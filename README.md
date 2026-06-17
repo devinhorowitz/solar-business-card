@@ -121,4 +121,4 @@ Parked until first articles land and the harvest question is answered. Scope: th
 
 ---
 
-*© Devin R. Horowitz. Personal project — license TBD.*
+*© 2026 Devin R. Horowitz. Released under the [MIT License](LICENSE).*
