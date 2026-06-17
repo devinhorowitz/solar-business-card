@@ -2,6 +2,8 @@
 
 A glowing business card that runs on light. An ATtiny1616 breathes four amber LEDs through the board while an indoor solar cell — or a pair of hidden coin cells — trickle-charges a supercapacitor bank. The whole PCB is generated from Python, not drawn by hand.
 
+![SOLAR-GLOW · DRH — front and back, gold ENIG on black soldermask](docs/board-preview.png)
+
 > **Status:** REV J — boards ordered (OSH Park), parts ordered (DigiKey), enclosure drafted. Firmware parked pending first articles and an energy-budget check.
 
 ---
@@ -78,6 +80,8 @@ The board is currently 0.8 mm. The design will take anything from 0.8 down to 0.
 ## The enclosure
 
 A **back-only** cover: it protects the populated rear and the four edges and leaves the front — solar cell, dome, LED apertures — naked, which is the whole point.
+
+![Back-shell cavity — perimeter shelf, four M2 bosses, the dome support post, the internal pillar field, and the U2 pocket](docs/enclosure-backshell.png)
 
 - **Low profile.** ~2.2 mm behind the board (~3.0 mm tall cover on the 0.8 mm board). The lone tall part — the U2 balancer at 1.75 mm — sits in a local floor pocket so the rest of the plate stays thin.
 - **Stiff.** The board lands on a continuous perimeter shelf, four M2 bosses, a post directly under the dome (so a press collapses the dome, not the board), and a field of internal pillars auto-placed on a keepout grid that never lands on a part, header, or via.
