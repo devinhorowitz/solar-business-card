@@ -101,11 +101,12 @@ pilots (`pilot_r` 0.85, tapped from the cavity side) are fine for the metal buil
 
 ## MCU package interplay
 
-Because U2 already puts 1.75 mm on the back, a leaded **v1 MCU costs almost nothing in
-height**: SSOP-28 (~2.0 mm) is ~+0.25 mm over U2, SOIC-28 (~2.65 mm) ~+0.9 mm, and a QFN's
-thinness is wasted while U2 sits at 1.75 mm. The thin enclosure does **not** argue for a QFN
-MCU unless U2 is also re-spec'd to a thinner balancer (a DFN/SOT-23-class part). See
-punch-list §7 for the part/package decision.
+Because U2 already puts 1.75 mm on the back, the MCU package is **height-irrelevant**:
+SSOP-28 (~2.0 mm) is only ~+0.25 mm over U2, and a QFN's thinness (0.9 mm) is wasted while
+U2 sits at 1.75 mm. **The V1 MCU is the 28-VQFN (4×4) anyway** — chosen on **footprint, not
+height**: with the four supercaps eating ~43% of the board, X/Y is the binding constraint, and
+the QFN's 16 mm² land beats SSOP-28's ~50 mm². Harder to solder (hot air, EP to GND), but v0
+already hand-places the QFN-20. See V1-SPEC §4 / punch-list §7.
 
 ## CAD follow-ups (when this gets cut)
 

@@ -66,7 +66,7 @@ This result **gates §3 (accel) and §4 (more LEDs)**. Measure it with the VDD p
 
 ## 7. MCU for v1 — part & package — *open; one datasheet check pending*
 
-v1 wants more than the 1616 has room for — light-sense (§1), spare GPIO (§2), an accelerometer (§3), maybe more LED channels (§4) — and possibly mixed-voltage I²C. **Hard constraint:** the v1 MCU must **not** exceed the 1616's power, especially **sleep / power-down** current (the dark-storage reserve §6 and §3 hinge on), while offering more. Candidates were checked against datasheets / vendor data; the power-down number for the front-runner is the one open item.
+v1 wants more than the 1616 has room for — light-sense (§1), spare GPIO (§2), an accelerometer (§3), maybe more LED channels (§4) — and possibly mixed-voltage I²C. **Hard constraint:** the v1 MCU must **not** exceed the 1616's power, especially **sleep / power-down** current (the dark-storage reserve §6 and §3 hinge on), while offering more. Candidates were checked against datasheets / vendor data; the power-down number for the front-runner (AVR64DD28) is now pulled — **0.65 µA typ, resolved below**.
 
 **Candidates.**
 - **tinyAVR-1 (1616, current)** and **tinyAVR-2** — same power (~0.1 µA power-down). The 2-series sheds the DAC, type-D timer, and two comparators for a 2nd USART, 2 CCL, and a better ADC.
@@ -74,11 +74,11 @@ v1 wants more than the 1616 has room for — light-sense (§1), spare GPIO (§2)
 - **ATtiny3217** (1-series, 24-pin) — same power, a strict superset of the 1616 plus more I/O and flash; bigger package.
 - **AVR-DD (e.g. AVR64DD28)** — roadmap-optimal once non-drop-in rework is acceptable. 1.8–5.5 V, flexible TCA-to-any-port routing, 2× TCB + TCD, and **MVIO**. MVIO is the key: PORTC runs on a separate VDDIO2, so the core stays on the 5 V supercap rail (full harvest band) while I²C/PORTC sits at 3.0 V for the accelerometer — **the §3 mixed-voltage fix with no level-shifter and no harvest-band loss.** Also serves §1 (ADC) and §4 (PWM).
 
-**The one blocker — power-down current.** No clean public side-by-side proves the AVR-DD's power-down ≤ the 1616's ~0.1 µA (Microchip blocks the automated datasheet fetch). **Pull the AVR-DD datasheet (`AVR64DD28`; the doc also covers AVR32DD28 / AVR64DD20 / AVR32DD20) and read Electrical Characteristics → Power Consumption: Power-Down typ (3 V / 25 °C), and Power-Down with RTC/PIT running.** If it clears the 1616 → **v1 MCU = AVR-DD.** If not → ATtiny1627 (for the ADC) or ATtiny3217 (for the superset).
+**Power-down — resolved.** Datasheet pulled (`AVR64DD32-28-Complete-DataSheet-DS40002315.pdf`, Table 38-5): AVR-DD Power-Down typ = **0.65 µA** (`VREGCTRL.PMODE = AUTO`, peripherals off, 3 V/25 °C); +0.6 µA for a 32 kHz periodic-wake source (WDT). That's **~6× the 1616's 0.1 µA**, so it does *not* pass the literal "≤ 1616" test — but it's still sub-µA and dark-storage standby is dominated by supercap + U2-balancer leakage (µA-class), which swamps the ~0.55 µA delta. The v0 standby measurement settles the real total. **Firmware must-do:** `PMODE = AUTO` for sleep — FULL mode is **160 µA** (250×) and would dominate. **→ v1 MCU = AVR64DD28.**
 
-**Package (ties to the enclosure).** U2 (SOIC-8) already sets the ~1.75 mm back-side floor, so a leaded MCU is nearly free on height: **SSOP-28 (~2.0 mm) ≈ +0.25 mm — recommended**; SOIC-28 (~2.65 mm) ≈ +0.9 mm but the easy 1.27 mm pitch matches the SOIC-8 you already hand-place; QFN-28 (~0.9 mm) buys nothing while U2 is the tall part and needs hot air. See `enclosure/ENCLOSURE-NOTES.md`.
+**Package — 28-VQFN (4×4), decided.** Height is irrelevant (U2 sets the ~1.75 mm floor; the QFN is 0.9 mm). The driver is **footprint**: with the four supercaps eating ~43% of the board, X/Y is the binding constraint, so the QFN's **16 mm²** land beats SSOP-28's ~50 mm² (and SOIC-28's bigger still). Harder to solder — hot air + paste, EP reflowed to GND — but v0 already hand-places the QFN-20, so this is the same game. θJA 36.5 °C/W (Table 38-9). See `enclosure/ENCLOSURE-NOTES.md`.
 
-**Caveat if AVR-DD.** Likely no dedicated PTC → cap-touch becomes ADC-based, reshaping §5 — though a metal enclosure deprioritizes cap-touch anyway (lean on the dome). Confirm package (lean SSOP-28) and pin count (28 gives headroom for §1/§2/§3/§4) once the power check clears.
+**Caveat (AVR-DD).** Likely no dedicated PTC → cap-touch becomes ADC-based, reshaping §5 — though a metal enclosure deprioritizes cap-touch anyway (lean on the dome). Package locked (28-VQFN); 22 I/O gives headroom for §1/§2/§3/§4.
 
 ---
 
