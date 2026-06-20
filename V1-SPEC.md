@@ -97,7 +97,11 @@ LEDs are the budget.
   *prolonged dark* (vs ~weeks for the sleeping MCU) — gate on whether the card lives in light.
 - **More LEDs.** +~1.25 mA each full-on; raises the draw ceiling. The 15 J reserve buffers a bigger
   "show," but continuous all-on stays harvest-bound. Independent PWM needs timer/PORTMUX planning
-  (AVR-DD's flexible routing helps).
+  (AVR-DD's flexible routing helps). *Specific v2 lever:* vertical LED **pairs in the two inter-letter
+  gaps** (→ 6 total) for more inner-stroke glow — defer past the v0 harvest result (it's **+50% peak
+  draw**), and it grows the keepaway box taller. Even then it won't light the D/R **bowls** (a diffuser
+  film is the lever for full-letter evenness, not more boundary LEDs). **4 is the v1 baseline** — the
+  proven minimum for even back-diffusion.
 - **Brighter / longer glow.** *Brighter* continuous is harvest-limited; *brighter peaks* and
   *longer dark glow* are exactly what the 4-cell reserve buys.
 - **Touch.** A grounded Ti back-plate swamps the PA7 self-cap electrode → **the dome is the button**;
