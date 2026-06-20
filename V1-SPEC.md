@@ -131,10 +131,21 @@ nothing while the cells/U2 are the tall parts.
   the four Ø1.64 mm LED entry holes must clear L1/L2/L3/L4** so bare FR4 passes diffuse light. Plan
   the GND/VS plane voids deliberately so the central window doesn't **fragment** the planes — route
   the supercap power around the glow band, not through it.
-- **0.4 mm changes the glow.** Thinner FR4 spreads light **less** than v0's 0.8 mm → a **crisper but
-  less even** monogram; the LEDs sit close behind the letters, and evening it out may want **more
-  LEDs or a diffuser film**. **Validate the glow *look* on a 0.4 mm coupon — v0 (0.8 mm) will not
-  predict it.** (This is the cost of merging the glow board and the feature board, which the earlier
+- **Monogram + LED-window placement + keepaway (templated).** Track the initials wider (**0.12 →
+  ~0.23**, ~2.5 mm inter-letter gaps) so each **Ø1.64 mm window nestles a letter boundary** — the two
+  inter-letter gaps + the two outer flanks — *snug* against the strokes, **not** centered in a wide
+  gap. The gaps are front **copper** (only the strokes are cut), and on 0.4 mm FR4 light only couples
+  into a stroke within ~0.7 mm, so a wide gap would bury the LED under copper and kill that window.
+  The **keepaway is one rectangle**, sized tight to the content (**~20.9 × 6.2 mm** = window span ×
+  letter height + 0.35 mm clearance, centered on the monogram), **subtracted from every layer's copper
+  and marked a routing keepout** so nothing wires across the light path between the rear windows and the front face. A single box (vs a
+  letter-hugging field) is deliberate: it's **letter-agnostic**, so the design is a **template** —
+  anyone can drop their own initials in the box and keep the four fixed centerline windows. See
+  `solar-glow-drh-glow-window.png`.
+- **0.4 mm changes the glow.** Thinner FR4 spreads light **less** than v0's 0.8 mm → a **crisper,
+  more edge-lit** monogram (brightest at the strokes nearest each window); evening it out may want
+  **more windows or a diffuser film**. **Validate the glow *look* on a 0.4 mm coupon — v0 (0.8 mm)
+  will not predict it.** (This is the cost of merging the glow board and the feature board, which the earlier
   plan kept separate precisely to avoid plane-void/diffusion juggling.)
 
 ---
