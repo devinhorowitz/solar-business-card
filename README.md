@@ -4,7 +4,7 @@ A glowing business card that runs on light. An ATtiny1616 breathes four amber LE
 
 ![SOLAR-GLOW · DRH — front and back, gold ENIG on black soldermask](docs/board-preview.png)
 
-> **Status:** REV J — boards ordered (OSH Park), parts ordered (DigiKey), enclosure drafted. Firmware parked pending first articles and an energy-budget check.
+> **Status:** REV J — boards ordered (OSH Park), parts ordered (DigiKey). Firmware parked pending first articles and an energy-budget check.
 
 ---
 
@@ -56,11 +56,7 @@ solar-business-card/
 ├── gerber_export.py               # emits Gerbers + drill files
 ├── gerbers/                       # fabrication output (sent to OSH Park)
 ├── solar-glow-drh-BOM.xlsx        # bill of materials — parts, prices, datasheet links
-├── datasheets/                    # every component's datasheet
-└── enclosure/                     # rear cover
-    ├── solar-glow-drh-backshell-cad.py          # parametric generator (CadQuery → STEP + STL)
-    ├── solar-glow-drh-backshell.step / .stl       # 0.8 mm board · 9 support pillars
-    └── solar-glow-drh-backshell-0p2mm.step/.stl   # 0.2 mm board · dense pillar brace
+└── datasheets/                    # every component's datasheet
 ```
 
 ---
@@ -73,28 +69,7 @@ python3 pcb_route.py        # builds the board, prints DRC (connectivity / short
 python3 gerber_export.py    # writes the Gerber + drill set into gerbers/
 ```
 
-The board is currently 0.8 mm. The design will take anything from 0.8 down to 0.2 mm — thinner FR4 passes more light through the substrate if the apertures alone don't give the glow you want, at the cost of needing more enclosure bracing (which the 0.2 mm enclosure variant provides).
-
----
-
-## The enclosure
-
-A **back-only** cover: it protects the populated rear and the four edges and leaves the front — solar cell, dome, LED apertures — naked, which is the whole point.
-
-![Back-shell cavity — perimeter shelf, four M2 bosses, the dome support post, the internal pillar field, and the U2 pocket](docs/enclosure-backshell.png)
-
-- **Low profile.** ~2.2 mm behind the board (~3.0 mm tall cover on the 0.8 mm board). The lone tall part — the U2 balancer at 1.75 mm — sits in a local floor pocket so the rest of the plate stays thin.
-- **Stiff.** The board lands on a continuous perimeter shelf, four M2 bosses, a post directly under the dome (so a press collapses the dome, not the board), and a field of internal pillars auto-placed on a keepout grid that never lands on a part, header, or via.
-- **Press fit.** The four walls run ~0.05 mm/side under the board with the corners relieved; lap the wall faces to a clean slip-press.
-
-Regenerate or retune:
-
-```bash
-pip install cadquery
-python3 enclosure/solar-glow-drh-backshell-cad.py   # writes both variants' STEP + STL
-```
-
-Key parameters at the top of the script: `board_th` (PCB thickness — supports are invariant to it), `edge_fit` (interference), `floor_th` (**bump to ~1.0 for a plastic test print**), and `WINDOW_U2` (open a window under U2 for a ~1.8 mm flush profile). The standard solid runs ~14 g in aluminum, ~23 g in titanium, ~44 g in brass.
+The board is currently 0.8 mm. The design will take anything from 0.8 down to 0.2 mm — thinner FR4 passes more light through the substrate if the apertures alone don't give the glow you want.
 
 ---
 
@@ -103,8 +78,7 @@ Key parameters at the top of the script: `board_th` (PCB thickness — supports 
 1. **Validate the energy budget** — harvest vs. LED draw under real lighting.
 2. **Reflow the SMD parts first** — QFN, passives, LEDs, balancer.
 3. **Hand-solder last** — the PV1 cell (heat-sensitive: ≤260 °C / 2 s, no IPA), the snap dome, and the coin retainers if building the battery variant.
-4. **Fit the enclosure** — lap the walls, screw down through the four bosses.
-5. **Flash firmware** over UPDI.
+4. **Flash firmware** over UPDI.
 
 ---
 
