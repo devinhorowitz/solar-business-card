@@ -33,7 +33,7 @@ Pin facts below are confirmed against the ATtiny1614/16/17 datasheet (DS40002204
 **v1 parts — candidates, verify datasheets before committing.**
 - MEMS accel, LGA ~1 mm: Bosch **BMA400** (~1 µA low-power) or ST **LIS2DW12**, used as the always-on wake source.
 - **LDO required** — VS reaches ~3.85 V (solar) / ~5 V (battery), above the accel's ~3.6 V max. Candidate: TI **TPS7A02** (~25 nA Iq).
-- **Mixed-voltage I2C fix** — either a level shifter, or regulate the whole logic rail to 3.0 V (which loses the 1.8–3.0 V harvest band — a trade to weigh).
+- **Mixed-voltage I2C fix** — either a level shifter, or regulate the whole logic rail to 3.0 V (which loses the 1.8–3.0 V harvest band — a trade to weigh), **or move to an MVIO MCU (AVR-DD)**, which gives PORTC its own I/O voltage — no shifter, no harvest-band loss (see §7).
 
 **Interim.** Touch-to-wake via the dual-mode pad is the zero-cost, motion-free alternative.
 
@@ -47,7 +47,7 @@ Four independent channels today: D3–D5 on TCA0 split WO0–2, and D2 on PC0/TC
 
 ## 5. Touch tuning — *validate on v0, may feed v1*
 
-The dual-mode electrode (Ø4.9 bare-gold center on PA7 + GND horseshoe) is a usable self-cap target as-is. Validate PTC sensitivity on the prototype. If marginal, v1 options: enlarge the electrode (deliberate footprint change — **protect the snap-dome fit**) and/or clear the back GND pour behind the electrode to cut parasitic Cp.
+The dual-mode electrode (Ø4.9 bare-gold center on PA7 + GND horseshoe) is a usable self-cap target as-is. Validate PTC sensitivity on the prototype. If marginal, v1 options: enlarge the electrode (deliberate footprint change — **protect the snap-dome fit**) and/or clear the back GND pour behind the electrode to cut parasitic Cp. **Note:** if the enclosure goes **metal** (see `enclosure/ENCLOSURE-NOTES.md`), a grounded back-plate behind the electrode largely kills self-cap touch — plan on the dome as the button and treat touch as expendable.
 
 ---
 
@@ -61,6 +61,30 @@ The dual-mode electrode (Ø4.9 bare-gold center on PA7 + GND horseshoe) is a usa
 - **Conclusion to test:** continuous full breathing is *not* sustainable on office light (~10× short). Natural indoor mode is harvest-and-pulse (~6–10 % duty) or continuous *dim* (1 LED, ~0.3 mA). Continuous full breathing needs a windowsill / daylight.
 
 This result **gates §3 (accel) and §4 (more LEDs)**. Measure it with the VDD proxy (§1 stand-in) and, once added, the real light-sense.
+
+---
+
+## 7. MCU for v1 — part & package — *open; one datasheet check pending*
+
+v1 wants more than the 1616 has room for — light-sense (§1), spare GPIO (§2), an accelerometer (§3), maybe more LED channels (§4) — and possibly mixed-voltage I²C. **Hard constraint:** the v1 MCU must **not** exceed the 1616's power, especially **sleep / power-down** current (the dark-storage reserve §6 and §3 hinge on), while offering more. Candidates were checked against datasheets / vendor data; the power-down number for the front-runner is the one open item.
+
+**Candidates.**
+- **tinyAVR-1 (1616, current)** and **tinyAVR-2** — same power (~0.1 µA power-down). The 2-series sheds the DAC, type-D timer, and two comparators for a 2nd USART, 2 CCL, and a better ADC.
+- **ATtiny1627** (2-series, 20-pin, near drop-in) — same power, better ADC, but a feature *trade*, not a superset.
+- **ATtiny3217** (1-series, 24-pin) — same power, a strict superset of the 1616 plus more I/O and flash; bigger package.
+- **AVR-DD (e.g. AVR64DD28)** — roadmap-optimal once non-drop-in rework is acceptable. 1.8–5.5 V, flexible TCA-to-any-port routing, 2× TCB + TCD, and **MVIO**. MVIO is the key: PORTC runs on a separate VDDIO2, so the core stays on the 5 V supercap rail (full harvest band) while I²C/PORTC sits at 3.0 V for the accelerometer — **the §3 mixed-voltage fix with no level-shifter and no harvest-band loss.** Also serves §1 (ADC) and §4 (PWM).
+
+**The one blocker — power-down current.** No clean public side-by-side proves the AVR-DD's power-down ≤ the 1616's ~0.1 µA (Microchip blocks the automated datasheet fetch). **Pull the AVR-DD datasheet (`AVR64DD28`; the doc also covers AVR32DD28 / AVR64DD20 / AVR32DD20) and read Electrical Characteristics → Power Consumption: Power-Down typ (3 V / 25 °C), and Power-Down with RTC/PIT running.** If it clears the 1616 → **v1 MCU = AVR-DD.** If not → ATtiny1627 (for the ADC) or ATtiny3217 (for the superset).
+
+**Package (ties to the enclosure).** U2 (SOIC-8) already sets the ~1.75 mm back-side floor, so a leaded MCU is nearly free on height: **SSOP-28 (~2.0 mm) ≈ +0.25 mm — recommended**; SOIC-28 (~2.65 mm) ≈ +0.9 mm but the easy 1.27 mm pitch matches the SOIC-8 you already hand-place; QFN-28 (~0.9 mm) buys nothing while U2 is the tall part and needs hot air. See `enclosure/ENCLOSURE-NOTES.md`.
+
+**Caveat if AVR-DD.** Likely no dedicated PTC → cap-touch becomes ADC-based, reshaping §5 — though a metal enclosure deprioritizes cap-touch anyway (lean on the dome). Confirm package (lean SSOP-28) and pin count (28 gives headroom for §1/§2/§3/§4) once the power check clears.
+
+---
+
+## 8. Supercap upgrade + land rework — *V1 PRIORITY · drives the re-spin*
+
+The lands are wrong: the SCPC terminals are two **1.5 × 3.5 mm** pads on the *underside*, diagonal, **within** the 28.5 × 17 mm body, but `FP("SCPC")` puts 3.5 × 3.5 pads at `(±18.25, ±8)` — out on the folded-edge locator tabs. Redraw to the bottom-face terminals (SCHURTER official WS17 land / SnapEDA, or measure the part). While reworking, swap **3-153-434 (WS10, 300 mF) → 3-153-438 (WS17, 1 F)** — same footprint family, **3.3× capacitance** (500 mF @ 5.5 V), ESR 40 mΩ, 1.7 mm thick. V0 protos in hand: bodge a copper lead per terminal to prove the stack. Full detail, the enclosure consequence, and the **baseline-source decision that blocks V1 copper**: `docs/V1-PLAN.md`.
 
 ---
 
