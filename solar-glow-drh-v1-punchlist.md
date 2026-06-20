@@ -82,9 +82,21 @@ v1 wants more than the 1616 has room for — light-sense (§1), spare GPIO (§2)
 
 ---
 
-## 8. Supercap upgrade + land rework — *V1 PRIORITY · drives the re-spin*
+## 8. Supercap upgrade — *optional drop-in; no longer forces a re-spin*
 
-The lands are wrong: the SCPC terminals are two **1.5 × 3.5 mm** pads on the *underside*, diagonal, **within** the 28.5 × 17 mm body, but `FP("SCPC")` puts 3.5 × 3.5 pads at `(±18.25, ±8)` — out on the folded-edge locator tabs. Redraw to the bottom-face terminals (SCHURTER official WS17 land / SnapEDA, or measure the part). While reworking, swap **3-153-434 (WS10, 300 mF) → 3-153-438 (WS17, 1 F)** — same footprint family, **3.3× capacitance** (500 mF @ 5.5 V), ESR 40 mΩ, 1.7 mm thick. V0 protos in hand: bodge a copper lead per terminal to prove the stack. Full detail, the enclosure consequence, and the **baseline-source decision that blocks V1 copper**: `docs/V1-PLAN.md`.
+**Correction (was "lands are wrong"):** the land is **right**. The datasheet's one shared "Soldering
+pads to Case WS10/13/17" land is two 3.5 × 3.5 mm diagonal pads, 36.5 × 16 (centres **±16.5 / ±6.25**),
+and `FP("SCPC")` is exactly that. The earlier "pads at (±18.25, ±8), out on the locator tabs" read the
+36.5 × 16 *outer span* as the pad centres — they're ±16.5 / ±6.25, on the folded-edge contact. So
+**WS10 → WS17 is a drop-in part swap on the existing REV J land** — no redraw. ⚠ bench-confirm by
+seating a WS-series cell on a bare REV J board first; if it misaligns the suspect is SC1/SC2 rotation,
+not `FP`.
+
+**The swap:** **3-153-434 (WS10, 300 mF) → 3-153-438 (WS17, 1 F)** — same land, **3.3× capacitance**
+(500 mF @ 5.5 V), ESR 40 mΩ, 1.7 mm thick (+0.7 mm Z → enclosure cavity, parked). The capacitance
+upgrade alone needs **no board re-spin**. A 4-cell (2× energy) array is a separate, reroute-scale
+decision — see `docs/V1-PLAN.md` §1a. Baseline source is **recovered** (§4 there). Full detail:
+`docs/V1-PLAN.md`.
 
 ---
 

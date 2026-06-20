@@ -3,7 +3,9 @@
 > **STATUS: PARKED** (as of V1 kickoff) — on ice pending V1 board bring-up. CAD + STEP/STL
 > preserved in this folder; resume after the V1 PCB is validated. Note: the V1 supercap swap
 > to 3-153-438 (1.7 mm) lets `cavity` go to ~1.8 mm and **deletes the U2 pocket** — see
-> `../docs/V1-PLAN.md` §1.
+> `../docs/V1-PLAN.md` §1. If V1 instead goes **4-cell** (§1a there), that changes cap
+> *placement* (four cells at opposite ends of the back), **not** the 1.7 mm height — but the
+> pillar/keepout audit and the SC pockets below would need re-laying-out for four cells.
 
 Engineering notes for taking the drafted back-shell (`solar-glow-drh-backshell-cad.py`)
 to a thin **machined-metal** production part. The CadQuery model is material-agnostic;
@@ -32,7 +34,7 @@ What the cover has to clear, tallest first (max heights; datasheet-grounded wher
 |---|---|---|
 | U2 balancer | SOIC-8 | **~1.75 mm** ← gets a local pocket |
 | D1 blocking diode | SOD-123 | ~1.1–1.35 mm ← sets the 1.6 mm cavity |
-| SC1 / SC2 supercaps | WS10 | 1.0 mm |
+| SC1 / SC2 supercaps | WS10 → **WS17** (v1) | 1.0 → **1.7** mm (just under U2) |
 | U1 MCU | QFN-20 | ~0.9 mm |
 | D2–D5 LEDs | LA P47F | 0.83 mm (datasheet) |
 | C1–C3 | 0805 | ~0.7 mm |
