@@ -26,8 +26,10 @@ FLAGS (confirm):
     shared datasheet title). The SOIC-8 land + single MID node require the dual. Threshold
     ~2.5 V/cell (safe-but-conservative for the 2.75 V WS17; effective stack ~5.0 V). v0 SAB
     pin mapping retained below; verify exact pinout/balance voltage at footprint time.
-  * TC1 6-pad order mirrors J1 (1=UPDI,2=VS,3=GND); confirm vs the actual TC2030 UPDI
-    cable/adapter convention.
+  * TC1 pad order RESOLVED: SerialUPDI via a legged TC2030-IDC cable (straight-through 6-pad).
+    1=UPDI, 2=VS(=VCC/VTG), 3=GND, 4-6=NC. (TC2030-MCP is PIC-only -> not usable here; PICkit/SNAP
+    would instead need TC2030-PKT-ICESPI, which puts GND on pad 6 -- a different map.) Wire the
+    USB-serial dongle UPDI/VCC/GND to pads 1/2/3; UPDI = TX through ~4.7k + RX on the same line.
 NEW parts to place (not in current placement): R5,R6 (light-sense), C5 (VSENSE filter),
   SJ1 (VDDIO2 0R jumper).
 """
@@ -74,7 +76,7 @@ NET = {
     # ---- button (snap dome, F12340) ----
     "SW1": {"C": "BTN", "RING": "GND"},
     # ---- programming / breakout ----
-    "TC1": {"1": "UPDI", "2": "VS", "3": "GND", "4": "NC", "5": "NC", "6": "NC"},  # FLAG: confirm pad order
+    "TC1": {"1": "UPDI", "2": "VS", "3": "GND", "4": "NC", "5": "NC", "6": "NC"},  # SerialUPDI / TC2030-IDC: 1=UPDI 2=VCC 3=GND, 4-6 NC (resolved)
     "J1":  {"1": "UPDI", "2": "VS", "3": "GND"},
     "JP1": {"1": "SDA", "2": "SCL", "3": "GND"},
     # ---- light-sense divider + VSENSE filter (NEW) ----
