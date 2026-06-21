@@ -19,10 +19,13 @@ Net glossary:
   VBAT/BMID/VBATD  dual-coin battery option (mutually exclusive with PV1)
 
 FLAGS (confirm):
-  * SW2 OFF/ON/TINY semantics unknown -> pads left TBD; LED anodes wired to VS (v0)
-    until the switch role is defined.
-  * U2 part: repo datasheet is ALD810025; earlier context said ALD910025. Pinout below
-    is the v0 SAB mapping; reconcile the exact P/N + balance voltage at footprint time.
+  * SW2 removed. Replaced by 4 per-channel LED test jumpers (SB1-4): 4 independent PWM
+    channels retained; each 2-pad solder bridge forces one LED on without the MCU. Bridge
+    only when the MCU is not driving that pin high (unpopulated / unflashed bring-up).
+  * U2 = ALD910025 (DUAL, 8-pin) -- NOT ALD810025 (that is the QUAD / 16-pin, per the
+    shared datasheet title). The SOIC-8 land + single MID node require the dual. Threshold
+    ~2.5 V/cell (safe-but-conservative for the 2.75 V WS17; effective stack ~5.0 V). v0 SAB
+    pin mapping retained below; verify exact pinout/balance voltage at footprint time.
   * TC1 6-pad order mirrors J1 (1=UPDI,2=VS,3=GND); confirm vs the actual TC2030 UPDI
     cable/adapter convention.
 NEW parts to place (not in current placement): R5,R6 (light-sense), C5 (VSENSE filter),
@@ -82,8 +85,16 @@ NET = {
     "SJ1": {"1": "VS", "2": "VDDIO2"},
     # ---- mounting (plated, bond board GND to Ti body) ----
     "MH1": {"1": "GND"}, "MH2": {"1": "GND"}, "MH3": {"1": "GND"}, "MH4": {"1": "GND"},
-    # ---- SW2 3-pos slide: FLAGGED, semantics TBD ----
-    "SW2": {"1": "TBD_SW2", "2": "TBD_SW2", "3": "TBD_SW2"},
+    # ---- per-channel LED test jumpers (SB1-4, replaces SW2) ----
+    # 2-pad solder bridges. OPEN = MCU drives that channel (normal independent PWM).
+    # BRIDGED = that LED's drive net pulled to GND => LED forced ON without the MCU.
+    # Bridge all 4 = whole-array glow test, MCU absent. Caveat: only bridge when the MCU
+    # is NOT actively driving that pin high (unpopulated / unflashed bring-up, or PA0-PA3
+    # tristated in firmware), else a forced bridge fights a live high output.
+    "SB1": {"1": "LDRV1", "2": "GND"},
+    "SB2": {"1": "LDRV2", "2": "GND"},
+    "SB3": {"1": "LDRV3", "2": "GND"},
+    "SB4": {"1": "LDRV4", "2": "GND"},
 }
 
 # unique nets (sanity)
