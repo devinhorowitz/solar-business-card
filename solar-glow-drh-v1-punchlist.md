@@ -82,23 +82,18 @@ v1 wants more than the 1616 has room for — light-sense (§1), spare GPIO (§2)
 
 ---
 
-## 8. Supercap upgrade — *optional drop-in; no longer forces a re-spin*
+## 8. Supercap — 4-cell 2P2S, and the land FIX (was the "land bug")
 
-**Correction (was "lands are wrong"):** the land is **right**. The datasheet's one shared "Soldering
-pads to Case WS10/13/17" land is two 3.5 × 3.5 mm diagonal pads, 36.5 × 16 (centres **±16.5 / ±6.25**),
-and `FP("SCPC")` is exactly that. The earlier "pads at (±18.25, ±8), out on the locator tabs" read the
-36.5 × 16 *outer span* as the pad centres — they're ±16.5 / ±6.25, on the folded-edge contact. So
-**WS10 → WS17 is a drop-in part swap on the existing REV J land** — no redraw. ⚠ bench-confirm by
-seating a WS-series cell on a bare REV J board first; if it misaligns the suspect is SC1/SC2 rotation,
-not `FP`.
+**The v0/REV-J land was WRONG — confirmed against physical parts.** The old diagonal end-tab land
+(two 3.5 × 3.5 mm pads, 36.5 × 16, centres ±16.5 / ±6.25) sits on the cell's coated, **non-solderable**
+end tabs and makes **zero contact**. The real solderable terminals are **flat pads UNDER the body**:
+**P 7.8 × 3.5 mm, N 12.2 × 3.5 mm** (asymmetric widths = polarity key), centred at **±11 mm** from cell
+centre. The diagonal land **must never be reintroduced**. See the locked footprint in `SESSION-HANDOFF.md`.
 
-**The swap:** **3-153-434 (WS10, 300 mF) → 3-153-438 (WS17, 1 F)** — same land, **3.3× capacitance**
-(500 mF @ 5.5 V), ESR 40 mΩ, 1.7 mm thick (+0.7 mm Z → enclosure cavity, parked). The capacitance
-upgrade alone needs **no board re-spin**. A 4-cell (2× energy) array is a separate, reroute-scale
-decision — see `docs/V1-PLAN.md` §1a. Baseline source is **recovered** (§4 there). Full detail:
-`docs/V1-PLAN.md`.
-
----
+**The build (DECIDED):** 4× **3-153-438 (WS17, 1 F, 2.75 V)** in **2P2S → 1 F @ 5.5 V ≈ 15 J**, single
+MID node, balanced by U2 (**ALD910025**, the dual SAB — not the ALD810025 quad). ESR 40 mΩ, 1.7 mm
+thick. This is a **full reroute** (redrawn land + 4-layer planes + features), not a drop-in. Full
+detail: `V1-SPEC.md` §0/§1, `V1-PLAN.md` §1/§1a.
 
 ## Firmware track — *parked until boards arrive*
 

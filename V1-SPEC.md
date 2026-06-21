@@ -109,20 +109,23 @@ LEDs are the budget.
 
 ---
 
-## 4. MCU — the one pending hardware gate
+## 4. MCU — DECIDED (AVR64DD28, 28-VQFN)
 
-**Target: AVR-DD (AVR64DD28), SSOP-28.** It serves the whole menu: **MVIO** (PORTC on a separate
+**AVR64DD28 in 28-VQFN (4×4).** It serves the whole menu: **MVIO** (PORTC on a separate
 VDDIO2 → core stays on the 5 V rail for full harvest band while I²C/PORTC sits at 3.0 V for the
 accel — no level shifter, no harvest-band loss), ADC (light-sense), flexible TCA/TCB/TCD PWM (more
-LEDs), and 28-pin GPIO headroom (§1/§2/§3). 4-layer makes the extra routing easy, and the height is
-free behind the 1.7 mm cells.
+LEDs), and 22 I/O of headroom (§1/§2/§3). 4-layer makes the extra routing easy.
 
-**The gate:** confirm its **power-down current ≤ the 1616's ~0.1 µA** before committing (dark-storage
-reserve hinges on it). Pull the `AVR64DD28` datasheet → Electrical Characteristics → Power
-Consumption: **Power-Down typ (3 V / 25 °C)**, and **with RTC/PIT running**. If it clears → AVR-DD.
-If not → **ATtiny1627** (better ADC, near drop-in) or **ATtiny3217** (strict 1616 superset, bigger
-package). Package height is a non-issue: SSOP-28 (~2.0 mm) is ~+0.25 mm over the cells; a QFN buys
-nothing while the cells/U2 are the tall parts.
+**Power-down gate — cleared.** Datasheet pulled (DS40002315, Table 38-5): Power-Down typ = **0.65 µA**
+(`VREGCTRL.PMODE = AUTO`, 3 V/25 °C; +0.6 µA for a 32 kHz wake source). That is ~6× the 1616's 0.1 µA
+but still sub-µA, and dark-storage standby is dominated by supercap + U2-balancer leakage (µA-class),
+which swamps the ~0.55 µA delta. **Firmware must-do:** `PMODE = AUTO` for sleep (FULL mode is 160 µA).
+Full analysis: punchlist §7.
+
+**Package = 28-VQFN, not SSOP-28.** Height is irrelevant (U2 at 1.75 mm sets the floor; the QFN is
+0.9 mm). The driver is footprint: with the four cells eating ~43% of the board, X/Y is the binding
+constraint, so the QFN's ~16 mm² land beats SSOP-28's ~50 mm². Harder to solder (hot air + paste, EP
+to GND), same as the v0 QFN-20.
 
 ---
 
@@ -156,8 +159,8 @@ nothing while the cells/U2 are the tall parts.
 
 ## 6. Titanium rear-shell (end-goal; bakes a few rules into V1 now)
 
-Rear-only cover, naked front. With the cells at 1.7 mm they now set the floor; U2 at 1.75, SSOP-28
-at ~2.0 → a uniform **~2.2 mm cavity, no U2 pocket**. Build these **shell-ready rules into V1 now**
+Rear-only cover, naked front. The cells at 1.7 mm and U2 at 1.75 mm set the floor (the VQFN MCU is
+only 0.9 mm) → a uniform **~1.8 mm cavity, no U2 pocket**. Build these **shell-ready rules into V1 now**
 so the board doesn't need re-spinning for the enclosure:
 
 - **Grounded body → shorts.** **Drop the right-edge castellations** in the enclosed variant; land

@@ -1,5 +1,5 @@
 (module TC2030-MCP-FP (layer F.Cu) (tedit 5A29CE9B)
-  (descr "Tag-Connect TC2030 legged land (6-pin, 1.27mm pitch). Common board-side land for the TC2030-MCP and TC2030-IDC cables; verified geometry from the KiCad official library (Tag-Connect_TC2030-IDC-FP). SOLAR-GLOW DRH UPDI programming. Pads 1-6 = 2x3 grid; map UPDI/VCC/GND to the TC2030-MCP cable pinout before fab (see netlist TC1 flag).")
+  (descr "Tag-Connect TC2030 legged land (6-pin, 1.27mm pitch). Geometry verified against the TC2030-MCP datasheet (in repo) and KiCad's official lib (Tag-Connect_TC2030-IDC-FP). NOTE: this board-side land is common to ALL TC2030 cables, but the TC2030-MCP cable itself is PIC-only -- for this AVR-DD/UPDI board source an AVR cable (TC2030-PKT-ICESPI for PICkit/SNAP, or TC2030-IDC for SerialUPDI/Atmel-ICE). Pads 1-6 = 2x3 grid; UPDI/VCC/GND map per the chosen AVR cable (see netlist TC1 flag).")
   (tags "tag connect programming header pogo pins")
   (attr virtual)
   (fp_text reference REF** (at 0 5) (layer F.SilkS)

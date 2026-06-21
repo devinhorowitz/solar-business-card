@@ -16,8 +16,9 @@ Snapshot for a **new Claude session** picking up this board. Read this first, th
 `solar-glow-drh-v1.kicad_pcb` — 4-layer, 0.4 mm, PCBWay. **39 footprints. Pad-clean and
 courtyard-clean** (verified at the pad level, not just courtyards). Portrait 50.8 × 88.9 mm,
 0.8 mm FR4, ENIG. Stackup: L1 F.Cu signal/parts, L2 In1.Cu GND plane, L3 In2.Cu VS plane,
-L4 B.Cu signal/parts. MCU = AVR64DD28 VQFN28. 4× WS17 supercaps (2P2S → ~500 mF @ 5.5 V),
-U2 (ALD810025 SOIC-8) balances the shared MID. Glow = 4 rear LEDs (LA P47F) backlighting a
+L4 B.Cu signal/parts. MCU = AVR64DD28 VQFN28. 4× WS17 supercaps (2P2S → 1 F @ 5.5 V ≈ 15 J),
+U2 (ALD910025 SOIC-8, **dual** SAB — NOT the ALD810025, which is the quad/16-pin) balances the
+shared MID. Glow = 4 rear LEDs (LA P47F) backlighting a
 DRH monogram cutout at y45 through bare FR4; plane keepout voids pour+vias there.
 
 ### Changes made this session

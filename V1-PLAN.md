@@ -1,73 +1,67 @@
 # SOLAR-GLOW · DRH — V1 redesign plan
 
-Status: **baseline source recovered (§4 resolved); the supercap "land bug" did not reproduce (§1).**
-V0/REV J is prototyping. With the land re-verified against the datasheet, V1's supercap axis is now an
-*optional* drop-in capacitance upgrade — not a forced re-spin. The open question is whether to cut a
-new V1 board at all, and if so whether for **2 or 4** cells (§1a).
+Status: **baseline source recovered (§4 resolved). The supercap land bug is REAL — confirmed against
+physical parts (§1), and is the reason V1 exists.** V0/REV J is prototyping only. **V1 is LOCKED as a
+4-cell 2P2S full reroute** (see `V1-SPEC.md` §0): 1 F @ 5.5 V ≈ 15 J, redrawn under-body supercap
+land, 4-layer planes, AVR64DD28 in 28-VQFN. The 2-cell "drop-in" path below is the rejected
+alternative, kept for the record.
 
 ---
 
-## 1. Supercap upgrade (land re-verified — no rework needed)
+## 1. Supercap land FIX + 4-cell upgrade (the core reason for V1)
 
-**Part swap.** 3-153-434 (WS10, 300 mF, 1.0 mm) → **3-153-438 (WS17, 1000 mF / 1 F, 1.7 mm)**.
-Both are 2.75 V single cells; two in series → **500 mF @ 5.5 V** vs 150 mF today — **3.3×**
-the storage, and ESR drops to 40 mΩ (from 50). WS10/WS13/WS17 **share one footprint**, so
-board *area* is unchanged — only thickness and capacitance move.
+**Part.** 4× **3-153-438 (SCHURTER SCPC WS17, 1 F, 2.75 V, 1.7 mm)**, wired 2P2S → **1 F @ 5.5 V
+≈ 15 J** on a single MID node (U2 balances it). ESR 40 mΩ.
 
-**~~The land is wrong and must be redrawn (the whole reason for V1).~~ Correction — the land
-matches SCHURTER's recommended land; the "redraw" was a misread. ⚠ bench-confirm before relying.**
-Re-checked against `datasheets/typ_SCPC-2.pdf` and the recovered REV J source:
+**The land WAS wrong on v0/REV J and is redrawn for V1 — confirmed against physical parts.** This is
+the landmine; it must never be reintroduced. Per `datasheets/typ_SCPC-2.pdf` (p4, Case WS17) and the
+cells in hand:
 
-- **Shared land.** The datasheet gives **one** "Soldering pads to Case WS10, WS13, WS17" land: two
-  **3.5 × 3.5 mm** pads on the diagonal, **36.5 × 16 mm** pattern, **centres ±16.5 / ±6.25**. The
-  3.5 mm pads are intentionally oversized vs the 1.5 × 3.5 mm bottom terminals and run ~4 mm past the
-  28.5 mm body ends **by design**, to catch the folded-edge terminals.
-- **Current footprint** `FP("SCPC")` = `[("P",16.5,6.25,3.5,3.5),("N",−16.5,−6.25,3.5,3.5)]`, body
-  28.5 × 17 — i.e. **exactly** the datasheet land (the code comment even says "WS10 datasheet land").
-  The earlier "pads at (±18.25, ±8), out on the locator tabs" read the **36.5 × 16 outer span**
-  (half → 18.25 / 8) as the pad *centres*. The centres are ±16.5 / ±6.25 — ~2.25 mm past the body
-  end, squarely on the folded-edge contact, not on a locator tab.
-- **Consequence.** WS10 → WS17 is a **drop-in part swap on the existing REV J land** — no redraw, and
-  the capacitance upgrade alone needs **no board re-spin** (only +0.7 mm Z, an enclosure-cavity
-  change that is parked). The ordered REV J boards carry this exact land (gerber-verified, §4).
-- **⚠ One open thread.** The prior note said "confirmed against parts in hand." The gerber + datasheet
-  evidence says the pattern is correct, so if a real cell didn't seat on a REV J board the cause is
-  **placement/rotation** (SC1 rot 270 / SC2 rot 90), not the pad pattern. **Before treating the land
-  as final: set a WS-series cell on a bare REV J board and confirm both terminals sit on copper /
-  reflow wets both.** If it genuinely misaligns, revisit SC1/SC2 orientation — not `FP("SCPC")`.
+- **The v0/REV-J land is WRONG.** It placed two 3.5 × 3.5 mm pads on a diagonal (36.5 × 16 pattern,
+  centres ±16.5 / ±6.25), landing on the cell's **folded end tabs**. Those tabs are coated /
+  **non-solderable** mechanical locators, so a board built to that land makes **zero contact**. The
+  datasheet's single "Soldering pads to Case WS10/13/17" diagram is a generic stand-in; reading it
+  as the WS17 land is exactly the mistake that shipped on v0.
+- **The correct land (LOCKED).** The real solderable terminals are **flat pads UNDER the body**:
+  **P pad 7.8 × 3.5 mm, N pad 12.2 × 3.5 mm** (the asymmetric widths are the polarity key), centred
+  on the cell axis at **±11 mm** from cell centre, ~1.5 mm in from each end, inside the 28.5 × 17 mm
+  body. Rotations SC1/SC4 → 90°, SC2/SC3 → 270°. See the locked footprint block in `SESSION-HANDOFF.md`.
+- **Consequence.** This is **not** a drop-in on the REV-J land — it is a redraw, which together with
+  the 4-cell array + 4-layer planes + the new features is the whole justification for the V1 re-spin.
 
 **Enclosure consequence (good):** 1.7 mm ≈ U2 (1.75 mm). Bump `cavity` 1.6 → ~1.8 mm and the
 caps *and* U2 clear with no pockets — deletes the marginal 0.3 mm U2 skin. ~+0.2 mm behind the
 board for a simpler, stronger floor (also helps 7075). See `enclosure/ENCLOSURE-NOTES.md`.
 
-### 1a. Capacity options for V1 — 2 cells vs 4 cells (open)
+### 1a. Capacity: 4 cells (DECIDED) vs the 2-cell alternative (rejected)
 
-With the land no longer blocking, there are two ways to take the upgrade:
+**Decision: 4× WS17 in 2P2S → 1 F @ 5.5 V ≈ 15 J** (locked, `V1-SPEC.md` §0). The 2-cell "drop-in"
+was the cheaper alternative but is **rejected**: it rode on the (wrong) belief that the REV-J land
+was reusable, and the land is being redrawn regardless, so the "free, no board work" advantage does
+not exist. The 4-cell reserve is the power headroom the feature menu (§3) needs.
 
-| | **2× WS17 (2S)** — drop-in | **4× WS17 (2P2S / 2S2P)** — pulled from V2 |
+| | 2× WS17 (2S) — *rejected* | **4× WS17 (2P2S) — DECIDED** |
 |---|---|---|
-| Energy @ 5.5 V | 500 mF → **~7.6 J** (3.3× v0) | 1 F → **~15 J** (2× the 2-cell) |
-| Board work | **none** — same REV J land, taller part only | **full reroute** (4×28.5×17 ≈ 43% of board + centre SMD band) |
-| Balancer | existing U2, unchanged | **2P2S → one** (U2 as-is); 2S2P → two, or tie midpoints |
-| Supercap cost | ~2× a cell | **~2× the 2-cell** (doubles the dominant BOM line) |
-| Buys | a real, near-free upgrade | ~2× dark ride-through; does **not** fix the harvest deficit (§6), and cold-starts ~2× slower |
+| Energy @ 5.5 V | 500 mF → ~7.6 J | **1 F → ~15 J** (~6.6× v0) |
+| Balancer | one (U2) | **one (U2, shared MID)** |
+| Board work | redraw anyway (land was wrong) | **full reroute** (4×28.5×17 ≈ 43% + centre SMD band) |
+| Buys | less dark ride-through | **the feature menu (§3) + max dark endurance** |
 
-**Budget.** SCHURTER 3-153-438 (WS17, 1 F) is **~€6.77 in volume** (Schukat); qty-1 runs higher
-(DigiKey lists it but the qty-1 figure is **TBD** — JS-only page). Plan on **~$8–12/cell**.
-Supercaps already dominate this BOM, so the 2→4 delta is essentially **+2 cells (~$16–24/board)**:
-2 cells add ~$16–24 of supercap, 4 cells ~$32–48, pushing supercaps from ~half to **two-thirds+** of
-per-board cost — and turning V1 into the V2-scale reroute. **Recommendation:** ship the 2-cell drop-in
-as V1 (near-free, no board work); take 4 cells only if you're already committing to a reroute and want
-maximum dark endurance — otherwise it stays a V2 item (§6).
+**Cost note.** SCHURTER 3-153-438 (WS17, 1 F) ~€6.77 in volume (Schukat); plan ~$8–12/cell. Four
+cells push supercaps to two-thirds+ of per-board BOM — the dominant line, and the reason this is a
+deliberate reroute, not a casual upgrade.
+
 
 ---
 
-## 2. MCU — parked, gated
+## 2. MCU — DECIDED (AVR64DD28, 28-VQFN)
 
-No MCU change goes into copper until the **AVR-DD power-down number** lands (pull `AVR64DD28`,
-read Power-Down typ @ 3 V/25 °C and with RTC/PIT). If it clears the 1616's ~0.1 µA → **AVR-DD,
-SSOP-28** (height is free behind the 1.7–1.75 mm supercap/U2 floor; MVIO solves the §3
-mixed-voltage I²C). Else ATtiny1627 (ADC) or ATtiny3217 (superset). Full analysis: punch-list §7.
+Resolved (was "parked, gated"). The AVR-DD power-down number landed — **0.65 µA typ** (DS40002315
+Table 38-5, `PMODE=AUTO`, 3 V/25 °C); ~6× the 1616's 0.1 µA but still sub-µA and swamped by supercap
++ U2-balancer leakage. **Package = 28-VQFN** (not SSOP-28): with the four cells eating ~43% of the
+board, X/Y is binding, so the QFN's ~16 mm² land wins. MVIO solves the §3 mixed-voltage I²C; ADC
+serves §1; flexible TCA/TCB/TCD serves §4. Firmware must-do: `PMODE=AUTO` for sleep. Full analysis:
+punch-list §7.
 
 ---
 
@@ -144,8 +138,9 @@ see **§1a**. If V1 stays a drop-in (2 cells, existing REV J board), this whole 
 
 ## References
 
-- Supercap: 3-153-438 row in `datasheets/typ_SCPC-2.pdf` (WS17 case drawing p.4; the shared
-  "Soldering pads to Case WS10/13/17" land — diagonal 3.5×3.5 pads, 36.5×16 — is on the last page).
+- Supercap: 3-153-438 row in `datasheets/typ_SCPC-2.pdf` (WS17 case drawing p.4). The generic
+  "Soldering pads to Case WS10/13/17" diagram is a stand-in — the real WS17 solderable pads are the
+  under-body flats (P 7.8×3.5, N 12.2×3.5, ±11 mm), NOT the diagonal end-tab land. See §1.
 - REV J generator source: `solar-glow-drh-pcb-generator-revJ.zip` (recovered; see §4).
 - MCU gate: `AVR64DD28` datasheet — **to pull**.
 - `solar-glow-drh-v1-punchlist.md` §7 (MCU), §1–§6 (deferred items, energy budget).
