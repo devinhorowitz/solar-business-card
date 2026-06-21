@@ -26,12 +26,13 @@ FLAGS (confirm):
     shared datasheet title). The SOIC-8 land + single MID node require the dual. Threshold
     ~2.5 V/cell (safe-but-conservative for the 2.75 V WS17; effective stack ~5.0 V). v0 SAB
     pin mapping retained below; verify exact pinout/balance voltage at footprint time.
-  * TC1 pad order RESOLVED: SerialUPDI via a legged TC2030-IDC cable (straight-through 6-pad).
+  * TC1 pad order RESOLVED: SerialUPDI via a no-legs TC2030-IDC-NL cable (straight-through 6-pad).
     1=UPDI, 2=VS(=VCC/VTG), 3=GND, 4-6=NC. (TC2030-MCP is PIC-only -> not usable here; PICkit/SNAP
     would instead need TC2030-PKT-ICESPI, which puts GND on pad 6 -- a different map.) Wire the
     USB-serial dongle UPDI/VCC/GND to pads 1/2/3; UPDI = TX through ~4.7k + RX on the same line.
-NEW parts to place (not in current placement): R5,R6 (light-sense), C5 (VSENSE filter),
-  SJ1 (VDDIO2 0R jumper).
+PLACEMENT (reconciled to the .kicad_pcb): R5,R6,C5,SJ1 placed; SW2 removed, replaced by SB1-4
+  (placed by the R1-R4 ballast row); JP2 spare-GPIO breakout added (PA4/PC0/PC1/GND -> U1 pins
+  2/6/7); M1 is a reserved/unconnected courtyard (real LGA footprint deferred to v2).
 """
 
 NET = {
@@ -46,7 +47,8 @@ NET = {
         "19": "GND", "25": "GND", "EP": "GND",                      # GND x2 + pad
         "23": "UPDI",                                               # PF7
         "22": "RESET",                                              # PF6 (input-only)
-        # spares (unrouted): 2=PA4 4=PA6 6=PC0 7=PC1 11..17=PD1..PD7 20=PF0 21=PF1
+        "2": "PA4", "6": "PC0", "7": "PC1",                         # spare GPIO -> JP2 breakout
+        # spares (unrouted): 4=PA6 11..17=PD1..PD7 20=PF0 21=PF1
     },
     # ---- quad supercap, 2P2S, single MID ----
     "SC1": {"P": "VS",  "N": "MID"},   # top-left   VS-MID
@@ -76,9 +78,10 @@ NET = {
     # ---- button (snap dome, F12340) ----
     "SW1": {"C": "BTN", "RING": "GND"},
     # ---- programming / breakout ----
-    "TC1": {"1": "UPDI", "2": "VS", "3": "GND", "4": "NC", "5": "NC", "6": "NC"},  # SerialUPDI / TC2030-IDC: 1=UPDI 2=VCC 3=GND, 4-6 NC (resolved)
+    "TC1": {"1": "UPDI", "2": "VS", "3": "GND", "4": "NC", "5": "NC", "6": "NC"},  # SerialUPDI / TC2030-IDC-NL (no-legs): 1=UPDI 2=VCC 3=GND, 4-6 NC (resolved)
     "J1":  {"1": "UPDI", "2": "VS", "3": "GND"},
     "JP1": {"1": "SDA", "2": "SCL", "3": "GND"},
+    "JP2": {"1": "PA4", "2": "PC0", "3": "PC1", "4": "GND"},  # spare-GPIO breakout (3 spare GPIO + GND)
     # ---- light-sense divider + VSENSE filter (NEW) ----
     "R5": {"1": "VIN", "2": "VSENSE"},     # top (MΩ-class)
     "R6": {"1": "VSENSE", "2": "GND"},     # bottom
