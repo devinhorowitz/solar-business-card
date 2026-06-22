@@ -101,6 +101,26 @@ abs_pads=[r for r in abs_pads if r[0] not in _BATT]
 plated  =[h for h in plated   if (round(h[0],2),round(h[1],2)) not in _batt_holes]
 nonplated=[h for h in nonplated if (round(h[0],2),round(h[1],2)) not in _batt_holes]
 
+# ---- v2: LIS2DH12 accelerometer (12-LGA, 2x2x1.0mm) drops into the M1 keepout at (20,35.9) on B ----
+_ACCEL_KEEPOUT={"M1"}                                                 # remove the reserved keepout, place the real part
+abs_pads=[r for r in abs_pads if r[0] not in _ACCEL_KEEPOUT]
+_renet={("U1","21"):"INT1", ("U1","20"):"INT2"}                     # commit PF1->INT1, PF0->INT2 (QFN NE corner, faces accel)
+abs_pads=[(r[0],r[1],_renet.get((r[0],r[1]),r[2]),*r[3:]) for r in abs_pads]
+# LGA-12 0.5mm pitch (datasheet Fig.12): perimeter pads of a 4x4 grid, centre 2x2 empty; pads ~0.25x0.30.
+# rotated 180deg so the serial column (SCL/CS/SDO/SDA) faces W toward the I2C bus and both INTs face S toward the QFN.
+_accel=[ # (pin, net, x, y)   nets per Table 2: CS->VS (I2C mode), SA0->GND (addr 0x18), Res->GND
+ ("4","SDA", 19.25,35.15),("5","GND", 19.75,35.15),("6","GND", 20.25,35.15),("7","GND", 20.75,35.15),
+ ("3","GND", 19.25,35.65),                                          ("8","GND", 20.75,35.65),
+ ("2","VS",  19.25,36.15),                                          ("9","VS",  20.75,36.15),
+ ("1","SCL", 19.25,36.65),("12","INT1",19.75,36.65),("11","INT2",20.25,36.65),("10","VS", 20.75,36.65)]
+for pn,net,x,y in _accel:
+    abs_pads.append(("U3",pn,net,x,y,0.25,0.30,"rr",0.0,"B"))
+abs_pads.append(("C6","1","VS", 22.2,36.4,0.50,0.55,"rr",0.0,"B"))  # accel decoupling 100nF, VS-GND, just E of part
+abs_pads.append(("C6","2","GND",23.2,36.4,0.50,0.55,"rr",0.0,"B"))
+# v2: shift JP1 (I2C breakout) ~5mm N so its pads clear the INT-escape corridor (x12.7-14.7, y38-42); SDA/SCL walls just extend up to reach it
+_JP1={"1":(13.7,32.42),"2":(13.7,34.96),"3":(13.7,37.50)}            # SDA / SCL / GND (2.54mm pitch, vertical)
+abs_pads=[(r[0],r[1],r[2],_JP1[r[1]][0],_JP1[r[1]][1],*r[5:]) if r[0]=="JP1" else r for r in abs_pads]
+
 # ---- board outline from Edge.Cuts (bbox -> rounded rect, matching v0 style) ----
 ec = txt[txt.find('Edge.Cuts')-200:]
 exs=[float(a) for a,b in re.findall(r'\((?:start|end|xy)\s+(-?[\d.]+)\s+(-?[\d.]+)\)', txt) ]
@@ -227,10 +247,10 @@ T=[
  ("UPDI","B",[(4.7,36.0),P("J1","1")],TW),                                           # via drop -> J1.1
  # ---- SDA: route like SCL/VDDIO2 - stay on B under LDRV1/2/3's F descents (free, diff layer), then pop to F for the north-run. No escape/dip vias to crowd the SW corridor. ----
  ("SDA","B",[P("U1","8"),(8.3,44.5),(12.0,44.5)],TWN),                               # B: S off pin8 -> E under LDRV1/2/3 F descents -> F-transition
- ("SDA","In3",[(12.0,44.5),(12.0,36.7),P("JP1","1")],TW),                            # In3 diagonal up (W of JP1.3 GND via + JP1.2 via) -> JP1.1 drop [F-free]
+ ("SDA","In3",[(12.0,44.5),(12.0,33.0),P("JP1","1")],TW),                            # In3 up x12 (W of GND/SCL vias), short jog to relocated JP1.1
  # ---- SCL: pin9 (B) runs on B under LDRV1's F descent AND SDA's F north-run (both free, diff layer), then pops to F for a clean north-run up the corridor -> JP1.2 ----
  ("SCL","B",[P("U1","9"),(8.7,44.0),(12.5,44.0)],TWN),                               # B: S off pin9 -> E under LDRV1(F) + SDA(F) -> F-transition
- ("SCL","In2",[(12.5,44.0),(12.3,43.0),(12.3,39.2),P("JP1","2")],TW),                            # In2 diagonal up (E of SDA, W of GND via) -> JP1.2 drop [F-free]
+ ("SCL","In2",[(12.5,44.0),(12.3,43.0),(12.3,35.5),P("JP1","2")],TW),                            # In2 up x12.3, short jog to relocated JP1.2
  # ---- VDDIO2: pin10 (B) diagonals E of LDRV1 (S of SCL's deeper run, so no cross), E to SJ1.2; C3 (nudged next to SJ1.2) chains off SJ1.2 ----
  ("VDDIO2","B",[P("U1","10"),(9.1,43.55),(13.71,43.55),P("SJ1","2")],TWN),           # SJ1 branch: S off pin10 (clear pin11) -> E (threads NC pins / SCL via) -> S into SJ1.2
  ("VDDIO2","B",[P("SJ1","2"),(12.6,47.0),P("C3","1")],TWN),                          # C3 branch: SJ1.2 -> SW hop -> C3.1
@@ -242,6 +262,31 @@ T=[
  ("BTN","In2",[(6.0,41.3),(6.05,42.5),(6.05,71.0),(42.0,71.0),(42.0,77.9)],TW),      # In2: down W margin (threads divider/JP2 via gaps @x6.05) -> across y71 (S of MID, between SC3/SC4 pad rows) -> E of dome GND via [F-free]
  ("BTN","F",[(42.0,77.9),P("SW1","1")],TW),                                          # short F stub into SW1.1 (via-near-pad: snap dome needs a flat contact, no via-in-pad)
 ]
+# ---- accelerometer (U3) routing ----
+T += [
+ # GND ties (B): north row + two cross-centre links (dead-centre of the LGA is pad-free) -> one via to In1
+ ("GND","B",[P("U3","5"),P("U3","6"),P("U3","7")],TW),
+ ("GND","B",[P("U3","8"),P("U3","7")],TW),
+ ("GND","B",[P("U3","3"),P("U3","8")],TW),                                            # SDO/SA0 -> GND across dead centre (addr 0x18)
+ ("GND","B",[P("U3","6"),(20.25,34.4)],TW),                                           # tap N to GND plane via
+ # VS ties (B): east column + cross-centre link -> one via to In4, continues to C6.1
+ ("VS","B",[P("U3","9"),P("U3","10")],TW),
+ ("VS","B",[P("U3","2"),P("U3","9")],TW),                                             # CS -> VS across dead centre (I2C mode)
+ ("VS","B",[P("U3","9"),(21.5,36.4),P("C6","1")],TW),                                 # tap E to VS plane via + decoupling
+ ("GND","B",[P("C6","2"),(23.8,36.4)],TW),                                            # C6 GND -> In1 via
+ # I2C escapes (B) west to JP1 (taps the existing MCU<->JP1 bus)
+ ("SDA","B",[P("U3","4"),(15.0,34.0),P("JP1","1")],TW),
+ ("SCL","B",[P("U3","1"),(15.5,35.8),P("JP1","2")],TW),
+ # INT1 -> PF1 (pin21): B stub, In3 across, B stub into QFN pin
+ # INT1 -> PD4 (pin14): B stub off accel, In3 south around the SDA-wall end, escape via just S of PD4
+ ("INT1","B",[P("U3","12"),(19.4,37.6)],TWN),
+ ("INT1","In3",[(19.4,37.6),(14.5,39.7),(13.3,39.6)],TW),
+ ("INT1","B",[(13.3,39.6),P("U1","21")],TWN),
+ # INT2 -> PF0 (pin20)
+ ("INT2","B",[P("U3","11"),(20.7,37.6)],TWN),
+ ("INT2","In3",[(20.7,37.6),(15.5,40.4),(13.5,40.2)],TW),
+ ("INT2","B",[(13.5,40.2),P("U1","20")],TWN),
+]
 VIAS += [("VS",14.8,47.6,"B"),("VS",21.1,47.6,"B"),("VS",27.4,47.6,"B"),("VS",33.4,47.6,"B"),   # LED-anode VS stitch
          ("GND",8.55,40.9,"B"),("GND",10.1,40.9,"B"),                                           # U1 EP GND stitch vias (left one W of LDRV1 F descent)
          ("VS",13.0,43.0,"B"),("VS",9.9,38.3,"B"),                                               # U1 VS escape vias (pin18 relocated clear of SCL; bottom = fine)
@@ -252,8 +297,8 @@ VIAS += [("VS",14.8,47.6,"B"),("VS",21.1,47.6,"B"),("VS",27.4,47.6,"B"),("VS",33
          ("UPDI",10.5,37.6,"FB"),("UPDI",10.87,15.63,"FB"),("UPDI",4.7,36.0,"FB"),                # UPDI fine escape + drops at TC1.1 / J1.1
          ("PA4",6.0,40.1,"FB"),("PA4",4.09,54.9,"FB"),                                           # PA4 escape + JP2.1 via-in-pad
          ("BTN",6.0,41.3,"FB"),("BTN",42.0,77.9,"FB"),                                                                    # BTN escape (B->F); SW1.1 is front-side, no drop via
-         ("SDA",12.0,44.5,"FB"),("SDA",13.7,36.36,"FB"),                                          # SDA F-transition (fine) + JP1.1
-         ("SCL",12.5,44.0,"FB"),("SCL",13.7,38.9,"FB"),                                          # SCL F-transition (fine) + JP1.2
+         ("SDA",12.0,44.5,"FB"),("SDA",13.7,32.42,"FB"),                                          # SDA escape via + relocated JP1.1
+         ("SCL",12.5,44.0,"FB"),("SCL",13.7,34.96,"FB"),                                          # SCL escape via + relocated JP1.2
          ("LDRV2",8.7,38.0,"B"),("LDRV2",22.91,49.6,"FB"),                                         # LDRV2 fine escape + riser
          ("LDRV3",8.0,37.7,"B"),("LDRV3",29.2,49.6,"FB"),                                          # LDRV3 fine escape + riser
          ("LDRV4",6.8,39.3,"B"),("LDRV4",35.2,49.6,"FB"),                                         # LDRV4 fine escape + riser
@@ -264,6 +309,11 @@ FINE.update({(9.9,38.3),(9.3,37.6),(10.5,37.6),(6.0,40.1),(6.0,41.3),(13.0,43.0)
              (8.7,38.0),(8.0,37.7),(6.8,39.3),
              (6.0,40.7),(5.0,42.4),(7.3,42.8),(5.5,50.4),
              (40.4,41.8),(45.6,40.5)})  # QFN-edge + left-escape + pin18-VS + SDA/SCL-transition + LDRV2/3/4 escapes + VSENSE/PC0/PC1 escapes + MID U2.4/U2.6 via-in-pad
+# ---- accelerometer (U3) vias ----
+VIAS += [("GND",20.25,34.4,"FB"),("VS",21.5,36.4,"FB"),("GND",23.8,36.4,"FB"),       # accel + C6 cluster -> planes
+         ("INT1",19.4,37.6,"FB"),("INT1",13.3,39.6,"FB"),                            # INT1 B<->In3<->B (via in the freed JP1 slot, clear of the SDA/SCL walls)
+         ("INT2",20.7,37.6,"FB"),("INT2",13.5,40.2,"FB")]                            # INT2 B<->In3<->B
+FINE.update({(19.4,37.6),(13.3,39.6),(20.7,37.6),(13.5,40.2)})                       # INT signal vias = fine
 
 # thru-hole features for plane antipad logic: (net,x,y). MH are GND.
 THRU=[("GND",x,y) for x,y,d in plated] + [(n,x,y) for (n,x,y,_) in VIAS]
