@@ -32,8 +32,8 @@ GLOW = (14.95, 40.8, 35.85, 47.0)      # DRH window: tracks ok, NO vias/pour/fp
 # Rationale: both decoupling caps sit awkwardly far from their pins AND choke the
 # pin8/9/10 escape band. Moving them south/east opens the band and shortens decoupling.
 NUDGE = {
-    "C1": (0.0, 2.0),    # VDD/GND decoupling: 45.5 -> 47.5, clears the SDA back-dip & the escape band
-    "C3": (7.5, 3.0),    # VDDIO2 decoupling: (4.0,45.5) -> (11.5,48.5), S of C1, next to SJ1.2; kills the long west run
+    # C1 reverted to KiCad position (9.5,45.5): LDRV1 left the front, freeing the escape band; closer to VS pins = better decoupling.
+    "C3": (7.5, 3.0),    # VDDIO2 decoupling: (4.0,45.5) -> (11.5,48.5), next to SJ1.2; kills the long west run. KEEP (load-bearing for VDDIO2 route).
 }
 
 
@@ -93,6 +93,13 @@ for b in fp_blocks(txt):
             continue                                  # non-plated hole: drill only, no copper pad
         if ptype=="thru_hole" and drill: plated.append((cx,cy,drill))
         abs_pads.append((ref,pname,net if net else "NC",cx,cy,w,h,sh,rtot,side))   # NC pads kept as no-net copper
+
+# ---- v1: drop the v0 battery test sub-circuit (BT1/BT2 coin cells + D6/D7). v1 is solar-only; the cells overlapped the supercap real estate. ----
+_BATT={"BT1","BT2","D6","D7"}
+_batt_holes={(round(r[3],2),round(r[4],2)) for r in abs_pads if r[0] in _BATT}   # coords to also purge from plated/np drill lists
+abs_pads=[r for r in abs_pads if r[0] not in _BATT]
+plated  =[h for h in plated   if (round(h[0],2),round(h[1],2)) not in _batt_holes]
+nonplated=[h for h in nonplated if (round(h[0],2),round(h[1],2)) not in _batt_holes]
 
 # ---- board outline from Edge.Cuts (bbox -> rounded rect, matching v0 style) ----
 ec = txt[txt.find('Edge.Cuts')-200:]
@@ -173,35 +180,35 @@ T=[
  ("GND","B",[P("U1","25"),(9.5,40.05)],TWN),     # bottom-edge GND pin -> up into EP
  ("VS","B",[P("U1","18"),(12.2,40.9),(13.0,43.0)],TWN),  # right-edge VS pin -> B due-E at y40.9 (clears pin17 NC) -> SE to escape via (clear of SCL F corridor)
  ("VS","B",[P("U1","24"),(9.9,38.3)],TWN),       # bottom-edge VS pin -> fine escape via -> In2
- # ---- VBATD: D6.K -> D7.A (short vertical, open area) ----
- ("VBATD","B",[P("D6","K"),P("D7","A")],TW),
- # ---- MID bus: 4 supercap mid taps (SC1.N/SC2.P top, SC3.N/SC4.P bottom) + 3 U2 balancer pins. Open-area routing, dodging D6 and skirting RIGHT of the glow window. ----
- ("MID","B",[P("SC1","N"),(15.5,31.3),(35.3,31.3),P("SC2","P")],TW),                 # top pair (y31.3 clears D6 + supercap bodies)
- ("MID","B",[(35.3,31.3),(38.5,31.3),(38.5,41.8),P("U2","4")],TW),                   # top pair -> U2.4 (down the right margin)
- ("MID","B",[P("U2","4"),(40.4,45.0),(47.0,45.0),(47.0,40.0),P("U2","6")],TW),       # U2.4 -> around U2 -> right trunk (below D1) -> U2.6
- ("MID","B",[P("U2","6"),P("U2","7")],TW),                                           # U2.6 - U2.7 (right edge of U2)
- ("MID","B",[(47.0,45.0),(47.0,57.5),(15.5,57.5),P("SC3","N")],TW),                  # trunk down -> along y57.5 -> SC3.N
- ("MID","B",[(35.3,57.5),P("SC4","P")],TW),                                          # SC4.P up onto the y57.5 line
+ # ---- MID bus: 4 supercap mid taps (SC1.N/SC2.P top, SC3.N/SC4.P bottom) + 3 U2 balancer pins. Open-area routing, skirting RIGHT of the glow window. ----
+ # ---- MID balance bus: moved to In2 (back-side cleanup). 6 surfacing vias; SC1.N/SC2.P land @y26 (UNDER panel -> hidden), U2.4/U2.6 fine via-in-pad, SC3.N/SC4.P @y57.5. U2.6-U2.7 stay bridged on B so one via serves the pair. ----
+ ("MID","In2",[(15.5,26.0),(35.3,26.0)],TW),                                         # top pair bus on In2 (y26 = under panel, both vias hidden)
+ ("MID","In2",[(35.3,26.0),(38.5,26.0),(38.5,41.8),P("U2","4")],TW),                 # down right margin (E of glow window) -> U2.4 via
+ ("MID","In2",[P("U2","4"),(40.4,45.0),(47.0,45.0),(47.0,40.5),P("U2","6")],TW),     # around U2 bottom (y45) -> right trunk -> U2.6 via
+ ("MID","B",[P("U2","6"),P("U2","7")],TW),                                           # U2.6 - U2.7 bridged on B (one via serves both)
+ ("MID","In2",[(47.0,45.0),(47.0,61.0),(35.3,61.0),(15.5,61.0)],TW),                 # trunk down -> along y61 (SC3.N/SC4.P pads are horizontal) -> SC4.P via @(35.3,61) -> SC3.N via @(15.5,61)
  # ---- VIN solar input: PV1 + pads tied on front; Pt -> down east region (dodging MH4) -> via -> D1.A. (R5.1 divider tap deferred.) ----
  ("VIN","F",[P("PV1","P"),P("PV1","Pt")],TW),                                        # PV1 + pads tied (front, top)
- ("VIN","F",[P("PV1","Pt"),(46.5,26.0),(44.8,28.0),(44.8,43.5)],TW),                 # F down east, west of MH4
+ ("VIN","F",[P("PV1","Pt"),(45.5,25.0)],TW),                                         # short F stub from PV1.Pt, stays under panel
+ ("VIN","In3",[(45.5,25.0),(44.8,28.0),(44.8,43.5)],TW),                             # In3 descent W of MH4 (drops to inner AT panel edge -> exposed part hidden)
  ("VIN","B",[(44.8,43.5),P("D1","A")],TW),                                           # via drop -> D1.A
  ("VIN","In3",[(44.8,43.5),(44.8,56.0),(3.3,56.0),(3.3,51.0),P("R5","1")],TW),       # In3: drop S of D1, W across the bottom lane (y56, S of JP2 / N of MID trunk), up W of JP2.1, into R5.1
  # ---- U1 bottom-edge signal escape: fine 0.20mm staggered vias -> hop to F -> non-art corridors -> drop back to B. ----
  # NOTE: LDRV1/2/3/4 reverse (pin x-order opposite ballast x-order). Resolved WITHOUT schematic reassignment by the layer trick: F descents run all the way south PAST the back-side caps/cathodes (F is clear there), drop to B *south* of the ballast row, and return E in nested lanes (cathode K-diagonals are all N of the ballasts, so zero collisions / zero reversal dips).
  ("LDRV1","B",[P("U1","26"),(9.3,37.6)],TWN),                                        # dog-bone NE -> outer-row fine via
- ("LDRV1","F",[(9.3,37.6),(9.3,49.2),(16.6,49.2)],TW),                               # F: straight down x9.3 (clear of UPDI via) -> south lane y49.2 (clears C3.2 GND via F-ring) -> R1
- ("LDRV1","B",[(16.6,49.2),P("R1","2")],TW),                                         # via drop -> R1.2
+ ("LDRV1","In2",[(9.3,37.6),(9.3,50.3),(16.6,50.3),P("R1","2")],TW),                 # In2: descend x9.3 -> N-corridor y50.3 -> up onto R1.2 (via-in-pad) [F-free]
  # ---- LDRV2/3/4: reversal handled by descend->parallel-lane->rise topology (no crossing). Descents on inner layers clear the B-side caps' pads; only via rings to dodge. ----
  ("LDRV2","B",[P("U1","27"),(8.7,38.0)],TWN),                                        # pin27 dog-bone N -> fine escape via
- ("LDRV2","In3",[(8.7,38.0),(9.3,39.0),(9.3,51.3),(22.91,51.3)],TW),      # In3: drop S of LDRV1 via, thread EP gap x9.3, S corridor y51.3, E to R2
- ("LDRV2","B",[(22.91,51.3),P("R2","2")],TW),                                        # riser via -> R2.2
+ ("LDRV2","In3",[(8.7,38.0),(9.3,39.0),(9.3,50.5),(22.91,50.5),P("R2","2")],TW),     # In3: thread EP gap x9.3, N-corridor y50.5 (N of SB bridges), up onto R2.2 (via-in-pad)
  ("LDRV3","B",[P("U1","28"),(8.0,37.7)],TWN),                                        # pin28 dog-bone N -> fine escape via (staggered N of LDRV2)
- ("LDRV3","In2",[(8.0,37.7),(7.9,39.0),(7.9,52.4),(29.2,52.4)],TW),                  # In2: descend W of EP (x7.9), S corridor y52.4, E to R3
- ("LDRV3","B",[(29.2,52.4),P("R3","2")],TW),                                         # riser via -> R3.2
+ ("LDRV3","In2",[(8.0,37.7),(7.9,39.0),(7.9,50.95),(29.2,50.95),P("R3","2")],TW),    # In2: descend W of EP, N-corridor y50.95 (clears C5.2 GND via + SB), up onto R3.2
  ("LDRV4","B",[P("U1","1"),(6.8,39.3)],TWN),                                         # left-edge pin1 -> fine escape via (W)
- ("LDRV4","In3",[(6.8,39.3),(7.9,41.2),(7.9,53.0),(35.2,53.0)],TW),                  # In3: W descent (clear of divider GND vias), S corridor y53.0, E to R4
- ("LDRV4","B",[(35.2,53.0),P("R4","2")],TW),                                         # riser via -> R4.2
+ ("LDRV4","In3",[(6.8,39.3),(7.9,41.2),(7.9,51.25),(35.2,51.25),P("R4","2")],TW),    # In3: W descent, N-corridor y51.25 (N of SB), up onto R4.2
+ # ---- SB1-4 disable jumpers: each ballast (LDRVn) also feeds SBn.1; SBn.2 is GND. Short B stub ballast -> bridge pad. ----
+ ("LDRV1","B",[P("R1","2"),P("SB1","1")],TW),
+ ("LDRV2","B",[P("R2","2"),P("SB2","1")],TW),
+ ("LDRV3","B",[P("R3","2"),P("SB3","1")],TW),
+ ("LDRV4","B",[P("R4","2"),P("SB4","1")],TW),
  # ---- VSENSE: pin3 -> In2 W-zone descent -> divider node R6.1; node tied R5.2 (direct) + C5.1 (B dip under R6.2 GND) ----
  ("VSENSE","B",[P("U1","3"),(6.0,40.7)],TWN),                                        # pin3 escape W -> fine via
  ("VSENSE","In2",[(6.0,40.7),(5.5,41.0),(5.5,50.4)],TW),                            # In2 W-zone descent -> R6.1 (VSENSE node)
@@ -215,45 +222,48 @@ T=[
  ("PC1","In2",[(7.3,42.8),(7.4,44.5),(7.4,52.5),(6.63,53.8),P("JP2","3")],TW),       # In2 mid-zone -> below divider -> JP2.3
  # UPDI: fine via -> F T-junction (north to TC1.1, west to J1.1)
  ("UPDI","B",[P("U1","23"),(10.5,37.6)],TWN),                                        # dog-bone NE -> outer-row fine via
- ("UPDI","F",[(10.5,37.6),(11.5,37.0),(11.5,16.2),(10.87,15.63)],TW),                # F north up x11.5 (E of TC1.3 GND via at 10.87,16.9) -> TC1.1 (via-in-pad)
- ("UPDI","F",[(10.5,37.6),(9.0,36.0),(4.7,36.0)],TW),                                # F west (N of C2 VS via at 8.55,36.6) to J1 column
+ ("UPDI","In3",[(10.5,37.6),(11.5,37.0),(11.5,16.2),(10.87,15.63)],TW),              # In3 north up x11.5 (E of TC1.3 GND via) -> TC1.1 (via-in-pad) [F-free; mostly under panel]
+ ("UPDI","In3",[(10.5,37.6),(9.0,36.0),(4.7,36.0)],TW),                              # In3 west (N of C2 VS via) to J1 column [F-free]
  ("UPDI","B",[(4.7,36.0),P("J1","1")],TW),                                           # via drop -> J1.1
  # ---- SDA: route like SCL/VDDIO2 - stay on B under LDRV1/2/3's F descents (free, diff layer), then pop to F for the north-run. No escape/dip vias to crowd the SW corridor. ----
  ("SDA","B",[P("U1","8"),(8.3,44.5),(12.0,44.5)],TWN),                               # B: S off pin8 -> E under LDRV1/2/3 F descents -> F-transition
- ("SDA","F",[(12.0,44.5),(12.0,36.36),P("JP1","1")],TW),                             # via F -> F up the CLEAR front corridor (x12.0, W of JP1) -> JP1.1
+ ("SDA","In3",[(12.0,44.5),(12.0,36.7),P("JP1","1")],TW),                            # In3 diagonal up (W of JP1.3 GND via + JP1.2 via) -> JP1.1 drop [F-free]
  # ---- SCL: pin9 (B) runs on B under LDRV1's F descent AND SDA's F north-run (both free, diff layer), then pops to F for a clean north-run up the corridor -> JP1.2 ----
  ("SCL","B",[P("U1","9"),(8.7,44.0),(12.5,44.0)],TWN),                               # B: S off pin9 -> E under LDRV1(F) + SDA(F) -> F-transition
- ("SCL","F",[(12.5,44.0),(12.5,38.9),P("JP1","2")],TW),                              # via F -> F up clear corridor (E of SDA's x12.0) -> JP1.2
+ ("SCL","In2",[(12.5,44.0),(12.3,43.0),(12.3,39.2),P("JP1","2")],TW),                            # In2 diagonal up (E of SDA, W of GND via) -> JP1.2 drop [F-free]
  # ---- VDDIO2: pin10 (B) diagonals E of LDRV1 (S of SCL's deeper run, so no cross), E to SJ1.2; C3 (nudged next to SJ1.2) chains off SJ1.2 ----
  ("VDDIO2","B",[P("U1","10"),(9.1,43.55),(13.71,43.55),P("SJ1","2")],TWN),           # SJ1 branch: S off pin10 (clear pin11) -> E (threads NC pins / SCL via) -> S into SJ1.2
  ("VDDIO2","B",[P("SJ1","2"),(12.6,47.0),P("C3","1")],TWN),                          # C3 branch: SJ1.2 -> SW hop -> C3.1
  # ---- PA4: left-edge pin2 -> fine escape -> F west (between J1.2/J1.3) -> far-west descent -> JP2.1 via-in-pad ----
  ("PA4","B",[P("U1","2"),(6.0,40.1)],TWN),                                           # escape west off pin2
- ("PA4","F",[(6.0,40.1),(3.0,40.1),(3.0,54.0),(4.09,54.9)],TW),                      # F west (thread J1) -> descend far-west (clear of divider) -> JP2.1
+ ("PA4","In2",[(6.0,40.1),(3.0,40.1),(3.0,54.0),(4.09,54.9)],TW),                     # In3 west (thread J1) -> descend far-west -> JP2.1 via-in-pad [F-free]
  # ---- BTN: left-edge pin5 -> escape -> F down west edge -> across south of supercaps -> SW1.1 (front-side dome pad) ----
  ("BTN","B",[P("U1","5"),(6.0,41.3)],TWN),                                           # escape west off pin5
- ("BTN","F",[(6.0,41.3),(6.0,71.0),(47.5,71.0),(47.5,77.9),P("SW1","1")],TW),        # F: down west -> across y71 (N of dome GND) -> down east margin -> into SW1.1 east opening
+ ("BTN","In2",[(6.0,41.3),(6.05,42.5),(6.05,71.0),(42.0,71.0),(42.0,77.9)],TW),      # In2: down W margin (threads divider/JP2 via gaps @x6.05) -> across y71 (S of MID, between SC3/SC4 pad rows) -> E of dome GND via [F-free]
+ ("BTN","F",[(42.0,77.9),P("SW1","1")],TW),                                          # short F stub into SW1.1 (via-near-pad: snap dome needs a flat contact, no via-in-pad)
 ]
 VIAS += [("VS",14.8,47.6,"B"),("VS",21.1,47.6,"B"),("VS",27.4,47.6,"B"),("VS",33.4,47.6,"B"),   # LED-anode VS stitch
          ("GND",8.55,40.9,"B"),("GND",10.1,40.9,"B"),                                           # U1 EP GND stitch vias (left one W of LDRV1 F descent)
          ("VS",13.0,43.0,"B"),("VS",9.9,38.3,"B"),                                               # U1 VS escape vias (pin18 relocated clear of SCL; bottom = fine)
          ("GND",40.4,73.5,"F"),                                                                   # SW1 dome GND return -> In1 (on the horseshoe, clear of BTN)
-         ("VIN",44.8,43.5,"FB"),("VIN",3.69,50.4,"FB"),                                          # VIN F->B at D1.A + In3->B at R5.1
-         ("LDRV1",9.3,37.6,"FB"),("LDRV1",16.6,49.2,"FB"),                                        # LDRV1 fine escape + drop at R1.2
+         ("VIN",45.5,25.0,"FB"),("VIN",44.8,43.5,"FB"),("VIN",3.69,50.4,"FB"),                                          # VIN F->B at D1.A + In3->B at R5.1
+         ("MID",15.5,26.0,"FB"),("MID",35.3,26.0,"FB"),("MID",40.4,41.8,"FB"),("MID",45.6,40.5,"FB"),("MID",15.5,61.0,"FB"),("MID",35.3,61.0,"FB"),  # MID bus -> In2 surfacing vias (SC1.N/SC2.P hidden @y26; U2.4/U2.6 fine; SC3.N/SC4.P @y57.5)
+         ("LDRV1",9.3,37.6,"FB"),("LDRV1",16.6,49.6,"FB"),                                        # LDRV1 fine escape + drop at R1.2
          ("UPDI",10.5,37.6,"FB"),("UPDI",10.87,15.63,"FB"),("UPDI",4.7,36.0,"FB"),                # UPDI fine escape + drops at TC1.1 / J1.1
          ("PA4",6.0,40.1,"FB"),("PA4",4.09,54.9,"FB"),                                           # PA4 escape + JP2.1 via-in-pad
-         ("BTN",6.0,41.3,"FB"),                                                                    # BTN escape (B->F); SW1.1 is front-side, no drop via
+         ("BTN",6.0,41.3,"FB"),("BTN",42.0,77.9,"FB"),                                                                    # BTN escape (B->F); SW1.1 is front-side, no drop via
          ("SDA",12.0,44.5,"FB"),("SDA",13.7,36.36,"FB"),                                          # SDA F-transition (fine) + JP1.1
          ("SCL",12.5,44.0,"FB"),("SCL",13.7,38.9,"FB"),                                          # SCL F-transition (fine) + JP1.2
-         ("LDRV2",8.7,38.0,"B"),("LDRV2",22.91,51.3,"B"),                                         # LDRV2 fine escape + riser
-         ("LDRV3",8.0,37.7,"B"),("LDRV3",29.2,52.4,"B"),                                          # LDRV3 fine escape + riser
-         ("LDRV4",6.8,39.3,"B"),("LDRV4",35.2,53.0,"B"),                                         # LDRV4 fine escape + riser
+         ("LDRV2",8.7,38.0,"B"),("LDRV2",22.91,49.6,"FB"),                                         # LDRV2 fine escape + riser
+         ("LDRV3",8.0,37.7,"B"),("LDRV3",29.2,49.6,"FB"),                                          # LDRV3 fine escape + riser
+         ("LDRV4",6.8,39.3,"B"),("LDRV4",35.2,49.6,"FB"),                                         # LDRV4 fine escape + riser
          ("VSENSE",6.0,40.7,"B"),("VSENSE",5.5,50.4,"FB"),                                                                 # VSENSE pin3 escape
          ("PC0",5.0,42.4,"B"),("PC0",5.37,54.9,"FB"),                                             # PC0 escape + JP2.2 via-in-pad
          ("PC1",7.3,42.8,"B"),("PC1",6.63,54.9,"FB")]                                             # PC1 escape + JP2.3 via-in-pad
 FINE.update({(9.9,38.3),(9.3,37.6),(10.5,37.6),(6.0,40.1),(6.0,41.3),(13.0,43.0),(12.0,44.5),(12.5,44.0),
              (8.7,38.0),(8.0,37.7),(6.8,39.3),
-             (6.0,40.7),(5.0,42.4),(7.3,42.8),(5.5,50.4)})  # QFN-edge + left-escape + pin18-VS + SDA/SCL-transition + LDRV2/3/4 escapes + VSENSE/PC0/PC1 escapes
+             (6.0,40.7),(5.0,42.4),(7.3,42.8),(5.5,50.4),
+             (40.4,41.8),(45.6,40.5)})  # QFN-edge + left-escape + pin18-VS + SDA/SCL-transition + LDRV2/3/4 escapes + VSENSE/PC0/PC1 escapes + MID U2.4/U2.6 via-in-pad
 
 # thru-hole features for plane antipad logic: (net,x,y). MH are GND.
 THRU=[("GND",x,y) for x,y,d in plated] + [(n,x,y) for (n,x,y,_) in VIAS]

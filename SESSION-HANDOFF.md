@@ -11,7 +11,76 @@ Snapshot for a **new Claude session** picking up this board. Read this first, th
 
 ---
 
+## ⭐ LATEST STATE (2026-06-22) — 6-layer, routed, front-trace-hidden
+
+The board **moved from 4-layer to 6-layer** to get two inner *signal* layers for routing. The
+routing now lives in a generator, **`gen_v2.py`** (working dir + `/mnt/user-data/outputs/`), which
+parses Devin's KiCad `.kicad_pcb` for footprint geometry, defines its own 6-layer stackup, lays
+all the copper, runs self-checks (connectivity + shorts), and emits gerbers + a 4-panel preview.
+**Devin replicates the final routing in KiCad by hand** (the generator is the prototyping / proving
+tool; hand-coded polygon routing is not the sign-off tool on a board this dense).
+
+**6-layer stackup (0.8 mm, PCBWay):** `F(sig) / In1(GND plane) / In2(sig) / In3(sig) / In4(VS plane) / B(sig)`.
+Four signal layers (F, In2, In3, B); In1=GND plane, In4=VS plane. The glow window is voided on all
+four inner layers (no vias / pour / footprints / inner traces in the GLOW box x14.95–35.85,
+y40.8–47.0) for light diffusion. **All vias modeled as through** (a via blocks X/Y on every layer).
+
+**Routing status: 21/21 nets single-island, zero shorts** (`<0.15 mm` checker is authoritative).
+
+**Synced to Devin's live repo this session** (the generator had been parsing a stale clone). The
+live design added, and the generator now models:
+- **SB1–SB4** = per-LED **disable jumpers** (`bridge_2pad`, back side, y52). Each bridges a driver
+  line to GND: `SBn.1 = LDRVn`, `SBn.2 = GND`. Solder a bridge to ground that driver and kill its
+  LED. Each LDRVn now routes to its ballast **and** its SBn.1 pad (short B stub from the ballast).
+- **M1** = `M1:ACCEL_reserved`, back side at (20, 35.9), 4 NC corner pads forming a **2×2 mm keepout**
+  (the accelerometer's reserved spot — keep clear). See the accelerometer note below.
+- The origin `.kicad_pcb` **still has the battery** (BT1/BT2/D6/D7); the generator filters them out
+  so gerbers are battery-free regardless. **Devin still must delete BT1/BT2/D6/D7 in KiCad.**
+
+**Front-trace-hiding pass (the display face is the priority surface):** every interconnect that was
+on F moved to inner copper. Front trace length **~230 mm → 13.9 mm**, of which 12.3 mm is VIN's PV1
+ties *under the panel*; the only exposed front copper is a **1.6 mm stub into the dome pad**.
+- LDRV1 → In2, PA4 → In2, SDA → In3, SCL → In2, UPDI → In3 (both legs), VIN → drops to In3 at the
+  panel boundary, **BTN → In2** (down the west margin threading the divider/JP2 via gaps at x6.05,
+  across y71 between the SC3/SC4 pad rows, surfacing east of the dome GND via).
+- BTN surfaces at the dome as a **via-near-pad** (1.6 mm F stub), not via-in-pad — a snap dome needs
+  a flat contact.
+- **Solar panel hidden zone = x[4.4, 46.4], y[4.4, 27.4]** (top third, ~full width). Anything on F /
+  any via inside it is hidden once PV1 mounts. The panel covers only the top third, so center/lower
+  vias (QFN escapes, headers, ballasts, dome) cannot be hidden — Devin accepts this.
+- **Vias: 67 show on top, but every one sits at a component** (QFN escapes, the
+  header/ballast/divider/SB band, D1/U2/J1/dome/supercaps). None float in open copper.
+  Lower would need blind/buried vias (cost jump).
+- **MID balance bus moved to In2** (back-side cleanup, Devin's call). Back trace length dropped
+  **206 → 97 mm** (only the U2.6-U2.7 bridge stays on B). Cost 6 surfacing vias: SC1.N/SC2.P land
+  at y26 **under the panel (hidden)**, U2.4/U2.6 are fine via-in-pad, SC3.N/SC4.P land at y61
+  (their pads are **horizontal**, y59.25-62.75, unlike the vertical top-cap pads). Net +4 exposed
+  front vias, all at components. Low-current series-midpoint tap, so inner is electrically fine.
+
+**C1/C3 placement nudges (in the generator's `NUDGE` dict; Devin replicates in KiCad):**
+- **C1 reverted to its KiCad position (9.5, 45.5)** — no nudge needed once LDRV1 left the front, and
+  it's closer to the QFN VS pins (better decoupling). **No KiCad move required.**
+- **C3 stays nudged to (12.5, 48.5)** beside SJ1 (load-bearing: VDDIO2 decouples pin10→SJ1→C3).
+  **Devin applies this one move in KiCad.**
+
+**Two routing-under-supercap consequences to sanity-check** (both hidden, both physical): UPDI drops
+a via at TC1.1 and BTN surfaces at (42, 78), and **both sit under a supercap body** (SC1, SC4). WS17
+cells are raised on their end pads so a tented via in the body-center should clear, but confirm no
+flat underside feature fouls a via bump. (Same neighborhood as the **TC1-under-SC1 placement overlap**
+still open in KiCad — TC1 the Tag-Connect is physically under SC1; Devin's placement to resolve.)
+
+**Generator outputs:** `solar-glow-drh-v2-gerbers.zip`, `solar-glow-drh-v2-gerber-preview.png`
+(4 signal-layer panels), `gen_v2.py` — all in `/mnt/user-data/outputs/`. `gen_v1.py` (the prior
+4-layer generator) is preserved alongside.
+
+---
+
 ## Where the board is
+
+> **Note (2026-06-22):** the section below describes the earlier **4-layer KiCad source** and the
+> design decisions that produced it. It is still accurate as *history and component rationale*, but
+> the live routing target is now **6-layer** per the LATEST section above. Footprint count is up to
+> 37+ (SB1–4 and M1 added, battery to be removed).
 
 `solar-glow-drh-v1.kicad_pcb` — 4-layer, 0.4 mm, PCBWay. **39 footprints. Pad-clean and
 courtyard-clean** (verified at the pad level, not just courtyards). Portrait 50.8 × 88.9 mm,
@@ -45,19 +114,21 @@ DRH monogram cutout at y45 through bare FR4; plane keepout voids pour+vias there
 ---
 
 ## Open items / next steps
-1. **Routing** is the endgame — interactive KiCad + DRC. (Standing principle: hand-coded
-   polygon routing is NOT the tool for final copper sign-off on a board this dense. Claude's
-   job is to get it routable-clean, which it now is, and optionally rough-in short/obvious nets.)
-   No vias to the inner planes are placed yet; every VS/GND pad needs one. LED anodes sit inside
-   the glow void (VS voided there) so each needs a short VS trace out to a via.
-2. **SW2 net assignment** once the TINY decision is made (footprint ready, 3-pad solder jumper).
-3. **PV1 solar tabs sit 2.3 mm from the side edges (front).** Front is naked so lower risk, but
-   confirm the enclosure's front-wrap width — if the wall wraps onto the front by >2 mm it could
-   touch them. Cell body clears any reasonable wrap; only the tabs are borderline. Not moved
-   (would mean reworking the 42×23 solar footprint).
-4. **Front art → real F.Cu zones** (shaped GND pour + DRH letterforms + QR + frame + contact
-   block). Preserve the aesthetic already confirmed.
-5. **Haptic / actuator decision** — see next section.
+1. **KiCad replication + DRC is the endgame.** The generator proves the routing clean (21/21,
+   no shorts); Devin reproduces it in KiCad with real DRC for sign-off. To apply in KiCad:
+   move the board to **6-layer**, apply the **C3 nudge** (12.5, 48.5), **delete the battery**
+   (BT1/BT2/D6/D7), and replicate the inner routing + SB-jumper connections + via placements.
+2. **Resolve TC1-under-SC1** (Tag-Connect physically under SC1) and confirm the two
+   under-supercap vias (TC1.1, BTN @42,78) clear the cell undersides.
+3. **Voltage coordination** (still open): shunt clamp vs 5.5 V caps vs lower-VOC solar cell.
+4. **Confirm a real ~565 nm reverse-mount LED exists** (flagged sourcing risk).
+5. **Accelerometer**: M1 reserves the spot (20, 35.9). Part shortlist in `accelerometers.csv` —
+   recommended **ST LIS2DH12** (~$1.79, 2×2 12-LGA, INT1/INT2), I2C on the existing SDA/SCL bus
+   + VS/GND + 1–2 INT off spare GPIOs. Not yet placed/wired.
+6. **PV1 solar tabs** sit ~2.3 mm from the side edges (front); confirm enclosure front-wrap width.
+7. **Front art → real F.Cu zones** (shaped GND pour + DRH letterforms + QR + frame). The front is
+   now trace-clear, which is the clean canvas this needs.
+8. **Haptic / actuator decision** — see the Haptic section (not committed).
 
 ---
 
@@ -125,8 +196,10 @@ SC1 → 90°, SC2 → 270°, SC3 → 270°, SC4 → 90° (MID terminals inboard 
 - **MID bus = exactly 4 cell taps + 3 U2 balancer pins** (U2 pins 4,6,7). Nothing else.
 - LED anodes = VS, low-side drive (K2–K5). VDDIO2 jumpered to VS via SJ1 (LDO in v2).
 - PV1 (solar) → VIN → D1 (blocking Schottky) → VS. Coin-battery option (BT1/BT2 + D6/D7) is
-  mutually exclusive with PV1.
+  mutually exclusive with PV1 and is **being removed** (PV1 is the committed source; delete in KiCad).
 - RESET (PF6) is NC (UPDI handles reset). 13 spare GPIOs on U1 are NC.
+- **SB1–SB4** = per-LED disable jumpers: `SBn.1 = LDRVn`, `SBn.2 = GND`. Bridge to ground a driver
+  and disable that LED. **M1** reserves the accelerometer spot (NC keepout, back, (20, 35.9)).
 
 ---
 
