@@ -34,7 +34,28 @@ re-routes from the schematic).
 - **JP1 (I2C breakout) relocated ~5 mm NORTH** → SDA(13.7, 32.42) / SCL(13.7, 34.96) / GND(13.7, 37.50).
   Its old 3 big SMD pads sat on the only INT-escape slot; moving it opened the corridor. The SDA In3
   wall (x12.0) and SCL In2 wall (x12.3) just extend up to reach the new position.
-- **Recommend 2× ~4.7 k I2C pull-ups** (SDA→VS, SCL→VS) — not yet placed.
+- **I2C pull-ups PLACED (2026-06-22):** R10 (SDA→VS) and R11 (SCL→VS), 4.7 k each, tapped off the
+  SDA/SCL B runs just W of the accel. Required for the open-drain TWI bus (were never in the v1
+  schematic since the accel was a gated populate). 2.2 k if you drive long breakout wires or 400 kHz+.
+
+### Electrical sanity-sweep of the gerbers (2026-06-22) + secondary hardening
+Walked every block against the netlist/BOM. **The only required missing part was the I2C pull-ups (above).**
+Decoupling is complete (C1/C2 per-VDD-pin, **C4 bulk**, C3 VDDIO2, C6 accel, C7 clamp); power, clock
+(internal osc), UPDI, harvest, LEDs, accel, and button all check out. Secondary items, dispositioned:
+- **BTN ESD clamp PLACED: D8 (TVS, ~5 V standoff)** on B just E of the snap dome, cathode→BTN / anode→GND,
+  right at the entry so a hand-ESD on the dome metal is clamped before it reaches PA7.
+- **RESET (PF6) RC — NOT placed (deliberate).** Pin 22 sits in the board's densest corridor (JP1 + I2C +
+  INT + accel). A *close* RC collides with the INT1 inner route and JP1's GND pad; a placement with room
+  needs a long RESET trace running alongside the switching I2C/INT lines, which would couple noise onto
+  RESET and defeat the RC's purpose. RESET is internal-only and already held by the internal pull-up + BOD,
+  so it is not worth reworking that corridor. If wanted, hand-place R(10k,RESET→VS)+C(100nF,RESET→GND) in
+  KiCad, nudging the local INT1/JP1 routing to open a close spot.
+- **Cold-start — set the BOD fuse, no part.** From flat caps the MCU would brown-out-reset near 1.8 V; set
+  **BODLEVEL ~2.6 V** so it holds reset until the caps have useful charge. That is the real cold-start win
+  (an external supervisor would be redundant with the internal BOD).
+- **Balancer dormant at the clamped rail** (cells ~1.71 V < U2's ~2.5 V): leave as-is, MID rides matched
+  cell leakage; a bleeder would just drain the caps in the dark. **BTN** keeps the MCU internal pull-up.
+- **Build steps (parts exist):** bridge **SJ1** (else VDDIO2/PORTC is dead), delete battery, delete M1.
 
 ### VS-rail shunt clamp — voltage coordination RESOLVED (was open item #3)
 The accel's 3.6 V ceiling vs the cell's ~3.85 V open-circuit (VOC 4.15 − D1) needed resolving.
