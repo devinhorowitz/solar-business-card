@@ -1,3 +1,22 @@
+## session 15: VSENSE -> PC3 for comparator wake-on-light (+ BTN -> PC1)
+
+PIN CHANGE (do in the KiCad symbol/schematic): move **VSENSE to PC3 (pad5)** and the reserved **BTN to PC1
+(pad3)**. PC3 = AIN31 (keeps the ADC voltage sense) + AINP4 (adds the AC0 wake comparator) -> one pin, both
+jobs. AC0 negative input = internal DACREF (no pin, no parts). This is the wake-on-light feature: AC0 wakes
+the MCU from sleep when the solar cell sees light; DAC sets the threshold.
+ - FUSE: disable MVIO (SYSCFG1) so PC3's analog (AIN31/AINP4) works - VDDIO2 is already tied to VS, so PORTC
+   already sits at VDD; no downside.
+ - Alternative if a PORTD pin is preferred (no MVIO fuse): PD6 (pad12) = AIN6 + AINP3 + VOUT. But its S edge
+   is congested; PC3 routed clean, PD6 did not.
+ - LED PWM (firmware-only, no board change): LDRV1-4 are on PA4-PA7 = TCD0 WOA-WOD -> brightness/breathing
+   via TCD; note in the firmware plan.
+
+ROUTING NOTE for the W-margin re-lay: J1 (backup UPDI header) pads are 1.5x2.0mm and reach x5.45 - they
+dominate the left margin. J1.3 GND is B-only, so route VSENSE's In2 trace THROUGH that zone but keep its
+via off it (drop to In2 at the pad). VSENSE @x5.5 descent, BTN @x6.05 (briefly In3 up top to clear VSENSE's
+crossing). gen_v2 has a clean reference layout; KiCad's interactive router will do this corner better.
+
+---
 ## session 14: hand-soldering items (placement + via-in-pad)
 
 VIPPO LIST - EXTEND for hand-solderability. Current: U2, U4, Q1, TC1.1/2/3, JP2, D9.A, R2.2.

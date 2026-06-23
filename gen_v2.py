@@ -121,7 +121,8 @@ abs_pads=[r for r in abs_pads if r[0] not in _ACCEL_KEEPOUT]
 _DEL_SW={"SW1"}                                                      # snap-dome button removed; accel tap is the actuator now
 for _k in [kk for kk in list(CUSTOM) if kk[0] in _DEL_SW]: CUSTOM.pop(_k,None)
 abs_pads=[r for r in abs_pads if r[0] not in _DEL_SW]
-_renet={("U1","21"):"INT1", ("U1","20"):"INT2"}                     # commit PF1->INT1, PF0->INT2 (QFN NE corner, faces accel)
+_renet={("U1","21"):"INT1", ("U1","20"):"INT2",                     # commit PF1->INT1, PF0->INT2 (QFN NE corner, faces accel)
+        ("U1","5"):"VSENSE", ("U1","3"):"BTN"}                       # move VSENSE to PC3 (pad5) = AIN31 (ADC) + AINP4 (AC) -> comparator wake-on-light on the clean W edge; BTN reserve -> PC1 (pad3). NOTE: PC3 is MVIO/PORTC -> disable MVIO fuse (VDDIO2 already tied to VS) for the analog functions.
 abs_pads=[(r[0],r[1],_renet.get((r[0],r[1]),r[2]),*r[3:]) for r in abs_pads]
 _ANODES={("D2","A"),("D3","A"),("D4","A"),("D5","A")}
 abs_pads=[(r[0],r[1],"ANODE",*r[3:]) if (r[0],r[1]) in _ANODES else r for r in abs_pads]   # anodes now switch through SW2
@@ -328,9 +329,9 @@ T=[
  ("LDRV2","B",[P("R2","2"),P("SB2","1")],TW),
  ("LDRV3","B",[P("R3","2"),P("SB3","1")],TW),
  ("LDRV4","B",[P("R4","2"),P("SB4","1")],TW),
- # ---- VSENSE: pin3 -> In2 W-zone descent -> divider node R6.1; node tied R5.2 (direct) + C5.1 (B dip under R6.2 GND) ----
- ("VSENSE","B",[P("U1","3"),(6.0,40.7)],TWN),                                        # pin3 escape W -> fine via
- ("VSENSE","In2",[(6.0,40.7),(5.5,41.0),(5.5,50.4)],TW),                            # In2 W-zone descent -> R6.1 (VSENSE node)
+ # ---- VSENSE: now on PC3 (pad5, W edge) = AIN31+AINP4 -> B escape W (crosses BTN's In2 descent on a different layer) -> In2 x5.5 descent to divider node R6.1; node tied R5.2 + C5.1 ----
+ ("VSENSE","B",[P("U1","5"),(6.8,41.3)],TWN),                                        # pad5 (PC3) short B escape -> via right at the pad (keeps the all-layer via clear of J1.3's B pad)
+ ("VSENSE","In2",[(6.8,41.3),(5.5,42.0),(5.5,50.4)],TW),                             # In2 trace W to x5.5 (J1.3 is B-only, no In2 conflict) -> descend to R5.2 node
  ("VSENSE","B",[P("R6","1"),P("R5","2")],TWN),                                       # R6.1 - R5.2 (adjacent VSENSE pads)
  ("VSENSE","B",[P("R6","1"),(6.65,51.4),(6.45,51.4),P("C5","1")],TWN),               # R6.1 -> C5.1 (S to the relocated filter cap)
  # ---- PC0: pin6 -> In3 W-zone descent (between R5.2/R6.1) -> JP2.2 ----
@@ -356,9 +357,10 @@ T=[
  # ---- PA4: left-edge pin2 -> fine escape -> F west (between J1.2/J1.3) -> far-west descent -> JP2.1 via-in-pad ----
  ("PA4","B",[P("U1","2"),(6.0,40.1)],TWN),                                           # escape west off pin2
  ("PA4","In2",[(6.0,40.1),(3.0,40.1),(3.0,54.0),(4.09,54.9)],TW),                     # In3 west (thread J1) -> descend far-west -> JP2.1 via-in-pad [F-free]
- # ---- BTN (PA7): RESERVED out to the front middle-third (no button populated; accel tap is the actuator). Path kept for a future physical button. ----
- ("BTN","B",[P("U1","5"),(6.0,41.3)],TWN),                                           # escape west off pin5 (PA7)
- ("BTN","In2",[(6.0,41.3),(6.05,42.5),(6.05,57.0),(25.4,57.0)],TW),                  # In2: down the W-margin corridor @x6.05 -> across y57 (S of the VIN y56 lane, in the inter-supercap gap) to center
+ # ---- BTN: RESERVED out to the front middle-third (no button populated; accel tap is the actuator). Now on PC1 (pad3). Path kept for a future physical button. ----
+ ("BTN","B",[P("U1","3"),(6.0,40.7)],TWN),                                           # escape west off pad3 (PC1), via clear of PA4 (6.0,40.1) by 0.6
+ ("BTN","In3",[(6.0,40.7),(6.05,42.5)],TW),                                          # In3 briefly: dodge VSENSE's In2 W-crossing (y~41.6)
+ ("BTN","In2",[(6.05,42.5),(6.05,57.0),(25.4,57.0)],TW),                             # back to In2: proven x6.05 corridor -> across y57 (S of VIN) to center
  ("BTN","F",[(25.4,57.0),(25.4,55.8)],TW),                                           # short F stub = RESERVED landing in the front middle-third for a future button
 ]
 # ---- accelerometer (U3) routing ----
@@ -398,18 +400,18 @@ VIAS += [("ANODE",14.8,47.6,"FB"),("ANODE",21.1,47.6,"FB"),("ANODE",27.4,47.6,"F
          ("LDRV1",9.3,37.6,"FB"),("LDRV1",16.6,49.6,"FB"),                                        # LDRV1 fine escape + drop at R1.2
          ("UPDI",10.5,37.6,"FB"),("UPDI",12.665,15.63,"FB"),("UPDI",4.7,36.0,"FB"),                # UPDI fine escape + drops at TC1.1 (shifted E) / J1.1
          ("PA4",6.0,40.1,"FB"),("PA4",4.09,54.9,"FB"),                                           # PA4 escape + JP2.1 via-in-pad
-         ("BTN",6.0,41.3,"FB"),("BTN",25.4,57.0,"FB"),                                                                    # BTN escape (B->F) + reserved front-mid landing via
+         ("BTN",6.0,40.7,"FB"),("BTN",6.05,42.5,"FB"),("BTN",25.4,57.0,"FB"),                                                                    # BTN escape (B->F) + reserved front-mid landing via
          ("SDA",12.0,44.5,"FB"),("SDA",13.7,32.42,"FB"),                                          # SDA escape via + relocated JP1.1
          ("SCL",12.5,44.0,"FB"),("SCL",13.7,34.96,"FB"),                                          # SCL escape via + relocated JP1.2
          ("LDRV2",8.7,38.0,"B"),("LDRV2",22.91,49.6,"FB"),                                         # LDRV2 fine escape + riser
          ("LDRV3",8.0,37.7,"B"),("LDRV3",29.2,49.6,"FB"),                                          # LDRV3 fine escape + riser
          ("LDRV4",6.8,39.3,"B"),("LDRV4",35.2,49.6,"FB"),                                         # LDRV4 fine escape + riser
-         ("VSENSE",6.0,40.7,"B"),("VSENSE",5.5,50.4,"FB"),                                                                 # VSENSE pin3 escape
+         ("VSENSE",6.8,41.3,"FB"),("VSENSE",5.5,50.4,"FB"),                                                                 # VSENSE pad5(PC3) escape + node via
          ("PC0",5.0,42.4,"B"),("PC0",5.37,54.9,"FB"),                                             # PC0 escape + JP2.2 via-in-pad
          ("PC1",7.3,42.8,"B"),("PC1",6.63,54.9,"FB")]                                             # PC1 escape + JP2.3 via-in-pad
-FINE.update({(9.9,38.3),(9.3,37.6),(10.5,37.6),(6.0,40.1),(6.0,41.3),(13.0,43.0),(12.0,44.5),(12.5,44.0),
+FINE.update({(9.9,38.3),(9.3,37.6),(10.5,37.6),(6.0,40.1),(6.0,40.7),(6.05,42.5),(13.0,43.0),(12.0,44.5),(12.5,44.0),
              (8.7,38.0),(8.0,37.7),(6.8,39.3),
-             (6.0,40.7),(5.0,42.4),(7.3,42.8),(5.5,50.4),
+             (6.8,41.3),(5.0,42.4),(7.3,42.8),(5.5,50.4),
              (40.4,41.8),(45.6,40.5)})  # QFN-edge + left-escape + pin18-VS + SDA/SCL-transition + LDRV2/3/4 escapes + VSENSE/PC0/PC1 escapes + MID U2.4/U2.6 via-in-pad
 # ---- accelerometer (U3) vias ----
 VIAS += [("GND",20.25,34.4,"FB"),("VS",21.5,36.4,"FB"),("GND",23.8,36.4,"FB"),       # accel + C6 cluster -> planes

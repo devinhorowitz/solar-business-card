@@ -1,3 +1,44 @@
+## session 15 - MCU functionality review + comparator wake-on-light (VSENSE -> PC3). DRC clean.
+
+MCU REVIEW (datasheet-verified, AVR64DD28 / DS40002315): full peripheral audit done. Key findings, all
+FIRMWARE-ONLY (zero board change):
+ - LED cathodes LDRV1-4 = PA4/PA5/PA6/PA7 = exactly TCD0 WOA/WOB/WOC/WOD (verified pg17 mux). LEDs can be
+   hardware-PWM'd (brightness / breathing / fade + big supercap-runtime savings at low duty) with no board
+   change. TCD is 2-compare (WOA=CMPA, WOB=CMPB independent; WOC/WOD derived), so 4 fully-independent per-LED
+   levels need TCA0/TCB mixed in; a global breathe/dim is pure TCD.
+ - Accel INT1/INT2 already on PF1/PF0 (pads 21/20) -> tap-wake exists in hardware.
+ - Other firmware levers: RTC/PIT off internal 32k ULP (no crystal); CCL+EVSYS to run a glow/blink pattern
+   while the CPU sleeps; EEPROM "times-activated" counter (survives supercap drain); internal temp sensor.
+ - Not useful here: ZCD (mains only), op-amps (DD family lacks them), cap-touch (DD lacks PTC + the Ti plate
+   kills capacitance anyway -> accel tap is the right actuator).
+
+THE ONE BOARD-IMPLICATION ITEM -> IMPLEMENTED: comparator (AC0) wake-on-light.
+ - Goal: AC0 wakes the MCU from sleep when the solar cell sees light (VSENSE rises past a threshold), so the
+   card auto-glows on pickup with no tap. Zero new parts.
+ - MOVED VSENSE from pad3 (PC1, not AC-capable) to **pad5 = PC3 = AIN31 (ADC) + AINP4 (AC)** -> one pin does
+   both the existing voltage sense AND the wake comparator. BTN reserve moved pad5 -> **pad3 = PC1**.
+ - AC negative input = internal **DACREF** (no pin). DAC sets the light-detect threshold in firmware.
+ - CAVEAT: PC3 is on the MVIO port (PORTC). Its analog functions (AIN31/AINP4) require the **MVIO fuse
+   DISABLED** (SYSCFG1). Harmless here - VDDIO2 is already tied to VS via SJ1, so PORTC already runs at VDD.
+ - PD6 (pad12, AINP3+AIN6, PORTD, no MVIO caveat) was the alternative but its S edge is too congested (9
+   shorts); PC3 on the clean W edge wins.
+
+FIRMWARE RECIPE: AC0.MUXPOS = AINP4 (PC3); AC0.MUXNEG = DACREF; set DACREF (= DACREF[7:0]/256 x VREF) to the
+light threshold; enable AC interrupt; sleep; AC edge wakes -> run the glow. Disable the MVIO fuse so PC3
+analog works.
+
+ROUTING (gen_v2, DRC clean - 28/28 single-island, ZERO shorts, dog-boned 21/21): the U1 W-margin is tight
+(J1's 1.5x2.0mm header pads reach x5.45; JP2.3 pad; the R5/R6 divider at y50.4; five QFN W-edge escapes:
+PA4/BTN/VSENSE/PC0/PC1). Techniques that made it clean:
+ - VSENSE drops to In2 RIGHT AT pad5 (via at x6.8), then the In2 *trace* runs W to x5.5 and descends to the
+   R5.2 node. Key: J1.3's GND pad is B-only, so it blocks all-layer VIAS but NOT In2 traces -> keep the via
+   off the J1 zone, route the trace through it.
+ - BTN goes In3 briefly (y40.7-42.5) to dodge VSENSE's In2 W-crossing (~y41.6), then back to the proven In2
+   x6.05 corridor across y57 (S of the VIN lane) to the front-center reserved landing.
+This corner is the kind of dense escape work KiCad's push-shove router is for; the pin decision is what's
+durable. gen_v2.py + v2 gerbers/preview re-synced to outputs.
+
+---
 ## session 14 - hand-soldering pass: B-side placement + via-in-pad review (DRC clean)
 
 Goal: confirm the dense back side is hand/hot-air assemblable; nudge the easy wins, flag the rest.
