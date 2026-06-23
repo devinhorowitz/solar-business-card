@@ -19,7 +19,7 @@ CLR      = 0.15      # clearance floor for the shorts check
 POUR_CLR = 0.16      # plane antipad / pour-to-copper clearance
 EDGE_CLR = 0.30      # copper-to-edge pullback
 TW, TWP, TWN = 0.22, 0.45, 0.16        # signal / power / narrow-escape trace widths
-VIA_D, VIA_PAD = 0.30, 0.55            # plane-stitch + standard signal vias (drill / pad)
+VIA_D, VIA_PAD = 0.30, 0.60            # plane-stitch + standard signal vias (drill / pad); 0.60 pad -> 0.15mm annular = PCBWay 6mil floor (F pads tented by NFPR so no art cost)
 VIA_FD, VIA_FPAD = 0.20, 0.40          # fine QFN-escape vias (0.20mm drill class, PCBWay standard)
 FINE = set()                           # (x,y) of fine vias (filled during routing)
 def vpad(x,y):   return VIA_FPAD if (round(x,3),round(y,3)) in FINE else VIA_PAD
@@ -104,8 +104,13 @@ nonplated=[h for h in nonplated if (round(h[0],2),round(h[1],2)) not in _batt_ho
 # ---- v2: LIS2DH12 accelerometer (12-LGA, 2x2x1.0mm) drops into the M1 keepout at (20,35.9) on B ----
 _ACCEL_KEEPOUT={"M1"}                                                 # remove the reserved keepout, place the real part
 abs_pads=[r for r in abs_pads if r[0] not in _ACCEL_KEEPOUT]
+_DEL_SW={"SW1"}                                                      # snap-dome button removed; accel tap is the actuator now
+for _k in [kk for kk in list(CUSTOM) if kk[0] in _DEL_SW]: CUSTOM.pop(_k,None)
+abs_pads=[r for r in abs_pads if r[0] not in _DEL_SW]
 _renet={("U1","21"):"INT1", ("U1","20"):"INT2"}                     # commit PF1->INT1, PF0->INT2 (QFN NE corner, faces accel)
 abs_pads=[(r[0],r[1],_renet.get((r[0],r[1]),r[2]),*r[3:]) for r in abs_pads]
+_ANODES={("D2","A"),("D3","A"),("D4","A"),("D5","A")}
+abs_pads=[(r[0],r[1],"ANODE",*r[3:]) if (r[0],r[1]) in _ANODES else r for r in abs_pads]   # anodes now switch through SW2
 # LGA-12 0.5mm pitch (datasheet Fig.12): perimeter pads of a 4x4 grid, centre 2x2 empty; pads ~0.25x0.30.
 # rotated 180deg so the serial column (SCL/CS/SDO/SDA) faces W toward the I2C bus and both INTs face S toward the QFN.
 _accel=[ # (pin, net, x, y)   nets per Table 2: CS->VS (I2C mode), SA0->GND (addr 0x18), Res->GND
@@ -115,11 +120,73 @@ _accel=[ # (pin, net, x, y)   nets per Table 2: CS->VS (I2C mode), SA0->GND (add
  ("1","SCL", 19.25,36.65),("12","INT1",19.75,36.65),("11","INT2",20.25,36.65),("10","VS", 20.75,36.65)]
 for pn,net,x,y in _accel:
     abs_pads.append(("U3",pn,net,x,y,0.25,0.30,"rr",0.0,"B"))
-abs_pads.append(("C6","1","VS", 22.2,36.4,0.50,0.55,"rr",0.0,"B"))  # accel decoupling 100nF, VS-GND, just E of part
-abs_pads.append(("C6","2","GND",23.2,36.4,0.50,0.55,"rr",0.0,"B"))
+abs_pads.append(("C6","1","VS", 21.75,36.4,1.00,1.20,"rr",0.0,"B"))  # accel decoupling 100nF 0805, VS-GND, E of U3
+abs_pads.append(("C6","2","GND",23.65,36.4,1.00,1.20,"rr",0.0,"B"))
 # v2: shift JP1 (I2C breakout) ~5mm N so its pads clear the INT-escape corridor (x12.7-14.7, y38-42); SDA/SCL walls just extend up to reach it
 _JP1={"1":(13.7,32.42),"2":(13.7,34.96),"3":(13.7,37.50)}            # SDA / SCL / GND (2.54mm pitch, vertical)
 abs_pads=[(r[0],r[1],r[2],_JP1[r[1]][0],_JP1[r[1]][1],*r[5:]) if r[0]=="JP1" else r for r in abs_pads]
+# ---- v2: 0805 upsize for parsed passives (1.0x1.2 pads, 1.9mm centers). VSENSE divider R5/R6 row + C5 below; C4 VS-decoup E of U2. ----
+_v05={
+ ("R5","1"):(3.55,50.40,1.00,1.20),("R5","2"):(5.45,50.40,1.00,1.20),
+ ("R6","1"):(6.65,50.40,1.00,1.20),("R6","2"):(8.55,50.40,1.00,1.20),
+ ("C5","1"):(6.45,52.60,1.00,1.20),("C5","2"):(8.35,52.60,1.00,1.20),
+ ("C4","1"):(42.05,36.10,1.00,1.20),("C4","2"):(43.95,36.10,1.00,1.20),
+ ("SJ1","1"):(13.30,45.05,1.20,1.00),("SJ1","2"):(13.30,46.95,1.20,1.00),
+}
+abs_pads=[(r[0],r[1],r[2],*_v05[(r[0],r[1])],"rr",0.0,r[9]) if (r[0],r[1]) in _v05 else r for r in abs_pads]
+
+# ---- VS-rail shunt clamp on VIN (solar side, BEFORE D1) -------------------------------------------
+# Holds VS <=3.6V for the accel.  Sits on VIN so D1 isolates the supercaps: in the dark VIN=0 and the
+# clamp/divider draw nothing from the caps (no slow self-discharge); it only acts while the cell produces.
+# Boosted shunt: TLV431 (1.24V adj ref) sets the trip point, PNP Q1 carries the shunt current.
+#   VIN clamp = 1.24*(1+R7/R8) = 1.24*(1+20/10) = 3.72V  ->  VS ~= 3.72 - 0.3 (D1) = 3.42V  (accel max 3.6V)
+# Internal nets: CLBASE (Q1 base / TLV431 cathode / R9), CLREF (divider midpoint -> TLV431 ref).
+_clamp=[                                                                   # ref, pn, net, x, y, w, h   (all B-side)
+  # PNP Q1 = WDFN 2x2 (BCP5316MTWG, case 515AA): 1=Base->CLBASE 2=Emitter->VIN 3+EP=Collector->GND
+  ("Q1","1","CLBASE",41.5,48.5,0.40,0.50),("Q1","2","VS",41.5,49.5,0.40,0.50),("Q1","3","GND",40.3,49.0,1.00,1.40),
+  # TLV431 DBZ/SOT-23-3 (TI Table 4-1): pin1=REF, pin2=CATHODE, pin3=ANODE.  K(2)=CLBASE  A(3)=GND  ref(1)=CLREF
+  ("U4","1","CLREF",42.6,48.5,0.50,0.60),("U4","2","CLBASE",42.6,49.5,0.50,0.60),("U4","3","GND",43.8,49.0,0.50,0.60),
+  ("R9","1","VS",40.5,45.55,1.20,1.00),("R9","2","CLBASE",40.5,47.45,1.20,1.00),                                 # base pull-up / cathode path ~1k (vert, N of cluster)
+  ("R7","1","VS",45.5,47.05,1.20,1.00),("R7","2","CLREF",45.5,48.95,1.20,1.00),                                 # divider top 20k (horiz, E of U4)
+  ("R8","1","CLREF",45.5,49.55,1.20,1.00),("R8","2","GND",45.5,51.45,1.20,1.00),                                 # divider bottom 10k (horiz)
+  ("C7","1","VS",38.5,48.05,1.20,1.00),("C7","2","GND",38.5,49.95,1.20,1.00),                                 # local decoupling 100nF (vert, W edge)
+]
+for ref,pn,net,x,y,w,h in _clamp:
+    abs_pads.append((ref,pn,net,x,y,w,h,"rr",0.0,"B"))
+
+# ---- I2C pull-ups (REQUIRED now the accel is populated; TWI bus is open-drain) -----------------
+# 4.7k each to VS, tapped off the SDA/SCL B runs between the accel and JP1.
+abs_pads.append(("R10","1","SDA",15.05,32.40,1.00,1.20,"rr",0.0,"B"))   # SDA pull-up 4.7k 0805 (next to JP1.1; under-cap routing freed the pocket)
+abs_pads.append(("R10","2","VS", 16.95,32.40,1.00,1.20,"rr",0.0,"B"))
+abs_pads.append(("R11","1","SCL",15.05,34.96,1.00,1.20,"rr",0.0,"B"))   # SCL pull-up 4.7k 0805 (next to JP1.2)
+abs_pads.append(("R11","2","VS", 16.95,34.96,1.00,1.20,"rr",0.0,"B"))
+# ---- D9: 2nd blocking Schottky (MMSD301T1G, clone of D1). PV2 -> VINB -> D9 -> VS, per-panel so half-shade can't back-drive. ----
+abs_pads.append(("D9","K","VS",  41.65,53.5,1.00,1.20,"rr",0.0,"B"))   # cathode -> VS (auto-stitches to In4)
+abs_pads.append(("D9","A","VINB",45.35,53.5,1.00,1.20,"rr",0.0,"B"))   # anode = PV2 node (VINB)
+
+# ---- SW2: 3-pad solder-bridge LED MASTER selector (OFF / ON / TINY). center=ANODE common (all 4 LED
+#      anodes); left=VS (ON: anodes direct to rail); right=TINY (anodes -> VS via R12 = dim, long runtime).
+#      bridge center-left = ON, center-right = TINY, unbridged = OFF (true hardware off; supercap-safe for
+#      storage; works with/without firmware, pairs with the SB1-4 per-LED force-on jumpers). manual-bridge
+#      pads tolerate via-in-pad. sits in the K3-K4 cathode gap, ABOVE the LDRV N-corridor (no corridor cross). ----
+abs_pads.append(("SW2","1","VS",   23.1,48.6,0.60,0.80,"rr",0.0,"B"))   # ON  (anodes -> VS direct)
+abs_pads.append(("SW2","2","ANODE",24.0,48.6,0.60,0.80,"rr",0.0,"B"))   # common -> all 4 LED anodes (via In2 rail)
+abs_pads.append(("SW2","3","TINY", 24.9,48.6,0.60,0.80,"rr",0.0,"B"))   # TINY (anodes -> VS via R12)
+abs_pads.append(("R12","1","TINY", 30.0,48.60,1.20,1.00,"rr",0.0,"B"))  # TINY current-limit ballast (K4-K5 gap; sets dim level, tunable)
+abs_pads.append(("R12","2","VS",   31.9,48.60,1.20,1.00,"rr",0.0,"B"))  # R12.2 VS -> auto-dog-bones (R-type VS pad)
+
+# ---- button (SW1) + its D8 ESD TVS REMOVED -----------------------------------------------------
+# Actuation is now the accelerometer (tap / double-tap -> INT -> wake -> glow burst); a tap is
+# vibration so the Ti back-plate transmits it. BTN (PA7) is reserved out to the front middle-third
+# for a possible future physical button (see the BTN reserve routing below).
+# ---- second solar panel PV2 (mirror of PV1, bottom third, FRONT), wired PARALLEL with PV1 --------
+# Doubles harvest so the card charges in dim/indoor light. Same nets as PV1 (VIN/GND), tied at VIN
+# before D1 (shared blocking diode). 42x23 cell centered (25.4, 71.9), clearing MH1/MH2 like PV1/MH3-4.
+abs_pads.append(("PV2","P", "VINB",43.4,71.9,3.5,3.5,"o", 0.0,"F"))   # + pad (right) -> VINB (own Schottky D9)
+abs_pads.append(("PV2","N", "GND", 7.4,71.9,3.5,3.5,"o", 0.0,"F"))   # - pad (left),  like PV1.N
+abs_pads.append(("PV2","Pt","VINB",46.5,71.9,4.0,3.0,"rr",0.0,"F"))   # + tab -> VINB
+abs_pads.append(("PV2","Nt","GND", 4.3,71.9,4.0,3.0,"rr",0.0,"F"))   # - tab
+
 
 # ---- board outline from Edge.Cuts (bbox -> rounded rect, matching v0 style) ----
 ec = txt[txt.find('Edge.Cuts')-200:]
@@ -191,10 +258,10 @@ T=[
  ("K4","B",[P("D4","K"),P("R3","1")],TW),
  ("K5","B",[P("D5","K"),P("R4","1")],TW),
  # ---- LED anodes (VS): stub each anode straight down out of the window to its own VS via -> In2 plane (left of the cathode traces, no crossing) ----
- ("VS","B",[P("D2","A"),(14.8,47.6)],TW),
- ("VS","B",[P("D3","A"),(21.1,47.6)],TW),
- ("VS","B",[P("D4","A"),(27.4,47.6)],TW),
- ("VS","B",[P("D5","A"),(33.4,47.6)],TW),
+ ("ANODE","B",[P("D2","A"),(14.8,47.6)],TW),
+ ("ANODE","B",[P("D3","A"),(21.1,47.6)],TW),
+ ("ANODE","B",[P("D4","A"),(27.4,47.6)],TW),
+ ("ANODE","B",[P("D5","A"),(33.4,47.6)],TW),
  # ---- U1 QFN GND/VS escape (TWN): GND pins fold into the EP (which carries stitch vias -> In1); VS pins fan out to escape vias -> In2 ----
  ("GND","B",[P("U1","19"),(10.4,40.5)],TWN),     # right-edge GND pin -> into EP
  ("GND","B",[P("U1","25"),(9.5,40.05)],TWN),     # bottom-edge GND pin -> up into EP
@@ -212,7 +279,12 @@ T=[
  ("VIN","F",[P("PV1","Pt"),(45.5,25.0)],TW),                                         # short F stub from PV1.Pt, stays under panel
  ("VIN","In3",[(45.5,25.0),(44.8,28.0),(44.8,43.5)],TW),                             # In3 descent W of MH4 (drops to inner AT panel edge -> exposed part hidden)
  ("VIN","B",[(44.8,43.5),P("D1","A")],TW),                                           # via drop -> D1.A
- ("VIN","In3",[(44.8,43.5),(44.8,56.0),(3.3,56.0),(3.3,51.0),P("R5","1")],TW),       # In3: drop S of D1, W across the bottom lane (y56, S of JP2 / N of MID trunk), up W of JP2.1, into R5.1
+ # ---- PV2 VIN: tied on F, stub up under panel -> via -> In3 ascent joins the VIN trunk at the D1 node ----
+ ("VINB","F",[P("PV2","P"),P("PV2","Pt")],TW),                                       # PV2 + pads tied (front, bottom) [VINB]
+ ("VINB","F",[P("PV2","Pt"),(45.5,63.0)],TW),                                        # short F stub from PV2.Pt [VINB]
+ ("VINB","In3",[(45.5,63.0),(45.5,54.5),(45.35,53.5)],TW),                           # In3 up the E margin (E of SC4) -> D9.A via-in-pad
+ ("GND","F",[P("PV2","N"),P("PV2","Nt")],TW),                                        # PV2 - pads tied (front); plane-stitch vias auto-drop to In1 GND
+ ("VIN","In3",[(44.8,43.5),(44.5,45.5),(44.5,56.0),(3.3,56.0),(3.3,51.0),P("R5","1")],TW),       # In3: drop S of D1, W across the bottom lane (y56, S of JP2 / N of MID trunk), up W of JP2.1, into R5.1
  # ---- U1 bottom-edge signal escape: fine 0.20mm staggered vias -> hop to F -> non-art corridors -> drop back to B. ----
  # NOTE: LDRV1/2/3/4 reverse (pin x-order opposite ballast x-order). Resolved WITHOUT schematic reassignment by the layer trick: F descents run all the way south PAST the back-side caps/cathodes (F is clear there), drop to B *south* of the ballast row, and return E in nested lanes (cathode K-diagonals are all N of the ballasts, so zero collisions / zero reversal dips).
  ("LDRV1","B",[P("U1","26"),(9.3,37.6)],TWN),                                        # dog-bone NE -> outer-row fine via
@@ -233,7 +305,7 @@ T=[
  ("VSENSE","B",[P("U1","3"),(6.0,40.7)],TWN),                                        # pin3 escape W -> fine via
  ("VSENSE","In2",[(6.0,40.7),(5.5,41.0),(5.5,50.4)],TW),                            # In2 W-zone descent -> R6.1 (VSENSE node)
  ("VSENSE","B",[P("R6","1"),P("R5","2")],TWN),                                       # R6.1 - R5.2 (adjacent VSENSE pads)
- ("VSENSE","B",[P("R6","1"),(5.69,51.5),(7.69,51.5),P("C5","1")],TWN),               # R6.1 - C5.1 (B dip y51.5 dodges R6.2 GND pad)
+ ("VSENSE","B",[P("R6","1"),(6.65,51.4),(6.45,51.4),P("C5","1")],TWN),               # R6.1 -> C5.1 (S to the relocated filter cap)
  # ---- PC0: pin6 -> In3 W-zone descent (between R5.2/R6.1) -> JP2.2 ----
  ("PC0","B",[P("U1","6"),(7.0,41.7),(5.0,42.4)],TWN),                                           # pin6 escape W -> fine via
  ("PC0","In3",[(5.0,42.4),(4.9,43.5),(4.9,54.0),P("JP2","2")],TW),                   # In3 W-zone -> divider gap -> JP2.2
@@ -252,15 +324,15 @@ T=[
  ("SCL","B",[P("U1","9"),(8.7,44.0),(12.5,44.0)],TWN),                               # B: S off pin9 -> E under LDRV1(F) + SDA(F) -> F-transition
  ("SCL","In2",[(12.5,44.0),(12.3,43.0),(12.3,35.5),P("JP1","2")],TW),                            # In2 up x12.3, short jog to relocated JP1.2
  # ---- VDDIO2: pin10 (B) diagonals E of LDRV1 (S of SCL's deeper run, so no cross), E to SJ1.2; C3 (nudged next to SJ1.2) chains off SJ1.2 ----
- ("VDDIO2","B",[P("U1","10"),(9.1,43.55),(13.71,43.55),P("SJ1","2")],TWN),           # SJ1 branch: S off pin10 (clear pin11) -> E (threads NC pins / SCL via) -> S into SJ1.2
- ("VDDIO2","B",[P("SJ1","2"),(12.6,47.0),P("C3","1")],TWN),                          # C3 branch: SJ1.2 -> SW hop -> C3.1
+ ("VDDIO2","B",[P("U1","10"),(9.1,43.55),(14.2,43.55),(14.2,47.5),(13.3,47.5),P("SJ1","2")],TWN),  # SJ1 branch: E (N of SCL), cross y44 @x14.2 (W of D2), S, into SJ1.2 from below
+ ("VDDIO2","B",[P("SJ1","2"),(12.6,47.0),P("C3","1")],TWN),                          # C3 branch: SJ1.2 -> C3.1
  # ---- PA4: left-edge pin2 -> fine escape -> F west (between J1.2/J1.3) -> far-west descent -> JP2.1 via-in-pad ----
  ("PA4","B",[P("U1","2"),(6.0,40.1)],TWN),                                           # escape west off pin2
  ("PA4","In2",[(6.0,40.1),(3.0,40.1),(3.0,54.0),(4.09,54.9)],TW),                     # In3 west (thread J1) -> descend far-west -> JP2.1 via-in-pad [F-free]
- # ---- BTN: left-edge pin5 -> escape -> F down west edge -> across south of supercaps -> SW1.1 (front-side dome pad) ----
- ("BTN","B",[P("U1","5"),(6.0,41.3)],TWN),                                           # escape west off pin5
- ("BTN","In2",[(6.0,41.3),(6.05,42.5),(6.05,71.0),(42.0,71.0),(42.0,77.9)],TW),      # In2: down W margin (threads divider/JP2 via gaps @x6.05) -> across y71 (S of MID, between SC3/SC4 pad rows) -> E of dome GND via [F-free]
- ("BTN","F",[(42.0,77.9),P("SW1","1")],TW),                                          # short F stub into SW1.1 (via-near-pad: snap dome needs a flat contact, no via-in-pad)
+ # ---- BTN (PA7): RESERVED out to the front middle-third (no button populated; accel tap is the actuator). Path kept for a future physical button. ----
+ ("BTN","B",[P("U1","5"),(6.0,41.3)],TWN),                                           # escape west off pin5 (PA7)
+ ("BTN","In2",[(6.0,41.3),(6.05,42.5),(6.05,57.0),(25.4,57.0)],TW),                  # In2: down the W-margin corridor @x6.05 -> across y57 (S of the VIN y56 lane, in the inter-supercap gap) to center
+ ("BTN","F",[(25.4,57.0),(25.4,55.8)],TW),                                           # short F stub = RESERVED landing in the front middle-third for a future button
 ]
 # ---- accelerometer (U3) routing ----
 T += [
@@ -275,8 +347,12 @@ T += [
  ("VS","B",[P("U3","9"),(21.5,36.4),P("C6","1")],TW),                                 # tap E to VS plane via + decoupling
  ("GND","B",[P("C6","2"),(23.8,36.4)],TW),                                            # C6 GND -> In1 via
  # I2C escapes (B) west to JP1 (taps the existing MCU<->JP1 bus)
- ("SDA","B",[P("U3","4"),(15.0,34.0),P("JP1","1")],TW),
- ("SCL","B",[P("U3","1"),(15.5,35.8),P("JP1","2")],TW),
+ ("SDA","B",[P("JP1","1"),P("R10","1")],TWN),                                         # JP1.1 - R10.1 pull-up (B, y32.4)
+ ("SDA","B",[P("U3","4"),(18.5,35.0)],TWN),                                           # U3.4 SDA escape W -> hop via
+ ("SDA","In3",[(18.5,35.0),(18.5,33.6),(14.0,33.6),(13.70,32.42)],TW),                # In3 W across the freed pocket -> JP1.1 via
+ ("SCL","B",[P("JP1","2"),P("R11","1")],TWN),                                         # JP1.2 - R11.1 pull-up (B, y34.96)
+ ("SCL","B",[P("U3","1"),(18.7,36.5)],TWN),                                           # U3.1 SCL escape W -> hop via
+ ("SCL","In2",[(18.7,36.5),(18.7,35.9),(14.0,35.9),(13.70,34.96)],TW),                # In2 W across the freed pocket -> JP1.2 via
  # INT1 -> PF1 (pin21): B stub, In3 across, B stub into QFN pin
  # INT1 -> PD4 (pin14): B stub off accel, In3 south around the SDA-wall end, escape via just S of PD4
  ("INT1","B",[P("U3","12"),(19.4,37.6)],TWN),
@@ -287,16 +363,15 @@ T += [
  ("INT2","In3",[(20.7,37.6),(15.5,40.4),(13.5,40.2)],TW),
  ("INT2","B",[(13.5,40.2),P("U1","20")],TWN),
 ]
-VIAS += [("VS",14.8,47.6,"B"),("VS",21.1,47.6,"B"),("VS",27.4,47.6,"B"),("VS",33.4,47.6,"B"),   # LED-anode VS stitch
+VIAS += [("ANODE",14.8,47.6,"FB"),("ANODE",21.1,47.6,"FB"),("ANODE",27.4,47.6,"FB"),("ANODE",33.4,47.6,"FB"),   # LED-anode -> ANODE In2 rail (switched by SW2)
          ("GND",8.55,40.9,"B"),("GND",10.1,40.9,"B"),                                           # U1 EP GND stitch vias (left one W of LDRV1 F descent)
          ("VS",13.0,43.0,"B"),("VS",9.9,38.3,"B"),                                               # U1 VS escape vias (pin18 relocated clear of SCL; bottom = fine)
-         ("GND",40.4,73.5,"F"),                                                                   # SW1 dome GND return -> In1 (on the horseshoe, clear of BTN)
-         ("VIN",45.5,25.0,"FB"),("VIN",44.8,43.5,"FB"),("VIN",3.69,50.4,"FB"),                                          # VIN F->B at D1.A + In3->B at R5.1
+         ("VIN",45.5,25.0,"FB"),("VIN",44.8,43.5,"FB"),("VIN",3.69,50.4,"FB"),("VINB",45.5,63.0,"FB"),("VINB",45.35,53.5,"FB"),  # PV1 trunk + VINB(PV2->D9.A)
          ("MID",15.5,26.0,"FB"),("MID",35.3,26.0,"FB"),("MID",40.4,41.8,"FB"),("MID",45.6,40.5,"FB"),("MID",15.5,61.0,"FB"),("MID",35.3,61.0,"FB"),  # MID bus -> In2 surfacing vias (SC1.N/SC2.P hidden @y26; U2.4/U2.6 fine; SC3.N/SC4.P @y57.5)
          ("LDRV1",9.3,37.6,"FB"),("LDRV1",16.6,49.6,"FB"),                                        # LDRV1 fine escape + drop at R1.2
          ("UPDI",10.5,37.6,"FB"),("UPDI",10.87,15.63,"FB"),("UPDI",4.7,36.0,"FB"),                # UPDI fine escape + drops at TC1.1 / J1.1
          ("PA4",6.0,40.1,"FB"),("PA4",4.09,54.9,"FB"),                                           # PA4 escape + JP2.1 via-in-pad
-         ("BTN",6.0,41.3,"FB"),("BTN",42.0,77.9,"FB"),                                                                    # BTN escape (B->F); SW1.1 is front-side, no drop via
+         ("BTN",6.0,41.3,"FB"),("BTN",25.4,57.0,"FB"),                                                                    # BTN escape (B->F) + reserved front-mid landing via
          ("SDA",12.0,44.5,"FB"),("SDA",13.7,32.42,"FB"),                                          # SDA escape via + relocated JP1.1
          ("SCL",12.5,44.0,"FB"),("SCL",13.7,34.96,"FB"),                                          # SCL escape via + relocated JP1.2
          ("LDRV2",8.7,38.0,"B"),("LDRV2",22.91,49.6,"FB"),                                         # LDRV2 fine escape + riser
@@ -315,8 +390,93 @@ VIAS += [("GND",20.25,34.4,"FB"),("VS",21.5,36.4,"FB"),("GND",23.8,36.4,"FB"),  
          ("INT2",20.7,37.6,"FB"),("INT2",13.5,40.2,"FB")]                            # INT2 B<->In3<->B
 FINE.update({(19.4,37.6),(13.3,39.6),(20.7,37.6),(13.5,40.2)})                       # INT signal vias = fine
 
+# ---- shunt clamp (Q1/U4/R7-9/C7) local routing, all B-side -----------------------------------------
+T += [
+ # clamp now on VS: R9.1/R7.1/C7.1 (0805) auto-stitch to the In4 VS plane; Q1.2 (small WDFN pad) gets one explicit VS via.
+ ("VS","B",[P("Q1","2"),(41.5,51.0)],TW),                                             # Q1.2 emitter -> VS via (S, in the space the old detour used)
+ # CLBASE: R9.2 - Q1.1 - U4.2 (cathode)
+ ("CLBASE","B",[(40.5,47.45),(40.5,48.0),(41.5,48.0),(41.5,48.5)],TW),
+ ("CLBASE","B",[(41.5,48.5),(42.0,48.5),(42.0,49.5),(42.6,49.5)],TW),
+ # CLREF: U4.1 (ref) - R7.2 - R8.1 (divider midpoint)
+ ("CLREF","B",[(42.6,48.5),(42.6,48.2),(45.5,48.2),(45.5,49.55)],TW),
+]
+VIAS += [("GND",40.3,49.0,"B"),("GND",43.8,49.0,"B"),("GND",45.5,51.45,"B"),("GND",38.5,49.95,"B")]  # Q1.3(EP)/U4.3/R8.2/C7.2 -> In1
+VIAS += [("VS",41.5,51.0,"B")]   # Q1.2 emitter -> In4 VS plane
+
+# ---- I2C pull-up taps (R10 SDA, R11 SCL) + VS vias ----
+T += [
+]
+VIAS += [("SDA",18.5,35.0,"FB"),("SCL",18.7,36.5,"FB")]   # U3.4/U3.1 escapes -> inner runs to JP1 (R10.2/R11.2 VS auto-stitch at 0805)
+
+# (D8 BTN-TVS routing removed with the button.)
+
+
+# ---- SW2 / ANODE master-selector wiring (anodes switch through SW2 now, not hard-wired to VS) ----
+T += [
+ ("ANODE","In2",[(14.8,47.6),(33.4,47.6)],TW),     # In2 rail joining the 4 LED-anode vias
+ ("ANODE","In2",[(24.0,47.6),(24.0,48.6)],TW),     # tap down to SW2.2
+ ("TINY","B",[P("SW2","3"),(25.6,48.6)],TW),       # SW2.3 -> drop to In3
+ ("TINY","In3",[(25.6,48.6),(29.3,48.6)],TW),      # In3 hop across the K4 cathode
+ ("TINY","B",[(29.3,48.6),P("R12","1")],TW),       # rise to R12.1
+]
+VIAS += [("ANODE",24.0,48.6,"FB"),                 # SW2.2 (B) <-> In2 ANODE rail
+         ("VS",23.1,48.6,"B"),
+         ("TINY",25.6,48.6,"B"),("TINY",29.3,48.6,"B")]                     # SW2.1 -> In4 VS plane (manual-bridge via-in-pad, tolerant)
+
+# ---- dog-bone the discrete reflow stitches (R/C/D on GND/VS): move the via OUT of the pad + short B stub,
+#      so they need NO resin fill. Thermal EPs (U2/U4) + large/manual pads stay via-in-pad -> VIPPO at fab. ----
+_dbrt={"R","C","D"}
+_dbpads=[r for r in abs_pads if r[2] in ("GND","VS") and not in_void(r[3],r[4])
+         and ''.join(c for c in r[0] if not c.isdigit()) in _dbrt and min(r[5],r[6])>=0.55]
+_dbset={(round(r[3],2),round(r[4],2)) for r in _dbpads}
+VIAS=[v for v in VIAS if (round(v[1],2),round(v[2],2)) not in _dbset]   # drop the in-pad auto-stitch vias
+_occ=[(r[3],r[4],r[5],r[6],r[0],r[1]) for r in abs_pads]
+_trpolys=[(n,trace_poly(pts,wd,0.0)) for (n,sd,pts,wd) in T]            # existing traces (any layer) for short check
+DOGBONE=[]
+for r in _dbpads:
+    ref,pn,net,x,y,w,h,sh,rt,side=r
+    o=VIA_PAD/2+0.12
+    dirs=([(0,h/2+o),(0,-(h/2+o)),(w/2+o,0),(-(w/2+o),0)] if h>=w
+          else [(w/2+o,0),(-(w/2+o),0),(0,h/2+o),(0,-(h/2+o))])
+    done=False
+    for dx,dy in dirs:
+        vx,vy=round(x+dx,2),round(y+dy,2); ring=Point(vx,vy).buffer(VIA_PAD/2+0.15); bad=False
+        for (ox,oy,ow,oh,oref,opn) in _occ:
+            if (oref,opn)==(ref,pn): continue
+            if abs(vx-ox)<ow/2+VIA_PAD/2+0.15 and abs(vy-oy)<oh/2+VIA_PAD/2+0.15: bad=True; break
+        if not bad:
+            for (n2,gp) in _trpolys:
+                if n2!=net and gp.intersects(ring): bad=True; break       # would short an other-net trace (any layer)
+        if not bad:
+            for (n2,vx2,vy2,l2) in VIAS:
+                if (vx2-vx)**2+(vy2-vy)**2<(VIA_PAD+0.15)**2: bad=True; break
+        if not bad:
+            DOGBONE.append((net,vx,vy,ref,pn)); VIAS.append((net,vx,vy,"B"))
+            stub=(net,"B",[(x,y),(vx,vy)],TW); T.append(stub); _trpolys.append((net,trace_poly(stub[2],TW,0.0)))
+            done=True; break
+    if not done:
+        VIAS.append((net,x,y,side))   # no clear direction -> keep via-in-pad (-> VIPPO)
+print(f"dog-boned discretes: {len(DOGBONE)} of {len(_dbpads)} (rest stay via-in-pad -> VIPPO)")
+
 # thru-hole features for plane antipad logic: (net,x,y). MH are GND.
 THRU=[("GND",x,y) for x,y,d in plated] + [(n,x,y) for (n,x,y,_) in VIAS]
+
+# ---- F-side non-functional pad removal (NFPR): a through-via keeps an F annular ring ONLY where F copper
+#      (a panel tie, the BTN landing, future art) actually connects. Everywhere else the F pad is dead weight
+#      sitting in the art canvas, so we tent it. Holes still drill through; only the copper ring is removed. ----
+def _via_keeps(x,y,layer):
+    ring=Point(x,y).buffer(vpad(x,y)/2)
+    for (net,side,pts,wd) in T:
+        if side==layer and trace_poly(pts,wd,0.0).intersects(ring): return True
+    for ref,pn,net,px,py,w,h,sh,rt,side in abs_pads:
+        if side==layer and get_pad_poly(ref,pn,px,py,w,h,sh,rt,0.0).intersects(ring): return True
+    return False
+FUNC={L:{(x,y) for (net,x,y,lands) in VIAS if _via_keeps(x,y,L)} for L in ("F","In2","In3")}
+FUNC_F=FUNC["F"]
+_band=sum(1 for (n,x,y,l) in VIAS if 30<=y<=59)
+_bandF=sum(1 for (n,x,y,l) in VIAS if 30<=y<=59 and (x,y) in FUNC_F)
+print(f"F via pads: {len(FUNC_F)}/{len(VIAS)} functional (NFPR tents {len(VIAS)-len(FUNC_F)} on F).  Art band y30-59: {_bandF}/{_band} F rings kept -> {_band-_bandF} cleared")
+print(f"inner NFPR: In2 keeps {len(FUNC[chr(34)+chr(73)+chr(110)+chr(50)+chr(34)]) if False else len(FUNC['In2'])}/{len(VIAS)}, In3 keeps {len(FUNC['In3'])}/{len(VIAS)}")
 
 # ===================== copper per (net, side) =====================
 def build_copper(grow=0.0):
@@ -325,8 +485,10 @@ def build_copper(grow=0.0):
     for ref,pn,net,x,y,w,h,sh,rt,side in abs_pads:
         add(net,side,get_pad_poly(ref,pn,x,y,w,h,sh,rt,grow))
     for net,side,pts,wd in T: add(net,side,trace_poly(pts,wd,grow))
-    for net,x,y,lands in VIAS:                  # 6-layer: ALL vias are through -> annular ring on every signal layer
-        for L in ("F","In2","In3","B"): add(net,L,via_poly(x,y,grow))
+    for net,x,y,lands in VIAS:                  # through vias: inner+B rings always; F ring only where F copper connects (NFPR)
+        add(net,"B",via_poly(x,y,grow))
+        for L in ("F","In2","In3"):
+            if (x,y) in FUNC[L]: add(net,L,via_poly(x,y,grow))
     return {k:unary_union(v) for k,v in cu.items()}
 
 # ===================== inner planes (In1=GND, In4=VS) with antipads; In2/In3 are signal =====================
@@ -500,7 +662,7 @@ def connectivity():
     for gg in _explode(pours["In1"]): pieces["GND"].append(("In1",gg))
     for gg in _explode(pours["In4"]): pieces["VS"].append(("In4",gg))
     # bridges: through-vias join F+In2+In3+B, plus In1 if GND / In4 if VS; plated MH (GND thru: all sig + In1)
-    bridges=[(n,x,y,("F","In2","In3","B")+(("In1",) if n=="GND" else ())+(("In4",) if n=="VS" else ())) for n,x,y,lands in VIAS]
+    bridges=[(n,x,y,("B",)+tuple(L for L in ("F","In2","In3") if (x,y) in FUNC[L])+(("In1",) if n=="GND" else ())+(("In4",) if n=="VS" else ())) for n,x,y,lands in VIAS]
     bridges+=[("GND",x,y,("F","In2","In3","B","In1")) for x,y,d in plated]
     rep={}
     for net,pl in pieces.items():
