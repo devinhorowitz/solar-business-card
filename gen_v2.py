@@ -101,6 +101,16 @@ abs_pads=[r for r in abs_pads if r[0] not in _BATT]
 plated  =[h for h in plated   if (round(h[0],2),round(h[1],2)) not in _batt_holes]
 nonplated=[h for h in nonplated if (round(h[0],2),round(h[1],2)) not in _batt_holes]
 
+# ---- v2: TC2030-MCP-FP legged footprint -> 4 leg-latch + 3 alignment holes (NPTH).
+# Exact geometry = official KiCad Tag-Connect_TC2030-IDC-FP footprint (board-side == TC2030-MCP-FP),
+# rotated 90deg CCW to match TC1's pad orientation, placed at the locked TC1 center (11.5,16.9).
+# Native (rel cluster center): leg-latch dia 2.3749 @ (-2.54,+-2.54),(0.635,+-2.54); align dia 0.9906 @ (2.54,+-1.016),(-2.54,0).
+# Legs are the "4 clipping points" that latch the cable hands-free; non-plated (note5 permits plating them
+# as VS/GND vias in KiCad if extra stitching is wanted). Contact pads stay solid -> VIPPO TC1.1/2/3 (note4).
+_TC2030_FP=[(8.96,14.36,2.3749),(14.04,14.36,2.3749),(8.96,17.535,2.3749),(14.04,17.535,2.3749),   # 4 leg-latch
+            (10.484,19.44,0.9906),(12.516,19.44,0.9906),(11.5,14.36,0.9906)]                         # 3 alignment
+nonplated += _TC2030_FP
+
 # ---- v2: LIS2DH12 accelerometer (12-LGA, 2x2x1.0mm) drops into the M1 keepout at (20,35.9) on B ----
 _ACCEL_KEEPOUT={"M1"}                                                 # remove the reserved keepout, place the real part
 abs_pads=[r for r in abs_pads if r[0] not in _ACCEL_KEEPOUT]
@@ -172,8 +182,8 @@ abs_pads.append(("D9","A","VINB",45.35,53.5,1.00,1.20,"rr",0.0,"B"))   # anode =
 abs_pads.append(("SW2","1","VS",   23.1,48.6,0.60,0.80,"rr",0.0,"B"))   # ON  (anodes -> VS direct)
 abs_pads.append(("SW2","2","ANODE",24.0,48.6,0.60,0.80,"rr",0.0,"B"))   # common -> all 4 LED anodes (via In2 rail)
 abs_pads.append(("SW2","3","TINY", 24.9,48.6,0.60,0.80,"rr",0.0,"B"))   # TINY (anodes -> VS via R12)
-abs_pads.append(("R12","1","TINY", 30.0,48.60,1.20,1.00,"rr",0.0,"B"))  # TINY current-limit ballast (K4-K5 gap; sets dim level, tunable)
-abs_pads.append(("R12","2","VS",   31.9,48.60,1.20,1.00,"rr",0.0,"B"))  # R12.2 VS -> auto-dog-bones (R-type VS pad)
+abs_pads.append(("R12","1","TINY", 30.6,48.60,1.20,1.00,"rr",0.0,"B"))  # TINY current-limit ballast (K4-K5 gap; sets dim level, tunable)
+abs_pads.append(("R12","2","VS",   32.5,48.60,1.20,1.00,"rr",0.0,"B"))  # R12.2 VS -> auto-dog-bones (R-type VS pad)
 
 # ---- button (SW1) + its D8 ESD TVS REMOVED -----------------------------------------------------
 # Actuation is now the accelerometer (tap / double-tap -> INT -> wake -> glow burst); a tap is
@@ -314,7 +324,7 @@ T=[
  ("PC1","In2",[(7.3,42.8),(7.4,44.5),(7.4,52.5),(6.63,53.8),P("JP2","3")],TW),       # In2 mid-zone -> below divider -> JP2.3
  # UPDI: fine via -> F T-junction (north to TC1.1, west to J1.1)
  ("UPDI","B",[P("U1","23"),(10.5,37.6)],TWN),                                        # dog-bone NE -> outer-row fine via
- ("UPDI","In3",[(10.5,37.6),(11.5,37.0),(11.5,16.2),(10.87,15.63)],TW),              # In3 north up x11.5 (E of TC1.3 GND via) -> TC1.1 (via-in-pad) [F-free; mostly under panel]
+ ("UPDI","In3",[(10.5,37.6),(11.5,37.0),(11.5,16.2),(10.87,15.63)],TW),              # In3 north up x11.5 (E of TC1.3 GND via) -> TC1.1 (locked under SC1; program before mounting cap)
  ("UPDI","In3",[(10.5,37.6),(9.0,36.0),(4.7,36.0)],TW),                              # In3 west (N of C2 VS via) to J1 column [F-free]
  ("UPDI","B",[(4.7,36.0),P("J1","1")],TW),                                           # via drop -> J1.1
  # ---- SDA: route like SCL/VDDIO2 - stay on B under LDRV1/2/3's F descents (free, diff layer), then pop to F for the north-run. No escape/dip vias to crowd the SW corridor. ----
