@@ -24,6 +24,8 @@ VIA_FD, VIA_FPAD = 0.20, 0.40          # fine QFN-escape vias (0.20mm drill clas
 FINE = set()                           # (x,y) of fine vias (filled during routing)
 def vpad(x,y):   return VIA_FPAD if (round(x,3),round(y,3)) in FINE else VIA_PAD
 def vdrill(x,y): return VIA_FD  if (round(x,3),round(y,3)) in FINE else VIA_D
+DXTC  = 1.8                            # TC1 shifted EAST so its left leg-latch holes clear PV1.N (panel - land at x7.4)
+DYPV1 = 1.1                            # PV1 shifted SOUTH to mirror PV2 about mid-y 44.45 (Option-2 screw symmetry)
 ANTIPAD = VIA_PAD/2 + POUR_CLR         # (legacy default; per-via antipad uses vpad below)
 GLOW = (14.95, 40.8, 35.85, 47.0)      # DRH window: tracks ok, NO vias/pour/fp
 
@@ -107,8 +109,10 @@ nonplated=[h for h in nonplated if (round(h[0],2),round(h[1],2)) not in _batt_ho
 # Native (rel cluster center): leg-latch dia 2.3749 @ (-2.54,+-2.54),(0.635,+-2.54); align dia 0.9906 @ (2.54,+-1.016),(-2.54,0).
 # Legs are the "4 clipping points" that latch the cable hands-free; non-plated (note5 permits plating them
 # as VS/GND vias in KiCad if extra stitching is wanted). Contact pads stay solid -> VIPPO TC1.1/2/3 (note4).
-_TC2030_FP=[(8.96,14.36,2.3749),(14.04,14.36,2.3749),(8.96,17.535,2.3749),(14.04,17.535,2.3749),   # 4 leg-latch
-            (10.484,19.44,0.9906),(12.516,19.44,0.9906),(11.5,14.36,0.9906)]                         # 3 alignment
+_TC2030_FP=[(8.96+DXTC,14.36,2.3749),(14.04+DXTC,14.36,2.3749),(8.96+DXTC,17.535,2.3749),(14.04+DXTC,17.535,2.3749),  # 4 leg-latch (shifted E)
+            (10.484+DXTC,19.44,0.9906),(12.516+DXTC,19.44,0.9906),(11.5+DXTC,14.36,0.9906)]              # 3 alignment (shifted E)
+# purge the 2 NPTH holes from the OLD TC1 (TC2030-NL SMD footprint) the legged MCP-FP now replaces
+nonplated=[(x,y,d) for x,y,d in nonplated if (round(x,2),round(y,2)) not in {(11.5,13.3),(11.5,20.5)}]
 nonplated += _TC2030_FP
 
 # ---- v2: LIS2DH12 accelerometer (12-LGA, 2x2x1.0mm) drops into the M1 keepout at (20,35.9) on B ----
@@ -156,7 +160,7 @@ _clamp=[                                                                   # ref
   ("Q1","1","CLBASE",41.5,48.5,0.40,0.50),("Q1","2","VS",41.5,49.5,0.40,0.50),("Q1","3","GND",40.3,49.0,1.00,1.40),
   # TLV431 DBZ/SOT-23-3 (TI Table 4-1): pin1=REF, pin2=CATHODE, pin3=ANODE.  K(2)=CLBASE  A(3)=GND  ref(1)=CLREF
   ("U4","1","CLREF",42.6,48.5,0.50,0.60),("U4","2","CLBASE",42.6,49.5,0.50,0.60),("U4","3","GND",43.8,49.0,0.50,0.60),
-  ("R9","1","VS",40.5,45.55,1.20,1.00),("R9","2","CLBASE",40.5,47.45,1.20,1.00),                                 # base pull-up / cathode path ~1k (vert, N of cluster)
+  ("R9","1","VS",40.5,45.15,1.20,1.00),("R9","2","CLBASE",40.5,47.05,1.20,1.00),                                 # base pull-up / cathode path ~1k (vert, N of cluster)
   ("R7","1","VS",45.5,47.05,1.20,1.00),("R7","2","CLREF",45.5,48.95,1.20,1.00),                                 # divider top 20k (horiz, E of U4)
   ("R8","1","CLREF",45.5,49.55,1.20,1.00),("R8","2","GND",45.5,51.45,1.20,1.00),                                 # divider bottom 10k (horiz)
   ("C7","1","VS",38.5,48.05,1.20,1.00),("C7","2","GND",38.5,49.95,1.20,1.00),                                 # local decoupling 100nF (vert, W edge)
@@ -196,6 +200,19 @@ abs_pads.append(("PV2","P", "VINB",43.4,71.9,3.5,3.5,"o", 0.0,"F"))   # + pad (r
 abs_pads.append(("PV2","N", "GND", 7.4,71.9,3.5,3.5,"o", 0.0,"F"))   # - pad (left),  like PV1.N
 abs_pads.append(("PV2","Pt","VINB",46.5,71.9,4.0,3.0,"rr",0.0,"F"))   # + tab -> VINB
 abs_pads.append(("PV2","Nt","GND", 4.3,71.9,4.0,3.0,"rr",0.0,"F"))   # - tab
+
+
+# ---- v2 layout: Option-2 screw symmetry + TC1 clearance shift ----
+#  (1) PV1 SOUTH by DYPV1 -> mirrors PV2 about mid-y; frees room above PV1 for the top screws.
+#  (2) MH3/MH4 -> top corners (3.5,3.0)/(47.3,3.0) = exact mirror of MH1/MH2 -> screws at all 4 corners.
+#  (3) TC1 EAST by DXTC -> the left leg-latch holes clear PV1.N (the panel - land at x7.4, now at y17.0).
+abs_pads=[(r[0],r[1],r[2],round(r[3]+DXTC,3),*r[4:]) if r[0]=="TC1"
+          else (r[0],r[1],r[2],r[3],round(r[4]+DYPV1,3),*r[5:]) if r[0]=="PV1"
+          else (r[0],r[1],r[2],3.5,3.0,*r[5:])  if r[0]=="MH3"
+          else (r[0],r[1],r[2],47.3,3.0,*r[5:]) if r[0]=="MH4"
+          else r for r in abs_pads]
+plated=[(3.5,3.0,d) if (round(x,2),round(y,2))==(3.5,29.9) else
+        (47.3,3.0,d) if (round(x,2),round(y,2))==(47.3,29.9) else (x,y,d) for x,y,d in plated]
 
 
 # ---- board outline from Edge.Cuts (bbox -> rounded rect, matching v0 style) ----
@@ -324,7 +341,7 @@ T=[
  ("PC1","In2",[(7.3,42.8),(7.4,44.5),(7.4,52.5),(6.63,53.8),P("JP2","3")],TW),       # In2 mid-zone -> below divider -> JP2.3
  # UPDI: fine via -> F T-junction (north to TC1.1, west to J1.1)
  ("UPDI","B",[P("U1","23"),(10.5,37.6)],TWN),                                        # dog-bone NE -> outer-row fine via
- ("UPDI","In3",[(10.5,37.6),(11.5,37.0),(11.5,16.2),(10.87,15.63)],TW),              # In3 north up x11.5 (E of TC1.3 GND via) -> TC1.1 (locked under SC1; program before mounting cap)
+ ("UPDI","In3",[(10.5,37.6),(11.5,37.0),(11.5,26.0),(13.3,24.0),(13.3,15.63),(12.665,15.63)],TW),  # In3: x11.5 down past JP1, jog E below it, thread between the upper align holes @x13.3, W into shifted TC1.1
  ("UPDI","In3",[(10.5,37.6),(9.0,36.0),(4.7,36.0)],TW),                              # In3 west (N of C2 VS via) to J1 column [F-free]
  ("UPDI","B",[(4.7,36.0),P("J1","1")],TW),                                           # via drop -> J1.1
  # ---- SDA: route like SCL/VDDIO2 - stay on B under LDRV1/2/3's F descents (free, diff layer), then pop to F for the north-run. No escape/dip vias to crowd the SW corridor. ----
@@ -379,7 +396,7 @@ VIAS += [("ANODE",14.8,47.6,"FB"),("ANODE",21.1,47.6,"FB"),("ANODE",27.4,47.6,"F
          ("VIN",45.5,25.0,"FB"),("VIN",44.8,43.5,"FB"),("VIN",3.69,50.4,"FB"),("VINB",45.5,63.0,"FB"),("VINB",45.35,53.5,"FB"),  # PV1 trunk + VINB(PV2->D9.A)
          ("MID",15.5,26.0,"FB"),("MID",35.3,26.0,"FB"),("MID",40.4,41.8,"FB"),("MID",45.6,40.5,"FB"),("MID",15.5,61.0,"FB"),("MID",35.3,61.0,"FB"),  # MID bus -> In2 surfacing vias (SC1.N/SC2.P hidden @y26; U2.4/U2.6 fine; SC3.N/SC4.P @y57.5)
          ("LDRV1",9.3,37.6,"FB"),("LDRV1",16.6,49.6,"FB"),                                        # LDRV1 fine escape + drop at R1.2
-         ("UPDI",10.5,37.6,"FB"),("UPDI",10.87,15.63,"FB"),("UPDI",4.7,36.0,"FB"),                # UPDI fine escape + drops at TC1.1 / J1.1
+         ("UPDI",10.5,37.6,"FB"),("UPDI",12.665,15.63,"FB"),("UPDI",4.7,36.0,"FB"),                # UPDI fine escape + drops at TC1.1 (shifted E) / J1.1
          ("PA4",6.0,40.1,"FB"),("PA4",4.09,54.9,"FB"),                                           # PA4 escape + JP2.1 via-in-pad
          ("BTN",6.0,41.3,"FB"),("BTN",25.4,57.0,"FB"),                                                                    # BTN escape (B->F) + reserved front-mid landing via
          ("SDA",12.0,44.5,"FB"),("SDA",13.7,32.42,"FB"),                                          # SDA escape via + relocated JP1.1
@@ -405,7 +422,7 @@ T += [
  # clamp now on VS: R9.1/R7.1/C7.1 (0805) auto-stitch to the In4 VS plane; Q1.2 (small WDFN pad) gets one explicit VS via.
  ("VS","B",[P("Q1","2"),(41.5,51.0)],TW),                                             # Q1.2 emitter -> VS via (S, in the space the old detour used)
  # CLBASE: R9.2 - Q1.1 - U4.2 (cathode)
- ("CLBASE","B",[(40.5,47.45),(40.5,48.0),(41.5,48.0),(41.5,48.5)],TW),
+ ("CLBASE","B",[(40.5,47.05),(40.5,48.0),(41.5,48.0),(41.5,48.5)],TW),
  ("CLBASE","B",[(41.5,48.5),(42.0,48.5),(42.0,49.5),(42.6,49.5)],TW),
  # CLREF: U4.1 (ref) - R7.2 - R8.1 (divider midpoint)
  ("CLREF","B",[(42.6,48.5),(42.6,48.2),(45.5,48.2),(45.5,49.55)],TW),
