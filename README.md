@@ -44,7 +44,7 @@ all lives on the back, ready for an optional machined-metal back-shell.
 | Block | Part | Notes |
 |---|---|---|
 | MCU | **AVR64DD28** (28-VQFN) | TCA0 hardware PWM, I²C to the accel, charge/sleep logic; MVIO-capable |
-| Solar | **2× ANYSOLAR SM141K06TF** | indoor amorphous cells, wired in parallel — two panels ≈ 2× the harvest |
+| Solar | **2× ANYSOLAR SM141K06TF** | monocrystalline indoor cells (Voc 4.15 V), in parallel — two panels ≈ 2× the harvest |
 | Blocking diodes | **2× onsemi MMSD301T1G** | Schottky, one per panel; isolates the cells *and* the supercaps |
 | Storage | **4× SCHURTER 3-153-438** (WS17) | 1 F / 2.75 V each, wired 2P2S → **1 F @ 5.5 V ≈ 15 J** on one balanced node |
 | Balancer | **ALD910025SALI** | dual SAB MOSFET — the low-leakage way to hold the series midpoint |
@@ -52,7 +52,7 @@ all lives on the back, ready for an optional machined-metal back-shell.
 | LEDs | **4× ams OSRAM LA P47F** (amber) | reverse-mount; glow through the FR4 window, **150 Ω** ballast each |
 | LED master switch | **SW2** (solder-bridge) + **R12** | OFF / ON / TINY — TINY routes the LEDs through a 220 Ω ballast for a dim, long-runtime glow |
 | Motion | **ST LIS2DH12** | 3-axis accel; tap / double-tap wakes the MCU via interrupts |
-| Light sense | **R5 / R6 divider → ADC** | coarse light / dark / charging-state sense off the rail |
+| Light sense | **R5 / R6 divider → PD2** | VIN ÷ 2 off the *solar input* (not the rail) — tracks light directly; doubles as wake-on-light |
 
 **Breakouts and features:** a **TC2030** Tag-Connect pad (`TC1`) for hands-free UPDI
 programming, a backup UPDI header (`J1`), an I²C expansion header (`JP1`), a spare-GPIO header
@@ -66,17 +66,19 @@ Full part numbers, pricing, and per-part datasheet links are in
 
 ## The board
 
-- **Six copper layers** on 0.8 mm FR4: outer top/bottom for parts and signal, with internal
-  **GND and VS planes** and two internal signal layers to carry the dense back-side routing
-  around the supercaps.
+- **Six copper layers** on 0.8 mm FR4 — L1 signal/parts · **L2 GND plane** · L3–L4 signal ·
+  **L5 VS plane** · L6 signal/parts — the two internal signal layers carry the dense back-side
+  routing around the supercaps.
 - **The glow window is a keepout on every layer.** The monogram cutout and the four LED
   light-paths are voided through all six layers so nothing — copper pour, trace, or via —
   shadows the light between the rear LEDs and the front face. The rear soldermask is left
   *open* over the window on purpose: bare ENIG reflects the LEDs’ light forward instead of
   absorbing it.
 - **Rail discipline.** The supercap stack can sit near 5.5 V, but the accelerometer tops out at
-  3.6 V — so a TLV431-referenced PNP shunt clamp on the solar side holds the rail to ~3.47 V.
-  The clamp sits ahead of the blocking diode, so in the dark it draws nothing from the caps.
+  3.6 V — so a TLV431-referenced PNP shunt clamp sits on the **VS rail** (after the blocking
+  diodes) and holds VS ≤ ~3.47 V, directly limiting what the accelerometer sees. Its sense
+  divider draws a standing microamp or two from the rail — small against the other always-on
+  loads, and the trade for regulating VS itself rather than the solar input.
 - **Power planes** carry the supercap charge/discharge currents; the four cells eat the better
   part of the back, so the layout is geometry-bound and the planes earn their layers.
 
@@ -107,6 +109,7 @@ solar-business-card/
 ├── solar-glow-drh-v2_1.kicad_sch   # schematic
 ├── solar-glow-drh-v2_1.kicad_pro   # KiCad project
 ├── solar-glow-drh-BOM.xlsx         # bill of materials — parts, prices, datasheet links
+├── solar-glow-drh-v2-hardware.md   # as-built wiring & pin map — the firmware target
 ├── datasheets/                     # every component's datasheet
 └── enclosure/                      # parked CAD for the metal back-shell (STEP / STL / CadQuery)
 ```
@@ -146,18 +149,22 @@ The board is a KiCad project — open it, run DRC, and export the fab set:
 
 ## Firmware
 
-Parked until first articles land and the harvest question is answered. The board gives it:
+Parked until first articles land and the harvest question is answered — but the wiring it'll be
+built against is fully captured in **`solar-glow-drh-v2-hardware.md`** (complete pin map, the
+PORTMUX settings, the accel at I²C `0x18`). In short, the board gives it:
 
 - **LED breathing** — the four LEDs sink into **PA0–PA3 = TCA0 WO0–WO3**, so split-mode PWM
   drives all four as independent 8-bit channels (the 150 Ω ballast sets the peak; PWM sets the
   average, so you trim brightness *below* that ceiling).
 - **Tap-to-wake** — the accelerometer’s two interrupts land on **PF1 / PF0**; configure
   tap / double-tap and let it pull the MCU out of sleep.
-- **Light sensing** — the rail divider reads on an **ADC** pin (PD2); firmware adapts the glow
-  to available light, and can read **VDD/10** and the internal temp sensor directly.
-- **Auto-glow-on-pickup (candidate)** — the same sense pin is a candidate for the AC0
-  comparator, to wake on light with no tap; confirm PD2’s AC0 input against the datasheet
-  before committing it.
+- **Light sensing** — the divider taps the **solar input** (VIN ÷ 2) into **PD2** (AIN2), so it
+  reads light directly — ~0 V dark, rising under light; firmware adapts the glow to available
+  light and can also read **VDD/10** and the internal temp sensor.
+- **Wake-on-light (validated)** — PD2 is also **AINP0**, an AC0 comparator input, so the card
+  can wake on light with no tap. Two implementations on the same wiring: the AC0 comparator for
+  *instant* wake (~12 µA, runs in Standby), or an RTC-timed ADC poll for *dark-tolerant* wake
+  (~1–3 µA, ~1–2 s latency). Confirmed against the datasheet — see `solar-glow-drh-v2-hardware.md` §6.
 - **Low-power housekeeping** — `VREGCTRL.PMODE = AUTO` for sub-µA power-down; RTC/PIT off the
   internal ULP oscillator (no crystal); an EEPROM “times-activated” counter that survives a
   full supercap drain; and CCL + EVSYS to run a glow pattern while the CPU sleeps.
