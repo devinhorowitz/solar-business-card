@@ -1,23 +1,41 @@
 # SOLAR-GLOW · DRH
 
-A glowing business card that runs on light. An ATtiny1616 breathes four amber LEDs through the board while an indoor solar cell — or a pair of hidden coin cells — trickle-charges a supercapacitor bank. The whole PCB is generated from Python, not drawn by hand.
+A business card that runs on light. An AVR microcontroller breathes four amber LEDs
+*through* the board — a monogram cut into the front copper that glows when the rear LEDs
+backlight it through the bare fiberglass — while a pair of indoor solar cells trickle-charge
+a supercapacitor bank that holds the charge.
 
 ![SOLAR-GLOW · DRH — front and back, gold ENIG on black soldermask](docs/board-preview.png)
 
-> **Status:** REV J — boards ordered (OSH Park), parts ordered (DigiKey). Firmware parked pending first articles and an energy-budget check.
+> **Status: v2.1 — fully routed, DRC-clean in KiCad. Not yet fabbed.**
+> Six-layer, 0.8 mm, bound for PCBWay. The one thing standing between here and a build is the
+> **energy budget** — harvest vs. draw under real indoor light has never been measured. See
+> *“The open question.”*
 
 ---
 
 ## What it is
 
-A 2-layer, business-card-sized PCB (50.8 × 88.9 mm, 0.8 mm FR4, ENIG, rounded corners) that:
+A business-card-sized PCB — **50.8 × 88.9 mm, 0.8 mm FR4, ENIG, rounded corners** — that:
 
-- **Harvests** indoor light with an ANYSOLAR SM141K06L cell **or** runs from two hidden CR1632 coin cells — the two power paths share a footprint and are mutually exclusive.
-- **Stores** energy in two series supercapacitors (5.5 V, ~150 mF), kept balanced by an ALD910025 dual SAB-MOSFET.
-- **Glows** by PWM-breathing four reverse-mount amber LEDs that fire through ~1.64 mm apertures to the front face.
-- **Listens** for a press on a 12 mm metal snap dome (or a bare-pad capacitive touch) driven by the MCU.
+- **Harvests** indoor light with **two** ANYSOLAR solar cells wired in parallel, each behind
+  its own blocking diode so a half-shadow on one can’t back-feed the other.
+- **Stores** energy in **four** series-parallel supercapacitors — **1 F at 5.5 V, ≈ 15 J** —
+  kept balanced by a dual SAB-MOSFET, and held to a safe voltage by a shunt clamp.
+- **Glows** by back-lighting a **“DRH” monogram** that’s cut into the front copper: a gold
+  ENIG field with the three letters opened to bare FR4. Four reverse-mounted amber LEDs on the
+  back fire up through the translucent substrate, so the letters themselves light up — and PWM
+  on the LED drives makes them breathe.
+- **Wakes** to a **tap.** A 3-axis accelerometer feels you pick the card up (or the enclosure
+  being tapped) and interrupts the MCU out of sleep — no button, no moving parts.
 
-The board is **code-defined**: `pcb_route.py` builds the geometry and runs DRC, `gerber_export.py` emits the fab files. No schematic-capture or layout tool in the loop.
+The front face stays naked — solar cells and the glowing monogram exposed — and the dense work
+all lives on the back, ready for an optional machined-metal back-shell.
+
+> **A note on lineage:** earlier revisions (REV J and before) were *generated from Python* —
+> geometry and Gerbers emitted by script, no layout tool in the loop. **v2.1 is a full KiCad
+> design** (schematic + board). The old generators are kept only as history; the KiCad files
+> are the source of truth.
 
 ---
 
@@ -25,26 +43,59 @@ The board is **code-defined**: `pcb_route.py` builds the geometry and runs DRC, 
 
 | Block | Part | Notes |
 |---|---|---|
-| MCU | ATtiny1616 (20-VQFN) | PWM breathing, cap-touch, charge logic |
-| Solar | ANYSOLAR SM141K06L | Voc 4.15 V, 184 mW **at full sun** — indoor harvest is a small fraction of that |
-| Blocking diode | onsemi MMSD301T1G | Schottky; stops the caps back-feeding the cell |
-| Storage | 2× SCHURTER 3-153-434 | 300 mF / 2.75 V each → 150 mF / 5.5 V in series |
-| Balancer | ALD910025SALI | dual SAB MOSFET — the only non-leaky way to balance the stack |
-| LEDs | 4× ams OSRAM LA P47F | amber 617 nm, reverse-mount, 1 kΩ ballast each |
-| Button | Snaptron F12340 | 12 mm / 340 gf metal snap dome |
-| Battery option | 2× Keystone 3012 + 2× MMSD4148 | CR1632 retainers, mutually exclusive with the solar cell |
+| MCU | **AVR64DD28** (28-VQFN) | TCA0 hardware PWM, I²C to the accel, charge/sleep logic; MVIO-capable |
+| Solar | **2× ANYSOLAR SM141K06TF** | indoor amorphous cells, wired in parallel — two panels ≈ 2× the harvest |
+| Blocking diodes | **2× onsemi MMSD301T1G** | Schottky, one per panel; isolates the cells *and* the supercaps |
+| Storage | **4× SCHURTER 3-153-438** (WS17) | 1 F / 2.75 V each, wired 2P2S → **1 F @ 5.5 V ≈ 15 J** on one balanced node |
+| Balancer | **ALD910025SALI** | dual SAB MOSFET — the low-leakage way to hold the series midpoint |
+| Rail clamp | **TI TLV431 + onsemi BCP53 PNP** | shunt clamp holds the rail **≤ ~3.47 V** so the accel stays inside its 3.6 V max |
+| LEDs | **4× ams OSRAM LA P47F** (amber) | reverse-mount; glow through the FR4 window, **150 Ω** ballast each |
+| LED master switch | **SW2** (solder-bridge) + **R12** | OFF / ON / TINY — TINY routes the LEDs through a 220 Ω ballast for a dim, long-runtime glow |
+| Motion | **ST LIS2DH12** | 3-axis accel; tap / double-tap wakes the MCU via interrupts |
+| Light sense | **R5 / R6 divider → ADC** | coarse light / dark / charging-state sense off the rail |
 
-Breakouts and features: UPDI (`J1`) for programming, I²C (`JP1`) for expansion, seven test points, five castellated edge pads, and four **grounded** M2 mounting holes.
+**Breakouts and features:** a **TC2030** Tag-Connect pad (`TC1`) for hands-free UPDI
+programming, a backup UPDI header (`J1`), an I²C expansion header (`JP1`), a spare-GPIO header
+(`JP2`), per-LED disable jumpers (`SB1–4`), a VDDIO2 tie jumper (`SJ1`), and **four grounded
+M2 mounting holes** at the corners.
 
-Full part numbers, live pricing, and per-part datasheet links are in **`solar-glow-drh-BOM.xlsx`**.
+Full part numbers, pricing, and per-part datasheet links are in
+**`solar-glow-drh-BOM.xlsx`**.
 
 ---
 
-## The open question — read this before assembling a batch
+## The board
 
-The board is well-verified; the **energy budget is not**. The 184 mW solar figure is a full-sun number, and indoor light delivers a small fraction of it, while four breathing LEDs average several mW. The supercap bank is sized to *harvest slowly, glow in bursts*, but that bet has never been measured.
+- **Six copper layers** on 0.8 mm FR4: outer top/bottom for parts and signal, with internal
+  **GND and VS planes** and two internal signal layers to carry the dense back-side routing
+  around the supercaps.
+- **The glow window is a keepout on every layer.** The monogram cutout and the four LED
+  light-paths are voided through all six layers so nothing — copper pour, trace, or via —
+  shadows the light between the rear LEDs and the front face. The rear soldermask is left
+  *open* over the window on purpose: bare ENIG reflects the LEDs’ light forward instead of
+  absorbing it.
+- **Rail discipline.** The supercap stack can sit near 5.5 V, but the accelerometer tops out at
+  3.6 V — so a TLV431-referenced PNP shunt clamp on the solar side holds the rail to ~3.47 V.
+  The clamp sits ahead of the blocking diode, so in the dark it draws nothing from the caps.
+- **Power planes** carry the supercap charge/discharge currents; the four cells eat the better
+  part of the back, so the layout is geometry-bound and the planes earn their layers.
 
-**First move when boards arrive:** put the cell under your real target lighting and measure harvest current against the LED draw, before populating a stack. The coin-cell path is the fallback — the card glows on batteries no matter what.
+---
+
+## The open question — read this before building a batch
+
+The board is well-verified; the **energy budget is not.** A solar cell’s headline rating is a
+full-sun number, and indoor light delivers a small fraction of it, while four breathing LEDs
+average several milliamps. The two-panel harvest and the 15 J tank are sized to **harvest
+slowly and glow in bursts** — but that bet has never been put on a meter.
+
+What changed the math since the early notes: the rail is now **clamped to ~3.47 V** and the
+ballasts are **150 Ω**, so each LED peaks near **~9 mA** rather than the old estimate. Four
+on at once is a real load against an indoor harvest measured in fractions of a milliamp.
+
+**First move when boards arrive:** put the cells under your actual target lighting and measure
+**harvest current against LED draw** before you populate a full stack. That single number sizes
+the duty cycle, the feature set, and whether the always-on accelerometer earns its microamps.
 
 ---
 
@@ -52,46 +103,89 @@ The board is well-verified; the **energy budget is not**. The 184 mW solar figur
 
 ```
 solar-business-card/
-├── pcb_route.py                   # board geometry + DRC (code-defined)
-├── gerber_export.py               # emits Gerbers + drill files
-├── gerbers/                       # fabrication output (sent to OSH Park)
-├── solar-glow-drh-BOM.xlsx        # bill of materials — parts, prices, datasheet links
-└── datasheets/                    # every component's datasheet
+├── solar-glow-drh-v2_1.kicad_pcb   # the board — 6-layer, routed (source of truth)
+├── solar-glow-drh-v2_1.kicad_sch   # schematic
+├── solar-glow-drh-v2_1.kicad_pro   # KiCad project
+├── solar-glow-drh-BOM.xlsx         # bill of materials — parts, prices, datasheet links
+├── datasheets/                     # every component's datasheet
+└── enclosure/                      # parked CAD for the metal back-shell (STEP / STL / CadQuery)
 ```
 
 ---
 
 ## Building the board
 
-```bash
-pip install shapely gerbonara pymupdf
-python3 pcb_route.py        # builds the board, prints DRC (connectivity / shorts)
-python3 gerber_export.py    # writes the Gerber + drill set into gerbers/
-```
+The board is a KiCad project — open it, run DRC, and export the fab set:
 
-The board is currently 0.8 mm. The design will take anything from 0.8 down to 0.2 mm — thinner FR4 passes more light through the substrate if the apertures alone don't give the glow you want.
+1. Open `solar-glow-drh-v2_1.kicad_pro` in **KiCad**.
+2. **Run DRC.** It comes back clean apart from two expected items: the unregistered
+   `solarglow` footprint library (register it locally), and one intentional dangling stub on
+   the reserved `BTN` net. The rear soldermask “bridges” over the reflective window are
+   deliberate, not errors.
+3. **Plot Gerbers + drill** and order from **PCBWay** (6-layer, 0.8 mm; confirm the via-fill
+   and minimum-clearance rules against PCBWay’s stackup).
+
+> The supercap land is the one thing to never get wrong. The WS17 cell solders to **flat pads
+> under its body** (the asymmetric P/N widths are the polarity key), **not** to the folded end
+> tabs — those are non-solderable mechanical locators. The footprint in this design is built to
+> the correct under-body land; don’t substitute an end-tab land.
 
 ---
 
 ## Assembly order (when boards arrive)
 
-1. **Validate the energy budget** — harvest vs. LED draw under real lighting.
-2. **Reflow the SMD parts first** — QFN, passives, LEDs, balancer.
-3. **Hand-solder last** — the PV1 cell (heat-sensitive: ≤260 °C / 2 s, no IPA), the snap dome, and the coin retainers if building the battery variant.
-4. **Flash firmware** over UPDI.
+1. **Validate the energy budget first** — harvest vs. LED draw under real lighting (above).
+2. **Reflow the SMD parts** — the QFN MCU and the LGA accelerometer need hot air / a hotplate;
+   the EP and the accel pad reflow to their planes.
+3. **Hand-solder last** — the solar cells (heat-sensitive: ≤ 260 °C / 2 s, no IPA), and set the
+   **SW2** bridge for OFF / ON / TINY.
+4. **Flash firmware** over UPDI — the Tag-Connect pad (`TC1`) is the no-header path; `J1` is the
+   backup header.
 
 ---
 
 ## Firmware
 
-Parked until first articles land and the harvest question is answered. Scope: the PWM breathing curve, cap-touch tuning on the dome pad, and charge / brown-out management around the supercap bank.
+Parked until first articles land and the harvest question is answered. The board gives it:
+
+- **LED breathing** — the four LEDs sink into **PA0–PA3 = TCA0 WO0–WO3**, so split-mode PWM
+  drives all four as independent 8-bit channels (the 150 Ω ballast sets the peak; PWM sets the
+  average, so you trim brightness *below* that ceiling).
+- **Tap-to-wake** — the accelerometer’s two interrupts land on **PF1 / PF0**; configure
+  tap / double-tap and let it pull the MCU out of sleep.
+- **Light sensing** — the rail divider reads on an **ADC** pin (PD2); firmware adapts the glow
+  to available light, and can read **VDD/10** and the internal temp sensor directly.
+- **Auto-glow-on-pickup (candidate)** — the same sense pin is a candidate for the AC0
+  comparator, to wake on light with no tap; confirm PD2’s AC0 input against the datasheet
+  before committing it.
+- **Low-power housekeeping** — `VREGCTRL.PMODE = AUTO` for sub-µA power-down; RTC/PIT off the
+  internal ULP oscillator (no crystal); an EEPROM “times-activated” counter that survives a
+  full supercap drain; and CCL + EVSYS to run a glow pattern while the CPU sleeps.
+
+Scope when it starts: the breathing curve, the tap gestures, charge / brown-out management
+around the supercap bank, and the duty-cycle adaptation the harvest measurement unlocks.
+
+---
+
+## Enclosure (parked)
+
+An optional back-only **machined-metal** shell hugs the populated rear; the front stays naked.
+CAD, STEP, and STL are in `enclosure/`, on ice until the board is validated. The design notes
+(`enclosure/ENCLOSURE-NOTES.md`) carry the decisions that matter once it’s cut: **titanium
+(Ti-6Al-4V)** for strength at a card-thin skin (7075 aluminum as the cheaper, marginal
+fallback); **photochemical etching** for the shallow relief pockets since titanium mills slow;
+and the electrical gotcha — the screws tie the metal body to board GND, so the enclosed variant
+**drops the edge castellations** (or adds a die-cut Kapton isolation layer) so nothing shorts
+to the grounded shell. With a metal back, the **accelerometer tap is the actuator** — there’s
+no button to press from outside.
 
 ---
 
 ## Cost
 
-- **Per board, solar build: ≈ $50**, of which the two supercaps are ~60%. This is a showpiece, not a hand-out-by-the-hundred card.
-- Battery option adds ≈ $2.74 (retainers, diodes, decoupling; cells user-supplied).
+- **Per board ≈ $100** at quantity one, and the **four supercaps are the dominant line** —
+  well over half the BOM. This is a showpiece, not a hand-out-by-the-hundred card.
+- The energy tank is where the money goes; everything else is comparatively cheap.
 
 ---
 
