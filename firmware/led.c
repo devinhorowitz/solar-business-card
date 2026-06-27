@@ -15,9 +15,11 @@
  * 255 -> pad mostly LOW -> LED full (ballast-limited). Monotonic and intuitive.
  */
 #include <avr/io.h>
+#include <avr/interrupt.h>
+#include <avr/sleep.h>
+#include <avr/wdt.h>
 #include "board.h"
 #include "led.h"
-#include <util/delay.h>
 
 /* perceptual ramp: output ~ input^2, keeps the "breath" from looking
  * top-heavy to the eye without floats or a big LUT. in/out 0..255. */
@@ -75,10 +77,63 @@ void led_off(void)
     led_set_all(0);
 }
 
-/* 1 ms granularity runtime delay (util/delay wants a compile-time arg). */
-static void delay_ms_var(uint16_t ms)
+/* --- glow timebase -------------------------------------------------------
+ * During a breath the LEDs dominate the current; the CPU only needs to update
+ * the duty every step_ms. Rather than burn the core in a _delay_ms busy-loop
+ * for the whole ~3 s animation, a TCB ticks every 1 ms and the core IDLE-sleeps
+ * between updates (TCA keeps the PWM running in idle, so the glow is unbroken).
+ * IDLE gates the core clock only -- the oscillator and TCA keep running and the
+ * LEDs still dominate -- so the saving is modest (~5% of glow energy), but it
+ * costs nothing visually and pets the watchdog along the way.
+ *
+ * TCB is enabled only for the duration of led_breathe. CCMP is derived from
+ * F_CPU so 1 ms holds if the clock changes; at 4 MHz / DIV2 it is 2000 counts. */
+static volatile uint8_t tcb_tick;
+
+ISR(TCB0_INT_vect)
 {
-    while (ms--) _delay_ms(1);
+    TCB0.INTFLAGS = TCB_CAPT_bm;     /* write-1-to-clear */
+    tcb_tick = 1;
+}
+
+static void tcb_start_1ms(void)
+{
+    TCB0.CCMP     = (uint16_t)(F_CPU / 2UL / 1000UL);   /* 1 ms at CLK_PER/2 */
+    TCB0.CNT      = 0;
+    TCB0.INTFLAGS = TCB_CAPT_bm;                        /* drop any stale flag */
+    TCB0.INTCTRL  = TCB_CAPT_bm;                        /* IRQ on compare      */
+    TCB0.CTRLB    = TCB_CNTMODE_INT_gc;                 /* periodic interrupt  */
+    TCB0.CTRLA    = TCB_CLKSEL_DIV2_gc | TCB_ENABLE_bm;
+}
+
+static void tcb_stop(void)
+{
+    TCB0.CTRLA    = 0;               /* disable so it does not tick between glows */
+    TCB0.INTCTRL  = 0;
+    TCB0.INTFLAGS = TCB_CAPT_bm;
+}
+
+/* sleep the core in IDLE for `ms` TCB ticks (1 ms each). Only the TCB tick ends
+ * a nap; PIT/accel interrupts may wake the core but leave tcb_tick clear, so a
+ * wake event during a glow is latched (for the main loop) without cutting the
+ * animation short. Requires TCB running (tcb_start_1ms) and interrupts enabled. */
+static void idle_nap_ms(uint16_t ms)
+{
+    set_sleep_mode(SLEEP_MODE_IDLE);
+    while (ms--) {
+        tcb_tick = 0;
+        for (;;) {
+            cli();
+            if (tcb_tick) { sei(); break; }
+            sleep_enable();
+            sei();                   /* SEI + SLEEP is atomic: no missed tick */
+            sleep_cpu();
+            sleep_disable();
+        }
+#if USE_WDT
+        wdt_reset();                 /* pet across the whole glow, ~1 ms cadence */
+#endif
+    }
 }
 
 void led_breathe(uint8_t cycles, uint16_t breath_ms, uint8_t peak)
@@ -87,17 +142,19 @@ void led_breathe(uint8_t cycles, uint16_t breath_ms, uint8_t peak)
     uint16_t step_ms = breath_ms / (uint16_t)(2u * steps);
     if (step_ms == 0) step_ms = 1;
 
+    tcb_start_1ms();                           /* 1 ms timebase for the idle naps */
     for (uint8_t c = 0; c < cycles; c++) {
         for (uint8_t i = 0; i <= steps; i++) {              /* in  */
             uint8_t lin = (uint8_t)(((uint16_t)peak * i) / steps);
             led_set_all(gamma2(lin));
-            delay_ms_var(step_ms);
+            idle_nap_ms(step_ms);
         }
         for (uint8_t i = steps; i > 0; i--) {               /* out */
             uint8_t lin = (uint8_t)(((uint16_t)peak * (i - 1)) / steps);
             led_set_all(gamma2(lin));
-            delay_ms_var(step_ms);
+            idle_nap_ms(step_ms);
         }
     }
+    tcb_stop();
     led_off();
 }

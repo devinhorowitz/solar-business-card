@@ -149,6 +149,42 @@ before each conversion, or disable the ADC between samples).
 - **Accel sensitivity** (`lis2dh12.h`): `LIS_CLICK_THS_RAW` (~16 mg/LSb at ±2 g;
   lower = more sensitive), `LIS_CLICK_CFG_VAL` (`0x15` single / `0x2A` double /
   `0x3F` both), and `LIS_CFG_CTRL_REG1` ODR vs. current.
+- **`POLL_PERIOD_S`** (1 or 2): the RTC PIT poll period. This is now wired to the
+  PIT (it was previously decorative — the period was hardcoded to 1 s); a value
+  other than 1 or 2 is a compile `#error`. 2 s halves the poll's standby cost at
+  the price of slower dark→light response.
+- **`WINK_FLOOR_MV`**: the power-on wink only fires above this rail (set above
+  `VS_GLOW_FLOOR_MV`), so a marginal just-charged card cannot wink itself back
+  below the glow floor.
+- **`USE_WDT`** (0/1): the watchdog (see Robustness below).
+
+## Robustness / hardening
+
+- **Watchdog (`USE_WDT`, on by default).** An ~8 s WDT (runs in every sleep mode
+  off the ULP oscillator) recovers the card from an unexpected lockup. It is
+  petted from the **main-loop top** and from **inside `led_breathe`** (~1 ms
+  cadence), never from an ISR — petting from an ISR would mask a wedged main
+  loop, which is exactly the failure to catch. The PIT wakes the loop every
+  `POLL_PERIOD_S`, so power-down sleep never trips it. The timeout must stay well
+  above both the poll period and the longest glow (`GLOW_CYCLES * GLOW_BREATH_MS`);
+  at the 8 s setting and the defaults there is wide margin.
+- **All hardware waits are bounded.** The I2C paths break on bus timeout /
+  arbitration loss (a dead or shorted accel cannot wedge boot), and the ADC
+  conversion wait is bounded and returns 0 (reads as low-rail / dark, fails safe)
+  if a conversion never completes. After these, the only remaining spin is the
+  internal RTC sync at cold boot, which clears in a few cycles.
+- **`twi_read` reports faults distinctly.** It returns a status byte separate
+  from the data, so a real `0xFF` register value is never confused with a bus
+  error (the read helpers all propagate the fault up to the caller).
+- **Glow sips, doesn't spin.** During a breath the core IDLE-sleeps between
+  1 ms PWM updates (TCA keeps the PWM running in idle) instead of busy-waiting at
+  4 MHz. The saving is modest — IDLE gates only the core clock; the oscillator,
+  TCA, and especially the LEDs keep drawing — so call it ~5% of glow energy, to
+  be confirmed on the bench. **The part stays at 4 MHz on purpose:** once the
+  core sleeps through the glow it is only briefly active (~50 µs ADC polls plus
+  boot config), so dropping to 1 MHz would save a negligible *absolute* amount
+  while slowing I2C and lowering the PWM frequency. Revisit only if a bench
+  measurement says the brief active windows actually matter.
 
 ## Brown-out
 

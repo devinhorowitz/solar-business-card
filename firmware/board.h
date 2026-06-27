@@ -96,4 +96,17 @@
 /* baseline poll period (option B), seconds (RTC PIT). 1 or 2. */
 #define POLL_PERIOD_S      1
 
+/* power-on wink only fires with comfortable headroom above the glow floor,
+ * so a freshly-charged-but-marginal card cannot wink itself back below the
+ * floor (matters most if BOD is later enabled and the rail hovers near the
+ * floor while charging). Set >= VS_GLOW_FLOOR_MV. */
+#define WINK_FLOOR_MV      3000
+
+/* watchdog: recover from an unexpected lockup on a fielded card. 1 = on.
+ * Petted from the main loop (top) and from inside led_breathe, never from an
+ * ISR. Timeout (~8 s) must stay well above POLL_PERIOD_S and the longest glow
+ * (GLOW_CYCLES * GLOW_BREATH_MS); the PIT wakes the loop every poll to pet it,
+ * so power-down sleep never trips it. */
+#define USE_WDT            1
+
 #endif /* BOARD_H */

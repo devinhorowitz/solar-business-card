@@ -25,6 +25,7 @@
 #include <avr/interrupt.h>
 #include <avr/sleep.h>
 #include <avr/cpufunc.h>
+#include <avr/wdt.h>      /* wdt_reset() == WDR; enable is via WDT.CTRLA below */
 
 #include "board.h"
 #include "twi.h"
@@ -67,11 +68,18 @@ static void gpio_init(void)
 
 static void rtc_pit_init(void)
 {
-    /* 1.024 kHz internal ULP clock (runs in power-down). CYC1024 -> 1.0 s. */
+    /* 1.024 kHz internal ULP clock (runs in power-down). Period from the
+     * POLL_PERIOD_S knob so the config actually takes effect. */
     RTC.CLKSEL = RTC_CLKSEL_OSC1K_gc;
     while (RTC.PITSTATUS & RTC_CTRLBUSY_bm) { }
     RTC.PITINTCTRL = RTC_PI_bm;
-    RTC.PITCTRLA   = RTC_PERIOD_CYC1024_gc | RTC_PITEN_bm;
+#if   POLL_PERIOD_S == 1
+    RTC.PITCTRLA = RTC_PERIOD_CYC1024_gc | RTC_PITEN_bm;   /* 1024 / 1.024 kHz = 1.0 s */
+#elif POLL_PERIOD_S == 2
+    RTC.PITCTRLA = RTC_PERIOD_CYC2048_gc | RTC_PITEN_bm;   /* 2048 / 1.024 kHz = 2.0 s */
+#else
+#  error "POLL_PERIOD_S must be 1 or 2 (RTC PIT poll period, seconds)."
+#endif
 }
 
 /* ---------------- sleep ---------------- */
@@ -114,18 +122,34 @@ int main(void)
     PORTF.INTFLAGS = ACC_INT1_bm | ACC_INT2_bm;
     f_tap = f_motion = f_tick = 0;
 
+#if USE_WDT
+    /* arm the watchdog last, once the slow bring-up (I2C config) is done so it
+     * cannot trip during init. CTRLA is CCP-protected. ~8 s >> poll and glow. */
+    _PROTECTED_WRITE(WDT.CTRLA, WDT_PERIOD_8KCLK_gc);
+    wdt_reset();
+#endif
+
     sei();
 
-    /* power-on wink so a freshly programmed card shows life (if rail allows) */
-    if (sense_rail_ok())
+    /* power-on wink so a freshly programmed card shows life. Gated on a margin
+     * above the glow floor (WINK_FLOOR_MV), not the floor itself, so a marginal
+     * just-charged card cannot wink itself back below the floor. */
+    if (sense_vdd_mv() >= WINK_FLOOR_MV)
         led_breathe(1, GLOW_BREATH_MS, GLOW_PEAK);
 
     for (;;) {
+#if USE_WDT
+        wdt_reset();      /* pet from the loop top: a wedged main loop (even one
+                           * still taking interrupts) stops petting -> reset. */
+#endif
         if (f_tap) {
             f_tap = 0;
             if (sense_rail_ok()) {
+                /* tally BEFORE the glow: the EEPROM write then happens at the
+                 * higher pre-glow rail, not after the glow has sagged it. The
+                 * ~13 ms write is imperceptible ahead of the animation. */
+                sense_count_inc();
                 led_breathe(GLOW_CYCLES, GLOW_BREATH_MS, GLOW_PEAK);
-                sense_count_inc();           /* lifetime activation tally */
             }
             lis2dh12_clear_click();          /* drop the latched INT1 */
             prev_light = (sense_vin_mv() >= LIGHT_VIN_MV);

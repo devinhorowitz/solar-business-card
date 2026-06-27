@@ -59,15 +59,17 @@ static inline uint8_t twi_write(uint8_t b)
     return (TWI0.MSTATUS & TWI_RXACK_bm) ? 1 : 0;
 }
 
-/* read one data byte. ack=1 -> ACK + clock next byte; ack=0 -> NACK + STOP. */
-static inline uint8_t twi_read(uint8_t ack)
+/* read one data byte into *out. ack=1 -> ACK + clock next byte; ack=0 -> NACK
+ * + STOP. returns 0 ok, 1 fault (bus error / arb lost). The status is returned
+ * separately from the data so a real 0xFF byte is never confused with an error. */
+static inline uint8_t twi_read(uint8_t ack, uint8_t *out)
 {
     while (!(TWI0.MSTATUS & TWI_RIF_bm))
-        if (TWI0.MSTATUS & TWI_BUSERR_bm) return 0xFF;
-    uint8_t b = TWI0.MDATA;
+        if (TWI0.MSTATUS & (TWI_BUSERR_bm | TWI_ARBLOST_bm)) return 1;
+    *out = TWI0.MDATA;
     if (ack) TWI0.MCTRLB = TWI_MCMD_RECVTRANS_gc;                 /* ACK, go again */
     else     TWI0.MCTRLB = TWI_ACKACT_bm | TWI_MCMD_STOP_gc;      /* NACK + STOP   */
-    return b;
+    return 0;
 }
 
 static inline void twi_stop(void)
@@ -94,7 +96,8 @@ static inline uint8_t twi_reg_read(uint8_t addr7, uint8_t reg, uint8_t *dst, uin
     if (twi_write((n > 1) ? (uint8_t)(reg | 0x80) : reg)) { twi_stop(); return 1; }
     if (twi_start(addr7, 1))                          { twi_stop(); return 1; }  /* repeated start */
     for (uint8_t i = 0; i < n; i++)
-        dst[i] = twi_read((uint8_t)(i < (n - 1)));    /* ACK all but last; last NACKs + STOPs */
+        if (twi_read((uint8_t)(i < (n - 1)), &dst[i]))    /* ACK all but last; last NACKs + STOPs */
+            return 1;                                     /* bus fault -> dst not trustworthy */
     return 0;
 }
 

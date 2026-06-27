@@ -25,10 +25,16 @@ void sense_adc_init(void)
 
 static uint16_t adc_read_raw(uint8_t muxpos)
 {
-    ADC0.MUXPOS   = muxpos;
-    ADC0.COMMAND  = ADC_STCONV_bm;
-    while (!(ADC0.INTFLAGS & ADC_RESRDY_bm)) { }
-    return ADC0.RES;            /* INTFLAGS RESRDY clears on RES read */
+    ADC0.MUXPOS  = muxpos;
+    ADC0.COMMAND = ADC_STCONV_bm;
+    /* A 12-bit conversion here is ~50 us (13.5 + 2 + SAMPLEN cycles at 1 MHz
+     * CLK_ADC). Bound the wait so a misconfigured/stuck ADC cannot hang the
+     * core; ~8000 loops is many ms, far beyond the conversion. On timeout
+     * return 0, which reads as low rail / dark and fails safe (no glow). */
+    for (uint16_t guard = 0; guard < 8000; guard++)
+        if (ADC0.INTFLAGS & ADC_RESRDY_bm)
+            return ADC0.RES;        /* reading RES clears RESRDY */
+    return 0;
 }
 
 uint16_t sense_vin_mv(void)
