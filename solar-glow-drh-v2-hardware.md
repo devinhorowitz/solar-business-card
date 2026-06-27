@@ -139,7 +139,9 @@ Inner copper: **In1 = GND plane, In4 = VS plane**, In2/In3 = signal. (6-layer, 0
 - **Rail clamp:** TLV431 (U4) + PNP (Q1) shunt holds **VS ≤ ~3.47 V** so the accelerometer
   stays inside its 3.6 V max. Divider R7 (1.8 M) / R8 (1 M) sets the trip; it sits on VS.
 - **VDDIO2 = VS** via SJ1, so PORTC runs at the rail and **MVIO is unused** (no separate I/O
-  voltage, no MVIO fuse to manage). PORTC pins are valid up to VS.
+  voltage). The MVIO fuse `SYSCFG1.MVSYSCFG` should be set to **SINGLE** to match (factory
+  default is DUAL; DUAL also works since VDDIO2 sits at a valid voltage, but SINGLE is the
+  intent). PORTC pins are valid up to VS. See the firmware README "Fuses" section.
 - **Sense:** `VSENSE = VIN / 2` (R5/R6 = 1 MΩ, C5 = 10 nF, ~5 ms filter) into PD2. Reads the
   *solar input*, not the stored rail — see §6.
 
@@ -147,30 +149,49 @@ Inner copper: **In1 = GND plane, In4 = VS plane**, In2/In3 = signal. (6-layer, 0
 
 ## 6. Wake-on-light — validated, viable as wired (no board change)
 
+> **Firmware reconciliation (read first).** The firmware implements **path B
+> only**. **Path A (AC0 instant wake) was found non-viable on this silicon** once
+> verified against the datasheet: the AC0 interrupt and flags do not update while
+> `CLK_PER` is stopped, and Table 13-4 does not list the AC as a Standby or
+> Power-Down wake source, so an AC0 wake would silently never fire. The **wiring
+> below is still correct** and path B works exactly as described; what is stale is
+> the option-A recommendation and the current/darkness estimates, which predate
+> the firmware bring-up (they assume a ~2 µA accelerometer, but a click-armed
+> LIS2DH12 runs at ~10 µA). The corrected wake/power model lives in
+> **`firmware/README.md` ("Power notes / wake architecture")**, which is
+> authoritative for anything in this section.
+
 Confirmed electrically this revision. The divider sits on **VIN (before D1)**, so VSENSE
 collapses to ~0 V in the dark and rises with light; **PD2 = AINP0** is a real AC0 input and
 **AIN2** is a real ADC input. Signal swing: ~0 V dark → ~1.2–2.1 V in light (dim-indoor to
 sun), against an easily-set threshold near ~0.4 V. AC0 input range is −0.2 V…VDD, so VSENSE
 fits. Two implementations, same wiring — choose per use:
 
-**A) AC0 comparator — instant wake.**
+**A) AC0 comparator — instant wake. [NOT VIABLE — see the reconciliation note above; kept as the record of why it was considered.]**
 - AC0 `MUXPOS = AINP0` (PD2); `MUXNEG = DACREF`; set threshold `DACREF × VREF` ≈ 0.4 V.
 - Enable hysteresis (10/25/50 mV) so a flickering source doesn't chatter the interrupt.
 - `CTRLA.RUNSTDBY = 1`, sleep in **Standby**; the AC0 CMP interrupt wakes the core the moment
   light appears. Use `CTRLA.POWER = 0x2` (slowest, plenty fast for light) ≈ **~12 µA** standing.
-- Dark tolerance: AC0 (~12 µA) + accel (~2 µA) + standby (~3 µA) ≈ ~16 µA against ~4 J usable
-  → roughly **a day** of total darkness before the tank is flat.
+- Dark tolerance (as originally estimated): AC0 (~12 µA) + accel (~2 µA) + standby (~3 µA)
+  ≈ ~16 µA. *Both assumptions are wrong:* A does not work at all on this part, and a
+  click-armed accel runs at ~10 µA (not ~2 µA), so this line does not reflect the shipped
+  design — see the README.
 
 **B) RTC/PIT poll + ADC — dark-tolerant.**
 - Sleep in **Power-Down**; wake every ~1–2 s off the internal-ULP RTC/PIT; ADC-sample PD2
   (AIN2); escalate to full wake only when the reading clears the light threshold.
-- Average **~1–3 µA → ~5–7 days** of darkness, at the cost of ~1–2 s detection latency.
+- Detection latency ~1–2 s. (The "~1–3 µA → ~5–7 days" originally written here omitted the
+  always-on accelerometer; with the click-armed accel at ~10 µA the real standing draw is
+  accel-dominated and darkness survival is on the order of **half a day** — see README.)
 - Note: in the deepest Power-Down the AC0 is off, so this is the only wake-on-light that works
   in that mode — and it's the better fit for "card sat in a drawer."
 
-Both recharge instantly when light returns. A reasonable firmware default: run **B** as the
-always-on baseline and arm **A** only when the card is in active use and instant response is
-wanted.
+Both recharge instantly when light returns. **B is the baseline and the only viable
+wake-on-light path.** Instant response is not lost: the accelerometer's motion/tap interrupt
+is a confirmed Power-Down wake source, and picking the card up to carry it into the light *is*
+that motion, so A is not needed. A true zero-latency *light* trigger, if ever wanted, is the
+supported AC0 → Event System → CCL → CCL-interrupt path (Table 13-4 lists CCL as a Standby
+wake source) — a v-next exercise, not built here.
 
 *Open empirical item:* the indoor VIN figures are estimated from the panel's logarithmic
 Voc-vs-illumination behavior; the dark (0 V) and sun (datasheet) endpoints are firm. The
@@ -185,11 +206,11 @@ and set the achievable duty cycle.
    fitted); plan to sleep aggressively (the rail is tiny).
 2. **GPIO/PORTMUX:** `TCAROUTEA = DEFAULT`, `TWIROUTEA = ALT2`; PA0‒PA3 outputs (LEDs),
    PF0/PF1 inputs w/ interrupt (accel), PD2 left to the analog peripheral.
-3. **I²C up, talk to the accel** at `0x18`; configure tap/activity → INT1/INT2; verify the
-   PF1/PF0 interrupts fire on a physical tap.
+3. **I²C up, talk to the accel** at `0x18`; configure tap → INT1 and motion (IA2) → INT2;
+   verify the PF1/PF0 interrupts fire on a physical tap and on a pickup.
 4. **TCA0 split-mode PWM** on the LEDs; **confirm SW2 is ON/TINY** or nothing lights.
-5. **Wake-on-light** (§6) — bring up option B first (simplest, deepest sleep), then A if instant
-   wake is wanted.
+5. **Wake-on-light** (§6) — implement path B (deepest sleep, the only viable path); instant
+   response to handling comes from the accel interrupt, so A is not built.
 6. **Housekeeping:** ADC read of VSENSE (×2 = VIN) and VDD/10 for charge state; optional EEPROM
    activation counter; brown-out behavior around the supercap rail.
 
