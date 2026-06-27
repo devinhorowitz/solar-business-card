@@ -6,11 +6,13 @@ backlit **DRH** monogram with a breathing glow when you tap it (or when it is
 carried from dark into light). There is **no button** in v2.1 — the
 accelerometer is the actuator.
 
-> Status: this code is verified at the **register level** against the
-> AVR64DD32/28 datasheet (DS40002315) and the LIS2DH12 datasheet (DM00091513),
-> and the pin map is read directly from the committed `.kicad_pcb`. It was
-> **not compile-tested** in the authoring environment (no AVR-Dx DFP there).
-> Build against a real DFP as below; only standard DFP macros are used.
+> Status: verified at the **register level** against the AVR64DD32/28 datasheet
+> (DS40002315) and the LIS2DH12 datasheet (DM00091513); the pin map is read
+> directly from the committed `.kicad_pcb`; and every `_gc`/`_bm` macro, SFR
+> field, struct member, and ISR vector used here was checked against the actual
+> Microchip `ioavr64dd28.h` from the current AVR-Dx pack. It was **not
+> compile-tested** in the authoring environment (no toolchain+DFP there), so
+> build against a real DFP as below before trusting it on hardware.
 
 ## Files
 
@@ -111,7 +113,13 @@ card is in active use and instant light response matters.
 
 **The energy-budget bench measurement is still the project's #1 gate.** It sets
 the indoor harvest number and therefore the achievable LED duty; treat the
-tunables below as starting points until that measurement lands.
+tunables below as starting points until that measurement lands. When you make
+that measurement, confirm sleep current with the ADC configured: `sense_adc_init`
+leaves the ADC enabled and selects the internal 2.500 V reference with
+`ALWAYSON` set so a periodic sample reads true without re-settling. In
+power-down both should be off, but verify it on the meter; if the reference adds
+standing current, gate it (clear `ALWAYSON` and add a short settling delay
+before each conversion, or disable the ADC between samples).
 
 ## What to tune (all in `board.h` unless noted)
 
@@ -121,9 +129,14 @@ tunables below as starting points until that measurement lands.
 - **`VS_GLOW_FLOOR_MV`**: rail floor below which the card refuses to glow.
 - **`LIGHT_THRESH_MV`**: dark→light trip point at the VSENSE pin (≈ VIN/2).
 - **LED PWM polarity** (`led_init` in `led.c`): the four LED pins use pad
-  **INVEN** so a larger duty = brighter. If a bench check shows brightness
-  running backwards, delete the four `PINnCTRL |= PORT_INVEN_bm` lines — that is
-  the whole fix.
+  **INVEN**. This is analyzed-correct for a low-side LED on TCA split mode
+  (which down-counts: output cleared at BOTTOM, set on compare match), giving
+  larger duty = brighter. INVEN is also **load-bearing for the dark idle
+  state**: at duty 0 the WO output is low, so INVEN parks the pad HIGH and the
+  LED is off. Do **not** "fix" an apparent inversion by removing INVEN — that
+  would also turn every LED ON at rest. If a bench check somehow shows
+  brightness running backwards, invert the value instead (write `255 - duty`
+  in `led_set`/`led_set_all`), which keeps the idle state dark.
 - **Accel sensitivity** (`lis2dh12.h`): `LIS_CLICK_THS_RAW` (~16 mg/LSb at ±2 g;
   lower = more sensitive), `LIS_CLICK_CFG_VAL` (`0x15` single / `0x2A` double /
   `0x3F` both), and `LIS_CFG_CTRL_REG1` ODR vs. current.

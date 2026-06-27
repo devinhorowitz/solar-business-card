@@ -65,8 +65,10 @@ static void gpio_init(void)
      * INT pads are push-pull active-high, so no pull resistor. */
     PORTF.PIN0CTRL = PORT_ISC_RISING_gc;   /* INT2 / activity */
     PORTF.PIN1CTRL = PORT_ISC_RISING_gc;   /* INT1 / tap      */
-    /* PD2 (VSENSE) is left to the analog peripherals -- do not touch its
-     * digital buffer config here; ADC/AC read it directly. */
+    /* PD2 (VSENSE) is analog only: disable its digital input buffer so the
+     * Schmitt trigger doesn't toggle (and burn current) on a slow mid-rail
+     * analog level. ADC/AC read the analog path regardless of this bit. */
+    PORTD.PIN2CTRL = PORT_ISC_INPUT_DISABLE_gc;
     /* LED pins + TCA routing are owned by led_init(); I2C pins by PORTMUX below. */
     PORTMUX.TWIROUTEA = PORTMUX_TWI0_ALT2_gc;   /* SDA=PC2, SCL=PC3 */
 }
@@ -120,6 +122,11 @@ int main(void)
     (void)lis2dh12_init_tap();     /* tap->INT1, activity->INT2             */
 
     rtc_pit_init();       /* 5/6. baseline poll + housekeeping clock */
+
+    /* the accel INT lines were indeterminate until configured just above; drop
+     * any edge they may have latched into PORTF before we arm interrupts. */
+    PORTF.INTFLAGS = ACC_INT1_bm | ACC_INT2_bm;
+    f_tap = f_motion = f_tick = 0;
 
     sei();
 

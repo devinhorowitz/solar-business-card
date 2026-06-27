@@ -25,7 +25,9 @@
 static inline void twi_init(void)
 {
     TWI0.MBAUD   = TWI_MBAUD_100K;
-    TWI0.MCTRLA  = TWI_ENABLE_bm;             /* host on, no IRQ, no smart mode */
+    /* host on; enable the inactive-bus timeout so a wedged bus (SCL stuck low)
+     * recovers into a BUSERR instead of hanging a polled wait forever. */
+    TWI0.MCTRLA  = TWI_TIMEOUT_200US_gc | TWI_ENABLE_bm;
     TWI0.MSTATUS = TWI_BUSSTATE_IDLE_gc;      /* force bus state to IDLE */
 }
 
@@ -34,8 +36,12 @@ static inline uint8_t twi_start(uint8_t addr7, uint8_t read)
 {
     TWI0.MADDR = (uint8_t)((addr7 << 1) | (read & 1u));
     if (read) {
+        /* The address phase is a WRITE regardless of direction: if no device
+         * ACKs, WIF (not RIF) is set together with RXACK. Watch WIF/BUSERR/
+         * ARBLOST here too, or this spins forever on an absent/dead device.
+         * RIF and WIF are mutually exclusive, so WIF here means address-NACK. */
         while (!(TWI0.MSTATUS & TWI_RIF_bm))
-            if (TWI0.MSTATUS & (TWI_BUSERR_bm | TWI_ARBLOST_bm)) return 1;
+            if (TWI0.MSTATUS & (TWI_WIF_bm | TWI_BUSERR_bm | TWI_ARBLOST_bm)) return 1;
     } else {
         while (!(TWI0.MSTATUS & TWI_WIF_bm))
             if (TWI0.MSTATUS & (TWI_BUSERR_bm | TWI_ARBLOST_bm)) return 1;
