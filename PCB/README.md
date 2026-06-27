@@ -161,7 +161,7 @@ Summary of the **orderable** lines:
 | **SC1–SC4** | **4** | **1 F / 2.75 V (WS17)** | `3-153-438` | by MPN |
 | U2 | 1 | Dual SAB MOSFET (SOIC-8) | `ALD910025SALI` | `ALD910025SALI-ND` |
 | D2–D5 | 4 | Amber LED, reverse-mount | `LA P47F-V2BB-24-3B5A-30-R18-Z` | `475-LAP47F-V2BB-24-3B5A-30-R18-ZCT-ND` |
-| R1–R4 | 4 | **150 Ω 1% — SIZED** (⚠ package, see flag) | `TNPW1206150RFEEA` | by MPN |
+| R1–R4 | 4 | **150 Ω 1% 0402 — SIZED** | `RC0402FR-07150RL` | by MPN |
 | R12 | 1 | 220 Ω 0805 | `RC0805FR-07220RL` | by MPN |
 | R5, R6 | 2 | 1 MΩ 0805 | `RC0805FR-071ML` | by MPN |
 | R7 | 1 | 1.8 MΩ 0805 | `RC0805FR-071M8L` | by MPN |
@@ -185,17 +185,15 @@ Summary of the **orderable** lines:
 - **MH1–MH4** are plated drills — supply your own **M2 screws** if enclosing.
 
 **Flags to clear before you buy:**
-- **⚠ R1–R4 footprint vs BOM package — reconcile, or the part won't fit.** The placed land for
-  the four ballast resistors is **~0402** (pads 0.59 × 0.66 mm at 1.02 mm pitch); the BOM line
-  specifies **1206** (`TNPW1206150RFEEA`). A 1206 part cannot solder to a 0402 land. Most
-  likely the BOM package is stale (carried over from v0's 1 kΩ 1206 ballast) while the board
-  intends a small part — confirm the intent and either **order an 0402 150 Ω part** or **change
-  the KiCad footprint to 1206** (and re-check it fits the tight central band). Every other
-  resistor and cap is 0805 and matches.
+- **R1–R4 package — resolved in the BOM.** The placed land is **0402** (0.59 × 0.66 mm pads at
+  1.02 mm pitch), and the BOM now matches it: **Yageo `RC0402FR-07150RL`**, 150 Ω 1% 0402. (The
+  old line carried a stale **1206** part, `TNPW1206150RFEEA`, left over from v0's 1 kΩ ballast;
+  a 1206 cannot solder to this land.) 1/16 W is ample here (~12 mW peak). The board footprint
+  was correct and is unchanged — only the BOM moved. Every other R/C is 0805 and matches.
 - **R1–R4 value (150 Ω) is `SIZED`, not locked.** It sets per-LED peak current (~9 mA on the
   clamped rail) and is **bench-pending** — the energy-budget test may re-tune it. Buy a small
-  range (e.g. 100 / 150 / 220 / 330 Ω) so you can swap after the measurement. (Buy it in
-  whatever package you settle on in the flag above.)
+  0402 range (e.g. 100 / 150 / 220 / 330 Ω) so you can swap after the measurement. For PCBA,
+  any 0402 150 Ω 1% equivalent is fine.
 - **SC1–SC4 are the dominant cost** (well over half the BOM). Confirm live pricing; they swing
   the whole board cost.
 
