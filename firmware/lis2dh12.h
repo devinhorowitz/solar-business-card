@@ -1,0 +1,73 @@
+/*
+ * lis2dh12.h  --  ST LIS2DH12 3-axis accel: register map + tap/activity config.
+ *
+ * Verified against datasheet en.DM00091513 (LIS2DH12). I2C, CS=VS so I2C mode,
+ * SA0=GND so 7-bit address 0x18. INT1 -> MCU PF1, INT2 -> MCU PF0, both
+ * active-HIGH (default INT polarity), so the MCU pins use a RISING edge sense.
+ *
+ * Wake model:
+ *   - CLICK (single-tap, all axes, high-pass filtered) -> INT1 -> PF1.
+ *     This is the primary "tap the card to light it up" gesture.
+ *   - ACTIVITY (sleep-to-wake, ACT_THS/ACT_DUR) -> INT2 -> PF0.
+ *     A softer "the card moved / was picked up" nudge. Not latched, so it
+ *     self-clears when motion stops.
+ *
+ * Running mode: low-power, 100 Hz ODR (CTRL_REG1 = 0x5F). Datasheet current
+ * for LP is a few uA; see README power notes. ODR and click threshold are the
+ * two knobs most likely to need a bench tweak.
+ */
+#ifndef LIS2DH12_H
+#define LIS2DH12_H
+
+#include <stdint.h>
+#include "board.h"          /* LIS2DH12_ADDR */
+
+/* ---- register addresses (verified) ---- */
+#define LIS_WHO_AM_I        0x0F   /* -> 0x33 */
+#define LIS_CTRL_REG0       0x1E
+#define LIS_TEMP_CFG_REG    0x1F
+#define LIS_CTRL_REG1       0x20
+#define LIS_CTRL_REG2       0x21
+#define LIS_CTRL_REG3       0x22
+#define LIS_CTRL_REG4       0x23
+#define LIS_CTRL_REG5       0x24
+#define LIS_CTRL_REG6       0x25
+#define LIS_STATUS_REG      0x27
+#define LIS_OUT_X_L         0x28
+#define LIS_CLICK_CFG       0x38
+#define LIS_CLICK_SRC       0x39
+#define LIS_CLICK_THS       0x3A
+#define LIS_TIME_LIMIT      0x3B
+#define LIS_TIME_LATENCY    0x3C
+#define LIS_TIME_WINDOW     0x3D
+#define LIS_ACT_THS         0x3E
+#define LIS_ACT_DUR         0x3F
+
+#define LIS_WHO_AM_I_VAL    0x33
+
+/* ---- config values (verified bit-by-bit; see .c for the full decode) ---- */
+#define LIS_CFG_CTRL_REG0   0x90   /* SDO_PU_DISC=1 (SA0 grounded, drop pull-up); mandatory low bits = 0010000 */
+#define LIS_CFG_CTRL_REG1   0x5F   /* ODR=100Hz (0101), LPen=1, Zen/Yen/Xen=1  -> low-power, all axes */
+#define LIS_CFG_CTRL_REG2   0x04   /* HPCLICK=1: high-pass the click path (strips the 1g gravity DC) */
+#define LIS_CFG_CTRL_REG3   0x80   /* I1_CLICK=1: click interrupt -> INT1 pad */
+#define LIS_CFG_CTRL_REG4   0x80   /* BDU=1, FS=+/-2g, HR=0 (LP mode); 1 LSb(click) ~= 16 mg */
+#define LIS_CFG_CTRL_REG5   0x00   /* no reboot/FIFO; click has its own latch via CLICK_THS bit7 */
+#define LIS_CFG_CTRL_REG6   0x08   /* I2_ACT=1: activity (wake) -> INT2 pad; INT_POLARITY=0 active-high */
+
+/* ---- tunables (bench-set; safe starting points) ----
+ * At +/-2g, click threshold step ~= 16 mg/LSb. At 100 Hz ODR the TIME_*
+ * registers step at 1/ODR = 10 ms each. */
+#define LIS_CLICK_CFG_VAL   0x15   /* single-click X+Y+Z (XS|YS|ZS). 0x2A = double, 0x3F = both */
+#define LIS_CLICK_THS_RAW   0x30   /* ~0.75 g. lower = more sensitive. (bit7 LIR_Click added in .c) */
+#define LIS_TIME_LIMIT_VAL  0x0A   /* 100 ms: max over-threshold dwell still counted as a click */
+#define LIS_TIME_LATENCY_VAL 0x14  /* 200 ms: dead time after a click (double-click spacing floor) */
+#define LIS_TIME_WINDOW_VAL 0x30   /* 480 ms: double-click window (harmless for single) */
+#define LIS_ACT_THS_VAL     0x10   /* activity (INT2) threshold, ~ FS-scaled; coarse "it moved" */
+#define LIS_ACT_DUR_VAL     0x01   /* activity duration */
+
+/* ---- API ---- 0 = OK, non-zero = fault (bus/NACK) ---- */
+uint8_t lis2dh12_present(void);      /* 1 if WHO_AM_I == 0x33, else 0 */
+uint8_t lis2dh12_init_tap(void);     /* full config: tap->INT1, activity->INT2 */
+void    lis2dh12_clear_click(void);  /* read CLICK_SRC to drop the latched INT1 */
+
+#endif /* LIS2DH12_H */
