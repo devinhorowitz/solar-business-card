@@ -49,26 +49,25 @@ Form settings on the CNC quote page (the on-screen selections override the drawi
 - **Tolerance: Tighter tolerances required** → select **C1–C3** from the drawing. On the "Select tightest tolerance" pop-up, choose **±0.05 mm** — the tightest single value on the drawing (the C2 flatness); C1 and C3 at 0.10 sit comfortably within a 0.05-capable setup and are scoped per-feature on the drawing. (Don't pick ±0.02 — nothing needs it; don't pick ±0.075/±0.125 — looser than the 0.05 flatness.) **C1** (cavity depth 1.85 +0.10/−0) is the non-negotiable one — under it, the floor presses on U2. C2 (flatness 0.05) and C3 (true position 0.10) are the two to negotiate if the surcharge is steep. Do **not** leave this on "No tighter tolerances," or they build to ISO 2768 and ignore the critical-dims table.
 - **Surface finish: Bead blasting** (matte, uniform on the visible back face) — not Brushed. Read the discrepancy warning before submitting.
 - **Surface roughness:** 250 µin / 6.3 µm Ra (default; the blast texture dominates anyway).
-- **Finished appearance: Standard** for the first article. Premium only on the proven production run — asking for "no obvious flaws" on a 0.50 mm floor invites rejection.
+- **Finished appearance: Standard** for the first article. Premium only on the proven production run — asking for "no obvious flaws" on a 0.55 mm floor invites rejection.
 - **Inspection: Standard Inspection with Formal Report** (2D drawing already supplied; you want the measured cavity depth and floor thickness back). CMM-with-report if you also want flatness and hole position verified.
-- **Part marking:** none (the reflector groove is in the STEP; rear branding is a later step).
+- **Part marking:** none (the reflector frame is laser-marked per note 9; rear branding is a later step).
 - **Product description:** DIY / Demonstration model.
 
 Paste into **Other special request**:
 
 ```
-- Cavity floor is 0.55 mm; thinnest section 0.50 mm under a 0.05 mm reflector
-  groove on the cavity floor. Please advise the minimum titanium floor you can
+- Cavity floor is a uniform 0.55 mm (no thinned section; the reflector frame is
+  laser-marked, not cut). Please advise the minimum titanium floor you can
   reliably hold for this ~48 x 86 mm pocket given the internal ribs; we will
   re-issue the STEP to your minimum.
 - 4x M2 x 0.4 tapped through-holes, tapped from the back face.
 - Break all sharp edges ~0.1 mm (titanium).
-- Reflector groove (0.25 x 0.05 mm) may be machined as modeled or laser-marked;
-  if cutting the 0.05 groove risks the thin floor, laser-mark the outline instead
-  and leave the floor 0.55 mm full.
+- Reflector frame (0.25 mm wide outline on the cavity floor) is LASER-MARKED, not
+  cut, so the floor stays a uniform 0.55 mm. Do not engrave a groove.
 ```
 
-Expect the instant price to move: the thin floor plus the tighter-tolerance flags route this to manual engineering review, which is where the floor answer comes from. That answer is the gate before trusting the assembly.
+Expect the instant price to move: the 0.55 mm floor plus the tighter-tolerance flags route this to manual engineering review, which is where the floor answer comes from. That answer is the gate before trusting the assembly.
 
 ---
 
@@ -94,7 +93,7 @@ Expect the instant price to move: the thin floor plus the tighter-tolerance flag
 - Z stack from the back face:
   - back frame and 4 boss annuli: **proud 0.15 mm** (to Z −0.15)
   - recessed rear art field: at Z 0 (between frame and annuli)
-  - cavity floor: at **Z +0.55** (0.55 mm of titanium beneath the cavity; 0.50 mm under the reflector ring)
+  - cavity floor: at **Z +0.55** (a uniform 0.55 mm of titanium beneath the cavity; the reflector frame is laser-marked, not cut)
   - boss / lip / rib tops (the PCB rest plane): **Z +2.40**
   - PCB recess: Z +2.40 to +3.20 (receives the 0.80 mm board)
 - Wall 1.00 mm, perimeter lip 1.50 mm, two cap-gap ribs 1.00 mm wide, back-frame step 0.15 mm.
@@ -112,24 +111,22 @@ and priced per flagged location, so we flag the minimum set.)
 | C3 | 4× mounting-hole pattern (true position) | 43.8 × 82.9 mm rectangular, per model | true position **⌀0.10 mm** | Must align with PCB mounts MH1–4. Board clearance holes are ⌀2.2 over M2, leaving ~0.2 mm. |
 | C4 | Mounting-hole diameter (tapped) | **M2** (tap-drill ⌀1.6, through) | standard | Thread fit for the M2 screws. |
 
-Everything else — outer profile, recess width, frame, spotfaces, ribs, braces, the reflector
-groove — at **ISO 2768-1 general**. In particular the board-recess width is **not** a critical
+Everything else — outer profile, recess width, frame, spotfaces, ribs, braces, the reflector-frame
+mark — at **ISO 2768-1 general**. In particular the board-recess width is **not** a critical
 press fit (see note 6).
 
 ### 3. Thin-wall advisory (read before quoting)
 
-The cavity floor is **0.55 mm**. A 0.25 mm hairline reflector groove (note 9) cuts 0.05 mm into the
-cavity face, so the **thinnest section is 0.50 mm**, which sits right at the bare-minimum achievable
-metal wall (~0.5 mm). This is below the general metal minimum-wall guidance (~0.8 mm) and the
-titanium-specific minimum wall (~1.0 mm, ~1.5 mm ideal), because thin titanium flexes and chatters
-during cutting.
+The cavity floor is a **uniform 0.55 mm**. The reflector frame is **laser-marked, not cut**, so there
+is no thinned section: 0.55 mm is the thinnest titanium anywhere. That is still below the general
+metal minimum-wall guidance (~0.8 mm) and the titanium-specific minimum wall (~1.0 mm, ~1.5 mm ideal),
+because thin titanium flexes and chatters during cutting.
 
-**The customer is aware the floor is below standard wall guidance** and has sized it so the thinnest
-point lands at the 0.5 mm metal-wall floor. The floor is internally backed by two full-cavity ribs
-and two full-cavity posts, all on solid stock, to limit flex during machining and in service. Please
-proceed one of two ways and note which on the quote:
+**The customer is aware the floor is below standard wall guidance** and has sized it deliberately. The
+floor is internally backed by two full-cavity ribs and two full-cavity posts, all on solid stock, to
+limit flex during machining and in service. Please proceed one of two ways and note which on the quote:
 
-- **(A)** Machine the 0.55 mm floor **as-is** (the groove leaves 0.50); customer accepts the thin-wall risk; **or**
+- **(A)** Machine the uniform 0.55 mm floor **as-is**; customer accepts the thin-wall risk; **or**
 - **(B)** If you cannot reliably hold 0.55 mm, tell us the **minimum floor thickness you will hold** in Ti-6Al-4V for this ~48 × 86 mm pocket given the rib backing, and we will re-issue the model to that value.
 
 There is no separate "conservative" model to quote — the floor is the one variable we will move to
@@ -142,7 +139,7 @@ match your capability.
 - M2 coarse pitch is 0.4 mm, below the 0.6 mm minimum-pitch gate on the online quote form. Please tap
   M2 per this note (or advise) rather than letting the auto-checker reject the thread.
 - Customer-supplied fasteners: 4× **brass M2 × 3 mm slotted cheese head**, head ⌀ 3.8 mm (DIN 84), [example listing](https://www.amazon.com/dp/B06WLN47XV). Tip seats flush in the back spotface (note 5).
-- Incidental benefit: the cheese head stands ~1.3 mm proud (k = 1.26–1.40 mm), marginally taller than the 1.2 mm solar cells, so the four corner heads act as feet when the card lies face-down and hold the panel surface ~0.1 mm off the table. The margin is thin (head-height tolerance, any adhesive under the cells, and board flex can erase it), so treat it as a nicety, not a guaranteed standoff.
+- Incidental benefit: the cheese head stands ~1.3 mm proud (k = 1.26–1.40 mm), marginally taller than the 1.2 mm solar cells, so the four corner heads act as feet when the card lies face-down and hold the panel surface ~0.1 mm off the table. The margin is thin: the solar cell's own thickness tolerance (1.2 mm **±0.3** per the SM141K06TF datasheet, so up to ~1.5 mm) can by itself erase or invert it, before you even count head-height tolerance, adhesive under the cells, or board flex. Treat it as a nicety, not a guaranteed standoff.
 
 ![M2 × 3 mm slotted cheese head, brass (DIN 84) — schematic](../docs/screw-m2x3-cheese.png)
 
@@ -175,12 +172,11 @@ are sharp and nick easily, so no edge left knife-sharp.
 
 ### 9. Marking — reflector registration frame
 
-- A hairline frame, **0.25 mm wide × 0.05 mm deep**, modeled as a cut on the cavity floor, on the
-  20.9 × 6.2 mm monogram-window outline (centered at the window). It locates an adhesive reflector
-  strip; it is **non-structural**. The floor is sized so this 0.05 cut leaves 0.50 mm of titanium.
-- Machine it as modeled (a light engrave with a fine bit), **or** laser-mark the same outline instead
-  (zero material removed, floor stays 0.55 mm full). Either is acceptable; the as-modeled cut is the
-  worst case for wall thickness.
+- A hairline frame, **0.25 mm wide**, **laser-marked** on the cavity floor on the 20.9 × 6.2 mm
+  monogram-window outline (centered at the window). It locates an adhesive reflector strip; it is
+  **non-structural** and **not modeled in the STEP** (a mark, not geometry).
+- Laser-mark only, **do not cut a groove**: zero material is removed, so the floor stays a uniform
+  0.55 mm. (A cut groove was the old worst case for wall thickness and has been dropped.)
 - Any rear branding/art (separate) goes in the recessed back field by laser, after finishing.
 
 ### 10. Setup / fixturing guidance
