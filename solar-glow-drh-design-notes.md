@@ -52,9 +52,11 @@ The honest energy model, and the reason a bench bring-up gates any feature decis
 | v0: 2× WS10, ~150 mF, ~2.3 J | ≤ harvest; ~40–60 s breathing / ~10–15 min refill |
 | v2.1: 4× WS17, 1 F @ 5.5 V, ~15 J | ≤ harvest; minutes of breathing per charge; refill ~hours |
 
-**Draw line items** (budget against harvest): accel ≈ 1 µA; light-sense divider sub-µA; MCU sleep
-≈ 0.65 µA (AVR-DD power-down, `PMODE=AUTO`). The LEDs are the only mA-scale load; everything else is
-noise on the budget.
+**Draw line items** (budget against harvest): accel ≈ **10 µA** (a click-armed LIS2DH12 runs at
+100 Hz to time taps — it can't sit at the ~1 µA slow-ODR figure the old docs assumed, so this is
+now the dominant always-on load and pegs dark-survival at ~half a day); light-sense divider
+sub-µA; MCU sleep ≈ 0.65 µA (AVR-DD power-down, `PMODE=AUTO`). The LEDs are the only mA-scale
+load. See `firmware/README.md` "Power notes" for the corrected model.
 
 > **Ballast caveat — re-derive the LED numbers for v2.1.** The LED-draw figures used throughout the
 > old docs (≈5 mA for 4 LEDs full-on, ≈3 mA breathing, +1.25 mA per added LED) were computed at
@@ -125,10 +127,12 @@ belongs in KiCad** (push-shove router, real thermal reliefs, exact mask expansio
 
 ## 5. MCU selection — AVR64DD28 in 28-VQFN (the rationale)
 
-- **Why this part:** **MVIO** (PORTC on a separate VDDIO2 — the core can stay on the 5 V rail for
-  full harvest band while I²C/PORTC sits at a lower voltage for the accel, with no level shifter and
-  no harvest-band loss), **ADC** (light-sense), flexible **TCA/TCB/TCD** PWM (LED breathing / more
-  LEDs), and **22 I/O** of headroom.
+- **Why this part:** **MVIO** (PORTC can run on a separate VDDIO2 — attractive for a mixed-voltage
+  rail), **ADC** (light-sense), flexible **TCA/TCB/TCD** PWM (LED breathing / more LEDs), and
+  **22 I/O** of headroom. *(As-built, the separate-voltage mode is **not** used: the shunt clamp
+  holds the whole VS rail ≤ 3.47 V and VDDIO2 is tied to VS via SJ1, so the accel is protected by
+  the clamp rather than by MVIO. Set the `SYSCFG1.MVSYSCFG` fuse to SINGLE — see firmware README
+  "Fuses".)*
 - **Why VQFN, not SSOP-28:** height is irrelevant (U2 at 1.75 mm sets the cavity floor; the QFN is
   0.9 mm). The binding constraint is **X/Y footprint** — with the cells eating ~43% of the board, the
   QFN's ~16 mm² land beats SSOP-28's ~50 mm². Cost: hot-air + paste, EP reflowed to GND (same as the
@@ -153,13 +157,18 @@ I²C cleanly.)
 All firmware-only, no board change:
 
 - **LED hardware-PWM** for brightness / breathing / fade — big supercap-runtime savings at low duty.
-- **CCL + EVSYS can run a glow/blink pattern while the CPU sleeps** — autonomous show, CPU stays in
-  low power.
+- **CCL + EVSYS could run a glow/blink pattern while the CPU sleeps** — autonomous show, CPU stays
+  in low power. *(As-built, the firmware instead IDLE-sleeps through the breath while TCA0 runs the
+  PWM; a fully autonomous CCL + EVSYS glow remains a v-next idea.)*
 - **RTC/PIT off the internal 32 kHz ULP** (no crystal) for periodic wake.
 - **EEPROM "times-activated" counter** that survives a full supercap drain.
-- **AC0 wake-on-light** (auto-glow on pickup, zero new parts): set `AC0.MUXPOS` to the sense pin,
-  `AC0.MUXNEG = DACREF`, DAC sets the light threshold, sleep, AC edge wakes. The as-built validated
-  recipe (on PD2 = AIN2 + AINP0) lives in `solar-glow-drh-v2-hardware.md` §6.
+- **AC0 wake-on-light — *tried, non-viable on this part.*** The idea (AC0 comparator on the sense
+  pin, `MUXNEG = DACREF` for the threshold, AC edge wakes from sleep) was checked against the
+  datasheet during firmware bring-up and **doesn't work here**: the AC interrupt doesn't update
+  with the peripheral clock stopped, and the AC isn't a Standby/Power-Down wake source, so it would
+  never fire. Wake-on-light is instead the **RTC-timed ADC poll** (deep Power-Down), and instant
+  pickup response comes from the **accelerometer interrupt**. See the corrected
+  `solar-glow-drh-v2-hardware.md` §6 and `firmware/README.md`.
 - **Internal temperature sensor** is available if wanted.
 
 Not useful on this part: ZCD (mains only), op-amps (the DD family lacks them), PTC cap-touch (see §5).
