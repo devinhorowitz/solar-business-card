@@ -126,15 +126,18 @@ back-side flat pads.
 
 ## 11. Variants and open axes (the "enclosure(s)")
 
-- **Material:** Ti-6Al-4V (holds 0.3 mm skins, yield ~880 MPa) vs 7075-T6 (cheaper/faster, bump the
-  skins). Machining (photochemical-etch the shallow reliefs, CNC the walls/bosses) and the full CAD
-  knob set are in `ENCLOSURE-NOTES.md`.
-- **Skin thickness:** the repo previously carried a standard and a 0.2 mm-skin variant.
+- **Material:** **Ti-6Al-4V Grade 5**, single material (yield ~880 MPa). The earlier 7075-T6 fallback
+  is dropped — titanium's strength is what lets the floor run thin.
+- **Machining:** **fully 3-axis CNC-milled** (the photochemical-etch idea is dropped). Uniform 0.55 mm
+  floor backed by ribs/posts; reflector frame laser-marked, not cut. Full CAD knob set, dimensioned
+  drawing, and fab notes are in `enclosure/README.md`.
+- **Floor thickness:** one shipping floor (0.55 mm); the old standard / 0.2 mm-skin and the 0.60 mm
+  conservative variants are retired. The floor is the single value re-issued to PCBWay's minimum.
 - **Open vs enclosed:** with no castellations, the old "enclosed variant drops the edge bus"
   complication disappears — the enclosed build is simpler than it was.
 
 ## Cross-references
 
-- **Shell design rules, material, machining, CAD knobs:** `ENCLOSURE-NOTES.md`.
+- **Shell design rules, material, machining, CAD knobs:** `enclosure/README.md`.
 - **Why four cells / the rear real-estate logic / energy model:** `solar-glow-drh-design-notes.md` §4.
 - **Exact pad and keepout geometry:** open `solar-glow-drh-v2_1.kicad_pcb` in KiCad.

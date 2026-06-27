@@ -60,7 +60,7 @@ programming, a backup UPDI header (`J1`), an I²C expansion header (`JP1`), a sp
 M2 mounting holes** at the corners.
 
 Full part numbers, pricing, and per-part datasheet links are in
-**`solar-glow-drh-v2_1-BOM.xlsx`**.
+**`PCB/solar-glow-drh-v2_1-BOM.xlsx`**.
 
 ---
 
@@ -105,15 +105,20 @@ the duty cycle, the feature set, and whether the always-on accelerometer earns i
 
 ```
 solar-business-card/
-├── solar-glow-drh-v2_1.kicad_pcb   # the board — 6-layer, routed (source of truth)
-├── solar-glow-drh-v2_1.kicad_sch   # schematic
-├── solar-glow-drh-v2_1.kicad_pro   # KiCad project
-├── solar-glow-drh-v2_1-BOM.xlsx    # bill of materials — parts, prices, datasheet links
-├── solar-glow-drh-BOM.xlsx         # v0-prototype BOM, kept for posterity
+├── README.md                       # this file
+├── PCB/                            # KiCad project + fabrication BOM
+│   ├── solar-glow-drh-v2_1.kicad_pcb   # the board — 6-layer, routed (source of truth)
+│   ├── solar-glow-drh-v2_1.kicad_sch   # schematic
+│   ├── solar-glow-drh-v2_1.kicad_pro   # KiCad project
+│   └── solar-glow-drh-v2_1-BOM.xlsx    # bill of materials — parts, prices, datasheet links
 ├── solar-glow-drh-v2-hardware.md   # as-built wiring & pin map — the firmware target
+├── solar-glow-drh-v2-mechanical.md # board mechanics, keepouts, programming access
+├── solar-glow-drh-design-notes.md  # design rationale, energy model, enclosure board-side rules
 ├── firmware/                       # bare-metal C (AVR64DD28); register-verified, see firmware/README.md
 ├── datasheets/                     # every component's datasheet
-└── enclosure/                      # parked CAD for the metal back-shell (STEP / STL / CadQuery)
+├── docs/                           # renders and figures
+├── enclosure/                      # machined-titanium back-shell: CAD / STEP / STL / drawing / README
+└── v0 prototype/                   # the original prototype, kept for posterity
 ```
 
 ---
@@ -203,6 +208,7 @@ minimum the shop will hold. Retention is **four corner M2 screws**, not a press 
 gotcha — the screws tie the metal body to board GND, so the enclosed variant **drops the edge
 castellations** (or adds a die-cut Kapton isolation layer) so nothing shorts to the grounded shell.
 With a metal back, the **accelerometer tap is the actuator** — there’s no button to press from outside.
+
 ---
 
 ## Cost

@@ -175,21 +175,27 @@ Not useful on this part: ZCD (mains only), op-amps (the DD family lacks them), P
 
 ---
 
-## 7. Enclosure — board-side rules to honor now (full detail in ENCLOSURE-NOTES.md)
+## 7. Enclosure — board-side rules to honor now (full detail in enclosure/README.md)
 
 The Ti rear-shell is parked, but a few rules must be baked into the board so it never needs a
 re-spin for the enclosure:
 
 - **Grounded body → short risk.** In the enclosed variant, **drop the right-edge castellations**;
-  land support pillars **only on GND pour**; spec a **die-cut Kapton (~0.05 mm)** blanket isolation
-  layer under the shell.
-- **Uniform ~1.8 mm cavity, no U2 pocket** — the 1.7 mm cells ≈ U2 at 1.75 mm set the floor; the
-  0.9 mm QFN is irrelevant.
+  land support pillars **only on GND pour**; keep a **die-cut Kapton (~0.05 mm)** blanket isolation
+  layer in reserve if a later via audit on the rib lines finds an untented via.
+- **Uniform ~1.8 mm cavity, no U2 pocket** — the **1.70 mm WS17 supercaps** ≈ U2 at 1.75 mm set the
+  cavity floor (cavity = 1.85 = U2 + 0.10 mm air); the 0.9 mm QFN is irrelevant. ("Cells" elsewhere
+  can mean the 1.2 mm **solar** cells on the front — a different part; don't conflate the two.)
+- **No tall back-side parts.** The cavity budget assumes the tallest *populated* rear part is U2 at
+  1.75 mm. Keep the 2.54 mm breakout headers (JP1/JP2) **unpopulated** in the enclosed build — a
+  populated 0.1 in header is ~8 mm and the shell will not close. J1/TC2030 are flat back-side pads.
 - **The button is the accel tap** (cap-touch dies behind a grounded plate; the old "snap-dome"
   actuator is superseded).
-- **Skins:** 0.3 mm needs titanium's strength (yield ~880 MPa); 7075 is the cheaper fallback with
-  thicker floors. **Ti work-hardens / mills slow** → cut shallow reliefs by **photochemical etching**,
-  CNC only the walls/bosses; keep M2 engagement in thick bosses, never the thin pocket zones.
+- **Shell, current approach:** Ti-6Al-4V Grade 5, **fully 3-axis CNC-milled** (no etching), with a
+  **uniform 0.55 mm floor** backed by ribs and posts, and the reflector frame **laser-marked, not
+  cut**. Retention is four corner M2 screws; keep M2 engagement in the thick bosses. The earlier
+  0.3 mm-skin / 7075-fallback / photochemical-etch plan is dropped. Full CAD, drawing, and fab notes
+  are in `enclosure/README.md`.
 
 ---
 
