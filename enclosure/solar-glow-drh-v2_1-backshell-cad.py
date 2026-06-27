@@ -61,7 +61,9 @@ boss_r     = 2.60                  # M2 boss / back annulus outer radius
 pilot_r    = 0.80                  # M2 thread-forming hole, CLEAN THROUGH
 
 # window braces (disk clears the glow window + every back pad; from the PCB):
-BRACE = [(35.0,37.0,1.0),(39.5,40.0,1.0),(19.2,50.9,1.0),(13.6,40.1,1.0)]
+# window braces: E + W flank the optical-window keepout (between side lip and window edge).
+# NE(35,37) + SW(19.2,50.9) were REDUNDANT once the ribs went in (worst span 11.6 either way) -> removed.
+BRACE = [(39.5,40.0,1.0),(13.6,40.1,1.0)]   # E, W
 # cap-gap stiffening ribs (in the empty SC1|SC2 and SC3|SC4 corridors; clear the optical band):
 RIBS  = [(24.6, 2.5, 26.2, 33.0), (24.6, 56.0, 26.2, 86.4)]   # (x0,y0,x1,y1)
 
