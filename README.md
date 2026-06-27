@@ -190,16 +190,19 @@ harvest number sizes.
 
 ## Enclosure (parked)
 
-An optional back-only **machined-metal** shell hugs the populated rear; the front stays naked.
-CAD, STEP, and STL are in `enclosure/`, on ice until the board is validated. The design notes
-(`enclosure/ENCLOSURE-NOTES.md`) carry the decisions that matter once it’s cut: **titanium
-(Ti-6Al-4V)** for strength at a card-thin skin (7075 aluminum as the cheaper, marginal
-fallback); **photochemical etching** for the shallow relief pockets since titanium mills slow;
-and the electrical gotcha — the screws tie the metal body to board GND, so the enclosed variant
-**drops the edge castellations** (or adds a die-cut Kapton isolation layer) so nothing shorts
-to the grounded shell. With a metal back, the **accelerometer tap is the actuator** — there’s
-no button to press from outside.
+An optional back-only **machined-titanium** shell hugs the populated rear; the front stays naked.
+CAD, STEP, STL, fab notes and a dimensioned drawing are in `enclosure/`, on ice until the board is
+validated — see `enclosure/README.md`.
 
+![Titanium back-shell (Ti-max) — design render, not yet built](docs/enclosure-hero.png)
+
+The decisions that matter once it’s cut: **titanium (Ti-6Al-4V Grade 5)**, **3-axis CNC-milled** by
+PCBWay; the cavity is **part-limited to 1.85 mm** by the tallest component (U2), and the floor is run
+to a **0.55 mm** card-thin skin (backed by ribs) — the one number that gets re-issued to whatever
+minimum the shop will hold. Retention is **four corner M2 screws**, not a press fit. The electrical
+gotcha — the screws tie the metal body to board GND, so the enclosed variant **drops the edge
+castellations** (or adds a die-cut Kapton isolation layer) so nothing shorts to the grounded shell.
+With a metal back, the **accelerometer tap is the actuator** — there’s no button to press from outside.
 ---
 
 ## Cost
