@@ -1,21 +1,21 @@
 # Enclosure design notes — metal back-shell
 
-> **STATUS: PARKED** (as of V1 kickoff) — on ice pending V1 board bring-up. CAD + STEP/STL
-> preserved in this folder; resume after the V1 PCB is validated. Note: the V1 supercap swap
-> to 3-153-438 (1.7 mm) lets `cavity` go to ~1.8 mm and **deletes the U2 pocket** — see
-> `../docs/V1-PLAN.md` §1. If V1 instead goes **4-cell** (§1a there), that changes cap
-> *placement* (four cells at opposite ends of the back), **not** the 1.7 mm height — but the
-> pillar/keepout audit and the SC pockets below would need re-laying-out for four cells.
+> **STATUS: PARKED** — on ice pending v2.1 board bring-up (and the programming phase). CAD +
+> STEP/STL preserved in this folder; resume after the PCB is validated. The board carries
+> **4× WS17 supercaps (3-153-438, 1.7 mm)** arranged around the central glow band (see
+> `solar-glow-drh-design-notes.md` §4). Because the cells (1.7 mm) sit just under U2 (1.75 mm),
+> the cavity can be a uniform ~1.8 mm with **no U2 pocket** — but the height stack, pillar/
+> keepout audit, and SC pockets below still reflect the older single-pair CAD and must be
+> re-laid-out for the four-cell placement when this resumes.
 
 Engineering notes for taking the drafted back-shell (`solar-glow-drh-backshell-cad.py`)
 to a thin **machined-metal** production part. The CadQuery model is material-agnostic;
 these are the decisions and gotchas the material choice forces. Read alongside the
-README's *"The enclosure"* section.
+README's enclosure section.
 
 ## Concept
 
-A back-only cover that hugs the populated rear of the board: naked front (solar cell,
-dome, LED apertures exposed), PCB screwed down through the four M2 bosses, four walls
+A back-only cover that hugs the populated rear of the board: naked front (solar cells and LED apertures exposed), PCB screwed down through the four M2 bosses, four walls
 press-fit over the board edge. The goal is a card-thin product, so the cover rides as
 close to the board back as the tallest part allows, with a **local blind pocket** over
 that part rather than lifting the whole floor.
@@ -34,8 +34,8 @@ What the cover has to clear, tallest first (max heights; datasheet-grounded wher
 |---|---|---|
 | U2 balancer | SOIC-8 | **~1.75 mm** ← gets a local pocket |
 | D1 blocking diode | SOD-123 | ~1.1–1.35 mm ← sets the 1.6 mm cavity |
-| SC1 / SC2 supercaps | WS10 → **WS17** (v1) | 1.0 → **1.7** mm (just under U2) |
-| U1 MCU | QFN-20 | ~0.9 mm |
+| SC1–SC4 supercaps | WS17 (3-153-438) | **1.7 mm** (just under U2) |
+| U1 MCU | VQFN-28 (4×4) | ~0.9 mm |
 | D2–D5 LEDs | LA P47F | 0.83 mm (datasheet) |
 | C1–C3 | 0805 | ~0.7 mm |
 | R1–R4 | 1206 | ~0.6 mm |
@@ -84,13 +84,12 @@ feature the metal touches is a short to ground.** Two concrete hits in the curre
    die-cut **Kapton film (~0.05 mm)** between board back and cover, the simplest blanket fix
    and negligible against the thickness budget.
 
-## Cap-touch fights the metal
+## Actuation behind a metal back
 
-A grounded plate directly behind the **PA7 self-cap electrode** swamps it with capacitance
-to ground — touch sensitivity likely dies. With a metal back, treat the **snap dome as the
-real button** and cap-touch as expendable (this settles the dual-mode-button question for
-the enclosed build). To keep touch, the electrode needs a clear window + air gap in the
-metal directly behind it, and even then the nearby grounded metal hurts. See punch-list §5.
+Cap-touch was considered and ruled out: a grounded back-plate swamps any self-capacitive
+electrode, and the AVR-DD has no PTC hardware anyway. The actuator is the **accelerometer tap**
+(U3, LIS2DH12) — and a metal back-plate *helps* here, transmitting the tap as vibration to the
+sensor. No electrode, window, or air gap is needed; PA7 is unconnected on the board.
 
 ## Mounting
 
@@ -99,14 +98,11 @@ M2 threads want ~3–4 mm of engagement, which a 0.3–0.6 mm floor can't give �
 screw features in the thick rails, never in the thin pocket zones. The current blind M2
 pilots (`pilot_r` 0.85, tapped from the cavity side) are fine for the metal build.
 
-## MCU package interplay
+## MCU package
 
-Because U2 already puts 1.75 mm on the back, the MCU package is **height-irrelevant**:
-SSOP-28 (~2.0 mm) is only ~+0.25 mm over U2, and a QFN's thinness (0.9 mm) is wasted while
-U2 sits at 1.75 mm. **The V1 MCU is the 28-VQFN (4×4) anyway** — chosen on **footprint, not
-height**: with the four supercaps eating ~43% of the board, X/Y is the binding constraint, and
-the QFN's 16 mm² land beats SSOP-28's ~50 mm². Harder to solder (hot air, EP to GND), but v0
-already hand-places the QFN-20. See V1-SPEC §4 / punch-list §7.
+The MCU is the **28-VQFN (4×4)**, chosen on footprint, not height — U2 sets the ~1.75 mm
+floor regardless of the 0.9 mm QFN. Full rationale (why VQFN over SSOP, given the cells eat
+~43% of the board) is in `solar-glow-drh-design-notes.md` §5.
 
 ## CAD follow-ups (when this gets cut)
 

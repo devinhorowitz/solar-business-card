@@ -4,8 +4,7 @@
 `solar-glow-drh-v2_1.kicad_pcb` / `.kicad_sch` and cross-checked against the
 AVR64DD32-28 datasheet (DS40002315), the LIS2DH12 datasheet (DM00091513), and the
 SM141K06TF and SCPC parts. Where a register value is given, it is the value the firmware must
-write to match what is physically routed. This supersedes the older `…-v1-pinmap.md` and the
-`SESSION-HANDOFF.md` §15 pin notes (which describe an earlier, different mapping).
+write to match what is physically routed.
 
 MCU: **AVR64DD28**, 28-pin VQFN (footprint `solarglow:U1`). It sits on the **back** of the board.
 

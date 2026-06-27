@@ -1,9 +1,6 @@
 # SOLAR-GLOW · DRH — design notes & posterity
 
-Durable engineering rationale, hard-won findings, and future-variant ideas, distilled from the
-v0/v1 planning docs before they were retired (`V1-SPEC.md`, `V1-PLAN.md`,
-`solar-glow-drh-v1-punchlist.md`, `KICAD-PUNCHLIST.md`, `SESSION-HANDOFF.md`,
-`solar-glow-drh-v1-ROUTING-PLAN.md`, `solar-glow-drh-v1-pinmap.md`).
+Durable engineering rationale, hard-won findings, and future-variant ideas, distilled from the v0/v1 planning docs (since retired).
 
 **Authority order.** For the *current* design, the committed `solar-glow-drh-v2_1.kicad_pcb` /
 `.kicad_sch`, plus `solar-glow-drh-v2-hardware.md` (as-built wiring/pin map) and `README.md`, are
@@ -236,13 +233,11 @@ v0 also carried a dual-coin-cell charging option (BT1/BT2 + diodes); **dropped i
   rail needs two-in-series, so the array is 1 F *effective* at 5.5 V. What is fixed is **energy**:
   4 × ½ · 1 F · 2.75² ≈ **15 J**. Farads at 2.75 V vs 5.5 V are not comparable joules — quote the
   energy, not the farads.
-- **Superseded pin maps — do NOT resurrect.** The retired docs carried two *earlier, divergent* pin
-  assignments that do **not** match the as-built board: (a) `solar-glow-drh-v1-pinmap.md` put VSENSE
-  on PA5 and BTN on PA7; (b) `SESSION-HANDOFF.md` / `KICAD-PUNCHLIST.md` (session 15) put the LEDs on
-  PA4–PA7 / TCD0 and moved VSENSE → PC3 / BTN → PC1. **Neither is correct.** The committed
-  `solar-glow-drh-v2_1.kicad_sch` + `solar-glow-drh-v2-hardware.md` are the only authoritative pin
-  reference (LEDs PA0–PA3 / TCA0, VSENSE PD2, BTN PA5, I²C PC2/PC3, accel INT PF0/PF1). Logged here so
-  the wrong maps never come back.
+- **Pin authority — one source only.** Earlier drafts of this design carried two *different* pin
+  assignments (VSENSE on PA5 with BTN on PA7; and the LEDs on PA4–PA7 / TCD0 with VSENSE on PC3)
+  — **neither matches the board.** The committed `solar-glow-drh-v2_1.kicad_sch` and
+  `solar-glow-drh-v2-hardware.md` are the only authoritative pin reference: LEDs PA0–PA3 / TCA0,
+  VSENSE PD2, BTN PA5, I²C PC2/PC3, accel INT PF0/PF1. If anything else disagrees, it is wrong.
 
 ---
 
