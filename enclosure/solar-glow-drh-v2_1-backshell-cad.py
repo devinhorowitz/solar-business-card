@@ -3,45 +3,41 @@
 solar-glow-drh-v2_1-backshell-cad.py  -  metal back-shell generator (CadQuery / OpenCASCADE)
 
 REDESIGN of the stale pre-v2.1 shell, built to the as-built `solar-glow-drh-v2-mechanical.md`
-(distilled from the committed `solar-glow-drh-v2_1.kicad_pcb`). See sec.8 of that brief for the
-deltas. v2.1 drops the U2 pocket, the SC pockets, the edge-castellation relief, and the button.
+(distilled from the committed `solar-glow-drh-v2_1.kicad_pcb`). v2.1 drops the U2 pocket, the SC
+pockets, the edge-castellation relief, and the button (mechanical brief sec.8).
 
 ------------------------------------------------------------------------------------------------
-REV-B support + finish changes (this revision):
+SUPPORT + FINISH:
 
-  EDGE SUPPORT = a CONTINUOUS PERIMETER LIP, not scattered edge pillars. A `lip_w` (1.5 mm) ledge
-  rings the inside of the cavity and joins all four M2 bosses, so EVERY section of the board edge
-  is seated, the board goes from corner-supported to fully edge-supported (far stiffer center
-  deflection), and it is one contour pass to mill instead of many plunged posts. The lip sits inside
-  the pad-free 1.5 mm rim band (mechanical brief sec.8), so it never lands on a pad and clears the
-  nearest body (top/bottom supercaps at 2.65 mm from the rim) by >1 mm.
+  EDGE SUPPORT = a CONTINUOUS PERIMETER LIP (`lip_w` 1.5 mm) that rings the inside of the cavity and
+  joins all four M2 bosses -> the board is fully edge-supported, not corner-supported, and it is one
+  contour pass to mill. The lip sits inside the pad-free 1.5 mm rim band (brief sec.8): never on a
+  pad, clears the nearest body (supercaps, 2.65 mm from the rim) by >1 mm.
 
-  CENTER ANTI-TRAMPOLINE = brace pillars ringing the glow window. The window panel is the most
-  flex-prone span, but sec.7 forbids pillars on the LED pads / monogram (x 15-36 / y 40.8-47). The
-  four `BRACE_PILLARS` below were found by scanning the committed back-side copper for points whose
-  full r=1.0 disk clears BOTH the glow window and every pad; each ended up with >=1.5 mm clearance.
-  They cannot sit dead-center (the window blocks it); they bracket it N/E/S/W as close as the
-  keepout allows, and the lip carries the rest.
+  CENTER ANTI-TRAMPOLINE = four brace pillars ringing the glow window. Sec.7 forbids pillars on the
+  LED pads / monogram (the window), so dead-center is out; these were found by scanning the committed
+  back copper for points whose full r=1.0 disk clears BOTH the window and every pad, and bracket it
+  N/E/S/W (clearances 1.5-3.7 mm). The lip carries the rest of the span.
 
-  CORNERS / EDGE PROFILE = R3 plan corners kept (to match the PCB outline); edges SQUARED with a
-  small `edge_ease` chamfer (0.20 mm) for feel/deburr. A true 3 mm radius rolled into the ~3.25 mm
-  thickness is geometrically a near-full bullnose (one R3 round-over eats 3.0 of 3.25 mm) -> egg
-  shaped, the opposite of the "flat like a business card" goal -> squared is the right call.
+  CORNERS / EDGES = R3 plan corners (match the PCB); edges SQUARED + a 0.20 mm `edge_ease`. A true
+  3 mm vertical radius on a ~3.25 mm edge is a full bullnose -> egg, not flat -> squared is correct.
 
-  BACK BORDER = a raised perimeter frame on the outer (visible) back face, `border_h` (0.15 mm)
-  proud, `border_w` (1.0 mm) wide, following the rounded outline. Two jobs: (1) front/back symmetry
-  -- it echoes the front soldermask edge frame; (2) a wear standoff -- rear art is engraved into the
-  recessed central field, so the raised border (not the art) takes contact when the card is set
-  down or stacked.
-------------------------------------------------------------------------------------------------
+  BACK FACE = a literal metal "rubbing" of the interior structure (`echoes the interior machining`):
+    * the 4 M2 screw posts drill CLEAN THROUGH (boss + skin + back annulus) -> 4 holes on the back;
+    * a raised back FRAME that MIRRORS the inner lip exactly -- same footprint (PCB perimeter) and
+      same width (`lip_w`) -- a literal representation of the card outline in metal;
+    * the 4 bosses rendered on the back as raised annuli (outer r = `boss_r`, the screw hole through
+      the centre), fused into the back frame THE SAME WAY the inner bosses fuse into the inner lip;
+    * all raised `border_h` (0.15 mm) proud, so the central field is recessed -> engraved rear art
+      lives in the field and the raised frame/bosses take the wear when the card is set down/stacked.
 
-ISOLATION (brief sec.9): the 4 M2 screws tie the body to GND; with castellations gone the only
-short hazard is the lip/pillars on the back. Default = die-cut Kapton (~0.05 mm) blanket; cavity
-swallows it. The lip also lands inside the pad-free band, so it is safe even without Kapton.
-PROGRAMMING (brief sec.10): default = flash-before-close; `PROG_WINDOW` opens a TC2030 hole.
+ISOLATION (sec.9): the 4 M2 screws ground the body; with castellations gone the only short hazard is
+the lip/pillars on the back. Default = die-cut Kapton (~0.05 mm); cavity swallows it. The lip is also
+inside the pad-free band, so safe even without Kapton.
+PROGRAMMING (sec.10): default flash-before-close; `PROG_WINDOW` opens a TC2030 hole in the field.
 
 All XY in board coords (KiCad frame: origin top-left, X across 50.80, Y down 88.90). Heights are
-datasheet figures. Z=0 = OUTER back face; +Z into the board.
+datasheet figures. Z=0 = OUTER back face; +Z into the board; the raised back features go to -Z.
 
 deps:  pip install --break-system-packages cadquery
 """
@@ -65,19 +61,16 @@ edge_fit   = -0.05                 # interference on the FLATS
 corner_clr = 0.15                  # corner relief so the press grips the flats, not the corners
 edge_ease  = 0.20                  # squared-edge chamfer (feel/deburr). 0 => dead square.
 
-lip_w      = 1.50                  # continuous perimeter support lip (joins the bosses)
-boss_r     = 2.60                  # M2 boss radius (top annulus > the 2.2 mm board hole)
-pilot_r    = 0.80                  # M2 thread-forming pilot, tapped from the boss top
-skin_keep  = 0.20                  # floor left under the pilot so it never pierces the back skin
+lip_w      = 1.50                  # perimeter support lip (inner) AND the back frame width (they mirror)
+boss_r     = 2.60                  # M2 boss radius (inner post AND the back annulus outer radius)
+pilot_r    = 0.80                  # M2 thread-forming hole (~1.6 mm), now CLEAN THROUGH the boss+skin
+border_h   = 0.15                  # raised height of the back frame + back boss annuli
 
 # brace pillars ringing the glow window (disk clears the window + every back-side pad; from the PCB):
 BRACE_PILLARS = [(35.0, 37.0, 1.0),    # NE of window  (clr 2.93)
                  (39.5, 40.0, 1.0),    # E  of window  (clr 3.69)
                  (19.2, 50.9, 1.0),    # SW of window  (clr 2.32)
                  (13.6, 40.1, 1.0)]    # W  of window  (clr 1.50)
-
-# back-face raised border (wear standoff + front/back symmetry):
-border_h, border_w, border_inset = 0.15, 1.0, 0.30
 
 # =============================== derived geometry ===============================
 cavW, cavH, cavR = W + 2*edge_fit, H + 2*edge_fit, R + edge_fit
@@ -107,7 +100,7 @@ def build(floor, prog_window=False, brace=BRACE_PILLARS):
     for ccx, ccy in [(R, R), (W - R, R), (R, H - R), (W - R, H - R)]:
         cwp = cwp.moveTo(wx(ccx), wy(ccy)).circle(R + corner_clr)
     res = res.cut(cwp.extrude(board_th + 0.04))
-    # 4) supports (added AFTER the cuts): perimeter lip + 4 bosses + window braces, all floor->bb
+    # 4) INNER supports (after the cuts): perimeter lip + 4 bosses + window braces, all floor->bb
     lip = (cq.Workplane("XY").workplane(offset=floor).rect(cavW, cavH)
              .extrude(cavity).edges("|Z").fillet(cavR))
     lip = lip.cut(cq.Workplane("XY").workplane(offset=floor - 0.01).rect(iw, ih)
@@ -118,21 +111,24 @@ def build(floor, prog_window=False, brace=BRACE_PILLARS):
     for x, y, rr in sup:
         wp = wp.moveTo(wx(x), wy(y)).circle(rr)
     res = res.union(wp.extrude(cavity))
-    # 5) blind M2 pilots, tapped from the boss top down; never pierces the back skin
-    pilot_depth = cavity + max(floor - skin_keep, 0.0)
-    wp2 = cq.Workplane("XY").workplane(offset=bb - pilot_depth)
-    for mx, my in mounts:
-        wp2 = wp2.moveTo(wx(mx), wy(my)).circle(pilot_r)
-    res = res.cut(wp2.extrude(pilot_depth))
-    # 6) raised back border on the outer face (z=0), rising out the back (-Z)
+    # 5) BACK FACE structure (mirror of the interior): frame == lip footprint, + boss annuli
     if border_h > 0:
-        bo_w, bo_h, bo_r = outW - 2*border_inset, outH - 2*border_inset, outR - border_inset
-        bi_w, bi_h, bi_r = bo_w - 2*border_w, bo_h - 2*border_w, max(bo_r - border_w, 0.5)
-        frame = (cq.Workplane("XY").workplane(offset=-border_h).rect(bo_w, bo_h)
-                   .extrude(border_h).edges("|Z").fillet(bo_r))
-        frame = frame.cut(cq.Workplane("XY").workplane(offset=-border_h - 0.01).rect(bi_w, bi_h)
-                            .extrude(border_h + 0.02).edges("|Z").fillet(bi_r))
+        # frame: raised ring at the PCB perimeter, width lip_w (exact mirror of the inner lip)
+        frame = (cq.Workplane("XY").workplane(offset=-border_h).rect(cavW, cavH)
+                   .extrude(border_h).edges("|Z").fillet(cavR))
+        frame = frame.cut(cq.Workplane("XY").workplane(offset=-border_h - 0.01).rect(iw, ih)
+                            .extrude(border_h + 0.02).edges("|Z").fillet(ir))
         res = res.union(frame)
+        # boss annuli on the back: raised disks r=boss_r at the mounts (holes cut in step 6)
+        bwp = cq.Workplane("XY").workplane(offset=-border_h)
+        for mx, my in mounts:
+            bwp = bwp.moveTo(wx(mx), wy(my)).circle(boss_r)
+        res = res.union(bwp.extrude(border_h))
+    # 6) M2 holes drilled CLEAN THROUGH: boss + skin + back annulus, in one cut
+    twp = cq.Workplane("XY").workplane(offset=-border_h - 0.1)
+    for mx, my in mounts:
+        twp = twp.moveTo(wx(mx), wy(my)).circle(pilot_r)
+    res = res.cut(twp.extrude(bb + border_h + 0.2))
     # 7) optional TC2030 re-flash window through the back skin over TC1
     if prog_window:
         res = res.cut(cq.Workplane("XY").workplane(offset=-border_h - 0.1)
@@ -148,13 +144,13 @@ jobs = [
     ("7075-std",          0.80, False, "7075-T6, bumped 0.8 skin"),
     ("Ti-std-progwindow", 0.60, True,  "Ti-6Al-4V std + TC2030 re-flash window"),
 ]
-print(f"cavity={cavity}  lip_w={lip_w}  edge_ease={edge_ease}  border={border_h}x{border_w}mm")
+print(f"cavity={cavity}  lip_w={lip_w}  edge_ease={edge_ease}  back-frame=mirror(lip)  border_h={border_h}  thru-holes=ON")
 for suf, floor, pw, note in jobs:
     solid = build(floor, prog_window=pw)
     field = floor + cavity + board_th
     name = f"{B}-{suf}"
     cq.exporters.export(solid, OUT + name + ".step")
     cq.exporters.export(solid, OUT + name + ".stl", tolerance=0.04, angularTolerance=0.2)
-    print(f"  {name:38s} floor={floor:.2f}  field={field:.2f}  at-border={field+border_h:.2f} mm  "
+    print(f"  {name:38s} floor={floor:.2f}  field={field:.2f}  at-frame={field+border_h:.2f} mm  "
           f"progwin={pw}  | {note}")
 print("done")
