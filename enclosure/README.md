@@ -105,8 +105,10 @@ match your capability.
 - Tap from the **back face**. Engagement is ~2.2 mm of titanium.
 - M2 coarse pitch is 0.4 mm, below the 0.6 mm minimum-pitch gate on the online quote form. Please tap
   M2 per this note (or advise) rather than letting the auto-checker reject the thread.
-- Customer-supplied fasteners: 4× **brass M2 × 3 mm slotted cheese head**, head ⌀ 3.8 mm (DIN 84). Tip seats flush in the back spotface (note 5).
+- Customer-supplied fasteners: 4× **brass M2 × 3 mm slotted cheese head**, head ⌀ 3.8 mm (DIN 84), [example listing](https://www.amazon.com/dp/B06WLN47XV). Tip seats flush in the back spotface (note 5).
 - Incidental benefit: the cheese head stands ~1.3 mm proud (k = 1.26–1.40 mm), marginally taller than the 1.2 mm solar cells, so the four corner heads act as feet when the card lies face-down and hold the panel surface ~0.1 mm off the table. The margin is thin (head-height tolerance, any adhesive under the cells, and board flex can erase it), so treat it as a nicety, not a guaranteed standoff.
+
+![M2 × 3 mm slotted cheese head, brass (DIN 84) — schematic](../docs/screw-m2x3-cheese.png)
 
 ### 5. Spotfaces
 
