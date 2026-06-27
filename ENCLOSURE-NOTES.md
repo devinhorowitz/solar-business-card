@@ -11,7 +11,9 @@
 Engineering notes for taking the drafted back-shell (`solar-glow-drh-backshell-cad.py`)
 to a thin **machined-metal** production part. The CadQuery model is material-agnostic;
 these are the decisions and gotchas the material choice forces. Read alongside the
-README's enclosure section.
+README's enclosure section. The as-built board geometry — outline, mount holes,
+part placement, and the back-side height stack — is in `solar-glow-drh-v2-mechanical.md`
+(pulled from the committed PCB); these notes are the shell-design rules that sit on top of it.
 
 ## Concept
 
