@@ -1,5 +1,15 @@
 #!/usr/bin/env python3
 """
+=============================== STALE / DO NOT USE AS-IS ===============================
+This models the PRE-v2.1 board: a SINGLE supercap pair, a U2 floor pocket, right-edge
+castellations, a QFN-20 MCU, and a snap-dome button. The committed v2.1 board has none of
+those. Redesign against the as-built mechanical reference `solar-glow-drh-v2-mechanical.md`
+(its section 8 lists the deltas: FOUR supercaps at both ends, NO edge castellations, NO U2
+pocket, and an accelerometer tap -> NO button hole). The geometry, pockets, and pillar map
+below are wrong for v2.1; the CadQuery scaffolding (bosses, fillet, press-fit walls, the
+parameter block) is a reusable starting point.
+=======================================================================================
+
 solar-glow-drh-backshell-cad.py  —  B-rep back-shell generator (CadQuery / OpenCASCADE)
 
 Real-solid build so STEP carries true faces/edges (Fusion/SolidWorks editable), plus STL.
