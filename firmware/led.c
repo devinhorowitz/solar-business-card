@@ -6,8 +6,8 @@
  *   WO1 = LCMP1  -> PA1 (LDRV2, D3)
  *   WO2 = LCMP2  -> PA2 (LDRV3, D4)
  *   WO3 = HCMP0  -> PA3 (LDRV4, D5)
- * LPER = HPER = 255, CLKSEL = DIV1 -> ~15.6 kHz at F_CPU 4 MHz (flicker-free,
- * above the audible band). PORTMUX.TCAROUTEA = PORTA is the default but is set
+ * LPER = HPER = 255, CLKSEL = DIV1 -> ~3.9 kHz at F_CPU 1 MHz (still well above
+ * any flicker the eye resolves; no inductors/piezo, so nothing to whine). PORTMUX.TCAROUTEA = PORTA is the default but is set
  * explicitly so the routing is self-documenting.
  *
  * Brightness math: duty is written straight to the compare register. With pad
@@ -87,7 +87,7 @@ void led_off(void)
  * costs nothing visually and pets the watchdog along the way.
  *
  * TCB is enabled only for the duration of led_breathe. CCMP is derived from
- * F_CPU so 1 ms holds if the clock changes; at 4 MHz / DIV2 it is 2000 counts. */
+ * F_CPU so 1 ms holds if the clock changes; at 1 MHz / DIV2 it is 500 counts. */
 static volatile uint8_t tcb_tick;
 
 ISR(TCB0_INT_vect)
@@ -157,4 +157,12 @@ void led_breathe(uint8_t cycles, uint16_t breath_ms, uint8_t peak)
     }
     tcb_stop();
     led_off();
+}
+
+void led_wait_ms(uint16_t ms)
+{
+    if (ms == 0) return;
+    tcb_start_1ms();
+    idle_nap_ms(ms);
+    tcb_stop();
 }

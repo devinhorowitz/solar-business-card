@@ -46,8 +46,14 @@ uint8_t lis2dh12_init_tap(void)
     return rc ? 1u : 0u;
 }
 
+uint8_t lis2dh12_read_click(void)
+{
+    uint8_t src = 0;
+    if (twi_reg_read(LIS2DH12_ADDR, LIS_CLICK_SRC, &src, 1)) return 0;  /* bus fault -> no bits */
+    return src;   /* the read clears the latched INT1 */
+}
+
 void lis2dh12_clear_click(void)
 {
-    uint8_t src;
-    (void)twi_reg_read(LIS2DH12_ADDR, LIS_CLICK_SRC, &src, 1);  /* read-to-clear */
+    (void)lis2dh12_read_click();   /* read-to-clear, value discarded */
 }

@@ -57,17 +57,30 @@
 /* ---- tunables (bench-set; safe starting points) ----
  * At +/-2g, click threshold step ~= 16 mg/LSb. At 100 Hz ODR the TIME_*
  * registers step at 1/ODR = 10 ms each. */
-#define LIS_CLICK_CFG_VAL   0x15   /* single-click X+Y+Z (XS|YS|ZS). 0x2A = double, 0x3F = both */
+#if USE_DOUBLE_TAP
+#define LIS_CLICK_CFG_VAL   0x3F   /* single + double, X+Y+Z (firmware picks which fired via CLICK_SRC) */
+#else
+#define LIS_CLICK_CFG_VAL   0x15   /* single-click X+Y+Z (XS|YS|ZS) only */
+#endif
 #define LIS_CLICK_THS_RAW   0x30   /* ~0.75 g. lower = more sensitive. (bit7 LIR_Click added in .c) */
 #define LIS_TIME_LIMIT_VAL  0x0A   /* 100 ms: max over-threshold dwell still counted as a click */
-#define LIS_TIME_LATENCY_VAL 0x14  /* 200 ms: dead time after a click (double-click spacing floor) */
-#define LIS_TIME_WINDOW_VAL 0x30   /* 480 ms: double-click window (harmless for single) */
+#define LIS_TIME_LATENCY_VAL 0x05  /* 50 ms: dead time after a click (debounce / spacing floor) */
+#define LIS_TIME_WINDOW_VAL 0x0A   /* 100 ms: 2nd-tap window. Worst-case DCLICK assertion =
+                                    * LATENCY+WINDOW+LIMIT = 50+100+100 = 250 ms, which must stay
+                                    * UNDER board.h DTAP_WINDOW_MS or a slow double reads as single.
+                                    * Widen this only if DTAP_WINDOW_MS is widened to match. */
 #define LIS_ACT_THS_VAL     0x10   /* activity (INT2) threshold, ~ FS-scaled; coarse "it moved" */
 #define LIS_ACT_DUR_VAL     0x01   /* activity duration */
+
+/* CLICK_SRC (0x39) bits */
+#define LIS_CLICK_IA_bm     0x40
+#define LIS_CLICK_DCLICK_bm 0x20   /* double-click detected */
+#define LIS_CLICK_SCLICK_bm 0x10   /* single-click detected */
 
 /* ---- API ---- 0 = OK, non-zero = fault (bus/NACK) ---- */
 uint8_t lis2dh12_present(void);      /* 1 if WHO_AM_I == 0x33, else 0 */
 uint8_t lis2dh12_init_tap(void);     /* full config: tap->INT1, activity->INT2 */
-void    lis2dh12_clear_click(void);  /* read CLICK_SRC to drop the latched INT1 */
+uint8_t lis2dh12_read_click(void);   /* read CLICK_SRC (clears the latch); returns the bits */
+void    lis2dh12_clear_click(void);  /* read CLICK_SRC to drop the latched INT1 (discards value) */
 
 #endif /* LIS2DH12_H */

@@ -45,8 +45,12 @@ static volatile uint8_t f_tick;    /* RTC PIT     */
 
 static void clocks_init(void)
 {
-    /* internal OSCHF at 4 MHz, no prescaler -> F_CPU = 4 MHz */
-    _PROTECTED_WRITE(CLKCTRL.OSCHFCTRLA, CLKCTRL_FRQSEL_4M_gc);
+    /* internal OSCHF at 1 MHz, no prescaler -> F_CPU = 1 MHz. Chosen over 4 MHz
+     * to trim active current: the core only runs in brief bursts (it sleeps
+     * through the glow), so a slower clock costs nothing noticeable here while
+     * lowering the per-burst draw. Running OSCHF itself at 1 MHz draws less than
+     * 4 MHz-plus-prescaler, so set the oscillator low rather than dividing. */
+    _PROTECTED_WRITE(CLKCTRL.OSCHFCTRLA, CLKCTRL_FRQSEL_1M_gc);
     _PROTECTED_WRITE(CLKCTRL.MCLKCTRLB, 0);          /* prescaler off (PEN = 0) */
     /* voltage regulator: power-saving in deep sleep (doc section 7 step 1) */
     _PROTECTED_WRITE(SLPCTRL.VREGCTRL, SLPCTRL_PMODE_AUTO_gc);
@@ -144,15 +148,32 @@ int main(void)
 #endif
         if (f_tap) {
             f_tap = 0;
+            uint8_t dbl = 0;
+#if USE_DOUBLE_TAP
+            /* Resolve single vs double BEFORE glowing: idle-wait the window so a
+             * second tap can land, then read CLICK_SRC once (this also clears the
+             * latch). Reading only after the window avoids disturbing the accel's
+             * in-progress double-click timing. */
+            led_wait_ms(DTAP_WINDOW_MS);
+            dbl = (lis2dh12_read_click() & LIS_CLICK_DCLICK_bm) != 0;
+#else
+            lis2dh12_clear_click();              /* drop the latched INT1 */
+#endif
             if (sense_rail_ok()) {
                 /* tally BEFORE the glow: the EEPROM write then happens at the
                  * higher pre-glow rail, not after the glow has sagged it. The
                  * ~13 ms write is imperceptible ahead of the animation. */
                 sense_count_inc();
-                led_breathe(GLOW_CYCLES, GLOW_BREATH_MS, GLOW_PEAK);
+                if (dbl)
+                    led_breathe(DTAP_CYCLES, DTAP_BREATH_MS, DTAP_PEAK);  /* signature */
+                else
+                    led_breathe(GLOW_CYCLES, GLOW_BREATH_MS, GLOW_PEAK);
             }
-            lis2dh12_clear_click();          /* drop the latched INT1 */
             prev_light = (sense_vin_mv() >= LIGHT_VIN_MV);
+            /* a tap is also "activity", so INT2 likely fired too and set f_motion.
+             * Clear it here (after the glow) so the next loop does not chase the
+             * tap with a redundant soft breath. */
+            f_motion = 0;
         }
         else if (f_motion) {
             f_motion = 0;

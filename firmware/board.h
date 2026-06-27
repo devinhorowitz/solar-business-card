@@ -42,8 +42,8 @@
 
 #include <avr/io.h>
 
-/* ---- main clock: internal OSCHF at 4 MHz, no crystal fitted ---- */
-#define F_CPU 4000000UL
+/* ---- main clock: internal OSCHF at 1 MHz, no crystal fitted ---- */
+#define F_CPU 1000000UL   /* OSCHF run frequency; see clocks_init in main.c */
 
 /* ---- LEDs (low-side sink) on PORTA PA0..PA3 = TCA0 WO0..WO3 ----
  * TCA0 split: WO0..WO2 driven by LCMP0..2 (low timer), WO3 by HCMP0 (high timer).
@@ -84,6 +84,21 @@
                                  never exceeds the ballasted ceiling. */
 #define GLOW_BREATH_MS  1600  /* one breathe-in/out cycle, ms */
 #define GLOW_CYCLES     2     /* breaths per tap */
+
+/* Double-tap = a distinct "signature" glow (brighter + longer) on top of the
+ * normal single-tap glow. USE_DOUBLE_TAP=1 enables it. Because the glow blocks
+ * for the full animation, single vs double must be resolved BEFORE glowing: on
+ * a tap the firmware idle-waits DTAP_WINDOW_MS (long enough for a 2nd tap to
+ * register in the accel) and then reads CLICK_SRC once. Cost: that window is
+ * added as latency to every tap. Set 0 for instant single-tap with no double.
+ * The accel-side double-tap timing lives in lis2dh12.h (TIME_LATENCY/WINDOW). */
+#define USE_DOUBLE_TAP  1
+#define DTAP_WINDOW_MS  300   /* must be >= accel worst-case DCLICK assertion
+                               * (TIME_LATENCY+TIME_WINDOW+TIME_LIMIT, see lis2dh12.h);
+                               * currently 250 ms, so 300 leaves ~50 ms margin */
+#define DTAP_CYCLES     3     /* signature glow: more breaths than a single tap */
+#define DTAP_BREATH_MS  1600
+#define DTAP_PEAK       255   /* and brighter (single tap uses GLOW_PEAK)       */
 
 /* charge floor: skip the glow (stay dark) below this rail voltage, mV.
  * Read via ADC VDD/10. Keeps a brown-out from bricking mid-animation. */
