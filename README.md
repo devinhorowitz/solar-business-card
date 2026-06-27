@@ -111,6 +111,7 @@ solar-business-card/
 ├── solar-glow-drh-v2_1-BOM.xlsx    # bill of materials — parts, prices, datasheet links
 ├── solar-glow-drh-BOM.xlsx         # v0-prototype BOM, kept for posterity
 ├── solar-glow-drh-v2-hardware.md   # as-built wiring & pin map — the firmware target
+├── firmware/                       # bare-metal C (AVR64DD28); register-verified, see firmware/README.md
 ├── datasheets/                     # every component's datasheet
 └── enclosure/                      # parked CAD for the metal back-shell (STEP / STL / CadQuery)
 ```
@@ -150,9 +151,13 @@ The board is a KiCad project — open it, run DRC, and export the fab set:
 
 ## Firmware
 
-Parked until first articles land and the harvest question is answered — but the wiring it'll be
-built against is fully captured in **`solar-glow-drh-v2-hardware.md`** (complete pin map, the
-PORTMUX settings, the accel at I²C `0x18`). In short, the board gives it:
+A first implementation now lives in **`firmware/`** — bare-metal C, **verified at the register
+level** against the AVR64DD28 and LIS2DH12 datasheets but **not yet compiled against a real
+toolchain or run on hardware**. Its knobs, wake model, and power notes are in
+**`firmware/README.md`** (authoritative); the wiring it targets is in
+**`solar-glow-drh-v2-hardware.md`** (complete pin map, PORTMUX, the accel at I²C `0x18`). Final
+duty-cycle and feature tuning stay **gated on the energy-budget measurement** below. In short,
+the board gives it:
 
 - **LED breathing** — the four LEDs sink into **PA0–PA3 = TCA0 WO0–WO3**, so split-mode PWM
   drives all four as independent 8-bit channels (the 150 Ω ballast sets the peak; PWM sets the
@@ -162,16 +167,24 @@ PORTMUX settings, the accel at I²C `0x18`). In short, the board gives it:
 - **Light sensing** — the divider taps the **solar input** (VIN ÷ 2) into **PD2** (AIN2), so it
   reads light directly — ~0 V dark, rising under light; firmware adapts the glow to available
   light and can also read **VDD/10** and the internal temp sensor.
-- **Wake-on-light (validated)** — PD2 is also **AINP0**, an AC0 comparator input, so the card
-  can wake on light with no tap. Two implementations on the same wiring: the AC0 comparator for
-  *instant* wake (~12 µA, runs in Standby), or an RTC-timed ADC poll for *dark-tolerant* wake
-  (~1–3 µA, ~1–2 s latency). Confirmed against the datasheet — see `solar-glow-drh-v2-hardware.md` §6.
+- **Wake-on-light** — the card can also wake when light appears, with no tap. The implemented
+  path is an **RTC-timed ADC poll** in deep Power-Down (sample PD2/AIN2 every ~1–2 s, glow on a
+  dark→light rise). The tempting *instant* AC0-comparator version was checked against the
+  datasheet and found **non-viable on this part** — the AC interrupt doesn't update with the
+  peripheral clock stopped, and the AC isn't a Standby/Power-Down wake source, so it would never
+  fire. Instant response isn't lost: the accelerometer interrupt wakes from Power-Down, and
+  picking the card up to carry it into the light *is* that motion. (Standing current is
+  dominated by the always-on accelerometer, not the poll — see `firmware/README.md`, and the
+  corrected `solar-glow-drh-v2-hardware.md` §6.)
 - **Low-power housekeeping** — `VREGCTRL.PMODE = AUTO` for sub-µA power-down; RTC/PIT off the
   internal ULP oscillator (no crystal); an EEPROM “times-activated” counter that survives a
-  full supercap drain; and CCL + EVSYS to run a glow pattern while the CPU sleeps.
+  full supercap drain; and the core **IDLE-sleeps through the breathing glow** while TCA0 keeps
+  the PWM running, rather than busy-waiting. (An autonomous CCL + EVSYS light-wake is a possible
+  v-next, but isn't what the current firmware does.)
 
-Scope when it starts: the breathing curve, the tap gestures, charge / brown-out management
-around the supercap bank, and the duty-cycle adaptation the harvest measurement unlocks.
+Still open (what the bench measurement unlocks): final breathing-curve and tap-gesture tuning,
+charge / brown-out management around the supercap bank, and the duty-cycle adaptation the
+harvest number sizes.
 
 ---
 
