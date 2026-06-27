@@ -60,7 +60,7 @@ programming, a backup UPDI header (`J1`), an I²C expansion header (`JP1`), a sp
 M2 mounting holes** at the corners.
 
 Full part numbers, pricing, and per-part datasheet links are in
-**`solar-glow-drh-BOM.xlsx`**.
+**`solar-glow-drh-v2_1-BOM.xlsx`**.
 
 ---
 
@@ -108,7 +108,8 @@ solar-business-card/
 ├── solar-glow-drh-v2_1.kicad_pcb   # the board — 6-layer, routed (source of truth)
 ├── solar-glow-drh-v2_1.kicad_sch   # schematic
 ├── solar-glow-drh-v2_1.kicad_pro   # KiCad project
-├── solar-glow-drh-BOM.xlsx         # bill of materials — parts, prices, datasheet links
+├── solar-glow-drh-v2_1-BOM.xlsx    # bill of materials — parts, prices, datasheet links
+├── solar-glow-drh-BOM.xlsx         # v0-prototype BOM, kept for posterity
 ├── solar-glow-drh-v2-hardware.md   # as-built wiring & pin map — the firmware target
 ├── datasheets/                     # every component's datasheet
 └── enclosure/                      # parked CAD for the metal back-shell (STEP / STL / CadQuery)
