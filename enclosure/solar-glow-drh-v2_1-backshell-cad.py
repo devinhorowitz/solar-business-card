@@ -269,8 +269,9 @@ jobs = [
     # name                 floor wall  border ribs  prog   note
     ("Ti-max",             0.55, 1.00, 0.15, True,  False, "RECOMMENDED: 0.55 floor (0.50 min under reflector ring) + cap-gap ribs + 1.0 walls"),
     ("Ti-max-progwindow",  0.55, 1.00, 0.15, True,  True,  "Ti-max + TC2030 re-flash window"),
-    ("Ti-conservative",    0.60, 1.60, 0.15, False, False, "reference / fallback, no ribs"),
 ]
+# Ti-conservative (0.60 floor / 1.60 wall) struck: if the shop cannot hold the 0.55 floor we
+# re-issue to whatever minimum they will hold, so a pre-baked 0.60 fallback is dead weight.
 print(f"cavity={cavity} (U2 {U2_H} + air {cav_margin}; kapton {kapton_th})  lip/frame={lip_w}  "
       f"braces={len(BRACE)} ribs={len(RIBS)}  border=0.15  "
       f"cavity tool R{TOOL_R} (Ø{2*TOOL_R}) / back tool R{BACK_TOOL_R} (Ø{2*BACK_TOOL_R})  "
