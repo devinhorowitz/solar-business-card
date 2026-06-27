@@ -21,13 +21,17 @@
 
 #include <stdint.h>
 
-/* ADC: enable, 12-bit, DIV2 presc, 2.500 V ref, long sample (1M source Z). */
+/* Configure the ADC: 12-bit, DIV2 presc, 2.500 V reference, long sample (1M
+ * source Z), reference-settling INITDLY. Leaves the ADC disabled; each read
+ * powers it (and the reference) up for the conversion and back down after, so
+ * the analog domain draws nothing between polls. */
 void     sense_adc_init(void);
 
 /* one-shot reads, in millivolts at the real-world node:
  *   sense_vin_mv() : VIN (already x2 for the divider).
  *   sense_vdd_mv() : the MCU/supercap rail VDD (via VDD/10 channel).
- * Both enable->convert->return; cheap enough to call from the poll path. */
+ * Both power the ADC + reference up for the conversion and back down after;
+ * cheap enough to call from the poll path. */
 uint16_t sense_vin_mv(void);
 uint16_t sense_vdd_mv(void);
 
