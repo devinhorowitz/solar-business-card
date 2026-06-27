@@ -12516,7 +12516,7 @@
 				)
 			)
 		)
-		(property "Value" "ALD910025SAL"
+		(property "Value" "ALD910025SALI"
 			(at 91.01 129.54 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -13598,7 +13598,7 @@
 				)
 			)
 		)
-		(property "Value" "SM141K06L"
+		(property "Value" "SM141K06TF"
 			(at 36.4 48.26 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -15080,7 +15080,7 @@
 				)
 			)
 		)
-		(property "Value" "SM141K06L"
+		(property "Value" "SM141K06TF"
 			(at 36.4 78.74 0)
 			(show_name no)
 			(do_not_autoplace no)
