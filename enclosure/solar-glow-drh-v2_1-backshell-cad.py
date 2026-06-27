@@ -33,6 +33,12 @@ BACK FACE = metal rubbing of the interior: 4 screw posts drilled CLEAN THROUGH, 
 mirrors the inner lip (PCB-perimeter footprint + width), and the bosses as raised annuli fused to
 the frame the way the inner bosses fuse to the lip; all raised `border_h` so engraved rear art in
 the recessed field takes no wear.
+
+ROUND-TOOL MACHINABILITY: the interior pocket carries no internal corner sharper than the cutter.
+Convex features (bosses, brace posts, rib ends) are clear to mill around; the concave junctions where
+the bosses and ribs merge into the lip are RADIUSED to the finishing-tool radius (TOOL_R, R1.0 = Ø2.0
+mm) so the pocket clears in single passes. The relief is computed (void minus its morphological
+opening), sits only at the perimeter junctions, and is verified clear of every back-side component.
 ================================================================================================
 
 All XY in board coords (KiCad: origin top-left, X across 50.80, Y down 88.90). Heights are datasheet
@@ -41,6 +47,8 @@ figures. Z=0 = OUTER back face; +Z into the board; raised back features go to -Z
 deps:  pip install --break-system-packages cadquery
 """
 import cadquery as cq
+from shapely.geometry import Point, box
+from shapely.ops import unary_union
 
 # ===== board (committed PCB) =====
 W, H, R   = 50.80, 88.90, 3.0
@@ -58,7 +66,20 @@ corner_clr = 0.15                  # corner relief so the press grips the flats
 edge_ease  = 0.20                  # squared-edge chamfer (feel/deburr)
 lip_w      = 1.50                  # perimeter support lip (inner) AND the back-frame width (mirror)
 boss_r     = 2.60                  # M2 boss / back annulus outer radius
-pilot_r    = 0.80                  # M2 thread-forming hole, CLEAN THROUGH
+pilot_r    = 0.80                  # M2 tap-drill hole, CLEAN THROUGH. Boss is TAPPED M2 (brass is soft --
+                                   # never let a brass screw thread-form into Ti; cut the threads first).
+# corner fasteners: brass M2x3, pan head <= Ø4.0 (cell-limited; absolute Ø5.3 touches the cell at 2.66 mm).
+SCREW_LEN  = 3.0                   # under-head length (M2x3). Head seats on the PCB front.
+CBORE_D    = 3.0                   # back spotface dia at each hole; depth auto-set so the M2x3 tip is flush.
+
+# round-tool relief: a spinning end mill cannot cut a sharp INTERNAL (concave) corner -- it always
+# leaves its own radius. Convex features (the bosses, brace posts, rib ends) are fine; the tool just
+# rides around them. The only un-machinable spots are the concave junctions where the bosses and the
+# ribs merge into the lip. We RADIUS those corners to the finishing-tool radius so the pocket clears
+# in single passes -- i.e. we draw the corner the tool actually leaves, so nothing in the model is
+# smaller than the cutter. R1.0 = Ø2.0 mm finisher; the cavity inner corners (ir=1.45) already clear
+# it. Shop roughs the open pocket with a Ø3-4 mm tool and finishes corners/walls with the Ø2.0.
+TOOL_R     = 1.00
 
 # window braces (disk clears the glow window + every back pad; from the PCB):
 # window braces: E + W flank the optical-window keepout (between side lip and window edge).
@@ -74,6 +95,35 @@ RIBS  = [(24.9, 0.0, 25.9, 33.0), (24.9, 56.0, 25.9, 88.9)]   # (x0,y0,x1,y1)  1
 wx = lambda x: x - W/2
 wy = lambda y: y - H/2
 cavW, cavH, cavR = W + 2*edge_fit, H + 2*edge_fit, R + edge_fit
+
+# ---- round-tool corner relief (pure-2D, matches the CAD cavity cut exactly) ----
+def _inner_pocket():
+    """pocket-interior (void) footprint in BOARD coords, identical to the CAD cavity cut:
+    centered iw x ih rect inset by lip_w, corner radius ir."""
+    iw, ih, ir = cavW - 2*lip_w, cavH - 2*lip_w, max(cavR - lip_w, 0.5)
+    x0, y0, x1, y1 = W/2 - iw/2, H/2 - ih/2, W/2 + iw/2, H/2 + ih/2
+    b = box(x0+ir, y0, x1-ir, y1).union(box(x0, y0+ir, x1, y1-ir))
+    for cx, cy in [(x0+ir,y0+ir),(x1-ir,y0+ir),(x0+ir,y1-ir),(x1-ir,y1-ir)]:
+        b = b.union(Point(cx, cy).buffer(ir, resolution=48))
+    return b
+
+def _relief_polys(ribs_on, tool_r=TOOL_R):
+    """material a round tool of radius tool_r CANNOT clear in the pocket = void - open(void).
+    These are the concave boss-lip / rib-lip junction fills. Returns shapely Polygons (board coords)."""
+    isl  = [Point(mx, my).buffer(boss_r, resolution=64) for mx, my in mounts]
+    isl += [Point(x, y).buffer(rr, resolution=48) for x, y, rr in BRACE]
+    if ribs_on:
+        isl += [box(x0, y0, x1, y1) for x0, y0, x1, y1 in RIBS]
+    void  = _inner_pocket().difference(unary_union(isl))
+    vopen = void.buffer(-tool_r, join_style=1, resolution=32).buffer(tool_r, join_style=1, resolution=32)
+    added = void.difference(vopen).buffer(0)
+    geoms = list(added.geoms) if added.geom_type.startswith("Multi") else ([added] if not added.is_empty else [])
+    return [g.simplify(0.01, preserve_topology=True) for g in geoms if g.geom_type == "Polygon" and g.area > 0.01]
+
+def _poly_solid(poly, z0, dz):
+    """extrude a simple shapely polygon (board coords) into a CadQuery prism, z0 .. z0+dz."""
+    xy = [(wx(x), wy(y)) for x, y in list(poly.exterior.coords)[:-1]]
+    return cq.Workplane("XY").workplane(offset=z0).polyline(xy).close().extrude(dz)
 
 # ===== build =====
 def build(floor=0.45, wall_th=1.0, border_h=0.10, ribs=True, prog_window=False):
@@ -111,6 +161,10 @@ def build(floor=0.45, wall_th=1.0, border_h=0.10, ribs=True, prog_window=False):
         for x0, y0, x1, y1 in RIBS:
             res = res.union(cq.Workplane("XY").workplane(offset=floor)
                               .moveTo(wx((x0+x1)/2), wy((y0+y1)/2)).rect(x1-x0, y1-y0).extrude(cavity))
+    # round-tool corner relief: fill the concave boss-lip / rib-lip junctions to the tool radius so a
+    # spinning end mill clears the pocket in single passes (draws the radius the cutter actually leaves).
+    for poly in _relief_polys(ribs):
+        res = res.union(_poly_solid(poly, floor, cavity))
     # BACK FACE: frame == lip footprint + boss annuli, raised border_h
     if border_h > 0:
         frame = (cq.Workplane("XY").workplane(offset=-border_h).rect(cavW, cavH)
@@ -127,6 +181,16 @@ def build(floor=0.45, wall_th=1.0, border_h=0.10, ribs=True, prog_window=False):
     for mx, my in mounts:
         twp = twp.moveTo(wx(mx), wy(my)).circle(pilot_r)
     res = res.cut(twp.extrude(bb + border_h + 0.2))
+    # back SPOTFACE at each hole: drop a local flat to exactly where the M2x3 brass tip lands,
+    # so the tip sits FLUSH in the spotface while the annulus ring stays proud around it (Ti takes
+    # the wear, not the soft brass). Bottom z = front - SCREW_LEN -> "removes 0.2 mm at the hole"
+    # on Ti-max; the depth tracks the screw + stack so the fit stays intentional, never almost.
+    sf_bottom = (floor + cavity + board_th) - SCREW_LEN          # z the tip reaches (head seats on PCB front)
+    sf_start  = -border_h - 0.4
+    sfp = cq.Workplane("XY").workplane(offset=sf_start)
+    for mx, my in mounts:
+        sfp = sfp.moveTo(wx(mx), wy(my)).circle(CBORE_D / 2)
+    res = res.cut(sfp.extrude(sf_bottom - sf_start))
     if prog_window:
         res = res.cut(cq.Workplane("XY").workplane(offset=-border_h - 0.1)
                         .moveTo(wx(13.3), wy(16.9)).circle(5.5).extrude(floor + border_h + 0.2))
@@ -141,7 +205,9 @@ jobs = [
     ("Ti-max-progwindow",  0.45, 1.00, 0.10, True,  True,  "Ti-max + TC2030 re-flash window"),
     ("Ti-conservative",    0.60, 1.60, 0.15, False, False, "prior build, no ribs (reference / safety)"),
 ]
-print(f"cavity={cavity} (U2 {U2_H} + air {cav_margin}; kapton {kapton_th})  lip/frame={lip_w}  braces={len(BRACE)} ribs={len(RIBS)}")
+print(f"cavity={cavity} (U2 {U2_H} + air {cav_margin}; kapton {kapton_th})  lip/frame={lip_w}  "
+      f"braces={len(BRACE)} ribs={len(RIBS)}  tool_r={TOOL_R} (Ø{2*TOOL_R}mm finisher)  "
+      f"relief spots: ribs-on={len(_relief_polys(True))} ribs-off={len(_relief_polys(False))}")
 for name_suf, fl, wl, bd, rb, pw, note in jobs:
     solid = build(floor=fl, wall_th=wl, border_h=bd, ribs=rb, prog_window=pw)
     field = fl + cavity + board_th
