@@ -36,7 +36,9 @@ accelerometer is the actuator.
   - macOS: `brew tap osx-cross/avr && brew install avr-gcc`.
   - Windows: Microchip's AVR-GCC toolchain, or MSYS2.
 - A flasher: **avrdude >= 7.0** (has UPDI / `serialupdi`) *or* **pymcuprog**
-  (`pip install pymcuprog`, Microchip's UPDI tool).
+  (`pip install pymcuprog`, Microchip's UPDI tool). This guide drives the
+  **Adafruit UPDI Friend** (step 3); its CH340E enumerates as a USB serial port
+  (built into modern Linux; macOS/Windows may want WCH's CH340 driver).
 - The **AVR-Dx DFP** (device family pack): download the `.atpack` (a zip) from
   Microchip's pack server (`packs.download.microchip.com`), or copy it out of an
   MPLAB X install; unzip it and note the path. It supplies the `avr64dd28` device
@@ -52,25 +54,44 @@ flash / 8 KB RAM, so this firmware leaves room to spare).
 
 ### 3. Wire UPDI and power the board
 UPDI is a single wire on **pin 23**, broken out to the **TC2030 pad (TC1)** (a
-Tag-Connect cable latches hands-free) and header **J1**. Pick a programmer:
-- **SerialUPDI** (cheapest): a **3.3 V** USB-serial adapter — `TX -> 4.7 kΩ -> UPDI`,
-  `RX -> UPDI` (joined to the same node), `GND -> board GND`; use `PROG=serialupdi`.
-  Do **not** use a 5 V adapter — VDD is clamped to 3.47 V.
-- **PICkit 4/5, MPLAB SNAP, or Atmel-ICE**: wire UPDI / GND / Vtarget; use
-  `PROG=pickit4_updi` (or `snap_updi`), or drive it with pymcuprog / MPLAB.
+Tag-Connect cable latches hands-free) and the backup header **J1**.
 
-**Power the target while flashing.** The card runs off the supercap/solar rail, so
-a flat card has no power for UPDI. Either let the programmer supply Vtarget
-(PICkit/SNAP, or Vcc on the TC2030), put an external supply on VS, or charge the cap
-in light first. VDD is the clamped rail (<= 3.47 V), a valid programming voltage.
+This guide uses the **[Adafruit UPDI Friend](https://www.digikey.com/en/products/detail/adafruit-industries-llc/5879/22596413)**
+(DigiKey 5879) — a USB-C serial-UPDI programmer with the loop-back resistor *and* a
+switchable **3 V / 5 V** supply built in, so there's no resistor to wire and it can
+power the card itself. Its 3-pin JST-SH cable is colour-coded **white = UPDI**,
+**black = GND**, **red = PWR** (same three signals on the 0.1" header).
+
+1. **Set the voltage switch to 3 V.** The VS rail clamps at 3.47 V, so 3 V power and
+   logic are safe; **never 5 V** — it over-drives the UPDI pin and exceeds the clamp.
+2. Wire by signal to TC1 (or J1): **white/UPDI → UPDI**, **black/GND → GND**, and
+   **red/PWR → the connector's Vcc pin** (it sits on VS). Confirm the TC1/J1 pin
+   order against the schematic — a 3-contact UPDI Tag-Connect carries UPDI, GND, Vcc.
+3. On 3 V the UPDI Friend's supply (up to 500 mA) powers the card for programming —
+   which matters because a flat solar card has no power of its own for UPDI. If your
+   connector doesn't break out Vcc, charge the cap in light first and wire only
+   UPDI + GND (still on the 3 V setting, so the logic level matches).
+4. Plug in USB-C; the green PWR LED lights and the red TX LED blinks on transfers.
+
+Other serial-UPDI adapters, or a PICkit 4/5 / MPLAB SNAP, also work
+(`PROG=serialupdi` or `PROG=pickit4_updi` / `snap_updi`); a bare USB-serial adapter
+would need a 4.7 kΩ resistor between TX and the joined RX/UPDI node — exactly what the
+UPDI Friend builds in. We leave `UPDIPINCFG` at default (UPDI stays active on pin 23),
+so the standard (non-HV) UPDI Friend is the right one — the High-Voltage variant is
+only needed if UPDI has been fused off.
+
+Refs: [UPDI Friend guide](https://learn.adafruit.com/adafruit-updi-friend) ·
+[what UPDI is (Microchip)](https://onlinedocs.microchip.com/oxy/GUID-DDB0017E-84E3-4E77-AAE9-7AC4290E5E8B-en-US-4/index.html).
 
 ### 4. Flash
 ```sh
 make flash DFP=/path/to/... PROG=serialupdi PORT=/dev/ttyUSB0
 ```
 Port: Linux `/dev/ttyUSB0` (or `/dev/ttyACM0`), macOS `/dev/cu.usbserial-*`, Windows
-`COMx`. avrdude verifies after the write. (pymcuprog equivalent, roughly:
-`pymcuprog -d avr64dd28 -t uart -u <port> write -f solar-glow.hex --erase --verify`.)
+`COMx`. The Makefile sends `-b 230400` (the UPDI Friend's documented speed; override
+with `BAUD=57600` if a long cable is flaky). avrdude verifies after the write.
+(pymcuprog equivalent, roughly: `pymcuprog -d avr64dd28 -t uart -u <port> -c 230400
+write -f solar-glow.hex --erase --verify`.)
 
 ### 5. Set the fuses (once)
 Flashing does not touch fuses. Set them deliberately per the **Fuses** section

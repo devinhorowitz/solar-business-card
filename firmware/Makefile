@@ -25,9 +25,12 @@ DFP_INC   = $(DFP)/include
 DFP_SPEC  = $(DFP)/gcc/dev/$(MCU)
 
 # UPDI programmer + port (TC2030 pad TC1 or header J1 -> UPDI on pin 23).
-# serialupdi works with a cheap USB-serial + 4.7k resistor; pickit4/snap also.
+# Default flow = Adafruit UPDI Friend (DigiKey 5879): a serial-UPDI adapter with
+# the loop-back resistor + a 3V/5V supply built in -> set its switch to 3V.
+# A bare USB-serial + 4.7k resistor, or a pickit4/snap, also work.
 PROG     ?= serialupdi
 PORT     ?= /dev/ttyUSB0
+BAUD     ?= 230400          # UPDI Friend documented speed; 57600 is the safe fallback
 
 CC       = avr-gcc
 OBJCOPY  = avr-objcopy
@@ -62,7 +65,7 @@ $(TARGET).eep: $(TARGET).elf
 	$(OBJCOPY) -O ihex -j .eeprom --change-section-lma .eeprom=0 $< $@ || true
 
 flash: $(TARGET).hex
-	avrdude -c $(PROG) -P $(PORT) -p $(MCU) -U flash:w:$<:i
+	avrdude -c $(PROG) -P $(PORT) -b $(BAUD) -p $(MCU) -U flash:w:$<:i
 
 # Optional: enable BOD as a SAMPLED brown-out (low duty) so it guards the rail
 # without the ~17 uA of continuous BOD. Confirm the exact BODCFG byte for your
