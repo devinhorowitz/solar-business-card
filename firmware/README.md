@@ -28,15 +28,55 @@ accelerometer is the actuator.
 
 ## Build & flash
 
-Needs a modern `avr-gcc` (AVR-Dx capable) and the Microchip **AVR-Dx DFP**:
+### 1. Install the toolchain
+- **avr-gcc** (AVR-Dx capable) plus **avr-binutils** / **avr-libc**. A distro
+  `avr-gcc` may be too old for AVR-Dx; the reliable option on any OS is Microchip's
+  AVR-GCC toolchain build. A distro `avr-gcc` >= ~12 also works **with the DFP**.
+  - Debian/Ubuntu: `sudo apt install gcc-avr binutils-avr avr-libc` (check the version).
+  - macOS: `brew tap osx-cross/avr && brew install avr-gcc`.
+  - Windows: Microchip's AVR-GCC toolchain, or MSYS2.
+- A flasher: **avrdude >= 7.0** (has UPDI / `serialupdi`) *or* **pymcuprog**
+  (`pip install pymcuprog`, Microchip's UPDI tool).
+- The **AVR-Dx DFP** (device family pack): download the `.atpack` (a zip) from
+  Microchip's pack server (`packs.download.microchip.com`), or copy it out of an
+  MPLAB X install; unzip it and note the path. It supplies the `avr64dd28` device
+  header, startup, and linker spec that stock avr-libc may lack.
 
+### 2. Build
 ```sh
+cd firmware
 make DFP=/path/to/Microchip/AVR-Dx_DFP/<version>
+```
+Produces `solar-glow.hex`; the `avr-size` line reports usage (the part has 64 KB
+flash / 8 KB RAM, so this firmware leaves room to spare).
+
+### 3. Wire UPDI and power the board
+UPDI is a single wire on **pin 23**, broken out to the **TC2030 pad (TC1)** (a
+Tag-Connect cable latches hands-free) and header **J1**. Pick a programmer:
+- **SerialUPDI** (cheapest): a **3.3 V** USB-serial adapter — `TX -> 4.7 kΩ -> UPDI`,
+  `RX -> UPDI` (joined to the same node), `GND -> board GND`; use `PROG=serialupdi`.
+  Do **not** use a 5 V adapter — VDD is clamped to 3.47 V.
+- **PICkit 4/5, MPLAB SNAP, or Atmel-ICE**: wire UPDI / GND / Vtarget; use
+  `PROG=pickit4_updi` (or `snap_updi`), or drive it with pymcuprog / MPLAB.
+
+**Power the target while flashing.** The card runs off the supercap/solar rail, so
+a flat card has no power for UPDI. Either let the programmer supply Vtarget
+(PICkit/SNAP, or Vcc on the TC2030), put an external supply on VS, or charge the cap
+in light first. VDD is the clamped rail (<= 3.47 V), a valid programming voltage.
+
+### 4. Flash
+```sh
 make flash DFP=/path/to/... PROG=serialupdi PORT=/dev/ttyUSB0
 ```
+Port: Linux `/dev/ttyUSB0` (or `/dev/ttyACM0`), macOS `/dev/cu.usbserial-*`, Windows
+`COMx`. avrdude verifies after the write. (pymcuprog equivalent, roughly:
+`pymcuprog -d avr64dd28 -t uart -u <port> write -f solar-glow.hex --erase --verify`.)
 
-UPDI lands on pin 23, broken out to the **TC2030 pad (TC1)** and header **J1**.
-`serialupdi` (USB-serial + 4.7 kΩ series resistor) or a PICkit/SNAP both work.
+### 5. Set the fuses (once)
+Flashing does not touch fuses. Set them deliberately per the **Fuses** section
+below — sampled `BODCFG`, `SYSCFG1.MVSYSCFG = SINGLE`, and optionally
+`SYSCFG0.EESAVE` to keep the tap counter across reflashes. `make fuses` prints the
+avrdude pattern; fill in the bytes from the datasheet fuse tables.
 
 ## Pin map (read from `solar-glow-drh-v2_1.kicad_pcb`)
 

@@ -6,7 +6,7 @@
 #
 #   make                # build solar-glow.hex
 #   make flash          # UPDI flash via avrdude (set PROG/PORT below)
-#   make fuses          # (optional) set the sampled-BOD fuse, see note
+#   make fuses          # (optional) set fuses (sampled BOD, MVSYSCFG, EESAVE), see note
 #   make clean
 #
 # Point DFP at your pack, e.g.:
@@ -69,8 +69,11 @@ flash: $(TARGET).hex
 # desired level/sample-rate against the datasheet before flashing this.
 #   ACTIVE=SAMPLED, SLEEP=SAMPLED, SAMPFREQ + LVL bits -> see BODCFG fuse table.
 fuses:
-	@echo "Set BODCFG deliberately; see README 'Brown-out' note. Example:"
-	@echo "  avrdude -c $(PROG) -P $(PORT) -p $(MCU) -U bodcfg:w:0xXX:m"
+	@echo "Set fuses deliberately; see README 'Fuses' section for the full set."
+	@echo "Compute whole-byte values from the datasheet fuse tables, then e.g.:"
+	@echo "  avrdude -c $(PROG) -P $(PORT) -p $(MCU) -U bodcfg:w:0xXX:m   # sampled BOD"
+	@echo "  avrdude -c $(PROG) -P $(PORT) -p $(MCU) -U syscfg1:w:0xXX:m  # MVSYSCFG=SINGLE"
+	@echo "  avrdude -c $(PROG) -P $(PORT) -p $(MCU) -U syscfg0:w:0xXX:m  # EESAVE (keep counter)"
 
 clean:
 	rm -f $(OBJ) $(TARGET).elf $(TARGET).hex $(TARGET).eep
