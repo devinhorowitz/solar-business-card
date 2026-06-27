@@ -5,7 +5,7 @@
  * ---------
  * The card sleeps in POWER-DOWN almost all the time. Three things wake it:
  *   - TAP      (LIS2DH12 click -> INT1 -> PF1, rising)  -> full breathing glow
- *   - MOTION   (LIS2DH12 activity -> INT2 -> PF0, rising) -> one soft breath
+ *   - MOTION   (LIS2DH12 inertial wake-up -> INT2 -> PF0, rising) -> one soft breath
  *   - PIT tick (RTC, ~1 s, runs in power-down)          -> sample light, and
  *                if we just crossed dark->light, do a glow
  * All PORT pins sense fully asynchronously, so the rising-edge accel
@@ -170,7 +170,7 @@ int main(void)
                     led_breathe(GLOW_CYCLES, GLOW_BREATH_MS, GLOW_PEAK);
             }
             prev_light = (sense_vin_mv() >= LIGHT_VIN_MV);
-            /* a tap is also "activity", so INT2 likely fired too and set f_motion.
+            /* a tap is also motion, so INT2 likely fired too and set f_motion.
              * Clear it here (after the glow) so the next loop does not chase the
              * tap with a redundant soft breath. */
             f_motion = 0;
@@ -179,7 +179,7 @@ int main(void)
             f_motion = 0;
             if (sense_rail_ok())
                 led_breathe(1, GLOW_BREATH_MS, (uint8_t)(GLOW_PEAK / 2));
-            /* activity int is not latched; nothing to clear */
+            /* motion int (IA2) is not latched; nothing to clear */
         }
         else if (f_tick) {
             f_tick = 0;
