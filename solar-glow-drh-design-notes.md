@@ -1,0 +1,253 @@
+# SOLAR-GLOW · DRH — design notes & posterity
+
+Durable engineering rationale, hard-won findings, and future-variant ideas, distilled from the
+v0/v1 planning docs before they were retired (`V1-SPEC.md`, `V1-PLAN.md`,
+`solar-glow-drh-v1-punchlist.md`, `KICAD-PUNCHLIST.md`, `SESSION-HANDOFF.md`,
+`solar-glow-drh-v1-ROUTING-PLAN.md`, `solar-glow-drh-v1-pinmap.md`).
+
+**Authority order.** For the *current* design, the committed `solar-glow-drh-v2_1.kicad_pcb` /
+`.kicad_sch`, plus `solar-glow-drh-v2-hardware.md` (as-built wiring/pin map) and `README.md`, are
+ground truth. This file is the *reasoning archive* — the "why" and the "don't do that again," so a
+future v2.2/v3 does not re-learn it from scratch. Where the as-built docs already own a topic, this
+points at them rather than duplicating.
+
+---
+
+## 1. The supercap land — the landmine (never reintroduce the old one)
+
+**The v0/REV-J supercap land was WRONG — confirmed against physical parts.** It placed two
+3.5 × 3.5 mm pads on a diagonal (36.5 × 16 pattern, centres ±16.5 / ±6.25) that land on the cell's
+folded **end tabs**. Those tabs are coated, **non-solderable** mechanical locators, so a board built
+to that land makes **zero electrical contact**. The root cause: the datasheet's single generic
+"Soldering pads to Case WS10/13/17" diagram (`datasheets/typ_SCPC-2.pdf`) was misread as the WS17
+land.
+
+**The correct land (LOCKED).** The real solderable terminals are flat pads **under the body**:
+
+- **P (positive) pad: 7.8 × 3.5 mm**
+- **N (negative) pad: 12.2 × 3.5 mm** — the asymmetric widths are the **polarity key**
+- Both centred on the cell axis at **±11 mm** from cell centre, ~1.5 mm in from each end, inside the
+  28.5 × 17 mm body.
+- Protruding end tabs are finish-coated locators only — **not** solder pads.
+- Placement rotations as built: SC1/SC4 → 90°, SC2/SC3 → 270°.
+
+Part: **SCHURTER SCPC 3-153-438** (WS17 housing, 1 F, 2.75 V, ESR 40 mΩ, 1.7 mm thick). The
+diagonal end-tab land **must never be reintroduced**.
+
+---
+
+## 2. Power-budget model (the framework + the one open gate)
+
+The honest energy model, and the reason a bench bring-up gates any feature decision:
+
+- **Continuous sustainable average draw ≤ harvest.** This — not the cap size — sets the brightness
+  you can hold *forever*. Indoor harvest is roughly **0.1–0.5 mA at the rail** (the SM141K06x panel
+  is ~185 mW at 1 sun; ordinary office light is 100–500× less).
+- **The reserve buys excursions, not steady-state.** The ~15 J tank is how long/bright you can
+  *exceed* harvest before it drains, and how long the glow rides through darkness. Recharge scales
+  with it: ~15 J / ~1.6 mW ≈ **hours** to refill from empty on office light. A bigger tank = longer
+  dark glow **and** longer cold-start. This is the "diminishing returns" point: a 2× bucket buffers
+  dark ~2× longer but cold-starts ~2× slower — it **buffers a deficit, it does not cure** the
+  harvest-vs-draw ratio.
+
+| reserve | sustained draw it supports |
+|---|---|
+| v0: 2× WS10, ~150 mF, ~2.3 J | ≤ harvest; ~40–60 s breathing / ~10–15 min refill |
+| v2.1: 4× WS17, 1 F @ 5.5 V, ~15 J | ≤ harvest; minutes of breathing per charge; refill ~hours |
+
+**Draw line items** (budget against harvest): accel ≈ 1 µA; light-sense divider sub-µA; MCU sleep
+≈ 0.65 µA (AVR-DD power-down, `PMODE=AUTO`). The LEDs are the only mA-scale load; everything else is
+noise on the budget.
+
+> **Ballast caveat — re-derive the LED numbers for v2.1.** The LED-draw figures used throughout the
+> old docs (≈5 mA for 4 LEDs full-on, ≈3 mA breathing, +1.25 mA per added LED) were computed at
+> v0's **1 kΩ** ballast. The v2.1 BOM carries a **different ballast (150 Ω, flagged bench-pending)**,
+> which at the same ~3.47 V rail raises per-LED current several-fold. The schematic leaves R1–R4 as a
+> "LED ballast" placeholder, so the BOM is the source of truth for the value. **Re-derive draw and
+> duty against the final ballast before trusting any duty-cycle percentage below.**
+
+**Conclusion to test (at 1 kΩ; rescale for the final ballast):** continuous full breathing is *not*
+sustainable on office light (~10× short). The natural indoor mode is **harvest-and-pulse (~6–10%
+duty)** or **continuous dim (1 LED)**. Continuous full breathing needs a windowsill / daylight.
+
+**#1 open empirical gate: measure real harvest.** Use the **VDD-proxy ADC** during bring-up (read
+the rail against the internal reference — it charges in light, sags under load), then the real
+light-sense divider once characterised. That single measurement sizes the whole feature envelope.
+
+---
+
+## 3. Glow design + the template concept
+
+- **Glow keepout = one rectangle: x 14.95–35.85, y 40.8–47.0** (the DRH window, ≈20.9 × 6.2 mm).
+  It **voids every copper layer** so bare FR4 passes diffuse light. Inside it: **tracks allowed, but
+  NO vias, NO copper pour, NO footprints.** Plane voids must be deliberate so the window does not
+  *fragment* the GND/VS planes — route supercap power **around** the band, never through it. LED
+  anodes that sit inside the window trace out (north of y40.8 or south of y47) before via-ing to a
+  plane.
+- **Light couples into a stroke only within ~0.7 mm on thin FR4.** So the four Ø1.64 mm LED entry
+  windows must **nestle a letter boundary** (snug against the strokes, not centred in a wide gap, or
+  the LED is buried under copper and that window dies). The initials are track-widened
+  (~0.12 → ~0.23, ~2.5 mm inter-letter gaps) to put a stroke edge at each fixed window.
+- **The keepaway is a single letter-agnostic box → the design is a TEMPLATE.** Anyone can drop their
+  own initials into the box and keep the four fixed centreline windows. (See
+  `docs/solar-glow-drh-glow-window.png`.)
+- **FR4 thickness drives the look.** Thinner FR4 spreads light *less* → a crisper, more edge-lit
+  monogram (brightest at the strokes nearest each window); thicker diffuses more. **Validate the
+  *look* on a coupon of the ACTUAL board thickness** — a coupon of a different thickness will not
+  predict it. (v2.1 is 0.8 mm, the same as v0, so v0 *does* predict v2.1; the old "validate the
+  0.4 mm look" gate is moot now that the board is 0.8 mm.)
+- **A diffuser film is the lever for full-letter evenness** — including lighting the D/R *bowls* —
+  not more boundary LEDs.
+
+---
+
+## 4. Rear real-estate constraint + layout strategy
+
+The glow is **central and rear-facing**, which is exactly where the four big cells want to sit:
+
+- 4 × (28.5 × 17 mm) cells = **~43%** of the 50.8 × 88.9 board.
+- Decorative silk *can* hide under the cells. The **LEDs are on the same rear side as the cells and
+  cannot** — and the monogram tracks the LEDs. So a **protected central glow band (~17 mm)** is
+  reserved through the centre, and the cells go around it. This is the first thing to settle in any
+  re-spin and the real cost of four cells: the glow and the energy tank compete for the same rear
+  centre.
+- **Layout strategy: mirror the top supercap pair to the bottom** (reuses the proven footprint and
+  its routing). Both pairs join the **same VS / MID / GND nets** (SC3 ∥ SC1, SC4 ∥ SC2) → **1 F @
+  5.5 V on a single MID node**, so **U2 alone does all the balancing — no second balancer**. The MID
+  net runs the length of the board (cheap on planes) to tie both midpoints.
+- **Mounting holes at all four corners.** Inboard screws leave the ends of the 89 mm card
+  unsupported — bad for a stiff metal back-plate. Keep M2 engagement at the corners.
+
+**Routing hotspots (where a re-spin will be slow):** (1) the U1 QFN-28 escape — LDRV1–4, UPDI, SDA,
+SCL, BTN, VSENSE all leave the same two edges; fan out in pin order, get the VDD/GND/EP plane vias in
+first. (2) The MID bus around the glow void. (3) TC1 threaded under SC1. (4) The BTN-to-switch long
+net + its layer change. Hand-polygon routing is fine for a prototype but **final copper sign-off
+belongs in KiCad** (push-shove router, real thermal reliefs, exact mask expansion).
+
+---
+
+## 5. MCU selection — AVR64DD28 in 28-VQFN (the rationale)
+
+- **Why this part:** **MVIO** (PORTC on a separate VDDIO2 — the core can stay on the 5 V rail for
+  full harvest band while I²C/PORTC sits at a lower voltage for the accel, with no level shifter and
+  no harvest-band loss), **ADC** (light-sense), flexible **TCA/TCB/TCD** PWM (LED breathing / more
+  LEDs), and **22 I/O** of headroom.
+- **Why VQFN, not SSOP-28:** height is irrelevant (U2 at 1.75 mm sets the cavity floor; the QFN is
+  0.9 mm). The binding constraint is **X/Y footprint** — with the cells eating ~43% of the board, the
+  QFN's ~16 mm² land beats SSOP-28's ~50 mm². Cost: hot-air + paste, EP reflowed to GND (same as the
+  v0 QFN-20).
+- **Power-down: 0.65 µA typ** (DS40002315 Table 38-5, `VREGCTRL.PMODE = AUTO`, 3 V/25 °C; +0.6 µA
+  for a 32 kHz wake source). That is ~6× the old tinyAVR's 0.1 µA, but still sub-µA and swamped by
+  supercap + U2-balancer leakage (µA-class). **Firmware must-do: `PMODE = AUTO` for sleep — FULL
+  mode is 160 µA (250×) and would dominate the standby budget.**
+- **No AVDD on the 28-pin:** the ADC runs off VDD, so analog cleanliness rides on the VS plane +
+  decoupling. θJA ≈ 36.5 °C/W.
+- **No PTC:** the AVR-DD has no hardware cap-touch — and a grounded metal back-plate would kill
+  self-cap anyway — so **the actuator is the accelerometer tap**, not cap-touch.
+
+(Candidates weighed and rejected: tinyAVR-1/-2 and ATtiny1627/3217 all match the old part on power
+but are feature *trades* or lack MVIO; the AVR-DD was the only superset that solves the mixed-voltage
+I²C cleanly.)
+
+---
+
+## 6. Firmware ideas worth remembering (beyond the bring-up doc)
+
+All firmware-only, no board change:
+
+- **LED hardware-PWM** for brightness / breathing / fade — big supercap-runtime savings at low duty.
+- **CCL + EVSYS can run a glow/blink pattern while the CPU sleeps** — autonomous show, CPU stays in
+  low power.
+- **RTC/PIT off the internal 32 kHz ULP** (no crystal) for periodic wake.
+- **EEPROM "times-activated" counter** that survives a full supercap drain.
+- **AC0 wake-on-light** (auto-glow on pickup, zero new parts): set `AC0.MUXPOS` to the sense pin,
+  `AC0.MUXNEG = DACREF`, DAC sets the light threshold, sleep, AC edge wakes. The as-built validated
+  recipe (on PD2 = AIN2 + AINP0) lives in `solar-glow-drh-v2-hardware.md` §6.
+- **Internal temperature sensor** is available if wanted.
+
+Not useful on this part: ZCD (mains only), op-amps (the DD family lacks them), PTC cap-touch (see §5).
+
+---
+
+## 7. Enclosure — board-side rules to honor now (full detail in ENCLOSURE-NOTES.md)
+
+The Ti rear-shell is parked, but a few rules must be baked into the board so it never needs a
+re-spin for the enclosure:
+
+- **Grounded body → short risk.** In the enclosed variant, **drop the right-edge castellations**;
+  land support pillars **only on GND pour**; spec a **die-cut Kapton (~0.05 mm)** blanket isolation
+  layer under the shell.
+- **Uniform ~1.8 mm cavity, no U2 pocket** — the 1.7 mm cells ≈ U2 at 1.75 mm set the floor; the
+  0.9 mm QFN is irrelevant.
+- **The button is the accel tap** (cap-touch dies behind a grounded plate; the old "snap-dome"
+  actuator is superseded).
+- **Skins:** 0.3 mm needs titanium's strength (yield ~880 MPa); 7075 is the cheaper fallback with
+  thicker floors. **Ti work-hardens / mills slow** → cut shallow reliefs by **photochemical etching**,
+  CNC only the walls/bosses; keep M2 engagement in thick bosses, never the thin pocket zones.
+
+---
+
+## 8. Fab / assembly craft
+
+- **Via-in-pad on small, normally-soldered parts will wick solder** — VIPPO (resin-fill + cap) or
+  dog-bone them. From the v0/v1 layout, the genuine at-risk set beyond the existing VIPPO list
+  (U2, U4, Q1, TC1.1/2/3, JP2, D9.A, R2.2) was **C6, R1, R3, R4, R5**. Large pads / ICs / EP / flooded
+  solder-bridge pads (SB/SJ/SW) / robust header joints (JP/J1) reflow fine and need no fill.
+  **Re-confirm the actual in-pad-via set against the committed KiCad board** — the old list was tied
+  to the generator's dog-bone routine, not the KiCad layout. If PCBWay's via-fill is board-wide, the
+  point is moot.
+- **TC2030 (Tag-Connect) footprint rules:** use the **official KiCad `Tag-Connect_TC2030-IDC-FP`**
+  (Connectors.pretty; board-side == TC2030-MCP-FP) — do **not** hand-draw. 6 contact pads
+  Ø0.7874 mm at 1.27 mm pitch (pins 1=UPDI, 2=VS, 3=GND, 4–6 NC), F.Cu+F.Mask, **no paste**; 4
+  leg-latch holes Ø2.3749 mm NPTH (the hands-free latch); 3 alignment holes Ø0.9906 mm NPTH. **Contact
+  pads must stay SOLID for the spring pins** (no hole > 0.008") → VIPPO TC1.1/2/3, or plate the 3
+  alignment holes and route VS/GND to them to keep the pads hole-free. Keep-out: no tracks/vias in the
+  shaded area, no signal within 0.508 mm of a contact pad. **DNL** in the BOM (pogo connector, never
+  soldered).
+- **Production Gerbers come from KiCad's own fabrication-outputs exporter**, not from any preview
+  emitter. A geometry-derived preview is great for review but lacks thermal-relief spokes, exact mask
+  expansion, and real NFPR.
+
+---
+
+## 9. Design evolution (v0 → v1 plan → v2.1 as-built)
+
+Recorded so the history is legible and the dead branches stay dead:
+
+| topic | v0 (REV J) | v1 plan | **v2.1 as-built** |
+|---|---|---|---|
+| Stackup | 2-layer, 0.8 mm | 4-layer, 0.4 mm | **6-layer, 0.8 mm** (L1 sig · L2 GND · L3–4 sig · L5 VS · L6 sig) |
+| Storage | 2× WS10, ~2.3 J | 4× WS17 2P2S, ~15 J | **4× WS17 2P2S, 1 F @ 5.5 V, ~15 J** |
+| Accel rail handling | n/a | planned LDO (TPS7A02) for the 3.6 V-max accel | **TLV431B shunt clamp holds VS ≤ 3.47 V** (no LDO) |
+| Accelerometer | none | BMA400 / LIS2DW12 (candidates) | **LIS2DH12, I²C addr 0x18** |
+| Button | snap-dome / cap-touch | dome (cap-touch expendable) | **accel tap-wake** |
+| Solar | SM141K06L (1.8 mm) | SM141K06L | **SM141K06TF (1.2 mm)** — electrically identical, thinner |
+| LED ballast | 1 kΩ | 1 kΩ | **150 Ω per BOM (bench-pending)** — rescale the energy budget (§2) |
+| VSENSE pin | — | PA5, later proposed PC3 | **PD2 (AIN2 + AINP0)** |
+| LED timer | TCA0 | TCA0, briefly proposed TCD0 | **TCA0 split, WO0–WO3 = PA0–PA3** |
+
+v0 also carried a dual-coin-cell charging option (BT1/BT2 + diodes); **dropped in v2.1** (solar-only).
+
+---
+
+## 10. Two corrections worth keeping explicit
+
+- **The "4 farad" energy myth.** Four 1 F cells read as 4 F *only* all-parallel at 2.75 V. The 5.5 V
+  rail needs two-in-series, so the array is 1 F *effective* at 5.5 V. What is fixed is **energy**:
+  4 × ½ · 1 F · 2.75² ≈ **15 J**. Farads at 2.75 V vs 5.5 V are not comparable joules — quote the
+  energy, not the farads.
+- **Superseded pin maps — do NOT resurrect.** The retired docs carried two *earlier, divergent* pin
+  assignments that do **not** match the as-built board: (a) `solar-glow-drh-v1-pinmap.md` put VSENSE
+  on PA5 and BTN on PA7; (b) `SESSION-HANDOFF.md` / `KICAD-PUNCHLIST.md` (session 15) put the LEDs on
+  PA4–PA7 / TCD0 and moved VSENSE → PC3 / BTN → PC1. **Neither is correct.** The committed
+  `solar-glow-drh-v2_1.kicad_sch` + `solar-glow-drh-v2-hardware.md` are the only authoritative pin
+  reference (LEDs PA0–PA3 / TCA0, VSENSE PD2, BTN PA5, I²C PC2/PC3, accel INT PF0/PF1). Logged here so
+  the wrong maps never come back.
+
+---
+
+## 11. Cost reality
+
+The supercaps dominate the BOM. SCHURTER 3-153-438 (WS17, 1 F) runs ~€6.77 in volume / ~$8–15 per
+cell; four of them push the supercaps to **two-thirds or more** of the per-board cost — the single
+dominant line, and the reason the 4-cell array is a deliberate reroute rather than a casual upgrade.
