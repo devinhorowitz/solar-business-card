@@ -32,14 +32,6 @@
 #include "led.h"
 #include "sense.h"
 
-/* Set to 1 to sleep in STANDBY with the AC0 light comparator armed for an
- * instant (zero-latency) light wake -- option A in the hardware doc. Default
- * 0 keeps the deepest POWER-DOWN sleep with the ~1 s PIT poll (option B),
- * which is the more dark-tolerant "card in a drawer" baseline. */
-#ifndef USE_LIGHT_AC0_STANDBY
-#define USE_LIGHT_AC0_STANDBY 0
-#endif
-
 /* VIN threshold (mV) for "light present". LIGHT_THRESH_MV is defined at the
  * VSENSE pin (= VIN/2); sense_vin_mv() already returns VIN, so scale up. */
 #define LIGHT_VIN_MV  ((uint16_t)(LIGHT_THRESH_MV * VSENSE_DIVIDER))
@@ -86,24 +78,18 @@ static void rtc_pit_init(void)
 
 static void go_to_sleep(void)
 {
-#if USE_LIGHT_AC0_STANDBY
-    sense_light_arm();
-    set_sleep_mode(SLEEP_MODE_STANDBY);
-#else
+    /* Power-Down is the baseline: lowest current, and it still wakes on the
+     * accel pin interrupts (async, all sense modes) and the RTC PIT. */
     set_sleep_mode(SLEEP_MODE_PWR_DOWN);
-#endif
     cli();
     if (!f_tap && !f_motion && !f_tick) {
         sleep_enable();
-        sei();
+        sei();              /* SEI + SLEEP is atomic: a pending IRQ runs after SLEEP, no missed wake */
         sleep_cpu();
         sleep_disable();
     } else {
         sei();
     }
-#if USE_LIGHT_AC0_STANDBY
-    sense_light_disarm();
-#endif
 }
 
 /* ---------------- main ---------------- */
@@ -178,11 +164,3 @@ ISR(RTC_PIT_vect)
     RTC.PITINTFLAGS = RTC_PI_bm;
     f_tick = 1;
 }
-
-#if USE_LIGHT_AC0_STANDBY
-ISR(AC0_AC_vect)
-{
-    AC0.STATUS = AC_CMPIF_bm;              /* clear; wake handled by f_tick path next poll */
-    f_tick = 1;                            /* treat a light edge like a tick: re-evaluate */
-}
-#endif

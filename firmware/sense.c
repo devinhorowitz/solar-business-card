@@ -1,5 +1,5 @@
 /*
- * sense.c  --  ADC rail/light reads, AC0 light-wake (VDD ref), EEPROM counter.
+ * sense.c  --  ADC rail/light reads + EEPROM activation counter.
  */
 #include <avr/io.h>
 #include <avr/eeprom.h>
@@ -48,33 +48,6 @@ uint16_t sense_vdd_mv(void)
 uint8_t sense_rail_ok(void)
 {
     return (sense_vdd_mv() >= VS_GLOW_FLOOR_MV) ? 1u : 0u;
-}
-
-/* ---------- AC0 light wake (option A), VDD-referenced ---------- */
-
-/* threshold = DACREF/256 * VDD. VDD ~3.4 V clamped; LIGHT_THRESH_MV ~0.4 V.
- * DACREF = LIGHT_THRESH_MV * 256 / VDD_nominal. Computed against a 3400 mV
- * nominal rail; tracks the rail since the ref IS the rail. */
-#define VDD_NOMINAL_MV   3400UL
-#define LIGHT_DACREF     ((uint8_t)((LIGHT_THRESH_MV * 256UL) / VDD_NOMINAL_MV))
-
-void sense_light_arm(void)
-{
-    VREF.ACREF   = VREF_ALWAYSON_bm | VREF_REFSEL_VDD_gc;    /* <-- VDD, no bandgap (~0 uA) */
-    AC0.DACREF   = LIGHT_DACREF;                             /* ~0.4 V threshold */
-    AC0.MUXCTRL  = AC_MUXPOS_AINP0_gc | AC_MUXNEG_DACREF_gc; /* + = PD2, - = DACREF */
-    AC0.INTCTRL  = AC_INTMODE_POSEDGE_gc | AC_CMP_bm;        /* IRQ on dark->light edge */
-    /* slowest comparator profile (plenty fast for light) + run in standby */
-    AC0.CTRLA    = AC_RUNSTDBY_bm | AC_POWER_PROFILE3_gc |
-                   AC_HYSMODE_MEDIUM_gc | AC_ENABLE_bm;      /* hysteresis kills flicker chatter */
-}
-
-void sense_light_disarm(void)
-{
-    AC0.CTRLA   = 0;                       /* comparator off */
-    AC0.INTCTRL = 0;
-    VREF.ACREF  = 0;                       /* drop the (VDD) ref enable */
-    AC0.STATUS  = AC_CMPIF_bm;             /* clear any pending flag */
 }
 
 /* ---------- EEPROM lifetime activation counter ---------- */

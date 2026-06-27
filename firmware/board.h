@@ -78,9 +78,10 @@
 
 /* LED glow */
 #define GLOW_PEAK       220   /* 0..255 peak duty per LED at full bright.
-                                 Ballast (150R) fixes PEAK current (~9 mA on
-                                 the clamped rail); PWM only trims the average
-                                 below that, so this never exceeds the ceiling. */
+                                 Ballast (150R) fixes PEAK current to ~8 mA on
+                                 the clamped rail (amber Vf~2.25V, (3.4-2.25)/150);
+                                 PWM only trims the average below that, so this
+                                 never exceeds the ballasted ceiling. */
 #define GLOW_BREATH_MS  1600  /* one breathe-in/out cycle, ms */
 #define GLOW_CYCLES     2     /* breaths per tap */
 

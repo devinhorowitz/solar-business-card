@@ -22,7 +22,7 @@ accelerometer is the actuator.
 | `twi.h` | header-only blocking I2C host (TWI0), one device. |
 | `lis2dh12.h/.c` | accelerometer: presence, tap→INT1, activity→INT2, latch clear. |
 | `led.h/.c` | TCA0 split-mode PWM on PA0–PA3 + gamma breathing animation. |
-| `sense.h/.c` | ADC rail/light reads, AC0 light-wake (VDD ref), EEPROM counter. |
+| `sense.h/.c` | ADC rail/light reads + EEPROM activation counter. |
 | `main.c` | init (per hardware doc §7), sleep/wake state machine, ISRs. |
 | `Makefile` | build + UPDI flash. |
 
@@ -59,7 +59,8 @@ AVR64DD28, VQFN-28, on the **back** of the board.
 | 19,25,EP | GND | GND | |
 
 LEDs are **low-side**: each lights when its PA pin pulls LOW, current set by a
-150 Ω ballast on the clamped rail (~9 mA peak per LED). PWM only trims the
+150 Ω ballast on the clamped rail (~8 mA peak per LED: amber Vf≈2.25 V over
+(3.4−2.25)/150). PWM only trims the
 average below that ballasted ceiling. `D1`/`D9` are Schottkys, not LEDs.
 
 Spare/free: PA4, PC0, PC1 (on JP2); PA5 (`BTN`, reserved stub for v3); PA6, PA7,
@@ -89,27 +90,35 @@ the card stays dark and charges, so an animation can't brown out the part.
 2. The **accelerometer is the only actuator** in v2.1. `PA5/BTN` is a routed
    stub for a future revision, not populated.
 
-## Power notes (these correct the hardware doc's §6 estimates)
+## Power notes / wake architecture (these correct the hardware doc's §6)
 
 The rail is tiny (clamped ≤ 3.47 V supercap, sub-mA indoor harvest), so standing
-current is the whole game. Two corrections fed into this firmware:
+current is the whole game, and the wake architecture has to live within it. Two
+things here diverge from the hardware doc's §6:
 
 - **Accelerometer idle is ~6 µA, not ~2 µA.** A *click-armed* LIS2DH12 must run
   at ≥ ~50 Hz ODR; datasheet low-power current there is ~6 µA. The ~2 µA figure
   is normal-mode-1 Hz, too slow to detect a tap. We run **LP, 100 Hz** by
   default (`CTRL_REG1 = 0x5F`). Drop to 50 Hz to trim current if the budget is
   tight.
-- **AC0 light-wake must use VDD as its reference, not a bandgap.** An internal
-  bandgap ACREF (e.g. 2.048 V) costs ~71 µA standing (datasheet IDD_VREF),
-  which alone would blow the dark budget. `sense_light_arm()` selects
-  `ACREF = VDD` (`REFSEL = 0x5`, datasheet Table 21-3), so the comparator
-  reference is ~free; the threshold then tracks the rail (~12 % of VDD at the
-  default `DACREF`), which is fine for a light/dark decision.
+- **There is no AC0 "instant" wake-on-light** (the hardware doc's option A).
+  On this part the analog comparator keeps running in Standby with `RUNSTDBY`,
+  but its **interrupt and status flags do not update while `CLK_PER` is stopped**
+  (datasheet AC `CTRLA.RUNSTDBY` bit description), so an AC interrupt cannot wake
+  the core from Standby — and Table 13-4 omits the AC from the Standby/Power-Down
+  wake sources entirely. (The AC "Sleep Mode Operation" prose claims otherwise;
+  it contradicts the bit description and the wake table, and is not relied on.)
+  The original option A would have silently never fired. It is removed.
 
-Because of this, the dark-tolerant baseline (option B: power-down + ~1 s PIT
-poll, AC0 **off**) is the default. AC0 standby light-wake (option A, instant) is
-compiled out unless you set `-DUSE_LIGHT_AC0_STANDBY=1`; use it only when the
-card is in active use and instant light response matters.
+So wake-on-light is done by the **ADC on the ~1 s PIT poll** (a dark→light rise
+drives a glow): deepest Power-Down sleep, dark-tolerant, ~1–2 s latency. Instant
+response is not lost — the **accelerometer motion/tap interrupt** wakes the core
+immediately from Power-Down (a real, async PORT-pin interrupt, confirmed a
+Power-Down wake source), and picking the card up to bring it into the light is
+exactly that motion. If a true zero-latency *light* trigger is ever wanted, the
+supported path on this silicon is AC0 → Event System → CCL (asynchronous LUT,
+`FILTSEL=0`/`EDGEDET=0`) → CCL interrupt, which Table 13-4 does list as a
+Standby wake source. That is a v-next exercise, not built here.
 
 **The energy-budget bench measurement is still the project's #1 gate.** It sets
 the indoor harvest number and therefore the achievable LED duty; treat the
