@@ -20,7 +20,7 @@ accelerometer is the actuator.
 |------|------------|
 | `board.h` | as-built pin/route map + tunables. Single source of truth is the PCB. |
 | `twi.h` | header-only blocking I2C host (TWI0), one device. |
-| `lis2dh12.h/.c` | accelerometer: presence, tap→INT1, activity→INT2, latch clear. |
+| `lis2dh12.h/.c` | accelerometer: presence, tap→INT1, motion (IA2)→INT2, latch clear. |
 | `led.h/.c` | TCA0 split-mode PWM on PA0–PA3 + gamma breathing animation. |
 | `sense.h/.c` | ADC rail/light reads + EEPROM activation counter. |
 | `main.c` | init (per hardware doc §7), sleep/wake state machine, ISRs. |
@@ -52,7 +52,7 @@ AVR64DD28, VQFN-28, on the **back** of the board.
 | 9 | PC3 | SCL | TWI0 host (ALT2), ext 4.7k → VS |
 | 10 | VDDIO2 | VS | tied to VS by SJ1; PORTC at rail, MVIO unused |
 | 12 | PD2 | VSENSE | light/rail sense: ADC AIN2 + AC0 AINP0 |
-| 20 | PF0 | INT2 | accel activity in (rising) |
+| 20 | PF0 | INT2 | accel motion in (rising) |
 | 21 | PF1 | INT1 | accel tap in (rising) |
 | 23 | UPDI | UPDI | program |
 | 18,24 | VDD | VS | clamped rail ≤ 3.47 V |
@@ -70,9 +70,10 @@ PD1, PD3–PD7, PF6/RST.
 
 Baseline = **POWER-DOWN**. Wakes:
 
-- **Tap** (LIS2DH12 single-click, all axes, high-pass filtered) → INT1 → PF1 →
-  full breathing glow (`GLOW_CYCLES` breaths) + EEPROM activation count++.
-- **Motion** (LIS2DH12 activity) → INT2 → PF0 → one softer breath.
+- **Tap** (LIS2DH12 click, all axes, high-pass filtered) → INT1 → PF1 → full
+  breathing glow (`GLOW_CYCLES` breaths) + EEPROM activation count++. With
+  `USE_DOUBLE_TAP`, a double-tap plays a brighter/longer signature glow instead.
+- **Motion** (LIS2DH12 inertial wake-up, IA2) → INT2 → PF0 → one softer breath.
 - **PIT tick** (~1 s, RTC off the internal ULP, runs in power-down) → ADC-sample
   the light level; on a dark→light edge, glow.
 
@@ -96,11 +97,21 @@ The rail is tiny (clamped ≤ 3.47 V supercap, sub-mA indoor harvest), so standi
 current is the whole game, and the wake architecture has to live within it. Two
 things here diverge from the hardware doc's §6:
 
-- **Accelerometer idle is ~6 µA, not ~2 µA.** A *click-armed* LIS2DH12 must run
-  at ≥ ~50 Hz ODR; datasheet low-power current there is ~6 µA. The ~2 µA figure
-  is normal-mode-1 Hz, too slow to detect a tap. We run **LP, 100 Hz** by
-  default (`CTRL_REG1 = 0x5F`). Drop to 50 Hz to trim current if the budget is
-  tight.
+- **The accelerometer sets the sleep floor, and it runs at 100 Hz on purpose.**
+  A click-armed LIS2DH12 has to sample fast enough to *time* a tap, so it runs
+  **LP, 100 Hz** (`CTRL_REG1 = 0x5F`) = **~10 µA** (datasheet Table 12: 100 Hz
+  LP = 10 µA, 50 Hz = 6 µA, 10 Hz = 3 µA). That ~10 µA dominates the MCU's ~1 µA
+  power-down draw, so the accel ODR is the single biggest lever on dark-survival.
+  We deliberately do **not** use the sleep-to-wake "activity" function, which
+  auto-drops the ODR to 10 Hz when the card is still: the card is *still* exactly
+  when a tap arrives, the click engine cannot time a tap at 10 Hz, so a cold tap
+  from rest would land as generic motion rather than a click and double-tap would
+  be unreachable. Motion / "picked up" is instead sourced from the **IA2 inertial-
+  wake generator** (gravity high-passed), which runs alongside the click engine at
+  100 Hz. Cost of staying at 100 Hz is roughly the extra ~7 µA vs a 10 Hz idle —
+  it about halves dark-survival (order of half a day either way), and any lit use
+  the solar harvest covers. See *What to tune → Motion* for the alternative if you
+  would rather trade reliable cold-tap for runtime.
 - **There is no AC0 "instant" wake-on-light** (the hardware doc's option A).
   On this part the analog comparator keeps running in Standby with `RUNSTDBY`,
   but its **interrupt and status flags do not update while `CLK_PER` is stopped**
@@ -122,41 +133,109 @@ Standby wake source. That is a v-next exercise, not built here.
 
 **The energy-budget bench measurement is still the project's #1 gate.** It sets
 the indoor harvest number and therefore the achievable LED duty; treat the
-tunables below as starting points until that measurement lands. When you make
-that measurement, confirm sleep current with the ADC configured: `sense_adc_init`
-leaves the ADC enabled and selects the internal 2.500 V reference with
-`ALWAYSON` set so a periodic sample reads true without re-settling. In
-power-down both should be off, but verify it on the meter; if the reference adds
-standing current, gate it (clear `ALWAYSON` and add a short settling delay
-before each conversion, or disable the ADC between samples).
+tunables below as starting points until that measurement lands.
+
+The ADC reference is now run **on demand** so it cannot add standing current:
+`sense_adc_init` selects the internal 2.500 V reference **without** `ALWAYSON`
+and leaves the ADC **disabled**, and every read enables the ADC, converts, then
+disables it again. The datasheet guarantees no ADC current with `ENABLE = 0`,
+and the reference is released with it. Because the reference cold-starts on each
+read, an initialization delay (`ADC0.CTRLD` `INITDLY = DLY128`, 256 µs at
+CLK_ADC = 500 kHz) precedes the sample to cover VREF start-up; that is sized
+conservatively — start-up is ~10 µs on this board's high-frequency clock, and the
+200 µs datasheet figure is the 32 kHz-clock case, which does not apply — and the
+delay costs a fraction of a nanoamp averaged over the 1 s poll. So the
+sleep-current question the old design flagged is **closed in code**; the bench
+run now just *confirms* it (expect the analog domain to be a rounding error,
+~1 µA total in power-down) rather than deciding whether there is a bug to gate.
 
 ## What to tune (all in `board.h` unless noted)
 
-- **`GLOW_PEAK`** (0–255): peak LED duty. Ballast fixes peak current; this trims
-  the average. Lower it to stretch the energy budget.
-- **`GLOW_BREATH_MS` / `GLOW_CYCLES`**: breath speed and count per tap.
-- **`VS_GLOW_FLOOR_MV`**: rail floor below which the card refuses to glow.
-- **`LIGHT_THRESH_MV`**: dark→light trip point at the VSENSE pin (≈ VIN/2).
-- **LED PWM polarity** (`led_init` in `led.c`): the four LED pins use pad
-  **INVEN**. This is analyzed-correct for a low-side LED on TCA split mode
-  (which down-counts: output cleared at BOTTOM, set on compare match), giving
-  larger duty = brighter. INVEN is also **load-bearing for the dark idle
-  state**: at duty 0 the WO output is low, so INVEN parks the pad HIGH and the
-  LED is off. Do **not** "fix" an apparent inversion by removing INVEN — that
-  would also turn every LED ON at rest. If a bench check somehow shows
-  brightness running backwards, invert the value instead (write `255 - duty`
-  in `led_set`/`led_set_all`), which keeps the idle state dark.
-- **Accel sensitivity** (`lis2dh12.h`): `LIS_CLICK_THS_RAW` (~16 mg/LSb at ±2 g;
-  lower = more sensitive), `LIS_CLICK_CFG_VAL` (`0x15` single / `0x2A` double /
-  `0x3F` both), and `LIS_CFG_CTRL_REG1` ODR vs. current.
-- **`POLL_PERIOD_S`** (1 or 2): the RTC PIT poll period. This is now wired to the
-  PIT (it was previously decorative — the period was hardcoded to 1 s); a value
-  other than 1 or 2 is a compile `#error`. 2 s halves the poll's standby cost at
-  the price of slower dark→light response.
-- **`WINK_FLOOR_MV`**: the power-on wink only fires above this rail (set above
-  `VS_GLOW_FLOOR_MV`), so a marginal just-charged card cannot wink itself back
-  below the glow floor.
-- **`USE_WDT`** (0/1): the watchdog (see Robustness below).
+Starting points, not gospel. The energy-budget bench run fixes the real power
+numbers, and the accel thresholds want a real tap on the *assembled* card — the
+Ti back-plate changes how a tap and vibration couple into the sensor.
+
+### LED glow (`board.h`; animation in `led.c`)
+- **`GLOW_PEAK`** (0–255, default 220): peak LED duty for a normal tap. The 150 Ω
+  ballast fixes the *peak current* on the clamped rail; duty only trims the
+  average, so this is brightness/energy and can't exceed the ballasted ceiling.
+  It is **pre-gamma**: the animation runs `gamma2(v) = v²/256`, so 220 lands at a
+  189 actual peak duty (and even 255 maps to 254). Lower it to stretch the budget.
+- **`GLOW_BREATH_MS`** (1600) **/ `GLOW_CYCLES`** (2): breath duration and breaths
+  per tap.
+- **LED PWM polarity** (`led_init`): the LED pins use pad **INVEN**. It is
+  analyzed-correct for a low-side LED on TCA split mode (which down-counts),
+  giving larger duty = brighter, and it is **load-bearing for the dark idle
+  state** — at duty 0 the pad parks HIGH so the LED is off. Do **not** remove
+  INVEN to "fix" an apparent inversion; that lights every LED at rest. If
+  brightness ever runs backwards, write `255 - duty` in `led_set`/`led_set_all`
+  instead, which keeps idle dark.
+
+### Tap / single-click (`lis2dh12.h`)
+- **`LIS_CLICK_THS_RAW`** (`0x30` ≈ 0.75 g; 16 mg/LSb at ±2 g): tap sensitivity,
+  lower = more sensitive. The single most likely knob to need a real-hardware
+  tweak.
+- **`LIS_TIME_LIMIT_VAL` / `LIS_TIME_LATENCY_VAL` / `LIS_TIME_WINDOW_VAL`**
+  (100 / 50 / 100 ms; 10 ms per LSb at 100 Hz): click timing — max over-threshold
+  dwell still counted as a click, post-click dead time, and the second-tap window.
+  Read the double-tap coupling below before changing `TIME_WINDOW`.
+- **`LIS_CLICK_CFG_VAL`** is selected automatically from `USE_DOUBLE_TAP`
+  (`0x15` single-only / `0x3F` single + double) — don't hand-set it.
+- ODR / current is **`LIS_CFG_CTRL_REG1`** (`0x5F` = LP 100 Hz). See the accel
+  power note above before lowering it: below ~50 Hz the click engine starts
+  missing taps, and the sleep-to-wake trap is the whole reason it sits at 100 Hz.
+
+### Double-tap signature (`board.h`)
+- **`USE_DOUBLE_TAP`** (0/1, default 1): when on, a double-tap plays a distinct
+  brighter/longer signature glow. **Latency cost:** to tell single from double
+  before lighting, *every* tap idle-waits `DTAP_WINDOW_MS` before any glow starts,
+  so the common single tap gains that much delay. Set 0 for an instant single tap
+  with no double-tap.
+- **`DTAP_WINDOW_MS`** (300): how long the firmware waits for the second tap. It
+  **must stay ≥** the accel's worst-case double-click assertion time
+  (`TIME_LIMIT + TIME_LATENCY + TIME_WINDOW` = 100 + 50 + 100 = 250 ms), or a slow
+  double registers as a single. Widen this if you widen the accel `TIME_WINDOW`.
+- **`DTAP_CYCLES` / `DTAP_BREATH_MS` / `DTAP_PEAK`** (3 / 1600 / 255): the
+  signature glow — one more breath and brighter than a single tap.
+
+### Motion / "picked up" wake (`lis2dh12.h`) — IA2 inertial wake-up
+- **`LIS_INT2_THS_VAL`** (`0x10` ≈ 0.25 g; 16 mg/LSb at ±2 g): motion threshold
+  for the soft breath. Lower if a gentle pickup doesn't wake it, raise if it's
+  twitchy.
+- **`LIS_INT2_DUR_VAL`** (`0x00` = immediate; ×10 ms at 100 Hz): debounce. Raise a
+  few steps if vibration false-triggers, or if sustained motion gives repeated
+  breaths.
+- **The motion path must stay high-pass filtered** (`LIS_CFG_CTRL_REG2`, value
+  `0x06`, sets `HP_IA2`). Without it the static 1 g gravity exceeds the threshold
+  and pins INT2 high. The shared HP filter is primed by one `REFERENCE` read at
+  init, which assumes the card is roughly **at rest at boot** — true for a cold /
+  just-charged start; a reset mid-handling re-primes on the next boot. If that
+  ever bites, `HPM = 11` (autoreset-on-interrupt) is the robust alternative, but
+  it is shared with the click filter so it's left at `HPM = 00`.
+
+### Light & rail sensing (`board.h`; ADC in `sense.c`)
+- **`VS_GLOW_FLOOR_MV`** (2600): rail floor below which a glow is refused, so an
+  animation can't brown the part out mid-breath.
+- **`WINK_FLOOR_MV`** (3000, set ≥ floor): the power-on wink only fires with this
+  much headroom, so a marginal just-charged card can't wink itself back under the
+  floor.
+- **`LIGHT_THRESH_MV`** (400): dark→light trip at the VSENSE pin (≈ VIN/2).
+- **`POLL_PERIOD_S`** (1 or 2; other values are a compile `#error`): RTC PIT poll
+  period. 2 s halves the poll's standby cost for slower dark→light response.
+- **ADC internals** (`sense.c`): the reference runs **on demand** (no `ALWAYSON`,
+  ADC disabled between polls), with **`INITDLY = DLY128`** (256 µs) covering VREF
+  start-up and **`SAMPCTRL = 31`** giving a long sample window for the ~500 kΩ
+  divider source impedance. Do **not** re-enable `ALWAYSON` (standing current in
+  sleep). If you change CLK_ADC, re-check `INITDLY ≥ tVREF_ST` and keep the long
+  sample length.
+- **EEPROM counter** (`sense.c`) rewrites the same 4-byte cell every tap; only a
+  concern past ~100 k lifetime taps, where you'd rotate the cell address.
+
+### System (`board.h` / `main.c`)
+- **`USE_WDT`** (0/1, default 1): the watchdog (see Robustness below).
+- **Core clock** is 1 MHz OSCHF (`clocks_init`, see Robustness for the why and the
+  knock-ons). Note VREF start-up time — and therefore the `INITDLY` sizing above —
+  depends on this being the high-frequency clock, not a 32 kHz main clock.
 
 ## Robustness / hardening
 
@@ -177,14 +256,24 @@ before each conversion, or disable the ADC between samples).
   from the data, so a real `0xFF` register value is never confused with a bus
   error (the read helpers all propagate the fault up to the caller).
 - **Glow sips, doesn't spin.** During a breath the core IDLE-sleeps between
-  1 ms PWM updates (TCA keeps the PWM running in idle) instead of busy-waiting at
-  4 MHz. The saving is modest — IDLE gates only the core clock; the oscillator,
-  TCA, and especially the LEDs keep drawing — so call it ~5% of glow energy, to
-  be confirmed on the bench. **The part stays at 4 MHz on purpose:** once the
-  core sleeps through the glow it is only briefly active (~50 µs ADC polls plus
-  boot config), so dropping to 1 MHz would save a negligible *absolute* amount
-  while slowing I2C and lowering the PWM frequency. Revisit only if a bench
-  measurement says the brief active windows actually matter.
+  1 ms PWM updates (TCA keeps the PWM running in idle) instead of busy-waiting.
+  The saving is modest — IDLE gates only the core clock; the oscillator, TCA, and
+  especially the LEDs keep drawing — so call it ~5% of glow energy, to be
+  confirmed on the bench.
+- **Core runs at 1 MHz (`clocks_init`), on purpose.** Once the core sleeps
+  through the glow it is only active in brief bursts (a few ~350 µs ADC polls plus
+  the one-time boot config), so a slower clock trims the per-burst active current
+  for no behaviour cost here. The knock-ons were handled so nothing actually
+  changes functionally: I2C is held at 100 kHz via `MBAUD = 0` (the divider floor
+  at this clock, so 100 kHz is also the ceiling — 400 kHz fast-mode is unavailable
+  below ~4 MHz CLK_PER); the ADC prescaler is `DIV2` so CLK_ADC = 500 kHz stays in
+  the 0.5–8 µs-period spec (conversions are ~2x longer in wall-time, still well
+  inside the bounded ADC wait); PWM drops to ~3.9 kHz, still flicker-free with no
+  audible source on the board; the TCB 1 ms tick and all `_delay`-free timing are
+  derived from `F_CPU`, so they track automatically. The RTC PIT and the watchdog
+  run off their own low-power oscillators and are unaffected. The absolute energy
+  saved is small (the active windows are tiny), but it is free given the above, so
+  it is taken deliberately rather than chasing 4 MHz headroom this design never uses.
 
 ## Brown-out
 
