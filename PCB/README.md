@@ -125,13 +125,22 @@ There are no controlled-impedance nets to declare.
 - "**Leave soldermask open over the central window per the mask layers — do not tent or
   flood.**" (The bare-FR4 + open-ENIG window is the whole optical trick.)
 - "**Keep vias tented.**"
-- **Via-in-pad:** a handful of small parts have an in-pad via that will wick solder during
-  reflow unless filled. If PCBWay's process **fills (VIPPO) board-wide**, this is moot. If it
-  does not, the at-risk pads to resin-fill-and-cap are around **U2, U4, Q1, C6, the TC2030
-  contact pads (TC1.1/2/3), JP2, D9.A, and several R pads** — re-confirm the exact in-pad-via
-  set in the KiCad board before ordering, since it depends on the final routing.
-- **TC2030 contact pads must stay solid** for the spring pins (no hole through them) — VIPPO
-  them if any via lands in-pad.
+- **Via-in-pad — resolved against the committed board.** 49 vias land inside a soldered pad.
+  The fab question is binary: **if PCBWay plugs-and-caps every via board-wide, this is moot**,
+  except for confirming the Tag-Connect pads come out flat. **If it does not, handle these
+  four groups:**
+  - **Plug & cap regardless** — the Tag-Connect pogo contacts must be flat and hole-free:
+    **TC1.1, TC1.2, TC1.3.**
+  - **Plug, or babysit during reflow** — small normally-soldered pads that will wick (refs
+    **R1–R5, C6, D9, Q1, U2, U4**): exactly R1.2, R2.2, R3.2, R4.2, R5.1, C6.1, C6.2, D9.A,
+    Q1.3, U2.1/2/3/4/5/6/8, U4.3.
+  - **Leave to fab default** — big pads where the 0.3 mm barrel is negligible: the **U1 QFN
+    exposed-pad** stitch vias (×2), the **six supercap under-body pads** (SC1.P, SC2.N, SC3.N,
+    SC3.P, SC4.N, SC4.P), and the **four solar-cell pads** (PV1.N/Nt, PV2.N/Nt).
+  - **No action** — flooded or hand-soldered: the solder-bridge selectors (SB1–4, SJ1, SW2)
+    and the 0.1″ breakout pads (J1, JP1, JP2). *Note:* JP2's pads are small, so if you ever
+    *reflow* a header onto JP2 rather than hand-soldering it, treat JP2.1–4 like the wicking
+    group above.
 
 A **frameless solder-paste stencil** (from the F.Paste / B.Paste plot) is strongly
 recommended — the QFN EP and the LGA accelerometer reflow far more reliably with paste than
@@ -152,7 +161,7 @@ Summary of the **orderable** lines:
 | **SC1–SC4** | **4** | **1 F / 2.75 V (WS17)** | `3-153-438` | by MPN |
 | U2 | 1 | Dual SAB MOSFET (SOIC-8) | `ALD910025SALI` | `ALD910025SALI-ND` |
 | D2–D5 | 4 | Amber LED, reverse-mount | `LA P47F-V2BB-24-3B5A-30-R18-Z` | `475-LAP47F-V2BB-24-3B5A-30-R18-ZCT-ND` |
-| R1–R4 | 4 | **150 Ω 1% 1206 — SIZED** | `TNPW1206150RFEEA` | by MPN |
+| R1–R4 | 4 | **150 Ω 1% — SIZED** (⚠ package, see flag) | `TNPW1206150RFEEA` | by MPN |
 | R12 | 1 | 220 Ω 0805 | `RC0805FR-07220RL` | by MPN |
 | R5, R6 | 2 | 1 MΩ 0805 | `RC0805FR-071ML` | by MPN |
 | R7 | 1 | 1.8 MΩ 0805 | `RC0805FR-071M8L` | by MPN |
@@ -175,12 +184,20 @@ Summary of the **orderable** lines:
   UPDI / I²C / GPIO breakouts (TC1 is the primary programming path; JP1/JP2 are conveniences).
 - **MH1–MH4** are plated drills — supply your own **M2 screws** if enclosing.
 
-**Two flags worth repeating before you buy:**
+**Flags to clear before you buy:**
+- **⚠ R1–R4 footprint vs BOM package — reconcile, or the part won't fit.** The placed land for
+  the four ballast resistors is **~0402** (pads 0.59 × 0.66 mm at 1.02 mm pitch); the BOM line
+  specifies **1206** (`TNPW1206150RFEEA`). A 1206 part cannot solder to a 0402 land. Most
+  likely the BOM package is stale (carried over from v0's 1 kΩ 1206 ballast) while the board
+  intends a small part — confirm the intent and either **order an 0402 150 Ω part** or **change
+  the KiCad footprint to 1206** (and re-check it fits the tight central band). Every other
+  resistor and cap is 0805 and matches.
+- **R1–R4 value (150 Ω) is `SIZED`, not locked.** It sets per-LED peak current (~9 mA on the
+  clamped rail) and is **bench-pending** — the energy-budget test may re-tune it. Buy a small
+  range (e.g. 100 / 150 / 220 / 330 Ω) so you can swap after the measurement. (Buy it in
+  whatever package you settle on in the flag above.)
 - **SC1–SC4 are the dominant cost** (well over half the BOM). Confirm live pricing; they swing
   the whole board cost.
-- **R1–R4 (150 Ω) are `SIZED`, not locked.** They set per-LED peak current (~9 mA on the
-  clamped rail) and are **flagged bench-pending** — the energy-budget measurement may re-tune
-  them. Buy a small range (e.g. 100 Ω / 150 Ω / 220 Ω / 330 Ω) so you can swap after the test.
 
 ---
 
