@@ -275,10 +275,29 @@ Ti back-plate changes how a tap and vibration couple into the sensor.
   saved is small (the active windows are tiny), but it is free given the above, so
   it is taken deliberately rather than chasing 4 MHz headroom this design never uses.
 
-## Brown-out
+## Fuses (set at flash time, not by firmware)
 
-`sense_rail_ok()` is a *software* floor checked before each glow. For a true
-hardware guard, enable BOD as a **sampled** brown-out (low duty) via the
-`BODCFG` fuse rather than continuous BOD (~17 µA is too heavy for this rail).
-See the `fuses` target; pick the level/sample-rate byte from the datasheet
-BODCFG table deliberately before flashing.
+Fuses are configuration bytes the **programmer** writes during flashing; the
+running firmware can read them but can't change them. Set these deliberately —
+the `fuses` Makefile target is a stub, fill in the bytes from the datasheet fuse
+tables:
+
+- **`BODCFG` — brown-out (the main one).** `sense_rail_ok()` is only a *software*
+  floor checked before each glow; for a hardware guard against the rail collapsing
+  mid-operation, enable BOD as a **sampled** brown-out: `ACTIVE = SAMPLE`,
+  `SLEEP = SAMPLE`, `SAMPFREQ = 32 Hz` (lower current), `LVL` = a level below the
+  3.47 V rail (pick from the BOD level table). Continuous BOD (`ENABLE`) is ~17 µA,
+  far too heavy for this rail; sampled costs a small fraction of that.
+- **`SYSCFG1.MVSYSCFG` — MVIO.** Set to **SINGLE** (factory default is DUAL). The
+  board ties VDDIO2 to VS, so PORTC runs off the main rail with no separate I/O
+  voltage, which is what SINGLE means. (DUAL also works here since VDDIO2 sits at a
+  valid voltage, but SINGLE is the correct intent. Note: PORTC ADC/AC inputs would
+  *require* SINGLE — this design doesn't use them, VSENSE is on PD2.)
+- **`SYSCFG0.EESAVE` — keep the tap counter across reflashes.** A UPDI chip-erase
+  (every reflash) wipes EEPROM unless `EESAVE` is set, which skips EEPROM on erase.
+  Set it if you want `sense`'s activation counter to survive firmware updates. (A
+  *locked* device erases EEPROM regardless; this board isn't locked.)
+- **`SYSCFG0.UPDIPINCFG` — leave UPDI alone.** UPDI on pin 23 (TC2030 pad / J1) is
+  the only program path; do not repurpose that pin or you lose programming access.
+- **`OSCCFG`** can stay at default — the firmware selects the 1 MHz OSCHF clock in
+  software (`clocks_init`), so no clock fuse change is needed.
