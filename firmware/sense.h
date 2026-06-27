@@ -21,7 +21,7 @@
 
 #include <stdint.h>
 
-/* ADC: enable, 12-bit, DIV4 presc, 2.500 V ref, long sample (1M source Z). */
+/* ADC: enable, 12-bit, DIV2 presc, 2.500 V ref, long sample (1M source Z). */
 void     sense_adc_init(void);
 
 /* one-shot reads, in millivolts at the real-world node:

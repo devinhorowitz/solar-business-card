@@ -6,10 +6,12 @@
  * (set in main, not here). External 4.7k pull-ups to VS are fitted, so the
  * internal pull-ups are left off.
  *
- * Bus timing: F_CPU = 4 MHz, target ~100 kHz. MBAUD = 15 is the standard
- * AVR-Dx value for 100 kHz at 4 MHz with default rise time (datasheet
- * TWI baud equation). All transactions are polled; every wait has a
- * bus-error / arbitration escape so a wedged bus cannot hang the core.
+ * Bus timing: F_CPU = 1 MHz, target ~100 kHz. The SCL divider has a floor of
+ * 10 CLK_PER, so MBAUD = 0 gives 1 MHz / 10 = 100 kHz exactly (same bus speed
+ * as the old 4 MHz build, which used MBAUD = 15). 100 kHz is therefore also the
+ * ceiling at this clock; 400 kHz fast-mode would need a faster CLK_PER. All
+ * transactions are polled; every wait has a bus-error / arbitration escape so
+ * a wedged bus cannot hang the core.
  *
  * Return convention: 0 = OK, non-zero = fault (NACK or bus error). Callers
  * treat any non-zero as "accel not talking" and skip gracefully.
@@ -20,7 +22,7 @@
 #include <avr/io.h>
 #include <stdint.h>
 
-#define TWI_MBAUD_100K  15   /* @ F_CPU = 4 MHz */
+#define TWI_MBAUD_100K  0    /* 1 MHz / (10 + 2*0) = 100 kHz @ F_CPU = 1 MHz */
 
 static inline void twi_init(void)
 {

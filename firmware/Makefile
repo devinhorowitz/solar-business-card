@@ -18,7 +18,7 @@
 # Expect to point DFP at a real pack; the code uses only standard DFP macros.
 
 MCU      = avr64dd28
-F_CPU    = 4000000
+F_CPU    = 1000000
 
 DFP      ?= /usr/share/microchip/packs/AVR-Dx_DFP
 DFP_INC   = $(DFP)/include

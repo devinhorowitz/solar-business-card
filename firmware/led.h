@@ -38,4 +38,9 @@ void led_off(void);
  * (gamma-corrected) ramp so it looks like a breath, not a triangle. */
 void led_breathe(uint8_t cycles, uint16_t breath_ms, uint8_t peak);
 
+/* Idle-sleep the core for `ms` (LEDs untouched). Same 1 ms TCB timebase as the
+ * breathing animation, so it costs the idle tier, not a 4/1 MHz busy-spin.
+ * Requires interrupts enabled. Used for the double-tap disambiguation window. */
+void led_wait_ms(uint16_t ms);
+
 #endif /* LED_H */

@@ -15,7 +15,10 @@
 void sense_adc_init(void)
 {
     VREF.ADC0REF = VREF_ALWAYSON_bm | VREF_REFSEL_2V500_gc;
-    ADC0.CTRLC   = ADC_PRESC_DIV4_gc;          /* 4 MHz / 4 = 1 MHz CLK_ADC */
+    ADC0.CTRLC   = ADC_PRESC_DIV2_gc;          /* 1 MHz / 2 = 500 kHz CLK_ADC
+                                                * (2 us period; spec is 0.5-8 us).
+                                                * DIV4 would also be in spec but
+                                                * needlessly slow at this clock. */
     /* long sample time: the VSENSE divider is 1M//1M ~ 500k source impedance,
      * far above the SAR's comfort zone, so stretch acquisition. C5 holds the
      * charge between the ~1 s polls; this just covers the sample window. */
@@ -27,10 +30,11 @@ static uint16_t adc_read_raw(uint8_t muxpos)
 {
     ADC0.MUXPOS  = muxpos;
     ADC0.COMMAND = ADC_STCONV_bm;
-    /* A 12-bit conversion here is ~50 us (13.5 + 2 + SAMPLEN cycles at 1 MHz
-     * CLK_ADC). Bound the wait so a misconfigured/stuck ADC cannot hang the
-     * core; ~8000 loops is many ms, far beyond the conversion. On timeout
-     * return 0, which reads as low rail / dark and fails safe (no glow). */
+    /* A 12-bit conversion is ~(2 + SAMPLEN + 13.5) cycles at 500 kHz CLK_ADC,
+     * so ~95 us with SAMPLEN = 31. Bound the wait so a misconfigured/stuck ADC
+     * cannot hang the core; 8000 loops is tens of ms at 1 MHz, far beyond the
+     * conversion. On timeout return 0, which reads as low rail / dark and fails
+     * safe (no glow). */
     for (uint16_t guard = 0; guard < 8000; guard++)
         if (ADC0.INTFLAGS & ADC_RESRDY_bm)
             return ADC0.RES;        /* reading RES clears RESRDY */
