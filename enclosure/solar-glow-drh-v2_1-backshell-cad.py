@@ -26,19 +26,23 @@ against datasheet heights + plate mechanics. Findings that drove the numbers bel
   * Walls 1.6 -> 1.0 mm: Ti is plenty strong for a press-fit rim on a 0.8 mm FR4 edge; shrinks the
     footprint from 53.9 to 52.8 mm (closer to the 50.8 card).
 
-  Ti-max stack: floor 0.45 + cavity 1.85 + board 0.80 = 3.10 mm field (3.20 at the back frame),
-  vs the conservative 3.25. M2 thread is screw-limited, not Ti-limited (2.6 mm of engagement).
+  Ti-max stack: floor 0.45 + cavity 1.85 + board 0.80 = 3.10 mm field (3.25 at the back frame, with
+  the 0.15 mm border), vs the conservative 3.25 field. M2 thread is screw-limited, not Ti-limited
+  (2.6 mm of engagement).
 
 BACK FACE = metal rubbing of the interior: 4 screw posts drilled CLEAN THROUGH, a raised frame that
 mirrors the inner lip (PCB-perimeter footprint + width), and the bosses as raised annuli fused to
-the frame the way the inner bosses fuse to the lip; all raised `border_h` so engraved rear art in
-the recessed field takes no wear.
+the frame the way the inner bosses fuse to the lip; all raised `border_h` (0.15 mm machined step) so
+engraved/laser rear art in the recessed field takes no wear. The frame is milled, not etched; only
+the decals inside it are laser work.
 
-ROUND-TOOL MACHINABILITY: the interior pocket carries no internal corner sharper than the cutter.
-Convex features (bosses, brace posts, rib ends) are clear to mill around; the concave junctions where
-the bosses and ribs merge into the lip are RADIUSED to the finishing-tool radius (TOOL_R, R1.0 = Ø2.0
-mm) so the pocket clears in single passes. The relief is computed (void minus its morphological
-opening), sits only at the perimeter junctions, and is verified clear of every back-side component.
+ROUND-TOOL MACHINABILITY (both faces): no internal corner is sharper than the cutter. Convex features
+(bosses, brace posts, rib ends, the frame and prism outlines) are clear to mill around; the concave
+junctions are RADIUSED to the finishing-tool radius (TOOL_R, R1.0 = Ø2.0 mm). Interior: where bosses
+and ribs merge into the lip. Exterior: where the back annuli merge into the frame (the recess corners
+2.95, outer margin 3.95+, and field inner 1.45 already clear the Ø2.0). Relief is computed as void
+minus its morphological opening, sits only at the perimeter junctions, and is verified clear of every
+back-side component.
 ================================================================================================
 
 All XY in board coords (KiCad: origin top-left, X across 50.80, Y down 88.90). Heights are datasheet
@@ -107,18 +111,26 @@ def _inner_pocket():
         b = b.union(Point(cx, cy).buffer(ir, resolution=48))
     return b
 
-def _relief_polys(ribs_on, tool_r=TOOL_R):
-    """material a round tool of radius tool_r CANNOT clear in the pocket = void - open(void).
-    These are the concave boss-lip / rib-lip junction fills. Returns shapely Polygons (board coords)."""
-    isl  = [Point(mx, my).buffer(boss_r, resolution=64) for mx, my in mounts]
-    isl += [Point(x, y).buffer(rr, resolution=48) for x, y, rr in BRACE]
-    if ribs_on:
-        isl += [box(x0, y0, x1, y1) for x0, y0, x1, y1 in RIBS]
-    void  = _inner_pocket().difference(unary_union(isl))
+def _relief_for(islands, tool_r=TOOL_R):
+    """material a round tool of radius tool_r CANNOT clear in a pocket around `islands` =
+    void - open(void). These are the concave island-to-wall junction fills (board coords)."""
+    void  = _inner_pocket().difference(unary_union(islands))
     vopen = void.buffer(-tool_r, join_style=1, resolution=32).buffer(tool_r, join_style=1, resolution=32)
     added = void.difference(vopen).buffer(0)
     geoms = list(added.geoms) if added.geom_type.startswith("Multi") else ([added] if not added.is_empty else [])
     return [g.simplify(0.01, preserve_topology=True) for g in geoms if g.geom_type == "Polygon" and g.area > 0.01]
+
+def _cavity_islands(ribs_on):
+    """interior pocket islands: bosses + brace posts (+ cap-gap ribs)."""
+    isl  = [Point(mx, my).buffer(boss_r, resolution=64) for mx, my in mounts]
+    isl += [Point(x, y).buffer(rr, resolution=48) for x, y, rr in BRACE]
+    if ribs_on:
+        isl += [box(x0, y0, x1, y1) for x0, y0, x1, y1 in RIBS]
+    return isl
+
+def _back_islands():
+    """back recessed-field islands: just the 4 raised boss annuli (no ribs/braces on the back)."""
+    return [Point(mx, my).buffer(boss_r, resolution=64) for mx, my in mounts]
 
 def _poly_solid(poly, z0, dz):
     """extrude a simple shapely polygon (board coords) into a CadQuery prism, z0 .. z0+dz."""
@@ -163,7 +175,7 @@ def build(floor=0.45, wall_th=1.0, border_h=0.10, ribs=True, prog_window=False):
                               .moveTo(wx((x0+x1)/2), wy((y0+y1)/2)).rect(x1-x0, y1-y0).extrude(cavity))
     # round-tool corner relief: fill the concave boss-lip / rib-lip junctions to the tool radius so a
     # spinning end mill clears the pocket in single passes (draws the radius the cutter actually leaves).
-    for poly in _relief_polys(ribs):
+    for poly in _relief_for(_cavity_islands(ribs)):
         res = res.union(_poly_solid(poly, floor, cavity))
     # BACK FACE: frame == lip footprint + boss annuli, raised border_h
     if border_h > 0:
@@ -176,6 +188,11 @@ def build(floor=0.45, wall_th=1.0, border_h=0.10, ribs=True, prog_window=False):
         for mx, my in mounts:
             bwp = bwp.moveTo(wx(mx), wy(my)).circle(boss_r)
         res = res.union(bwp.extrude(border_h))
+        # round-tool relief on the BACK: the recessed art field is milled around the proud frame +
+        # annuli, so the annulus-frame junctions need the same radius the cutter leaves (mirror of the
+        # interior). Laser decals sit in the milled field; the frame stays a fully machined surface.
+        for poly in _relief_for(_back_islands()):
+            res = res.union(_poly_solid(poly, -border_h, border_h))
     # M2 holes CLEAN THROUGH (boss + skin + back annulus)
     twp = cq.Workplane("XY").workplane(offset=-border_h - 0.1)
     for mx, my in mounts:
@@ -201,13 +218,13 @@ OUT = "/mnt/user-data/outputs/"
 B = "solar-glow-drh-v2_1-backshell"
 jobs = [
     # name                 floor wall  border ribs  prog   note
-    ("Ti-max",             0.45, 1.00, 0.10, True,  False, "RECOMMENDED: 0.45 floor + cap-gap ribs + 1.0 walls"),
-    ("Ti-max-progwindow",  0.45, 1.00, 0.10, True,  True,  "Ti-max + TC2030 re-flash window"),
+    ("Ti-max",             0.45, 1.00, 0.15, True,  False, "RECOMMENDED: 0.45 floor + cap-gap ribs + 1.0 walls"),
+    ("Ti-max-progwindow",  0.45, 1.00, 0.15, True,  True,  "Ti-max + TC2030 re-flash window"),
     ("Ti-conservative",    0.60, 1.60, 0.15, False, False, "prior build, no ribs (reference / safety)"),
 ]
 print(f"cavity={cavity} (U2 {U2_H} + air {cav_margin}; kapton {kapton_th})  lip/frame={lip_w}  "
-      f"braces={len(BRACE)} ribs={len(RIBS)}  tool_r={TOOL_R} (Ø{2*TOOL_R}mm finisher)  "
-      f"relief spots: ribs-on={len(_relief_polys(True))} ribs-off={len(_relief_polys(False))}")
+      f"braces={len(BRACE)} ribs={len(RIBS)}  border=0.15  tool_r={TOOL_R} (Ø{2*TOOL_R}mm finisher)  "
+      f"relief: cavity={len(_relief_for(_cavity_islands(True)))} back={len(_relief_for(_back_islands()))}")
 for name_suf, fl, wl, bd, rb, pw, note in jobs:
     solid = build(floor=fl, wall_th=wl, border_h=bd, ribs=rb, prog_window=pw)
     field = fl + cavity + board_th
