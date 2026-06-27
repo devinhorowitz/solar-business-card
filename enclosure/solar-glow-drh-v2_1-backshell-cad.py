@@ -2,155 +2,147 @@
 """
 solar-glow-drh-v2_1-backshell-cad.py  -  metal back-shell generator (CadQuery / OpenCASCADE)
 
-REDESIGN of the stale pre-v2.1 shell, built to the as-built `solar-glow-drh-v2-mechanical.md`
-(distilled from the committed `solar-glow-drh-v2_1.kicad_pcb`). v2.1 drops the U2 pocket, the SC
-pockets, the edge-castellation relief, and the button (mechanical brief sec.8).
+Built to the as-built `solar-glow-drh-v2-mechanical.md` (from the committed PCB). v2.1 drops the
+U2 pocket, SC pockets, edge castellations, and the button (brief sec.8).
 
-------------------------------------------------------------------------------------------------
-SUPPORT + FINISH:
+================================================================================================
+TITANIUM LIMIT-PUSH (this revision). Final part is Ti-6Al-4V; the audit re-derived every dimension
+against datasheet heights + plate mechanics. Findings that drove the numbers below:
 
-  EDGE SUPPORT = a CONTINUOUS PERIMETER LIP (`lip_w` 1.5 mm) that rings the inside of the cavity and
-  joins all four M2 bosses -> the board is fully edge-supported, not corner-supported, and it is one
-  contour pass to mill. The lip sits inside the pad-free 1.5 mm rim band (brief sec.8): never on a
-  pad, clears the nearest body (supercaps, 2.65 mm from the rim) by >1 mm.
+  * Cavity is PART-limited, not a lever: U2 (SOIC-8, datasheet max 1.75) and the WS17 caps (1.70,
+    locked) set it. Cavity 1.85 = 1.75 + 0.10 air. Cannot shrink without shorter parts.
+  * The floor is the lever, and Ti YIELD is never the limit -- a 0.2 mm Ti floor stays sub-yield
+    even at a hard 50 N press. The binding limit is the floor DEFLECTING into the parts (air gap
+    0.10 mm to U2, 0.15 mm to the caps).
+  * The old lip-only-plus-window-braces left a 19.5 mm-radius UNSUPPORTED floor disk over the cap
+    regions; at that span a 0.6 mm floor already TOUCHES a cap at 50 N (needs 0.62). So the prior
+    floor was marginal.
+  * FIX = stiffen the floor with continuous RIBS in the empty cap-gap corridors (the SC1|SC2 and
+    SC3|SC4 channels, x 24.6-26.2, on bare laminate, no pads/vias). With the ribs + the 4 window
+    braces the worst span drops to 11.6 mm -> a 0.45 mm Ti floor is 50 N-safe. THINNER AND STRONGER.
+  * Kapton DROPPED: every metal contact (lip in the pad-free rim band, 4 braces, 2 ribs) sits on
+    bare laminate -- verified against the PCB -- so the blanket is unnecessary. (Keep a die-cut
+    Kapton strip only if a via audit on the rib lines later finds an untented via.)
+  * Walls 1.6 -> 1.0 mm: Ti is plenty strong for a press-fit rim on a 0.8 mm FR4 edge; shrinks the
+    footprint from 53.9 to 52.8 mm (closer to the 50.8 card).
 
-  CENTER ANTI-TRAMPOLINE = four brace pillars ringing the glow window. Sec.7 forbids pillars on the
-  LED pads / monogram (the window), so dead-center is out; these were found by scanning the committed
-  back copper for points whose full r=1.0 disk clears BOTH the window and every pad, and bracket it
-  N/E/S/W (clearances 1.5-3.7 mm). The lip carries the rest of the span.
+  Ti-max stack: floor 0.45 + cavity 1.85 + board 0.80 = 3.10 mm field (3.20 at the back frame),
+  vs the conservative 3.25. M2 thread is screw-limited, not Ti-limited (2.6 mm of engagement).
 
-  CORNERS / EDGES = R3 plan corners (match the PCB); edges SQUARED + a 0.20 mm `edge_ease`. A true
-  3 mm vertical radius on a ~3.25 mm edge is a full bullnose -> egg, not flat -> squared is correct.
+BACK FACE = metal rubbing of the interior: 4 screw posts drilled CLEAN THROUGH, a raised frame that
+mirrors the inner lip (PCB-perimeter footprint + width), and the bosses as raised annuli fused to
+the frame the way the inner bosses fuse to the lip; all raised `border_h` so engraved rear art in
+the recessed field takes no wear.
+================================================================================================
 
-  BACK FACE = a literal metal "rubbing" of the interior structure (`echoes the interior machining`):
-    * the 4 M2 screw posts drill CLEAN THROUGH (boss + skin + back annulus) -> 4 holes on the back;
-    * a raised back FRAME that MIRRORS the inner lip exactly -- same footprint (PCB perimeter) and
-      same width (`lip_w`) -- a literal representation of the card outline in metal;
-    * the 4 bosses rendered on the back as raised annuli (outer r = `boss_r`, the screw hole through
-      the centre), fused into the back frame THE SAME WAY the inner bosses fuse into the inner lip;
-    * all raised `border_h` (0.15 mm) proud, so the central field is recessed -> engraved rear art
-      lives in the field and the raised frame/bosses take the wear when the card is set down/stacked.
-
-ISOLATION (sec.9): the 4 M2 screws ground the body; with castellations gone the only short hazard is
-the lip/pillars on the back. Default = die-cut Kapton (~0.05 mm); cavity swallows it. The lip is also
-inside the pad-free band, so safe even without Kapton.
-PROGRAMMING (sec.10): default flash-before-close; `PROG_WINDOW` opens a TC2030 hole in the field.
-
-All XY in board coords (KiCad frame: origin top-left, X across 50.80, Y down 88.90). Heights are
-datasheet figures. Z=0 = OUTER back face; +Z into the board; the raised back features go to -Z.
+All XY in board coords (KiCad: origin top-left, X across 50.80, Y down 88.90). Heights are datasheet
+figures. Z=0 = OUTER back face; +Z into the board; raised back features go to -Z.
 
 deps:  pip install --break-system-packages cadquery
 """
-import numpy as np
 import cadquery as cq
 
-# =============================== board (read from the committed PCB) ===============================
+# ===== board (committed PCB) =====
 W, H, R   = 50.80, 88.90, 3.0
 board_th  = 0.80
 mounts = [(3.5, 3.0), (47.3, 3.0), (3.5, 85.9), (47.3, 85.9)]      # 4x M2, GND, 2.2 mm drill
 
-# =============================== shell knobs ===============================
-U2_H       = 1.75                  # tallest back part (SOIC-8 balancer) -> sets the cavity
-kapton_th  = 0.05                  # isolation blanket (assembly spec; cavity swallows it). 0 => none.
-cav_margin = 0.05
-cavity     = round(U2_H + kapton_th + cav_margin, 3)   # ~1.85 (== brief's "~1.8")
+# ===== fixed shell knobs =====
+U2_H       = 1.75                  # tallest back part (SOIC-8 max, datasheet) -> sets the cavity
+kapton_th  = 0.00                  # DROPPED (all contacts on bare laminate). set 0.05 to reinstate.
+cav_margin = 0.10                  # air over the tallest part
+cavity     = round(U2_H + kapton_th + cav_margin, 3)   # 1.85
 
-floor_th   = 0.60                  # outer-skin thickness (Ti std 0.6 / thin 0.2; 7075 bumps it)
-wall_th    = 1.60                  # press-fit wall thickness (rings the board edge)
-edge_fit   = -0.05                 # interference on the FLATS
-corner_clr = 0.15                  # corner relief so the press grips the flats, not the corners
-edge_ease  = 0.20                  # squared-edge chamfer (feel/deburr). 0 => dead square.
+edge_fit   = -0.05                 # press interference on the FLATS
+corner_clr = 0.15                  # corner relief so the press grips the flats
+edge_ease  = 0.20                  # squared-edge chamfer (feel/deburr)
+lip_w      = 1.50                  # perimeter support lip (inner) AND the back-frame width (mirror)
+boss_r     = 2.60                  # M2 boss / back annulus outer radius
+pilot_r    = 0.80                  # M2 thread-forming hole, CLEAN THROUGH
 
-lip_w      = 1.50                  # perimeter support lip (inner) AND the back frame width (they mirror)
-boss_r     = 2.60                  # M2 boss radius (inner post AND the back annulus outer radius)
-pilot_r    = 0.80                  # M2 thread-forming hole (~1.6 mm), now CLEAN THROUGH the boss+skin
-border_h   = 0.15                  # raised height of the back frame + back boss annuli
+# window braces (disk clears the glow window + every back pad; from the PCB):
+BRACE = [(35.0,37.0,1.0),(39.5,40.0,1.0),(19.2,50.9,1.0),(13.6,40.1,1.0)]
+# cap-gap stiffening ribs (in the empty SC1|SC2 and SC3|SC4 corridors; clear the optical band):
+RIBS  = [(24.6, 2.5, 26.2, 33.0), (24.6, 56.0, 26.2, 86.4)]   # (x0,y0,x1,y1)
 
-# brace pillars ringing the glow window (disk clears the window + every back-side pad; from the PCB):
-BRACE_PILLARS = [(35.0, 37.0, 1.0),    # NE of window  (clr 2.93)
-                 (39.5, 40.0, 1.0),    # E  of window  (clr 3.69)
-                 (19.2, 50.9, 1.0),    # SW of window  (clr 2.32)
-                 (13.6, 40.1, 1.0)]    # W  of window  (clr 1.50)
-
-# =============================== derived geometry ===============================
-cavW, cavH, cavR = W + 2*edge_fit, H + 2*edge_fit, R + edge_fit
-outW, outH, outR = cavW + 2*wall_th, cavH + 2*wall_th, cavR + wall_th
 wx = lambda x: x - W/2
 wy = lambda y: y - H/2
+cavW, cavH, cavR = W + 2*edge_fit, H + 2*edge_fit, R + edge_fit
 
-# =============================== build ===============================
-def build(floor, prog_window=False, brace=BRACE_PILLARS):
-    bb = floor + cavity                 # board-back / boss-top / lip-top plane
-    wt = bb + board_th                  # wall top (flush with the naked front)
+# ===== build =====
+def build(floor=0.45, wall_th=1.0, border_h=0.10, ribs=True, prog_window=False):
+    bb = floor + cavity                       # board-back / boss-top / lip-top / rib-top plane
+    wt = bb + board_th
+    outW, outH, outR = cavW + 2*wall_th, cavH + 2*wall_th, cavR + wall_th
+    iw, ih, ir = cavW - 2*lip_w, cavH - 2*lip_w, max(cavR - lip_w, 0.5)
 
-    # 1) outer prism; vertical edges -> outR plan corners; top+bottom outer edges -> squared ease
     res = cq.Workplane("XY").rect(outW, outH).extrude(wt).edges("|Z").fillet(outR)
     if edge_ease > 0:
-        res = res.edges(">Z").chamfer(edge_ease)     # front rim outer edge
-        res = res.edges("<Z").chamfer(edge_ease)     # back outer edge
-    # 2a) board recess (full width, press fit on the flats) -- the top board_th
-    res = res.cut(cq.Workplane("XY").workplane(offset=bb)
-                    .rect(cavW, cavH).extrude(board_th + 0.02).edges("|Z").fillet(cavR))
-    # 2b) component cavity (inset by lip_w -> leaves the lip) -- depth `cavity` from the floor
-    iw, ih, ir = cavW - 2*lip_w, cavH - 2*lip_w, max(cavR - lip_w, 0.5)
-    res = res.cut(cq.Workplane("XY").workplane(offset=floor)
-                    .rect(iw, ih).extrude(cavity).edges("|Z").fillet(ir))
-    # 3) corner relief over the recess depth so the board corners are not gripped
+        res = res.edges(">Z").chamfer(edge_ease).edges("<Z").chamfer(edge_ease)
+    # board recess (press fit) + uniform cavity (inset by lip_w)
+    res = res.cut(cq.Workplane("XY").workplane(offset=bb).rect(cavW, cavH)
+                    .extrude(board_th + 0.02).edges("|Z").fillet(cavR))
+    res = res.cut(cq.Workplane("XY").workplane(offset=floor).rect(iw, ih)
+                    .extrude(cavity).edges("|Z").fillet(ir))
+    # corner relief (recess depth)
     cwp = cq.Workplane("XY").workplane(offset=bb - 0.01)
     for ccx, ccy in [(R, R), (W - R, R), (R, H - R), (W - R, H - R)]:
         cwp = cwp.moveTo(wx(ccx), wy(ccy)).circle(R + corner_clr)
     res = res.cut(cwp.extrude(board_th + 0.04))
-    # 4) INNER supports (after the cuts): perimeter lip + 4 bosses + window braces, all floor->bb
+    # INNER supports: perimeter lip
     lip = (cq.Workplane("XY").workplane(offset=floor).rect(cavW, cavH)
              .extrude(cavity).edges("|Z").fillet(cavR))
     lip = lip.cut(cq.Workplane("XY").workplane(offset=floor - 0.01).rect(iw, ih)
                     .extrude(cavity + 0.02).edges("|Z").fillet(ir))
     res = res.union(lip)
-    sup = [(mx, my, boss_r) for mx, my in mounts] + list(brace)
+    # bosses + window braces (full-cavity columns)
     wp = cq.Workplane("XY").workplane(offset=floor)
-    for x, y, rr in sup:
+    for x, y, rr in [(mx, my, boss_r) for mx, my in mounts] + list(BRACE):
         wp = wp.moveTo(wx(x), wy(y)).circle(rr)
     res = res.union(wp.extrude(cavity))
-    # 5) BACK FACE structure (mirror of the interior): frame == lip footprint, + boss annuli
+    # cap-gap ribs (full-cavity walls; also prop the board along the corridor)
+    if ribs:
+        for x0, y0, x1, y1 in RIBS:
+            res = res.union(cq.Workplane("XY").workplane(offset=floor)
+                              .moveTo(wx((x0+x1)/2), wy((y0+y1)/2)).rect(x1-x0, y1-y0).extrude(cavity))
+    # BACK FACE: frame == lip footprint + boss annuli, raised border_h
     if border_h > 0:
-        # frame: raised ring at the PCB perimeter, width lip_w (exact mirror of the inner lip)
         frame = (cq.Workplane("XY").workplane(offset=-border_h).rect(cavW, cavH)
                    .extrude(border_h).edges("|Z").fillet(cavR))
         frame = frame.cut(cq.Workplane("XY").workplane(offset=-border_h - 0.01).rect(iw, ih)
                             .extrude(border_h + 0.02).edges("|Z").fillet(ir))
         res = res.union(frame)
-        # boss annuli on the back: raised disks r=boss_r at the mounts (holes cut in step 6)
         bwp = cq.Workplane("XY").workplane(offset=-border_h)
         for mx, my in mounts:
             bwp = bwp.moveTo(wx(mx), wy(my)).circle(boss_r)
         res = res.union(bwp.extrude(border_h))
-    # 6) M2 holes drilled CLEAN THROUGH: boss + skin + back annulus, in one cut
+    # M2 holes CLEAN THROUGH (boss + skin + back annulus)
     twp = cq.Workplane("XY").workplane(offset=-border_h - 0.1)
     for mx, my in mounts:
         twp = twp.moveTo(wx(mx), wy(my)).circle(pilot_r)
     res = res.cut(twp.extrude(bb + border_h + 0.2))
-    # 7) optional TC2030 re-flash window through the back skin over TC1
     if prog_window:
         res = res.cut(cq.Workplane("XY").workplane(offset=-border_h - 0.1)
                         .moveTo(wx(13.3), wy(16.9)).circle(5.5).extrude(floor + border_h + 0.2))
     return res
 
-# =============================== variants ===============================
+# ===== variants (titanium only; 7075 retired -- final part is Ti) =====
 OUT = "/mnt/user-data/outputs/"
 B = "solar-glow-drh-v2_1-backshell"
 jobs = [
-    ("Ti-std",            0.60, False, "Ti-6Al-4V, standard 0.6 skin"),
-    ("Ti-thin",           0.20, False, "Ti-6Al-4V, thin 0.2 skin"),
-    ("7075-std",          0.80, False, "7075-T6, bumped 0.8 skin"),
-    ("Ti-std-progwindow", 0.60, True,  "Ti-6Al-4V std + TC2030 re-flash window"),
+    # name                 floor wall  border ribs  prog   note
+    ("Ti-max",             0.45, 1.00, 0.10, True,  False, "RECOMMENDED: 0.45 floor + cap-gap ribs + 1.0 walls"),
+    ("Ti-max-progwindow",  0.45, 1.00, 0.10, True,  True,  "Ti-max + TC2030 re-flash window"),
+    ("Ti-conservative",    0.60, 1.60, 0.15, False, False, "prior build, no ribs (reference / safety)"),
 ]
-print(f"cavity={cavity}  lip_w={lip_w}  edge_ease={edge_ease}  back-frame=mirror(lip)  border_h={border_h}  thru-holes=ON")
-for suf, floor, pw, note in jobs:
-    solid = build(floor, prog_window=pw)
-    field = floor + cavity + board_th
-    name = f"{B}-{suf}"
+print(f"cavity={cavity} (U2 {U2_H} + air {cav_margin}; kapton {kapton_th})  lip/frame={lip_w}  braces={len(BRACE)} ribs={len(RIBS)}")
+for name_suf, fl, wl, bd, rb, pw, note in jobs:
+    solid = build(floor=fl, wall_th=wl, border_h=bd, ribs=rb, prog_window=pw)
+    field = fl + cavity + board_th
+    foot = (W + 2*edge_fit + 2*wl)
+    name = f"{B}-{name_suf}"
     cq.exporters.export(solid, OUT + name + ".step")
     cq.exporters.export(solid, OUT + name + ".stl", tolerance=0.04, angularTolerance=0.2)
-    print(f"  {name:38s} floor={floor:.2f}  field={field:.2f}  at-frame={field+border_h:.2f} mm  "
-          f"progwin={pw}  | {note}")
+    print(f"  {name:34s} floor={fl:.2f} wall={wl:.2f} field={field:.2f} at-frame={field+bd:.2f} foot={foot:.1f}mm "
+          f"ribs={rb} prog={pw} | {note}")
 print("done")
