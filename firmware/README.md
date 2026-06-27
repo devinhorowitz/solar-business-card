@@ -29,13 +29,20 @@ accelerometer is the actuator.
 ## Build & flash
 
 ### 1. Install the toolchain
-- **avr-gcc** (AVR-Dx capable) plus **avr-binutils** / **avr-libc**. A distro
-  `avr-gcc` may be too old for AVR-Dx; the reliable option on any OS is Microchip's
-  AVR-GCC toolchain build. A distro `avr-gcc` >= ~12 also works **with the DFP**.
-  - Debian/Ubuntu: `sudo apt install gcc-avr binutils-avr avr-libc` (check the version).
-  - macOS: `brew tap osx-cross/avr && brew install avr-gcc`.
+- **avr-gcc with AVR-Dx/DD support**, plus **avr-binutils** / **avr-libc**. The test
+  is DD support, not a version number: Microchip's AVR-GCC toolchain is the safe
+  cross-platform pick, and a distro `gcc-avr` that is Atmel/Microchip-patched also
+  recognizes the DD parts (Ubuntu's `gcc-avr` 7.3.0+Atmel does — verified). A
+  *mainline* (unpatched) avr-gcc needs >= 12. It finds the device through the DFP's
+  specs either way.
+  - Debian/Ubuntu: `sudo apt install gcc-avr binutils-avr avr-libc avrdude` — the
+    packaged `gcc-avr` already knows `avr64dd28`; add the DFP (below) for specs/headers.
+  - macOS: `brew tap osx-cross/avr && brew install avr-gcc avrdude`.
   - Windows: Microchip's AVR-GCC toolchain, or MSYS2.
-- A flasher: **avrdude >= 7.0** (has UPDI / `serialupdi`) *or* **pymcuprog**
+  - If `make` reports an *unknown MCU* (rather than just a missing `specs-avr64dd28`
+    file, which the DFP supplies), that avr-gcc lacks DD support — use Microchip's.
+- A flasher: **avrdude >= 7.1** (its `avrdude.conf` ships the AVR-DD parts and the
+  `serialupdi` programmer — verified; stock Ubuntu 7.1 works) *or* **pymcuprog**
   (`pip install pymcuprog`, Microchip's UPDI tool). This guide drives the
   **Adafruit UPDI Friend** (step 3); its CH340E enumerates as a USB serial port
   (built into modern Linux; macOS/Windows may want WCH's CH340 driver).
@@ -87,11 +94,15 @@ Refs: [UPDI Friend guide](https://learn.adafruit.com/adafruit-updi-friend) ·
 ```sh
 make flash DFP=/path/to/... PROG=serialupdi PORT=/dev/ttyUSB0
 ```
-Port: Linux `/dev/ttyUSB0` (or `/dev/ttyACM0`), macOS `/dev/cu.usbserial-*`, Windows
-`COMx`. The Makefile sends `-b 230400` (the UPDI Friend's documented speed; override
-with `BAUD=57600` if a long cable is flaky). avrdude verifies after the write.
-(pymcuprog equivalent, roughly: `pymcuprog -d avr64dd28 -t uart -u <port> -c 230400
-write -f solar-glow.hex --erase --verify`.)
+Find the port after plugging in the UPDI Friend: Linux `ls /dev/ttyUSB*` (the CH340E
+shows as `ttyUSB0`, occasionally `ttyACM0`), macOS `ls /dev/cu.usbserial-*`, Windows =
+the new `COMx` in Device Manager. The Makefile sends `-b 230400` (the UPDI Friend's
+documented speed; override with `BAUD=57600` if a long cable is flaky), and avrdude
+verifies after the write. On Linux, a *Permission denied* on the port means you need
+serial access: add yourself to the `dialout` group (`sudo usermod -aG dialout $USER`,
+then log out/in) or run the command with `sudo`. (pymcuprog equivalent, verified flags:
+`pymcuprog -d avr64dd28 -t uart -u <port> -c 230400 write -f solar-glow.hex --erase
+--verify`.)
 
 ### 5. Set the fuses (once)
 Flashing does not touch fuses. Set them deliberately per the **Fuses** section
@@ -347,7 +358,9 @@ tables:
   floor checked before each glow; for a hardware guard against the rail collapsing
   mid-operation, enable BOD as a **sampled** brown-out: `ACTIVE = SAMPLE`,
   `SLEEP = SAMPLE`, `SAMPFREQ = 32 Hz` (lower current), `LVL` = a level below the
-  3.47 V rail (pick from the BOD level table). Continuous BOD (`ENABLE`) is ~17 µA,
+  3.47 V rail (pick from the BOD level table). Byte-wise the low nibble is `0x0A`
+  (`ACTIVE = SAMPLE` in bits 3:2, `SLEEP = SAMPLE` in bits 1:0), so
+  `BODCFG = (LVL << 5) | (SAMPFREQ << 4) | 0x0A`. Continuous BOD (`ENABLE`) is ~17 µA,
   far too heavy for this rail; sampled costs a small fraction of that.
 - **`SYSCFG1.MVSYSCFG` — MVIO.** Set to **SINGLE** (factory default is DUAL). The
   board ties VDDIO2 to VS, so PORTC runs off the main rail with no separate I/O
