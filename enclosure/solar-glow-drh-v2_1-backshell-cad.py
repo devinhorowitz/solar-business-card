@@ -38,11 +38,18 @@ the decals inside it are laser work.
 
 ROUND-TOOL MACHINABILITY (both faces): no internal corner is sharper than the cutter. Convex features
 (bosses, brace posts, rib ends, the frame and prism outlines) are clear to mill around; the concave
-junctions are RADIUSED to the finishing-tool radius (TOOL_R, R1.0 = Ø2.0 mm). Interior: where bosses
-and ribs merge into the lip. Exterior: where the back annuli merge into the frame (the recess corners
-2.95, outer margin 3.95+, and field inner 1.45 already clear the Ø2.0). Relief is computed as void
-minus its morphological opening, sits only at the perimeter junctions, and is verified clear of every
-back-side component.
+junctions are RADIUSED to the finishing-tool radius. Interior cavity (1.85 deep): TOOL_R R1.0 = Ø2.0,
+where bosses and ribs merge into the lip. Back field (0.15 deep): BACK_TOOL_R R0.5 = Ø1.0 (finer tool
+for the shallow art recess -> tighter junction corners), where the annuli merge into the frame. The
+recess corners 2.95, outer margin 3.95+, and field inner 1.45 already clear the Ø2.0. Relief is
+computed as void minus its morphological opening, sits only at the perimeter junctions, and is
+verified clear of every back-side component.
+
+TI EDGE-BREAK (deburr): titanium edges chip and cut, so no corner is left knife-sharp. The outer
+top/bottom rim is eased `edge_ease` (0.20); the exposed END-FACE edges -- the proud back frame and
+annuli tops (incl. spotface mouths) and the front rim + board-recess mouth -- are broken `EDGE_BREAK`
+(0.10). The internal board-rest tops (lip/boss/rib) and hole exits don't take a clean modeled chamfer
+in OCC; carry the drawing note "deburr all edges, break sharp corners ~0.1 mm (Ti)".
 ================================================================================================
 
 All XY in board coords (KiCad: origin top-left, X across 50.80, Y down 88.90). Heights are datasheet
@@ -67,7 +74,10 @@ cavity     = round(U2_H + kapton_th + cav_margin, 3)   # 1.85
 
 edge_fit   = -0.05                 # press interference on the FLATS
 corner_clr = 0.15                  # corner relief so the press grips the flats
-edge_ease  = 0.20                  # squared-edge chamfer (feel/deburr)
+edge_ease  = 0.20                  # squared-edge chamfer on the outer top/bottom rim (feel/deburr)
+EDGE_BREAK = 0.10                  # Ti deburr: break the sharp END-FACE edges (back proud frame/annuli
+                                   # + front rim + recess mouth) so corners are durable, not knife-sharp.
+                                   # Ti edges chip and cut; an edge-break also resists nicking. ~0.1 mm.
 lip_w      = 1.50                  # perimeter support lip (inner) AND the back-frame width (mirror)
 boss_r     = 2.60                  # M2 boss / back annulus outer radius
 pilot_r    = 0.80                  # M2 tap-drill hole, CLEAN THROUGH. Boss is TAPPED M2 (brass is soft --
@@ -84,6 +94,10 @@ CBORE_D    = 3.0                   # back spotface dia at each hole; depth auto-
 # smaller than the cutter. R1.0 = Ø2.0 mm finisher; the cavity inner corners (ir=1.45) already clear
 # it. Shop roughs the open pocket with a Ø3-4 mm tool and finishes corners/walls with the Ø2.0.
 TOOL_R     = 1.00
+# the BACK field is only 0.15 mm deep, so it gets finished with a smaller cutter than the 1.85 mm
+# cavity. A finer tool radius tightens the (cosmetic) annulus-frame junction relief on the art face.
+# R0.5 = Ø1.0 mm finisher. (Drop to 0.25 for a Ø0.5 cutter if crisper corners are wanted.)
+BACK_TOOL_R = 0.50
 
 # window braces (disk clears the glow window + every back pad; from the PCB):
 # window braces: E + W flank the optical-window keepout (between side lip and window edge).
@@ -191,7 +205,8 @@ def build(floor=0.45, wall_th=1.0, border_h=0.10, ribs=True, prog_window=False):
         # round-tool relief on the BACK: the recessed art field is milled around the proud frame +
         # annuli, so the annulus-frame junctions need the same radius the cutter leaves (mirror of the
         # interior). Laser decals sit in the milled field; the frame stays a fully machined surface.
-        for poly in _relief_for(_back_islands()):
+        # Finer Ø1.0 finisher here (shallow 0.15 field) -> tighter corner relief than the cavity.
+        for poly in _relief_for(_back_islands(), BACK_TOOL_R):
             res = res.union(_poly_solid(poly, -border_h, border_h))
     # M2 holes CLEAN THROUGH (boss + skin + back annulus)
     twp = cq.Workplane("XY").workplane(offset=-border_h - 0.1)
@@ -211,6 +226,18 @@ def build(floor=0.45, wall_th=1.0, border_h=0.10, ribs=True, prog_window=False):
     if prog_window:
         res = res.cut(cq.Workplane("XY").workplane(offset=-border_h - 0.1)
                         .moveTo(wx(13.3), wy(16.9)).circle(5.5).extrude(floor + border_h + 0.2))
+    # Ti deburr edge-break (last): break the exposed END-FACE edges so no corner is knife-sharp.
+    #   faces('<Z') = the proud back frame + annuli top (incl. the spotface mouths)
+    #   faces('>Z') = the front rim + the board-recess mouth
+    # The outer top/bottom rim is already eased by `edge_ease`. The internal board-rest tops (lip/boss/
+    # rib at z=bb) and hole exits won't take a clean OCC chamfer here -> carry a drawing note instead:
+    # "deburr all edges, break sharp corners ~0.1 mm (Ti)". Per-group try/except keeps the build robust.
+    if EDGE_BREAK > 0:
+        for sel in ("<Z", ">Z"):
+            try:
+                res = res.faces(sel).edges().chamfer(EDGE_BREAK)
+            except Exception as e:
+                print(f"  [deburr] faces('{sel}') skipped: {type(e).__name__}")
     return res
 
 # ===== variants (titanium only; 7075 retired -- final part is Ti) =====
@@ -223,8 +250,10 @@ jobs = [
     ("Ti-conservative",    0.60, 1.60, 0.15, False, False, "prior build, no ribs (reference / safety)"),
 ]
 print(f"cavity={cavity} (U2 {U2_H} + air {cav_margin}; kapton {kapton_th})  lip/frame={lip_w}  "
-      f"braces={len(BRACE)} ribs={len(RIBS)}  border=0.15  tool_r={TOOL_R} (Ø{2*TOOL_R}mm finisher)  "
-      f"relief: cavity={len(_relief_for(_cavity_islands(True)))} back={len(_relief_for(_back_islands()))}")
+      f"braces={len(BRACE)} ribs={len(RIBS)}  border=0.15  "
+      f"cavity tool R{TOOL_R} (Ø{2*TOOL_R}) / back tool R{BACK_TOOL_R} (Ø{2*BACK_TOOL_R})  "
+      f"deburr: outer rim {edge_ease}, ends {EDGE_BREAK}  "
+      f"relief: cavity={len(_relief_for(_cavity_islands(True)))} back={len(_relief_for(_back_islands(), BACK_TOOL_R))}")
 for name_suf, fl, wl, bd, rb, pw, note in jobs:
     solid = build(floor=fl, wall_th=wl, border_h=bd, ribs=rb, prog_window=pw)
     field = fl + cavity + board_th
