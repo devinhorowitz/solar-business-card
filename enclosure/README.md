@@ -36,6 +36,42 @@ engineering query (EQ).
 
 ---
 
+## Ordering instructions (PCBWay)
+
+Form settings on the CNC quote page (the on-screen selections override the drawing, so set these to match it):
+
+- **Process:** CNC machining, 3-axis milling.
+- **Material:** Titanium → **Titanium Gr5 (TC4)**. **Color:** Silver (natural Ti).
+- **Units:** mm. **Quantity:** 1 (prototype).
+- **Technical drawing:** attach `solar-glow-drh-v2_1-backshell-DRAWING.pdf`.
+- **Threads / tapped holes: Yes** — specify `4× M2×0.4 tapped through, from the back face`. (M2 is a standard thread, so their non-standard-thread disclaimer does not apply.)
+- **Inserts: No.**
+- **Tolerance: Tighter tolerances required** → select **C1–C3** from the drawing. **C1** (cavity depth 1.85 +0.10/−0) is the non-negotiable one — under it, the floor presses on U2. C2 (flatness 0.05) and C3 (true position 0.10) are the two to negotiate if the surcharge is steep. Do **not** leave this on "No tighter tolerances," or they build to ISO 2768 and ignore the critical-dims table.
+- **Surface finish: Bead blasting** (matte, uniform on the visible back face) — not Brushed. Read the discrepancy warning before submitting.
+- **Surface roughness:** 250 µin / 6.3 µm Ra (default; the blast texture dominates anyway).
+- **Finished appearance: Standard** for the first article. Premium only on the proven production run — asking for "no obvious flaws" on a 0.50 mm floor invites rejection.
+- **Inspection: Standard Inspection with Formal Report** (2D drawing already supplied; you want the measured cavity depth and floor thickness back). CMM-with-report if you also want flatness and hole position verified.
+- **Part marking:** none (the reflector groove is in the STEP; rear branding is a later step).
+- **Product description:** DIY / Demonstration model.
+
+Paste into **Other special request**:
+
+```
+- Cavity floor is 0.55 mm; thinnest section 0.50 mm under a 0.05 mm reflector
+  groove on the cavity floor. Please advise the minimum titanium floor you can
+  reliably hold for this ~48 x 86 mm pocket given the internal ribs; we will
+  re-issue the STEP to your minimum.
+- 4x M2 x 0.4 tapped through-holes, tapped from the back face.
+- Break all sharp edges ~0.1 mm (titanium).
+- Reflector groove (0.25 x 0.05 mm) may be machined as modeled or laser-marked;
+  if cutting the 0.05 groove risks the thin floor, laser-mark the outline instead
+  and leave the floor 0.55 mm full.
+```
+
+Expect the instant price to move: the thin floor plus the tighter-tolerance flags route this to manual engineering review, which is where the floor answer comes from. That answer is the gate before trusting the assembly.
+
+---
+
 ## CNC fabrication notes / drawing callouts
 
 ### Title / process
