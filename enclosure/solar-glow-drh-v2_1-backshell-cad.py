@@ -20,9 +20,9 @@ against datasheet heights + plate mechanics. Findings that drove the numbers bel
   * FIX = stiffen the floor with continuous RIBS in the empty cap-gap corridors (the SC1|SC2 and
     SC3|SC4 channels, x 24.9-25.9, on bare laminate, no pads/vias). With the ribs + the 2 window
     braces the worst span drops to ~11.6 mm. At 0.45 the cap gap already cleared 50 N, but the U2
-    0.10 mm gap was tight under a hard point press; the PRODUCTION floor is 0.55 mm (0.50 under the
-    reflector ring) so U2 also clears 50 N -- thin by design, with the thinnest section sitting at
-    the bare-minimum metal wall (~0.5 mm).
+    0.10 mm gap was tight under a hard point press; the PRODUCTION floor is a UNIFORM 0.55 mm so U2
+    also clears 50 N. There is NO thinned section: the reflector frame is LASER-MARKED on the cavity
+    floor, not cut, so the floor stays 0.55 mm everywhere.
   * Kapton DROPPED: every metal contact (lip in the pad-free rim band, 4 braces, 2 ribs) sits on
     bare laminate -- verified against the PCB -- so the blanket is unnecessary. (Keep a die-cut
     Kapton strip only if a via audit on the rib lines later finds an untented via.)
@@ -88,13 +88,14 @@ pilot_r    = 0.80                  # M2 tap-drill hole, CLEAN THROUGH. Boss is T
 SCREW_LEN  = 3.0                   # under-head length (M2x3). Head seats on the PCB front.
 CBORE_D    = 3.0                   # back spotface dia at each hole; depth auto-set so the M2x3 tip is flush.
 
-# glow-window reflector registration frame (on the cavity FLOOR): a hairline groove marking where the
-# Al reflector strip is placed -- behind the monogram window, facing the reverse-mount LEDs -- so stray
-# back-emission bounces forward through the FR4 letters and lifts the glow. Just a placement guide +
-# an intentional-design tell; cosmetic depth. GLOW_WIN is the monogram footprint from the committed PCB.
+# glow-window reflector registration frame (on the cavity FLOOR): a LASER-MARKED outline showing where
+# the Al reflector strip is placed -- behind the monogram window, facing the reverse-mount LEDs -- so
+# stray back-emission bounces forward through the FR4 letters and lifts the glow. Marked, NOT cut: the
+# floor stays a uniform 0.55 mm (no thinned section), and the modest reflector gain costs no metal.
+# GLOW_WIN is the monogram footprint from the committed PCB.
 GLOW_WIN   = (14.95, 40.8, 35.85, 47.0)   # board coords (x0,y0,x1,y1); 20.9 x 6.2 mm, centered (25.4,43.9)
-MARK_W     = 0.25                  # frame groove width (in-plane), hairline -- engrave with a fine bit
-MARK_DEPTH = 0.05                  # groove depth into the floor; barely there, leaves 0.40 mm of floor
+MARK_W     = 0.25                  # frame outline width (in-plane), hairline -- laser-marked, no material removed
+MARK_DEPTH = 0.00                  # 0 = laser mark (no cut). >0 would engrave a groove (thins the floor); kept off.
 
 # round-tool relief: a spinning end mill cannot cut a sharp INTERNAL (concave) corner -- it always
 # leaves its own radius. Convex features (the bosses, brace posts, rib ends) are fine; the tool just
@@ -162,7 +163,7 @@ def _poly_solid(poly, z0, dz):
     return cq.Workplane("XY").workplane(offset=z0).polyline(xy).close().extrude(dz)
 
 # ===== build =====
-def build(floor=0.55, wall_th=1.0, border_h=0.10, ribs=True, prog_window=False, glow_marker=True):
+def build(floor=0.55, wall_th=1.0, border_h=0.15, ribs=True, prog_window=False, glow_marker=True):
     bb = floor + cavity                       # board-back / boss-top / lip-top / rib-top plane
     wt = bb + board_th
     outW, outH, outR = cavW + 2*wall_th, cavH + 2*wall_th, cavR + wall_th
@@ -236,9 +237,10 @@ def build(floor=0.55, wall_th=1.0, border_h=0.10, ribs=True, prog_window=False, 
     if prog_window:
         res = res.cut(cq.Workplane("XY").workplane(offset=-border_h - 0.1)
                         .moveTo(wx(13.3), wy(16.9)).circle(5.5).extrude(floor + border_h + 0.2))
-    # glow-window reflector frame: hairline groove in the cavity floor (behind the monogram window) to
-    # locate the Al reflector strip. Frame band sits on the window outline; MARK_DEPTH into the floor.
-    if glow_marker:
+    # glow-window reflector frame: a LASER-MARKED outline on the cavity floor (behind the monogram
+    # window) locating the Al reflector strip. Marked, not cut -> the floor stays uniform `floor` mm.
+    # Only engrave a real groove if MARK_DEPTH is set > 0 (off by default; it would thin the floor).
+    if glow_marker and MARK_DEPTH > 0:
         gx0, gy0, gx1, gy1 = GLOW_WIN
         cx, cy = (gx0 + gx1) / 2, (gy0 + gy1) / 2
         ow, oh = (gx1 - gx0) + MARK_W, (gy1 - gy0) + MARK_W      # outer frame size
@@ -267,7 +269,7 @@ OUT = "/mnt/user-data/outputs/"
 B = "solar-glow-drh-v2_1-backshell"
 jobs = [
     # name                 floor wall  border ribs  prog   note
-    ("Ti-max",             0.55, 1.00, 0.15, True,  False, "RECOMMENDED: 0.55 floor (0.50 min under reflector ring) + cap-gap ribs + 1.0 walls"),
+    ("Ti-max",             0.55, 1.00, 0.15, True,  False, "RECOMMENDED: uniform 0.55 floor (reflector frame laser-marked, not cut) + cap-gap ribs + 1.0 walls"),
     ("Ti-max-progwindow",  0.55, 1.00, 0.15, True,  True,  "Ti-max + TC2030 re-flash window"),
 ]
 # Ti-conservative (0.60 floor / 1.60 wall) struck: if the shop cannot hold the 0.55 floor we
@@ -275,7 +277,7 @@ jobs = [
 print(f"cavity={cavity} (U2 {U2_H} + air {cav_margin}; kapton {kapton_th})  lip/frame={lip_w}  "
       f"braces={len(BRACE)} ribs={len(RIBS)}  border=0.15  "
       f"cavity tool R{TOOL_R} (Ø{2*TOOL_R}) / back tool R{BACK_TOOL_R} (Ø{2*BACK_TOOL_R})  "
-      f"deburr: outer rim {edge_ease}, ends {EDGE_BREAK}  reflector-frame {GLOW_WIN[2]-GLOW_WIN[0]:.1f}x{GLOW_WIN[3]-GLOW_WIN[1]:.1f}@{MARK_DEPTH}deep  "
+      f"deburr: outer rim {edge_ease}, ends {EDGE_BREAK}  reflector-frame {GLOW_WIN[2]-GLOW_WIN[0]:.1f}x{GLOW_WIN[3]-GLOW_WIN[1]:.1f} laser-marked (uniform floor)  "
       f"relief: cavity={len(_relief_for(_cavity_islands(True)))} back={len(_relief_for(_back_islands(), BACK_TOOL_R))}")
 for name_suf, fl, wl, bd, rb, pw, note in jobs:
     solid = build(floor=fl, wall_th=wl, border_h=bd, ribs=rb, prog_window=pw)
