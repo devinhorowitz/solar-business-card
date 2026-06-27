@@ -86,6 +86,14 @@ pilot_r    = 0.80                  # M2 tap-drill hole, CLEAN THROUGH. Boss is T
 SCREW_LEN  = 3.0                   # under-head length (M2x3). Head seats on the PCB front.
 CBORE_D    = 3.0                   # back spotface dia at each hole; depth auto-set so the M2x3 tip is flush.
 
+# glow-window reflector registration frame (on the cavity FLOOR): a hairline groove marking where the
+# Al reflector strip is placed -- behind the monogram window, facing the reverse-mount LEDs -- so stray
+# back-emission bounces forward through the FR4 letters and lifts the glow. Just a placement guide +
+# an intentional-design tell; cosmetic depth. GLOW_WIN is the monogram footprint from the committed PCB.
+GLOW_WIN   = (14.95, 40.8, 35.85, 47.0)   # board coords (x0,y0,x1,y1); 20.9 x 6.2 mm, centered (25.4,43.9)
+MARK_W     = 0.25                  # frame groove width (in-plane), hairline -- engrave with a fine bit
+MARK_DEPTH = 0.05                  # groove depth into the floor; barely there, leaves 0.40 mm of floor
+
 # round-tool relief: a spinning end mill cannot cut a sharp INTERNAL (concave) corner -- it always
 # leaves its own radius. Convex features (the bosses, brace posts, rib ends) are fine; the tool just
 # rides around them. The only un-machinable spots are the concave junctions where the bosses and the
@@ -152,7 +160,7 @@ def _poly_solid(poly, z0, dz):
     return cq.Workplane("XY").workplane(offset=z0).polyline(xy).close().extrude(dz)
 
 # ===== build =====
-def build(floor=0.45, wall_th=1.0, border_h=0.10, ribs=True, prog_window=False):
+def build(floor=0.45, wall_th=1.0, border_h=0.10, ribs=True, prog_window=False, glow_marker=True):
     bb = floor + cavity                       # board-back / boss-top / lip-top / rib-top plane
     wt = bb + board_th
     outW, outH, outR = cavW + 2*wall_th, cavH + 2*wall_th, cavR + wall_th
@@ -226,6 +234,18 @@ def build(floor=0.45, wall_th=1.0, border_h=0.10, ribs=True, prog_window=False):
     if prog_window:
         res = res.cut(cq.Workplane("XY").workplane(offset=-border_h - 0.1)
                         .moveTo(wx(13.3), wy(16.9)).circle(5.5).extrude(floor + border_h + 0.2))
+    # glow-window reflector frame: hairline groove in the cavity floor (behind the monogram window) to
+    # locate the Al reflector strip. Frame band sits on the window outline; MARK_DEPTH into the floor.
+    if glow_marker:
+        gx0, gy0, gx1, gy1 = GLOW_WIN
+        cx, cy = (gx0 + gx1) / 2, (gy0 + gy1) / 2
+        ow, oh = (gx1 - gx0) + MARK_W, (gy1 - gy0) + MARK_W      # outer frame size
+        iwd, ihd = (gx1 - gx0) - MARK_W, (gy1 - gy0) - MARK_W    # inner (window minus band)
+        outer = (cq.Workplane("XY").workplane(offset=floor - MARK_DEPTH)
+                   .moveTo(wx(cx), wy(cy)).rect(ow, oh).extrude(MARK_DEPTH + 0.02))
+        inner = (cq.Workplane("XY").workplane(offset=floor - MARK_DEPTH - 0.01)
+                   .moveTo(wx(cx), wy(cy)).rect(iwd, ihd).extrude(MARK_DEPTH + 0.04))
+        res = res.cut(outer.cut(inner))
     # Ti deburr edge-break (last): break the exposed END-FACE edges so no corner is knife-sharp.
     #   faces('<Z') = the proud back frame + annuli top (incl. the spotface mouths)
     #   faces('>Z') = the front rim + the board-recess mouth
@@ -252,7 +272,7 @@ jobs = [
 print(f"cavity={cavity} (U2 {U2_H} + air {cav_margin}; kapton {kapton_th})  lip/frame={lip_w}  "
       f"braces={len(BRACE)} ribs={len(RIBS)}  border=0.15  "
       f"cavity tool R{TOOL_R} (Ø{2*TOOL_R}) / back tool R{BACK_TOOL_R} (Ø{2*BACK_TOOL_R})  "
-      f"deburr: outer rim {edge_ease}, ends {EDGE_BREAK}  "
+      f"deburr: outer rim {edge_ease}, ends {EDGE_BREAK}  reflector-frame {GLOW_WIN[2]-GLOW_WIN[0]:.1f}x{GLOW_WIN[3]-GLOW_WIN[1]:.1f}@{MARK_DEPTH}deep  "
       f"relief: cavity={len(_relief_for(_cavity_islands(True)))} back={len(_relief_for(_back_islands(), BACK_TOOL_R))}")
 for name_suf, fl, wl, bd, rb, pw, note in jobs:
     solid = build(floor=fl, wall_th=wl, border_h=bd, ribs=rb, prog_window=pw)
