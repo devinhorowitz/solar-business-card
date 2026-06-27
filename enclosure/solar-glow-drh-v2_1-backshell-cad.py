@@ -64,8 +64,12 @@ pilot_r    = 0.80                  # M2 thread-forming hole, CLEAN THROUGH
 # window braces: E + W flank the optical-window keepout (between side lip and window edge).
 # NE(35,37) + SW(19.2,50.9) were REDUNDANT once the ribs went in (worst span 11.6 either way) -> removed.
 BRACE = [(39.5,40.0,1.0),(13.6,40.1,1.0)]   # E, W
-# cap-gap stiffening ribs (in the empty SC1|SC2 and SC3|SC4 corridors; clear the optical band):
-RIBS  = [(24.6, 2.5, 26.2, 33.0), (24.6, 56.0, 26.2, 86.4)]   # (x0,y0,x1,y1)
+# cap-gap stiffening ribs: 1.0 mm wide in the SC1|SC2 / SC3|SC4 corridors (gap x24.0-26.8), giving
+# 0.9 mm clearance EACH SIDE to the nominal cap edges (hand-placement tolerance; was 0.6). Run into
+# the perimeter lip top+bottom so each rib is a SPUR off the lip (continuous pocket boundary, not a
+# free-standing island) -> one roughing + boundary finish, no island plunging, and the lip tie
+# stiffens the narrower wall so the span is unchanged. (Drop width to 0.8 for 1.0 mm/side if needed.)
+RIBS  = [(24.9, 0.0, 25.9, 33.0), (24.9, 56.0, 25.9, 88.9)]   # (x0,y0,x1,y1)  1.0 wide, lip-tied
 
 wx = lambda x: x - W/2
 wy = lambda y: y - H/2
