@@ -5,6 +5,12 @@ edge and is held by four corner M2 screws; the populated back of the board drops
 machined cavity while the bare show-front (two solar cells + the backlit DRH monogram
 window) stays exposed. Retention is the four screws clamping, not a press fit.
 
+## Views
+
+![Ti-max back-shell multiview: back face, cavity, plans, edge profile, corner boss](../docs/enclosure-views.png)
+
+*Design render of the Ti-max model (0.55 mm floor). Not yet fabricated or fit-checked against a real board.*
+
 ## Files
 
 | File | Purpose |
