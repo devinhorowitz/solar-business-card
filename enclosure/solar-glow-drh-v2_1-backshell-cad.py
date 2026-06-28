@@ -10,17 +10,17 @@ TITANIUM LIMIT-PUSH (this revision). Final part is Ti-6Al-4V; the audit re-deriv
 against datasheet heights + plate mechanics. Findings that drove the numbers below:
 
   * Cavity is PART-limited, not a lever: U2 (SOIC-8, datasheet max 1.75) and the WS17 caps (1.70,
-    locked) set it. Cavity 1.85 = 1.75 + 0.10 air. Cannot shrink without shorter parts.
+    locked) set it. Cavity 1.90 = 1.75 + 0.15 air. Cannot shrink without shorter parts.
   * The floor is the lever, and Ti YIELD is never the limit -- a 0.2 mm Ti floor stays sub-yield
     even at a hard 50 N press. The binding limit is the floor DEFLECTING into the parts (air gap
-    0.10 mm to U2, 0.15 mm to the caps).
+    0.15 mm to U2, 0.20 mm to the caps).
   * The old lip-only-plus-window-braces left a 19.5 mm-radius UNSUPPORTED floor disk over the cap
     regions; at that span a 0.6 mm floor already TOUCHES a cap at 50 N (needs 0.62). So the prior
     floor was marginal.
   * FIX = stiffen the floor with continuous RIBS in the empty cap-gap corridors (the SC1|SC2 and
     SC3|SC4 channels, x 24.9-25.9, on bare laminate, no pads/vias). With the ribs + the 2 window
     braces the worst span drops to ~11.6 mm. At 0.45 the cap gap already cleared 50 N, but the U2
-    0.10 mm gap was tight under a hard point press; the PRODUCTION floor is a UNIFORM 0.55 mm so U2
+    gap was tight under a hard point press; the PRODUCTION floor is a UNIFORM 0.55 mm so U2
     also clears 50 N. There is NO thinned section: the reflector frame is LASER-MARKED on the cavity
     floor, not cut, so the floor stays 0.55 mm everywhere.
   * Kapton DROPPED: every metal contact (lip in the pad-free rim band, 4 braces, 2 ribs) sits on
@@ -29,7 +29,7 @@ against datasheet heights + plate mechanics. Findings that drove the numbers bel
   * Walls 1.6 -> 1.0 mm: Ti is plenty strong for a press-fit rim on a 0.8 mm FR4 edge; shrinks the
     footprint from 53.9 to 52.8 mm (closer to the 50.8 card).
 
-  Ti-max stack: floor 0.55 + cavity 1.85 + board 0.80 = 3.20 mm field (3.35 at the back frame, with
+  Ti-max stack: floor 0.55 + cavity 1.90 + board 0.80 = 3.25 mm field (3.40 at the back frame, with
   the 0.15 mm border). M2 thread is screw-limited, not Ti-limited (~2.2 mm of engagement).
 
 BACK FACE = metal rubbing of the interior: 4 screw posts drilled CLEAN THROUGH, a raised frame that
@@ -72,8 +72,8 @@ mounts = [(3.5, 3.0), (47.3, 3.0), (3.5, 85.9), (47.3, 85.9)]      # 4x M2, GND,
 # ===== fixed shell knobs =====
 U2_H       = 1.75                  # tallest back part (SOIC-8 max, datasheet) -> sets the cavity
 kapton_th  = 0.00                  # DROPPED (all contacts on bare laminate). set 0.05 to reinstate.
-cav_margin = 0.10                  # air over the tallest part
-cavity     = round(U2_H + kapton_th + cav_margin, 3)   # 1.85
+cav_margin = 0.15                  # air over the tallest part (U2). cavity 1.90 = nominal; +-0.05 -> 1.85 min = U2 gap floor 0.10
+cavity     = round(U2_H + kapton_th + cav_margin, 3)   # 1.90  (toleranced 1.90 +-0.05 on the drawing = range 1.85..1.95)
 
 edge_fit   = -0.05                 # press interference on the FLATS
 corner_clr = 0.15                  # corner relief so the press grips the flats
@@ -106,7 +106,7 @@ MARK_DEPTH = 0.00                  # 0 = laser mark (no cut). >0 would engrave a
 # smaller than the cutter. R1.0 = Ø2.0 mm finisher; the cavity inner corners (ir=1.45) already clear
 # it. Shop roughs the open pocket with a Ø3-4 mm tool and finishes corners/walls with the Ø2.0.
 TOOL_R     = 1.00
-# the BACK field is only 0.15 mm deep, so it gets finished with a smaller cutter than the 1.85 mm
+# the BACK field is only 0.15 mm deep, so it gets finished with a smaller cutter than the 1.90 mm
 # cavity. A finer tool radius tightens the (cosmetic) annulus-frame junction relief on the art face.
 # R0.5 = Ø1.0 mm finisher. (Drop to 0.25 for a Ø0.5 cutter if crisper corners are wanted.)
 BACK_TOOL_R = 0.50
