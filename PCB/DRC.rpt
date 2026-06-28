@@ -1,0 +1,1397 @@
+** Drc report for solar-glow-drh-v2_2.kicad_pcb **
+** Created on 2026-06-28T16:10:25 **
+** Report includes: Errors, Warnings **
+
+** Found 346 DRC violations **
+[clearance]: Clearance violation ( clearance 0.2000 mm; actual 0.1500 mm)
+    Local override; error
+    @(9.6065 mm, 46.4260 mm): Track [SDA] on B.Cu, length 0.8824 mm
+    @(10.4500 mm, 46.5200 mm): Via [GND] on F.Cu - B.Cu
+[clearance]: Clearance violation ( clearance 0.2000 mm; actual 0.1370 mm)
+    Local override; error
+    @(31.1000 mm, 38.9000 mm): Via [GND] on F.Cu - B.Cu
+    @(31.7900 mm, 38.5000 mm): Pad 1 [LA] of C9 on B.Cu
+[shorting_items]: Items shorting two nets (nets LB and LA)
+    Local override; error
+    @(37.9400 mm, 32.3000 mm): Track [LB] on In3.Cu, length 24.0000 mm
+    @(37.9400 mm, 32.9000 mm): Via [LA] on F.Cu - B.Cu
+[clearance]: Clearance violation ( clearance 0.2000 mm; actual 0.1500 mm)
+    Local override; error
+    @(10.4500 mm, 46.5200 mm): Via [GND] on F.Cu - B.Cu
+    @(10.6695 mm, 47.0500 mm): Track [SDA] on B.Cu, length 1.8816 mm
+[clearance]: Clearance violation ( clearance 0.2000 mm; actual 0.0493 mm)
+    Local override; error
+    @(47.8400 mm, 32.6000 mm): Track [LB] on In3.Cu, length 9.6000 mm
+    @(37.9400 mm, 32.9000 mm): Via [LA] on F.Cu - B.Cu
+[shorting_items]: Items shorting two nets (nets LA and LB)
+    Local override; error
+    @(37.9400 mm, 32.9000 mm): Via [LA] on F.Cu - B.Cu
+    @(38.2400 mm, 32.6000 mm): Track [LB] on In3.Cu, length 0.4243 mm
+[shorting_items]: Items shorting two nets (nets unconnected-(U5-VOUT-Pad7) and LB)
+    Local override; error
+    @(35.0500 mm, 33.3000 mm): Pad 7 [unconnected-(U5-VOUT-Pad7)] of U5 on B.Cu
+    @(35.4500 mm, 33.0500 mm): Via [LB] on F.Cu - B.Cu
+[shorting_items]: Items shorting two nets (nets LB and LA)
+    Local override; error
+    @(37.6400 mm, 32.0000 mm): Track [LB] on In3.Cu, length 24.6000 mm
+    @(37.9400 mm, 32.9000 mm): Via [LA] on F.Cu - B.Cu
+[clearance]: Clearance violation ( clearance 0.2000 mm; actual 0.0285 mm)
+    Local override; error
+    @(9.6065 mm, 44.9500 mm): Track [SDA] on B.Cu, length 1.4760 mm
+    @(10.0100 mm, 45.5000 mm): Pad 2 [GND] of C1 on B.Cu
+[shorting_items]: Items shorting two nets (nets unconnected-(U5-VOUT-Pad7) and LB)
+    Local override; error
+    @(35.0500 mm, 33.3000 mm): Pad 7 [unconnected-(U5-VOUT-Pad7)] of U5 on B.Cu
+    @(35.4500 mm, 33.0500 mm): Track [LB] on B.Cu, length 0.9341 mm
+[shorting_items]: Items shorting two nets (nets LA and LB)
+    Local override; error
+    @(35.4000 mm, 32.0500 mm): Track [LA] on B.Cu, length 2.1401 mm
+    @(34.5500 mm, 33.3000 mm): Pad 8 [LB] of U5 on B.Cu
+[clearance]: Clearance violation ( clearance 0.2000 mm; actual 0.1627 mm)
+    Local override; error
+    @(9.1000 mm, 38.9000 mm): Track [LDRV1] on B.Cu, length 1.3153 mm
+    @(9.5000 mm, 38.9000 mm): Pad 25 [GND] of U1 on B.Cu
+[clearance]: Clearance violation ( clearance 0.2000 mm; actual 0.1627 mm)
+    Local override; error
+    @(10.7000 mm, 38.9000 mm): Pad 22 [unconnected-(U1-PF6/RST-Pad22)] of U1 on B.Cu
+    @(10.3000 mm, 38.9000 mm): Track [UPDI] on B.Cu, length 1.3153 mm
+[clearance]: Clearance violation ( clearance 0.2000 mm; actual 0.1900 mm)
+    Local override; error
+    @(9.0000 mm, 36.0000 mm): Track [UPDI] on In3.Cu, length 4.3000 mm
+    @(7.6300 mm, 36.6000 mm): Via [VS] on F.Cu - B.Cu
+[clearance]: Clearance violation ( clearance 0.2000 mm; actual 0.1500 mm)
+    Local override; error
+    @(9.1565 mm, 44.5000 mm): Track [SDA] on B.Cu, length 0.6364 mm
+    @(8.7000 mm, 43.6051 mm): Track [SCL] on B.Cu, length 1.5060 mm
+[clearance]: Clearance violation ( clearance 0.2000 mm; actual 0.1500 mm)
+    Local override; error
+    @(9.7649 mm, 44.6700 mm): Track [SCL] on B.Cu, length 1.2048 mm
+    @(9.1565 mm, 44.5000 mm): Track [SDA] on B.Cu, length 0.6364 mm
+[clearance]: Clearance violation ( clearance 0.2000 mm; actual 0.1912 mm)
+    Local override; error
+    @(18.7000 mm, 36.5000 mm): Via [SCL] on F.Cu - B.Cu
+    @(19.2500 mm, 36.1500 mm): Pad 2 [VS] of U3 on B.Cu
+[clearance]: Clearance violation ( clearance 0.2000 mm; actual 0.1500 mm)
+    Local override; error
+    @(9.8933 mm, 44.3600 mm): Track [VDDIO2] on B.Cu, length 0.9480 mm
+    @(10.9697 mm, 44.6700 mm): Track [SCL] on B.Cu, length 0.9475 mm
+[clearance]: Clearance violation ( clearance 0.2000 mm; actual 0.1613 mm)
+    Local override; error
+    @(6.0500 mm, 42.5000 mm): Via [BTN] on F.Cu - B.Cu
+    @(7.0000 mm, 41.7000 mm): Track [PC0] on B.Cu, length 2.1190 mm
+[clearance]: Clearance violation ( clearance 0.2000 mm; actual 0.1500 mm)
+    Local override; error
+    @(11.6397 mm, 44.0000 mm): Track [SCL] on B.Cu, length 0.8603 mm
+    @(10.8413 mm, 44.3600 mm): Track [VDDIO2] on B.Cu, length 1.1455 mm
+[clearance]: Clearance violation ( clearance 0.2000 mm; actual 0.1700 mm)
+    Local override; error
+    @(6.0500 mm, 42.5000 mm): Track [BTN] on In2.Cu, length 14.5000 mm
+    @(6.6300 mm, 54.9000 mm): Via [PC1] on F.Cu - B.Cu
+[clearance]: Clearance violation ( clearance 0.2000 mm; actual 0.1707 mm)
+    Local override; error
+    @(7.5000 mm, 40.5000 mm): Track [BTN] on B.Cu, length 1.5133 mm
+    @(7.5000 mm, 40.9000 mm): Pad 4 [FD] of U1 on B.Cu
+[clearance]: Clearance violation ( clearance 0.2000 mm; actual 0.1700 mm)
+    Local override; error
+    @(12.5000 mm, 44.0000 mm): Via [SCL] on F.Cu - B.Cu
+    @(11.6513 mm, 43.5500 mm): Track [VDDIO2] on B.Cu, length 2.5487 mm
+[clearance]: Clearance violation ( clearance 0.2000 mm; actual 0.1500 mm)
+    Local override; error
+    @(9.8933 mm, 44.3600 mm): Track [VDDIO2] on B.Cu, length 0.9480 mm
+    @(10.5000 mm, 43.8300 mm): Via [VSENSE] on F.Cu - B.Cu
+[clearance]: Clearance violation ( clearance 0.2000 mm; actual 0.1950 mm)
+    Local override; error
+    @(14.2000 mm, 43.5500 mm): Track [VDDIO2] on B.Cu, length 3.9500 mm
+    @(14.8000 mm, 44.3000 mm): Pad A [ANODE] of D2 on B.Cu
+[clearance]: Clearance violation ( clearance 0.2000 mm; actual 0.1929 mm)
+    Local override; error
+    @(12.0000 mm, 43.9464 mm): Track [SDA] on In3.Cu, length 1.5267 mm
+    @(12.5000 mm, 44.0000 mm): Via [SCL] on F.Cu - B.Cu
+[clearance]: Clearance violation ( clearance 0.2000 mm; actual 0.1900 mm)
+    Local override; error
+    @(12.5000 mm, 44.0000 mm): Via [SCL] on F.Cu - B.Cu
+    @(12.0000 mm, 44.5000 mm): Track [SDA] on In3.Cu, length 0.5536 mm
+[clearance]: Clearance violation ( clearance 0.2000 mm; actual 0.1500 mm)
+    Local override; error
+    @(10.2305 mm, 47.0500 mm): Track [SDA] on B.Cu, length 0.4391 mm
+    @(10.4500 mm, 46.5200 mm): Via [GND] on F.Cu - B.Cu
+[clearance]: Clearance violation ( clearance 0.2000 mm; actual 0.1350 mm)
+    Local override; error
+    @(16.9500 mm, 34.9600 mm): Track [VS] on B.Cu, length 0.9200 mm
+    @(15.4900 mm, 34.9600 mm): Pad 1 [SCL] of R11 on B.Cu
+[shorting_items]: Items shorting two nets (nets VS and SCL)
+    Local override; error
+    @(16.0300 mm, 34.9600 mm): Via [VS] on F.Cu - B.Cu
+    @(15.4900 mm, 34.9600 mm): Pad 1 [SCL] of R11 on B.Cu
+[clearance]: Clearance violation ( clearance 0.2000 mm; actual 0.1801 mm)
+    Local override; error
+    @(9.9000 mm, 38.3000 mm): Via [VS] on F.Cu - B.Cu
+    @(10.3000 mm, 38.9000 mm): Pad 23 [UPDI] of U1 on B.Cu
+[clearance]: Clearance violation ( clearance 0.2000 mm; actual 0.0250 mm)
+    Local override; error
+    @(24.9000 mm, 36.3650 mm): Pad 2 [VS] of U2 on B.Cu
+    @(23.8000 mm, 36.4000 mm): Via [GND] on F.Cu - B.Cu
+[clearance]: Clearance violation ( clearance 0.2000 mm; actual 0.1784 mm)
+    Local override; error
+    @(24.9000 mm, 37.6350 mm): Pad 3 [VS] of U2 on B.Cu
+    @(23.6500 mm, 37.4200 mm): Via [GND] on F.Cu - B.Cu
+[clearance]: Clearance violation ( clearance 0.2000 mm; actual 0.1500 mm)
+    Local override; error
+    @(23.1000 mm, 48.6000 mm): Pad 1 [VS] of SW2 on B.Cu
+    @(24.0000 mm, 48.6000 mm): Pad 2 [ANODE] of SW2 on B.Cu
+[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.1750 mm)
+    Rule: board setup constraints hole; error
+    @(24.9000 mm, 36.3650 mm): Pad 2 [VS] of U2 on B.Cu
+    @(23.8000 mm, 36.4000 mm): Via [GND] on F.Cu - B.Cu
+[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.0950 mm)
+    Rule: board setup constraints hole; error
+    @(15.4900 mm, 34.9600 mm): Pad 1 [SCL] of R11 on B.Cu
+    @(16.0300 mm, 34.9600 mm): Via [VS] on F.Cu - B.Cu
+[clearance]: Clearance violation ( clearance 0.2000 mm; actual 0.1500 mm)
+    Local override; error
+    @(24.9000 mm, 48.6000 mm): Pad 3 [TINY] of SW2 on B.Cu
+    @(24.0000 mm, 48.6000 mm): Pad 2 [ANODE] of SW2 on B.Cu
+[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2500 mm; actual 0.1433 mm)
+    Rule: board setup constraints hole; error
+    @(35.0500 mm, 33.3000 mm): Pad 7 [unconnected-(U5-VOUT-Pad7)] of U5 on B.Cu
+    @(35.4500 mm, 33.0500 mm): Via [LB] on F.Cu - B.Cu
+[drill_out_of_range]: Hole size out of range (board setup constraints min hole 0.3000 mm; actual 0.2000 mm)
+    Rule: netclass 'Default'; error
+    @(25.9000 mm, 38.9000 mm): Via [MID] on F.Cu - B.Cu
+[drill_out_of_range]: Hole size out of range (board setup constraints min hole 0.3000 mm; actual 0.2000 mm)
+    Rule: netclass 'Default'; error
+    @(31.1000 mm, 37.6300 mm): Via [MID] on F.Cu - B.Cu
+[drill_out_of_range]: Hole size out of range (board setup constraints min hole 0.3000 mm; actual 0.2000 mm)
+    Rule: netclass 'Default'; error
+    @(9.9000 mm, 38.3000 mm): Via [VS] on F.Cu - B.Cu
+[drill_out_of_range]: Hole size out of range (board setup constraints min hole 0.3000 mm; actual 0.2000 mm)
+    Rule: netclass 'Default'; error
+    @(13.0000 mm, 43.0000 mm): Via [VS] on F.Cu - B.Cu
+[drill_out_of_range]: Hole size out of range (board setup constraints min hole 0.3000 mm; actual 0.2000 mm)
+    Rule: netclass 'Default'; error
+    @(8.7000 mm, 38.0000 mm): Via [LDRV2] on F.Cu - B.Cu
+[drill_out_of_range]: Hole size out of range (board setup constraints min hole 0.3000 mm; actual 0.2000 mm)
+    Rule: netclass 'Default'; error
+    @(12.0000 mm, 44.5000 mm): Via [SDA] on F.Cu - B.Cu
+[drill_out_of_range]: Hole size out of range (board setup constraints min hole 0.3000 mm; actual 0.2000 mm)
+    Rule: netclass 'Default'; error
+    @(6.8000 mm, 39.3000 mm): Via [LDRV4] on F.Cu - B.Cu
+[drill_out_of_range]: Hole size out of range (board setup constraints min hole 0.3000 mm; actual 0.2000 mm)
+    Rule: netclass 'Default'; error
+    @(6.0000 mm, 40.1000 mm): Via [PA4] on F.Cu - B.Cu
+[drill_out_of_range]: Hole size out of range (board setup constraints min hole 0.3000 mm; actual 0.2000 mm)
+    Rule: netclass 'Default'; error
+    @(6.0000 mm, 40.7000 mm): Via [BTN] on F.Cu - B.Cu
+[drill_out_of_range]: Hole size out of range (board setup constraints min hole 0.3000 mm; actual 0.2000 mm)
+    Rule: netclass 'Default'; error
+    @(6.0500 mm, 42.5000 mm): Via [BTN] on F.Cu - B.Cu
+[drill_out_of_range]: Hole size out of range (board setup constraints min hole 0.3000 mm; actual 0.2000 mm)
+    Rule: netclass 'Default'; error
+    @(5.0000 mm, 42.4000 mm): Via [PC0] on F.Cu - B.Cu
+[drill_out_of_range]: Hole size out of range (board setup constraints min hole 0.3000 mm; actual 0.2000 mm)
+    Rule: netclass 'Default'; error
+    @(7.3000 mm, 42.8000 mm): Via [PC1] on F.Cu - B.Cu
+[drill_out_of_range]: Hole size out of range (board setup constraints min hole 0.3000 mm; actual 0.2000 mm)
+    Rule: netclass 'Default'; error
+    @(12.5000 mm, 44.0000 mm): Via [SCL] on F.Cu - B.Cu
+[drill_out_of_range]: Hole size out of range (board setup constraints min hole 0.3000 mm; actual 0.2000 mm)
+    Rule: netclass 'Default'; error
+    @(20.7000 mm, 37.6000 mm): Via [INT2] on F.Cu - B.Cu
+[drill_out_of_range]: Hole size out of range (board setup constraints min hole 0.3000 mm; actual 0.2000 mm)
+    Rule: netclass 'Default'; error
+    @(13.5000 mm, 40.2000 mm): Via [INT2] on F.Cu - B.Cu
+[drill_out_of_range]: Hole size out of range (board setup constraints min hole 0.3000 mm; actual 0.2000 mm)
+    Rule: netclass 'Default'; error
+    @(19.4000 mm, 37.6000 mm): Via [INT1] on F.Cu - B.Cu
+[drill_out_of_range]: Hole size out of range (board setup constraints min hole 0.3000 mm; actual 0.2000 mm)
+    Rule: netclass 'Default'; error
+    @(13.3000 mm, 39.6000 mm): Via [INT1] on F.Cu - B.Cu
+[drill_out_of_range]: Hole size out of range (board setup constraints min hole 0.3000 mm; actual 0.2000 mm)
+    Rule: netclass 'Default'; error
+    @(10.5000 mm, 37.6000 mm): Via [UPDI] on F.Cu - B.Cu
+[drill_out_of_range]: Hole size out of range (board setup constraints min hole 0.3000 mm; actual 0.2000 mm)
+    Rule: netclass 'Default'; error
+    @(9.3000 mm, 37.6000 mm): Via [LDRV1] on F.Cu - B.Cu
+[drill_out_of_range]: Hole size out of range (board setup constraints min hole 0.3000 mm; actual 0.2000 mm)
+    Rule: netclass 'Default'; error
+    @(8.0000 mm, 37.7000 mm): Via [LDRV3] on F.Cu - B.Cu
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1600 mm)
+    Rule: netclass 'Default'; error
+    @(11.5000 mm, 40.5000 mm): Track [GND] on B.Cu, length 1.1000 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1600 mm)
+    Rule: netclass 'Default'; error
+    @(9.5000 mm, 38.9000 mm): Track [GND] on B.Cu, length 1.1500 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1600 mm)
+    Rule: netclass 'Default'; error
+    @(12.2000 mm, 40.9000 mm): Track [VS] on B.Cu, length 2.2472 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1600 mm)
+    Rule: netclass 'Default'; error
+    @(11.5000 mm, 40.9000 mm): Track [VS] on B.Cu, length 0.7000 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1600 mm)
+    Rule: netclass 'Default'; error
+    @(9.9000 mm, 38.9000 mm): Track [VS] on B.Cu, length 0.6000 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1600 mm)
+    Rule: netclass 'Default'; error
+    @(8.7000 mm, 38.9000 mm): Track [LDRV2] on B.Cu, length 0.9000 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1600 mm)
+    Rule: netclass 'Default'; error
+    @(12.0000 mm, 45.7195 mm): Track [SDA] on B.Cu, length 1.2195 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1600 mm)
+    Rule: netclass 'Default'; error
+    @(8.3000 mm, 42.9000 mm): Track [SDA] on B.Cu, length 0.1414 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1600 mm)
+    Rule: netclass 'Default'; error
+    @(19.2500 mm, 35.1500 mm): Track [SDA] on B.Cu, length 0.7649 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1600 mm)
+    Rule: netclass 'Default'; error
+    @(13.7000 mm, 32.4200 mm): Track [SDA] on B.Cu, length 1.3501 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1600 mm)
+    Rule: netclass 'Default'; error
+    @(8.2000 mm, 43.0000 mm): Track [SDA] on B.Cu, length 1.4000 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1600 mm)
+    Rule: netclass 'Default'; error
+    @(9.6065 mm, 46.4260 mm): Track [SDA] on B.Cu, length 0.8824 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1600 mm)
+    Rule: netclass 'Default'; error
+    @(8.2000 mm, 44.4000 mm): Track [SDA] on B.Cu, length 0.1414 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1600 mm)
+    Rule: netclass 'Default'; error
+    @(10.2305 mm, 47.0500 mm): Track [SDA] on B.Cu, length 0.4391 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1600 mm)
+    Rule: netclass 'Default'; error
+    @(9.1565 mm, 44.5000 mm): Track [SDA] on B.Cu, length 0.6364 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1600 mm)
+    Rule: netclass 'Default'; error
+    @(9.6065 mm, 44.9500 mm): Track [SDA] on B.Cu, length 1.4760 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1600 mm)
+    Rule: netclass 'Default'; error
+    @(8.3000 mm, 44.5000 mm): Track [SDA] on B.Cu, length 0.8565 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1600 mm)
+    Rule: netclass 'Default'; error
+    @(10.6695 mm, 47.0500 mm): Track [SDA] on B.Cu, length 1.8816 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1600 mm)
+    Rule: netclass 'Default'; error
+    @(6.6500 mm, 51.4000 mm): Track [VSENSE] on B.Cu, length 0.2000 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1600 mm)
+    Rule: netclass 'Default'; error
+    @(6.6500 mm, 50.4000 mm): Track [VSENSE] on B.Cu, length 1.0000 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1600 mm)
+    Rule: netclass 'Default'; error
+    @(6.4500 mm, 51.4000 mm): Track [VSENSE] on B.Cu, length 1.2000 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1600 mm)
+    Rule: netclass 'Default'; error
+    @(6.6500 mm, 50.4000 mm): Track [VSENSE] on B.Cu, length 1.2000 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1600 mm)
+    Rule: netclass 'Default'; error
+    @(9.1000 mm, 42.9000 mm): Track [VDDIO2] on B.Cu, length 0.6667 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1600 mm)
+    Rule: netclass 'Default'; error
+    @(14.2000 mm, 43.5500 mm): Track [VDDIO2] on B.Cu, length 3.9500 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1600 mm)
+    Rule: netclass 'Default'; error
+    @(12.6000 mm, 47.0000 mm): Track [VDDIO2] on B.Cu, length 1.8310 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1600 mm)
+    Rule: netclass 'Default'; error
+    @(9.8933 mm, 44.3600 mm): Track [VDDIO2] on B.Cu, length 0.9480 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1600 mm)
+    Rule: netclass 'Default'; error
+    @(14.2000 mm, 47.5000 mm): Track [VDDIO2] on B.Cu, length 0.9000 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1600 mm)
+    Rule: netclass 'Default'; error
+    @(11.6513 mm, 43.5500 mm): Track [VDDIO2] on B.Cu, length 2.5487 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1600 mm)
+    Rule: netclass 'Default'; error
+    @(13.3000 mm, 47.5000 mm): Track [VDDIO2] on B.Cu, length 0.5500 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1600 mm)
+    Rule: netclass 'Default'; error
+    @(13.3000 mm, 46.9500 mm): Track [VDDIO2] on B.Cu, length 0.7018 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1600 mm)
+    Rule: netclass 'Default'; error
+    @(10.8413 mm, 44.3600 mm): Track [VDDIO2] on B.Cu, length 1.1455 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1600 mm)
+    Rule: netclass 'Default'; error
+    @(9.1000 mm, 43.5667 mm): Track [VDDIO2] on B.Cu, length 1.1219 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1600 mm)
+    Rule: netclass 'Default'; error
+    @(7.5000 mm, 39.7000 mm): Track [LDRV4] on B.Cu, length 0.8062 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1600 mm)
+    Rule: netclass 'Default'; error
+    @(7.5000 mm, 40.1000 mm): Track [PA4] on B.Cu, length 1.5000 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1600 mm)
+    Rule: netclass 'Default'; error
+    @(7.5000 mm, 40.5000 mm): Track [BTN] on B.Cu, length 1.5133 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1600 mm)
+    Rule: netclass 'Default'; error
+    @(7.0000 mm, 41.7000 mm): Track [PC0] on B.Cu, length 2.1190 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1600 mm)
+    Rule: netclass 'Default'; error
+    @(7.5000 mm, 41.7000 mm): Track [PC0] on B.Cu, length 0.5000 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1600 mm)
+    Rule: netclass 'Default'; error
+    @(7.5000 mm, 42.1000 mm): Track [PC1] on B.Cu, length 0.7280 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1600 mm)
+    Rule: netclass 'Default'; error
+    @(9.7649 mm, 44.6700 mm): Track [SCL] on B.Cu, length 1.2048 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1600 mm)
+    Rule: netclass 'Default'; error
+    @(19.2500 mm, 36.6500 mm): Track [SCL] on B.Cu, length 0.5701 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1600 mm)
+    Rule: netclass 'Default'; error
+    @(10.9697 mm, 44.6700 mm): Track [SCL] on B.Cu, length 0.9475 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1600 mm)
+    Rule: netclass 'Default'; error
+    @(11.6397 mm, 44.0000 mm): Track [SCL] on B.Cu, length 0.8603 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1600 mm)
+    Rule: netclass 'Default'; error
+    @(8.7000 mm, 42.9000 mm): Track [SCL] on B.Cu, length 0.7051 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1600 mm)
+    Rule: netclass 'Default'; error
+    @(13.7000 mm, 34.9600 mm): Track [SCL] on B.Cu, length 1.3500 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1600 mm)
+    Rule: netclass 'Default'; error
+    @(8.7000 mm, 43.6051 mm): Track [SCL] on B.Cu, length 1.5060 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1600 mm)
+    Rule: netclass 'Default'; error
+    @(13.5000 mm, 40.2000 mm): Track [INT2] on B.Cu, length 2.0025 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1600 mm)
+    Rule: netclass 'Default'; error
+    @(20.2500 mm, 36.6500 mm): Track [INT2] on B.Cu, length 1.0512 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1600 mm)
+    Rule: netclass 'Default'; error
+    @(13.3000 mm, 39.6000 mm): Track [INT1] on B.Cu, length 1.8028 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1600 mm)
+    Rule: netclass 'Default'; error
+    @(19.7500 mm, 36.6500 mm): Track [INT1] on B.Cu, length 1.0124 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1600 mm)
+    Rule: netclass 'Default'; error
+    @(10.3000 mm, 38.9000 mm): Track [UPDI] on B.Cu, length 1.3153 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1600 mm)
+    Rule: netclass 'Default'; error
+    @(9.1000 mm, 38.9000 mm): Track [LDRV1] on B.Cu, length 1.3153 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1600 mm)
+    Rule: netclass 'Default'; error
+    @(8.3000 mm, 38.9000 mm): Track [LDRV3] on B.Cu, length 1.2369 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)
+    Rule: netclass 'Default'; error
+    @(37.9400 mm, 56.3000 mm): Track [LA] on B.Cu, length 23.4000 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)
+    Rule: netclass 'Default'; error
+    @(48.1400 mm, 32.3000 mm): Track [LA] on B.Cu, length 24.3000 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)
+    Rule: netclass 'Default'; error
+    @(37.6400 mm, 56.6000 mm): Track [LA] on B.Cu, length 24.0000 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)
+    Rule: netclass 'Default'; error
+    @(37.3400 mm, 32.3000 mm): Track [LA] on B.Cu, length 10.8000 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)
+    Rule: netclass 'Default'; error
+    @(47.8400 mm, 56.3000 mm): Track [LA] on B.Cu, length 9.9000 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)
+    Rule: netclass 'Default'; error
+    @(37.6400 mm, 32.6000 mm): Track [LA] on B.Cu, length 10.2000 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)
+    Rule: netclass 'Default'; error
+    @(47.8400 mm, 32.6000 mm): Track [LA] on B.Cu, length 23.7000 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)
+    Rule: netclass 'Default'; error
+    @(48.4400 mm, 56.9000 mm): Track [LA] on B.Cu, length 11.1000 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)
+    Rule: netclass 'Default'; error
+    @(48.1400 mm, 56.6000 mm): Track [LA] on B.Cu, length 10.5000 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)
+    Rule: netclass 'Default'; error
+    @(35.4000 mm, 32.0500 mm): Track [LA] on B.Cu, length 2.1401 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)
+    Rule: netclass 'Default'; error
+    @(37.3400 mm, 32.0000 mm): Track [LA] on B.Cu, length 1.9406 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)
+    Rule: netclass 'Default'; error
+    @(37.3400 mm, 32.0000 mm): Track [LA] on B.Cu, length 11.1000 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)
+    Rule: netclass 'Default'; error
+    @(37.3400 mm, 56.9000 mm): Track [LA] on B.Cu, length 24.6000 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)
+    Rule: netclass 'Default'; error
+    @(48.4400 mm, 32.0000 mm): Track [LA] on B.Cu, length 24.9000 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)
+    Rule: netclass 'Default'; error
+    @(35.4500 mm, 33.0500 mm): Track [LB] on B.Cu, length 0.9341 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)
+    Rule: netclass 'Default'; error
+    @(36.2000 mm, 32.6000 mm): Track [LB] on In3.Cu, length 0.8746 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)
+    Rule: netclass 'Default'; error
+    @(48.1400 mm, 32.3000 mm): Track [LB] on In3.Cu, length 10.2000 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)
+    Rule: netclass 'Default'; error
+    @(47.8400 mm, 56.3000 mm): Track [LB] on In3.Cu, length 23.7000 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)
+    Rule: netclass 'Default'; error
+    @(37.3400 mm, 56.9000 mm): Track [LB] on In3.Cu, length 11.1000 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)
+    Rule: netclass 'Default'; error
+    @(37.9400 mm, 32.3000 mm): Track [LB] on In3.Cu, length 24.0000 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)
+    Rule: netclass 'Default'; error
+    @(37.9400 mm, 56.3000 mm): Track [LB] on In3.Cu, length 9.9000 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)
+    Rule: netclass 'Default'; error
+    @(48.4400 mm, 56.9000 mm): Track [LB] on In3.Cu, length 24.9000 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)
+    Rule: netclass 'Default'; error
+    @(37.3400 mm, 32.0000 mm): Track [LB] on In3.Cu, length 1.2883 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)
+    Rule: netclass 'Default'; error
+    @(37.3400 mm, 32.0000 mm): Track [LB] on In3.Cu, length 24.9000 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)
+    Rule: netclass 'Default'; error
+    @(48.1400 mm, 56.6000 mm): Track [LB] on In3.Cu, length 24.3000 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)
+    Rule: netclass 'Default'; error
+    @(47.8400 mm, 32.6000 mm): Track [LB] on In3.Cu, length 9.6000 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)
+    Rule: netclass 'Default'; error
+    @(37.6400 mm, 32.0000 mm): Track [LB] on In3.Cu, length 24.6000 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)
+    Rule: netclass 'Default'; error
+    @(48.4400 mm, 32.0000 mm): Track [LB] on In3.Cu, length 10.8000 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)
+    Rule: netclass 'Default'; error
+    @(37.6400 mm, 56.6000 mm): Track [LB] on In3.Cu, length 10.5000 mm
+[track_width]: Track width (board setup constraints min width 0.2000 mm; actual 0.1500 mm)
+    Rule: netclass 'Default'; error
+    @(38.2400 mm, 32.6000 mm): Track [LB] on In3.Cu, length 0.4243 mm
+[via_diameter]: Via diameter (board setup constraints min diameter 0.5000 mm; actual 0.4000 mm)
+    Rule: netclass 'Default'; error
+    @(25.9000 mm, 38.9000 mm): Via [MID] on F.Cu - B.Cu
+[via_diameter]: Via diameter (board setup constraints min diameter 0.5000 mm; actual 0.4000 mm)
+    Rule: netclass 'Default'; error
+    @(31.1000 mm, 37.6300 mm): Via [MID] on F.Cu - B.Cu
+[via_diameter]: Via diameter (board setup constraints min diameter 0.5000 mm; actual 0.4000 mm)
+    Rule: netclass 'Default'; error
+    @(9.9000 mm, 38.3000 mm): Via [VS] on F.Cu - B.Cu
+[via_diameter]: Via diameter (board setup constraints min diameter 0.5000 mm; actual 0.4000 mm)
+    Rule: netclass 'Default'; error
+    @(13.0000 mm, 43.0000 mm): Via [VS] on F.Cu - B.Cu
+[via_diameter]: Via diameter (board setup constraints min diameter 0.5000 mm; actual 0.4000 mm)
+    Rule: netclass 'Default'; error
+    @(8.7000 mm, 38.0000 mm): Via [LDRV2] on F.Cu - B.Cu
+[via_diameter]: Via diameter (board setup constraints min diameter 0.5000 mm; actual 0.4000 mm)
+    Rule: netclass 'Default'; error
+    @(12.0000 mm, 44.5000 mm): Via [SDA] on F.Cu - B.Cu
+[via_diameter]: Via diameter (board setup constraints min diameter 0.5000 mm; actual 0.4000 mm)
+    Rule: netclass 'Default'; error
+    @(6.8000 mm, 39.3000 mm): Via [LDRV4] on F.Cu - B.Cu
+[via_diameter]: Via diameter (board setup constraints min diameter 0.5000 mm; actual 0.4000 mm)
+    Rule: netclass 'Default'; error
+    @(6.0000 mm, 40.1000 mm): Via [PA4] on F.Cu - B.Cu
+[via_diameter]: Via diameter (board setup constraints min diameter 0.5000 mm; actual 0.4000 mm)
+    Rule: netclass 'Default'; error
+    @(6.0000 mm, 40.7000 mm): Via [BTN] on F.Cu - B.Cu
+[via_diameter]: Via diameter (board setup constraints min diameter 0.5000 mm; actual 0.4000 mm)
+    Rule: netclass 'Default'; error
+    @(6.0500 mm, 42.5000 mm): Via [BTN] on F.Cu - B.Cu
+[via_diameter]: Via diameter (board setup constraints min diameter 0.5000 mm; actual 0.4000 mm)
+    Rule: netclass 'Default'; error
+    @(5.0000 mm, 42.4000 mm): Via [PC0] on F.Cu - B.Cu
+[via_diameter]: Via diameter (board setup constraints min diameter 0.5000 mm; actual 0.4000 mm)
+    Rule: netclass 'Default'; error
+    @(7.3000 mm, 42.8000 mm): Via [PC1] on F.Cu - B.Cu
+[via_diameter]: Via diameter (board setup constraints min diameter 0.5000 mm; actual 0.4000 mm)
+    Rule: netclass 'Default'; error
+    @(12.5000 mm, 44.0000 mm): Via [SCL] on F.Cu - B.Cu
+[via_diameter]: Via diameter (board setup constraints min diameter 0.5000 mm; actual 0.4000 mm)
+    Rule: netclass 'Default'; error
+    @(20.7000 mm, 37.6000 mm): Via [INT2] on F.Cu - B.Cu
+[via_diameter]: Via diameter (board setup constraints min diameter 0.5000 mm; actual 0.4000 mm)
+    Rule: netclass 'Default'; error
+    @(13.5000 mm, 40.2000 mm): Via [INT2] on F.Cu - B.Cu
+[via_diameter]: Via diameter (board setup constraints min diameter 0.5000 mm; actual 0.4000 mm)
+    Rule: netclass 'Default'; error
+    @(19.4000 mm, 37.6000 mm): Via [INT1] on F.Cu - B.Cu
+[via_diameter]: Via diameter (board setup constraints min diameter 0.5000 mm; actual 0.4000 mm)
+    Rule: netclass 'Default'; error
+    @(13.3000 mm, 39.6000 mm): Via [INT1] on F.Cu - B.Cu
+[via_diameter]: Via diameter (board setup constraints min diameter 0.5000 mm; actual 0.4000 mm)
+    Rule: netclass 'Default'; error
+    @(10.5000 mm, 37.6000 mm): Via [UPDI] on F.Cu - B.Cu
+[via_diameter]: Via diameter (board setup constraints min diameter 0.5000 mm; actual 0.4000 mm)
+    Rule: netclass 'Default'; error
+    @(9.3000 mm, 37.6000 mm): Via [LDRV1] on F.Cu - B.Cu
+[via_diameter]: Via diameter (board setup constraints min diameter 0.5000 mm; actual 0.4000 mm)
+    Rule: netclass 'Default'; error
+    @(8.0000 mm, 37.7000 mm): Via [LDRV3] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.4000 mm, 32.0500 mm): Track [LA] on B.Cu, length 2.1401 mm
+    @(34.5500 mm, 33.3000 mm): Pad 8 [LB] of U5 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.4500 mm, 33.0500 mm): Via [LB] on F.Cu - B.Cu
+    @(35.0500 mm, 33.3000 mm): Pad 7 [unconnected-(U5-VOUT-Pad7)] of U5 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.4500 mm, 33.0500 mm): Track [LB] on B.Cu, length 0.9341 mm
+    @(35.0500 mm, 33.3000 mm): Pad 7 [unconnected-(U5-VOUT-Pad7)] of U5 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(16.0300 mm, 34.9600 mm): Via [VS] on F.Cu - B.Cu
+    @(15.4900 mm, 34.9600 mm): Pad 1 [SCL] of R11 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(33.4000 mm, 47.6000 mm): Via [ANODE] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(27.4000 mm, 47.6000 mm): Via [ANODE] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(21.1000 mm, 47.6000 mm): Via [ANODE] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(21.1000 mm, 44.3000 mm): Track [ANODE] on B.Cu, length 3.3000 mm
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(33.4000 mm, 44.3000 mm): Pad A [ANODE] of D5 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(36.0000 mm, 43.5000 mm): Pad K [K5] of D5 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(21.1000 mm, 44.3000 mm): Pad A [ANODE] of D3 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(23.7000 mm, 43.5000 mm): Pad K [K3] of D3 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(14.8000 mm, 44.3000 mm): Pad A [ANODE] of D2 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(17.4000 mm, 43.5000 mm): Pad K [K2] of D2 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(27.4000 mm, 44.3000 mm): Pad A [ANODE] of D4 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(33.4000 mm, 47.6000 mm): Via [ANODE] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(27.4000 mm, 47.6000 mm): Via [ANODE] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(21.1000 mm, 47.6000 mm): Via [ANODE] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(21.1000 mm, 44.3000 mm): Track [ANODE] on B.Cu, length 3.3000 mm
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(33.4000 mm, 44.3000 mm): Pad A [ANODE] of D5 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(21.1000 mm, 44.3000 mm): Pad A [ANODE] of D3 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(23.7000 mm, 43.5000 mm): Pad K [K3] of D3 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(14.8000 mm, 44.3000 mm): Pad A [ANODE] of D2 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(17.4000 mm, 43.5000 mm): Pad K [K2] of D2 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(27.4000 mm, 44.3000 mm): Pad A [ANODE] of D4 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(30.0000 mm, 43.5000 mm): Pad K [K4] of D4 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(33.4000 mm, 47.6000 mm): Via [ANODE] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(27.4000 mm, 47.6000 mm): Via [ANODE] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(21.1000 mm, 47.6000 mm): Via [ANODE] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(21.1000 mm, 44.3000 mm): Track [ANODE] on B.Cu, length 3.3000 mm
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(33.4000 mm, 44.3000 mm): Pad A [ANODE] of D5 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(36.0000 mm, 43.5000 mm): Pad K [K5] of D5 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(21.1000 mm, 44.3000 mm): Pad A [ANODE] of D3 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(23.7000 mm, 43.5000 mm): Pad K [K3] of D3 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(14.8000 mm, 44.3000 mm): Pad A [ANODE] of D2 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(27.4000 mm, 44.3000 mm): Pad A [ANODE] of D4 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(30.0000 mm, 43.5000 mm): Pad K [K4] of D4 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(33.4000 mm, 47.6000 mm): Via [ANODE] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(27.4000 mm, 47.6000 mm): Via [ANODE] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(21.1000 mm, 47.6000 mm): Via [ANODE] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(21.1000 mm, 44.3000 mm): Track [ANODE] on B.Cu, length 3.3000 mm
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(33.4000 mm, 44.3000 mm): Pad A [ANODE] of D5 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(21.1000 mm, 44.3000 mm): Pad A [ANODE] of D3 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(23.7000 mm, 43.5000 mm): Pad K [K3] of D3 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(14.8000 mm, 44.3000 mm): Pad A [ANODE] of D2 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(17.4000 mm, 43.5000 mm): Pad K [K2] of D2 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(27.4000 mm, 44.3000 mm): Pad A [ANODE] of D4 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(30.0000 mm, 43.5000 mm): Pad K [K4] of D4 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(33.4000 mm, 47.6000 mm): Via [ANODE] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(27.4000 mm, 47.6000 mm): Via [ANODE] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(21.1000 mm, 47.6000 mm): Via [ANODE] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(21.1000 mm, 44.3000 mm): Track [ANODE] on B.Cu, length 3.3000 mm
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(33.4000 mm, 44.3000 mm): Pad A [ANODE] of D5 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(21.1000 mm, 44.3000 mm): Pad A [ANODE] of D3 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(14.8000 mm, 44.3000 mm): Pad A [ANODE] of D2 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(17.4000 mm, 43.5000 mm): Pad K [K2] of D2 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(27.4000 mm, 44.3000 mm): Pad A [ANODE] of D4 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(30.0000 mm, 43.5000 mm): Pad K [K4] of D4 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(33.4000 mm, 47.6000 mm): Via [ANODE] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(27.4000 mm, 47.6000 mm): Via [ANODE] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(21.1000 mm, 47.6000 mm): Via [ANODE] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(21.1000 mm, 44.3000 mm): Track [ANODE] on B.Cu, length 3.3000 mm
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(33.4000 mm, 44.3000 mm): Pad A [ANODE] of D5 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(21.1000 mm, 44.3000 mm): Pad A [ANODE] of D3 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(14.8000 mm, 44.3000 mm): Pad A [ANODE] of D2 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(17.4000 mm, 43.5000 mm): Pad K [K2] of D2 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(27.4000 mm, 44.3000 mm): Pad A [ANODE] of D4 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(30.0000 mm, 43.5000 mm): Pad K [K4] of D4 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(33.4000 mm, 47.6000 mm): Via [ANODE] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(27.4000 mm, 47.6000 mm): Via [ANODE] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(21.1000 mm, 47.6000 mm): Via [ANODE] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(21.1000 mm, 44.3000 mm): Track [ANODE] on B.Cu, length 3.3000 mm
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(33.4000 mm, 44.3000 mm): Pad A [ANODE] of D5 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(21.1000 mm, 44.3000 mm): Pad A [ANODE] of D3 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(14.8000 mm, 44.3000 mm): Pad A [ANODE] of D2 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(27.4000 mm, 44.3000 mm): Pad A [ANODE] of D4 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(30.0000 mm, 43.5000 mm): Pad K [K4] of D4 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(33.4000 mm, 47.6000 mm): Via [ANODE] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(27.4000 mm, 47.6000 mm): Via [ANODE] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(21.1000 mm, 47.6000 mm): Via [ANODE] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(21.1000 mm, 44.3000 mm): Track [ANODE] on B.Cu, length 3.3000 mm
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(33.4000 mm, 44.3000 mm): Pad A [ANODE] of D5 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(21.1000 mm, 44.3000 mm): Pad A [ANODE] of D3 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(14.8000 mm, 44.3000 mm): Pad A [ANODE] of D2 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(27.4000 mm, 44.3000 mm): Pad A [ANODE] of D4 on B.Cu
+[via_dangling]: Via is not connected or connected on only one layer
+    Local override; warning
+    @(7.9050 mm, 54.9000 mm): Via [GND] on F.Cu - B.Cu
+[via_dangling]: Via is not connected or connected on only one layer
+    Local override; warning
+    @(13.7000 mm, 37.5000 mm): Via [GND] on F.Cu - B.Cu
+[track_dangling]: Track has unconnected end
+    Local override; warning
+    @(10.4500 mm, 45.5000 mm): Track [GND] on B.Cu, length 1.0200 mm
+[track_dangling]: Track has unconnected end
+    Local override; warning
+    @(8.5500 mm, 50.4000 mm): Track [GND] on B.Cu, length 1.0200 mm
+[track_dangling]: Track has unconnected end
+    Local override; warning
+    @(10.4500 mm, 36.6000 mm): Track [GND] on B.Cu, length 1.0200 mm
+[track_dangling]: Track has unconnected end
+    Local override; warning
+    @(13.4500 mm, 48.5000 mm): Track [GND] on B.Cu, length 1.0200 mm
+[track_dangling]: Track has unconnected end
+    Local override; warning
+    @(8.3500 mm, 52.6000 mm): Track [GND] on B.Cu, length 1.0200 mm
+[via_dangling]: Via is not connected or connected on only one layer
+    Local override; warning
+    @(45.5000 mm, 63.0000 mm): Via [VINB] on F.Cu - B.Cu
+[track_dangling]: Track has unconnected end
+    Local override; warning
+    @(45.5000 mm, 25.0000 mm): Track [VIN] on In3.Cu, length 3.0806 mm
+[track_dangling]: Track has unconnected end
+    Local override; warning
+    @(3.3000 mm, 56.0000 mm): Track [VIN] on In3.Cu, length 5.0000 mm
+[via_dangling]: Via is not connected or connected on only one layer
+    Local override; warning
+    @(25.9000 mm, 38.9000 mm): Via [MID] on F.Cu - B.Cu
+[track_dangling]: Track has unconnected end
+    Local override; warning
+    @(31.1000 mm, 37.6300 mm): Track [MID] on B.Cu, length 1.2600 mm
+[track_dangling]: Track has unconnected end
+    Local override; warning
+    @(47.0000 mm, 61.0000 mm): Track [MID] on In2.Cu, length 11.7000 mm
+[track_dangling]: Track has unconnected end
+    Local override; warning
+    @(35.3000 mm, 26.0000 mm): Track [MID] on In2.Cu, length 3.2000 mm
+[via_dangling]: Via is not connected or connected on only one layer
+    Local override; warning
+    @(49.4000 mm, 47.0500 mm): Via [VS] on F.Cu - B.Cu
+[track_dangling]: Track has unconnected end
+    Local override; warning
+    @(8.5500 mm, 36.6000 mm): Track [VS] on B.Cu, length 0.9200 mm
+[track_dangling]: Track has unconnected end
+    Local override; warning
+    @(32.5000 mm, 48.6000 mm): Track [VS] on B.Cu, length 1.0200 mm
+[track_dangling]: Track has unconnected end
+    Local override; warning
+    @(16.9500 mm, 32.4000 mm): Track [VS] on B.Cu, length 0.9200 mm
+[track_dangling]: Track has unconnected end
+    Local override; warning
+    @(16.9500 mm, 34.9600 mm): Track [VS] on B.Cu, length 0.9200 mm
+[track_dangling]: Track has unconnected end
+    Local override; warning
+    @(8.5500 mm, 45.5000 mm): Track [VS] on B.Cu, length 1.0200 mm
+[track_dangling]: Track has unconnected end
+    Local override; warning
+    @(13.7000 mm, 32.4200 mm): Track [SDA] on B.Cu, length 1.3501 mm
+[track_dangling]: Track has unconnected end
+    Local override; warning
+    @(29.3000 mm, 48.6000 mm): Track [TINY] on B.Cu, length 1.3000 mm
+[track_dangling]: Track has unconnected end
+    Local override; warning
+    @(6.4500 mm, 51.4000 mm): Track [VSENSE] on B.Cu, length 1.2000 mm
+[track_dangling]: Track has unconnected end
+    Local override; warning
+    @(6.6500 mm, 50.4000 mm): Track [VSENSE] on B.Cu, length 1.2000 mm
+[track_dangling]: Track has unconnected end
+    Local override; warning
+    @(12.6000 mm, 47.0000 mm): Track [VDDIO2] on B.Cu, length 1.8310 mm
+[via_dangling]: Via is not connected or connected on only one layer
+    Local override; warning
+    @(4.0900 mm, 54.9000 mm): Via [PA4] on F.Cu - B.Cu
+[track_dangling]: Track has unconnected end
+    Local override; warning
+    @(25.4000 mm, 57.0000 mm): Track [BTN] on F.Cu, length 1.2000 mm
+[via_dangling]: Via is not connected or connected on only one layer
+    Local override; warning
+    @(5.3700 mm, 54.9000 mm): Via [PC0] on F.Cu - B.Cu
+[via_dangling]: Via is not connected or connected on only one layer
+    Local override; warning
+    @(6.6300 mm, 54.9000 mm): Via [PC1] on F.Cu - B.Cu
+[track_dangling]: Track has unconnected end
+    Local override; warning
+    @(13.7000 mm, 34.9600 mm): Track [SCL] on B.Cu, length 1.3500 mm
+[lib_footprint_issues]: The current configuration does not include the footprint library 'solarglow'
+    Local override; warning
+    @(3.5000 mm, 3.0000 mm): Footprint MH3
+[lib_footprint_issues]: The current configuration does not include the footprint library 'solarglow'
+    Local override; warning
+    @(25.4000 mm, 71.9000 mm): Footprint PV2
+[lib_footprint_issues]: The current configuration does not include the footprint library 'solarglow'
+    Local override; warning
+    @(47.3000 mm, 85.9000 mm): Footprint MH2
+[lib_footprint_issues]: The current configuration does not include the footprint library 'solarglow'
+    Local override; warning
+    @(3.5000 mm, 85.9000 mm): Footprint MH1
+[lib_footprint_issues]: The current configuration does not include the footprint library 'solarglow'
+    Local override; warning
+    @(47.3000 mm, 3.0000 mm): Footprint MH4
+[lib_footprint_issues]: The current configuration does not include the footprint library 'solarglow'
+    Local override; warning
+    @(25.4000 mm, 17.0000 mm): Footprint PV1
+[lib_footprint_issues]: The current configuration does not include the footprint library 'solarglow'
+    Local override; warning
+    @(0.0000 mm, 0.0000 mm): Footprint <no reference designator>
+[lib_footprint_issues]: The current configuration does not include the footprint library 'solarglow'
+    Local override; warning
+    @(15.5000 mm, 16.9000 mm): Footprint SC1
+[lib_footprint_issues]: The current configuration does not include the footprint library 'solarglow'
+    Local override; warning
+    @(22.4000 mm, 49.6000 mm): Footprint R2
+[lib_footprint_issues]: The current configuration does not include the footprint library 'solarglow'
+    Local override; warning
+    @(46.5000 mm, 72.0000 mm): Footprint R7
+[lib_footprint_issues]: The current configuration does not include the footprint library 'solarglow'
+    Local override; warning
+    @(16.0000 mm, 32.4000 mm): Footprint R10
+[lib_footprint_issues]: The current configuration does not include the footprint library 'solarglow'
+    Local override; warning
+    @(24.0000 mm, 48.6000 mm): Footprint SW2
+[lib_footprint_issues]: The current configuration does not include the footprint library 'solarglow'
+    Local override; warning
+    @(46.5000 mm, 68.0000 mm): Footprint U4
+[lib_footprint_issues]: The current configuration does not include the footprint library 'solarglow'
+    Local override; warning
+    @(9.5000 mm, 45.5000 mm): Footprint C1
+[lib_footprint_issues]: The current configuration does not include the footprint library 'solarglow'
+    Local override; warning
+    @(22.7000 mm, 36.4000 mm): Footprint C6
+[lib_footprint_issues]: The current configuration does not include the footprint library 'solarglow'
+    Local override; warning
+    @(7.6000 mm, 50.4000 mm): Footprint R6
+[lib_footprint_issues]: The current configuration does not include the footprint library 'solarglow'
+    Local override; warning
+    @(22.4000 mm, 52.0000 mm): Footprint SB2
+[lib_footprint_issues]: The current configuration does not include the footprint library 'solarglow'
+    Local override; warning
+    @(13.3000 mm, 46.0000 mm): Footprint SJ1
+[lib_footprint_issues]: The current configuration does not include the footprint library 'solarglow'
+    Local override; warning
+    @(31.5500 mm, 48.6000 mm): Footprint R12
+[lib_footprint_issues]: The current configuration does not include the footprint library 'solarglow'
+    Local override; warning
+    @(28.7000 mm, 43.9000 mm): Footprint D4
+[lib_footprint_issues]: The current configuration does not include the footprint library 'solarglow'
+    Local override; warning
+    @(9.5000 mm, 40.9000 mm): Footprint U1
+[lib_footprint_issues]: The current configuration does not include the footprint library 'solarglow'
+    Local override; warning
+    @(4.7000 mm, 38.4000 mm): Footprint J1
+[lib_footprint_issues]: The current configuration does not include the footprint library 'solarglow'
+    Local override; warning
+    @(34.7000 mm, 43.9000 mm): Footprint D5
+[lib_footprint_issues]: The current configuration does not include the footprint library 'solarglow'
+    Local override; warning
+    @(34.7000 mm, 49.6000 mm): Footprint R4
+[lib_footprint_issues]: The current configuration does not include the footprint library 'solarglow'
+    Local override; warning
+    @(34.8000 mm, 34.0000 mm): Footprint U5
+[lib_footprint_issues]: The current configuration does not include the footprint library 'solarglow'
+    Local override; warning
+    @(28.7000 mm, 49.6000 mm): Footprint R3
+[lib_footprint_issues]: The current configuration does not include the footprint library 'solarglow'
+    Local override; warning
+    @(9.5000 mm, 36.6000 mm): Footprint C2
+[lib_footprint_issues]: The current configuration does not include the footprint library 'solarglow'
+    Local override; warning
+    @(32.3000 mm, 35.5000 mm): Footprint C8
+[lib_footprint_issues]: The current configuration does not include the footprint library 'solarglow'
+    Local override; warning
+    @(28.5000 mm, 33.0000 mm): Footprint C4
+[lib_footprint_issues]: The current configuration does not include the footprint library 'solarglow'
+    Local override; warning
+    @(16.1000 mm, 52.0000 mm): Footprint SB1
+[lib_footprint_issues]: The current configuration does not include the footprint library 'solarglow'
+    Local override; warning
+    @(46.5000 mm, 12.0000 mm): Footprint D1
+[lib_footprint_issues]: The current configuration does not include the footprint library 'solarglow'
+    Local override; warning
+    @(15.5000 mm, 72.0000 mm): Footprint SC3
+[lib_footprint_issues]: The current configuration does not include the footprint library 'solarglow'
+    Local override; warning
+    @(34.7000 mm, 52.0000 mm): Footprint SB4
+[lib_footprint_issues]: The current configuration does not include the footprint library 'solarglow'
+    Local override; warning
+    @(13.3000 mm, 16.9000 mm): Footprint TC1
+[lib_footprint_issues]: The current configuration does not include the footprint library 'solarglow'
+    Local override; warning
+    @(32.3000 mm, 38.5000 mm): Footprint C9
+[lib_footprint_issues]: The current configuration does not include the footprint library 'solarglow'
+    Local override; warning
+    @(46.5000 mm, 61.0000 mm): Footprint D9
+[lib_footprint_issues]: The current configuration does not include the footprint library 'solarglow'
+    Local override; warning
+    @(46.5000 mm, 65.0000 mm): Footprint Q1
+[lib_footprint_issues]: The current configuration does not include the footprint library 'solarglow'
+    Local override; warning
+    @(12.5000 mm, 48.5000 mm): Footprint C3
+[lib_footprint_issues]: The current configuration does not include the footprint library 'solarglow'
+    Local override; warning
+    @(22.4000 mm, 43.9000 mm): Footprint D3
+[lib_footprint_issues]: The current configuration does not include the footprint library 'solarglow'
+    Local override; warning
+    @(16.1000 mm, 43.9000 mm): Footprint D2
+[lib_footprint_issues]: The current configuration does not include the footprint library 'solarglow'
+    Local override; warning
+    @(20.0000 mm, 35.9000 mm): Footprint U3
+[lib_footprint_issues]: The current configuration does not include the footprint library 'solarglow'
+    Local override; warning
+    @(7.4000 mm, 52.6000 mm): Footprint C5
+[lib_footprint_issues]: The current configuration does not include the footprint library 'solarglow'
+    Local override; warning
+    @(16.0000 mm, 34.9600 mm): Footprint R11
+[lib_footprint_issues]: The current configuration does not include the footprint library 'solarglow'
+    Local override; warning
+    @(32.3000 mm, 37.0000 mm): Footprint R13
+[lib_footprint_issues]: The current configuration does not include the footprint library 'solarglow'
+    Local override; warning
+    @(16.1000 mm, 49.6000 mm): Footprint R1
+[lib_footprint_issues]: The current configuration does not include the footprint library 'solarglow'
+    Local override; warning
+    @(46.5000 mm, 75.0000 mm): Footprint C7
+[lib_footprint_issues]: The current configuration does not include the footprint library 'solarglow'
+    Local override; warning
+    @(27.5000 mm, 37.0000 mm): Footprint U2
+[lib_footprint_issues]: The current configuration does not include the footprint library 'solarglow'
+    Local override; warning
+    @(35.3000 mm, 72.0000 mm): Footprint SC4
+[lib_footprint_issues]: The current configuration does not include the footprint library 'solarglow'
+    Local override; warning
+    @(35.3000 mm, 16.9000 mm): Footprint SC2
+[lib_footprint_issues]: The current configuration does not include the footprint library 'solarglow'
+    Local override; warning
+    @(46.5000 mm, 73.5000 mm): Footprint R8
+[lib_footprint_issues]: The current configuration does not include the footprint library 'solarglow'
+    Local override; warning
+    @(4.5000 mm, 50.4000 mm): Footprint R5
+[lib_footprint_issues]: The current configuration does not include the footprint library 'solarglow'
+    Local override; warning
+    @(46.5000 mm, 70.5000 mm): Footprint R9
+[lib_footprint_issues]: The current configuration does not include the footprint library 'solarglow'
+    Local override; warning
+    @(28.7000 mm, 52.0000 mm): Footprint SB3
+[silk_overlap]: Silkscreen clearance
+    Rule: board setup constraints silk; warning
+    @(34.9500 mm, 32.4250 mm): Segment on B.Silkscreen
+    @(34.8000 mm, 32.7000 mm): Reference field of U5
+[silk_overlap]: Silkscreen clearance
+    Rule: board setup constraints silk; warning
+    @(46.5000 mm, 66.5000 mm): Reference field of U4
+    @(45.6000 mm, 66.5590 mm): Reference field of Q1
+[silk_overlap]: Silkscreen clearance
+    Rule: board setup constraints silk; warning
+    @(46.5000 mm, 72.2000 mm): Reference field of R9
+    @(46.5000 mm, 71.8000 mm): Reference field of R8
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(28.7000 mm, 39.3000 mm): Reference field of D4
+    @(30.1000 mm, 38.9050 mm): Pad 5 [GND] of U2 on B.Cu
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(32.3000 mm, 35.7000 mm): Reference field of R13
+    @(32.8100 mm, 35.5000 mm): Pad 2 [GND] of C8 on B.Cu
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(32.3000 mm, 37.2000 mm): Reference field of C9
+    @(31.7900 mm, 37.0000 mm): Pad 1 [FD] of R13 on B.Cu
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(32.3000 mm, 35.7000 mm): Reference field of R13
+    @(31.7900 mm, 35.5000 mm): Pad 1 [VS] of C8 on B.Cu
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(23.0250 mm, 37.0000 mm): Reference field of U2
+    @(23.2100 mm, 36.4000 mm): Pad 2 [GND] of C6 on B.Cu
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(23.0250 mm, 37.0000 mm): Reference field of U2
+    @(22.1900 mm, 36.4000 mm): Pad 1 [VS] of C6 on B.Cu
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(34.8000 mm, 32.7000 mm): Reference field of U5
+    @(35.0500 mm, 33.3000 mm): Pad 7 [unconnected-(U5-VOUT-Pad7)] of U5 on B.Cu
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(34.8000 mm, 32.7000 mm): Reference field of U5
+    @(34.5500 mm, 33.3000 mm): Pad 8 [LB] of U5 on B.Cu
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(32.3000 mm, 37.2000 mm): Reference field of C9
+    @(32.8100 mm, 37.0000 mm): Pad 2 [VS] of R13 on B.Cu
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(46.5000 mm, 70.3000 mm): Reference field of R7
+    @(45.9900 mm, 70.5000 mm): Pad 1 [VS] of R9 on B.Cu
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(46.5000 mm, 70.3000 mm): Reference field of R7
+    @(47.0100 mm, 70.5000 mm): Pad 2 [CLBASE] of R9 on B.Cu
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(46.5000 mm, 71.8000 mm): Reference field of R8
+    @(47.0100 mm, 72.0000 mm): Pad 2 [CLREF] of R7 on B.Cu
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(46.5000 mm, 72.2000 mm): Reference field of R9
+    @(47.0100 mm, 72.0000 mm): Pad 2 [CLREF] of R7 on B.Cu
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(46.5000 mm, 71.8000 mm): Reference field of R8
+    @(45.9900 mm, 72.0000 mm): Pad 1 [VS] of R7 on B.Cu
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(46.5000 mm, 72.2000 mm): Reference field of R9
+    @(45.9900 mm, 72.0000 mm): Pad 1 [VS] of R7 on B.Cu
+
+** Found 50 unconnected pads **
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(8.1100 mm, 50.4000 mm): Pad 2 [GND] of R6 on B.Cu
+    @(8.5500 mm, 50.4000 mm): Track [GND] on B.Cu, length 1.0200 mm
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(8.3500 mm, 52.6000 mm): Track [GND] on B.Cu, length 1.0200 mm
+    @(7.9100 mm, 52.6000 mm): Pad 2 [GND] of C5 on B.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(10.4500 mm, 36.6000 mm): Track [GND] on B.Cu, length 1.0200 mm
+    @(10.0100 mm, 36.6000 mm): Pad 2 [GND] of C2 on B.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(10.4500 mm, 45.5000 mm): Track [GND] on B.Cu, length 1.0200 mm
+    @(10.0100 mm, 45.5000 mm): Pad 2 [GND] of C1 on B.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(13.0100 mm, 48.5000 mm): Pad 2 [GND] of C3 on B.Cu
+    @(13.4500 mm, 48.5000 mm): Track [GND] on B.Cu, length 1.0200 mm
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(25.9000 mm, 35.0900 mm): Via [GND] on F.Cu - B.Cu
+    @(29.0100 mm, 33.0000 mm): Pad 2 [GND] of C4 on B.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(31.1000 mm, 38.9000 mm): Via [GND] on F.Cu - B.Cu
+    @(32.8100 mm, 35.5000 mm): Pad 2 [GND] of C8 on B.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(32.8100 mm, 35.5000 mm): Pad 2 [GND] of C8 on B.Cu
+    @(34.1000 mm, 34.2500 mm): Pad 2 [GND] of U5 on B.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(45.7000 mm, 65.0000 mm): Pad 3 [GND] of Q1 on B.Cu
+    @(47.3000 mm, 68.0000 mm): Pad 3 [GND] of U4 on B.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(47.0100 mm, 75.0000 mm): Pad 2 [GND] of C7 on B.Cu
+    @(47.0100 mm, 73.5000 mm): Pad 2 [GND] of R8 on B.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(47.3000 mm, 68.0000 mm): Pad 3 [GND] of U4 on B.Cu
+    @(47.0100 mm, 73.5000 mm): Pad 2 [GND] of R8 on B.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(47.3000 mm, 85.9000 mm): PTH pad 1 [GND] of MH2
+    @(47.0100 mm, 75.0000 mm): Pad 2 [GND] of C7 on B.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(46.5000 mm, 59.1500 mm): Pad A [VINB] of D9 on B.Cu
+    @(46.5000 mm, 71.9000 mm): Track [VINB] on F.Cu, length 8.9560 mm
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(3.9900 mm, 50.4000 mm): Pad 1 [VIN] of R5 on B.Cu
+    @(45.5000 mm, 25.0000 mm): Track [VIN] on In3.Cu, length 3.0806 mm
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(43.4000 mm, 17.0000 mm): Track [VIN] on F.Cu, length 3.1000 mm
+    @(46.5000 mm, 10.1500 mm): Pad A [VIN] of D1 on B.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(24.9000 mm, 38.9050 mm): Pad 4 [MID] of U2 on B.Cu
+    @(25.0000 mm, 38.9000 mm): Track [MID] on In2.Cu, length 12.9000 mm
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(31.1000 mm, 37.6300 mm): Track [MID] on B.Cu, length 1.2600 mm
+    @(30.1000 mm, 36.3650 mm): Pad 7 [MID] of U2 on B.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(31.1000 mm, 37.6300 mm): Track [MID] on In2.Cu, length 1.4000 mm
+    @(30.1000 mm, 37.6350 mm): Pad 6 [MID] of U2 on B.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(32.5000 mm, 37.6300 mm): Track [MID] on In2.Cu, length 11.6300 mm
+    @(35.3000 mm, 61.0000 mm): Via [MID] on F.Cu - B.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(8.5500 mm, 36.6000 mm): Track [VS] on B.Cu, length 0.9200 mm
+    @(8.9900 mm, 36.6000 mm): Pad 1 [VS] of C2 on B.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(8.5500 mm, 45.5000 mm): Track [VS] on B.Cu, length 1.0200 mm
+    @(8.9900 mm, 45.5000 mm): Pad 1 [VS] of C1 on B.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(16.5100 mm, 32.4000 mm): Pad 2 [VS] of R10 on B.Cu
+    @(16.9500 mm, 32.4000 mm): Track [VS] on B.Cu, length 0.9200 mm
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(22.1900 mm, 36.4000 mm): Pad 1 [VS] of C6 on B.Cu
+    @(21.7500 mm, 36.4000 mm): Track [VS] on B.Cu, length 1.0200 mm
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(27.9900 mm, 33.0000 mm): Pad 1 [VS] of C4 on B.Cu
+    @(30.1000 mm, 35.0950 mm): Pad 8 [VS] of U2 on B.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(31.1000 mm, 35.0900 mm): Via [VS] on F.Cu - B.Cu
+    @(31.7900 mm, 35.5000 mm): Pad 1 [VS] of C8 on B.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(32.5000 mm, 48.6000 mm): Track [VS] on B.Cu, length 1.0200 mm
+    @(32.0600 mm, 48.6000 mm): Pad 2 [VS] of R12 on B.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(32.8100 mm, 37.0000 mm): Pad 2 [VS] of R13 on B.Cu
+    @(31.7900 mm, 35.5000 mm): Pad 1 [VS] of C8 on B.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(35.5000 mm, 33.7500 mm): Pad 6 [VS] of U5 on B.Cu
+    @(31.7900 mm, 35.5000 mm): Pad 1 [VS] of C8 on B.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(35.5000 mm, 33.7500 mm): Pad 6 [VS] of U5 on B.Cu
+    @(46.5000 mm, 13.8500 mm): Pad K [VS] of D1 on B.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(45.9900 mm, 72.0000 mm): Pad 1 [VS] of R7 on B.Cu
+    @(45.9900 mm, 70.5000 mm): Pad 1 [VS] of R9 on B.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(45.9900 mm, 72.0000 mm): Pad 1 [VS] of R7 on B.Cu
+    @(45.9900 mm, 75.0000 mm): Pad 1 [VS] of C7 on B.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(46.9000 mm, 65.5000 mm): Pad 2 [VS] of Q1 on B.Cu
+    @(46.5000 mm, 62.8500 mm): Pad K [VS] of D9 on B.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(46.9000 mm, 65.5000 mm): Pad 2 [VS] of Q1 on B.Cu
+    @(45.9900 mm, 70.5000 mm): Pad 1 [VS] of R9 on B.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(49.4000 mm, 47.0500 mm): Via [VS] on F.Cu - B.Cu
+    @(46.5000 mm, 62.8500 mm): Pad K [VS] of D9 on B.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(45.9900 mm, 73.5000 mm): Pad 1 [CLREF] of R8 on B.Cu
+    @(47.0100 mm, 72.0000 mm): Pad 2 [CLREF] of R7 on B.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(47.0100 mm, 72.0000 mm): Pad 2 [CLREF] of R7 on B.Cu
+    @(46.1000 mm, 67.5000 mm): Pad 1 [CLREF] of U4 on B.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(15.4900 mm, 32.4000 mm): Pad 1 [SDA] of R10 on B.Cu
+    @(13.7000 mm, 32.4200 mm): Track [SDA] on B.Cu, length 1.3501 mm
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(19.2500 mm, 35.1500 mm): Track [SDA] on B.Cu, length 0.7649 mm
+    @(35.5000 mm, 34.2500 mm): Pad 5 [SDA] of U5 on B.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(29.3000 mm, 48.6000 mm): Track [TINY] on B.Cu, length 1.3000 mm
+    @(31.0400 mm, 48.6000 mm): Pad 1 [TINY] of R12 on B.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(46.1000 mm, 68.5000 mm): Pad 2 [CLBASE] of U4 on B.Cu
+    @(47.0100 mm, 70.5000 mm): Pad 2 [CLBASE] of R9 on B.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(46.9000 mm, 64.5000 mm): Pad 1 [CLBASE] of Q1 on B.Cu
+    @(46.1000 mm, 68.5000 mm): Pad 2 [CLBASE] of U4 on B.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(6.6500 mm, 50.4000 mm): Track [VSENSE] on B.Cu, length 1.2000 mm
+    @(5.0100 mm, 50.4000 mm): Pad 2 [VSENSE] of R5 on B.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(6.4500 mm, 51.4000 mm): Track [VSENSE] on B.Cu, length 1.2000 mm
+    @(6.8900 mm, 52.6000 mm): Pad 1 [VSENSE] of C5 on B.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(7.0900 mm, 50.4000 mm): Pad 1 [VSENSE] of R6 on B.Cu
+    @(6.6500 mm, 50.4000 mm): Track [VSENSE] on B.Cu, length 1.0000 mm
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(7.5000 mm, 40.9000 mm): Pad 4 [FD] of U1 on B.Cu
+    @(31.7900 mm, 37.0000 mm): Pad 1 [FD] of R13 on B.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(31.7900 mm, 37.0000 mm): Pad 1 [FD] of R13 on B.Cu
+    @(35.0500 mm, 34.7000 mm): Pad 4 [FD] of U5 on B.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(13.7000 mm, 34.9600 mm): Track [SCL] on B.Cu, length 1.3500 mm
+    @(15.4900 mm, 34.9600 mm): Pad 1 [SCL] of R11 on B.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(34.5500 mm, 34.7000 mm): Pad 3 [SCL] of U5 on B.Cu
+    @(19.2500 mm, 36.6500 mm): Track [SCL] on B.Cu, length 0.5701 mm
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(35.4000 mm, 32.0500 mm): Track [LA] on B.Cu, length 2.1401 mm
+    @(31.7900 mm, 38.5000 mm): Pad 1 [LA] of C9 on B.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(35.4500 mm, 33.0500 mm): Track [LB] on B.Cu, length 0.9341 mm
+    @(32.8100 mm, 38.5000 mm): Pad 2 [LB] of C9 on B.Cu
+
+** Found 0 Footprint errors **
+
+** Ignored checks **
+    - Footprint has no courtyard defined
+    - Track endpoint not centered on via
+    - Tuning profile track geometries
+    - Footprint doesn't match symbol's footprint filters
+    - Footprint component type doesn't match footprint pads
+
+** End of Report **
