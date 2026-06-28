@@ -183,8 +183,8 @@ re-spin for the enclosure:
 - **Grounded body → short risk.** In the enclosed variant, **drop the right-edge castellations**;
   land support pillars **only on GND pour**; keep a **die-cut Kapton (~0.05 mm)** blanket isolation
   layer in reserve if a later via audit on the rib lines finds an untented via.
-- **Uniform ~1.8 mm cavity, no U2 pocket** — the **1.70 mm WS17 supercaps** ≈ U2 at 1.75 mm set the
-  cavity floor (cavity = 1.85 = U2 + 0.10 mm air); the 0.9 mm QFN is irrelevant. ("Cells" elsewhere
+- **Uniform ~1.9 mm cavity, no U2 pocket** — the **1.70 mm WS17 supercaps** ≈ U2 at 1.75 mm set the
+  cavity floor (cavity = 1.90 = U2 + 0.15 mm air, toleranced 1.90 ±0.05); the 0.9 mm QFN is irrelevant. ("Cells" elsewhere
   can mean the 1.2 mm **solar** cells on the front — a different part; don't conflate the two.)
 - **No tall back-side parts.** The cavity budget assumes the tallest *populated* rear part is U2 at
   1.75 mm. Keep the 2.54 mm breakout headers (JP1/JP2) **unpopulated** in the enclosed build — a

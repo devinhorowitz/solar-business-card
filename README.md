@@ -202,7 +202,7 @@ validated — see `enclosure/README.md`.
 ![Titanium back-shell (Ti-max) — design render, not yet built](docs/enclosure-hero.png)
 
 The decisions that matter once it’s cut: **titanium (Ti-6Al-4V Grade 5)**, **3-axis CNC-milled** by
-PCBWay; the cavity is **part-limited to 1.85 mm** by the tallest component (U2), and the floor is run
+PCBWay; the cavity is **part-limited to ~1.90 mm** by the tallest component (U2), and the floor is run
 to a **0.55 mm** card-thin skin (backed by ribs) — the one number that gets re-issued to whatever
 minimum the shop will hold. Retention is **four corner M2 screws**, not a press fit. The electrical
 gotcha — the screws tie the metal body to board GND, so the enclosed variant **drops the edge
