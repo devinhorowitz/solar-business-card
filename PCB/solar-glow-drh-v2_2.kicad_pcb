@@ -20676,14 +20676,6 @@
 		(net "K5")
 		(uuid "8bb331c1-ab28-46ea-af91-5a53b0ed22ba")
 	)
-	(segment
-		(start 17.4 43.5)
-		(end 15.59 49.6)
-		(width 0.22)
-		(layer "B.Cu")
-		(net "K2")
-		(uuid "b2f92a20-d7a9-4950-a7b6-18a3e4de886c")
-	)
 	(via
 		(at 37.94 32.9)
 		(size 0.6)
@@ -20959,6 +20951,14 @@
 		(layer "In3.Cu")
 		(net "LB")
 		(uuid "e43d6099-ee35-4559-95d4-c28e475c3e37")
+	)
+	(segment
+		(start 17.4 43.5)
+		(end 15.59 49.6)
+		(width 0.22)
+		(layer "B.Cu")
+		(net "K2")
+		(uuid "b2f92a20-d7a9-4950-a7b6-18a3e4de886c")
 	)
 	(zone
 		(layers "F.Cu" "B.Cu" "In1.Cu" "In2.Cu" "In3.Cu" "In4.Cu")
