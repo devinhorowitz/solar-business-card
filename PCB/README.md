@@ -137,7 +137,7 @@ There are no controlled-impedance nets to declare.
   - **Leave to fab default** — big pads where the 0.3 mm barrel is negligible: the **U1 QFN
     exposed-pad** stitch vias (×2), the **six supercap under-body pads** (SC1.P, SC2.N, SC3.N,
     SC3.P, SC4.N, SC4.P), and the **four solar-cell pads** (PV1.N/Nt, PV2.N/Nt).
-  - **No action** — flooded or hand-soldered: the solder-bridge selectors (SB1–4, SJ1, SW2)
+  - **No action** — flooded or hand-soldered: the solder-bridge selectors (SB1–4, SW2), the SJ1 0 Ω pad,
     and the 0.1″ breakout pads (J1, JP1, JP2). *Note:* JP2's pads are small, so if you ever
     *reflow* a header onto JP2 rather than hand-soldering it, treat JP2.1–4 like the wicking
     group above.
@@ -177,7 +177,7 @@ Summary of the **orderable** lines:
 | SJ1 | 1 | 0 Ω jumper 0805 | `RC0805JR-070RL` | by MPN |
 
 **No ordered part — these are board features, not BOM line items:**
-- **SW2** (LED OFF/ON/TINY) and **SB1–SB4** (per-LED disable) are **solder bridges** on the PCB.
+- **SW2** (LED OFF/ON/TINY) and **SB1–SB4** (per-LED force-on) are **solder bridges** on the PCB.
 - **TC1** is the **TC2030 footprint** — no soldered part; it mates with a TC2030-MCP pogo
   cable. **Do not load.**
 - **J1 / JP1 / JP2** are **optional** 0.1″ headers — fit a header only if you want the wired
@@ -249,7 +249,9 @@ Work outside-in by heat sensitivity:
 3. **Set the LED master switch SW2** (3-pad bridge — see `sw2-anode-selector.png`): center–left
    = **ON**, center–right = **TINY** (dim via R12), unbridged = **OFF** (a true hardware off —
    supercap-safe for storage).
-4. **SB1–SB4:** leave bridged unless you want to disable a specific LED channel.
+4. **SB1–SB4: leave open.** Each is a per-LED *force-on* bridge that shorts that LED's drive
+   node (LDRVn) to GND. Open is the normal state (the MCU drives the LED); bridge one only to
+   force that LED hard-on without firmware, which also removes MCU control of that channel.
 5. **Confirm SJ1** (VDDIO2 → VS tie) is present — PCBWay places it, but without it PORTC has no
    I/O supply.
 
