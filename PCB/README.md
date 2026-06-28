@@ -199,41 +199,63 @@ Summary of the **orderable** lines:
 
 ---
 
-## Step 5 — Assembly order
+## Step 5 — Assembly (as ordered: PCBWay turnkey)
 
-Everything populates on the **back**; the front stays naked. Work outside-in by heat
-sensitivity.
+Ordered as **single-sided turnkey assembly**: PCBWay sources the parts and machine-places
+them on the **back**; the front stays naked. You finish two part types by hand afterward.
 
-1. **Stencil + paste, then reflow the SMD parts.** Print paste, place, reflow (hot
-   air / hotplate / oven). The **QFN-28 MCU (U1)** has an exposed pad that reflows to the GND
-   plane, and the **LGA-12 accelerometer (U3)** has a ground pad under the body — both want
-   paste and reflow, not iron-tinning. All the passives, the diodes, U2, U4, Q1, and the
-   reverse-mount LEDs go down in this pass.
-   - **LEDs are reverse-mount** (`LA P47F`) — they emit *down* through the FR4 to the front.
-     Mind the cathode mark and the reverse footprint orientation; the cathode goes to `Kn` →
-     ballast → `LDRVn`, the anode to the common `ANODE` node.
-2. **Hand-solder the solar cells last (heat-sensitive).** PV1 / PV2 (`SM141K06TF`) are the
-   most fragile parts: keep iron contact to **≤ 260 °C for ≤ 2 s per joint**, and **do not
-   clean them with IPA** (it can damage the cell). Solder to the custom land; mind cell
-   polarity.
-3. **Set the LED master switch (SW2).** It is a 3-pad solder bridge — see
-   `sw2-anode-selector.png`:
-   - bridge **center–left (to VS) = ON** (full brightness),
-   - bridge **center–right (to TINY) = TINY** (LEDs through R12 = dim, long runtime),
-   - **unbridged = OFF** (a true hardware off — good for storage; supercap-safe).
-   - Leave **SB1–SB4 bridged** unless you want to disable a specific LED channel.
-4. **Tie VDDIO2 (SJ1).** SJ1 is the 0 Ω part above; it bonds VDDIO2 to VS (MVIO unused). Make
-   sure it is placed/bridged, or PORTC has no I/O supply.
+**The split**
+- **PCBWay machine-places** (reflow, bottom, **31 parts / 21 lines**): U1, U2, U3, U4, Q1,
+  D1, D9, D2–D5, R1–R12, **SJ1** (the 0 Ω VDDIO2 tie), C1–C7. This is the trimmed BOM
+  `solar-glow-drh-v2_1-BOM-assembly.xlsx` — give PCBWay *that* file, not the full one.
+- **You hand-solder afterward:** SC1–SC4 supercaps and PV1–PV2 solar cells. They are kept
+  **off** the PCBWay BOM on purpose — the supercaps are manual-solder only (SCHURTER SCPC),
+  and the cells are heat-sensitive.
+- **Not placed:** SW2, SB1–SB4 (solder bridges you set), TC1 (Tag-Connect pad), J1/JP1/JP2
+  (optional headers), MH1–MH4 (mounting holes).
 
-**Critical, do-not-get-wrong items** (full rationale in `../solar-glow-drh-design-notes.md`):
+**Sourcing:** turnkey, with the standing instruction that anything PCBWay can't source they
+flag and you consign from DigiKey — **no substitutes without approval**. The three most
+likely to need consigning are **U1** (AVR64DD28), **U2** (ALD910025SALI), and **D2–D5** (the
+ams OSRAM amber bin — confirm the exact reverse-mount P/N, OSRAM sells top-emit lookalikes).
 
-> - **Supercap land:** the WS17 cell solders to **flat pads under its body** — the
->   **asymmetric P/N widths (P = 7.8 mm, N = 12.2 mm) are the polarity key**. It does **not**
->   solder to the folded end tabs; those are coated, non-solderable mechanical locators.
->   Placement rotations as built: **SC1/SC4 = 90°, SC2/SC3 = 270°.** The wrong (end-tab) land
->   makes zero electrical contact — never substitute it.
-> - **LEDs are reverse-mount**; an LED placed face-up will not glow through the board.
-> - **Glow-window mask must be open** (Step 3) — a tented window kills the optics.
+**Files handed to PCBWay:** the trimmed assembly BOM, the **centroid / pick-and-place**
+(KiCad → Fabrication Outputs → Component Placement; **CSV, mm, exclude-DNP** after marking
+SC1–SC4 / PV1–PV2 / J1 / JP1 / JP2 as DNP; **Absolute origin** to match the drills), and
+`led-orientation-D2-D5.png`.
+
+**Order-form settings that matter:** bottom side, qty 5, ENIG / matte-black / white silk,
+**resin-fill + via-in-pad** (cleans the via-in-pad joints and keeps the TC1 pogo pads flat),
+**moisture-sensitive = U1 / U2 / U3** (U3 is a MEMS part — observe peak reflow temp, no
+ultrasonic clean), no China substitutes. **Black-FR4 core stays OFF** — the glow needs
+translucent FR4, the black look comes from the soldermask.
+
+> **LED polarity (reverse-mount `LA P47F`):** anode **A** on the left, cathode **K** on the
+> right, all four at **rotation 0** (see `led-orientation-D2-D5.png`). They emit *down* through
+> the FR4 to the front. A flipped LED will not glow — this is the single most common PCBA
+> defect on this board.
+
+### Finishing the board by hand (after PCBWay returns it)
+
+Work outside-in by heat sensitivity:
+
+1. **Supercaps SC1–SC4 — hot air / hotplate, not an iron.** They solder to **flat pads under
+   the body**; the **asymmetric P/N widths (P = 7.8 mm, N = 12.2 mm) are the polarity key**.
+   The folded end tabs are coated, non-solderable locators — never solder to those. The cells
+   sit at the board ends, clear of the central cluster, so localized hot air will not disturb
+   the reflowed parts. Rotations as built: **SC1/SC4 = 90°, SC2/SC3 = 270°.**
+2. **Solar cells PV1 / PV2 last (most fragile).** Iron **≤ 260 °C, ≤ 2 s per joint**, and
+   **do not clean with IPA**. Mind cell polarity to the custom land.
+3. **Set the LED master switch SW2** (3-pad bridge — see `sw2-anode-selector.png`): center–left
+   = **ON**, center–right = **TINY** (dim via R12), unbridged = **OFF** (a true hardware off —
+   supercap-safe for storage).
+4. **SB1–SB4:** leave bridged unless you want to disable a specific LED channel.
+5. **Confirm SJ1** (VDDIO2 → VS tie) is present — PCBWay places it, but without it PORTC has no
+   I/O supply.
+
+**Critical, do-not-get-wrong** (full rationale in `../solar-glow-drh-design-notes.md`): the
+supercap under-body land and its asymmetric-width polarity key; reverse-mount LED orientation;
+and the glow-window mask staying open (Step 3) — a tented window kills the optics.
 
 ---
 
