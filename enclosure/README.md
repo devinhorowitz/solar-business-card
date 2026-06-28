@@ -156,10 +156,15 @@ retention and clamp. No tight tolerance is needed on the recess width.
 
 ### 7. Internal radii and tooling
 
-No internal corner in the model is sharper than the finishing tool. All concave junctions are pre-radiused:
+Internal concave junctions are modeled **sharp**, and a round tool simply leaves its own tool-radius
+fillet there — standard practice for a milled pocket, and nothing mates in those corners. They are
+left sharp on purpose: pre-modeling the radius here could only be done as a polygon offset, which
+exports as **faceted faces a CAM seat cannot measure** (it gets the file rejected). The whole solid is
+therefore analytic (planes, cylinders, cones, fillet/chamfer surfaces). The finisher radii are called
+out only for reference:
 
-- Cavity (1.85 mm deep): concave boss-to-lip and rib-to-lip junctions radiused **R1.0** (⌀2.0 mm finisher). Cavity inner corners are R1.45.
-- Back recessed field (0.15 mm deep): annulus-to-frame junctions radiused **R0.5** (≤⌀1.0 mm finisher; shallow, reach trivial).
+- Cavity (1.85 mm deep): boss-to-lip and rib-to-lip junctions take a **⌀2.0 mm** finisher (R1.0 left by the tool). Cavity inner corners are modeled R1.45.
+- Back recessed field (0.15 mm deep): annulus-to-frame junctions take a **≤⌀1.0 mm** finisher (R0.5; shallow, reach trivial).
 
 Rough the open cavity with a ⌀3–4 mm tool; finish corners/walls with the ⌀2.0. No EDM or square
 internal corners required.

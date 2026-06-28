@@ -38,14 +38,15 @@ the frame the way the inner bosses fuse to the lip; all raised `border_h` (0.15 
 engraved/laser rear art in the recessed field takes no wear. The frame is milled, not etched; only
 the decals inside it are laser work.
 
-ROUND-TOOL MACHINABILITY (both faces): no internal corner is sharper than the cutter. Convex features
-(bosses, brace posts, rib ends, the frame and prism outlines) are clear to mill around; the concave
-junctions are RADIUSED to the finishing-tool radius. Interior cavity (1.85 deep): TOOL_R R1.0 = Ø2.0,
-where bosses and ribs merge into the lip. Back field (0.15 deep): BACK_TOOL_R R0.5 = Ø1.0 (finer tool
-for the shallow art recess -> tighter junction corners), where the annuli merge into the frame. The
-recess corners 2.95, outer margin 3.95+, and field inner 1.45 already clear the Ø2.0. Relief is
-computed as void minus its morphological opening, sits only at the perimeter junctions, and is
-verified clear of every back-side component.
+ROUND-TOOL MACHINABILITY (both faces): every convex feature (bosses, brace posts, rib ends, the frame
+and prism outlines) is clear for a round tool to mill around, and the recess corners (2.95), outer
+margin (3.95+) and field inner (1.45) all clear a Ø2.0 cutter. The concave boss-lip / rib-lip and
+annulus-frame junctions are left SHARP in the model: a spinning end mill physically leaves its own
+tool-radius fillet there, nothing mates in those corners, and modeling them sharp keeps every surface
+analytic (a pre-modeled radius could only be a polygon offset here, which exports as faceted faces a
+CAM seat cannot measure). `tool_relief=True` re-enables the (faceted) pre-fill if ever wanted; it is
+OFF by default. The finishing-tool radii are still called out for reference: cavity TOOL_R R1.0 = Ø2.0,
+back field BACK_TOOL_R R0.5 = Ø1.0.
 
 TI EDGE-BREAK (deburr): titanium edges chip and cut, so no corner is left knife-sharp. The outer
 top/bottom rim is eased `edge_ease` (0.20); the exposed END-FACE edges -- the proud back frame and
@@ -163,7 +164,7 @@ def _poly_solid(poly, z0, dz):
     return cq.Workplane("XY").workplane(offset=z0).polyline(xy).close().extrude(dz)
 
 # ===== build =====
-def build(floor=0.55, wall_th=1.0, border_h=0.15, ribs=True, prog_window=False, glow_marker=True):
+def build(floor=0.55, wall_th=1.0, border_h=0.15, ribs=True, prog_window=False, glow_marker=True, tool_relief=False):
     bb = floor + cavity                       # board-back / boss-top / lip-top / rib-top plane
     wt = bb + board_th
     outW, outH, outR = cavW + 2*wall_th, cavH + 2*wall_th, cavR + wall_th
@@ -198,10 +199,14 @@ def build(floor=0.55, wall_th=1.0, border_h=0.15, ribs=True, prog_window=False, 
         for x0, y0, x1, y1 in RIBS:
             res = res.union(cq.Workplane("XY").workplane(offset=floor)
                               .moveTo(wx((x0+x1)/2), wy((y0+y1)/2)).rect(x1-x0, y1-y0).extrude(cavity))
-    # round-tool corner relief: fill the concave boss-lip / rib-lip junctions to the tool radius so a
-    # spinning end mill clears the pocket in single passes (draws the radius the cutter actually leaves).
-    for poly in _relief_for(_cavity_islands(ribs)):
-        res = res.union(_poly_solid(poly, floor, cavity))
+    # round-tool corner relief (OFF by default): pre-filling the concave boss-lip / rib-lip junctions
+    # to the tool radius makes the model match what the cutter leaves, but the only clean way to do it
+    # here is a polygon offset, which exports as faceted faces a CAM seat cannot measure (PCBWay
+    # rejects that). Left sharp, the model is fully analytic and a round tool simply leaves its own
+    # radius there (standard practice; nothing mates in those corners). tool_relief=True re-enables it.
+    if tool_relief:
+        for poly in _relief_for(_cavity_islands(ribs)):
+            res = res.union(_poly_solid(poly, floor, cavity))
     # BACK FACE: frame == lip footprint + boss annuli, raised border_h
     if border_h > 0:
         frame = (cq.Workplane("XY").workplane(offset=-border_h).rect(cavW, cavH)
@@ -213,12 +218,11 @@ def build(floor=0.55, wall_th=1.0, border_h=0.15, ribs=True, prog_window=False, 
         for mx, my in mounts:
             bwp = bwp.moveTo(wx(mx), wy(my)).circle(boss_r)
         res = res.union(bwp.extrude(border_h))
-        # round-tool relief on the BACK: the recessed art field is milled around the proud frame +
-        # annuli, so the annulus-frame junctions need the same radius the cutter leaves (mirror of the
-        # interior). Laser decals sit in the milled field; the frame stays a fully machined surface.
-        # Finer Ø1.0 finisher here (shallow 0.15 field) -> tighter corner relief than the cavity.
-        for poly in _relief_for(_back_islands(), BACK_TOOL_R):
-            res = res.union(_poly_solid(poly, -border_h, border_h))
+        # round-tool relief on the BACK (OFF by default, same reason as the cavity): the annulus-frame
+        # junctions are left sharp so the back stays analytic; the finisher leaves its own radius.
+        if tool_relief:
+            for poly in _relief_for(_back_islands(), BACK_TOOL_R):
+                res = res.union(_poly_solid(poly, -border_h, border_h))
     # M2 holes CLEAN THROUGH (boss + skin + back annulus)
     twp = cq.Workplane("XY").workplane(offset=-border_h - 0.1)
     for mx, my in mounts:
@@ -278,7 +282,7 @@ print(f"cavity={cavity} (U2 {U2_H} + air {cav_margin}; kapton {kapton_th})  lip/
       f"braces={len(BRACE)} ribs={len(RIBS)}  border=0.15  "
       f"cavity tool R{TOOL_R} (Ø{2*TOOL_R}) / back tool R{BACK_TOOL_R} (Ø{2*BACK_TOOL_R})  "
       f"deburr: outer rim {edge_ease}, ends {EDGE_BREAK}  reflector-frame {GLOW_WIN[2]-GLOW_WIN[0]:.1f}x{GLOW_WIN[3]-GLOW_WIN[1]:.1f} laser-marked (uniform floor)  "
-      f"relief: cavity={len(_relief_for(_cavity_islands(True)))} back={len(_relief_for(_back_islands(), BACK_TOOL_R))}")
+      f"relief: OFF (concave junctions left sharp -> clean analytic STEP; round tool leaves its radius)")
 for name_suf, fl, wl, bd, rb, pw, note in jobs:
     solid = build(floor=fl, wall_th=wl, border_h=bd, ribs=rb, prog_window=pw)
     field = fl + cavity + board_th
