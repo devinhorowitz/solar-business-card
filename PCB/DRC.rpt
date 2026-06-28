@@ -1,8 +1,8 @@
 ** Drc report for solar-glow-drh-v2_2.kicad_pcb **
-** Created on 2026-06-28T18:02:14 **
+** Created on 2026-06-28T18:27:08 **
 ** Report includes: Errors, Warnings **
 
-** Found 140 DRC violations **
+** Found 136 DRC violations **
 [shorting_items]: Items shorting two nets (nets LA and LB)
     Local override; error
     @(39.0000 mm, 34.0000 mm): Via [LA] on F.Cu - B.Cu
@@ -34,7 +34,43 @@
 [solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
     Rule: board setup solder mask min width; error
     @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
-    @(36.0000 mm, 43.5000 mm): Pad K [K5] of D5 on B.Cu
+    @(33.4000 mm, 47.6000 mm): Via [ANODE] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(27.4000 mm, 47.6000 mm): Via [ANODE] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(21.1000 mm, 44.3000 mm): Pad A [ANODE] of D3 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(23.7000 mm, 43.5000 mm): Pad K [K3] of D3 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(14.8000 mm, 44.3000 mm): Pad A [ANODE] of D2 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(17.4000 mm, 43.5000 mm): Pad K [K2] of D2 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(21.1000 mm, 47.6000 mm): Via [ANODE] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(27.4000 mm, 44.3000 mm): Pad A [ANODE] of D4 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(30.0000 mm, 43.5000 mm): Pad K [K4] of D4 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(23.7000 mm, 43.5000 mm): Track [K3] on B.Cu, length 6.3629 mm
 [solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
     Rule: board setup solder mask min width; error
     @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
@@ -51,10 +87,6 @@
     Rule: board setup solder mask min width; error
     @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
     @(23.7000 mm, 43.5000 mm): Track [K3] on B.Cu, length 6.3629 mm
-[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
-    Rule: board setup solder mask min width; error
-    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
-    @(36.0000 mm, 43.5000 mm): Pad K [K5] of D5 on B.Cu
 [solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
     Rule: board setup solder mask min width; error
     @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
@@ -82,15 +114,11 @@
 [solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
     Rule: board setup solder mask min width; error
     @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
-    @(21.1000 mm, 47.6000 mm): Via [ANODE] on F.Cu - B.Cu
-[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
-    Rule: board setup solder mask min width; error
-    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
     @(14.8000 mm, 44.3000 mm): Pad A [ANODE] of D2 on B.Cu
 [solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
     Rule: board setup solder mask min width; error
     @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
-    @(17.4000 mm, 43.5000 mm): Pad K [K2] of D2 on B.Cu
+    @(21.1000 mm, 47.6000 mm): Via [ANODE] on F.Cu - B.Cu
 [solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
     Rule: board setup solder mask min width; error
     @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
@@ -142,35 +170,7 @@
 [solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
     Rule: board setup solder mask min width; error
     @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
-    @(17.4000 mm, 43.5000 mm): Pad K [K2] of D2 on B.Cu
-[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
-    Rule: board setup solder mask min width; error
-    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
-    @(30.0000 mm, 43.5000 mm): Pad K [K4] of D4 on B.Cu
-[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
-    Rule: board setup solder mask min width; error
-    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
-    @(23.7000 mm, 43.5000 mm): Track [K3] on B.Cu, length 6.3629 mm
-[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
-    Rule: board setup solder mask min width; error
-    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
-    @(23.7000 mm, 43.5000 mm): Pad K [K3] of D3 on B.Cu
-[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
-    Rule: board setup solder mask min width; error
-    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
-    @(27.4000 mm, 44.3000 mm): Pad A [ANODE] of D4 on B.Cu
-[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
-    Rule: board setup solder mask min width; error
-    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
-    @(30.0000 mm, 43.5000 mm): Pad K [K4] of D4 on B.Cu
-[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
-    Rule: board setup solder mask min width; error
-    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
-    @(23.7000 mm, 43.5000 mm): Track [K3] on B.Cu, length 6.3629 mm
-[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
-    Rule: board setup solder mask min width; error
-    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
-    @(23.7000 mm, 43.5000 mm): Pad K [K3] of D3 on B.Cu
+    @(21.1000 mm, 47.6000 mm): Via [ANODE] on F.Cu - B.Cu
 [solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
     Rule: board setup solder mask min width; error
     @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
@@ -226,10 +226,6 @@
 [solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
     Rule: board setup solder mask min width; error
     @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
-    @(27.4000 mm, 44.3000 mm): Pad A [ANODE] of D4 on B.Cu
-[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
-    Rule: board setup solder mask min width; error
-    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
     @(30.0000 mm, 43.5000 mm): Pad K [K4] of D4 on B.Cu
 [solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
     Rule: board setup solder mask min width; error
@@ -266,6 +262,10 @@
 [solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
     Rule: board setup solder mask min width; error
     @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(27.4000 mm, 44.3000 mm): Pad A [ANODE] of D4 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
     @(30.0000 mm, 43.5000 mm): Pad K [K4] of D4 on B.Cu
 [solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
     Rule: board setup solder mask min width; error
@@ -275,12 +275,18 @@
     Rule: board setup solder mask min width; error
     @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
     @(23.7000 mm, 43.5000 mm): Pad K [K3] of D3 on B.Cu
-[via_dangling]: Via is not connected or connected on only one layer
-    Local override; warning
-    @(7.9050 mm, 54.9000 mm): Via [GND] on F.Cu - B.Cu
-[via_dangling]: Via is not connected or connected on only one layer
-    Local override; warning
-    @(13.7000 mm, 37.5000 mm): Via [GND] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(30.0000 mm, 43.5000 mm): Pad K [K4] of D4 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(23.7000 mm, 43.5000 mm): Track [K3] on B.Cu, length 6.3629 mm
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; error
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+    @(23.7000 mm, 43.5000 mm): Pad K [K3] of D3 on B.Cu
 [via_dangling]: Via is not connected or connected on only one layer
     Local override; warning
     @(45.5000 mm, 63.0000 mm): Via [VINB] on F.Cu - B.Cu
@@ -307,9 +313,6 @@
     @(49.4000 mm, 47.0500 mm): Via [VS] on F.Cu - B.Cu
 [track_dangling]: Track has unconnected end
     Local override; warning
-    @(13.7000 mm, 32.4200 mm): Track [SDA] on B.Cu, length 1.3501 mm
-[track_dangling]: Track has unconnected end
-    Local override; warning
     @(29.3000 mm, 48.6000 mm): Track [TINY] on B.Cu, length 1.3000 mm
 [track_dangling]: Track has unconnected end
     Local override; warning
@@ -320,18 +323,6 @@
 [track_dangling]: Track has unconnected end
     Local override; warning
     @(12.6000 mm, 47.0000 mm): Track [VDDIO2] on B.Cu, length 1.8310 mm
-[via_dangling]: Via is not connected or connected on only one layer
-    Local override; warning
-    @(4.0900 mm, 54.9000 mm): Via [PA4] on F.Cu - B.Cu
-[via_dangling]: Via is not connected or connected on only one layer
-    Local override; warning
-    @(5.3700 mm, 54.9000 mm): Via [PC0] on F.Cu - B.Cu
-[via_dangling]: Via is not connected or connected on only one layer
-    Local override; warning
-    @(6.6300 mm, 54.9000 mm): Via [PC1] on F.Cu - B.Cu
-[track_dangling]: Track has unconnected end
-    Local override; warning
-    @(13.7000 mm, 34.9600 mm): Track [SCL] on B.Cu, length 1.3500 mm
 [lib_footprint_issues]: The current configuration does not include the footprint library 'solarglow'
     Local override; warning
     @(3.5000 mm, 3.0000 mm): Footprint MH3
@@ -492,7 +483,7 @@
     Local override; warning
     @(28.7000 mm, 52.0000 mm): Footprint SB3
 
-** Found 20 unconnected pads **
+** Found 21 unconnected pads **
 [unconnected_items]: Missing connection between items
     Local override; error
     @(46.5000 mm, 59.1500 mm): Pad A [VINB] of D9 on B.Cu
@@ -520,11 +511,7 @@
 [unconnected_items]: Missing connection between items
     Local override; error
     @(32.5000 mm, 37.6300 mm): Track [MID] on In2.Cu, length 11.6300 mm
-    @(35.3000 mm, 61.0000 mm): Track [MID] on In2.Cu, length 19.8000 mm
-[unconnected_items]: Missing connection between items
-    Local override; error
-    @(45.9900 mm, 70.5000 mm): Track [VS] on B.Cu, length 0.6998 mm
-    @(45.9900 mm, 72.0000 mm): Pad 1 [VS] of R7 on B.Cu
+    @(47.0000 mm, 61.0000 mm): Track [MID] on In2.Cu, length 11.7000 mm
 [unconnected_items]: Missing connection between items
     Local override; error
     @(45.9900 mm, 73.5000 mm): Pad 1 [CLREF] of R8 on B.Cu
@@ -536,11 +523,15 @@
 [unconnected_items]: Missing connection between items
     Local override; error
     @(15.4900 mm, 32.4000 mm): Pad 1 [SDA] of R10 on B.Cu
-    @(13.7000 mm, 32.4200 mm): Track [SDA] on B.Cu, length 1.3501 mm
+    @(8.3000 mm, 42.9000 mm): Pad 8 [SDA] of U1 on B.Cu
 [unconnected_items]: Missing connection between items
     Local override; error
+    @(19.2500 mm, 35.1500 mm): Pad 4 [SDA] of U3 on B.Cu
+    @(15.4900 mm, 32.4000 mm): Pad 1 [SDA] of R10 on B.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(19.2500 mm, 35.1500 mm): Pad 4 [SDA] of U3 on B.Cu
     @(35.5000 mm, 34.2500 mm): Pad 5 [SDA] of U5 on B.Cu
-    @(19.2500 mm, 35.1500 mm): Track [SDA] on B.Cu, length 0.7649 mm
 [unconnected_items]: Missing connection between items
     Local override; error
     @(29.3000 mm, 48.6000 mm): Track [TINY] on B.Cu, length 1.3000 mm
@@ -559,12 +550,16 @@
     @(31.7900 mm, 37.0000 mm): Track [FD] on B.Cu, length 0.8500 mm
 [unconnected_items]: Missing connection between items
     Local override; error
-    @(13.7000 mm, 34.9600 mm): Track [SCL] on B.Cu, length 1.3500 mm
+    @(15.4900 mm, 34.9600 mm): Pad 1 [SCL] of R11 on B.Cu
+    @(8.7000 mm, 42.9000 mm): Pad 9 [SCL] of U1 on B.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(19.2500 mm, 36.6500 mm): Pad 1 [SCL] of U3 on B.Cu
     @(15.4900 mm, 34.9600 mm): Pad 1 [SCL] of R11 on B.Cu
 [unconnected_items]: Missing connection between items
     Local override; error
+    @(19.2500 mm, 36.6500 mm): Pad 1 [SCL] of U3 on B.Cu
     @(34.5500 mm, 34.7000 mm): Pad 3 [SCL] of U5 on B.Cu
-    @(19.2500 mm, 36.6500 mm): Track [SCL] on B.Cu, length 0.5701 mm
 [unconnected_items]: Missing connection between items
     Local override; error
     @(31.7900 mm, 38.5000 mm): Pad 1 [LA] of C9 on B.Cu
