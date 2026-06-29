@@ -7,13 +7,15 @@ SM141K06TF and SCPC parts. Where a register value is given, it is the value the 
 write to match what is physically routed.
 
 **v2.2 NFC addition (read this caveat).** The v2.2 board adds an NFC tag subsystem
-(`U5` NT3H2211, `C8`, `C9`, `R13`, and the antenna coil) and reassigns **PA6** to its
-field-detect line. Those parts are confirmed *placed* in the committed
-`solar-glow-drh-v2_2.kicad_pcb`, but that file's net names are not machine-readable, so the
-NFC **net** wiring below (FD→PA6, `U5` Vcc→VS, the I²C nets) is from the v2.2 design spec /
-firmware contract and is **bench-pending** — not read off the board like the v2.1 rows. The
-NT3H2211 register/memory facts are verified against the NTAG I²C plus datasheet
-(NT3H2111_2211 Rev 3.6).
+(`U5` NT3H2211, `C8`, `C9`, `R13`, and the antenna coil) on **PA6** (field-detect), and a
+later revision adds a **high-side load switch** that power-gates `U5`'s VCC from **PA7**
+(`NFC_EN`). The NT3H2211 parts are *placed* in the committed `solar-glow-drh-v2_2.kicad_pcb`,
+but the **load-switch/`NFC_EN` power-gate is newer and not yet on a committed board**, and
+that file's net names are not machine-readable anyway — so all NFC **net** wiring here
+(FD→PA6, the I²C nets, `NFC_EN`→the switch, `U5` Vcc→the switch output, and where `R13` ties)
+is from the design spec / firmware contract and is **bench-pending**, not read off the board
+like the v2.1 rows. The NT3H2211 register/memory facts are verified against the NTAG I²C plus
+datasheet (NT3H2111_2211 Rev 3.6).
 
 MCU: **AVR64DD28**, 28-pin VQFN (footprint `solarglow:U1`). It sits on the **back** of the board.
 
@@ -29,8 +31,8 @@ MCU: **AVR64DD28**, 28-pin VQFN (footprint `solarglow:U1`). It sits on the **bac
 | 1  | **PA3** | `LDRV4` | LED4 (D5) drive | **TCA0 WO3** |
 | 2  | **PA4** | `PA4` | spare GPIO | broken out on JP2.1 |
 | 3  | **PA5** | `BTN` | reserved button | GPIO; only routed to a stub (the one DRC `track_dangling`); v3 hook |
-| 4  | **PA6** | `FD` | NFC field-detect in (`U5`) | PORTA pin interrupt, **falling**; ext 10k (`R13`) to VS — *v2.2, bench-pending* |
-| 5  | **PA7** | — | free | unconnected |
+| 4  | **PA6** | `FD` | NFC field-detect in (`U5`) | PORTA pin int, **falling**; field-powered (works VCC-off, §8.4); int pull-up on + ext 10k (`R13`) to VS — *v2.2, bench-pending* |
+| 5  | **PA7** | `NFC_EN` | NFC VCC load-switch enable | output, **active-HIGH**, LOW = NFC off (default) — *v2.2 power-gate, bench-pending* |
 | 6  | **PC0** | `PC0` | spare GPIO | broken out on JP2.2 |
 | 7  | **PC1** | `PC1` | spare GPIO | broken out on JP2.3 |
 | 8  | **PC2** | `SDA` | I²C data | **TWI0 host SDA** via `TWIROUTEA = ALT2`; 4.7 kΩ pull-up to VS |
@@ -100,7 +102,9 @@ Inner copper: **In1 = GND plane, In4 = VS plane**, In2/In3 = signal. (6-layer, 0
   PA2/PA3, which are LED pins). External 4.7 kΩ pull-ups are fitted, so don't enable internal
   ones. Bus is the accelerometer (`0x18`) plus the JP1 breakout — and, on **v2.2**, the
   NFC tag `U5` (`0x55`); the two addresses don't clash, so no firmware change beyond
-  talking to both. FD (a pin interrupt on PA6) is separate from the bus.
+  talking to both. `U5` is reachable on I²C only while `NFC_EN` (PA7) powers it — it is
+  gated **off** by default. FD (a pin interrupt on PA6) is separate from the bus, and is
+  field-powered, so it works even with `U5`'s VCC gated off.
 
 - **Accelerometer wake — PORTF pin interrupts.**
   Configure **PF1** (INT1) and **PF0** (INT2) as inputs with edge interrupts to match whatever
@@ -129,10 +133,14 @@ Inner copper: **In1 = GND plane, In4 = VS plane**, In2/In3 = signal. (6-layer, 0
 **U5 — NXP NT3H2211 (NTAG I²C plus, 2 KB) — NFC contact tag (v2.2).**
 - Interface: **I²C target, address `0x55`** 7-bit (write 0xAA / read 0xAB); shares the TWI0
   bus with the accel (0x18), no clash.
-- **FD (field detect, pin 4) → PA6**, open-drain with ext 10 kΩ (`R13`) to VS: idles HIGH,
-  pulls LOW on an NFC field → PA6 falling-edge interrupt wakes the MCU.
-- Supply Vcc → VS (clamped ≤ 3.47 V, inside its 3.6 V max); decoupled by `C8` (100 nF).
-  `VOUT` (energy-harvest output) unconnected.
+- **FD (field detect, pin 4) → PA6**, open-drain, ext 10 kΩ (`R13`) to VS: idles HIGH, pulls
+  LOW on an NFC field → PA6 falling-edge interrupt wakes the MCU. FD is **field-powered**
+  (§8.4), so this works even with `U5`'s VCC gated off; firmware also enables PA6's internal
+  pull-up.
+- Supply Vcc → **high-side load-switch output**, gated by `NFC_EN` (PA7, active-HIGH); the
+  switch input is on VS (clamped ≤ 3.47 V, inside the 3.6 V max). **Off by default** to kill
+  the ~195 µA idle draw (datasheet Table 42); only powered around an MCU↔tag I²C access. `C8`
+  (100 nF) decouples the switched VCC; `VOUT` (energy-harvest output) unconnected.
 - Antenna: PCB coil on `LA`/`LB`, tuned to 13.56 MHz by the chip's internal 50 pF
   (`C9` = DNP trim). No firmware involvement in the radio.
 - Role: a phone tap reads a contact **vCard** (RF-powered, so it reads with the cap flat) and
@@ -239,6 +247,6 @@ and set the achievable duty cycle.
 6. **Housekeeping:** ADC read of VSENSE (×2 = VIN) and VDD/10 for charge state; optional EEPROM
    activation counter; brown-out behavior around the supercap rail.
 
-**Pins free for new features:** PA7, PD1, PD3, PD4, PD5, PD6, PD7, PF6/RST (8 GPIO, most
+**Pins free for new features:** PD1, PD3, PD4, PD5, PD6, PD7, PF6/RST (7 GPIO, most
 ADC-capable; PD6 can be a DAC output), plus PA4/PC0/PC1 already on JP2 and PA5 (`BTN`)
-reserved. (PA6 is the NFC `FD` input on v2.2.)
+reserved. (On v2.2, PA6 = NFC `FD` and PA7 = `NFC_EN`.)
