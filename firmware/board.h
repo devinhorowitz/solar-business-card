@@ -16,8 +16,8 @@
  *     1 PA3      LDRV4    LED4 (D5)                 TCA0 WO3
  *     2 PA4      PA4      spare GPIO  (JP2.1)
  *     3 PA5      BTN      reserved button (stub only; v3 hook)
- *     4 PA6      FD       NFC field-detect in (NT3H2211, v2.2)  PORTA pin int, falling
- *     5 PA7      -        free
+ *     4 PA6      FD       NFC field-detect in (NT3H2211)  FD-wake, falling; field-powered (works VCC-off)
+ *     5 PA7      NFC_EN   NFC VCC load-switch enable (active-HIGH)  output, LOW = NFC off
  *     6 PC0      PC0      spare GPIO  (JP2.2)
  *     7 PC1      PC1      spare GPIO  (JP2.3)
  *     8 PC2      SDA      TWI0 host SDA  (TWIROUTEA=ALT2)  ext 4.7k to VS
@@ -72,13 +72,32 @@
 
 /* ---- I2C device: NXP NT3H2211 (NTAG I2C plus 2K), v2.2 NFC addition ----
  * 7-bit address 0x55 (write 0xAA / read 0xAB); shares TWI0 with the accel @0x18,
- * no clash. VCC on VS, decoupled by C8 (100nF). Antenna is the PCB coil on LA/LB,
- * tuned by the chip's internal 50pF (C9 = DNP trim) -- no firmware involvement. */
+ * no clash. Antenna is the PCB coil on LA/LB, tuned by the chip's internal 50pF
+ * (C9 = DNP trim) -- no firmware involvement in the radio.
+ *
+ * POWER-GATED: the chip draws ~195 uA continuously from VCC (datasheet Table 42,
+ * 3.3V idle) with NO sleep state -- the dominant idle drain on the supercaps. A
+ * high-side load switch now gates its VCC; enable is NFC_EN (PA7, active-HIGH),
+ * default LOW = VCC off (~0 draw). Raise HIGH only while the MCU needs the I2C
+ * side (provisioning / read / write), then drop it LOW again. NFC_EN gates ONLY
+ * the MCU<->tag I2C path: a phone reading the static vCard, and the FD field-
+ * detect wake (see below), both run on the phone's field power and work with VCC
+ * OFF (datasheet 8.4). */
 #define NT3H_ADDR       0x55
 
-/* FD (field detect, U5 pin4) -> PA6. Open-drain at the tag, external 10k (R13)
- * pull-up to VS, so PA6 idles HIGH and is pulled LOW on an NFC field -> we sense a
- * FALLING edge. No internal pull-up (the external one is fitted). */
+/* NFC_EN: high-side load-switch enable for the NT3H2211 VCC. ACTIVE-HIGH.
+ *   1 = NFC powered (I2C reachable).   0 = VCC off (default; ~0 draw). */
+#define NFC_EN_PORT     PORTA
+#define NFC_EN_PIN_bm   PIN7_bm
+
+/* FD (field detect, U5 pin4) -> PA6, open-drain, external 10k (R13) to VS.
+ * FD-WAKE: a phone's field pulls FD low (FD_ON=00b, field-present = the POR
+ * default). Per datasheet 8.4 the FD pin runs on the phone's field power, so it
+ * works even with the tag's VCC gated off -- that is why FD-wake survives the
+ * power-gate. main.c senses a FALLING edge on PA6 and runs the tap glow; no I2C
+ * setup is needed (the field-present default does it). Firmware also enables PA6's
+ * internal pull-up as belt-and-suspenders (so the pin can't float if R13 is
+ * marginal or tied to the switched rail); it only sinks current while FD is low. */
 #define FD_PORT         PORTA
 #define FD_PIN_bm       PIN6_bm
 
@@ -86,7 +105,8 @@
  * read even with the supercap flat, and it only has to be written once. Set to 1
  * for a SINGLE flash to write the NDEF into the tag EEPROM, confirm the phone
  * reads it, then set back to 0 and reflash (avoids re-writing EEPROM every boot).
- * The NDEF stays re-writable -- bump this to 1 again to rewrite. */
+ * The NDEF stays re-writable -- bump this to 1 again to rewrite. nfc_provision_default()
+ * powers the tag on (NFC_EN high) for the write and drops it back off afterward. */
 #define NFC_PROVISION   0
 
 /* =====================================================================

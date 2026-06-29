@@ -1,5 +1,5 @@
 /*
- * nfc.h  --  NXP NT3H2211 (NTAG I2C plus, 2K) driver: NDEF write + FD field wake.
+ * nfc.h  --  NXP NT3H2211 (NTAG I2C plus, 2K) driver: power-gated NDEF write.
  *
  * Verified against datasheet NT3H2111_2211 Rev 3.6 (datasheets/NT3H2111_2211.pdf).
  * U5 is an I2C TARGET on the same TWI0 host bus as the accel (SDA=PC2, SCL=PC3,
@@ -8,13 +8,18 @@
  * transactions -- NOT twi_reg_read(), whose bit7 sub-address auto-increment is a
  * LIS2DH12-ism the NT3H does not use.
  *
- * Two jobs:
- *   1. Write a contact NDEF into the tag EEPROM (one-time provisioning). The NDEF
- *      is RF-readable by a phone even with the supercap flat (the tag runs on the
- *      phone's field), and is re-writable.
- *   2. FD (field detect, U5 pin4 -> PA6) wakes the MCU when a phone enters the
- *      field; main.c then runs the tap glow. FD is open-drain, ext 10k (R13) to
- *      VS, idles HIGH, pulls LOW on the event -> PA6 falling-edge interrupt.
+ * The tag's VCC is power-gated by a high-side load switch enabled on NFC_EN (PA7,
+ * active-HIGH); see board.h. The chip has no sleep state and draws ~195 uA from
+ * VCC continuously, so VCC is kept OFF and only switched on around an I2C access.
+ * nfc_power_on() raises NFC_EN and waits for the tag to boot (bounded ACK-poll);
+ * nfc_power_off() drops it. Both the RF read of the static NDEF by a phone AND the
+ * FD field-detect wake run on the phone's field power and need NO VCC (datasheet
+ * 8.4) -- power-gating only affects the MCU<->tag I2C side.
+ *
+ * Job: write a contact NDEF into the tag EEPROM (one-time provisioning). The NDEF
+ * is RF-readable by a phone even with the supercap flat, and is re-writable.
+ * (FD-wake itself needs no driver code: the chip's POR/config default pulls FD low
+ * on field-present, and main.c senses the PA6 falling edge -- see board.h/main.c.)
  *
  * --- memory model (datasheet, I2C perspective; Table 6/7, sec 8.3.2/8.3.8/9.7) ---
  *   - access is in 16-byte BLOCKS, addressed by a 1-byte block address (MEMA).
@@ -34,12 +39,7 @@
  *   - session registers (volatile, loaded from config at POR) live at I2C block
  *     0xFE and are reachable ONLY via the sec 9.8 register op (MEMA=FEh).
  *   - NC_REG is at register offset 0x00; NS_REG (session only) at offset 0x06.
- *   - FD behavior is in NC_REG: FD_ON[3:2] = event that PULLS FD LOW, FD_OFF[5:4]
- *     = event that RELEASES it. FD_ON=00b -> "field switched ON" = a phone tapped
- *     the card (vs 01b first SoC, 10b tag selected, 11b pass-through). FD_OFF=00b
- *     -> released when the field goes away. BOTH are the POR default (NC_REG
- *     default = 0x01, only TRANSFER_DIR set), so FD-on-field works out of the box;
- *     nfc_set_fd_field_mode() just asserts it explicitly for the live session.
+ *     (FD-output config in NC_REG is left at its POR default -- FD is not used.)
  */
 #ifndef NFC_H
 #define NFC_H
@@ -97,9 +97,14 @@ uint8_t nfc_write_block(uint8_t blk, const uint8_t *src16);
 uint8_t nfc_read_reg(uint8_t reg, uint8_t *val);
 uint8_t nfc_write_reg(uint8_t reg, uint8_t mask, uint8_t val);
 
-/* set the (session) NC_REG FD bits to field-present mode (FD_ON=00, FD_OFF=00).
- * Belt-and-suspenders: this is already the POR default in the config register. */
-uint8_t nfc_set_fd_field_mode(void);
+/* power-gate control (NFC_EN = PA7, active-HIGH; see board.h).
+ * nfc_power_on(): drive NFC_EN HIGH, then wait for the tag to answer its I2C
+ *   address (bounded ACK-poll after a short load-switch soft-start). Returns 0
+ *   when the tag is up and reachable, non-zero on timeout (absent / EN not wired).
+ * nfc_power_off(): drive NFC_EN LOW (VCC off). Call immediately after any I2C
+ *   access; it MUST be low before sleep. */
+uint8_t nfc_power_on(void);
+void    nfc_power_off(void);
 
 /* read-only CC check: 1 if block-0 bytes 12..15 == E1 10 6D 00 (NDEF-capable). */
 uint8_t nfc_check_cc(void);
