@@ -42,7 +42,7 @@ CFLAGS   = -mmcu=$(MCU) -DF_CPU=$(F_CPU)UL -Os -std=gnu11 \
            -B $(DFP_SPEC) -I $(DFP_INC)
 LDFLAGS  = -mmcu=$(MCU) -B $(DFP_SPEC) -Wl,--gc-sections
 
-SRC      = main.c led.c lis2dh12.c sense.c
+SRC      = main.c led.c lis2dh12.c nfc.c sense.c
 OBJ      = $(SRC:.c=.o)
 TARGET   = solar-glow
 

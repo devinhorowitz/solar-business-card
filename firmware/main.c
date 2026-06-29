@@ -3,13 +3,15 @@
  *
  * Behaviour
  * ---------
- * The card sleeps in POWER-DOWN almost all the time. Three things wake it:
+ * The card sleeps in POWER-DOWN almost all the time. Four things wake it:
  *   - TAP      (LIS2DH12 click -> INT1 -> PF1, rising)  -> full breathing glow
  *   - MOTION   (LIS2DH12 inertial wake-up -> INT2 -> PF0, rising) -> one soft breath
+ *   - NFC      (NT3H2211 field detect -> FD -> PA6, falling) -> the tap glow:
+ *                a phone entering the RF field pulls FD low (NC_REG FD_ON=00b)
  *   - PIT tick (RTC, ~1 s, runs in power-down)          -> sample light, and
  *                if we just crossed dark->light, do a glow
- * All PORT pins sense fully asynchronously, so the rising-edge accel
- * interrupts wake the core even with CLK_PER stopped (datasheet 18.3.3.1).
+ * All PORT pins sense fully asynchronously, so the accel (rising) and FD (falling)
+ * pin interrupts wake the core even with CLK_PER stopped (datasheet 18.3.3.1).
  *
  * Every glow is gated by the rail-voltage floor: if the supercap is below
  * VS_GLOW_FLOOR_MV we stay dark and let it charge, so an animation can never
@@ -32,6 +34,7 @@
 #include "lis2dh12.h"
 #include "led.h"
 #include "sense.h"
+#include "nfc.h"
 
 /* VIN threshold (mV) for "light present". LIGHT_THRESH_MV is defined at the
  * VSENSE pin (= VIN/2); sense_vin_mv() already returns VIN, so scale up. */
@@ -40,6 +43,7 @@
 static volatile uint8_t f_tap;     /* PF1 click   */
 static volatile uint8_t f_motion;  /* PF0 activity */
 static volatile uint8_t f_tick;    /* RTC PIT     */
+static volatile uint8_t f_nfc;     /* PA6 NFC field-detect */
 
 /* ---------------- init ---------------- */
 
@@ -62,6 +66,10 @@ static void gpio_init(void)
      * INT pads are push-pull active-high, so no pull resistor. */
     PORTF.PIN0CTRL = PORT_ISC_RISING_gc;   /* INT2 / activity */
     PORTF.PIN1CTRL = PORT_ISC_RISING_gc;   /* INT1 / tap      */
+    /* NFC field-detect on PA6: input (default), falling-edge sense. FD is open-
+     * drain at the tag with an external 10k (R13) pull-up to VS, so it idles HIGH
+     * and pulls LOW on a field -> falling edge. No internal pull-up (R13 present). */
+    FD_PORT.PIN6CTRL = PORT_ISC_FALLING_gc;
     /* PD2 (VSENSE) is analog only: disable its digital input buffer so the
      * Schmitt trigger doesn't toggle (and burn current) on a slow mid-rail
      * analog level. ADC/AC read the analog path regardless of this bit. */
@@ -94,7 +102,7 @@ static void go_to_sleep(void)
      * accel pin interrupts (async, all sense modes) and the RTC PIT. */
     set_sleep_mode(SLEEP_MODE_PWR_DOWN);
     cli();
-    if (!f_tap && !f_motion && !f_tick) {
+    if (!f_tap && !f_motion && !f_tick && !f_nfc) {
         sleep_enable();
         sei();              /* SEI + SLEEP is atomic: a pending IRQ runs after SLEEP, no missed wake */
         sleep_cpu();
@@ -119,12 +127,24 @@ int main(void)
     (void)lis2dh12_present();      /* WHO_AM_I sanity (ignored if bus dead) */
     (void)lis2dh12_init_tap();     /* tap->INT1, activity->INT2             */
 
+    /* 4. NFC tag (shares the bus). FD asserts on field-present by POR default;
+     * set it explicitly for this session too (harmless if the bus is dead or the
+     * RF side momentarily owns the tag -- we ignore the return, like the accel). */
+    (void)nfc_present();
+    (void)nfc_set_fd_field_mode();
+#if NFC_PROVISION
+    /* one-shot: write the NDEF into the tag EEPROM (see board.h NFC_PROVISION). */
+    (void)nfc_provision_default();
+#endif
+
     rtc_pit_init();       /* 5/6. baseline poll + housekeeping clock */
 
     /* the accel INT lines were indeterminate until configured just above; drop
-     * any edge they may have latched into PORTF before we arm interrupts. */
+     * any edge they may have latched into PORTF before we arm interrupts. Same for
+     * the FD edge on PORTA (PA6). */
     PORTF.INTFLAGS = ACC_INT1_bm | ACC_INT2_bm;
-    f_tap = f_motion = f_tick = 0;
+    FD_PORT.INTFLAGS = FD_PIN_bm;
+    f_tap = f_motion = f_tick = f_nfc = 0;
 
 #if USE_WDT
     /* arm the watchdog last, once the slow bring-up (I2C config) is done so it
@@ -175,6 +195,18 @@ int main(void)
              * tap with a redundant soft breath. */
             f_motion = 0;
         }
+        else if (f_nfc) {
+            f_nfc = 0;
+            /* a phone tapped the card: same glow as a single accel tap, gated by
+             * the rail floor. Bringing the phone close also jostles the card, so
+             * the accel motion int likely set f_motion too -- clear it after so we
+             * don't chase the NFC glow with a redundant soft breath. (Deliberately
+             * NOT counted by sense_count_inc(): that counter tracks physical taps;
+             * move it here too if you'd rather count every interaction.) */
+            if (sense_rail_ok())
+                led_breathe(GLOW_CYCLES, GLOW_BREATH_MS, GLOW_PEAK);
+            f_motion = 0;
+        }
         else if (f_motion) {
             f_motion = 0;
             if (sense_rail_ok())
@@ -202,6 +234,15 @@ ISR(PORTF_PORT_vect)
     if (fl & ACC_INT1_bm) f_tap = 1;       /* PF1 */
     if (fl & ACC_INT2_bm) f_motion = 1;    /* PF0 */
     PORTF.INTFLAGS = fl;                   /* write-1-to-clear */
+}
+
+/* NFC field-detect on PA6 (PORTA's own pin-interrupt vector). FD pulled LOW = a
+ * phone's RF field is present (NC_REG FD_ON=00b). Wakes the core from Power-Down. */
+ISR(PORTA_PORT_vect)
+{
+    uint8_t fl = PORTA.INTFLAGS;
+    if (fl & FD_PIN_bm) f_nfc = 1;
+    PORTA.INTFLAGS = fl;                   /* write-1-to-clear */
 }
 
 ISR(RTC_PIT_vect)

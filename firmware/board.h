@@ -16,7 +16,7 @@
  *     1 PA3      LDRV4    LED4 (D5)                 TCA0 WO3
  *     2 PA4      PA4      spare GPIO  (JP2.1)
  *     3 PA5      BTN      reserved button (stub only; v3 hook)
- *     4 PA6      -        free
+ *     4 PA6      FD       NFC field-detect in (NT3H2211, v2.2)  PORTA pin int, falling
  *     5 PA7      -        free
  *     6 PC0      PC0      spare GPIO  (JP2.2)
  *     7 PC1      PC1      spare GPIO  (JP2.3)
@@ -69,6 +69,25 @@
 /* ---- I2C device: LIS2DH12 accelerometer ----
  * CS=VS -> I2C mode ; SA0=GND -> 7-bit address 0x18. */
 #define LIS2DH12_ADDR   0x18
+
+/* ---- I2C device: NXP NT3H2211 (NTAG I2C plus 2K), v2.2 NFC addition ----
+ * 7-bit address 0x55 (write 0xAA / read 0xAB); shares TWI0 with the accel @0x18,
+ * no clash. VCC on VS, decoupled by C8 (100nF). Antenna is the PCB coil on LA/LB,
+ * tuned by the chip's internal 50pF (C9 = DNP trim) -- no firmware involvement. */
+#define NT3H_ADDR       0x55
+
+/* FD (field detect, U5 pin4) -> PA6. Open-drain at the tag, external 10k (R13)
+ * pull-up to VS, so PA6 idles HIGH and is pulled LOW on an NFC field -> we sense a
+ * FALLING edge. No internal pull-up (the external one is fitted). */
+#define FD_PORT         PORTA
+#define FD_PIN_bm       PIN6_bm
+
+/* One-shot NDEF provisioning. The tag is RF-powered by the phone, so the NDEF is
+ * read even with the supercap flat, and it only has to be written once. Set to 1
+ * for a SINGLE flash to write the NDEF into the tag EEPROM, confirm the phone
+ * reads it, then set back to 0 and reflash (avoids re-writing EEPROM every boot).
+ * The NDEF stays re-writable -- bump this to 1 again to rewrite. */
+#define NFC_PROVISION   0
 
 /* =====================================================================
  * Tunables  (bench-set; see README "What to tune").  All comments here
