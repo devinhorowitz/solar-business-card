@@ -6,6 +6,11 @@ backlit **DRH** monogram with a breathing glow when you tap it (or when it is
 carried from dark into light). There is **no button** in v2.1 — the
 accelerometer is the actuator.
 
+The **v2.2** board adds an NFC tag (`U5`, NXP NT3H2211): a phone tap reads a
+contact **vCard** from it, and the tag's field-detect line also wakes the glow.
+The same firmware image drives both boards — the NFC paths simply no-op if the
+tag isn't fitted. See **NFC contact card** below.
+
 > Status: verified at the **register level** against the AVR64DD32/28 datasheet
 > (DS40002315) and the LIS2DH12 datasheet (DM00091513); the pin map is read
 > directly from the committed `.kicad_pcb`; and every `_gc`/`_bm` macro, SFR
@@ -13,14 +18,21 @@ accelerometer is the actuator.
 > Microchip `ioavr64dd28.h` from the current AVR-Dx pack. It was **not
 > compile-tested** in the authoring environment (no toolchain+DFP there), so
 > build against a real DFP as below before trusting it on hardware.
+>
+> The **NFC** additions are verified against the NTAG I2C plus datasheet
+> (NT3H2111_2211 Rev 3.6). The NT3H2211 parts are confirmed *placed* in the
+> committed `solar-glow-drh-v2_2.kicad_pcb`, but that file's net names aren't
+> machine-readable, so the wiring (FD→PA6, the I2C nets) is taken from the v2.2
+> design spec — bench-confirm FD-wake and the NDEF read on the assembled card.
 
 ## Files
 
 | file | what it is |
 |------|------------|
 | `board.h` | as-built pin/route map + tunables. Single source of truth is the PCB. |
-| `twi.h` | header-only blocking I2C host (TWI0), one device. |
+| `twi.h` | header-only blocking I2C host (TWI0); shared by the accel and NFC tag. |
 | `lis2dh12.h/.c` | accelerometer: presence, tap→INT1, motion (IA2)→INT2, latch clear. |
+| `nfc.h/.c` | NT3H2211 NFC tag (v2.2): NDEF write + FD field-detect config. |
 | `led.h/.c` | TCA0 split-mode PWM on PA0–PA3 + gamma breathing animation. |
 | `sense.h/.c` | ADC rail/light reads + EEPROM activation counter. |
 | `main.c` | init (per hardware doc §7), sleep/wake state machine, ISRs. |
@@ -120,6 +132,7 @@ AVR64DD28, VQFN-28, on the **back** of the board.
 | 27 | PA1 | LDRV2 | LED D3, TCA0 WO1 |
 | 28 | PA2 | LDRV3 | LED D4, TCA0 WO2 |
 | 1 | PA3 | LDRV4 | LED D5, TCA0 WO3 |
+| 4 | PA6 | FD | NFC field-detect in (`U5`, v2.2); PORTA pin int, **falling**; ext 10k → VS |
 | 8 | PC2 | SDA | TWI0 host (PORTMUX **ALT2**), ext 4.7k → VS |
 | 9 | PC3 | SCL | TWI0 host (ALT2), ext 4.7k → VS |
 | 10 | VDDIO2 | VS | tied to VS by SJ1; PORTC at rail, MVIO unused |
@@ -135,8 +148,8 @@ LEDs are **low-side**: each lights when its PA pin pulls LOW, current set by a
 (3.4−2.25)/150). PWM only trims the
 average below that ballasted ceiling. `D1`/`D9` are Schottkys, not LEDs.
 
-Spare/free: PA4, PC0, PC1 (on JP2); PA5 (`BTN`, reserved stub for v3); PA6, PA7,
-PD1, PD3–PD7, PF6/RST.
+Spare/free: PA4, PC0, PC1 (on JP2); PA5 (`BTN`, reserved stub for v3); PA7,
+PD1, PD3–PD7, PF6/RST. (PA6 is the NFC `FD` input on the v2.2 board.)
 
 ## Behaviour
 
@@ -146,13 +159,17 @@ Baseline = **POWER-DOWN**. Wakes:
   breathing glow (`GLOW_CYCLES` breaths) + EEPROM activation count++. With
   `USE_DOUBLE_TAP`, a double-tap plays a brighter/longer signature glow instead.
 - **Motion** (LIS2DH12 inertial wake-up, IA2) → INT2 → PF0 → one softer breath.
+- **NFC** (NT3H2211 field detect, v2.2) → FD → PA6 → the tap glow, when a phone
+  enters the RF field. Assert event is `NC_REG.FD_ON = 00b` ("field on"), the
+  chip's POR default. NDEF provisioning + detail under **NFC contact card** below.
 - **PIT tick** (~1 s, RTC off the internal ULP, runs in power-down) → ADC-sample
   the light level; on a dark→light edge, glow.
 
-All PORT pins sense fully asynchronously, so the rising-edge accel interrupts
-wake the core from power-down with the peripheral clock stopped (datasheet
-§18.3.3.1). Every glow is gated by `sense_rail_ok()`: below `VS_GLOW_FLOOR_MV`
-the card stays dark and charges, so an animation can't brown out the part.
+All PORT pins sense fully asynchronously, so the rising-edge accel interrupts and
+the falling-edge FD interrupt wake the core from power-down with the peripheral
+clock stopped (datasheet §18.3.3.1). Every glow is gated by `sense_rail_ok()`:
+below `VS_GLOW_FLOOR_MV` the card stays dark and charges, so an animation can't
+brown out the part.
 
 ### Two hardware gates (not visible to firmware)
 
@@ -162,6 +179,47 @@ the card stays dark and charges, so an animation can't brown out the part.
    is dark, check SW2 first.
 2. The **accelerometer is the only actuator** in v2.1. `PA5/BTN` is a routed
    stub for a future revision, not populated.
+
+## NFC contact card (`NT3H2211`, v2.2)
+
+`U5` is an NXP **NT3H2211** (NTAG I2C plus, 2 KB) — an NFC Forum Type-2 tag on the
+**same TWI0 bus** as the accel, 7-bit address **0x55** (no clash with the accel's
+0x18). Its antenna is a PCB coil on `LA`/`LB` tuned to 13.56 MHz by the chip's
+internal 50 pF (`C9` is a do-not-populate trim); the radio is invisible to firmware.
+Two jobs, both in `nfc.c`:
+
+- **Contact vCard.** A phone tap reads a vCard (name / title / firm / mobile / work +
+  personal email / website) and offers "Add to Contacts." The tag is **RF-powered by
+  the phone**, so the card reads even with the supercap flat. Written once, re-writable.
+- **Field-detect wake.** FD (`U5` pin 4 → **PA6**, open-drain, ext 10 kΩ `R13` to VS,
+  idles HIGH) pulls LOW when a field appears and wakes the MCU into the tap glow. The
+  assert event `NC_REG.FD_ON = 00b` ("field on") is the chip's **POR default**, so
+  `nfc_set_fd_field_mode()` only re-asserts it; the wake works out of the box. PA6 is a
+  **falling-edge** pin interrupt. No internal pull-up is enabled — it relies on `R13`;
+  if you ever DNP `R13` (or run this image on a v2.1 board, where PA6 is unconnected),
+  add `PORT_PULLUPEN` to PA6 so a floating input can't fire phantom wakes.
+
+### Writing the NDEF (one-time)
+
+The contact NDEF lives in `nfc.c` as a byte array, machine-generated from the vCard
+fields — **regenerate, don't hand-edit**. Memory facts (NT3H2111_2211 Rev 3.6): the tag
+ships with a valid Capability Container (`E1 10 6D 00`, 872 B in sector 0), so firmware
+writes **only the NDEF into user memory from block 1** and never touches block 0
+(writing block 0 would change the I2C address). To provision:
+
+1. Set **`NFC_PROVISION 1`** in `board.h`.
+2. Flash with the card **powered** (the write needs Vcc; the current ~300-byte vCard is
+   19 EEPROM blocks, ~120 ms).
+3. Tap a phone to confirm the contact card appears.
+4. Set `NFC_PROVISION` back to **0** and reflash, so it doesn't rewrite EEPROM every
+   boot. Bump to 1 again any time to update the contact.
+
+Transactions are the datasheet ones (§9.7 block read/write — note the mandatory ≥4 ms
+off-bus settle after an EEPROM block write, so the code **fix-delays** rather than
+polling `EEPROM_WR_BUSY`, which would itself be the corrupting early command; §9.8 mask
+register write for the FD config). The vCard MIME type is `text/vcard`; if a reader
+doesn't auto-offer the contact, the legacy fallback `text/x-vCard` is a one-line change
+in the generator.
 
 ## Power notes / wake architecture (these correct the hardware doc's §6)
 
