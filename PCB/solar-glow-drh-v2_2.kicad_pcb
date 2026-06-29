@@ -16198,25 +16198,7 @@
 		(filling no)
 		(net "GND")
 		(uuid "17f79a63-e024-467a-958a-3f67afec486e")
-	)
-	(via
-		(at 31.1 38.9)
-		(size 0.6)
-		(drill 0.3)
-		(layers "F.Cu" "B.Cu")
-		(capping no)
-		(covering
-			(front no)
-			(back no)
-		)
-		(plugging
-			(front no)
-			(back no)
-		)
-		(filling no)
-		(net "GND")
-		(uuid "18bd6e28-1559-43cc-a4e5-bf67b7bbc229")
-	)
+	)
 	(via
 		(at 30.1 38.905)
 		(size 0.6)

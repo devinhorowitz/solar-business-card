@@ -6943,6 +6943,188 @@
 			)
 			(embedded_fonts no)
 		)
+		(symbol "solarglow:U6"
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "U6"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "TPS22918"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "U6_1_1"
+				(rectangle
+					(start 2.54 2.54)
+					(end 20.32 -27.94)
+					(stroke
+						(width 0.2)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+				(pin passive line
+					(at 0 0 0)
+					(length 2.54)
+					(name "VIN"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -5.08 0)
+					(length 2.54)
+					(name "GND"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -10.16 0)
+					(length 2.54)
+					(name "ON"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -15.24 0)
+					(length 2.54)
+					(name "CT"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+					(number "4"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -20.32 0)
+					(length 2.54)
+					(name "QOD"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+					(number "5"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -25.4 0)
+					(length 2.54)
+					(name "VOUT"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+					(number "6"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
 	)
 	(no_connect
 		(at 410.21 139.7)
@@ -6979,10 +7161,6 @@
 	(no_connect
 		(at 410.21 144.78)
 		(uuid "b18dddca-953e-468d-8480-5b31684a0328")
-	)
-	(no_connect
-		(at 209.55 58.42)
-		(uuid "b55ad73d-cdba-49bc-a7d9-1ecd51b9eec4")
 	)
 	(no_connect
 		(at 209.55 104.14)
@@ -9573,7 +9751,7 @@
 			)
 		)
 	)
-	(global_label "VS"
+	(global_label "VNFC"
 		(shape bidirectional)
 		(at 599.44 95.25 0)
 		(effects
@@ -9825,7 +10003,7 @@
 			)
 		)
 	)
-	(global_label "VS"
+	(global_label "VNFC"
 		(shape bidirectional)
 		(at 554.99 95.25 0)
 		(effects
@@ -14178,6 +14356,293 @@
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "U5")
 					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "solarglow:U6")
+		(at 650.24 76.2 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "0324146a-7374-4052-9f48-3c6822ca7210")
+		(property "Reference" "U6"
+			(at 661.67 76.2 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "TPS22918"
+			(at 661.67 81.28 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Package_TO_SOT_SMD:SOT-23-6"
+			(at 661.67 86.36 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 650.24 76.2 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 650.24 76.2 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "b7ad4d3e-f4e7-4866-a0ba-55ab169c8f1a")
+		)
+		(pin "2"
+			(uuid "0d755d50-0791-4b86-a2b0-7674c819c0dc")
+		)
+		(pin "3"
+			(uuid "27c5d13c-48eb-4773-b27d-1249b45f729d")
+		)
+		(pin "4"
+			(uuid "5f848bb0-2862-4d4d-b3ae-f8a74a17dfc7")
+		)
+		(pin "5"
+			(uuid "c38f39d2-d5bc-473f-9ebe-168ebf252d2d")
+		)
+		(pin "6"
+			(uuid "bac9a359-b71a-4696-b73d-61e637bd2225")
+		)
+		(instances
+			(project "solar-glow-drh-v2_2"
+				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
+					(reference "U6")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(wire
+		(pts
+			(xy 650.24 76.2)
+			(xy 645.16 76.2)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "e30f9126-6826-43b9-9902-a7570fb9add6")
+	)
+	(global_label "VS"
+		(shape bidirectional)
+		(at 645.16 76.2 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "5cea8759-efb8-4a3b-b667-8ddc8e78a553")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 645.16 76.2 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
+	(wire
+		(pts
+			(xy 650.24 81.28)
+			(xy 645.16 81.28)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "9531030b-692f-4618-b10f-d9c5e1d3cdbb")
+	)
+	(global_label "GND"
+		(shape bidirectional)
+		(at 645.16 81.28 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "45d47b73-41d1-4f44-bc42-6fb09a197389")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 645.16 81.28 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
+	(wire
+		(pts
+			(xy 650.24 86.36)
+			(xy 645.16 86.36)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "36f3e2ba-cbf4-4a0f-b0e7-4217c0fd7573")
+	)
+	(global_label "NFC_EN"
+		(shape bidirectional)
+		(at 645.16 86.36 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "7ae221c7-2582-4e29-b502-8d600039ed7e")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 645.16 86.36 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
+	(wire
+		(pts
+			(xy 650.24 96.52)
+			(xy 645.16 96.52)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "17e9e287-a044-46e5-b573-d0e988c45623")
+	)
+	(global_label "VNFC"
+		(shape bidirectional)
+		(at 645.16 96.52 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "d630ecc5-c657-4b79-8ca0-b7e64ab038ef")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 645.16 96.52 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
+	(wire
+		(pts
+			(xy 650.24 101.6)
+			(xy 645.16 101.6)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "33e81197-cace-4454-bbd5-50c815a51b10")
+	)
+	(global_label "VNFC"
+		(shape bidirectional)
+		(at 645.16 101.6 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "c0fe1139-4e4f-4753-9300-daf7b8576da1")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 645.16 101.6 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
+	(no_connect
+		(at 650.24 91.44)
+		(uuid "1b71bf97-47bb-4569-bf97-efa4cc4fa66b")
+	)
+	(wire
+		(pts
+			(xy 209.55 58.42)
+			(xy 204.47 58.42)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "d291f377-92c8-4544-bb68-671c7963d318")
+	)
+	(global_label "NFC_EN"
+		(shape bidirectional)
+		(at 204.47 58.42 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "a8ab25e2-a7a1-4f6a-9ff3-83001b29990a")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 204.47 58.42 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
 				)
 			)
 		)
