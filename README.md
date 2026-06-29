@@ -53,6 +53,7 @@ all lives on the back, ready for an optional machined-metal back-shell.
 | LED master switch | **SW2** (solder-bridge) + **R12** | OFF / ON / TINY — TINY routes the LEDs through a 220 Ω ballast for a dim, long-runtime glow |
 | Motion | **ST LIS2DH12** | 3-axis accel; tap / double-tap wakes the MCU via interrupts |
 | Light sense | **R5 / R6 divider → PD2** | VIN ÷ 2 off the *solar input* (not the rail) — tracks light directly; doubles as wake-on-light |
+| NFC *(v2.2)* | **NXP NT3H2211** (NTAG I²C plus) | a contact **vCard** a phone taps to save; field-detect also wakes the glow — I²C `0x55`, shares the accel's bus |
 
 **Breakouts and features:** a **TC2030** Tag-Connect pad (`TC1`) for hands-free UPDI
 programming, a backup UPDI header (`J1`), an I²C expansion header (`JP1`), a spare-GPIO header
@@ -169,6 +170,10 @@ the board gives it:
   average, so you trim brightness *below* that ceiling).
 - **Tap-to-wake** — the accelerometer’s two interrupts land on **PF1 / PF0**; configure
   tap / double-tap and let it pull the MCU out of sleep.
+- **NFC contact tag** *(v2.2)* — `U5` (NXP NT3H2211) carries a **vCard** a phone reads on a
+  tap to save the contact (RF-powered, so it reads with the cap flat), and its **field-detect**
+  line wakes the same glow. Shares the I²C bus with the accel (`0x55` vs `0x18`). See
+  `firmware/README.md` → *NFC contact card*.
 - **Light sensing** — the divider taps the **solar input** (VIN ÷ 2) into **PD2** (AIN2), so it
   reads light directly — ~0 V dark, rising under light; firmware adapts the glow to available
   light and can also read **VDD/10** and the internal temp sensor.
