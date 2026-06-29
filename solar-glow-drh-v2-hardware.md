@@ -1,10 +1,18 @@
-# SOLAR-GLOW · DRH — As-Built Hardware & Wiring Reference (v2.1)
+# SOLAR-GLOW · DRH — As-Built Hardware & Wiring Reference (v2.2)
 
 **The single source of truth for firmware.** Every line here is taken from the committed
-`solar-glow-drh-v2_1.kicad_pcb` / `.kicad_sch` and cross-checked against the
-AVR64DD32-28 datasheet (DS40002315), the LIS2DH12 datasheet (DM00091513), and the
-SM141K06TF and SCPC parts. Where a register value is given, it is the value the firmware must
-write to match what is physically routed.
+`solar-glow-drh-v2_2.kicad_pcb` and cross-checked against the
+AVR64DD32-28 datasheet (DS40002315), the LIS2DH12 datasheet (DM00091513), the NT3H2211
+datasheet (NT3H2111_2211), and the SM141K06TF and SCPC parts. Where a register value is
+given, it is the value the firmware must write to match what is physically routed.
+
+**v2.2 delta — NFC.** v2.2 adds an NFC tag: **U5 (NXP NT3H2211, NTAG I²C plus 2K)** with a
+PCB-etched antenna coil and its passives (C8, C9, R13). The *only* MCU-pin change from the
+frozen v2.1 hardware is **PA6 (pad 4), formerly free, which now carries the NFC `FD`
+field-detect line.** Everything else (LEDs, I²C accelerometer, rail clamp, harvest, sense) is
+unchanged from v2.1. The NFC pins/nets here are read from `solar-glow-drh-v2_2.kicad_pcb`; a
+matching v2.2 schematic is not yet committed. RF/coil design detail lives in
+`solar-glow-drh-v2_2-notes.md`.
 
 MCU: **AVR64DD28**, 28-pin VQFN (footprint `solarglow:U1`). It sits on the **back** of the board.
 
@@ -20,7 +28,7 @@ MCU: **AVR64DD28**, 28-pin VQFN (footprint `solarglow:U1`). It sits on the **bac
 | 1  | **PA3** | `LDRV4` | LED4 (D5) drive | **TCA0 WO3** |
 | 2  | **PA4** | `PA4` | spare GPIO | broken out on JP2.1 |
 | 3  | **PA5** | `BTN` | reserved button | GPIO; only routed to a stub (the one DRC `track_dangling`); v3 hook |
-| 4  | **PA6** | — | free | unconnected |
+| 4  | **PA6** | `FD` | NFC field-detect input | open-drain from U5 (NT3H2211 pin 4); 10 kΩ (R13) pull-up to VS. Poll, or use a PORTA pin interrupt to wake on an NFC field. |
 | 5  | **PA7** | — | free | unconnected |
 | 6  | **PC0** | `PC0` | spare GPIO | broken out on JP2.2 |
 | 7  | **PC1** | `PC1` | spare GPIO | broken out on JP2.3 |
@@ -56,7 +64,7 @@ Each LED: anode → `ANODE` (common) → **SW2** → VS; cathode → `Kn` → ba
 |------|-----------|
 | `VIN` | PV1 (+) solar node, **before** blocking diode D1. ~0 V in the dark, rises with light. Feeds the VSENSE divider and D1 anode. |
 | `VINB` | PV2 (+) solar node, before blocking diode D9. |
-| `VS` | The storage rail (after D1/D9). = MCU VDD, accel VDD, LED anode source, supercap top. **Clamped ≤ 3.47 V** by the TLV431+PNP shunt (U4/Q1). |
+| `VS` | The storage rail (after D1/D9). = MCU VDD, accel VDD, NFC tag VCC, LED anode source, supercap top. **Clamped ≤ 3.47 V** by the TLV431+PNP shunt (U4/Q1). |
 | `GND` | Ground — inner plane In1, EP, the four M2 mount holes. |
 | `MID` | Supercap series midpoint, balanced by U2 (ALD910025 dual SAB). |
 | `CLBASE` / `CLREF` | Clamp internals — Q1 base / TLV431 reference divider tap. |
@@ -64,7 +72,9 @@ Each LED: anode → `ANODE` (common) → **SW2** → VS; cathode → `Kn` → ba
 | `TINY` | Dim-mode node: LED anodes → VS through R12 (220 Ω) when SW2 = TINY. |
 | `LDRV1‒4` | LED cathode drives → MCU PA0‒PA3. |
 | `K2‒K5` | Individual LED-cathode-to-ballast nets. |
-| `SDA` / `SCL` | I²C bus (accel + JP1 breakout). |
+| `SDA` / `SCL` | I²C bus — accelerometer U3 (0x18) + NFC tag U5 (0x55). On PC2/PC3 via `TWIROUTEA = ALT2`; 4.7 kΩ pull-ups (R10/R11) to VS. |
+| `LA` / `LB` | NFC antenna — the two taps of the PCB-etched spiral coil (B.Cu + In3.Cu, series-aiding, ~7 turns/layer) in the back NFC pocket, resonated to 13.56 MHz by U5's internal 50 pF. `C9` (DNP) is a footprint for optional external trim. |
+| `FD` | NFC field-detect — U5 open-drain pin 4 → PA6, pulled to VS by R13 (10 kΩ). Asserts on RF field / configurable NFC events. |
 | `INT1` / `INT2` | Accel interrupt lines → PF1 / PF0. |
 | `VSENSE` | Light/rail sense → PD2. = VIN/2 (R5/R6 = 1 MΩ each), filtered by C5 (10 nF). |
 | `PA4` / `PC0` / `PC1` | Spare GPIO, broken out on JP2. |
@@ -89,7 +99,15 @@ Inner copper: **In1 = GND plane, In4 = VS plane**, In2/In3 = signal. (6-layer, 0
 - **I²C — TWI0, host mode.**
   **`PORTMUX.TWIROUTEA = ALT2`** (puts host SDA/SCL on PC2/PC3 — the default routes to
   PA2/PA3, which are LED pins). External 4.7 kΩ pull-ups are fitted, so don't enable internal
-  ones. Bus is the accelerometer plus the JP1 breakout.
+  ones. Bus is the accelerometer (0x18) and the NFC tag U5 (0x55).
+
+- **NFC — NT3H2211 (U5), an I²C target on the same bus.**
+  Address **`0x55`** (7-bit; write `0xAA`, read `0xAB`) — no clash with the accelerometer at
+  0x18. The AVR is host; U5 is a target whose EEPROM a phone can read/write over the air.
+  **`FD`** (open-drain) → **PA6**: set it as an input and either poll it or enable a PORTA pin
+  interrupt to react to an NFC field. **`VOUT`** (pin 7) is left **unconnected** — U5 runs from
+  VS, so the energy-harvesting output is unused. No special MCU setup beyond the I²C bus; the
+  antenna is the PCB coil on `LA`/`LB`.
 
 - **Accelerometer wake — PORTF pin interrupts.**
   Configure **PF1** (INT1) and **PF0** (INT2) as inputs with edge interrupts to match whatever
@@ -114,6 +132,15 @@ Inner copper: **In1 = GND plane, In4 = VS plane**, In2/In3 = signal. (6-layer, 0
 - Supply Vdd/Vdd_IO → VS; SCL → PC3, SDA → PC2. Decoupled by C6.
 - Role: tap / double-tap / activity → INT → wakes the MCU. A tap is vibration, so the metal
   back-plate transmits it in the enclosed build.
+
+**U5 — NXP NT3H2211 (NTAG I²C plus 2K), the NFC tag.**
+- Dual interface: **NFC (13.56 MHz, ISO 14443-A)** to a phone, and **I²C target** to the MCU.
+- **I²C address `0x55`** 7-bit (write 0xAA / read 0xAB). Host = the AVR (TWI0); shares SDA/SCL with the accel.
+- Pinout (XQFN8, datasheet Table 3): **1 = LA, 2 = VSS/GND, 3 = SCL, 4 = FD, 5 = SDA, 6 = VCC, 7 = VOUT, 8 = LB.**
+- Power: **VCC → VS** (the clamped ≤ 3.47 V rail, within U5's 3.6 V max). Decoupled by **C8 (100 nF)**.
+- **FD (pin 4)** open-drain → **PA6**, pulled to VS by **R13 (10 kΩ)**; signals an NFC field / configurable events.
+- **VOUT (pin 7) is unconnected** — the harvested-power output is unused (the card runs from the solar rail).
+- Antenna: a 2-layer **PCB spiral on `LA`/`LB`** (B.Cu + In3.Cu, series-aiding, ~7 turns/layer) in the back NFC pocket, resonated to 13.56 MHz by U5's internal 50 pF. **C9 (DNP, NP0)** is a footprint for optional external tuning — not populated. Coil geometry/inductance: see `solar-glow-drh-v2_2-notes.md`.
 
 **LEDs — 4× ams OSRAM LA P47F (amber, reverse-mount).** Low-side driven on PA0‒PA3 (§1/§3),
 150 Ω ballast each, anodes commoned to `ANODE` and switched by SW2.
@@ -207,12 +234,14 @@ and set the achievable duty cycle.
 2. **GPIO/PORTMUX:** `TCAROUTEA = DEFAULT`, `TWIROUTEA = ALT2`; PA0‒PA3 outputs (LEDs),
    PF0/PF1 inputs w/ interrupt (accel), PD2 left to the analog peripheral.
 3. **I²C up, talk to the accel** at `0x18`; configure tap → INT1 and motion (IA2) → INT2;
-   verify the PF1/PF0 interrupts fire on a physical tap and on a pickup.
+   verify the PF1/PF0 interrupts fire on a physical tap and on a pickup. Also probe **U5 (NFC)
+   at `0x55`**; optionally set **PA6 (FD)** as an input (poll or PORTA interrupt). NFC EEPROM
+   read/write is a phone-side function and needs no extra MCU setup beyond the bus.
 4. **TCA0 split-mode PWM** on the LEDs; **confirm SW2 is ON/TINY** or nothing lights.
 5. **Wake-on-light** (§6) — implement path B (deepest sleep, the only viable path); instant
    response to handling comes from the accel interrupt, so A is not built.
 6. **Housekeeping:** ADC read of VSENSE (×2 = VIN) and VDD/10 for charge state; optional EEPROM
    activation counter; brown-out behavior around the supercap rail.
 
-**Pins free for new features:** PA6, PA7, PD1, PD3, PD4, PD5, PD6, PD7, PF6/RST (9 GPIO, most
+**Pins free for new features:** PA7, PD1, PD3, PD4, PD5, PD6, PD7, PF6/RST (8 GPIO, most
 ADC-capable; PD6 can be a DAC output), plus PA4/PC0/PC1 already on JP2 and PA5 (`BTN`) reserved.
