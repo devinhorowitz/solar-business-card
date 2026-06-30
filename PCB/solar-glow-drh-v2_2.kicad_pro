@@ -70,9 +70,7 @@
         }
       },
       "diff_pair_dimensions": [],
-      "drc_exclusions": [
-        "shorting_items|39000000|34000000|c71aca2c-3cd6-45d4-a4eb-6cb5205f2ece|e43d6099-ee35-4559-95d4-c28e475c3e37"
-      ],
+      "drc_exclusions": [],
       "meta": {
         "version": 2
       },
