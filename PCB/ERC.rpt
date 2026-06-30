@@ -1,0 +1,35 @@
+ERC report (2026-06-30T16:18:05, Encoding UTF8)
+Report includes: Errors, Warnings, Exclusions
+
+***** Sheet /
+[wire_dangling]: Wires not connected to anything
+    ; error
+    @(100 mils, 1500 mils): Bus to wire entry
+[unconnected_wire_endpoint]: Unconnected wire to bus entry
+    ; warning
+    @(100 mils, 1500 mils): Bus to wire entry
+[unconnected_wire_endpoint]: Unconnected wire to bus entry
+    ; warning
+    @(100 mils, 1500 mils): Bus to wire entry
+[isolated_pin_label]: Label connected to only one pin
+    ; warning
+    @(8050 mils, 1700 mils): Global Label 'PA4'
+[isolated_pin_label]: Label connected to only one pin
+    ; warning
+    @(8050 mils, 1900 mils): Global Label 'BTN'
+[isolated_pin_label]: Label connected to only one pin
+    ; warning
+    @(8050 mils, 2500 mils): Global Label 'PC0'
+[isolated_pin_label]: Label connected to only one pin
+    ; warning
+    @(8050 mils, 2700 mils): Global Label 'PC1'
+
+ ** ERC messages: 7  Errors 1  Warnings 6
+
+ ** Ignored checks:
+    - Global label only appears once in the schematic
+    - Four connection points are joined together
+    - SPICE model issue
+    - Library symbol issue
+    - Footprint link issue
+    - Assigned footprint doesn't match footprint filters

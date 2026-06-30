@@ -7015,9 +7015,9 @@
 					)
 				)
 				(pin passive line
-					(at 0 0 0)
+					(at 0 -25.4 0)
 					(length 2.54)
-					(name "VIN"
+					(name "VOUT"
 						(effects
 							(font
 								(size 1 1)
@@ -7033,9 +7033,9 @@
 					)
 				)
 				(pin passive line
-					(at 0 -5.08 0)
+					(at 0 -20.32 0)
 					(length 2.54)
-					(name "GND"
+					(name "QOD"
 						(effects
 							(font
 								(size 1 1)
@@ -7087,9 +7087,9 @@
 					)
 				)
 				(pin passive line
-					(at 0 -20.32 0)
+					(at 0 -5.08 0)
 					(length 2.54)
-					(name "QOD"
+					(name "GND"
 						(effects
 							(font
 								(size 1 1)
@@ -7105,9 +7105,9 @@
 					)
 				)
 				(pin passive line
-					(at 0 -25.4 0)
+					(at 0 0 0)
 					(length 2.54)
-					(name "VOUT"
+					(name "VIN"
 						(effects
 							(font
 								(size 1 1)
@@ -7173,6 +7173,15 @@
 	(no_connect
 		(at 604.52 100.33)
 		(uuid "e044131d-4203-4642-b390-b4f77d86bbf6")
+	)
+	(bus_entry
+		(at 2.54 38.1)
+		(size 2.54 2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "3e98a38f-33a0-4cc5-8320-785903c9525e")
 	)
 	(wire
 		(pts
