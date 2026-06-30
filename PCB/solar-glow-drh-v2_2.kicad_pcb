@@ -312,7 +312,7 @@
 				(pins "N" "Nt" "P" "Pt")
 			)
 		)
-		(attr smd)
+		(attr smd exclude_from_pos_files)
 		(duplicate_pad_numbers_are_jumpers no)
 		(pad "N" smd circle
 			(at -18 0)
@@ -627,7 +627,7 @@
 				(pins "N" "Nt" "P" "Pt")
 			)
 		)
-		(attr smd)
+		(attr smd exclude_from_pos_files)
 		(duplicate_pad_numbers_are_jumpers no)
 		(pad "N" smd circle
 			(at -18 0)
@@ -834,7 +834,7 @@
 				(pins "N" "P")
 			)
 		)
-		(attr smd)
+		(attr smd exclude_from_pos_files)
 		(duplicate_pad_numbers_are_jumpers no)
 		(pad "N" smd roundrect
 			(at 0 11 90)
@@ -1529,7 +1529,7 @@
 				(pins "1" "2" "3")
 			)
 		)
-		(attr smd)
+		(attr smd exclude_from_pos_files)
 		(duplicate_pad_numbers_are_jumpers no)
 		(pad "1" smd roundrect
 			(at -0.9 0)
@@ -1959,7 +1959,7 @@
 				(pins "1" "2")
 			)
 		)
-		(attr smd)
+		(attr smd exclude_from_pos_files)
 		(duplicate_pad_numbers_are_jumpers no)
 		(pad "1" smd roundrect
 			(at -0.45 0)
@@ -2641,7 +2641,7 @@
 				(pins "1" "2" "3")
 			)
 		)
-		(attr smd)
+		(attr smd exclude_from_pos_files)
 		(duplicate_pad_numbers_are_jumpers no)
 		(pad "1" smd roundrect
 			(at 0 -2.54)
@@ -3367,7 +3367,7 @@
 				(pins "1" "2")
 			)
 		)
-		(attr smd)
+		(attr smd exclude_from_pos_files)
 		(duplicate_pad_numbers_are_jumpers no)
 		(pad "1" smd roundrect
 			(at -0.45 0)
@@ -3531,7 +3531,7 @@
 				(pins "N" "P")
 			)
 		)
-		(attr smd)
+		(attr smd exclude_from_pos_files)
 		(duplicate_pad_numbers_are_jumpers no)
 		(pad "N" smd roundrect
 			(at 0 -11 270)
@@ -3613,7 +3613,7 @@
 				(pins "1" "2")
 			)
 		)
-		(attr smd)
+		(attr smd exclude_from_pos_files)
 		(duplicate_pad_numbers_are_jumpers no)
 		(pad "1" smd roundrect
 			(at -0.45 0)
@@ -3695,7 +3695,7 @@
 				(pins "1" "2" "3" "4" "5" "6")
 			)
 		)
-		(attr smd)
+		(attr smd exclude_from_pos_files)
 		(duplicate_pad_numbers_are_jumpers no)
 		(pad "1" smd circle
 			(at -0.635 -1.27)
@@ -5047,7 +5047,7 @@
 				(pins "N" "P")
 			)
 		)
-		(attr smd)
+		(attr smd exclude_from_pos_files)
 		(duplicate_pad_numbers_are_jumpers no)
 		(pad "N" smd roundrect
 			(at 0 11 90)
@@ -5129,7 +5129,7 @@
 				(pins "N" "P")
 			)
 		)
-		(attr smd)
+		(attr smd exclude_from_pos_files)
 		(duplicate_pad_numbers_are_jumpers no)
 		(pad "N" smd roundrect
 			(at 0 -11 270)
@@ -5457,7 +5457,7 @@
 				(pins "1" "2")
 			)
 		)
-		(attr smd)
+		(attr smd exclude_from_pos_files)
 		(duplicate_pad_numbers_are_jumpers no)
 		(pad "1" smd roundrect
 			(at -0.45 0)
