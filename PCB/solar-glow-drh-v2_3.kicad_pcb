@@ -17950,6 +17950,22 @@
 		(net "MID")
 		(uuid "f7cbab17-e1d2-4fdd-beb2-8dfcc7a8e2da")
 	)
+	(segment
+		(start 30.1 35.095)
+		(end 25.9 36.37)
+		(width 0.25)
+		(layer "F.Cu")
+		(net "VS")
+		(uuid "b7d368d8-0543-4bec-980f-eb499dcc3f36")
+	)
+	(segment
+		(start 30.878595 35.228937)
+		(end 30.1 35.095)
+		(width 0.25)
+		(layer "F.Cu")
+		(net "VS")
+		(uuid "d5d78880-cd99-4020-ac2b-918cc4d235f7")
+	)
 	(via
 		(at 45.99 75)
 		(size 0.6)
