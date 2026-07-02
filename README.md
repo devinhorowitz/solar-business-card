@@ -244,10 +244,12 @@ supercaps (U2 at 1.75 mm sits over a small **relief pocket** that drops the loca
 still clears), the floor runs to **0.75 mm** of engraving stock backed by ribs, and the overall height
 is **3.55 mm**. The four bosses sit on the **v3.0 hole pattern** (concentric with the r3.0 corner
 fillets), the internal braces are **removed**, and retention is **four corner M2 screws**, not a press
-fit. The electrical gotcha — the screws tie the metal body to board GND, so the enclosed variant
-**drops the edge castellations** (or adds a die-cut Kapton layer) so nothing shorts to the grounded
-shell, and the **accelerometer tap is the actuator** (cap-touch dies behind a grounded plate). The
-dimensioned drawing is mid-regeneration for v3.0 — see `enclosure/README.md`.
+fit. The electrical gotcha — the screws tie the metal body to board GND, but the board carries **no edge
+castellations** and the shell's contacts land on **bare laminate**, so nothing shorts to the grounded
+shell (the die-cut Kapton fallback is dropped, kept only in reserve). The perimeter lip was narrowed to
+1.00 mm to clear the JP1/TP1 bench-pad strip at the board edge, and the **accelerometer tap is the
+actuator** (cap-touch dies behind a grounded plate). The dimensioned drawing is mid-regeneration for
+v3.0 — see `enclosure/README.md`.
 
 ---
 

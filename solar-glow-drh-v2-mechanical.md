@@ -123,8 +123,10 @@ The four M2 screws ground the body, so it is a defined-potential shield — good
 copper the metal touches is a short.** Edge castellations are gone (§8), so the wall hazard is moot.
 The remaining hazard is **support pillars pressing on the back**: soldermask (~20 µm) is a weak
 insulator under load, and any exposed copper (untented vias, the VS pour) shorts to the GND body.
-**Land pillars only on GND pour**, or spec a **die-cut Kapton (~0.05 mm)** blanket between the
-board back and the shell — the simplest fix, negligible on the thickness budget.
+**Land pillars / lip on GND pour or bare laminate** — which the v3.0 shell does: its contacts land on
+bare laminate (verified against the PCB), and the perimeter lip / back-frame was narrowed **1.50 →
+1.00 mm** to clear the JP1/TP1 bench pads at the right edge. The **die-cut Kapton (~0.05 mm)** blanket
+is therefore **dropped**, kept in reserve only for a future board that puts copper under a shell contact.
 
 ## 10. Programming access
 

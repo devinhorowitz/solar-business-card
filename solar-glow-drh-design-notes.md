@@ -181,9 +181,12 @@ Not useful on this part: ZCD (mains only), op-amps (the DD family lacks them), P
 The Ti rear-shell is parked, but a few rules must be baked into the board so it never needs a
 re-spin for the enclosure:
 
-- **Grounded body → short risk.** In the enclosed variant, **drop the right-edge castellations**;
-  land support pillars **only on GND pour**; keep a **die-cut Kapton (~0.05 mm)** blanket isolation
-  layer in reserve if a later via audit on the rib lines finds an untented via.
+- **Grounded body → short risk (resolved).** The board carries no edge castellations, and the
+  shell's contacts (lip, bosses, ribs) land on **bare laminate** — verified against the PCB, no pads
+  or vias under them — so nothing shorts to the GND body. The perimeter lip / back-frame was narrowed
+  **1.50 → 1.00 mm** so it clears the v3.0 bench-pad strip (JP1/TP1, x 47.55–49.25). The **die-cut
+  Kapton (~0.05 mm)** blanket is **dropped** (`kapton_th = 0.00`), kept in reserve only if a future
+  board ever puts copper under a shell contact.
 - **General cavity 1.85 mm (cap-limited), plus a U2 relief pocket** — the four **1.70 mm WS17
   supercaps** set the general cavity (1.85 = cap + 0.15 mm air, toleranced 1.85 ±0.05). U2 (SOIC-8,
   1.75 mm) is the single tallest part but sits over a **local 0.05 mm relief pocket** (floor 0.70 mm
