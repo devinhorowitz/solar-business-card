@@ -33,7 +33,9 @@ against datasheet heights + plate mechanics. Findings that drove the numbers bel
     frame is LASER-MARKED on the cavity floor, not cut, so it removes no material.
   * Kapton DROPPED: every metal contact (lip in the pad-free rim band, 4 braces, 2 ribs) sits on
     bare laminate -- verified against the PCB -- so the blanket is unnecessary. (Keep a die-cut
-    Kapton strip only if a via audit on the rib lines later finds an untented via.)
+    Kapton strip only if a via audit on the rib lines later finds an untented via.) RE-VERIFIED for
+    the v3.0 bench strip (JP1/TP1 SMD pads at x47.55-49.25, y11.15-23.01): at lip_w 1.00 the lip
+    band starts x49.75 -> 0.50 mm clear of the pads; nothing else exposed enters x>49.75.
   * Walls 1.6 -> 1.0 mm: Ti is plenty strong for a press-fit rim on a 0.8 mm FR4 edge; shrinks the
     footprint from 53.9 to 52.8 mm (closer to the 50.8 card).
 
@@ -97,7 +99,7 @@ edge_ease  = 0.20                  # squared-edge chamfer on the outer top/botto
 EDGE_BREAK = 0.10                  # Ti deburr: break the sharp END-FACE edges (back proud frame/annuli
                                    # + front rim + recess mouth) so corners are durable, not knife-sharp.
                                    # Ti edges chip and cut; an edge-break also resists nicking. ~0.1 mm.
-lip_w      = 1.50                  # perimeter support lip (inner) AND the back-frame width (mirror)
+lip_w      = 1.00                  # perimeter support lip (inner) AND the back-frame width (mirror). 1.50 -> 1.00: the v3.0 bench pad strip (JP1/TP1, copper to x49.25) landed EXACTLY on the old 1.50-lip inner edge (50.75-1.50=49.25, nominal gap 0.00); at 1.00 the inner edge is 49.75 -> 0.50 mm clearance to the exposed pads, covering pocket (ISO2768-m) + board-routing (+-0.2) tolerance stack. Floor-span margin absorbs it (0.75 floor is 2.5x the analyzed 0.55).
 boss_r     = 2.60                  # M2 boss / back annulus outer radius
 pilot_r    = 0.80                  # M2 tap-drill hole, CLEAN THROUGH. Boss is TAPPED M2 (brass is soft --
                                    # never let a brass screw thread-form into Ti; cut the threads first).
