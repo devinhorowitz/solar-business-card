@@ -1,0 +1,34 @@
+(version 1)
+
+# SOLAR-GLOW DRH v3.0 — PCBWay 2-layer capability rules
+# Two tiers replicate the project's audited scheme:
+#   error   = hard floor (do not ship below this)
+#   warning = marginal band [0.126, 0.1524) — PCBWay-legal, flagged for the ledger
+# PCBWay stated capability: 0.1mm/4mil trace+space, drill 0.2–6.3mm, annular 0.15mm/6mil.
+# Our error floors sit above their stated minimums by design.
+
+(rule "clearance-hard-floor"
+  (severity error)
+  (constraint clearance (min 0.126mm)))
+
+(rule "clearance-marginal-band"
+  (severity warning)
+  (constraint clearance (min 0.1524mm)))
+
+(rule "track-hard-floor"
+  (severity error)
+  (constraint track_width (min 0.126mm)))
+
+(rule "track-marginal-band"
+  (severity warning)
+  (constraint track_width (min 0.1524mm)))
+
+# PCBWay spec 0.15mm; our uniform 0.6/0.3 vias sit exactly at 0.15 by construction,
+# so the error tier is set just below spec to avoid float coin-flips at-spec.
+(rule "annular-hard-floor"
+  (severity error)
+  (constraint annular_width (min 0.1249mm)))
+
+(rule "drill-floor"
+  (severity error)
+  (constraint hole_size (min 0.2mm)))

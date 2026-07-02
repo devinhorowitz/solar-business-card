@@ -1,0 +1,101 @@
+# SOLAR-GLOW DRH v3.0 — KiBot CI configuration
+# Lives at PCB/solar-glow-drh.kibot.yaml; driven by .github/workflows/kibot.yml
+kibot:
+  version: 1
+
+global:
+  output: '%f-%i.%x'
+
+preflight:
+  erc:
+    enabled: true
+  drc:
+    enabled: true
+    filters:
+      # The NFC coil is one continuous copper trace whose two ends are nets LA and LB;
+      # KiCad reports the label-flip junction as tracks_crossing. Intentional.
+      # Broad regex tradeoff: filters ALL tracks_crossing; any genuinely new crossing
+      # will also raise clearance errors, which are NOT filtered.
+      - filter: 'Coil LA/LB junction (intentional)'
+        error: 'tracks_crossing'
+        regex: 'Tracks crossing'
+      # Hard-gold plating-bus stubs cross the outline at x25.4 N/S (panel-rail ties).
+      # Broad regex tradeoff: filters all copper_edge findings in CI; Devin's local
+      # DRC (board rule 0.5mm) still surfaces any new edge encroachment.
+      - filter: 'Plating stubs crossing outline (intentional)'
+        error: 'copper_edge_clearance'
+        regex: 'edge clearance'
+
+outputs:
+  - name: gerbers
+    comment: Fabrication copper/mask/paste/silk/outline (KiCad plot engine)
+    type: gerber
+    dir: gerbers
+    options:
+      use_gerber_x2_attributes: true
+      create_gerber_job_file: true
+      tent_vias: true
+    layers:
+      - F.Cu
+      - B.Cu
+      - F.Mask
+      - B.Mask
+      - F.Paste
+      - B.Paste
+      - F.SilkS
+      - B.SilkS
+      - Edge.Cuts
+
+  - name: drill
+    comment: Excellon drill files (PTH + NPTH separate)
+    type: excellon
+    dir: gerbers
+    options:
+      pth_and_npth_single_file: false
+      map: pdf
+
+  - name: fab_zip
+    comment: Single zip of gerbers + drills
+    type: compress
+    dir: .
+    options:
+      files:
+        - from_output: gerbers
+        - from_output: drill
+
+  - name: ibom
+    comment: Interactive HTML BOM for hand assembly
+    type: ibom
+    dir: docs
+    options:
+      dark_mode: true
+      layer_view: B
+
+  - name: board_images
+    comment: Top/bottom board views
+    type: pcbdraw
+    dir: docs
+    options:
+      format: png
+      bottom: false
+  - name: board_images_bottom
+    type: pcbdraw
+    dir: docs
+    options:
+      format: png
+      bottom: true
+
+  - name: position
+    comment: 'Pick+place CSV. CAUTION: the 13 exclude-from-position flags clear on schematic sync; this CI output is informational, the fab CPL follows the pre-order checklist.'
+    type: position
+    dir: fabdocs
+    options:
+      format: CSV
+      units: millimeters
+
+  - name: bom_csv
+    comment: Flat BOM snapshot
+    type: bom
+    dir: fabdocs
+    options:
+      format: CSV
