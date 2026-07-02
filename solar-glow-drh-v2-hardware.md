@@ -1,4 +1,11 @@
-# SOLAR-GLOW · DRH — As-Built Hardware & Wiring Reference (v2.1, + v2.2 NFC)
+# SOLAR-GLOW · DRH — As-Built Hardware & Wiring Reference (v2-era; v3.0 deltas inline)
+
+> **v2-era doc — read the v3.0 deltas.** Written for v2.1 (+ the v2.2 NFC add). The current board is
+> **v3.0 (2-layer)**; `PCB/solar-glow-drh-v3_0.kicad_pcb` governs and `firmware/README.md` carries the
+> working pin map. Two v3.0 changes are applied inline here: the **LDRV/LED pin map was permuted**
+> (pin 1/PA3 = LDRV1 → D2 … pin 26/PA0 = LDRV4 → D5 — the fan untangle), and the **stackup is 2-layer**
+> (GND = full-board B.Cu pour, VS = routed B mesh; no inner planes). Net list, PORTMUX, and register
+> values carry forward unchanged.
 
 **The single source of truth for firmware.** Every line here is taken from the committed
 `solar-glow-drh-v2_1.kicad_pcb` / `.kicad_sch` and cross-checked against the
@@ -25,10 +32,10 @@ MCU: **AVR64DD28**, 28-pin VQFN (footprint `solarglow:U1`). It sits on the **bac
 
 | Pad | Pin | Net | Function | Peripheral / firmware note |
 |----:|------|------|----------|----------------------------|
-| 26 | **PA0** | `LDRV1` | LED1 (D2) cathode drive | **TCA0 WO0** — low-side sink, 150 Ω ballast |
-| 27 | **PA1** | `LDRV2` | LED2 (D3) drive | **TCA0 WO1** |
-| 28 | **PA2** | `LDRV3` | LED3 (D4) drive | **TCA0 WO2** |
-| 1  | **PA3** | `LDRV4` | LED4 (D5) drive | **TCA0 WO3** |
+| 26 | **PA0** | `LDRV4` | LED (D5) cathode drive | **TCA0 WO0** — low-side sink, 150 Ω ballast |
+| 27 | **PA1** | `LDRV3` | LED (D4) drive | **TCA0 WO1** |
+| 28 | **PA2** | `LDRV2` | LED (D3) drive | **TCA0 WO2** |
+| 1  | **PA3** | `LDRV1` | LED (D2) drive | **TCA0 WO3** |
 | 2  | **PA4** | `PA4` | spare GPIO | broken out on JP2.1 |
 | 3  | **PA5** | `BTN` | reserved button | GPIO; only routed to a stub (the one DRC `track_dangling`); v3 hook |
 | 4  | **PA6** | `FD` | NFC field-detect in (`U5`) | PORTA pin int, **falling**; field-powered (works VCC-off, §8.4); int pull-up on + ext 10k (`R13`) to VS — *v2.2, bench-pending* |
@@ -56,7 +63,7 @@ MCU: **AVR64DD28**, 28-pin VQFN (footprint `solarglow:U1`). It sits on the **bac
 | EP | — | `GND` | exposed pad | thermal + ground |
 
 **LED ↔ channel map** (note the off-by-one: D1/D9 are Schottkys, not LEDs):
-`D2 → LDRV1 → PA0/WO0`, `D3 → LDRV2 → PA1/WO1`, `D4 → LDRV3 → PA2/WO2`, `D5 → LDRV4 → PA3/WO3`.
+`D2 → LDRV1 → PA3/WO3`, `D3 → LDRV2 → PA2/WO2`, `D4 → LDRV3 → PA1/WO1`, `D5 → LDRV4 → PA0/WO0` (v3.0 fan untangle).
 Each LED: anode → `ANODE` (common) → **SW2** → VS; cathode → `Kn` → ballast (150 Ω) → `LDRVn` → MCU pin.
 
 ---
@@ -68,7 +75,7 @@ Each LED: anode → `ANODE` (common) → **SW2** → VS; cathode → `Kn` → ba
 | `VIN` | PV1 (+) solar node, **before** blocking diode D1. ~0 V in the dark, rises with light. Feeds the VSENSE divider and D1 anode. |
 | `VINB` | PV2 (+) solar node, before blocking diode D9. |
 | `VS` | The storage rail (after D1/D9). = MCU VDD, accel VDD, LED anode source, supercap top. **Clamped ≤ 3.47 V** by the TLV431+PNP shunt (U4/Q1). |
-| `GND` | Ground — inner plane In1, EP, the four M2 mount holes. |
+| `GND` | Ground — **full-board B.Cu pour** (`GND_B`) in v3.0 (was the In1 plane in v2.3), EP, the four M2 mount holes. |
 | `MID` | Supercap series midpoint, balanced by U2 (ALD910025 dual SAB). |
 | `CLBASE` / `CLREF` | Clamp internals — Q1 base / TLV431 reference divider tap. |
 | `ANODE` | Common LED-anode node, switched by SW2. |
@@ -80,7 +87,7 @@ Each LED: anode → `ANODE` (common) → **SW2** → VS; cathode → `Kn` → ba
 | `VSENSE` | Light/rail sense → PD2. = VIN/2 (R5/R6 = 1 MΩ each), filtered by C5 (10 nF). |
 | `PA4` / `PC0` / `PC1` | Spare GPIO, broken out on JP2. |
 
-Inner copper: **In1 = GND plane, In4 = VS plane**, In2/In3 = signal. (6-layer, 0.8 mm.)
+Stackup: **v3.0 is 2-layer** (F / B) — GND = full-board B.Cu pour, VS = routed B mesh; 0.8 mm. (v2.3 fallback: 4-layer, F · In1 GND · In2 VS · B. v2.1 was 6-layer.)
 
 ---
 

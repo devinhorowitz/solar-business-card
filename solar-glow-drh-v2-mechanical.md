@@ -1,13 +1,21 @@
-# SOLAR-GLOW · DRH — As-Built Mechanical Reference (v2.1)
+# SOLAR-GLOW · DRH — As-Built Mechanical Reference (v2-era; v3.0 deltas inline)
 
-**The single source of truth for the enclosure.** Every dimension and coordinate here is read
-from the committed `solar-glow-drh-v2_1.kicad_pcb` (KiCad frame: origin top-left, X across the
-50.8 mm width, Y down the 88.9 mm length). Heights are datasheet figures for the populated parts.
+> **Superseded for the enclosure — read the v3.0 deltas.** The authoritative shell spec is now
+> `enclosure/README.md` and the generator `enclosure/solar-glow-drh-v3_0-backshell-cad.py`; the board
+> is **v3.0** (`PCB/solar-glow-drh-v3_0.kicad_pcb`). Since this doc was written the shell was built
+> and aligned: the **mounting holes moved** (v3.0 positions below), the **floor is 0.75 mm** (0.70
+> under a small U2 relief pocket), the **braces are removed**, and the **overall height is 3.55 mm**.
+> Use this doc for the board envelope, keepouts, and programming access; defer to `enclosure/README.md`
+> for every shell number.
 
-The board changed materially from the shell modeled in `enclosure/` — **four supercaps instead of
-two, no edge castellations, no U2 pocket needed, VQFN-28 not QFN-20, and an accelerometer tap
-instead of a button.** The existing CAD therefore has to be **redesigned against the geometry
-below, not patched.** §8 lists exactly what changed.
+Every board dimension and coordinate here is read from the committed KiCad board (KiCad frame:
+origin top-left, X across the 50.8 mm width, Y down the 88.9 mm length). Heights are datasheet
+figures for the populated parts.
+
+The board changed materially from the *original* shell modeled in `enclosure/` — **four supercaps
+instead of two, no edge castellations, VQFN-28 not QFN-20, and an accelerometer tap instead of a
+button.** That redesign is done: the v3.0 shell (`solar-glow-drh-v3_0-backshell-*`) is the result.
+§8 lists what changed.
 
 ---
 
@@ -24,12 +32,12 @@ Four plated through-holes, **2.2 mm drill**, all tied to **GND**:
 
 | Hole | (x, y) |
 |------|--------|
-| MH3 | (3.5, 3.0) |
-| MH4 | (47.3, 3.0) |
-| MH1 | (3.5, 85.9) |
-| MH2 | (47.3, 85.9) |
+| MH3 | (3.0, 3.0) |
+| MH4 | (47.8, 3.0) |
+| MH1 | (3.0, 85.9) |
+| MH2 | (47.8, 85.9) |
 
-All four corners, inset 3.5 mm from the long edges and 3.0 mm from the short edges. The screws tie
+All four corners, inset **3.0 mm from both edges** (v3.0 — concentric with the r3.0 corner fillets; was 3.5 mm from the long edges), pitch 44.80 × 82.90. The screws tie
 the metal body to GND (intended — the shell becomes a grounded shield). M2 wants 3–4 mm of thread
 engagement, so the **bosses must rise the full cavity height**; a thin floor cannot tap.
 
@@ -67,9 +75,11 @@ Two parts set the cavity; everything else clears under it.
 | D2–D5 | LEDs, LA P47F (reverse-mount) | ~0.83 mm | row at y 43.9 |
 | R / C | 1206 / 0805 | 0.6–0.7 mm | central band, y 32–55 |
 
-→ A **uniform ~1.8 mm cavity** clears U2 and the cells with margin. **No local U2 pocket** is
-needed (U2 at 1.75 mm ≈ the cells at 1.7 mm) — this deletes the thin-skin pocket the old CAD
-carried. **No through-hole headers exist** (every connector is flat SMD), so nothing else stands
+→ The v3.0 shell uses a **general cavity of 1.85 mm** (cap-limited by the four 1.70 mm supercaps),
+with a **0.05 mm relief pocket under U2** (1.75 mm) so the tallest part keeps its air while the floor
+stays 0.75 mm — a *different* pocket than the old thin-skin one, and for a different reason
+(engraving-stock floor, not a U2-limited cavity). See `enclosure/README.md`. **No through-hole
+headers exist** (every connector is flat SMD), so nothing else stands
 proud; the stack really is U2/cell-limited.
 
 ## 6. Big-part placement (what the shell works around)
@@ -84,7 +94,7 @@ length:
 (U3), clamp (Q1/U4/R7-9, right), the LED row + monogram (center), the SW2/SB/SJ selectors, the
 passive field, and the breakout pads. This band is where all the routing and the optical heart live.
 
-**Corners** (x 3.5 / 47.3, y 3.0 / 85.9): the four M2 holes, clear of the cells.
+**Corners** (x 3.0 / 47.8, y 3.0 / 85.9): the four M2 holes (v3.0 positions), clear of the cells.
 
 ## 7. Optically-active zone — no pillars here
 
@@ -102,7 +112,7 @@ no-pillar keepout**.
 - **No edge castellations.** Verified: zero pads within 1.5 mm of the rim. The old CAD's biggest
   electrical hazard — press-fit walls shorting the right-edge VS/SDA/SCL castellations — **is gone.**
   Walls can press over the bare-FR4 edge with no edge-pad short.
-- **No U2 pocket.** U2 (1.75 mm) ≈ cells (1.7 mm) → uniform ~1.8 mm cavity, no local thin skin.
+- **U2 relief pocket (v3.0).** A 0.05 mm pocket under U2 lets the general floor run 0.75 mm (engraving stock) while U2 keeps its 0.15 mm air; general cavity 1.85 mm. (Not the old U2-limited thin-skin pocket.) See `enclosure/README.md`.
 - **VQFN-28, not QFN-20** (height-irrelevant at 0.9 mm; noted for accuracy).
 - **No button.** The actuator is the accelerometer tap, which the metal back-plate *transmits*. No
   dome, no button hole, no cap-touch window.
@@ -128,11 +138,12 @@ back-side flat pads.
 
 - **Material:** **Ti-6Al-4V Grade 5**, single material (yield ~880 MPa). The earlier 7075-T6 fallback
   is dropped — titanium's strength is what lets the floor run thin.
-- **Machining:** **fully 3-axis CNC-milled** (the photochemical-etch idea is dropped). Uniform 0.55 mm
-  floor backed by ribs/posts; reflector frame laser-marked, not cut. Full CAD knob set, dimensioned
-  drawing, and fab notes are in `enclosure/README.md`.
-- **Floor thickness:** one shipping floor (0.55 mm); the old standard / 0.2 mm-skin and the 0.60 mm
-  conservative variants are retired. The floor is the single value re-issued to PCBWay's minimum.
+- **Machining (v3.0):** **fully 3-axis CNC-milled** (the photochemical-etch idea is dropped),
+  bead-blast finish. **0.75 mm floor** (0.70 under the U2 relief pocket) backed by two ribs — the
+  brace posts are removed; reflector frame laser-marked, not cut; overall height 3.55 mm. Full CAD,
+  callouts, and fab notes are in `enclosure/README.md`.
+- **Floor thickness:** one shipping floor (**0.75 mm**, engraving stock); the old 0.55 / standard /
+  0.2 mm-skin / 0.60 mm variants are retired. The floor is the single value re-issued to PCBWay's minimum.
 - **Open vs enclosed:** with no castellations, the old "enclosed variant drops the edge bus"
   complication disappears — the enclosed build is simpler than it was.
 
