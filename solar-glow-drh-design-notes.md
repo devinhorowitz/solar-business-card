@@ -181,12 +181,9 @@ Not useful on this part: ZCD (mains only), op-amps (the DD family lacks them), P
 The Ti rear-shell is parked, but a few rules must be baked into the board so it never needs a
 re-spin for the enclosure:
 
-- **Grounded body → short risk (resolved).** The board carries no edge castellations, and the
-  shell's contacts (lip, bosses, ribs) land on **bare laminate** — verified against the PCB, no pads
-  or vias under them — so nothing shorts to the GND body. The perimeter lip / back-frame was narrowed
-  **1.50 → 1.00 mm** so it clears the v3.0 bench-pad strip (JP1/TP1, x 47.55–49.25). The **die-cut
-  Kapton (~0.05 mm)** blanket is **dropped** (`kapton_th = 0.00`), kept in reserve only if a future
-  board ever puts copper under a shell contact.
+- **Grounded body → short risk.** In the enclosed variant, **drop the right-edge castellations**;
+  land support pillars **only on GND pour**; keep a **die-cut Kapton (~0.05 mm)** blanket isolation
+  layer in reserve if a later via audit on the rib lines finds an untented via.
 - **General cavity 1.85 mm (cap-limited), plus a U2 relief pocket** — the four **1.70 mm WS17
   supercaps** set the general cavity (1.85 = cap + 0.15 mm air, toleranced 1.85 ±0.05). U2 (SOIC-8,
   1.75 mm) is the single tallest part but sits over a **local 0.05 mm relief pocket** (floor 0.70 mm
@@ -194,8 +191,9 @@ re-spin for the enclosure:
   0.9 mm QFN is irrelevant. ("Cells" elsewhere can mean the 1.2 mm **solar** cells on the front — a
   different part; don't conflate the two.)
 - **No tall back-side parts.** The cavity budget assumes the tallest *populated* rear part is U2 at
-  1.75 mm. Keep the 2.54 mm breakout headers (JP1/JP2) **unpopulated** in the enclosed build — a
-  populated 0.1 in header is ~8 mm and the shell will not close. J1/TC2030 are flat back-side pads.
+  1.75 mm. The v2-era 2.54 mm breakout headers (old JP1/JP2) are gone in v3.0; the reused-`JP1`
+  bench strip + `TP1` are flat SMD pads (nothing to populate — a soldered header would stop the
+  shell closing, same as ever). J1/TC2030 are flat back-side pads.
 - **The button is the accel tap** (cap-touch dies behind a grounded plate; the old "snap-dome"
   actuator is superseded).
 - **Shell, current approach (v3.0):** Ti-6Al-4V Grade 5, **fully 3-axis CNC-milled** (no etching),
@@ -449,3 +447,30 @@ ON threshold compatible with 1 V+ GPIO, so PA7 at any plausible VS is fine.
 "dangling" notes in the U6 window — expected) → **Tools → Add Teardrops** (covers R14 *and*
 the U6 rework) → commit board + schematic together (the sch pin renumber and the pad renet
 must land in the same commit or update-from-schematic will fight you).
+
+---
+
+## Addendum (2026-07-02) — bench pad strip (TP1 + JP1) and the enclosure lip
+
+- **Why:** TC1 dies for bench use once PV1 is glued (the TC2030 legs land under the panel), and
+  there was no clean power-injection or I²C tap point. Wanted: baked-in bench access.
+- **First placement failed on the shell.** A 4-pad THT column in the SC1|SC2 canyon (x 25.4)
+  collided with the enclosure's cap-gap **rib** (x 24.9–25.9, full cavity height): pins/pads
+  directly under grounded Ti. Scrapped before commit.
+- **Shipped placement:** five bare **SMD** pads (1.7 mm sq, 2.54 pitch, B side) at **x 48.4** in
+  the SC2-body-to-edge margin — `TP1` VIN (y 12.0), `JP1` 1–4 = GND/VS/SCL/SDA (y 14.54–22.16).
+  VIN/VS are local B spurs off the VIN trunk and D1.K; SDA taps a new via at (33.4, 30.78), SCL
+  T's off its existing via at (34.37, 35.28); both run east on F at y 29.55/29.1 through the
+  channel above the coil's north fence (LA's B turns start at y 32.05), landing on the pads
+  through **via-in-pad** on `JP1.3`/`JP1.4` (bare probe pads — via-in-pad is free there).
+  Verified: all nets single-component, 0 hard shorts, min changed-copper clearance 0.200; DRC 0.
+- **The lip finding:** the shell's perimeter lip was 1.50 mm — inner edge at 50.75 − 1.50 =
+  **x 49.25, exactly the strip's east copper edge (0.00 nominal)**. Guaranteed contact once
+  pocket (ISO 2768-m) + board-routing (±0.2) tolerances stack. **Fix: lip_w 1.50 → 1.00** →
+  inner edge 49.75, **0.50 mm clearance**; floor-span margin absorbs it (the 0.75 floor is 2.5×
+  the analyzed 0.55), and the mirrored back frame thins 1.5 → 1.0 (the rear art field grows
+  0.5 mm/side). Generator + STEP/STL regenerated and committed; solids valid at 143/144 faces.
+- **Housekeeping:** the `JP1` designator is *reused* (the v2-era JP1/JP2 2.54 mm headers are
+  gone; JP2 has no successor). JP1/TP1 are bare pads — **no BOM part; mark both DNP in the CPL**
+  alongside SC1–SC4 / PV1–PV2 / J1 / C9. Pinout + bench ritual live in
+  `solar-glow-drh-v2-hardware.md`; fab-facing notes in `PCB/README.md`.

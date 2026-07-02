@@ -90,10 +90,10 @@ Each LED: anode → `ANODE` (common) → **SW2** → VS; cathode → `Kn` → ba
 | `TINY` | Dim-mode node: LED anodes → VS through R12 (220 Ω) when SW2 = TINY. |
 | `LDRV1‒4` | LED cathode drives → MCU PA0‒PA3. |
 | `K2‒K5` | Individual LED-cathode-to-ballast nets. |
-| `SDA` / `SCL` | I²C bus (accel `0x18` + NFC tag `0x55`; JP1 breakout removed in v3.0). |
+| `SDA` / `SCL` | I²C bus (accel `0x18` + NFC tag `0x55`); tapped at `JP1.4`/`JP1.3` on the bench strip. |
 | `INT1` / `INT2` | Accel interrupt lines → PF1 / PF0. |
 | `VSENSE` | Light/rail sense → PD2. = VIN/2 (R5/R6 = 1 MΩ each), filtered by C5 (10 nF). |
-| `PA4` / `PC0` / `PC1` | Spare GPIO (JP2 removed in v3.0 — no breakout). |
+| `PA4` / `PC0` / `PC1` | Spare GPIO (the v2-era JP2 breakout is gone — reserved, un-broken-out). |
 
 Stackup: **v3.0 is 2-layer** (F / B) — GND = full-board B.Cu pour, VS = routed B mesh; 0.8 mm. (v2.3 fallback: 4-layer, F · In1 GND · In2 VS · B. v2.1 was 6-layer.)
 
@@ -172,7 +172,28 @@ Stackup: **v3.0 is 2-layer** (F / B) — GND = full-board B.Cu pour, VS = routed
 
 **Breakouts / programming.**
 - `TC1` — TC2030 Tag-Connect (UPDI): hands-free flashing. `J1` — backup UPDI header.
-- `JP1` / `JP2` — **removed in v3.0** (no I²C/GPIO breakout headers on the board; `J1` UPDI remains).
+- The v2-era `JP1`/`JP2` 2.54 mm breakout headers are **gone in v3.0**; `JP2` has no successor
+  (PA4/PC0/PC1 stay reserved, un-broken-out). The `JP1` designator is **reused** for the bench pad
+  strip below.
+
+**Bench pad strip — `TP1` + `JP1` (new in v3.0).** Five bare SMD pads (1.7 mm square, ENIG,
+2.54 mm pitch) in a column at x 48.4 on the **back**, in the margin between SC2's body edge
+(x 43.8) and the card edge — the one strip the Ti shell interior clears (its lip was thinned
+1.50 → 1.00 mm for exactly this; closed-shell clearance to the pads is 0.50 mm). Top to bottom:
+
+| Pad | y | Net | Purpose |
+|---|---|---|---|
+| `TP1` | 12.00 | `VIN` | Solar-input node (pre-D1) — charge test / panel emulation |
+| `JP1.1` | 14.54 | `GND` | Return (B.Cu pour) |
+| `JP1.2` | 17.08 | `VS` | **Bench power injection** — 3.0–3.3 V, current-limited ~50 mA |
+| `JP1.3` | 19.62 | `SCL` | I²C tap (via-in-pad stitches to the F-side run) |
+| `JP1.4` | 22.16 | `SDA` | I²C tap (via-in-pad) |
+
+No holes, nothing proud of the mask — clip, pogo, or tack a wire on for a bench session and
+wick it off after. **Bench sequence:** inject at `JP1.2`/`JP1.1` → flash via `TC1` → functional
+test → supercaps on → charge test at `TP1` → panels last. With the shell off the strip also
+gives post-assembly I²C access to the NT3H2211 (`0x55`) and LIS2DH12 (`0x18`); with the shell
+on nothing is probe-able anyway, by design.
 
 ---
 

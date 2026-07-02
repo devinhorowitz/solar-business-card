@@ -20,7 +20,7 @@ a supercapacitor bank that holds the charge.
 | Board | 50.80 × 88.90 mm, r3.0 corners, **0.80 mm** FR4, ENIG, matte-black mask | 0.8-vs-1.0 mm thickness still open |
 | Mounting holes | 4× M2, GND, at **(3.0, 3.0) / (47.8, 3.0) / (3.0, 85.9) / (47.8, 85.9)**, pitch **44.80 × 82.90 mm** | concentric with the r3.0 corner fillets |
 | **Enclosure** | **v3.0 Ti back-shell** — 0.75 floor, 1.85 cavity (1.90 local under U2), overall **3.55 mm**, braces off | matches the v3.0 hole pattern; see `enclosure/README.md` |
-| BOM | **v3_0 masters** — U6 + R14 added, JP1/JP2 dropped, all passives except SJ1 now 0402 | master is `PCB/solar-glow-drh-v3_0-BOM.xlsx`; placed set in `-BOM-assembly.xlsx` |
+| BOM | **v3_0 masters** — U6 + R14 added, JP1/JP2 dropped (JP1 later reused for the bench pad strip), all passives except SJ1 now 0402 | master is `PCB/solar-glow-drh-v3_0-BOM.xlsx`; placed set in `-BOM-assembly.xlsx` |
 | Firmware | register-verified C, not yet on hardware | LED pin map re-mapped in v3.0 (see `firmware/README.md`) |
 
 ### Where the truth lives — how these docs stay from drifting
@@ -83,12 +83,14 @@ all lives on the back, ready for an optional machined-metal back-shell.
 | NFC | **NXP NT3H2211** (NTAG I²C plus 2K) | present from v3.0 — a contact **vCard** a phone taps to save; field-detect (FD, PA6) also wakes the glow — I²C `0x55`, shares the accel's bus |
 
 **Breakouts and features:** a **TC2030** Tag-Connect pad (`TC1`) for hands-free UPDI
-programming, a backup UPDI header (`J1`), an I²C expansion header (`JP1`), a spare-GPIO header
-(`JP2`), per-LED disable jumpers (`SB1–4`), a VDDIO2 tie jumper (`SJ1`), and **four grounded
-M2 mounting holes** at the corners.
+programming, a backup UPDI header (`J1`), a **5-pad bench strip** on the back east edge
+(`TP1` VIN + `JP1` GND/VS/SCL/SDA — bare SMD probe pads for bench power injection and an I²C
+tap; pinout in `solar-glow-drh-v2-hardware.md`), per-LED disable jumpers (`SB1–4`), a VDDIO2
+tie jumper (`SJ1`), and **four grounded M2 mounting holes** at the corners. (The v2-era
+`JP1`/`JP2` 2.54 mm breakout headers are gone; the `JP1` name is reused for the strip.)
 
 Full part numbers, pricing, and per-part datasheet links are in
-**`PCB/solar-glow-drh-v3_0-BOM.xlsx`** — the master BOM (v3.0): **U6 (TPS22918) and R14 (100 k `NFC_EN` pulldown) included**, the stale JP1/JP2 rows dropped, and every passive except SJ1 converted to **0402** to match the board lands. Converted/added lines have prices blanked pending a fresh quote (U6 quoted: TPS22918DBVR $0.55 @ qty 1, DigiKey 2026-07-02). Lineage: v2.2 added the NFC parts (U5 / C8 / C9 / R13); the `v2 2` and older BOM files stay in the repo as history.
+**`PCB/solar-glow-drh-v3_0-BOM.xlsx`** — the master BOM (v3.0): **U6 (TPS22918) and R14 (100 k `NFC_EN` pulldown) included**, the stale JP1/JP2 rows dropped (the `JP1` designator is reused in v3.0 for the bench pad strip — bare pads, no BOM part), and every passive except SJ1 converted to **0402** to match the board lands. Converted/added lines have prices blanked pending a fresh quote (U6 quoted: TPS22918DBVR $0.55 @ qty 1, DigiKey 2026-07-02). Lineage: v2.2 added the NFC parts (U5 / C8 / C9 / R13); the `v2 2` and older BOM files stay in the repo as history.
 
 ---
 
@@ -244,12 +246,10 @@ supercaps (U2 at 1.75 mm sits over a small **relief pocket** that drops the loca
 still clears), the floor runs to **0.75 mm** of engraving stock backed by ribs, and the overall height
 is **3.55 mm**. The four bosses sit on the **v3.0 hole pattern** (concentric with the r3.0 corner
 fillets), the internal braces are **removed**, and retention is **four corner M2 screws**, not a press
-fit. The electrical gotcha — the screws tie the metal body to board GND, but the board carries **no edge
-castellations** and the shell's contacts land on **bare laminate**, so nothing shorts to the grounded
-shell (the die-cut Kapton fallback is dropped, kept only in reserve). The perimeter lip was narrowed to
-1.00 mm to clear the JP1/TP1 bench-pad strip at the board edge, and the **accelerometer tap is the
-actuator** (cap-touch dies behind a grounded plate). The dimensioned drawing is mid-regeneration for
-v3.0 — see `enclosure/README.md`.
+fit. The electrical gotcha — the screws tie the metal body to board GND, so the enclosed variant
+**drops the edge castellations** (or adds a die-cut Kapton layer) so nothing shorts to the grounded
+shell, and the **accelerometer tap is the actuator** (cap-touch dies behind a grounded plate). The
+dimensioned drawing is mid-regeneration for v3.0 — see `enclosure/README.md`.
 
 ---
 
