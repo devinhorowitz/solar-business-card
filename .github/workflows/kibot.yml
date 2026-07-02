@@ -1,0 +1,39 @@
+# .github/workflows/kibot.yml — PCB CI for solar-business-card
+# On every push touching PCB/: run ERC+DRC (intentional findings filtered),
+# regenerate fab zip, iBOM, board images, BOM/position docs into Generated/,
+# and commit them back so the repo always carries current reports.
+name: PCB CI
+ 
+on:
+  push:
+    paths:
+      - 'PCB/**'
+      - '.github/workflows/kibot.yml'
+ 
+permissions:
+  contents: write
+ 
+jobs:
+  kibot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+ 
+      - name: Run KiBot (KiCad 10)
+        uses: INTI-CMNB/KiBot@v2_k10
+        with:
+          config: PCB/solar-glow-drh.kibot.yaml
+          dir: Generated
+          board: PCB/solar-glow-drh-v3_0.kicad_pcb
+          schema: PCB/solar-glow-drh-v3_0.kicad_sch
+ 
+      - name: Commit generated outputs
+        run: |
+          git config user.name "kibot-ci"
+          git config user.email "kibot-ci@users.noreply.github.com"
+          git add -A Generated
+          git diff --cached --quiet || git commit -m "CI: regenerate fab + docs [skip ci]"
+          git push
+ 
