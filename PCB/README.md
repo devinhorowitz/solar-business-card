@@ -45,7 +45,7 @@ PCB/
 | Layers | **2 copper**: F.Cu (cells, plating ties, monogram art) · B.Cu (everything else) |
 | Power architecture | **GND = full-board B.Cu pour** (~3000 mm²); **VS = routed B.Cu mesh** |
 | Finished thickness | **0.8 mm** FR4 |
-| Surface finish | **ENIG** (gold — it is both the look and the reflector behind the glow window) |
+| Surface finish | **ENIG** + **selective hard (electrolytic) gold** on the F.Cu gold set — the plating bus exists to feed it (see the order special request) |
 | Soldermask | **Matte black**, both sides |
 | Silkscreen | White (back-side identifiers / logos); front face is intentionally bare |
 | Components | **48 on the back**; the front carries only the two solar cells (PV1/PV2) |
@@ -128,11 +128,11 @@ Order parameters, from the committed board:
 |---|---|
 | Layers | **2** |
 | Material / thickness | FR4, **0.8 mm** finished |
-| Surface finish | **ENIG** |
+| Surface finish | **ENIG**, plus **selective hard gold** per the special request below |
 | Soldermask color | **Matte black** |
 | Silkscreen | White |
 | Min track / spacing used | **0.15 mm track / 0.127 mm spacing** (the marginal-band corridors) |
-| Vias | **Uniform: 0.30 mm drill / 0.60 mm pad** (0.15 mm annular), 89 total, tented |
+| Vias | **Uniform: 0.30 mm drill / 0.60 mm pad** (0.15 mm annular), 94 total, tented (resin-fill + cap ordered board-wide) |
 | Non-plated holes | TC2030: Ø **2.3749 mm** (4× leg-latch) and Ø **0.9906 mm** (3× alignment) |
 | Plated mount holes | Ø **2.2 mm** ×4 (M2, corners, tied to GND) |
 | Castellations | **None** (verified — only the corner mount holes sit within 1.5 mm of the rim) |
@@ -146,19 +146,35 @@ via), and no controlled-impedance nets to declare.
 - "**Leave soldermask open over the central window per the mask layers — do not tent or
   flood.**" (The bare-FR4 + open-ENIG window is the whole optical trick.)
 - "**Keep vias tented.**"
-- "**The two F.Cu stubs touching the board outline at x = 25.4 (top and bottom edges) are
-  intentional plating ties — leave as-is.**" A DFM reviewer will flag copper-to-edge = 0
-  there; that is by design.
+- **Selective hard gold (the reason the plating bus exists):** paste this verbatim into the
+  special-request box —
+
+  > *"Selective hard gold plating on top side: the DRH monogram field, the perimeter frame, and
+  > the six edge ornament shapes (all connected copper on F.Cu). Remaining exposed copper: ENIG.
+  > The two 0.25 mm traces crossing the board outline at x=25.4 (top and bottom edges) are
+  > plating-bus connections; please retain to panel rail and rout at depanel. The gold set is
+  > GND-referenced by design (the four M2 mounting-hole pads overlap the frame at all four
+  > corners); not floating copper, not a defect. All in-pad vias: resin-filled and copper-capped
+  > (POFV, IPC-4761 Type VII)."*
+
+  A DFM reviewer will flag copper-to-edge = 0 at the two stubs; that is by design. (Geometry
+  re-verified against the committed board 2026-07-02: the gold set is a single connected F.Cu
+  component, both stubs + all four M2 GND pads on it; everything else exposed on F is the solar
+  lands, which stay ENIG.) Ordering plain ENIG without this request leaves the bus as dead
+  copper and no wear surface on the face — do not ship without it.
 - "**The LA/LB track crossing at (41.0, 38.0) is the NFC coil junction — intentional.**"
-- **Via-in-pad — 10 vias land inside soldered pads** on this board: `TC1.1`, `U1.EP`,
-  `U5.1`, `D1.K`, `R13.2`, `SW2.1`, `J1.2`, `PV1.N`, `PV2.N`, `PV2.Nt`. The clean answer is
+- **Via-in-pad — 12 vias land inside pads** on this board: 10 in soldered pads (`TC1.1`, `U1.EP`,
+  `U5.1`, `D1.K`, `R13.2`, `SW2.1`, `J1.2`, `PV1.N`, `PV2.N`, `PV2.Nt`) plus 2 in the bench-strip
+  probe pads (`JP1.3`, `JP1.4` — bare pads, hand-solder optional). The clean answer is
   the same as always: **order resin-fill + cap (via-in-pad process) board-wide.** The one
   that *must* be flat and hole-free is **TC1.1** (a Tag-Connect pogo contact); the rest
   are large or hand-soldered pads where a plugged via is merely tidy.
 
 > **Resolved in the R14 patch:** the previously undocumented Ø 0.89 mm NPTH at (37.9, 75.4)
 > (under SC4's body) was **deleted from the board** — nothing in the repo claimed it. If it had a
-> purpose, it's one git revert away.
+> purpose, it's one git revert away. *(Lineage re-checked 2026-07-02: absent from the v0
+> prototype; entered at v2.1 inside an anonymous `NPTH_mech` footprint; never appeared in the fab
+> hole table; the enclosure generator places nothing there. Orphan confirmed — deletion stands.)*
 
 A **frameless solder-paste stencil** (from the F.Paste / B.Paste plot) is strongly
 recommended — the QFN EP and the LGA accelerometer reflow far more reliably with paste than
@@ -250,7 +266,7 @@ the exact reverse-mount P/N, OSRAM sells top-emit lookalikes).
 SC1–SC4 / PV1–PV2 / J1 / C9 as DNP; **Absolute origin** to match the drills), and
 `led-orientation-D2-D5.png`.
 
-**Order-form settings that matter:** bottom side, qty 5, ENIG / matte-black / white silk,
+**Order-form settings that matter:** bottom side, qty 5, ENIG **+ selective hard gold (special request above)** / matte-black / white silk,
 **resin-fill + via-in-pad** (cleans the 10 via-in-pad joints and keeps the TC1 pogo pad
 flat), **moisture-sensitive = U1 / U2 / U3 / U5** (U3 is a MEMS part — observe peak reflow
 temp, no ultrasonic clean), no China substitutes. **Black-FR4 core stays OFF** — the glow
