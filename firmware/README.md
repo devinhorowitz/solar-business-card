@@ -1,12 +1,12 @@
-# SOLAR-GLOW DRH v2.1 — firmware
+# SOLAR-GLOW DRH — firmware (targets the v3.0 card)
 
-Bare-metal C for the AVR64DD28 on the SOLAR-GLOW DRH v2.1 card. The card
+Bare-metal C for the AVR64DD28 on the SOLAR-GLOW DRH v3.0 card. The card
 harvests light into a supercap tank, sleeps in deep power-down, and lights the
 backlit **DRH** monogram with a breathing glow when you tap it (or when it is
-carried from dark into light). There is **no button** in v2.1 — the
+carried from dark into light). There is **no button** on this card — the
 accelerometer is the actuator.
 
-The **v2.2** board adds an NFC tag (`U5`, NXP NT3H2211): a phone tap reads a
+The board carries an NFC tag (`U5`, NXP NT3H2211, added in v2.2): a phone tap reads a
 contact **vCard** from it, and the tag's field-detect line also wakes the glow.
 The tag's VCC is **power-gated** by a load switch on `NFC_EN` (PA7) and held off
 by default — the chip has no sleep state and would otherwise draw ~195 µA, the
@@ -35,7 +35,7 @@ card's largest idle load. See **NFC contact card** below.
 | `board.h` | as-built pin/route map + tunables. Single source of truth is the PCB. |
 | `twi.h` | header-only blocking I2C host (TWI0); shared by the accel and NFC tag. |
 | `lis2dh12.h/.c` | accelerometer: presence, tap→INT1, motion (IA2)→INT2, latch clear. |
-| `nfc.h/.c` | NT3H2211 NFC tag (v2.2): NDEF write + VCC power-gate (`NFC_EN`). |
+| `nfc.h/.c` | NT3H2211 NFC tag (`U5`): NDEF write + VCC power-gate via `NFC_EN`/`U6`. |
 | `led.h/.c` | TCA0 split-mode PWM on PA0–PA3 + gamma breathing animation. |
 | `sense.h/.c` | ADC rail/light reads + EEPROM activation counter. |
 | `main.c` | init (per hardware doc §7), sleep/wake state machine, ISRs. |
@@ -125,18 +125,25 @@ below — sampled `BODCFG`, `SYSCFG1.MVSYSCFG = SINGLE`, and optionally
 `SYSCFG0.EESAVE` to keep the tap counter across reflashes. `make fuses` prints the
 avrdude pattern; fill in the bytes from the datasheet fuse tables.
 
-## Pin map (read from `solar-glow-drh-v2_1.kicad_pcb`)
+> **v3.0 LED pin map — the one firmware-facing change.** v3.0 permuted the LDRV nets at U1 (the fan
+> untangle) so the schematic matches the as-routed copper: **pin 1/PA3/WO3 = LDRV1 → D2; pin 28/PA2/WO2
+> = LDRV2 → D3; pin 27/PA1/WO1 = LDRV3 → D4; pin 26/PA0/WO0 = LDRV4 → D5** (v2.3 was the reverse at the
+> U1 end). The table below is the v3.0 map, and `led.c`'s channel table must match it. TCA0 split on
+> PA0–PA3 and the LED placements (D2–D5) are unchanged. (The PWM `INVEN` polarity in `led.c` is a
+> carried bench item — a one-line fix if the glow reads inverted.)
+
+## Pin map (read from `solar-glow-drh-v3_0.kicad_pcb`)
 
 AVR64DD28, VQFN-28, on the **back** of the board.
 
 | pin | func | net | role |
 |----:|------|-----|------|
-| 26 | PA0 | LDRV1 | LED D2, low-side, TCA0 WO0 |
-| 27 | PA1 | LDRV2 | LED D3, TCA0 WO1 |
-| 28 | PA2 | LDRV3 | LED D4, TCA0 WO2 |
-| 1 | PA3 | LDRV4 | LED D5, TCA0 WO3 |
-| 4 | PA6 | FD | NFC field-detect in (`U5`, v2.2); PORTA pin int, **falling**; field-powered (works VCC-off); int pull-up on + ext 10k → VS |
-| 5 | PA7 | NFC_EN | NFC VCC load-switch enable (v2.2), **active-HIGH**; output, LOW = NFC off |
+| 26 | PA0 | LDRV4 | LED D5, low-side, TCA0 WO0 |
+| 27 | PA1 | LDRV3 | LED D4, TCA0 WO1 |
+| 28 | PA2 | LDRV2 | LED D3, TCA0 WO2 |
+| 1 | PA3 | LDRV1 | LED D2, TCA0 WO3 |
+| 4 | PA6 | FD | NFC field-detect in (`U5`); PORTA pin int, **falling**; field-powered (works VCC-off); int pull-up on + ext 10k (R13) → VS |
+| 5 | PA7 | NFC_EN | Enables the NFC VCC load switch (`U6`, TPS22918), **active-HIGH**; init LOW = NFC off. (~100 k pulldown to hold U6 off while PA7 tristates is a **carried bench item — not on the board yet**.) |
 | 8 | PC2 | SDA | TWI0 host (PORTMUX **ALT2**), ext 4.7k → VS |
 | 9 | PC3 | SCL | TWI0 host (ALT2), ext 4.7k → VS |
 | 10 | VDDIO2 | VS | tied to VS by SJ1; PORTC at rail, MVIO unused |
@@ -153,7 +160,7 @@ LEDs are **low-side**: each lights when its PA pin pulls LOW, current set by a
 average below that ballasted ceiling. `D1`/`D9` are Schottkys, not LEDs.
 
 Spare/free: PA4, PC0, PC1 (on JP2); PA5 (`BTN`, reserved stub for v3);
-PD1, PD3–PD7, PF6/RST. (PA6 = NFC `FD`, PA7 = `NFC_EN` on the v2.2 board.)
+PD1, PD3–PD7, PF6/RST. (PA6 = NFC `FD`, PA7 = `NFC_EN`.)
 
 ## Behaviour
 
@@ -163,7 +170,7 @@ Baseline = **POWER-DOWN**. Wakes:
   breathing glow (`GLOW_CYCLES` breaths) + EEPROM activation count++. With
   `USE_DOUBLE_TAP`, a double-tap plays a brighter/longer signature glow instead.
 - **Motion** (LIS2DH12 inertial wake-up, IA2) → INT2 → PF0 → one softer breath.
-- **NFC** (NT3H2211 field detect, v2.2) → FD → PA6 → the tap glow, when a phone's
+- **NFC** (NT3H2211 field detect, `U5`) → FD → PA6 → the tap glow, when a phone's
   field appears. FD runs on the phone's field power (datasheet §8.4), so it wakes
   the MCU even though the tag's VCC is gated **off**; field-present is the chip's
   POR default (`NC_REG.FD_ON = 00b`), so no setup is needed. Detail under **NFC
@@ -183,10 +190,10 @@ brown out the part.
    anodes are disconnected and nothing lights regardless of what the firmware
    does. There is no GPIO sense for it; the code just drives PWM. If the board
    is dark, check SW2 first.
-2. The **accelerometer is the only actuator** in v2.1. `PA5/BTN` is a routed
+2. The **accelerometer is the only actuator** on this card. `PA5/BTN` is a routed
    stub for a future revision, not populated.
 
-## NFC contact card (`NT3H2211`, v2.2)
+## NFC contact card (`NT3H2211`, `U5`)
 
 `U5` is an NXP **NT3H2211** (NTAG I2C plus, 2 KB) — an NFC Forum Type-2 tag on the
 **same TWI0 bus** as the accel, 7-bit address **0x55** (no clash with the accel's
