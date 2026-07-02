@@ -1,16 +1,8 @@
 ** Drc report for solar-glow-drh-v3_0.kicad_pcb **
-** Created on 2026-07-02T10:16:22 **
+** Created on 2026-07-02T13:00:31 **
 ** Report includes: Errors, Warnings **
 
-** Found 2 DRC violations **
-[starved_thermal]: Thermal relief connection to zone incomplete (layer B.Cu; zone min spoke count 2; actual 1)
-    Local override; error
-    @(0.0000 mm, 0.0000 mm): Zone 'GND_B' [GND] on B.Cu, priority 0
-    @(10.0100 mm, 36.6000 mm): Pad 2 [GND] of C2 on B.Cu
-[starved_thermal]: Thermal relief connection to zone incomplete (layer B.Cu; 1 spokes connected to isolated island)
-    Local override; error
-    @(0.0000 mm, 0.0000 mm): Zone 'GND_B' [GND] on B.Cu, priority 0
-    @(19.2500 mm, 35.6500 mm): Pad 3 [GND] of U3 on B.Cu
+** Found 0 DRC violations **
 
 ** Found 0 unconnected pads **
 
