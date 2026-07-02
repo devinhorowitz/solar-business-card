@@ -1,8 +1,8 @@
 ** Drc report for solar-glow-drh-v3_0.kicad_pcb **
-** Created on 2026-07-02T01:07:50 **
+** Created on 2026-07-02T01:16:00 **
 ** Report includes: Errors, Warnings, Exclusions **
 
-** Found 20 DRC violations **
+** Found 19 DRC violations **
 [tracks_crossing]: Tracks crossing
     Local override; error
     @(41.0000 mm, 52.4200 mm): Track [LA] on B.Cu, length 14.4200 mm
@@ -15,10 +15,6 @@
     Rule: board setup constraints edge; error
     @(3.0000 mm, 88.9000 mm): Segment on Edge.Cuts
     @(25.4000 mm, 87.6500 mm): Segment [GND] on F.Cu
-[starved_thermal]: Thermal relief connection to zone incomplete (layer B.Cu; 2 spokes connected to isolated island)
-    Local override; error
-    @(0.0000 mm, 0.0000 mm): Zone 'GND_B' [GND] on B.Cu, priority 0
-    @(12.6650 mm, 16.9000 mm): Pad 3 [GND] of TC1 on B.Cu
 [track_dangling]: Track has unconnected end
     Local override; warning
     @(25.8640 mm, 35.0640 mm): Track [GND] on B.Cu, length 1.3086 mm
