@@ -20,7 +20,7 @@ a supercapacitor bank that holds the charge.
 | Board | 50.80 × 88.90 mm, r3.0 corners, **0.80 mm** FR4, ENIG, matte-black mask | 0.8-vs-1.0 mm thickness still open |
 | Mounting holes | 4× M2, GND, at **(3.0, 3.0) / (47.8, 3.0) / (3.0, 85.9) / (47.8, 85.9)**, pitch **44.80 × 82.90 mm** | concentric with the r3.0 corner fillets |
 | **Enclosure** | **v3.0 Ti back-shell** — 0.75 floor, 1.85 cavity (1.90 local under U2), overall **3.55 mm**, braces off | matches the v3.0 hole pattern; see `enclosure/README.md` |
-| BOM | **unchanged across v2.1 → v3.0** | master is `PCB/solar-glow-drh-v2_1-BOM.xlsx`; no per-revision BOM |
+| BOM | **v3_0 masters** — U6 + R14 added, JP1/JP2 dropped, all passives except SJ1 now 0402 | master is `PCB/solar-glow-drh-v3_0-BOM.xlsx`; placed set in `-BOM-assembly.xlsx` |
 | Firmware | register-verified C, not yet on hardware | LED pin map re-mapped in v3.0 (see `firmware/README.md`) |
 
 ### Where the truth lives — how these docs stay from drifting
@@ -32,7 +32,7 @@ Each fact has exactly one home; everything else points at it rather than restati
 | Board copper / geometry / holes | `PCB/solar-glow-drh-v3_0.kicad_pcb` + `.kicad_sch` |
 | Enclosure geometry | `enclosure/solar-glow-drh-v3_0-backshell-cad.py` (prints the Z-stack; regenerates the STEP) |
 | Firmware pin map + knobs | `firmware/README.md` (matches the schematic) |
-| BOM | `PCB/solar-glow-drh-v2_1-BOM.xlsx` (unchanged through v3.0) |
+| BOM | `PCB/solar-glow-drh-v3_0-BOM.xlsx` (v3.0 master — converted lines have prices blanked pending quote; see `PCB/README.md` Step 4) |
 | Design *reasoning* / lineage | `solar-glow-drh-design-notes.md` |
 
 When a number here disagrees with a source-of-truth file, the source file wins and this table is the
@@ -88,7 +88,7 @@ programming, a backup UPDI header (`J1`), an I²C expansion header (`JP1`), a sp
 M2 mounting holes** at the corners.
 
 Full part numbers, pricing, and per-part datasheet links are in
-**`PCB/solar-glow-drh-v2_1-BOM.xlsx`** — the master BOM, **unchanged across v2.1 → v3.0** (same parts).
+**`PCB/solar-glow-drh-v3_0-BOM.xlsx`** — the master BOM (v3.0): **U6 (TPS22918) and R14 (100 k `NFC_EN` pulldown) included**, the stale JP1/JP2 rows dropped, and every passive except SJ1 converted to **0402** to match the board lands. Converted/added lines have prices blanked pending a fresh quote (U6 quoted: TPS22918DBVR $0.55 @ qty 1, DigiKey 2026-07-02). Lineage: v2.2 added the NFC parts (U5 / C8 / C9 / R13); the `v2 2` and older BOM files stay in the repo as history.
 
 ---
 
@@ -140,7 +140,8 @@ solar-business-card/
 │   ├── solar-glow-drh-v3_0.kicad_pcb   # the board — v3.0, 2-layer (source of truth)
 │   ├── solar-glow-drh-v3_0.kicad_sch   # schematic (v3.0)
 │   ├── solar-glow-drh-v2_3.kicad_pcb   # 4-layer fallback — kept, not deleted
-│   ├── solar-glow-drh-v2_1-BOM.xlsx    # bill of materials — parts, prices, links (master; unchanged through v3.0)
+│   ├── solar-glow-drh-v3_0-BOM.xlsx    # bill of materials — v3.0 master (U6 + R14; all-0402)
+│   ├── solar-glow-drh-v3_0-BOM-assembly.xlsx  # placed-parts BOM for PCBA (36 parts)
 │   └── README.md                       # order & build guide
 ├── solar-glow-drh-v2-hardware.md   # as-built wiring & pin map (v2-era; v3.0 LED-map delta noted at top)
 ├── solar-glow-drh-v2-mechanical.md # board mechanics, keepouts, access (v2-era; v3.0 hole/enclosure deltas at top)

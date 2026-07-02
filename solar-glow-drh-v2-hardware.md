@@ -4,7 +4,7 @@
 > **v3.0 (2-layer)**; `PCB/solar-glow-drh-v3_0.kicad_pcb` governs and `firmware/README.md` carries the
 > working pin map. Two v3.0 changes are applied inline here: the **LDRV/LED pin map was permuted**
 > (pin 1/PA3 = LDRV1 → D2 … pin 26/PA0 = LDRV4 → D5 — the fan untangle), and the **stackup is 2-layer**
-> (GND = full-board B.Cu pour, VS = routed B mesh; no inner planes). Net list, PORTMUX, and register
+> (GND = full-board B.Cu pour, VS = routed B mesh; no inner planes), and the **NFC power-gate is now committed** (`U6` TPS22918 + `R14` 100 k `NFC_EN` pulldown — see the NFC note below). Net list, PORTMUX, and register
 > values carry forward unchanged.
 
 **The single source of truth for firmware.** Every line here is taken from the committed
@@ -13,16 +13,24 @@ AVR64DD32-28 datasheet (DS40002315), the LIS2DH12 datasheet (DM00091513), and th
 SM141K06TF and SCPC parts. Where a register value is given, it is the value the firmware must
 write to match what is physically routed.
 
-**v2.2 NFC addition (read this caveat).** The v2.2 board adds an NFC tag subsystem
-(`U5` NT3H2211, `C8`, `C9`, `R13`, and the antenna coil) on **PA6** (field-detect), and a
-later revision adds a **high-side load switch** that power-gates `U5`'s VCC from **PA7**
-(`NFC_EN`). The NT3H2211 parts are *placed* in the committed `solar-glow-drh-v2_2.kicad_pcb`,
-but the **load-switch/`NFC_EN` power-gate is newer and not yet on a committed board**, and
-that file's net names are not machine-readable anyway — so all NFC **net** wiring here
-(FD→PA6, the I²C nets, `NFC_EN`→the switch, `U5` Vcc→the switch output, and where `R13` ties)
-is from the design spec / firmware contract and is **bench-pending**, not read off the board
-like the v2.1 rows. The NT3H2211 register/memory facts are verified against the NTAG I²C plus
-datasheet (NT3H2111_2211 Rev 3.6).
+**NFC subsystem — now fully committed (v2.2 → v3.0).** The board carries the NFC tag subsystem
+(`U5` NT3H2211, `C8`, `C9` DNP, `R13`, and the etched antenna coil) on **PA6** (field-detect),
+the **high-side load switch `U6` (TPS22918, SOT-23-6)** that power-gates `U5`'s VCC (`VNFC`)
+from **PA7** (`NFC_EN`), and — added in the v3.0 R14 patch — a **100 kΩ pulldown `R14`** that
+holds `NFC_EN` low whenever PA7 tristates (UPDI, reset, brown-out). All of it is committed on
+`solar-glow-drh-v3_0.kicad_pcb`, and the NFC net wiring below has been **verified off the board
+copper**: FD→PA6 ✓, `NFC_EN`→U6.ON ✓, `U5` Vcc→`VNFC` = U6.VOUT ✓, `R13`→VS (the always-on
+rail, not the switched one) ✓, `R14` `NFC_EN`→GND ✓. The **U6 pin map is now verified against TI SLVSD76C (TPS22918 Rev C, committed at
+`datasheets/tps22918.pdf` — the doc for the ordered DBVR part; the -Q1 doc SLVSCZ8B, also in
+the repo, matches it identically)** — and the check caught a real defect: the symbol had
+**VIN/VOUT and GND/QOD transposed** (board said 1=VOUT, 2=QOD, 5=GND, 6=VIN; only ON=3 and
+CT=4 were right). As routed it would have left U6 with no ground and fed VS into VOUT.
+**Fixed on the board 2026-07-02**: pads renetted to TI truth (1=VIN, 2=GND, 3=ON,
+4=CT-float, 5=QOD, 6=VOUT), schematic pin numbers corrected, QOD strapped to VOUT (internal
+R_PD ≈ 25 Ω discharge — a TI-sanctioned config), CT left floating (also sanctioned), and the
+local copper reworked to match. One open item: the **FD wake is bench-pending**
+(scope PA6 on a real phone tap with VCC gated off). The NT3H2211 register/memory facts are
+verified against the NTAG I²C plus datasheet (NT3H2111_2211 Rev 3.6).
 
 MCU: **AVR64DD28**, 28-pin VQFN (footprint `solarglow:U1`). It sits on the **back** of the board.
 
@@ -36,12 +44,12 @@ MCU: **AVR64DD28**, 28-pin VQFN (footprint `solarglow:U1`). It sits on the **bac
 | 27 | **PA1** | `LDRV3` | LED (D4) drive | **TCA0 WO1** |
 | 28 | **PA2** | `LDRV2` | LED (D3) drive | **TCA0 WO2** |
 | 1  | **PA3** | `LDRV1` | LED (D2) drive | **TCA0 WO3** |
-| 2  | **PA4** | `PA4` | spare GPIO | broken out on JP2.1 |
+| 2  | **PA4** | `PA4` | spare GPIO | spare (JP2 removed in v3.0 — no breakout) |
 | 3  | **PA5** | `BTN` | reserved button | GPIO; only routed to a stub (the one DRC `track_dangling`); v3 hook |
-| 4  | **PA6** | `FD` | NFC field-detect in (`U5`) | PORTA pin int, **falling**; field-powered (works VCC-off, §8.4); int pull-up on + ext 10k (`R13`) to VS — *v2.2, bench-pending* |
-| 5  | **PA7** | `NFC_EN` | NFC VCC load-switch enable | output, **active-HIGH**, LOW = NFC off (default) — *v2.2 power-gate, bench-pending* |
-| 6  | **PC0** | `PC0` | spare GPIO | broken out on JP2.2 |
-| 7  | **PC1** | `PC1` | spare GPIO | broken out on JP2.3 |
+| 4  | **PA6** | `FD` | NFC field-detect in (`U5`) | PORTA pin int, **falling**; field-powered (works VCC-off, §8.4); int pull-up on + ext 10k (`R13`) to VS — *v3.0-committed (R13→VS verified on copper); bench: scope a real tap* |
+| 5  | **PA7** | `NFC_EN` | NFC VCC load-switch enable | output, **active-HIGH**, LOW = NFC off (default); **ext 100 k pulldown `R14` (v3.0)** holds it off while PA7 floats — *committed; U6 pin map verified per TI SLVSD76C, defect found + fixed 2026-07-02* |
+| 6  | **PC0** | `PC0` | spare GPIO | spare (JP2 removed in v3.0) |
+| 7  | **PC1** | `PC1` | spare GPIO | spare (JP2 removed in v3.0) |
 | 8  | **PC2** | `SDA` | I²C data | **TWI0 host SDA** via `TWIROUTEA = ALT2`; 4.7 kΩ pull-up to VS |
 | 9  | **PC3** | `SCL` | I²C clock | **TWI0 host SCL** via `TWIROUTEA = ALT2`; 4.7 kΩ pull-up to VS |
 | 10 | **VDDIO2** | `VDDIO2` | PORTC I/O supply | tied to VS by SJ1 (0 Ω) — see §5 |
@@ -82,10 +90,10 @@ Each LED: anode → `ANODE` (common) → **SW2** → VS; cathode → `Kn` → ba
 | `TINY` | Dim-mode node: LED anodes → VS through R12 (220 Ω) when SW2 = TINY. |
 | `LDRV1‒4` | LED cathode drives → MCU PA0‒PA3. |
 | `K2‒K5` | Individual LED-cathode-to-ballast nets. |
-| `SDA` / `SCL` | I²C bus (accel + JP1 breakout). |
+| `SDA` / `SCL` | I²C bus (accel `0x18` + NFC tag `0x55`; JP1 breakout removed in v3.0). |
 | `INT1` / `INT2` | Accel interrupt lines → PF1 / PF0. |
 | `VSENSE` | Light/rail sense → PD2. = VIN/2 (R5/R6 = 1 MΩ each), filtered by C5 (10 nF). |
-| `PA4` / `PC0` / `PC1` | Spare GPIO, broken out on JP2. |
+| `PA4` / `PC0` / `PC1` | Spare GPIO (JP2 removed in v3.0 — no breakout). |
 
 Stackup: **v3.0 is 2-layer** (F / B) — GND = full-board B.Cu pour, VS = routed B mesh; 0.8 mm. (v2.3 fallback: 4-layer, F · In1 GND · In2 VS · B. v2.1 was 6-layer.)
 
@@ -107,7 +115,7 @@ Stackup: **v3.0 is 2-layer** (F / B) — GND = full-board B.Cu pour, VS = routed
 - **I²C — TWI0, host mode.**
   **`PORTMUX.TWIROUTEA = ALT2`** (puts host SDA/SCL on PC2/PC3 — the default routes to
   PA2/PA3, which are LED pins). External 4.7 kΩ pull-ups are fitted, so don't enable internal
-  ones. Bus is the accelerometer (`0x18`) plus the JP1 breakout — and, on **v2.2**, the
+  ones. Bus is the accelerometer (`0x18`) — and, since **v2.2**, the
   NFC tag `U5` (`0x55`); the two addresses don't clash, so no firmware change beyond
   talking to both. `U5` is reachable on I²C only while `NFC_EN` (PA7) powers it — it is
   gated **off** by default. FD (a pin interrupt on PA6) is separate from the bus, and is
@@ -144,7 +152,7 @@ Stackup: **v3.0 is 2-layer** (F / B) — GND = full-board B.Cu pour, VS = routed
   LOW on an NFC field → PA6 falling-edge interrupt wakes the MCU. FD is **field-powered**
   (§8.4), so this works even with `U5`'s VCC gated off; firmware also enables PA6's internal
   pull-up.
-- Supply Vcc → **high-side load-switch output**, gated by `NFC_EN` (PA7, active-HIGH); the
+- Supply Vcc → **`VNFC` = `U6` (TPS22918) output**, gated by `NFC_EN` (PA7, active-HIGH; `R14` 100 k pulldown); U6 itself draws ISD ≈ 0.5 µA typ (3.5 µA max) from VS while off and IQ ≈ 8.3 µA while on (SLVSD76C §6.5); the
   switch input is on VS (clamped ≤ 3.47 V, inside the 3.6 V max). **Off by default** to kill
   the ~195 µA idle draw (datasheet Table 42); only powered around an MCU↔tag I²C access. `C8`
   (100 nF) decouples the switched VCC; `VOUT` (energy-harvest output) unconnected.
@@ -153,7 +161,7 @@ Stackup: **v3.0 is 2-layer** (F / B) — GND = full-board B.Cu pour, VS = routed
 - Role: a phone tap reads a contact **vCard** (RF-powered, so it reads with the cap flat) and
   the FD line wakes the glow. Firmware: `nfc.c` writes the NDEF into user memory from block 1;
   the factory CC (`E1 10 6D 00`) is left in place — block 0 is never written, as that would
-  change the I²C address. *v2.2 net wiring is bench-pending — see the header note.*
+  change the I²C address. *Net wiring verified off the v3.0 board copper (see the header note); FD-wake scope check still open.*
 
 **LEDs — 4× ams OSRAM LA P47F (amber, reverse-mount).** Low-side driven on PA0‒PA3 (§1/§3),
 150 Ω ballast each, anodes commoned to `ANODE` and switched by SW2.
@@ -164,8 +172,7 @@ Stackup: **v3.0 is 2-layer** (F / B) — GND = full-board B.Cu pour, VS = routed
 
 **Breakouts / programming.**
 - `TC1` — TC2030 Tag-Connect (UPDI): hands-free flashing. `J1` — backup UPDI header.
-- `JP1` — I²C breakout: 1 = SDA, 2 = SCL, 3 = GND.
-- `JP2` — GPIO breakout: 1 = PA4, 2 = PC0, 3 = PC1, 4 = GND.
+- `JP1` / `JP2` — **removed in v3.0** (no I²C/GPIO breakout headers on the board; `J1` UPDI remains).
 
 ---
 
@@ -255,5 +262,5 @@ and set the achievable duty cycle.
    activation counter; brown-out behavior around the supercap rail.
 
 **Pins free for new features:** PD1, PD3, PD4, PD5, PD6, PD7, PF6/RST (7 GPIO, most
-ADC-capable; PD6 can be a DAC output), plus PA4/PC0/PC1 already on JP2 and PA5 (`BTN`)
+ADC-capable; PD6 can be a DAC output), plus PA4/PC0/PC1 (spare — no breakout since v3.0) and PA5 (`BTN`)
 reserved. (On v2.2, PA6 = NFC `FD` and PA7 = `NFC_EN`.)

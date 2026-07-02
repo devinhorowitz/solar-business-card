@@ -334,9 +334,115 @@ corners, and the **same BOM**. It is the current board; **v2.3 (4-layer) is the 
   (42.9, 38); east L-tie crossing the coil on F. Plus benign `lib_footprint_issues` + the reserved
   `BTN` `track_dangling`.
 - **Carried bench items** (not resolved here): NFC coil L + C9 trim (~100 pF; now includes the F L-tie
-  crossing and the Ti-shell proximity); scope PA6/FD on a real tap with VCC gated off; ~100k NFC_EN
-  pulldown (tristate default); LED PWM INVEN polarity in `led.c`; `twi.c` presence; plastic dry-fit;
+  crossing and the Ti-shell proximity); scope PA6/FD on a real tap with VCC gated off; **NFC_EN pulldown — resolved this session (R14; see the addendum below)**; LED PWM INVEN polarity in `led.c`; `twi.c` presence; plastic dry-fit;
   **Ti-shell-behind-coil L/Q** — enclosure-relevant: metal behind the NFC coil pulls its inductance
   and Q, and could force a local change over the coil area if it detunes (measurement, not a CAD
   change yet).
 
+## Teardrops enabled + post-teardrop audit (2026-07-02)
+
+- **Settings** (`.kicad_pro`): all teardrop targets on — pads, vias, and track-to-track
+  (`td_ontrackend: true`) — with curved edges (`td_curve_segcount: 1` on all three shape targets).
+  Size defaults kept: length ratio 0.5 / max 1.0 mm, width ratio 1.0 / max 2.0 mm, filter 0.9.
+  Schema verified against kicad-source-mirror 10.0 `board_design_settings.cpp` (flags live in the
+  project JSON, not the board file).
+- **Generated:** 247 teardrop zones = 236 pad/via + 11 track-end, curved, fills stored in the board
+  (file ~613 KB → 1.23 MB). KiCad 10 writes them as `(zone … (attr (teardrop (type …))))`.
+- **Same commit, Devin's cleanup:** 45°-corner beautification (FD, LDRV3/4, SDA, VS, TINY elbows;
+  28 segments removed / 12 added) and deletion of redundant GND scraps **including both former
+  bridge straps** — (36.5, 47.55→49.05) and the (12.45, 16.54) pair with the TC1.3 stub. Independent
+  union-graph audit: **GND is a single component on both the pre- and post-cleanup boards**, so the
+  straps had become redundant after the round-3 rework (TC1.3 rides its solid zone connect). No
+  starved-thermal recurrence.
+- **Geometric ledger** (independent Shapely engine, identical code on both boards): pairs < 0.1524 mm
+  went 100 → 103; below the 0.126 hard floor there is exactly one item on both boards — the
+  intentional LA↔LB coil junction. Deltas: +3 marginal from the FD 45° reroute (FD↔BTN / LDRV1 /
+  PA4), −3 removed with the GND scraps (GND↔UPDI, GND↔VS, SCL↔SDA), +4 teardrop-involved (below).
+- **Teardrop marginals KiCad cannot see** — KiCad's DRC does not apply clearance rules to teardrop
+  zones, so these exist only in this ledger; all PCBWay-legal, no action:
+  CLREF-teardrop ↔ VS pad 0.141 @(46.0, 72.0); NFC_EN-teardrop ↔ PC1 pad 0.143 @(7.5, 42.1);
+  SCL-teardrop ↔ VDDIO2 pad 0.145 @(9.1, 42.9); UPDI-teardrop ↔ GND pad 0.150 @(10.0, 36.6).
+- **DRC row-count jitter caveat:** on the long parallel 0.127 corridors (the SDA/VIN/VS west bus)
+  KiCad enumerates one row per segment-pair at minimum distance, and the count oscillates between
+  runs and engines on physically identical geometry (CI 50 → GUI 64 → CI 61 clearance rows). Judge
+  the marginal ledger by the geometric pair scan, not by row counts.
+- **CI on the teardrop board: green.** Errors 0 (+2 excluded plating stubs), warnings 61
+  (+1 excluded coil crossing).
+- Parser conventions used for the audit are the ones in the "KiCad-2026 pad convention" trap above,
+  re-verified this session against the 10.0 parser and `pad.cpp`: pad `(at x y angle)` angle is
+  absolute (board frame); position is footprint-relative.
+
+## R14 patch — NFC_EN pulldown + NPTH cleanup (2026-07-02)
+
+- **R14 (100 kΩ, 0402)** added at **(4.39, 29.4)** rot 0, in the north pocket between the MID bus and
+  U6's top pad row: pad 1 = `NFC_EN` (3.88, 29.4), pad 2 = `GND` (4.9, 29.4) dropping straight into
+  the existing GND via at (4.9, 28.5). `NFC_EN` reaches the U6-side stub through a **new via pair**
+  (3.88, 30.6) → F.Cu → (3.88, 33.35); the F crossing threads west of SCL's F column. Why the hop:
+  the B-side **VS wall at y = 32.2** (x 3.35 → 7.29, w 0.4) seals the pocket off from the stub, and
+  the west GND corridor to J1.3 is fenced by the J1.2 VS feed at y 38.4 and a VS via at (3.6, 40.8) —
+  two earlier placements died on exactly those two features.
+- **Ø 0.89 mm NPTH at (37.9, 75.4) deleted** — undocumented, under SC4's body, claimed by nothing in
+  the repo. One git revert away if it turns out to have had a purpose.
+- **Verification** (same engine as the electrical sift, true pad shapes, hole-decoded pour): all nets
+  single-component (`NFC_EN` = U1.5 + U6.3 + R14.1); shorts = the intentional LA/LB junction + three
+  new-copper-vs-stale-pour overlaps that the zone refill resolves; **min new-copper clearance vs
+  foreign non-pour = 0.2197 mm** (via F-ring → SCL) — every new gap ≥ 0.22, so **zero new
+  marginal-ledger entries** and the DRC warning count should not move. Counts: 564 → 569 segments,
+  87 → 89 vias, 54 → 55 footprints.
+- **Schematic:** R14 cloned in R13's per-ref lib-symbol idiom, placed off-sheet-right at
+  (685.8, 69.85) with its own `NFC_EN` / `GND` global labels — reposition freely. If you ever re-run
+  update-from-schematic, add R14 to the local `solarglow` footprint lib first (the repo carries no
+  `.pretty`; footprints live embedded in the board file).
+- **Handoff ritual:** open the board → **refill zones (B.Cu)** → run DRC (expect the same 0 err /
+  ~61 warn) → **Tools → Add Teardrops** so R14 *and the reworked U6 area* get their teardrops → commit. The
+  U6 pin-map check is **closed** — see the U6 pin-map addendum below.
+
+---
+
+## Addendum — U6 pin-map defect + fix (2026-07-02)
+
+**The check that had been open since U6 landed is closed, and it caught a fabrication-fatal
+defect.** Devin committed both TI datasheet variants: **SLVSD76C** (`datasheets/tps22918.pdf` —
+TPS22918 Rev C, the doc for the ordered `TPS22918DBVR`) and **SLVSCZ8B**
+(`datasheets/tps22918-q1.pdf` — the -Q1 automotive twin). Pin tables and every §6.5 number
+compared below are **identical** across the two, so SLVSD76C is the citation of record and
+the -Q1 doc stays as a cross-check. The DBV pin table reads: **1 = VIN, 2 = GND, 3 = ON, 4 = CT, 5 = QOD, 6 = VOUT.** The board's
+symbol had **1 = VOUT, 2 = QOD, 5 = GND, 6 = VIN** — VIN/VOUT and GND/QOD transposed across
+the package; only ON (3) and CT (4) were right. As routed, the chip would have had **no
+ground** and VS driven into VOUT. Two design choices survived the check unchanged: **CT may
+float** ("Can be left floating") and **QOD tied to VOUT** is one of TI's three sanctioned QOD
+configs (discharge through the internal R_PD, 25 Ω typ at 3.3 V).
+
+**Fix strategy — renet, don't move.** U6 stays at (6.3425, 32.2) rot 90 (CPL unchanged). The
+four power pads were **reassigned to TI truth** (pad 1 → `VS`/VIN_1, pad 2 → `GND`/GND_2,
+pad 5 → `VNFC`/QOD_5, pad 6 → `VNFC`/VOUT_6; pads 3/4 untouched), and the **schematic lib
+pins were renumbered 1↔6, 2↔5** — the lib pin *names* were correct all along, only their
+numbers were mirrored, so no wire or label moved.
+
+**Copper ops.** Deleted: the pad-1↔2 pair seg and the old VNFC diagonal (both fed what is now
+VIN), the old VS drop into pad 6, the old GND stub off pad 5, and their 4 teardrop zones.
+Added: `a1` VS wall-drop south into pad 1 (w 0.4); `a2` QOD→VOUT strap across pads 5–6
+(w 0.25) — the required strap falls exactly on the old pair-seg's mirror; `a3'` VNFC re-anchor
+pad 6 → the existing elbow at (9.47, 30.85) (w 0.15, entering *below* the elbow top to keep
+0.35 to the VIN diagonal instead of reproducing the ledgered 0.127); `a4`+`V1` GND stub south
+from pad 2 to a via at (6.343, 34.5); an F-side GND run west — (9.05, 34.5) → (9.05, 30.2) →
+(4.9, 30.2) — threading the free F room between the SCL horizontal and the UPDI column-fence;
+and `V2''` at (4.9, 29.9), whose back-side ring lands **directly on R14.2** (the R14 GND
+drop), tying U6.2 into the main ground. Eastward routes were exhaustively ruled out: the UPDI
+F column (x ≈ 9.94, y 20.4–35.9) fences F, and the VIN elbow + SC1.N pad seal every B lane.
+
+**Verification (geometry engine, post-fix):** every net single-component (GND includes
+U6.2 → V1 → F → V2'' → R14.2; VNFC = pads 5+6 + strap + re-anchor + the original artery to
+U5); shorts = the intentional LA/LB junction + six stale-pour overlaps that the B.Cu refill
+re-carves; **minimum changed-copper clearance 0.200 mm** (the F run vs the SCL via ring —
+everything else ≥ 0.275). Counts now: **574 segments, 91 vias, 249 zones** (243 teardrops).
+
+**Datasheet numbers worth keeping** (SLVSD76C §6.5, identical in SLVSCZ8B, V_IN = 3.3 V): I_SD 0.5 µA typ / 3.5 µA
+max — this is U6's **standing draw on VS while NFC is off**, the price of the gate (vs the
+~195 µA of U5 it removes); I_Q 8.3 µA typ while on (only during I²C windows); R_PD 25 Ω typ;
+ON threshold compatible with 1 V+ GPIO, so PA7 at any plausible VS is fine.
+
+**Handoff:** refill zones (B.Cu) → DRC (the deleted teardrops may surface a few new cosmetic
+"dangling" notes in the U6 window — expected) → **Tools → Add Teardrops** (covers R14 *and*
+the U6 rework) → commit board + schematic together (the sch pin renumber and the pad renet
+must land in the same commit or update-from-schematic will fight you).
