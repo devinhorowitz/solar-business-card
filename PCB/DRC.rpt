@@ -1,216 +1,24 @@
 ** Drc report for solar-glow-drh-v3_0.kicad_pcb **
-** Created on 2026-07-02T00:43:20 **
+** Created on 2026-07-02T01:07:50 **
 ** Report includes: Errors, Warnings, Exclusions **
 
-** Found 71 DRC violations **
+** Found 20 DRC violations **
 [tracks_crossing]: Tracks crossing
     Local override; error
     @(41.0000 mm, 52.4200 mm): Track [LA] on B.Cu, length 14.4200 mm
     @(41.0000 mm, 38.0000 mm): Track [LB] on B.Cu, length 1.9000 mm
-[hole_clearance]: Hole clearance violation (board setup constraints hole clearance 0.2000 mm; actual 0.1972 mm)
-    Rule: board setup constraints hole; error
-    @(9.9500 mm, 20.4800 mm): Track [UPDI] on F.Cu, length 2.9698 mm
-    @(10.7600 mm, 17.5350 mm): NPTH pad of 
 [copper_edge_clearance]: Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.0000 mm)
     Rule: board setup constraints edge; error
-    @(25.4000 mm, 86.8000 mm): Segment on Edge.Cuts
-    @(43.6000 mm, 87.3000 mm): Track [VS] on B.Cu, length 27.0000 mm
-[copper_edge_clearance]: Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.3800 mm)
-    Rule: board setup constraints edge; error
-    @(34.8200 mm, 46.4500 mm): Segment on Edge.Cuts
-    @(35.5000 mm, 47.5500 mm): Via [LDRV4] on F.Cu - B.Cu
-[copper_edge_clearance]: Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.0000 mm)
-    Rule: board setup constraints edge; error
-    @(34.8200 mm, 48.3000 mm): Segment on Edge.Cuts
-    @(35.5000 mm, 49.2500 mm): Track [LDRV4] on B.Cu, length 1.7000 mm
-[copper_edge_clearance]: Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.0000 mm)
-    Rule: board setup constraints edge; error
-    @(34.8200 mm, 46.4500 mm): Segment on Edge.Cuts
-    @(36.0000 mm, 43.5000 mm): Track [K5] on B.Cu, length 6.3629 mm
-[copper_edge_clearance]: Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.0000 mm)
-    Rule: board setup constraints edge; error
-    @(34.8200 mm, 48.3000 mm): Segment on Edge.Cuts
-    @(48.4000 mm, 33.7000 mm): Track [LA] on B.Cu, length 21.6000 mm
-[copper_edge_clearance]: Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.0000 mm)
-    Rule: board setup constraints edge; error
-    @(34.8200 mm, 48.3000 mm): Segment on Edge.Cuts
-    @(37.4000 mm, 55.3000 mm): Track [LA] on B.Cu, length 21.0000 mm
-[copper_edge_clearance]: Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.0000 mm)
-    Rule: board setup constraints edge; error
-    @(34.8200 mm, 48.3000 mm): Segment on Edge.Cuts
-    @(46.6000 mm, 35.1400 mm): Track [LA] on B.Cu, length 18.7200 mm
-[copper_edge_clearance]: Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.0000 mm)
-    Rule: board setup constraints edge; error
-    @(34.8200 mm, 48.3000 mm): Segment on Edge.Cuts
-    @(47.2000 mm, 34.6600 mm): Track [LA] on B.Cu, length 19.6800 mm
-[copper_edge_clearance]: Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.0000 mm)
-    Rule: board setup constraints edge; error
-    @(34.8200 mm, 48.3000 mm): Segment on Edge.Cuts
-    @(44.8000 mm, 36.5800 mm): Track [LA] on B.Cu, length 15.8400 mm
-[copper_edge_clearance]: Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.0000 mm)
-    Rule: board setup constraints edge; error
-    @(34.8200 mm, 48.3000 mm): Segment on Edge.Cuts
-    @(47.8000 mm, 34.1800 mm): Track [LA] on B.Cu, length 20.6400 mm
-[copper_edge_clearance]: Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.0000 mm)
-    Rule: board setup constraints edge; error
-    @(34.8200 mm, 48.3000 mm): Segment on Edge.Cuts
-    @(41.0000 mm, 52.4200 mm): Track [LA] on B.Cu, length 14.4200 mm
-[copper_edge_clearance]: Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.0000 mm)
-    Rule: board setup constraints edge; error
-    @(34.8200 mm, 48.3000 mm): Segment on Edge.Cuts
-    @(40.4000 mm, 52.9000 mm): Track [LA] on B.Cu, length 16.2000 mm
-[copper_edge_clearance]: Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.0000 mm)
-    Rule: board setup constraints edge; error
-    @(34.8200 mm, 48.3000 mm): Segment on Edge.Cuts
-    @(39.8000 mm, 53.3800 mm): Track [LA] on B.Cu, length 17.1600 mm
-[copper_edge_clearance]: Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.0000 mm)
-    Rule: board setup constraints edge; error
-    @(34.8200 mm, 48.3000 mm): Segment on Edge.Cuts
-    @(45.4000 mm, 36.1000 mm): Track [LA] on B.Cu, length 16.8000 mm
-[copper_edge_clearance]: Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.0000 mm)
-    Rule: board setup constraints edge; error
-    @(34.8200 mm, 48.3000 mm): Segment on Edge.Cuts
-    @(46.0000 mm, 35.6200 mm): Track [LA] on B.Cu, length 17.7600 mm
-[copper_edge_clearance]: Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.0000 mm)
-    Rule: board setup constraints edge; error
-    @(34.8200 mm, 48.3000 mm): Segment on Edge.Cuts
-    @(38.0000 mm, 54.8200 mm): Track [LA] on B.Cu, length 20.0400 mm
-[copper_edge_clearance]: Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.0000 mm)
-    Rule: board setup constraints edge; error
-    @(34.8200 mm, 48.3000 mm): Segment on Edge.Cuts
-    @(39.2000 mm, 53.8600 mm): Track [LA] on B.Cu, length 18.1200 mm
-[copper_edge_clearance]: Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.0000 mm)
-    Rule: board setup constraints edge; error
-    @(34.8200 mm, 48.3000 mm): Segment on Edge.Cuts
-    @(38.6000 mm, 54.3400 mm): Track [LA] on B.Cu, length 19.0800 mm
-[copper_edge_clearance]: Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.4460 mm)
-    Rule: board setup constraints edge; error
-    @(34.8200 mm, 46.4500 mm): Segment on Edge.Cuts
-    @(35.5497 mm, 46.0040 mm): Polygon [<no net>] on F.Cu
-[copper_edge_clearance]: Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.3460 mm)
-    Rule: board setup constraints edge; error
-    @(34.8200 mm, 46.4500 mm): Segment on Edge.Cuts
-    @(35.5418 mm, 46.1040 mm): Polygon [<no net>] on F.Cu
-[copper_edge_clearance]: Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.0000 mm)
-    Rule: board setup constraints edge; error
-    @(34.8200 mm, 46.4500 mm): Segment on Edge.Cuts
-    @(35.2033 mm, 46.6040 mm): Polygon [<no net>] on F.Cu
-[copper_edge_clearance]: Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.0000 mm)
-    Rule: board setup constraints edge; error
-    @(34.8200 mm, 46.4500 mm): Segment on Edge.Cuts
-    @(35.3351 mm, 46.5040 mm): Polygon [<no net>] on F.Cu
-[copper_edge_clearance]: Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.0460 mm)
-    Rule: board setup constraints edge; error
-    @(34.8200 mm, 46.4500 mm): Segment on Edge.Cuts
-    @(35.4210 mm, 46.4040 mm): Polygon [<no net>] on F.Cu
-[copper_edge_clearance]: Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.0000 mm)
-    Rule: board setup constraints edge; error
-    @(2.1000 mm, 10.0000 mm): Segment on Edge.Cuts
-    @(2.0000 mm, 14.4980 mm): Polygon [<no net>] on F.Cu
-[copper_edge_clearance]: Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.0000 mm)
-    Rule: board setup constraints edge; error
-    @(2.1000 mm, 79.0000 mm): Segment on Edge.Cuts
-    @(2.0000 mm, 83.4200 mm): Polygon [<no net>] on F.Cu
-[copper_edge_clearance]: Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.0000 mm)
-    Rule: board setup constraints edge; error
-    @(34.8200 mm, 46.4500 mm): Segment on Edge.Cuts
-    @(34.8451 mm, 46.7000 mm): Polygon [<no net>] on F.Cu
-[copper_edge_clearance]: Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.0000 mm)
-    Rule: board setup constraints edge; error
-    @(48.7000 mm, 10.0000 mm): Segment on Edge.Cuts
-    @(48.8000 mm, 5.4800 mm): Polygon [<no net>] on F.Cu
-[copper_edge_clearance]: Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.0000 mm)
-    Rule: board setup constraints edge; error
-    @(48.7000 mm, 79.0000 mm): Segment on Edge.Cuts
-    @(48.8000 mm, 74.4020 mm): Polygon [<no net>] on F.Cu
-[copper_edge_clearance]: Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.0000 mm)
-    Rule: board setup constraints edge; error
-    @(25.4000 mm, 2.1000 mm): Segment on Edge.Cuts
-    @(6.2210 mm, 2.0000 mm): Polygon [<no net>] on F.Cu
-[copper_edge_clearance]: Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.0000 mm)
-    Rule: board setup constraints edge; error
-    @(25.4000 mm, 86.8000 mm): Segment on Edge.Cuts
-    @(44.5790 mm, 86.9000 mm): Polygon [<no net>] on F.Cu
-[copper_edge_clearance]: Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.1460 mm)
-    Rule: board setup constraints edge; error
-    @(34.8200 mm, 46.4500 mm): Segment on Edge.Cuts
-    @(35.4802 mm, 46.3040 mm): Polygon [<no net>] on F.Cu
-[copper_edge_clearance]: Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.2460 mm)
-    Rule: board setup constraints edge; error
-    @(34.8200 mm, 46.4500 mm): Segment on Edge.Cuts
-    @(35.5191 mm, 46.2040 mm): Polygon [<no net>] on F.Cu
-[copper_edge_clearance]: Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.0000 mm)
-    Rule: board setup constraints edge; error
-    @(2.1000 mm, 79.0000 mm): Segment on Edge.Cuts
-    @(1.2500 mm, 85.0500 mm): Segment [GND] on F.Cu
-[copper_edge_clearance]: Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.0000 mm)
-    Rule: board setup constraints edge; error
-    @(25.4000 mm, 2.1000 mm): Segment on Edge.Cuts
-    @(3.8500 mm, 1.2500 mm): Segment [GND] on F.Cu
-[copper_edge_clearance]: Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.0000 mm)
-    Rule: board setup constraints edge; error
-    @(25.4000 mm, 2.1000 mm): Segment on Edge.Cuts
+    @(47.8000 mm, 0.0000 mm): Segment on Edge.Cuts
     @(25.4000 mm, 1.2500 mm): Segment [GND] on F.Cu
 [copper_edge_clearance]: Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.0000 mm)
     Rule: board setup constraints edge; error
     @(3.0000 mm, 88.9000 mm): Segment on Edge.Cuts
     @(25.4000 mm, 87.6500 mm): Segment [GND] on F.Cu
-[copper_edge_clearance]: Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.0000 mm)
-    Rule: board setup constraints edge; error
-    @(25.4000 mm, 86.8000 mm): Segment on Edge.Cuts
-    @(46.9500 mm, 87.6500 mm): Segment [GND] on F.Cu
-[copper_edge_clearance]: Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.0000 mm)
-    Rule: board setup constraints edge; error
-    @(34.8200 mm, 48.3000 mm): Segment on Edge.Cuts
-    @(49.5500 mm, 3.8500 mm): Segment [GND] on F.Cu
-[invalid_outline]: Board has malformed outline (not a closed shape)
-    Local override; error
-    @(2.1000 mm, 10.0000 mm): Segment on Edge.Cuts
-    @(2.1000 mm, 10.0000 mm): Segment on Edge.Cuts
-[invalid_outline]: Board has malformed outline (not a closed shape)
-    Local override; error
-    @(2.1000 mm, 79.0000 mm): Segment on Edge.Cuts
-    @(2.1000 mm, 79.0000 mm): Segment on Edge.Cuts
-[invalid_outline]: Board has malformed outline (not a closed shape)
-    Local override; error
-    @(25.4000 mm, 2.1000 mm): Segment on Edge.Cuts
-    @(25.4000 mm, 2.1000 mm): Segment on Edge.Cuts
-[invalid_outline]: Board has malformed outline (not a closed shape)
-    Local override; error
-    @(25.4000 mm, 86.8000 mm): Segment on Edge.Cuts
-    @(25.4000 mm, 86.8000 mm): Segment on Edge.Cuts
-[invalid_outline]: Board has malformed outline (not a closed shape)
-    Local override; error
-    @(34.8200 mm, 46.4500 mm): Segment on Edge.Cuts
-    @(34.8200 mm, 46.4500 mm): Segment on Edge.Cuts
-[invalid_outline]: Board has malformed outline (not a closed shape)
-    Local override; error
-    @(34.8200 mm, 48.3000 mm): Segment on Edge.Cuts
-    @(34.8200 mm, 46.4500 mm): Segment on Edge.Cuts
-[invalid_outline]: Board has malformed outline (not a closed shape)
-    Local override; error
-    @(48.7000 mm, 10.0000 mm): Segment on Edge.Cuts
-    @(48.7000 mm, 10.0000 mm): Segment on Edge.Cuts
-[invalid_outline]: Board has malformed outline (not a closed shape)
-    Local override; error
-    @(48.7000 mm, 79.0000 mm): Segment on Edge.Cuts
-    @(48.7000 mm, 79.0000 mm): Segment on Edge.Cuts
-[starved_thermal]: Thermal relief connection to zone incomplete (layer B.Cu; zone min spoke count 2; actual 1)
+[starved_thermal]: Thermal relief connection to zone incomplete (layer B.Cu; 2 spokes connected to isolated island)
     Local override; error
     @(0.0000 mm, 0.0000 mm): Zone 'GND_B' [GND] on B.Cu, priority 0
-    @(23.2100 mm, 36.4000 mm): Pad 2 [GND] of C6 on B.Cu
-[starved_thermal]: Thermal relief connection to zone incomplete (layer B.Cu; zone min spoke count 2; actual 1)
-    Local override; error
-    @(0.0000 mm, 0.0000 mm): Zone 'GND_B' [GND] on B.Cu, priority 0
-    @(9.5000 mm, 40.9000 mm): Pad EP [GND] of U1 on B.Cu
-[starved_thermal]: Thermal relief connection to zone incomplete (layer B.Cu; zone min spoke count 2; actual 1)
-    Local override; error
-    @(0.0000 mm, 0.0000 mm): Zone 'GND_B' [GND] on B.Cu, priority 0
-    @(4.7000 mm, 40.9400 mm): Pad 3 [GND] of J1 on B.Cu
-[starved_thermal]: Thermal relief connection to zone incomplete (layer B.Cu; zone min spoke count 2; actual 1)
-    Local override; error
-    @(0.0000 mm, 0.0000 mm): Zone 'GND_B' [GND] on B.Cu, priority 0
-    @(47.0100 mm, 75.0000 mm): Pad 2 [GND] of C7 on B.Cu
+    @(12.6650 mm, 16.9000 mm): Pad 3 [GND] of TC1 on B.Cu
 [track_dangling]: Track has unconnected end
     Local override; warning
     @(25.8640 mm, 35.0640 mm): Track [GND] on B.Cu, length 1.3086 mm
@@ -223,9 +31,6 @@
 [track_dangling]: Track has unconnected end
     Local override; warning
     @(34.0610 mm, 59.8390 mm): Track [MID] on B.Cu, length 6.9000 mm
-[via_dangling]: Via is not connected or connected on only one layer
-    Local override; warning
-    @(5.2000 mm, 37.4000 mm): Via [VS] on F.Cu - B.Cu
 [track_dangling]: Track has unconnected end
     Local override; warning
     @(32.5000 mm, 48.6000 mm): Track [VS] on B.Cu, length 1.0200 mm
@@ -262,22 +67,8 @@
 [track_dangling]: Track has unconnected end
     Local override; warning
     @(12.5000 mm, 41.4250 mm): Track [LDRV4] on F.Cu, length 0.0559 mm
-[track_dangling]: Track has unconnected end
-    Local override; warning
-    @(37.4000 mm, 33.7000 mm): Track [LA] on B.Cu, length 2.1213 mm
-[via_dangling]: Via is not connected or connected on only one layer
-    Local override; warning
-    @(42.9000 mm, 30.8000 mm): Via [LB] on F.Cu - B.Cu
 
-** Found 2 unconnected pads **
-[unconnected_items]: Missing connection between items
-    Local override; error
-    @(0.0000 mm, 0.0000 mm): Zone 'GND_B' [GND] on B.Cu, priority 0
-    @(0.0000 mm, 0.0000 mm): Zone 'GND_B' [GND] on B.Cu, priority 0
-[unconnected_items]: Missing connection between items
-    Local override; error
-    @(0.0000 mm, 0.0000 mm): Zone 'GND_B' [GND] on B.Cu, priority 0
-    @(0.0000 mm, 0.0000 mm): Zone 'GND_B' [GND] on B.Cu, priority 0
+** Found 0 unconnected pads **
 
 ** Found 0 Footprint errors **
 
