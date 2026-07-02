@@ -1,8 +1,8 @@
 ** Drc report for solar-glow-drh-v3_0.kicad_pcb **
-** Created on 2026-07-02T01:16:00 **
+** Created on 2026-07-02T01:42:44 **
 ** Report includes: Errors, Warnings, Exclusions **
 
-** Found 19 DRC violations **
+** Found 3 DRC violations **
 [tracks_crossing]: Tracks crossing
     Local override; error
     @(41.0000 mm, 52.4200 mm): Track [LA] on B.Cu, length 14.4200 mm
@@ -15,54 +15,6 @@
     Rule: board setup constraints edge; error
     @(3.0000 mm, 88.9000 mm): Segment on Edge.Cuts
     @(25.4000 mm, 87.6500 mm): Segment [GND] on F.Cu
-[track_dangling]: Track has unconnected end
-    Local override; warning
-    @(25.8640 mm, 35.0640 mm): Track [GND] on B.Cu, length 1.3086 mm
-[track_dangling]: Track has unconnected end
-    Local override; warning
-    @(47.3000 mm, 68.0000 mm): Track [GND] on B.Cu, length 0.5000 mm
-[track_dangling]: Track has unconnected end
-    Local override; warning
-    @(33.3110 mm, 37.7890 mm): Track [MID] on B.Cu, length 2.0520 mm
-[track_dangling]: Track has unconnected end
-    Local override; warning
-    @(34.0610 mm, 59.8390 mm): Track [MID] on B.Cu, length 6.9000 mm
-[track_dangling]: Track has unconnected end
-    Local override; warning
-    @(32.5000 mm, 48.6000 mm): Track [VS] on B.Cu, length 1.0200 mm
-[track_dangling]: Track has unconnected end
-    Local override; warning
-    @(32.8100 mm, 37.0000 mm): Track [VS] on B.Cu, length 0.5000 mm
-[track_dangling]: Track has unconnected end
-    Local override; warning
-    @(21.7500 mm, 36.4000 mm): Track [VS] on B.Cu, length 1.0200 mm
-[track_dangling]: Track has unconnected end
-    Local override; warning
-    @(3.1000 mm, 7.6000 mm): Track [VS] on B.Cu, length 48.4000 mm
-[track_dangling]: Track has unconnected end
-    Local override; warning
-    @(45.9900 mm, 70.5000 mm): Track [VS] on B.Cu, length 0.6998 mm
-[track_dangling]: Track has unconnected end
-    Local override; warning
-    @(36.0000 mm, 31.6600 mm): Track [VNFC] on B.Cu, length 0.0424 mm
-[track_dangling]: Track has unconnected end
-    Local override; warning
-    @(34.7500 mm, 34.0000 mm): Track [SDA] on B.Cu, length 0.2121 mm
-[track_dangling]: Track has unconnected end
-    Local override; warning
-    @(10.3300 mm, 43.8300 mm): Track [VSENSE] on B.Cu, length 0.1700 mm
-[track_dangling]: Track has unconnected end
-    Local override; warning
-    @(11.6000 mm, 44.1600 mm): Track [SCL] on B.Cu, length 0.3000 mm
-[track_dangling]: Track has unconnected end
-    Local override; warning
-    @(19.1500 mm, 36.7000 mm): Track [SCL] on B.Cu, length 0.2121 mm
-[track_dangling]: Track has unconnected end
-    Local override; warning
-    @(20.2500 mm, 36.6500 mm): Track [INT2] on B.Cu, length 1.0512 mm
-[track_dangling]: Track has unconnected end
-    Local override; warning
-    @(12.5000 mm, 41.4250 mm): Track [LDRV4] on F.Cu, length 0.0559 mm
 
 ** Found 0 unconnected pads **
 
