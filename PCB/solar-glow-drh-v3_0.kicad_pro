@@ -70,7 +70,20 @@
         }
       },
       "diff_pair_dimensions": [],
-      "drc_exclusions": [],
+      "drc_exclusions": [
+        [
+          "copper_edge_clearance|25400000|0|5c2f09c5-11fe-458c-879b-209c9eb360ea|2589c71e-59bc-4680-a98e-8c9dffa4074a",
+          ""
+        ],
+        [
+          "copper_edge_clearance|25400000|88900000|67b4c014-2d59-42c0-9ea0-d7ffdad5ce35|dfe2ea33-3280-4af4-8d21-d542a52b7241",
+          ""
+        ],
+        [
+          "tracks_crossing|41000000|38000000|3d02959a-52d1-4b3d-a148-36df4aae42e1|463118eb-0e6d-49d0-868f-c633afd66f71",
+          ""
+        ]
+      ],
       "meta": {
         "version": 2
       },
