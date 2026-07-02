@@ -7,10 +7,37 @@ a supercapacitor bank that holds the charge.
 
 ![SOLAR-GLOW · DRH — front and back, gold ENIG on black soldermask](docs/board-preview.png)
 
-> **Status: v2.1 — fully routed, DRC-clean in KiCad. Not yet fabbed.**
-> Six-layer, 0.8 mm, bound for PCBWay. The one thing standing between here and a build is the
-> **energy budget** — harvest vs. draw under real indoor light has never been measured. See
-> *“The open question.”*
+> **Status: v3.0 — fully routed, audit-clean. Not yet fabbed.**
+> Two-layer, 0.8 mm FR4, bound for PCBWay, with the 4-layer **v2.3** kept as the committed fallback.
+> The one thing standing between here and a build is the **energy budget** — harvest vs. draw under
+> real indoor light has never been measured. See *“The open question.”*
+
+### Current revision — the one canonical summary
+
+| What | Current | Notes / fallback |
+|---|---|---|
+| **PCB** | **v3.0 — 2-layer** (F / B) | GND = full-board B.Cu pour; VS = routed B mesh. **v2.3 (4-layer: F / In1 GND / In2 VS / B) is the committed fallback.** v2.1 was 6-layer (history). |
+| Board | 50.80 × 88.90 mm, r3.0 corners, **0.80 mm** FR4, ENIG, matte-black mask | 0.8-vs-1.0 mm thickness still open |
+| Mounting holes | 4× M2, GND, at **(3.0, 3.0) / (47.8, 3.0) / (3.0, 85.9) / (47.8, 85.9)**, pitch **44.80 × 82.90 mm** | concentric with the r3.0 corner fillets |
+| **Enclosure** | **v3.0 Ti back-shell** — 0.75 floor, 1.85 cavity (1.90 local under U2), overall **3.55 mm**, braces off | matches the v3.0 hole pattern; see `enclosure/README.md` |
+| BOM | **unchanged across v2.1 → v3.0** | master is `PCB/solar-glow-drh-v2_1-BOM.xlsx`; no per-revision BOM |
+| Firmware | register-verified C, not yet on hardware | LED pin map re-mapped in v3.0 (see `firmware/README.md`) |
+
+### Where the truth lives — how these docs stay from drifting
+
+Each fact has exactly one home; everything else points at it rather than restating it.
+
+| Domain | Source of truth |
+|---|---|
+| Board copper / geometry / holes | `PCB/solar-glow-drh-v3_0.kicad_pcb` + `.kicad_sch` |
+| Enclosure geometry | `enclosure/solar-glow-drh-v3_0-backshell-cad.py` (prints the Z-stack; regenerates the STEP) |
+| Firmware pin map + knobs | `firmware/README.md` (matches the schematic) |
+| BOM | `PCB/solar-glow-drh-v2_1-BOM.xlsx` (unchanged through v3.0) |
+| Design *reasoning* / lineage | `solar-glow-drh-design-notes.md` |
+
+When a number here disagrees with a source-of-truth file, the source file wins and this table is the
+thing to correct. The `solar-glow-drh-v2-*` docs are v2-era history (banner-marked at the top of
+each); read them for lineage, not for current values.
 
 ---
 
@@ -34,8 +61,8 @@ all lives on the back, ready for an optional machined-metal back-shell.
 
 > **A note on lineage:** earlier revisions (REV J and before) were *generated from Python* —
 > geometry and Gerbers emitted by script, no layout tool in the loop. **v2.1 is a full KiCad
-> design** (schematic + board). The old generators are kept only as history; the KiCad files
-> are the source of truth.
+> design** (schematic + board), continued through v3.0. The old generators are kept only as
+> history; the KiCad files are the source of truth.
 
 ---
 
@@ -53,7 +80,7 @@ all lives on the back, ready for an optional machined-metal back-shell.
 | LED master switch | **SW2** (solder-bridge) + **R12** | OFF / ON / TINY — TINY routes the LEDs through a 220 Ω ballast for a dim, long-runtime glow |
 | Motion | **ST LIS2DH12** | 3-axis accel; tap / double-tap wakes the MCU via interrupts |
 | Light sense | **R5 / R6 divider → PD2** | VIN ÷ 2 off the *solar input* (not the rail) — tracks light directly; doubles as wake-on-light |
-| NFC *(v2.2)* | **NXP NT3H2211** (NTAG I²C plus) | a contact **vCard** a phone taps to save; field-detect also wakes the glow — I²C `0x55`, shares the accel's bus |
+| NFC | **NXP NT3H2211** (NTAG I²C plus 2K) | present from v3.0 — a contact **vCard** a phone taps to save; field-detect (FD, PA6) also wakes the glow — I²C `0x55`, shares the accel's bus |
 
 **Breakouts and features:** a **TC2030** Tag-Connect pad (`TC1`) for hands-free UPDI
 programming, a backup UPDI header (`J1`), an I²C expansion header (`JP1`), a spare-GPIO header
@@ -61,17 +88,19 @@ programming, a backup UPDI header (`J1`), an I²C expansion header (`JP1`), a sp
 M2 mounting holes** at the corners.
 
 Full part numbers, pricing, and per-part datasheet links are in
-**`PCB/solar-glow-drh-v2_1-BOM.xlsx`**.
+**`PCB/solar-glow-drh-v2_1-BOM.xlsx`** — the master BOM, **unchanged across v2.1 → v3.0** (same parts).
 
 ---
 
 ## The board
 
-- **Six copper layers** on 0.8 mm FR4 — L1 signal/parts · **L2 GND plane** · L3–L4 signal ·
-  **L5 VS plane** · L6 signal/parts — the two internal signal layers carry the dense back-side
-  routing around the supercaps.
+- **Two copper layers** on 0.8 mm FR4 (v3.0): **F.Cu** signal/parts and **B.Cu**. **GND is a
+  full-board B.Cu pour** (`GND_B` zone) with stitch straps, and **VS is a routed mesh on B** — the
+  4→2-layer conversion of v2.3, whose internal GND/VS *planes* moved onto the back copper. The
+  4-layer **v2.3** (F · In1 GND · In2 VS · B) is the committed fallback if the back-side trace
+  texture showing faintly on the naked front reads wrong.
 - **The glow window is a keepout on every layer.** The monogram cutout and the four LED
-  light-paths are voided through all six layers so nothing — copper pour, trace, or via —
+  light-paths are voided through both layers so nothing — copper pour, trace, or via —
   shadows the light between the rear LEDs and the front face. The rear soldermask is left
   *open* over the window on purpose: bare ENIG reflects the LEDs’ light forward instead of
   absorbing it.
@@ -106,19 +135,20 @@ the duty cycle, the feature set, and whether the always-on accelerometer earns i
 
 ```
 solar-business-card/
-├── README.md                       # this file
-├── PCB/                            # KiCad project + fabrication BOM
-│   ├── solar-glow-drh-v2_1.kicad_pcb   # the board — 6-layer, routed (source of truth)
-│   ├── solar-glow-drh-v2_1.kicad_sch   # schematic
-│   ├── solar-glow-drh-v2_1.kicad_pro   # KiCad project
-│   └── solar-glow-drh-v2_1-BOM.xlsx    # bill of materials — parts, prices, datasheet links
-├── solar-glow-drh-v2-hardware.md   # as-built wiring & pin map — the firmware target
-├── solar-glow-drh-v2-mechanical.md # board mechanics, keepouts, programming access
-├── solar-glow-drh-design-notes.md  # design rationale, energy model, enclosure board-side rules
+├── README.md                       # this file (canonical current-revision summary)
+├── PCB/                            # KiCad projects + fabrication BOM
+│   ├── solar-glow-drh-v3_0.kicad_pcb   # the board — v3.0, 2-layer (source of truth)
+│   ├── solar-glow-drh-v3_0.kicad_sch   # schematic (v3.0)
+│   ├── solar-glow-drh-v2_3.kicad_pcb   # 4-layer fallback — kept, not deleted
+│   ├── solar-glow-drh-v2_1-BOM.xlsx    # bill of materials — parts, prices, links (master; unchanged through v3.0)
+│   └── README.md                       # order & build guide
+├── solar-glow-drh-v2-hardware.md   # as-built wiring & pin map (v2-era; v3.0 LED-map delta noted at top)
+├── solar-glow-drh-v2-mechanical.md # board mechanics, keepouts, access (v2-era; v3.0 hole/enclosure deltas at top)
+├── solar-glow-drh-design-notes.md  # design rationale, energy model, lineage (incl. the v3.0 chapter)
 ├── firmware/                       # bare-metal C (AVR64DD28); register-verified, see firmware/README.md
 ├── datasheets/                     # every component's datasheet
 ├── docs/                           # renders and figures
-├── enclosure/                      # machined-titanium back-shell: CAD / STEP / STL / drawing / README
+├── enclosure/                      # machined-titanium back-shell: CAD / STEP / STL / README (v3.0 + v2.1 kept)
 └── v0 prototype/                   # the original prototype, kept for posterity
 ```
 
@@ -128,13 +158,14 @@ solar-business-card/
 
 The board is a KiCad project — open it, run DRC, and export the fab set:
 
-1. Open `solar-glow-drh-v2_1.kicad_pro` in **KiCad**.
-2. **Run DRC.** It comes back clean apart from two expected items: the unregistered
-   `solarglow` footprint library (register it locally), and one intentional dangling stub on
-   the reserved `BTN` net. The rear soldermask “bridges” over the reflective window are
-   deliberate, not errors.
-3. **Plot Gerbers + drill** and order from **PCBWay** (6-layer, 0.8 mm; confirm the via-fill
-   and minimum-clearance rules against PCBWay’s stackup).
+1. Open `solar-glow-drh-v3_0.kicad_pro` in **KiCad** (2026 file format).
+2. **Run DRC.** It comes back clean apart from the intentional exceptions catalogued in
+   `PCB/README.md` and `solar-glow-drh-design-notes.md` (the NFC coil `LA`↔`LB` short, the four
+   GND-tie mounting-hole/gold-frame contacts, the two plating-bus stubs crossing Edge.Cuts at
+   x=25.4, the illumination copper inside the glow window, and the benign `lib_footprint_issues`
+   plus the reserved `BTN` `track_dangling`). Fill zones (press **B**) before checking.
+3. **Plot Gerbers + drill** from KiCad's own Fabrication Outputs and order from **PCBWay**
+   (**2-layer**, 0.8 mm; selective hard gold + plating bus + resin-fill/cap per `PCB/README.md`).
 
 > The supercap land is the one thing to never get wrong. The WS17 cell solders to **flat pads
 > under its body** (the asymmetric P/N widths are the polarity key), **not** to the folded end
@@ -170,7 +201,7 @@ the board gives it:
   average, so you trim brightness *below* that ceiling).
 - **Tap-to-wake** — the accelerometer’s two interrupts land on **PF1 / PF0**; configure
   tap / double-tap and let it pull the MCU out of sleep.
-- **NFC contact tag** *(v2.2)* — `U5` (NXP NT3H2211) carries a **vCard** a phone reads on a
+- **NFC contact tag** — `U5` (NXP NT3H2211, on the board from v3.0) carries a **vCard** a phone reads on a
   tap to save the contact (RF-powered, so it reads with the cap flat), and its **field-detect**
   line wakes the same glow. Shares the I²C bus with the accel (`0x55` vs `0x18`). See
   `firmware/README.md` → *NFC contact card*.
@@ -207,12 +238,15 @@ validated — see `enclosure/README.md`.
 ![Titanium back-shell (Ti-max) — design render, not yet built](docs/enclosure-hero.png)
 
 The decisions that matter once it’s cut: **titanium (Ti-6Al-4V Grade 5)**, **3-axis CNC-milled** by
-PCBWay; the cavity is **part-limited to ~1.90 mm** by the tallest component (U2), and the floor is run
-to a **0.55 mm** card-thin skin (backed by ribs) — the one number that gets re-issued to whatever
-minimum the shop will hold. Retention is **four corner M2 screws**, not a press fit. The electrical
-gotcha — the screws tie the metal body to board GND, so the enclosed variant **drops the edge
-castellations** (or adds a die-cut Kapton isolation layer) so nothing shorts to the grounded shell.
-With a metal back, the **accelerometer tap is the actuator** — there’s no button to press from outside.
+PCBWay, **bead-blast** finish; the general cavity is **cap-limited to 1.85 mm** by the four 1.70 mm
+supercaps (U2 at 1.75 mm sits over a small **relief pocket** that drops the local floor 0.05 mm so it
+still clears), the floor runs to **0.75 mm** of engraving stock backed by ribs, and the overall height
+is **3.55 mm**. The four bosses sit on the **v3.0 hole pattern** (concentric with the r3.0 corner
+fillets), the internal braces are **removed**, and retention is **four corner M2 screws**, not a press
+fit. The electrical gotcha — the screws tie the metal body to board GND, so the enclosed variant
+**drops the edge castellations** (or adds a die-cut Kapton layer) so nothing shorts to the grounded
+shell, and the **accelerometer tap is the actuator** (cap-touch dies behind a grounded plate). The
+dimensioned drawing is mid-regeneration for v3.0 — see `enclosure/README.md`.
 
 ---
 

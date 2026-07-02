@@ -2,11 +2,12 @@
 
 Durable engineering rationale, hard-won findings, and future-variant ideas, distilled from the v0/v1 planning docs (since retired).
 
-**Authority order.** For the *current* design, the committed `solar-glow-drh-v2_1.kicad_pcb` /
-`.kicad_sch`, plus `solar-glow-drh-v2-hardware.md` (as-built wiring/pin map) and `README.md`, are
-ground truth. This file is the *reasoning archive* — the "why" and the "don't do that again," so a
-future v2.2/v3 does not re-learn it from scratch. Where the as-built docs already own a topic, this
-points at them rather than duplicating.
+**Authority order.** For the *current* design, the committed `solar-glow-drh-v3_0.kicad_pcb` /
+`.kicad_sch` (v3.0, 2-layer) plus `README.md`'s current-revision table are ground truth; the 4-layer
+`solar-glow-drh-v2_3.kicad_pcb` is the committed fallback. This file is the *reasoning archive* — the
+"why" and the "don't do that again" — with the **v3.0 deltas collected in §12**. Where an as-built
+doc already owns a topic, this points at it rather than duplicating. (The `solar-glow-drh-v2-*` docs
+are v2-era; their v3.0 deltas are banner-noted at their tops.)
 
 ---
 
@@ -183,19 +184,23 @@ re-spin for the enclosure:
 - **Grounded body → short risk.** In the enclosed variant, **drop the right-edge castellations**;
   land support pillars **only on GND pour**; keep a **die-cut Kapton (~0.05 mm)** blanket isolation
   layer in reserve if a later via audit on the rib lines finds an untented via.
-- **Uniform ~1.9 mm cavity, no U2 pocket** — the **1.70 mm WS17 supercaps** ≈ U2 at 1.75 mm set the
-  cavity floor (cavity = 1.90 = U2 + 0.15 mm air, toleranced 1.90 ±0.05); the 0.9 mm QFN is irrelevant. ("Cells" elsewhere
-  can mean the 1.2 mm **solar** cells on the front — a different part; don't conflate the two.)
+- **General cavity 1.85 mm (cap-limited), plus a U2 relief pocket** — the four **1.70 mm WS17
+  supercaps** set the general cavity (1.85 = cap + 0.15 mm air, toleranced 1.85 ±0.05). U2 (SOIC-8,
+  1.75 mm) is the single tallest part but sits over a **local 0.05 mm relief pocket** (floor 0.70 mm
+  there vs 0.75 general), so it keeps its full 0.15 mm air while the general cavity stays 1.85. The
+  0.9 mm QFN is irrelevant. ("Cells" elsewhere can mean the 1.2 mm **solar** cells on the front — a
+  different part; don't conflate the two.)
 - **No tall back-side parts.** The cavity budget assumes the tallest *populated* rear part is U2 at
   1.75 mm. Keep the 2.54 mm breakout headers (JP1/JP2) **unpopulated** in the enclosed build — a
   populated 0.1 in header is ~8 mm and the shell will not close. J1/TC2030 are flat back-side pads.
 - **The button is the accel tap** (cap-touch dies behind a grounded plate; the old "snap-dome"
   actuator is superseded).
-- **Shell, current approach:** Ti-6Al-4V Grade 5, **fully 3-axis CNC-milled** (no etching), with a
-  **uniform 0.55 mm floor** backed by ribs and posts, and the reflector frame **laser-marked, not
-  cut**. Retention is four corner M2 screws; keep M2 engagement in the thick bosses. The earlier
-  0.3 mm-skin / 7075-fallback / photochemical-etch plan is dropped. Full CAD, drawing, and fab notes
-  are in `enclosure/README.md`.
+- **Shell, current approach (v3.0):** Ti-6Al-4V Grade 5, **fully 3-axis CNC-milled** (no etching),
+  **bead-blast** finish, with a **0.75 mm floor** (0.70 under the U2 pocket) backed by two ribs — the
+  brace posts are **removed** — and the reflector frame **laser-marked, not cut**. Overall height
+  3.55 mm; the four bosses sit on the **v3.0 hole pattern** (concentric with the r3.0 fillets),
+  retained by four corner M2 screws (~2.2 mm Ti engagement). The earlier 0.3 mm-skin / 7075-fallback /
+  photochemical-etch plan is dropped. Full CAD, callouts, and fab notes are in `enclosure/README.md`.
 
 ---
 
@@ -206,8 +211,8 @@ re-spin for the enclosure:
   (U2, U4, Q1, TC1.1/2/3, JP2, D9.A, R2.2) was **C6, R1, R3, R4, R5**. Large pads / ICs / EP / flooded
   solder-bridge pads (SB/SJ/SW) / robust header joints (JP/J1) reflow fine and need no fill.
   **Re-confirm the actual in-pad-via set against the committed KiCad board** — the old list was tied
-  to the generator's dog-bone routine, not the KiCad layout. If PCBWay's via-fill is board-wide, the
-  point is moot.
+  to the generator's dog-bone routine, not the KiCad layout. **v3.0 resolves this: all in-pad vias are
+  resin-filled + copper-capped (POFV) board-wide** (§12), so the point is moot.
 - **TC2030 (Tag-Connect) footprint rules:** use the **official KiCad `Tag-Connect_TC2030-IDC-FP`**
   (Connectors.pretty; board-side == TC2030-MCP-FP) — do **not** hand-draw. 6 contact pads
   Ø0.7874 mm at 1.27 mm pitch (pins 1=UPDI, 2=VS, 3=GND, 4–6 NC), F.Cu+F.Mask, **no paste**; 4
@@ -240,6 +245,16 @@ Recorded so the history is legible and the dead branches stay dead:
 
 v0 also carried a dual-coin-cell charging option (BT1/BT2 + diodes); **dropped in v2.1** (solar-only).
 
+**Since v2.1** (placements, BOM, and the glow window are unchanged throughout — only the stackup and
+the LDRV fan moved):
+
+| rev | stackup | note |
+|---|---|---|
+| v2.2 | 6-layer | intermediate |
+| **v2.3** | **4-layer** — F · In1 GND · In2 VS · B | the committed **fallback** |
+| **v3.0** | **2-layer** — F · B | **current** — GND = full-board B.Cu pour, VS = routed B mesh (the 4→2 conversion of v2.3). See §12. |
+
+
 ---
 
 ## 10. Two corrections worth keeping explicit
@@ -252,7 +267,7 @@ v0 also carried a dual-coin-cell charging option (BT1/BT2 + diodes); **dropped i
   assignments (VSENSE on PA5 with BTN on PA7; and the LEDs on PA4–PA7 / TCD0 with VSENSE on PC3)
   — **neither matches the board.** The committed `solar-glow-drh-v2_1.kicad_sch` and
   `solar-glow-drh-v2-hardware.md` are the only authoritative pin reference: LEDs PA0–PA3 / TCA0,
-  VSENSE PD2, BTN PA5, I²C PC2/PC3, accel INT PF0/PF1. If anything else disagrees, it is wrong.
+  VSENSE PD2, BTN PA5, I²C PC2/PC3, accel INT PF0/PF1. If anything else disagrees, it is wrong. **v3.0 permuted which LDRV net lands on which of PA0–PA3** (the fan untangle) — the pins are still PA0–PA3/TCA0, but the LDRV↔pin↔LED map changed; see §12 and `firmware/README.md`.
 
 ---
 
@@ -261,3 +276,67 @@ v0 also carried a dual-coin-cell charging option (BT1/BT2 + diodes); **dropped i
 The supercaps dominate the BOM. SCHURTER 3-153-438 (WS17, 1 F) runs ~€6.77 in volume / ~$8–15 per
 cell; four of them push the supercaps to **two-thirds or more** of the per-board cost — the single
 dominant line, and the reason the 4-cell array is a deliberate reroute rather than a casual upgrade.
+
+---
+
+## 12. v3.0 — the 2-layer redesign (current)
+
+v3.0 re-implements v2.3's 4-layer board on **two layers** (F / B) — same 50.80 × 88.90 card, r3.0
+corners, and the **same BOM**. It is the current board; **v2.3 (4-layer) is the committed fallback.**
+
+- **GND and VS come off the inner planes.** In1 (GND plane) becomes a **full-board B.Cu pour**
+  (`GND_B` zone) plus stitch straps; In2 (VS plane) becomes a **routed mesh on B** (w0.4 trunk).
+  Routing added: ~334 segments, **83 vias** (uniform 0.6/0.3).
+- **LDRV fan untangle — the pin-map change firmware must track.** Four U1-proximal LDRV labels were
+  permuted so the schematic matches the as-routed copper. As-routed:
+
+  | U1 pin | port | TCA0 | net | LED |
+  |---|---|---|---|---|
+  | 1 | PA3 | WO3 | LDRV1 | D2 |
+  | 28 | PA2 | WO2 | LDRV2 | D3 |
+  | 27 | PA1 | WO1 | LDRV3 | D4 |
+  | 26 | PA0 | WO0 | LDRV4 | D5 |
+
+  (v2.3 was the reverse at the U1 end: pin 26 = LDRV1 … pin 1 = LDRV4.) The **ballast-side labels are
+  untouched** — LDRVn still drives Dn+1 through ballast Rn; only the U1-pin end moved. `led.c`'s pin
+  table must match this. The port range PA0–PA3 / TCA0 split (§10) is unchanged; the LED *placements*
+  (D2–D5) and reverse-mount orientation are unchanged.
+- **Mounting holes symmetrized.** MH1–4 moved concentric with the r3.0 corner fillets — MH1 (3.0,
+  85.9), MH2 (47.8, 85.9), MH3 (3.0, 3.0), MH4 (47.8, 3.0); pad Ø3.6, drill 2.2, GND; pitch **44.80 ×
+  82.90** (was 43.80 × 82.90). The enclosure was aligned to match (`enclosure/README.md`). The **v2.3
+  fallback still carries the old 3.5 mm x-inset holes** — only relevant if v2.3 is ever fabbed (its
+  v2.1 enclosure matches the old positions as-is; backport is a carried, undecided question).
+- **Selective hard gold + plating bus.** Hard electrolytic gold on the DRH field + letters rim, the
+  perimeter frame (inset 1.25 mm, w0.5), and 6 edge ornaments. The frame is the plating-bus backbone;
+  6 ornament ties + a field→frame east L-tie feed it; **two 0.25 mm stubs cross Edge.Cuts at x=25.4
+  (N/S)** to the panel rail and are milled at depanel. The gold set is **GND-referenced** (the four M2
+  GND pads overlap the frame at the corners) — consistent with the grounded Ti shell, not floating
+  copper. PCBWay special-request text is in `PCB/README.md`.
+- **Two real defects found and fixed** in the final audit: an **NFC_EN 0.27 mm open at U6.3** (the
+  4→2 conversion dropped an inner link; the kept B stub ended short of the pad — bridged
+  (4.7,33.588)→(5.25,33.588) w0.25), and a **VS feed crossing U6's true bottom-row pads** (ripped and
+  re-jogged through the inter-row gap at y32.2). Both had been *masked* by a wrong back-side pad model
+  — see the trap below.
+- **KiCad-2026 pad convention — the trap that hid the defects.** Nets are **name-only** (no numeric
+  net table; old regex breaks). Back-side footprint pad position = `fp_at + Rot(−fp_rot)·pad_offset`,
+  and the pad's rect angle is written footprint-composed (use it as-is). Getting this wrong axis-swaps
+  14 pads, invents phantom shorts, and masks real opens. And a corollary already burned once on this
+  project: **ERC/DRC cannot catch a wrong symbol pin-number-to-function mapping** — only a datasheet
+  cross-check does.
+- **Face-copper verdict — open, Devin's aesthetic call.** The 2-layer face carries ~333 mm of signal
+  copper + via rings in the visible band. Under matte-black mask with resin-filled (tented) vias the
+  rings mostly vanish and traces read as faint relief, but it is well past the old "10–20 discreet
+  jumpers" guess. Options: **ship v3.0** (treat the trace texture as intentional circuit-aesthetic) or
+  **fall back to the clean-face 4-layer v2.3**.
+- **DRC intentional exceptions** (do-not-fix): LA↔LB coil short (the antenna); MH↔gold-frame contact
+  ×4 (GND tie); the 2 plating stubs crossing Edge.Cuts; the illumination copper inside the glow window
+  (D2–D5 pads, K2–K5 diagonals, ANODE stubs/vias); LDRV4 via (35.5, 47.55) rim graze; LB bridge via
+  (42.9, 38); east L-tie crossing the coil on F. Plus benign `lib_footprint_issues` + the reserved
+  `BTN` `track_dangling`.
+- **Carried bench items** (not resolved here): NFC coil L + C9 trim (~100 pF; now includes the F L-tie
+  crossing and the Ti-shell proximity); scope PA6/FD on a real tap with VCC gated off; ~100k NFC_EN
+  pulldown (tristate default); LED PWM INVEN polarity in `led.c`; `twi.c` presence; plastic dry-fit;
+  **Ti-shell-behind-coil L/Q** — enclosure-relevant: metal behind the NFC coil pulls its inductance
+  and Q, and could force a local change over the coil area if it detunes (measurement, not a CAD
+  change yet).
+
