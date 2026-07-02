@@ -1,16 +1,7 @@
-ERC report (2026-07-01T16:29:32, Encoding UTF8)
+ERC report (2026-07-02T00:29:32, Encoding UTF8)
 Report includes: Errors, Warnings, Exclusions
 
 ***** Sheet /
-[wire_dangling]: Wires not connected to anything
-    ; error
-    @(100 mils, 1500 mils): Bus to wire entry
-[unconnected_wire_endpoint]: Unconnected wire to bus entry
-    ; warning
-    @(100 mils, 1500 mils): Bus to wire entry
-[unconnected_wire_endpoint]: Unconnected wire to bus entry
-    ; warning
-    @(100 mils, 1500 mils): Bus to wire entry
 [isolated_pin_label]: Label connected to only one pin
     ; warning
     @(8050 mils, 1700 mils): Global Label 'PA4'
@@ -24,7 +15,7 @@ Report includes: Errors, Warnings, Exclusions
     ; warning
     @(8050 mils, 2700 mils): Global Label 'PC1'
 
- ** ERC messages: 7  Errors 1  Warnings 6
+ ** ERC messages: 4  Errors 0  Warnings 4
 
  ** Ignored checks:
     - Global label only appears once in the schematic

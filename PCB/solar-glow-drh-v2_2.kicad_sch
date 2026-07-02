@@ -6943,196 +6943,10 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "solarglow:U6"
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(in_pos_files yes)
-			(duplicate_pin_numbers_are_jumpers no)
-			(property "Reference" "U6"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value" "TPS22918"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Footprint" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Datasheet" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Description" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(symbol "U6_1_1"
-				(rectangle
-					(start 2.54 2.54)
-					(end 20.32 -27.94)
-					(stroke
-						(width 0.2)
-						(type default)
-					)
-					(fill
-						(type background)
-					)
-				)
-				(pin passive line
-					(at 0 -25.4 0)
-					(length 2.54)
-					(name "VOUT"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 0 -20.32 0)
-					(length 2.54)
-					(name "QOD"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 0 -10.16 0)
-					(length 2.54)
-					(name "ON"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-					(number "3"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 0 -15.24 0)
-					(length 2.54)
-					(name "CT"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-					(number "4"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 0 -5.08 0)
-					(length 2.54)
-					(name "GND"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-					(number "5"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 0 0 0)
-					(length 2.54)
-					(name "VIN"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-					(number "6"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
 	)
 	(no_connect
 		(at 410.21 139.7)
 		(uuid "0a4c937d-6165-4219-8426-7c9a5acbc380")
-	)
-	(no_connect
-		(at 650.24 91.44)
-		(uuid "1b71bf97-47bb-4569-bf97-efa4cc4fa66b")
 	)
 	(no_connect
 		(at 209.55 119.38)
@@ -7167,21 +6981,16 @@
 		(uuid "b18dddca-953e-468d-8480-5b31684a0328")
 	)
 	(no_connect
+		(at 209.55 58.42)
+		(uuid "b55ad73d-cdba-49bc-a7d9-1ecd51b9eec4")
+	)
+	(no_connect
 		(at 209.55 104.14)
 		(uuid "bf787d9c-a398-4482-823c-ac8ecbb70058")
 	)
 	(no_connect
 		(at 604.52 100.33)
 		(uuid "e044131d-4203-4642-b390-b4f77d86bbf6")
-	)
-	(bus_entry
-		(at 2.54 38.1)
-		(size 2.54 2.54)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "3e98a38f-33a0-4cc5-8320-785903c9525e")
 	)
 	(wire
 		(pts
@@ -7312,16 +7121,6 @@
 			(type default)
 		)
 		(uuid "137e277a-9ac5-4a79-9806-5189f12826a0")
-	)
-	(wire
-		(pts
-			(xy 650.24 96.52) (xy 645.16 96.52)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "17e9e287-a044-46e5-b573-d0e988c45623")
 	)
 	(wire
 		(pts
@@ -7525,16 +7324,6 @@
 	)
 	(wire
 		(pts
-			(xy 650.24 101.6) (xy 645.16 101.6)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "33e81197-cace-4454-bbd5-50c815a51b10")
-	)
-	(wire
-		(pts
 			(xy 80.01 58.42) (xy 74.93 58.42)
 		)
 		(stroke
@@ -7552,16 +7341,6 @@
 			(type default)
 		)
 		(uuid "3572aca2-820e-4aa2-89fc-78fb8c5bf6ca")
-	)
-	(wire
-		(pts
-			(xy 650.24 86.36) (xy 645.16 86.36)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "36f3e2ba-cbf4-4a0f-b0e7-4217c0fd7573")
 	)
 	(wire
 		(pts
@@ -8095,16 +7874,6 @@
 	)
 	(wire
 		(pts
-			(xy 650.24 81.28) (xy 645.16 81.28)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "9531030b-692f-4618-b10f-d9c5e1d3cdbb")
-	)
-	(wire
-		(pts
 			(xy 279.4 144.78) (xy 274.32 144.78)
 		)
 		(stroke
@@ -8495,16 +8264,6 @@
 	)
 	(wire
 		(pts
-			(xy 209.55 58.42) (xy 204.47 58.42)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "d291f377-92c8-4544-bb68-671c7963d318")
-	)
-	(wire
-		(pts
 			(xy 139.7 149.86) (xy 134.62 149.86)
 		)
 		(stroke
@@ -8552,16 +8311,6 @@
 			(type default)
 		)
 		(uuid "e2489e38-4413-4be8-9b69-4b2ff24001ad")
-	)
-	(wire
-		(pts
-			(xy 650.24 76.2) (xy 645.16 76.2)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "e30f9126-6826-43b9-9902-a7570fb9add6")
 	)
 	(wire
 		(pts
@@ -9509,27 +9258,6 @@
 			)
 		)
 	)
-	(global_label "GND"
-		(shape bidirectional)
-		(at 645.16 81.28 0)
-		(effects
-			(font
-				(size 1 1)
-			)
-		)
-		(uuid "45d47b73-41d1-4f44-bc42-6fb09a197389")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 645.16 81.28 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-	)
 	(global_label "LB"
 		(shape bidirectional)
 		(at 554.99 124.46 0)
@@ -9845,7 +9573,7 @@
 			)
 		)
 	)
-	(global_label "VNFC"
+	(global_label "VS"
 		(shape bidirectional)
 		(at 599.44 95.25 0)
 		(effects
@@ -9877,27 +9605,6 @@
 		(uuid "5a3a6d23-4954-4bb4-be95-c104261af027")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 274.32 241.3 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-	)
-	(global_label "VS"
-		(shape bidirectional)
-		(at 645.16 76.2 0)
-		(effects
-			(font
-				(size 1 1)
-			)
-		)
-		(uuid "5cea8759-efb8-4a3b-b667-8ddc8e78a553")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 645.16 76.2 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -10118,7 +9825,7 @@
 			)
 		)
 	)
-	(global_label "VNFC"
+	(global_label "VS"
 		(shape bidirectional)
 		(at 554.99 95.25 0)
 		(effects
@@ -10234,27 +9941,6 @@
 		(uuid "7aa6aa93-c655-4274-8abb-a0303fc841b9")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 204.47 180.34 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-	)
-	(global_label "NFC_EN"
-		(shape bidirectional)
-		(at 645.16 86.36 0)
-		(effects
-			(font
-				(size 1 1)
-			)
-		)
-		(uuid "7ae221c7-2582-4e29-b502-8d600039ed7e")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 645.16 86.36 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -10958,27 +10644,6 @@
 			)
 		)
 	)
-	(global_label "NFC_EN"
-		(shape bidirectional)
-		(at 204.47 58.42 0)
-		(effects
-			(font
-				(size 1 1)
-			)
-		)
-		(uuid "a8ab25e2-a7a1-4f6a-9ff3-83001b29990a")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 204.47 58.42 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-	)
 	(global_label "FD"
 		(shape bidirectional)
 		(at 554.99 69.85 0)
@@ -11231,27 +10896,6 @@
 			)
 		)
 	)
-	(global_label "VNFC"
-		(shape bidirectional)
-		(at 645.16 101.6 0)
-		(effects
-			(font
-				(size 1 1)
-			)
-		)
-		(uuid "c0fe1139-4e4f-4753-9300-daf7b8576da1")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 645.16 101.6 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-	)
 	(global_label "LA"
 		(shape bidirectional)
 		(at 554.99 119.38 0)
@@ -11473,27 +11117,6 @@
 		(uuid "cc07fe59-6321-4c6d-9f5a-d298e7e8631d")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 599.44 90.17 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-	)
-	(global_label "VNFC"
-		(shape bidirectional)
-		(at 645.16 96.52 0)
-		(effects
-			(font
-				(size 1 1)
-			)
-		)
-		(uuid "d630ecc5-c657-4b79-8ca0-b7e64ab038ef")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 645.16 96.52 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -12156,97 +11779,6 @@
 		)
 	)
 	(symbol
-		(lib_id "solarglow:U6")
-		(at 650.24 76.2 0)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(uuid "0324146a-7374-4052-9f48-3c6822ca7210")
-		(property "Reference" "U6"
-			(at 661.67 76.2 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "TPS22918"
-			(at 661.67 81.28 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "Package_TO_SOT_SMD:SOT-23-6"
-			(at 661.67 86.36 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 650.24 76.2 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" ""
-			(at 650.24 76.2 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "b7ad4d3e-f4e7-4866-a0ba-55ab169c8f1a")
-		)
-		(pin "2"
-			(uuid "0d755d50-0791-4b86-a2b0-7674c819c0dc")
-		)
-		(pin "3"
-			(uuid "27c5d13c-48eb-4773-b27d-1249b45f729d")
-		)
-		(pin "4"
-			(uuid "5f848bb0-2862-4d4d-b3ae-f8a74a17dfc7")
-		)
-		(pin "5"
-			(uuid "c38f39d2-d5bc-473f-9ebe-168ebf252d2d")
-		)
-		(pin "6"
-			(uuid "bac9a359-b71a-4696-b73d-61e637bd2225")
-		)
-		(instances
-			(project "solar-glow-drh-v2_2"
-				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
-					(reference "U6")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "solarglow:C3")
 		(at 410.21 281.94 0)
 		(unit 1)
@@ -12314,7 +11846,7 @@
 			(uuid "8bb369a0-3f5b-4040-aa2f-05941c444b9f")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "C3")
 					(unit 1)
@@ -12390,7 +11922,7 @@
 			(uuid "d407dfb8-db72-41b0-9b67-d76e16eac353")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "R10")
 					(unit 1)
@@ -12478,7 +12010,7 @@
 			(uuid "886f197c-92f7-463d-a4b4-7b7b7adc9323")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "TC1")
 					(unit 1)
@@ -12557,7 +12089,7 @@
 			(uuid "ae3b4c96-e136-48dd-9082-3e596952c386")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "Q1")
 					(unit 1)
@@ -12630,7 +12162,7 @@
 			(uuid "fd44a44f-cc84-4c7f-aa4d-f7b702e4557f")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "#FLG1")
 					(unit 1)
@@ -12706,7 +12238,7 @@
 			(uuid "20bd0fe2-8125-4dfb-bd57-cb5b40268b1b")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "D1")
 					(unit 1)
@@ -12782,7 +12314,7 @@
 			(uuid "b3be433d-c579-4660-a92b-0deeda786402")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "D5")
 					(unit 1)
@@ -12861,7 +12393,7 @@
 			(uuid "7ca075c5-2a48-438e-8b38-36eaf24cdea0")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "U4")
 					(unit 1)
@@ -12937,7 +12469,7 @@
 			(uuid "31eb4a43-ce6d-4284-93df-a75a928e4739")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "R9")
 					(unit 1)
@@ -13013,7 +12545,7 @@
 			(uuid "96271161-628d-4ece-b3bc-f8b24e40abcd")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "D3")
 					(unit 1)
@@ -13086,7 +12618,7 @@
 			(uuid "6494bb91-3321-445d-bba3-c77ff87cbcfb")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "#FLG5")
 					(unit 1)
@@ -13162,7 +12694,7 @@
 			(uuid "04f0c212-e27e-4971-ba3b-053f2adfcc5d")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "C6")
 					(unit 1)
@@ -13238,7 +12770,7 @@
 			(uuid "c6e6e4a3-c6a6-4f21-85ec-45c8cabb9f87")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "R7")
 					(unit 1)
@@ -13314,7 +12846,7 @@
 			(uuid "09915c67-a7c6-4203-996a-6a90f53f4a31")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "D9")
 					(unit 1)
@@ -13390,7 +12922,7 @@
 			(uuid "b1e0f55b-ddec-4be0-85b3-d881afec5aa0")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "SB3")
 					(unit 1)
@@ -13463,7 +12995,7 @@
 			(uuid "a82ea616-104c-414f-a277-0c9a1060bee1")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "MH2")
 					(unit 1)
@@ -13536,7 +13068,7 @@
 			(uuid "c465e459-a098-41e0-9afb-f30561fae5c3")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "MH1")
 					(unit 1)
@@ -13630,7 +13162,7 @@
 			(uuid "182340f1-b05d-4718-8064-184d22cfb1d4")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "U2")
 					(unit 1)
@@ -13703,7 +13235,7 @@
 			(uuid "bd24d70c-3f5f-4b79-aca5-7875ab7b08cf")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "#FLG3")
 					(unit 1)
@@ -13732,7 +13264,7 @@
 				)
 			)
 		)
-		(property "Value" "150R"
+		(property "Value" "LED ballast"
 			(at 290.4 251.46 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -13779,7 +13311,7 @@
 			(uuid "7e3437b0-8b77-4e4f-86d0-4c41b62dc83f")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "R4")
 					(unit 1)
@@ -13855,7 +13387,7 @@
 			(uuid "0cd03e90-e689-4976-927c-f7c69ba654f3")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "C7")
 					(unit 1)
@@ -13931,7 +13463,7 @@
 			(uuid "24e7a0fb-6ace-41cb-9187-11e9eceb6007")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "R11")
 					(unit 1)
@@ -14007,7 +13539,7 @@
 			(uuid "cdaa7b83-4ced-46b1-b2d5-f9843431c223")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "SC2")
 					(unit 1)
@@ -14086,7 +13618,7 @@
 			(uuid "cedc254d-720a-44e7-9b1c-694791bdd57b")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "J1")
 					(unit 1)
@@ -14115,7 +13647,7 @@
 				)
 			)
 		)
-		(property "Value" "150R"
+		(property "Value" "LED ballast"
 			(at 290.4 129.54 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -14162,7 +13694,7 @@
 			(uuid "e7649108-5569-4659-a71a-40c639ff78c2")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "R2")
 					(unit 1)
@@ -14241,7 +13773,7 @@
 			(uuid "af73cc3e-40ed-49af-b2da-59bbb3d171f1")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "L1")
 					(unit 1)
@@ -14314,7 +13846,7 @@
 			(uuid "2d8b5c38-1c58-40f3-be96-f93dfe893b38")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "MH3")
 					(unit 1)
@@ -14390,7 +13922,7 @@
 			(uuid "ec1513a7-aeb8-46bb-b4c1-43d6f07b4bd3")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "SC3")
 					(unit 1)
@@ -14466,7 +13998,7 @@
 			(uuid "a4b69953-7684-46ef-8e1c-3cd29264421b")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "SB4")
 					(unit 1)
@@ -14545,7 +14077,7 @@
 			(uuid "27b5fcba-f64f-4dc3-ac18-ea47b7e93a55")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "C8")
 					(unit 1)
@@ -14642,7 +14174,7 @@
 			(uuid "91e8df7a-01cb-4dbd-85a3-9d409bfe4b45")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "U5")
 					(unit 1)
@@ -14671,7 +14203,7 @@
 				)
 			)
 		)
-		(property "Value" "1M"
+		(property "Value" "VSENSE div"
 			(at 421.21 190.5 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -14718,7 +14250,7 @@
 			(uuid "21ca3368-a569-4a0b-8bef-e965eed90195")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "R5")
 					(unit 1)
@@ -14747,7 +14279,7 @@
 				)
 			)
 		)
-		(property "Value" "220R"
+		(property "Value" "TINY ballast"
 			(at 290.4 317.5 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -14794,7 +14326,7 @@
 			(uuid "3a34d7d0-aabe-4325-92c4-7d19b70ccfbf")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "R12")
 					(unit 1)
@@ -14876,7 +14408,7 @@
 			(uuid "85fa6075-73ac-4b0a-a006-6d1138bae176")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "PV1")
 					(unit 1)
@@ -14952,7 +14484,7 @@
 			(uuid "91a46ccc-d7c8-4123-9bed-78a44e458839")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "C2")
 					(unit 1)
@@ -14981,7 +14513,7 @@
 				)
 			)
 		)
-		(property "Value" "0R"
+		(property "Value" "VDDIO2 jmp"
 			(at 421.21 170.18 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -15028,7 +14560,7 @@
 			(uuid "bc6b72a1-7de4-41d8-8e52-093ac235af8d")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "SJ1")
 					(unit 1)
@@ -15107,7 +14639,7 @@
 			(uuid "78f89901-c072-4ff5-a506-3b7d314e39fc")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "SW2")
 					(unit 1)
@@ -15186,7 +14718,7 @@
 			(uuid "e33a21a7-c35e-4e6e-acee-7693789cc898")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "C9")
 					(unit 1)
@@ -15262,7 +14794,7 @@
 			(uuid "97a544bc-3e08-4701-93c8-268b121b88bf")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "SC1")
 					(unit 1)
@@ -15291,7 +14823,7 @@
 				)
 			)
 		)
-		(property "Value" "150R"
+		(property "Value" "LED ballast"
 			(at 290.4 190.5 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -15338,7 +14870,7 @@
 			(uuid "67965ec2-8c58-4397-aad9-94500c57ca08")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "R3")
 					(unit 1)
@@ -15367,7 +14899,7 @@
 				)
 			)
 		)
-		(property "Value" "150R"
+		(property "Value" "LED ballast"
 			(at 290.4 68.58 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -15414,7 +14946,7 @@
 			(uuid "53c5eb66-b96b-49d1-bb36-978395d32318")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "R1")
 					(unit 1)
@@ -15490,7 +15022,7 @@
 			(uuid "b8643f82-08e8-4fdd-935a-5254f16b6048")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "C1")
 					(unit 1)
@@ -15596,7 +15128,7 @@
 			(uuid "2ecb087e-5a99-48a3-9ac0-e848bbcc136b")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "U3")
 					(unit 1)
@@ -15675,7 +15207,7 @@
 			(uuid "a811b796-9a45-4338-b0b7-ccb0b6893c15")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "R13")
 					(unit 1)
@@ -15751,7 +15283,7 @@
 			(uuid "f4a56ca9-f8bf-4f77-9d4e-7a5b7a534991")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "D4")
 					(unit 1)
@@ -15780,7 +15312,7 @@
 				)
 			)
 		)
-		(property "Value" "10nF"
+		(property "Value" "VSENSE filt"
 			(at 421.21 231.14 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -15827,7 +15359,7 @@
 			(uuid "2d0eb425-2991-4323-8cd6-d4fa35e8a389")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "C5")
 					(unit 1)
@@ -15856,7 +15388,7 @@
 				)
 			)
 		)
-		(property "Value" "1uF"
+		(property "Value" "100nF"
 			(at 421.21 312.42 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -15903,7 +15435,7 @@
 			(uuid "1cb47447-c3d8-4e9f-8491-1774fba3e420")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "C4")
 					(unit 1)
@@ -15979,7 +15511,7 @@
 			(uuid "0389616e-ec78-436c-baf2-6d52d1988eb2")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "SB2")
 					(unit 1)
@@ -16052,7 +15584,7 @@
 			(uuid "97e866e5-81b1-47a5-b121-d12ba0e66b98")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "#FLG4")
 					(unit 1)
@@ -16128,7 +15660,7 @@
 			(uuid "da9cfc28-c098-400c-93b8-a4309005ca6e")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "D2")
 					(unit 1)
@@ -16201,7 +15733,7 @@
 			(uuid "6a858a34-a818-4b1d-899b-620b68784d75")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "MH4")
 					(unit 1)
@@ -16230,7 +15762,7 @@
 				)
 			)
 		)
-		(property "Value" "1M"
+		(property "Value" "VSENSE div"
 			(at 421.21 210.82 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -16277,7 +15809,7 @@
 			(uuid "660c8a21-5b16-42d0-aa90-499089fbd356")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "R6")
 					(unit 1)
@@ -16434,7 +15966,7 @@
 			(uuid "1241074a-dfa0-4ad9-9348-7a542400ce3d")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "U1")
 					(unit 1)
@@ -16516,7 +16048,7 @@
 			(uuid "b587a40f-c32a-4ee3-a8fe-6bb6e9a66d5e")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "PV2")
 					(unit 1)
@@ -16589,7 +16121,7 @@
 			(uuid "9ab5c8ce-81a8-45d1-a8d7-f348b450aadc")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "#FLG2")
 					(unit 1)
@@ -16665,7 +16197,7 @@
 			(uuid "ebbb75a5-da7b-4582-ae37-54b797519671")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "R8")
 					(unit 1)
@@ -16741,7 +16273,7 @@
 			(uuid "5414e84d-4e9b-4b71-af71-6494caa82fef")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "SB1")
 					(unit 1)
@@ -16817,7 +16349,7 @@
 			(uuid "7b2a150c-5763-4e47-96ed-269d60945833")
 		)
 		(instances
-			(project "solar-glow-drh-v2_2"
+			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "SC4")
 					(unit 1)
