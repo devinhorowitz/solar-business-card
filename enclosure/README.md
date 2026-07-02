@@ -121,7 +121,7 @@ Expect the instant price to move: the thin floor still routes this to manual eng
   - U2 relief-pocket floor: at **Z +0.70** over a 7.8 × 5.4 mm area only (see note 5b)
   - boss / lip / rib tops (the PCB rest plane): **Z +2.60**
   - PCB recess: Z +2.60 to +3.40 (receives the 0.80 mm board)
-- Wall 1.00 mm, perimeter lip 1.50 mm, two cap-gap ribs 1.00 mm wide, back-frame step 0.15 mm.
+- Wall 1.00 mm, **perimeter lip / back-frame 1.00 mm** (narrowed from 1.50 mm to clear the v3.0 bench-pad strip JP1/TP1 at x 47.55–49.25, which sat on the old 1.50 mm lip inner edge; 1.00 mm gives 0.50 mm clearance to the exposed pads), two cap-gap ribs 1.00 mm wide, back-frame step 0.15 mm.
 - **No internal braces.** Earlier revisions carried two full-cavity brace posts; they are removed (U2 is supported by the top rib end, and the caps by the ribs + lip). The generator retains the definitions but builds with `braces=False`.
 
 ### 2. Critical dimensions — flag these for tighter control
@@ -244,7 +244,7 @@ overlap the front-side gold plating frame, so the shell is tied to board GND thr
 That is intentional and consistent, but it has two consequences the board must respect in an
 enclosed build (full detail in `../solar-glow-drh-v2-mechanical.md` and `../solar-glow-drh-design-notes.md` §7):
 
-- **Edge castellations** (any VS/SDA/SCL at the board rim) would short against the grounded press-fit walls — drop them or add a die-cut ~0.05 mm Kapton isolation layer.
+- **Nothing shorts to the grounded shell — verified.** The board has **no edge castellations** (no pads within 1.5 mm of the rim), and the shell's contacts (lip, bosses, ribs) land on **bare laminate** — checked against the PCB, no pads or vias under them — with the perimeter lip narrowed to 1.00 mm so it clears the JP1/TP1 bench pads at the right edge. The die-cut ~0.05 mm Kapton isolation blanket earlier held in reserve is therefore **unnecessary and dropped** (`kapton_th = 0.00` in the generator; set 0.05 to reinstate if a future board ever puts copper under a shell contact).
 - **Capacitive touch is dead** behind a grounded metal plate — the actuator in the enclosed build is the accelerometer tap, not a self-cap button.
 
 ---
