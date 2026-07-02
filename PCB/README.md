@@ -163,6 +163,9 @@ via), and no controlled-impedance nets to declare.
   lands, which stay ENIG.) Ordering plain ENIG without this request leaves the bus as dead
   copper and no wear surface on the face — do not ship without it.
 - "**The LA/LB track crossing at (41.0, 38.0) is the NFC coil junction — intentional.**"
+- **Bench pad strip (`TP1` + `JP1`, back east edge, x 48.4):** five bare 1.7 mm SMD probe pads
+  (VIN / GND / VS / SCL / SDA at 2.54 pitch) — no component; they are in the mark-as-DNP list
+  above. Pinout and the bench-power ritual live in `solar-glow-drh-v2-hardware.md`.
 - **Via-in-pad — 12 vias land inside pads** on this board: 10 in soldered pads (`TC1.1`, `U1.EP`,
   `U5.1`, `D1.K`, `R13.2`, `SW2.1`, `J1.2`, `PV1.N`, `PV2.N`, `PV2.Nt`) plus 2 in the bench-strip
   probe pads (`JP1.3`, `JP1.4` — bare pads, hand-solder optional). The clean answer is
@@ -186,7 +189,7 @@ hand-tinning. Order it alongside the board.
 
 **BOM state.** The masters are now **`solar-glow-drh-v3_0-BOM.xlsx`** and
 **`solar-glow-drh-v3_0-BOM-assembly.xlsx`**, generated from the v2.2 files with three fixes:
-**U6 (TPS22918) and R14 (100 k `NFC_EN` pulldown) added**, the stale **JP1/JP2 rows dropped**
+**U6 (TPS22918) and R14 (100 k `NFC_EN` pulldown) added**, the stale **JP1/JP2 rows dropped** (the `JP1` designator is reused for the v3.0 bench pad strip — bare pads, not a BOM part)
 (those headers left the board in v3.0), and **every passive except SJ1 converted to 0402** to match
 the board's placed lands — the v2.2 file still listed 0805 MPNs for most R/C. Converted and added
 lines have their **prices blanked pending a fresh quote**; the old 0805 prices don't carry. The
@@ -263,7 +266,7 @@ the exact reverse-mount P/N, OSRAM sells top-emit lookalikes).
 
 **Files handed to PCBWay:** the trimmed assembly BOM, the **centroid / pick-and-place**
 (KiCad → Fabrication Outputs → Component Placement; **CSV, mm, exclude-DNP** after marking
-SC1–SC4 / PV1–PV2 / J1 / C9 as DNP; **Absolute origin** to match the drills), and
+SC1–SC4 / PV1–PV2 / J1 / C9 / JP1 / TP1 as DNP; **Absolute origin** to match the drills), and
 `led-orientation-D2-D5.png`.
 
 **Order-form settings that matter:** bottom side, qty 5, ENIG **+ selective hard gold (special request above)** / matte-black / white silk,
