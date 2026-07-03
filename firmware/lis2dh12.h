@@ -69,6 +69,10 @@
                                       and the data path stays at 100 Hz (see header). */
 
 /* ---- tunables (bench-set; safe starting points) ----
+ * BARE-CARD values: re-tune with the diffuser brace + Ti shell installed. The
+ * enclosed stack (stiff resin sandwich + shell mass) makes taps arrive sharper and
+ * lower-amplitude, so the click threshold / time windows tuned bare will feel wrong;
+ * use the seat-stack -> test -> lift-stack -> adjust loop.
  * At +/-2g, click threshold step ~= 16 mg/LSb. At 100 Hz ODR the TIME_*
  * registers step at 1/ODR = 10 ms each. */
 #if USE_DOUBLE_TAP

@@ -116,7 +116,10 @@
  * gate that fixes the real numbers.
  * ===================================================================== */
 
-/* LED glow */
+/* LED glow.  BARE-CARD values: re-check with the diffuser brace + Ti shell
+ * installed -- the white LED-hug diffuser backing makes the window brighter and
+ * more even, so the PWM duty (and the hardware TINY mode) want a first-light
+ * re-check enclosed. */
 #define GLOW_PEAK       220   /* 0..255 peak duty per LED at full bright.
                                  Ballast (150R) fixes PEAK current to ~8 mA on
                                  the clamped rail (amber Vf~2.25V, (3.4-2.25)/150);

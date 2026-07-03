@@ -310,9 +310,15 @@ run now just *confirms* it (expect the analog domain to be a rounding error,
 
 ## What to tune (all in `board.h` unless noted)
 
-Starting points, not gospel. The energy-budget bench run fixes the real power
-numbers, and the accel thresholds want a real tap on the *assembled* card — the
-Ti back-plate changes how a tap and vibration couple into the sensor.
+Starting points, not gospel. **The tap and glow constants below are bare-card
+values — re-tune them with the diffuser brace and Ti shell installed.** The full
+stack changes the physics: the resin sandwich + shell mass make taps sharper and
+lower-amplitude (so the accel click threshold / time windows shift), and the white
+diffuser backing makes the window brighter and more even (so the glow PWM duty
+shifts). Use a seat-stack -> test -> lift-stack -> adjust loop. The energy-budget
+bench run fixes the real power numbers, and the accel thresholds want a real tap on
+the *assembled* card — the Ti back-plate changes how a tap and vibration couple into
+the sensor.
 
 ### LED glow (`board.h`; animation in `led.c`)
 - **`GLOW_PEAK`** (0–255, default 220): peak LED duty for a normal tap. The 150 Ω

@@ -2,10 +2,10 @@
  * led.c  --  TCA0 split-mode PWM + breathing animation.
  *
  * TCA0 split mode gives six 8-bit PWM channels off one timer. We use four:
- *   WO0 = LCMP0  -> PA0 (LDRV1, D2)
- *   WO1 = LCMP1  -> PA1 (LDRV2, D3)
- *   WO2 = LCMP2  -> PA2 (LDRV3, D4)
- *   WO3 = HCMP0  -> PA3 (LDRV4, D5)
+ *   WO0 = LCMP0  -> PA0 (LDRV4, D5)
+ *   WO1 = LCMP1  -> PA1 (LDRV3, D4)
+ *   WO2 = LCMP2  -> PA2 (LDRV2, D3)
+ *   WO3 = HCMP0  -> PA3 (LDRV1, D2)
  * LPER = HPER = 255, CLKSEL = DIV1 -> ~3.9 kHz at F_CPU 1 MHz (still well above
  * any flicker the eye resolves; no inductors/piezo, so nothing to whine). PORTMUX.TCAROUTEA = PORTA is the default but is set
  * explicitly so the routing is self-documenting.
