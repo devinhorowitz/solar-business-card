@@ -1,130 +1,41 @@
 #!/usr/bin/env python3
 """
-solar-glow-drh-v3_0-backshell-0p6b-brace-cad.py  -  0.6mm-board DUMB-BOX shell for the resin brace.
+solar-glow-drh-v3_0-backshell-0p6b-brace-cad.py  -  0.6 mm-board DUMB-BOX shell for the resin brace.
 
-===================== DUMB BOX (brace direction) =====================
-The metal-pillar approach is retired: the PCB net audit rejected 3 of 4 pillar spots (NW on accel
-INT2; NE/SE on the NFC coil). The dielectric resin brace carries center support instead, so the shell
-reduces to floor + walls + 4 corner bosses + TWO Ø3.0 x 0.6 LOCATOR PILLARS left standing on the
-cavity floor at board (13,35) and (33,55) that engage recesses in the brace bottom. NO ribs. The floor
-stays a full 0.95 everywhere (no holes -> uniform back for engraving) and the brace bottom stays clear
-to sand flat to the fit. A PCB layout change now means a new resin print, never a shell re-machine.
-======================================================================
+Back-only titanium shell for the SOLAR-GLOW DRH PCB. It drops over the populated back and is held by
+four corner M2 screws; the bare show-front (two solar cells + the backlit DRH monogram window) stays
+exposed. This is the "dumb box": floor + walls + four corner bosses + a U2 relief pocket + two metal
+locator pillars, nothing else. All center support and the window/EMI features live in a separate
+dielectric resin brace, so a PCB layout change is a brace reprint, never a shell re-machine.
 
-solar-glow-drh-v3_0-backshell-0p6b-cad.py  -  0.6mm-BOARD VARIANT of the back-shell generator.
+Z stack (aligned to PCB/solar-glow-drh-v3_0.kicad_pcb, 0.60 mm board):
+  floor 0.95  +  cavity 1.85  +  board recess 0.60  =  3.40 field  (3.55 at the 0.15 back frame).
+The 0.60 board (vs 0.80) frees 0.20 mm into the floor: 0.95 clears stainless/copper and puts aluminum
+past the old titanium-0.75 stiffness, without growing the assembled part. Overall stays 3.55.
 
-============================ 0.6mm-BOARD / 0.95-FLOOR VARIANT ============================
-Purpose: buy floor-thickening space for the non-titanium materials WITHOUT growing the
-assembled part. A 0.60mm board (vs 0.80) frees 0.20mm that goes straight into the floor:
-    board_th 0.80 -> 0.60,  floor 0.75 -> 0.95,  cavity 1.85 unchanged,  overall 3.55 unchanged.
-A 0.95mm floor clears stainless/copper (marginal at 0.75) and puts aluminum past titanium-0.75
-stiffness. M2 screw engagement improves (3.0 - 0.60 = 2.40mm vs 2.20).
+Locator pillars: two Ø3.0 x 0.4 metal pillars stand on the cavity floor at board (13,35) and (33,55)
+(both west of the NFC coil), left as islands in the same cavity pass as the four bosses. They engage
+Ø3.2 x 0.8 recesses in the brace bottom: 0.4 engagement, 0.1 radial, ~0.25 axial margin after the
+brace's ~0.15 bottom-sanding. Height is 0.4 (not 0.6): the recess is 0.8 and the brace bottom is
+sanded to fit, so 0.4 preserves the axial margin against sanding variation. The floor stays a full
+0.95 everywhere -- no locating holes, so the back is a uniform engraving surface.
 
-RIBS-TRIMMED: the two long cap-gap ribs are REMOVED. Once assembled from the front, a 1.2mm solar
-cell soldered over each end third turns those thirds into a stiff cell+board sandwich, so the ribs
-(which sit under the cells) are no longer the board's support there -- the cells are. The only
-genuinely unsupported span is the center glow band (no cell over it), so the load path that matters
-is the 4 SUPPORT PILLARS bracketing the glow window (PILLARS list below), full-cavity props against
-the board being pressed directly from above. Sited in component-clear gaps on the v3.0 back (NW/NE =
-old brace gaps, SW/SE = south pair; window center left open for LEDs/reflector); verified clear of
-all B-side component pads and the supercap bodies.
+No ribs, no support posts: the resin brace carries center support. The rib/brace machinery is retained
+as build() options (ribs=/braces=) for a fallback, but the shipped part uses neither.
 
-Removing the long ribs also OPENS THE PCB: their x24.9-25.9 keepout down the top/bottom-third
-centerline is freed, and the supercaps were dimensionally locked to clear that rib -- un-confining
-them lets the PCB side resize/reposition the caps in a future rev (cavity 1.85 still clears the
-current 1.70 WS17; a taller/relocated cap would need a cavity re-check).
+U2 (SOIC-8, 1.75 mm, the tallest B-side part) sits over a local 0.05 relief pocket in the cavity floor
+(local floor 0.90) so it keeps its full 0.15 mm air under its through-cutout. Watch U2-region flex at
+bench bring-up -- no rib props it now; the fallback if it matters is a short local rib stub there.
 
-U2 (the one center-band part with no cell and boxed in too tightly for a pillar to reach) loses its
-old rib-end prop, but now sits caught between the top cap-patch (y<34, stiff) and the y40 pillars
-(~6mm span) and keeps its 0.15mm pocket clearance. Watch U2-region flex at bench bring-up; a fifth
-pillar can't fit its neighbors, so if it matters the fallback is a short local rib stub just there.
+Bench / board-side items (not resolved in CAD):
+ - Grounded pillars land on the board back (GND pour with VS mesh + signals). A pillar on GND pour is
+   fine (reinforces the tie); on VS or a signal it SHORTS. Nets are name-only in the KiCad-2026 file,
+   so guarantee GND-pour-or-bare laminate under each ~Ø3.0 spot board-side.
+ - 0.60 board wants a reflow carrier/fixture; bare-board handling is floppier than 0.80.
+ - NFC retune: layer-to-layer spacing shrinks 0.80 -> 0.60, nudging the coil tune (brace ferrite + C9).
 
-Minor: the ribs also lightly backed the titanium floor during back-engraving in the top/bottom-third
-centerline (the center was never rib-backed). At 0.95 floor this backing matters little; if deep
-engraving in those specific zones proves marginal, restore a rib there selectively.
-
-THREE COORDINATION / BENCH ITEMS (not resolved in CAD):
- 1. GROUNDED-PILLAR COPPER -- each pillar lands on the board back, which is a GND pour with VS mesh
-    and signals routed on it. A grounded pillar on GND pour is fine (and reinforces the tie); on VS
-    or a signal trace it SHORTS. Nets are name-only in the KiCad-2026 file, so this must be confirmed
-    board-side: guarantee GND-pour-or-bare under each ~1.5mm spot, or add a local keepout-from-VS/
-    signal there. Pillar centers (board coords): (13.6,40.1) (39.5,40.0) (13.5,50.5) (39.5,50.5).
- 2. REFLOW CARRIER -- a 0.60mm double-sided board (cells one face, parts the other) warps in reflow
-    far more than 0.80; it wants a reflow carrier/fixture. Bare-board handling is also floppier
-    pre-assembly (fine once screwed to the metal floor -- stiffness moves into the shell).
- 3. NFC RETUNE -- layer-to-layer spacing shrinks 0.80 -> 0.60, nudging the coil inductance/tune.
-    Folds into the C9 trim already parked as a bench item; flag so it is not a surprise.
-Do NOT go below 0.60mm board: 0.40 would give floor 1.15 but is genuinely warp-prone/floppy (the
-abandoned v1 thickness), and 0.95 already meets the target.
-=========================================================================================
-
-v3.0 ALIGNMENT: matches PCB solar-glow-drh-v3_0 (2-layer). The one PCB-driven change from the
-enclosure's prior state is the 4 M2 holes moving CONCENTRIC with the r3.0 board corner fillets
-(x-insets 3.5 -> 3.0; y already 3.0): mounts (3.0,3.0)/(47.8,3.0)/(3.0,85.9)/(47.8,85.9), matching
-the committed PCB MH1-4. The boss (r2.60) now sits 0.40 uniform off the cavity corner wall -- a
-sub-Ø2.0-cutter cusp that fuses into the corner (same machining class as the boss-lip junctions;
-better tap support). This file supersedes the v3.0-chat enclosure regen, which was forked from an
-OLDER generator state (window braces still ON, floor 0.55): this carries the enclosure decisions made
-since -- braces removed (ribs+lip hold U2/caps), floor pushed to 0.75 as back-engraving stock, and a
-local 0.05 U2 relief pocket so U2 keeps its full 0.15 air. board_th 0.80 (0.8-vs-1.0 still open).
-
-================================================================================================
-TITANIUM LIMIT-PUSH (this revision). Final part is Ti-6Al-4V; the audit re-derived every dimension
-against datasheet heights + plate mechanics. Findings that drove the numbers below:
-
-  * Cavity is PART-limited, not a lever: U2 (SOIC-8, datasheet max 1.75) and the WS17 caps (1.70,
-    locked) set it. General cavity 1.85 = cap 1.70 + 0.15 air; a local 0.05 relief pocket under U2
-    (1.90 there) keeps U2's full 0.15 air. Cannot shrink further without pocketing the caps.
-  * The floor is the lever, and Ti YIELD is never the limit -- a 0.2 mm Ti floor stays sub-yield
-    even at a hard 50 N press. The binding limit is the floor DEFLECTING into the parts (air gap
-    0.15 mm to U2, 0.20 mm to the caps).
-  * The old lip-only-plus-window-braces left a 19.5 mm-radius UNSUPPORTED floor disk over the cap
-    regions; at that span a 0.6 mm floor already TOUCHES a cap at 50 N (needs 0.62). So the prior
-    floor was marginal.
-  * FIX = stiffen the floor with continuous RIBS in the empty cap-gap corridors (the SC1|SC2 and
-    SC3|SC4 channels, x 24.9-25.9, on bare laminate, no pads/vias). With the ribs + the 2 window
-    braces the worst span drops to ~11.6 mm. At 0.45 the cap gap already cleared 50 N; the floor is
-    now run at 0.75 mm as back-engraving stock (2.5x stiffer than the analyzed 0.55, so every clearance
-    margin only improves), with a local 0.05 relief pocket dipping it to 0.70 under U2. The reflector
-    frame is LASER-MARKED on the cavity floor, not cut, so it removes no material.
-  * Kapton DROPPED: every metal contact (lip in the pad-free rim band, 4 braces, 2 ribs) sits on
-    bare laminate -- verified against the PCB -- so the blanket is unnecessary. (Keep a die-cut
-    Kapton strip only if a via audit on the rib lines later finds an untented via.) RE-VERIFIED for
-    the v3.0 bench strip (JP1/TP1 SMD pads at x47.55-49.25, y11.15-23.01): at lip_w 1.00 the lip
-    band starts x49.75 -> 0.50 mm clear of the pads; nothing else exposed enters x>49.75.
-  * Walls 1.6 -> 1.0 mm: Ti is plenty strong for a press-fit rim on a 0.8 mm FR4 edge; shrinks the
-    footprint from 53.9 to 52.8 mm (closer to the 50.8 card).
-
-  Ti-max stack: floor 0.75 + cavity 1.85 + board 0.80 = 3.40 mm field (3.55 at the back frame, with
-  the 0.15 mm border). M2 thread is screw-limited, not Ti-limited (~2.2 mm of engagement, unchanged).
-
-BACK FACE = metal rubbing of the interior: 4 screw posts drilled CLEAN THROUGH, a raised frame that
-mirrors the inner lip (PCB-perimeter footprint + width), and the bosses as raised annuli fused to
-the frame the way the inner bosses fuse to the lip; all raised `border_h` (0.15 mm machined step) so
-engraved/laser rear art in the recessed field takes no wear. The frame is milled, not etched; only
-the decals inside it are laser work.
-
-ROUND-TOOL MACHINABILITY (both faces): every convex feature (bosses, brace posts, rib ends, the frame
-and prism outlines) is clear for a round tool to mill around, and the recess corners (2.95), outer
-margin (3.95+) and field inner (1.45) all clear a Ø2.0 cutter. The concave boss-lip / rib-lip and
-annulus-frame junctions are left SHARP in the model: a spinning end mill physically leaves its own
-tool-radius fillet there, nothing mates in those corners, and modeling them sharp keeps every surface
-analytic (a pre-modeled radius could only be a polygon offset here, which exports as faceted faces a
-CAM seat cannot measure). `tool_relief=True` re-enables the (faceted) pre-fill if ever wanted; it is
-OFF by default. The finishing-tool radii are still called out for reference: cavity TOOL_R R1.0 = Ø2.0,
-back field BACK_TOOL_R R0.5 = Ø1.0.
-
-TI EDGE-BREAK (deburr): titanium edges chip and cut, so no corner is left knife-sharp. The outer
-top/bottom rim is eased `edge_ease` (0.20); the exposed END-FACE edges -- the proud back frame and
-annuli tops (incl. spotface mouths) and the front rim + board-recess mouth -- are broken `EDGE_BREAK`
-(0.10). The internal board-rest tops (lip/boss/rib) and hole exits don't take a clean modeled chamfer
-in OCC; carry the drawing note "deburr all edges, break sharp corners ~0.1 mm (Ti)".
-================================================================================================
-
-All XY in board coords (KiCad: origin top-left, X across 50.80, Y down 88.90). Heights are datasheet
-figures. Z=0 = OUTER back face; +Z into the board; raised back features go to -Z.
-
-deps:  pip install --break-system-packages cadquery
+The 3D STEP governs all geometry; this generator is the source of truth (it prints the full Z-stack and
+regenerates the STEP/STL from the PCB anchors).
 """
 import cadquery as cq
 from shapely.geometry import Point, box
@@ -191,10 +102,9 @@ BACK_TOOL_R = 0.50
 # (braces=False default): U2 + caps are held by the ribs+lip (U2's support is the rib end, unchanged);
 # the braces only propped the window / bare-laminate spans. Removing frees board (13.6,40.1)/(39.5,40.0).
 BRACE = [(39.5,40.0,1.0),(13.6,40.1,1.0)]   # E, W posts -- retained as defs; re-enable via build(braces=True)
-# 4 support pillars bracketing the glow window (component-clear gaps on the v3.0 back), full-cavity
-# props against central press. r0.7 (1.4mm). NW/NE reuse the old brace gaps; SW/SE are the south pair.
-# **Each spot must land on GND pour or bare laminate board-side (grounded pillar) -- see header.**
-PILLARS = [(13.6,40.1,0.7),(39.5,40.0,0.7),(13.5,50.5,0.7),(39.5,50.5,0.7)]
+# 4 window-support pillars: RETIRED (the PCB net audit rejected 3 of 4 spots; the resin brace carries
+# center support now). Kept as an empty list so build(pillars=True) is a no-op and no stale coords mislead.
+PILLARS = []
 # cap-gap stiffening ribs: 1.0 mm wide in the SC1|SC2 / SC3|SC4 corridors (gap x24.0-26.8), giving
 # 0.9 mm clearance EACH SIDE to the nominal cap edges (hand-placement tolerance; was 0.6). Run into
 # the perimeter lip top+bottom so each rib is a SPUR off the lip (continuous pocket boundary, not a
@@ -290,13 +200,13 @@ def build(floor=0.95, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pill
     if tool_relief:
         for poly in _relief_for(_cavity_islands(ribs, braces)):
             res = res.union(_poly_solid(poly, floor, cavity))
-    # LOCATOR PILLARS (inverted from stub-holes): two Ø3.0 x 0.6 metal pillars left standing on the
+    # LOCATOR PILLARS (inverted from stub-holes): two Ø3.0 x 0.4 metal pillars left standing on the
     # cavity floor, engaging recesses in the brace bottom. Floor stays a FULL 0.95 everywhere (no holes,
     # uniform back for engraving) + adds metal; and the brace bottom is left clear so it can be sanded
     # flat to the fit (the component pockets are all on the TOP face, so only the bottom is sandable).
     if locators:
         for sx, sy in [(13.0, 35.0), (33.0, 55.0)]:
-            res = res.union(cq.Workplane("XY").workplane(offset=floor).moveTo(wx(sx), wy(sy)).circle(3.0/2).extrude(0.6))
+            res = res.union(cq.Workplane("XY").workplane(offset=floor).moveTo(wx(sx), wy(sy)).circle(3.0/2).extrude(0.4))
     # BACK FACE: frame == lip footprint + boss annuli, raised border_h
     if border_h > 0:
         frame = (cq.Workplane("XY").workplane(offset=-border_h).rect(cavW, cavH)
@@ -372,7 +282,7 @@ OUT = "/mnt/user-data/outputs/"
 B = "solar-glow-drh-v3_0-backshell-0p6b-brace"
 jobs = [
     # name                 floor wall  border ribs  prog   note
-    ("Ti-max",             0.95, 1.00, 0.15, False, False, "0.6mm-board DUMB BOX for the resin brace: 0.95 floor + U2 relief pocket + 1.0 walls + 4 bosses + 2 Ø3.0 locator pillars. NO ribs (the brace carries center support). Overall 3.55."),
+    ("Ti-max",             0.95, 1.00, 0.15, False, False, "0.6mm-board DUMB BOX for the resin brace: 0.95 floor + U2 relief pocket + 1.0 walls + 4 bosses + 2 Ø3.0 x 0.4 locator pillars. NO ribs (the brace carries center support). Overall 3.55."),
     ("Ti-max-progwindow",  0.95, 1.00, 0.15, False, True,  "0.6mm-board / ribs-trimmed + TC2030 re-flash window"),
 ]
 # Ti-conservative (0.60 floor / 1.60 wall) struck: if the shop cannot hold the floor we

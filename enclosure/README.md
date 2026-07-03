@@ -32,7 +32,7 @@ The mating PCB, the resin brace, and the four M2 screws are separate parts, not 
 ## What changed from the earlier shells
 
 - **Floor 0.75 → 0.95**, on a **0.60 mm board** (was 0.80). Same 3.55 overall: the thinner board frees the floor, which nearly doubles safe back-engraving depth and clears more machinable metals.
-- **Ribs removed; two metal locator pillars added.** The old cap-gap ribs and window posts are gone — the resin brace carries center support. Two Ø3.0 × 0.6 pillars stand on the cavity floor at (13, 35) and (33, 55) (both west of the NFC coil) and locate the brace via matching recesses. They are left as islands in the same cavity pass as the bosses, so the floor stays a full 0.95 everywhere (no locating holes).
+- **Ribs removed; two metal locator pillars added.** The old cap-gap ribs and window posts are gone — the resin brace carries center support. Two Ø3.0 × 0.4 pillars stand on the cavity floor at (13, 35) and (33, 55) (both west of the NFC coil) and locate the brace via matching recesses. They are left as islands in the same cavity pass as the bosses, so the floor stays a full 0.95 everywhere (no locating holes).
 - **Reflector frame + floor tape dropped.** The monogram window is now backed by the brace's white LED-hug diffuser face, so the laser-marked reflector frame and the adhesive floor strip are no longer used.
 
 ## The 2D drawing
@@ -71,7 +71,7 @@ Paste into **Other special request**:
   takes the local floor to 0.90 mm over a 7.8 x 5.4 mm area only. If you cannot
   reliably hold 0.95 mm titanium over this ~48 x 86 mm pocket, advise the minimum
   floor you can hold and we will re-issue the STEP.
-- Two Ø3.0 x 0.6 mm metal pillars stand on the cavity floor (locators for a resin
+- Two Ø3.0 x 0.4 mm metal pillars stand on the cavity floor (locators for a resin
   insert). Leave them as islands in the cavity pass; do not drill them through.
 - 4x M2 x 0.4 tapped through-holes, tapped from the back face. (M2 x 0.4 is a
   standard coarse thread; please tap per this note rather than letting the 0.6 mm
@@ -105,7 +105,7 @@ Expect the instant price to move: the thin floor routes this to manual engineeri
   - back frame and 4 boss annuli: **proud 0.15 mm** (to Z −0.15)
   - recessed rear art field: at Z 0
   - cavity floor: at **Z +0.95** (0.90 local under the U2 pocket)
-  - locator pillar tops: at **Z +1.55** (0.6 tall, on the cavity floor)
+  - locator pillar tops: at **Z +1.35** (0.4 tall, on the cavity floor)
   - boss / lip tops (the PCB rest plane): **Z +2.80**
   - PCB recess: Z +2.80 to +3.40 (receives the 0.60 mm board)
 - Wall 1.00 mm, perimeter lip 1.00 mm, back-frame step 0.15 mm. **No internal ribs or posts.**
@@ -135,7 +135,7 @@ not present during machining). Please proceed one of two ways and note which on 
 
 ### 4. Locator pillars
 
-- **2× Ø3.0 × 0.6 mm** metal pillars standing on the cavity floor at board **(13, 35)** and **(33, 55)** — both west of the NFC coil region. Left as **islands** in the cavity milling pass (the four bosses are already islands, so no new operation). Modeled in the STEP.
+- **2× Ø3.0 × 0.4 mm** metal pillars standing on the cavity floor at board **(13, 35)** and **(33, 55)** — both west of the NFC coil region. Left as **islands** in the cavity milling pass (the four bosses are already islands, so no new operation). Modeled in the STEP.
 - They locate the resin brace via matching Ø3.2 recesses. **Do not drill them through** — the floor stays a full 0.95 mm beneath them.
 
 ### 5. Threads / tapped holes
