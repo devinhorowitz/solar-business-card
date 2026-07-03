@@ -28,7 +28,8 @@ Removable, not bonded (PCB §5): the brace seats and lifts off for the iterative
 cutout must clear tweezers-and-iron. The ferrite travels captive in its pocket.
 
 Registration: pockets key it laterally to the board (nests over U2, U6, U1, U3); PLUS two diagonal
-LOCATOR RECESSES (Ø3.2 x 0.8, INVERTED) in the bottom receive two Ø3.0 x 0.4 metal pillars standing on
+LOCATOR RECESSES (Ø3.2 x 0.8, INVERTED) in the bottom -- (13,35) round + (33,55) slotted 4.0 along the pin axis --
+receive two Ø3.0 x 0.4 metal pillars standing on
 the shell floor at (13,35) and (33,55). Inverting keeps the shell floor solid (uniform 0.95 back for
 engraving) and -- the point -- leaves the brace BOTTOM clear so it is the face you sand to the height
 fit (the component pockets live on the TOP, so the top cannot be sanded without bottoming parts). Pre-
@@ -70,7 +71,7 @@ FER_CLR = 0.20
 # tape recess) is retired, so its APER_/TAPE_ constants are removed.
 STUBS = [(13.0, 35.0), (33.0, 55.0)]   # diagonal locators (INVERTED): recesses in the brace bottom that
                                        # receive Ø3.0 metal pillars standing on the shell floor.
-RECESS_R, RECESS_DEPTH = 1.6, 0.8      # Ø3.2 recess, 0.8 deep: takes the shell's Ø3.0 x 0.4 pillar; ~0.15 bottom-sanding leaves ~0.25 axial margin
+RECESS_R, RECESS_DEPTH = 1.6, 0.8      # Ø3.2 x 0.8 deep: (13,35) round datum + (33,55) slotted 4.0 along the pin axis (see loop). Takes the shell's Ø3.0 x 0.4 pillar; ~0.15 bottom-sanding leaves ~0.25 axial margin
 W, H = 50.80, 88.90
 def wx(bx): return bx - W/2
 def wy(by): return by - H/2
@@ -131,7 +132,7 @@ for ref,x0,x1,y0,y1 in comps:
     ix0,ix1=max(x0,BX0),min(x1,BX1); iy0,iy1=max(y0,BY0),min(y1,BY1)
     if ix0>=ix1 or iy0>=iy1: continue
     px0,px1,py0,py1=ix0-CLR,ix1+CLR,iy0-CLR,iy1+CLR
-    depth=h+AIR; through=depth>=GAP-0.05
+    depth=h+AIR; through=depth>=GAP-0.05 or ref=="U6"   # U6 forced THRU: blind web would be 0.28mm (<SLA min); U6 tops at 1.45 in 1.85 -> 0.40 air to the shell floor when through
     zc=(GAP-depth) if not through else -0.05; dz=(depth+0.05) if not through else GAP+0.10
     brace=brace.cut(cq.Workplane("XY").box(px1-px0,py1-py0,dz,centered=(False,False,False)).translate((wx(px0),wy(py0),zc)))
     cut_log.append((ref,round(depth,2),"THRU" if through else "pkt"))
@@ -147,8 +148,13 @@ brace=brace.cut(cq.Workplane("XY").box(fx1-fx0,fy1-fy0,FER_POCKET_DEPTH+0.05,cen
 # cut in the component loop above). It backs the thin FR4 window, scatters as an even lightbox back-panel,
 # and recovers FR4 backscatter locally. The LED pocket clearance doubles as the reservoir if a viscous
 # optical gel is pre-filled at final assembly (optional: index-match + diffuse at the die; not needed to iterate).
+# (13,35) = round Ø3.2 datum; (33,55) = SLOT Ø3.2 x 4.0 along the 45deg pin-pair axis. Round+slot (not two
+# round holes) releases center-distance tolerance (SLA XY shrink + CNC pillar pos + board-in-shell play over
+# the 28.3mm span) while the round hole holds the X-Y datum and the slot width holds rotation.
 for sx,sy in STUBS:
-    brace=brace.cut(cq.Workplane("XY").workplane(offset=-0.01).moveTo(wx(sx),wy(sy)).circle(RECESS_R).extrude(RECESS_DEPTH+0.01))
+    wpr=cq.Workplane("XY").workplane(offset=-0.01).moveTo(wx(sx),wy(sy))
+    prof=wpr.slot2D(4.0, RECESS_R*2, 45) if (sx,sy)==(33.0,55.0) else wpr.circle(RECESS_R)
+    brace=brace.cut(prof.extrude(RECESS_DEPTH+0.01))
 
 cq.exporters.export(brace, OUT+BASE+".step")
 cq.exporters.export(brace, OUT+BASE+".stl", tolerance=0.03, angularTolerance=0.2)

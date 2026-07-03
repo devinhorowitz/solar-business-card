@@ -55,11 +55,18 @@ ax.text(X((GLOW[0]+GLOW[2])/2),Y((GLOW[1]+GLOW[3])/2),"LED-HUG\nBACKING",ha="cen
 # U2 through
 ax.add_patch(Rectangle((X(U2[0]-U2[2]/2),Y(U2[1]+U2[3]/2)),U2[2]*S,U2[3]*S,fc="#f6d6d0",ec="#b23b2a",lw=0.9))
 ax.text(X(U2[0]),Y(U2[1]),"U2\nTHRU",ha="center",va="center",fontsize=4.6,color="#7a1f12")
-# locator recesses
+# locator recesses: (13,35) round datum + (33,55) SLOT (Ø3.2 x 4.0 along the 45deg pin-pair axis)
+def _obround(cx,cy,length,width,ang,n=14):
+    r=width/2.0; d=(length-width)/2.0; ca,sa=np.cos(np.radians(ang)),np.sin(np.radians(ang)); pts=[]
+    for t in np.linspace(np.radians(ang-90),np.radians(ang+90),n): pts.append((cx+d*ca+r*np.cos(t),cy+d*sa+r*np.sin(t)))
+    for t in np.linspace(np.radians(ang+90),np.radians(ang+270),n): pts.append((cx-d*ca+r*np.cos(t),cy-d*sa+r*np.sin(t)))
+    return pts
+ax.add_patch(Circle((X(13.0),Y(35.0)),LOC_D/2*S,fc="#d6e2f7",ec="#2f5bd0",lw=1.0))
+ax.add_patch(MplPoly([(X(bx),Y(by)) for bx,by in _obround(33.0,55.0,4.0,LOC_D,45)],closed=True,fc="#d6e2f7",ec="#2f5bd0",lw=1.0))
 for lx,ly in LOCS:
-    ax.add_patch(Circle((X(lx),Y(ly)),LOC_D/2*S,fc="#d6e2f7",ec="#2f5bd0",lw=1.0))
     ax.plot([X(lx)-1.4,X(lx)+1.4],[Y(ly),Y(ly)],lw=0.4,color="#2f5bd0"); ax.plot([X(lx),X(lx)],[Y(ly)-1.4,Y(ly)+1.4],lw=0.4,color="#2f5bd0")
-ax.text(X(25.4),Y(BY1)-6,"BOARD-FACING FACE   SCALE 3.6:1",ha="center",fontsize=8.5,fontweight="bold",color=INK)
+    ax.plot([X(lx)-1.4,X(lx)+1.4],[Y(ly),Y(ly)],lw=0.4,color="#2f5bd0"); ax.plot([X(lx),X(lx)],[Y(ly)-1.4,Y(ly)+1.4],lw=0.4,color="#2f5bd0")
+ax.text(X(25.4),Y(BY1)-6,"BOARD-FACING FACE   SCALE 3.0:1",ha="center",fontsize=8.5,fontweight="bold",color=INK)
 # plan dims
 dimh(X(BX0),X(BX1),Y(BY1)-3.5,"47.00",fs=7,side=-1)
 dimv(Y(BY1),Y(BY0),X(BX0)-3.5,"25.80",fs=7,side=1)
@@ -98,14 +105,14 @@ notes=[
  "    (WEAKLY CONDUCTIVE): THE BRACE RESTS ON GND / VS / SIGNAL COPPER, SO A DIELECTRIC IS REQUIRED. WHITE ALSO DRIVES THE WINDOW BACKING (NOTE 6).",
  "3. FIT: PRINT ~0.1 PROUD IN HEIGHT AND SAND THE FLAT BOTTOM (DATUM) DOWN TO A ZERO-AIR FIT IN THE 1.85 CAVITY. ALL POCKETS ARE ON THE TOP FACE, SO THE",
  "    BOTTOM LAPS FLAT ON GLASS WITHOUT TOUCHING THEM. DO NOT SAND THE TOP (IT SETS THE POCKET DEPTHS).",
- "4. LOCATOR RECESSES: 2\u00d7 \u00d83.2 \u00d7 0.8 DEEP IN THE FLAT BOTTOM AT (13, 35) AND (33, 55). THEY RECEIVE THE SHELL'S 2\u00d7 \u00d83.0 \u00d7 0.4 METAL PILLARS",
- "    (0.4 ENGAGEMENT, 0.1 RADIAL, ~0.25 AXIAL MARGIN AFTER ~0.15 BOTTOM-SANDING). BOTH WEST OF THE NFC COIL. THIS IS THE ONLY LOCATION TIE TO THE SHELL.",
+ "4. LOCATOR RECESSES (Ø3.2 × 0.8 DEEP, IN THE FLAT BOTTOM): (13,35) ROUND DATUM + (33,55) SLOTTED Ø3.2 × 4.0 ALONG THE 45° PIN-PAIR AXIS. ROUND+SLOT RELEASES",
+ "    CENTER-DISTANCE TOLERANCE (SLA SHRINK + CNC + BOARD-IN-SHELL PLAY OVER THE 28.3 SPAN) YET HOLDS X-Y DATUM + ROTATION. RECEIVES THE SHELL'S 2× Ø3.0 × 0.4 PILLARS (0.4 ENGAGE, ~0.25 AXIAL).",
  "5. FERRITE CHANNEL (OVER THE NFC COIL): OPEN-ENDED CHANNEL, WALLED ON THE 12 WIDTH (CRITICAL - EDGE-LIMITED), OPEN AT BOTH Y-ENDS, 0.33 DEEP.",
  "    FERRITE (Wurth WE-FSFS 364006, NOMINAL 12 \u00d7 26 mm, EVEN ON THE 2mm SCORE GRID) IS PSA'd IN; LENGTH IS FORGIVING AND MAY OVERHANG THE ENDS SLIGHTLY.",
  "6. WINDOW = LED-HUG DIFFUSER BACKING: SOLID WHITE RESIN FILLS THE MONOGRAM-WINDOW FOOTPRINT BEHIND THE FR4, MINUS THE TIGHT D2-D5 LED POCKETS.",
  "    NO APERTURE, NO FLOOR TAPE. THE POCKET CLEARANCE DOUBLES AS A RESERVOIR IF A VISCOUS OPTICAL GEL IS PRE-FILLED AT FINAL ASSEMBLY (OPTIONAL).",
  "7. REMOVABLE / NOT BONDED: THE BRACE MUST LIFT OUT FOR NFC C9 TRIM DURING BENCH BRING-UP. KEEP IT DRY-FIT WHILE ITERATING; ADD ANY GEL ONLY ON THE FINAL CARD.",
- "8. U2 IS THE ONE THROUGH-POCKET (TALL, 1.75). ALL OTHER B-SIDE PARTS SIT IN BLIND POCKETS AT THEIR VERIFIED HEIGHTS (SEE THE GENERATOR).",
+ "8. U2 AND U6 ARE THROUGH-POCKETS (U2 TALL AT 1.75; U6 FORCED THROUGH -- ITS BLIND WEB WOULD BE 0.28 < SLA MIN; U6 IS 1.45 IN THE 1.85 CAVITY -> 0.40 AIR TO THE SHELL FLOOR). OTHERS BLIND.",
 ]
 yy=91.5
 for n in notes: ax.text(20,yy,n,fontsize=5.9,color=INK); yy-=3.9
