@@ -136,7 +136,7 @@ not present during machining). Please proceed one of two ways and note which on 
 ### 4. Locator pillars
 
 - **2× Ø3.0 × 0.4 mm** metal pillars standing on the cavity floor at board **(13, 35)** and **(33, 55)** — both west of the NFC coil region. Left as **islands** in the cavity milling pass (the four bosses are already islands, so no new operation). Modeled in the STEP.
-- They locate the resin brace via matching Ø3.2 recesses. **Do not drill them through** — the floor stays a full 0.95 mm beneath them.
+- They locate the resin brace via matching recesses, brace-side (one round datum + one slot). **Do not drill them through** — the floor stays a full 0.95 mm beneath them.
 
 ### 5. Threads / tapped holes
 
