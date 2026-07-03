@@ -7,9 +7,12 @@ REV B folds in the PCB-side notes (PCB/PCB-side-notes-brace-direction.md):
    solder-bridge blobs budgeted 0.8; U1/U3=1.0; 0402=0.55; U2=1.75).
  - Envelope clipped to the component-free middle band y 31.6-57.4 to KEEP CLEAR OF THE SUPERCAP BAYS
    (cap bodies at y31.15 / y57.75). Caps are no longer cut as through-holes; they are simply outside.
- - FERRITE POCKET added over the NFC coil (Wurth WE-FSFS 364006, DK 732-5049-ND; patch 12 x 24 mm,
-   EVEN dims on the sheet's 2mm score grid for clean cutting, centered in the antenna keepout).
-   Sheet is 0.38 mm OVERALL STACK (ferrite+PET+PSA, per DK) -> pocket 0.33
+ - FERRITE CHANNEL over the NFC coil (Wurth WE-FSFS 364006, DK 732-5049-ND). The pocket is an OPEN-ENDED
+   CHANNEL: the WIDTH (12 mm, x) is walled and critical -- it is edge-limited by the board/coil east edge;
+   the LENGTH (y) is open at both ends, so the ferrite (nominal 12 x 26 mm, even on the 2mm score grid) can
+   be cut long/short and extend slightly past the brace into the cap clearance (clears the cap bodies by
+   ~0.3). Two enclosed edges + the PSA + light clamp pressure from the PCB retain it; 4-edge capture is not
+   needed. Sheet is 0.38 mm OVERALL STACK (ferrite+PET+PSA, per DK) -> pocket 0.33
    (stack - 0.05); measure the delivered sheet and re-cut if an alternate is used (3641014 x3, Laird
    MHLL6060-300). With the ferrite between coil and floor the brace may now span the coil band
    (reverses the earlier "end west of x36.8"). Pocket is on the BOARD-FACING face; ferrite sits
@@ -25,8 +28,8 @@ Removable, not bonded (PCB §5): the brace seats and lifts off for the iterative
 cutout must clear tweezers-and-iron. The ferrite travels captive in its pocket.
 
 Registration: pockets key it laterally to the board (nests over U2, U6, U1, U3); PLUS two diagonal
-LOCATOR RECESSES (Ø5.2 x 0.6, INVERTED) in the bottom receive two Ø5.0 x 0.4 metal pillars standing on
-the shell floor at (13,35) and (44,54). Inverting keeps the shell floor solid (uniform 0.95 back for
+LOCATOR RECESSES (Ø3.2 x 0.8, INVERTED) in the bottom receive two Ø3.0 x 0.4 metal pillars standing on
+the shell floor at (13,35) and (33,55). Inverting keeps the shell floor solid (uniform 0.95 back for
 engraving) and -- the point -- leaves the brace BOTTOM clear so it is the face you sand to the height
 fit (the component pockets live on the TOP, so the top cannot be sanded without bottoming parts). Pre-
 compensate: print the bottom features (recesses, tape recess) ~0.15 deeper for the sanding allowance.
@@ -53,7 +56,9 @@ GAP   = 1.85
 CLR   = 0.25
 AIR   = 0.12
 GLOW  = (14.95, 40.8, 35.85, 47.0)
-FER   = (36.9, 32.5, 48.9, 56.5)   # 12 x 24 (even, on the 2mm score grid), centered in the antenna keepout
+FER   = (36.9, 31.5, 48.9, 57.5)   # 12 WIDE (x, CRITICAL -- edge-limited) x 26 LONG (y, nominal; length is
+                                   # forgiving -- open-ended channel, may run long/short and extend slightly past the brace).
+                                   # 26 fully covers the coil turns; clears the cap bodies (y31.15/57.75) by ~0.3.
 FER_T = 0.38                       # OVERALL STACK per DK 732-5049-ND (ferrite+PET+PSA); the "0.3" was the ferrite layer only.
                                    # MEASURE the delivered sheet and set pocket = measured - 0.05 (rule holds for any alternate sheet).
 FER_POCKET_DEPTH = FER_T - 0.05    # -> 0.33 nominal (sits ~0.05 proud, seats flush)
@@ -63,9 +68,9 @@ FER_CLR = 0.20
 APER_INSET = 0.6                   # aperture is the laser frame inset this much (brace overlaps the tape edge)
 TAPE_RECESS_DEPTH = 0.15           # clears a ~0.1mm foil tape (3M 427 = 0.12); set to chosen tape + ~0.03
 TAPE_RECESS_MARGIN = 0.20          # recess = laser frame + this (registration + slight tape oversize)
-STUBS = [(13.0, 35.0), (44.0, 54.0)]   # diagonal locators (INVERTED): recesses in the brace bottom that
-                                       # receive Ø5.0 metal pillars standing on the shell floor.
-RECESS_R, RECESS_DEPTH = 2.6, 0.6      # Ø5.2 recess, 0.6 deep: takes a 0.4 pillar with room for ~0.15 bottom sanding
+STUBS = [(13.0, 35.0), (33.0, 55.0)]   # diagonal locators (INVERTED): recesses in the brace bottom that
+                                       # receive Ø3.0 metal pillars standing on the shell floor.
+RECESS_R, RECESS_DEPTH = 1.6, 0.8      # Ø3.2 recess, 0.6 deep: takes a 0.4 pillar with room for ~0.15 bottom sanding
 W, H = 50.80, 88.90
 def wx(bx): return bx - W/2
 def wy(by): return by - H/2
@@ -130,8 +135,11 @@ for ref,x0,x1,y0,y1 in comps:
     zc=(GAP-depth) if not through else -0.05; dz=(depth+0.05) if not through else GAP+0.10
     brace=brace.cut(cq.Workplane("XY").box(px1-px0,py1-py0,dz,centered=(False,False,False)).translate((wx(px0),wy(py0),zc)))
     cut_log.append((ref,round(depth,2),"THRU" if through else "pkt"))
-fx0,fy0,fx1,fy1 = FER[0]-FER_CLR,FER[1]-FER_CLR,FER[2]+FER_CLR,FER[3]+FER_CLR
-fx0,fy0,fx1,fy1 = max(fx0,BX0+0.2),max(fy0,BY0+0.2),min(fx1,BX1-0.2),min(fy1,BY1-0.2)
+# ferrite pocket = OPEN CHANNEL: WIDTH (x) walled (critical, edge-limited); LENGTH (y) OPEN at both ends
+# so the ferrite can be cut long/short and extend slightly past the brace. Two walls + PSA + the clamped
+# PCB overhead retain it (PCB: full 4-edge capture unnecessary).
+fx0,fx1 = max(FER[0]-FER_CLR, BX0+0.2), min(FER[2]+FER_CLR, BX1)   # width walls (east meets the brace edge)
+fy0,fy1 = BY0-1.0, BY1+1.0                                          # y open: the cut clears both brace edges
 brace=brace.cut(cq.Workplane("XY").box(fx1-fx0,fy1-fy0,FER_POCKET_DEPTH+0.05,centered=(False,False,False))
                   .translate((wx(fx0),wy(fy0),GAP-FER_POCKET_DEPTH)))
 # window aluminum-tape bay (PCB §6a): through aperture (light path down to the floor tape)
@@ -153,7 +161,7 @@ try:
 except Exception as e: print("vol:",e)
 print(f"envelope {BX1-BX0:.1f} x {BY1-BY0:.1f} x {GAP} (y31.6-57.4, clears cap bays); {len(cut_log)} pockets")
 print(f"through-holes: {[c[0] for c in cut_log if c[2]=='THRU']}")
-print(f"ferrite pocket {fx1-fx0:.1f} x {fy1-fy0:.1f} x {FER_POCKET_DEPTH} over the coil")
+print(f"ferrite CHANNEL {fx1-fx0:.1f} wide (walled) x open-ended x {FER_POCKET_DEPTH} deep; ferrite {FER[2]-FER[0]:.0f}x{FER[3]-FER[1]:.0f} nominal (width critical / length forgiving, may overhang)")
 
 import matplotlib; matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -162,8 +170,9 @@ import matplotlib.patches as mp
 fig,ax=plt.subplots(figsize=(9,5)); ax.set_facecolor("#0d0d10"); fig.patch.set_facecolor("#0d0d10")
 ax.add_patch(Rectangle((BX0,BY0),BX1-BX0,BY1-BY0,fc="#e8e4d8",ec="#fff",lw=1.5,alpha=0.28))
 ax.text((BX0+BX1)/2,BY1-0.9,"WHITE RESIN BRACE (fills the gap, y31.6-57.4)",color="#eee",ha="center",fontsize=7,fontweight="bold")
-ax.add_patch(Rectangle((FER[0],FER[1]),FER[2]-FER[0],FER[3]-FER[1],fc="#3a2b55",ec="#b39ddb",lw=1.2,alpha=0.85))
-ax.text((FER[0]+FER[2])/2,(FER[1]+FER[3])/2,"FERRITE\nPOCKET\n(over coil)",color="#d1c4e9",ha="center",va="center",fontsize=6,fontweight="bold")
+ax.add_patch(Rectangle((FER[0]-FER_CLR,BY0),FER[2]-FER[0]+2*FER_CLR,BY1-BY0,fc="#2a2140",ec="#7e57c2",lw=0.9,ls=(0,(3,2)),alpha=0.6))   # open channel (walled x, open y)
+ax.add_patch(Rectangle((FER[0],FER[1]),FER[2]-FER[0],FER[3]-FER[1],fc="#3a2b55",ec="#b39ddb",lw=1.3,alpha=0.9))                                # ferrite 12x26 (runs past the brace y-edges)
+ax.text((FER[0]+FER[2])/2,(FER[1]+FER[3])/2,"FERRITE 12x26\nwidth CRITICAL\nlength forgiving\n(open channel)",color="#d1c4e9",ha="center",va="center",fontsize=5.2,fontweight="bold")
 tx0,ty0,tx1,ty1 = GLOW[0]-TAPE_RECESS_MARGIN,GLOW[1]-TAPE_RECESS_MARGIN,GLOW[2]+TAPE_RECESS_MARGIN,GLOW[3]+TAPE_RECESS_MARGIN
 ax.add_patch(Rectangle((tx0,ty0),tx1-tx0,ty1-ty0,fill=False,ec="#d9a23a",lw=0.8,ls=(0,(2,2))))     # tape recess (bottom)
 ax0,ay0,ax1,ay1 = GLOW[0]+APER_INSET,GLOW[1]+APER_INSET,GLOW[2]-APER_INSET,GLOW[3]-APER_INSET
@@ -180,7 +189,7 @@ for ref,x0,x1,y0,y1 in comps:
     ax.add_patch(Rectangle((ix0-CLR,iy0-CLR),(ix1-ix0)+2*CLR,(iy1-iy0)+2*CLR,fc=col,ec="#222",lw=0.3,alpha=0.9))
     if (ix1-ix0)>1.8 and (iy1-iy0)>1.3: ax.text((ix0+ix1)/2,(iy0+iy1)/2,ref,color="#111",ha="center",va="center",fontsize=4.6)
 for sx,sy in STUBS:
-    ax.add_patch(Circle((sx,sy),STUB_R,fc="#4a86e8",ec="#fff",lw=0.8)); ax.text(sx,sy+1.5,"stub",color="#8ab",ha="center",fontsize=5)
+    ax.add_patch(Circle((sx,sy),RECESS_R,fc="#4a86e8",ec="#fff",lw=0.8)); ax.text(sx,sy+1.9,"pillar\nhole",color="#8ab",ha="center",fontsize=4.6)
 leg=[mp.Patch(fc="#e0483a",label="through-hole (U2, tall)"),mp.Patch(fc="#e08a3a",label="deep (U6 1.45, U1/U3 1.0)"),
      mp.Patch(fc="#43a047",label="shallow (0402, LEDs, bridges)"),mp.Patch(fc="#3a2b55",label="ferrite pocket"),mp.Patch(fc="#4a86e8",label="locator stub")]
 ax.legend(handles=leg,loc="upper left",fontsize=5.2,facecolor="#1a1a1f",edgecolor="#444",labelcolor="#ddd",framealpha=0.9)
