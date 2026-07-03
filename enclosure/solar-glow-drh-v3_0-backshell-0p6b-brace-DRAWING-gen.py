@@ -7,7 +7,9 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle, Polygon as MplPoly
 
 W,H,R = 50.80,88.90,3.0
-wall,lip_w,floor,cavity,board,border = 1.0,1.00,0.95,1.85,0.60,0.15
+wall,lip_w,floor,cavity,board,border = 1.0,2.5,1.00,1.80,0.60,0.15   # lip_w here = WEST lip shown in Section A-A
+lip_W,lip_N,lip_S,lip_E,lip_Ew = 2.5,2.0,2.0,1.0,2.5
+Wb,Hb = 50.80,88.90
 boss_r,pilot_r,cbore,ease = 2.60,0.80,3.0,0.20
 ef=-0.05
 cavW,cavH,cavR = W+2*ef,H+2*ef,R+ef
@@ -55,7 +57,10 @@ S1=1.5; Px,Py=42,112
 X=lambda bx:Px+(bx-oxmin)*S1; Y=lambda by:Py+(by-oymin)*S1
 ax.add_patch(MplPoly(rrect(X(oxmin),Y(oymin),outW*S1,outH*S1,outR*S1),closed=True,fill=False,ec=INK,lw=1.0))
 ax.add_patch(MplPoly(rrect(X(oxmin)+wall*S1,Y(oymin)+wall*S1,cavW*S1,cavH*S1,cavR*S1),closed=True,fill=False,ec=GRY,lw=0.5))
-ax.add_patch(MplPoly(rrect(X(oxmin)+(wall+lip_w)*S1,Y(oymin)+(wall+lip_w)*S1,(cavW-2*lip_w)*S1,(cavH-2*lip_w)*S1,max(cavR-lip_w,0.5)*S1),closed=True,fill=False,ec=GRY,lw=0.5,ls=(0,(6,3))))
+_cav=[(lip_W,lip_N),(Wb-lip_Ew,lip_N),(Wb-lip_Ew,10.0),(Wb-lip_E,10.0),(Wb-lip_E,58.0),(Wb-lip_Ew,58.0),(Wb-lip_Ew,Hb-lip_S),(lip_W,Hb-lip_S)]
+ax.add_patch(MplPoly([(X(bx),Y(by)) for bx,by in _cav],closed=True,fill=False,ec=GRY,lw=0.7,ls=(0,(6,3))))
+for lx,ly,t in [(lip_W/2,44,"W 2.5"),(Wb-lip_E/2,34,"E 1.0"),(Wb-lip_Ew/2,6,"E 2.5"),(Wb-lip_Ew/2,82,"E 2.5"),(25,lip_N/2,"N 2.0"),(25,Hb-lip_S/2,"S 2.0")]:
+    ax.text(X(lx),Y(ly),t,ha="center",va="center",fontsize=4.6,color="#2f5bd0",rotation=(90 if lx<5 or lx>46 else 0))
 for mx,my in mounts:
     ax.add_patch(plt.Circle((X(mx),Y(my)),boss_r*S1,fill=False,ec=GRY,lw=0.5))
     ax.add_patch(plt.Circle((X(mx),Y(my)),cbore/2*S1,fill=False,ec=GRY,lw=0.5))
@@ -94,14 +99,14 @@ prof=[(0.10,0.0),(wall,0.0),(wall,-border),(wall+lip_w,-border),(wall+lip_w,0.0)
       (wall,wt),(ease,wt),(0.0,wt-ease),(0.0,0.10)]
 ax.add_patch(MplPoly([(xl(x),zl(z)) for x,z in prof],closed=True,fc=HATCH,ec=INK,lw=0.8,hatch="////"))
 dim((xl(0.0),zl(-border)),(xl(0.0),zl(wt)),xl(0.0)-7,"3.55",vert=True,fs=7,side=1)
-dim((xl(8.5),zl(0.0)),(xl(8.5),zl(floor)),xl(8.5)+7,"0.95",vert=True,fs=6.6,side=-1)
-dim((xl(8.5),zl(floor)),(xl(8.5),zl(bb)),xl(8.5)+7,"1.85 ±0.05",vert=True,fs=7,side=-1)
+dim((xl(8.5),zl(0.0)),(xl(8.5),zl(floor)),xl(8.5)+7,"1.00",vert=True,fs=6.6,side=-1)
+dim((xl(8.5),zl(floor)),(xl(8.5),zl(bb)),xl(8.5)+7,"1.80 ±0.05",vert=True,fs=7,side=-1)
 dim((xl(0.0),zl(0.0)),(xl(wall),zl(0.0)),zl(-border)-5,"1.0",fs=6.4,side=-1)
-dim((xl(wall),zl(bb)),(xl(wall+lip_w),zl(bb)),zl(bb)+7,"1.00 LIP",fs=5.8,side=1,txtoff=1.0)
+dim((xl(wall),zl(bb)),(xl(wall+lip_w),zl(bb)),zl(bb)+7,"2.5 W-LIP (see plan)",fs=5.2,side=1,txtoff=1.0)
 dim((xl(wall+lip_w+0.25),zl(-border)),(xl(wall+lip_w+0.25),zl(0.0)),xl(wall+lip_w)+3.0,"0.15",vert=True,fs=5.8,side=-1,txtoff=1.0)
 leader(xl(0.06),zl(wt-0.10),xl(2.4),zl(wt)+6,"0.20\u00d745\u00b0 EASE",ha="left",fs=6.2)
 fcf(xl(3.4),zl(bb)+8,["FLAT","0.05"]); leader(xl(2.2),zl(bb),xl(3.4),zl(bb)+8+2.3,"",ha="left")
-ax.text(xl(0.06),zl(floor)+0.8,"  floor 0.95 (0.90 local under the U2 pocket, note 7)   •   PCB recess 0.60 (0.60 mm board)",fontsize=5.7,color=GRY,va="bottom")
+ax.text(xl(0.06),zl(floor)+0.8,"  floor 1.00 TRUE (0.95 local under the U2 pocket, note 7)   •   PCB recess 0.60 (0.60 mm board)",fontsize=5.7,color=GRY,va="bottom")
 ax.text(EX+2,EY-11,"SECTION A-A  (edge)   SCALE 13:1",fontsize=8.5,fontweight="bold",color=INK)
 ax.text(EX+2,EY-16.5,"C1 = cavity depth    C2 = PCB-rest-plane flatness    (back face down; PCB drops in from top)",fontsize=6,color=GRY,style="italic")
 
@@ -126,7 +131,7 @@ ax.text(BX-92,BY-25,"DETAIL B   (corner boss)   13:1",fontsize=8.5,fontweight="b
 
 # ===================== CRITICAL DIMS + NOTES =====================
 ax.text(20,78,"CRITICAL DIMENSIONS  \u2014  C1 & C3 TOLERANCED \u00b10.05 (MARKED ON VIEWS); ALL OTHER FEATURES PER ISO 2768-1 (MEDIUM)",fontsize=7.4,fontweight="bold",color=INK)
-ct=[["C1","Cavity depth  (boss-top plane \u2192 cavity floor)","1.85  ±0.05"],
+ct=[["C1","Cavity depth  (boss-top plane \u2192 cavity floor)","1.80  ±0.05"],
     ["C2","PCB-rest plane flatness  (lip + 4 corner bosses)","FLAT  0.05"],
     ["C3","4\u00d7 mounting-hole pattern, pitch 44.80\u00d782.90","\u00b10.05  (linear)"],
     ["C4","Mounting holes \u2014 tapped, thru, from back","M2   /   \u00d81.6 drill"]]
@@ -140,12 +145,12 @@ notes=[
  "2. FINISH: BEAD-BLAST MATTE (UNIFORM ON THE STEPPED BACK FACE). REAR ART LASER-MARKED IN THE RECESSED BACK FIELD.",
  "3. GENERAL TOLERANCE PER ISO 2768-1 (MEDIUM). C1-C4 TOLERANCED AS LISTED; C1 & C3 = ±0.05. DATUMS: A = LEFT EDGE, B = BOTTOM EDGE, C = PCB-REST PLANE.",
  "4. 2x LOCATOR PILLAR: Ø3.0 x 0.4 TALL, STANDING ON THE CAVITY FLOOR AT (13, 35) AND (33, 55) - BOTH WEST OF THE NFC COIL. LEFT AS ISLANDS IN THE SAME CAVITY PASS AS THE BOSSES.",
- "    LOCATE THE RESIN BRACE (SEPARATE PART) VIA MATCHING Ø3.2 RECESSES. FLOOR STAYS A FULL 0.95 (NO LOCATING HOLES). MODELED IN THE STEP.",
+ "    LOCATE THE RESIN BRACE (SEPARATE PART) VIA MATCHING Ø3.2 RECESSES. FLOOR STAYS A FULL 1.00 (THE (33,55) RECESS IS SLOTTED). MODELED IN THE STEP.",
  "5. BREAK ALL SHARP EDGES ~0.1 (Ti). OUTER TOP/BOTTOM RIM EASED 0.20x45° (MODELED).",
- "6. THIN-WALL ADVISORY: FLOOR IS A UNIFORM 0.95 (0.90 LOCAL UNDER THE U2 POCKET), BELOW THE ~1.0 Ti MIN-WALL GUIDANCE BUT WELL ABOVE THE EARLIER 0.55/0.75.",
- "    IF YOU CANNOT RELIABLY HOLD 0.95 Ti OVER THIS ~48 x 86 POCKET, ADVISE THE MIN FLOOR YOU WILL HOLD; PART RE-ISSUED TO THAT VALUE.",
- "7. U2 RELIEF POCKET: 7.8 x 5.4 CENTERED (28.5, 37) ON THE CAVITY FLOOR, 0.05 DEEP (LOCAL FLOOR 0.90) - CLEARANCE FOR U2 (1.75). GENERAL FLOOR 0.95. MODELED IN THE STEP.",
- "8. PERIMETER LIP / BACK-FRAME = 1.00 (NARROWED FROM 1.50 TO CLEAR THE JP1/TP1 EDGE PADS AT x47.55-49.25). SHELL CONTACTS LAND ON BARE LAMINATE / GND POUR; NO KAPTON.",
+ "6. FLOOR IS NOW A TRUE 1.00 (0.95 LOCAL UNDER THE U2 POCKET), AT THE ~1.0 Ti MIN-WALL GUIDANCE SO IT ALSO CLEARS ALUMINIUM / COPPER / STAINLESS.",
+ "    CAVITY 1.80 +-0.05 -> 1.75 WORST-CASE, MINUS WS17 1.70 MAX (DATASHEET CASE WS17 HEIGHT) = 0.05 NON-CONTACT; THE BRACE + SOLAR-CELL SANDWICHES CARRY THE BOARD.",
+ "7. U2 RELIEF POCKET: 7.8 x 5.4 CENTERED (28.5, 37) ON THE CAVITY FLOOR, 0.05 DEEP (LOCAL FLOOR 0.95) - U2 (1.75) KEEPS 0.10 AIR. GENERAL FLOOR 1.00. MODELED IN THE STEP.",
+ "8. ASYMMETRIC SUPPORT LIP (SEE PLAN): WEST 2.5 / NORTH 2.0 / SOUTH 2.0 FOR PCB RIGIDITY; EAST 1.0 THROUGH THE JP1/TP1 PADS + OVER THE NFC COIL (A GROUNDED LIP WOULD DETUNE IT), WIDENING TO 2.5 AT THE N/S ENDS. BACK-FRAME MIRRORS IT.",
  "9. NO INTERNAL RIBS OR SUPPORT POSTS: THE RESIN BRACE (SEPARATE PART) CARRIES CENTER SUPPORT. A PCB LAYOUT CHANGE = A BRACE REPRINT, NOT A SHELL RE-MACHINE.",
  "10. PCB RECESS = 0.60 DEEP (RECEIVES THE 0.60 mm BOARD; SLIP FIT, NOT A PRESS FIT). 3D STEP GOVERNS ALL GEOMETRY; STL NOT FOR CNC.",
  "11. PART = BACK-SHELL ONLY. PCB, RESIN BRACE, AND 4× M2×3 BRASS SLOTTED-CHEESE SCREWS (HEAD Ø3.8) SUPPLIED SEPARATELY.",
@@ -174,7 +179,7 @@ ax.add_patch(Rectangle((tx,ty),tw,th,fill=False,ec=INK,lw=0.9))
 ax.plot([tx,tx+tw],[ty+th-6.5,ty+th-6.5],lw=0.4,color=INK)
 ax.text(tx+tw/2,ty+th-3.3,"GENERAL TOLERANCES  (UNLESS OTHERWISE NOTED, mm)",ha="center",va="center",fontsize=6.2,fontweight="bold",color=INK)
 tol=[("LINEAR & HOLE-POSITION DIMS","ISO 2768-m"),
-     ("CAVITY DEPTH  C1  (SECTION A-A)","1.85 \u00b10.05"),
+     ("CAVITY DEPTH  C1  (SECTION A-A)","1.80 \u00b10.05"),
      ("HOLE-PATTERN PITCH  C3  (PLAN)","44.80 / 82.90  \u00b10.05"),
      ("PCB-REST FLATNESS  C2","FLAT 0.05")]
 yt=ty+th-11.5

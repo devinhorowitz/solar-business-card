@@ -50,7 +50,7 @@ mounts = [(3.0, 3.0), (47.8, 3.0), (3.0, 85.9), (47.8, 85.9)]      # 4x M2, GND,
 U2_H       = 1.75                  # U2 (SOIC-8 max, datasheet): the single tallest back part
 cap_H      = 1.70                  # WS17 supercaps (locked): the 2nd-tallest parts (x4) -> set the GENERAL cavity
 kapton_th  = 0.00                  # DROPPED (all contacts on bare laminate). set 0.05 to reinstate.
-cav_margin = 0.15                  # air over the cavity-setting parts. general cavity 1.85 = cap_H + air
+cav_margin = 0.10                  # air over the cavity-setting parts. general cavity 1.80 = cap_H + air. Reduced 0.15->0.10 now the brace + cell-sandwiches carry the board: cavity 1.80 +-0.05 -> 1.75 worst-case, minus WS17 1.70 MAX (datasheet Case WS17: height max 1.7) = 0.05 non-contact. The freed 0.05 goes into the floor.
 cavity     = round(cap_H + kapton_th + cav_margin, 3)   # 1.85 general (cap-limited); toleranced 1.85 +-0.05 -> 1.80 min
 # U2 alone is 0.05 mm taller than the caps, so a LOCAL relief pocket in the cavity floor under U2 dips
 # the floor 0.05 there (local cavity 1.90) to keep U2's full 0.15 air, while the GENERAL floor runs
@@ -66,7 +66,13 @@ edge_ease  = 0.20                  # squared-edge chamfer on the outer top/botto
 EDGE_BREAK = 0.10                  # Ti deburr: break the sharp END-FACE edges (back proud frame/annuli
                                    # + front rim + recess mouth) so corners are durable, not knife-sharp.
                                    # Ti edges chip and cut; an edge-break also resists nicking. ~0.1 mm.
-lip_w      = 1.00                  # perimeter support lip (inner) AND the back-frame width (mirror). 1.50 -> 1.00: the v3.0 bench pad strip (JP1/TP1, copper to x49.25) landed EXACTLY on the old 1.50-lip inner edge (50.75-1.50=49.25, nominal gap 0.00); at 1.00 the inner edge is 49.75 -> 0.50 mm clearance to the exposed pads, covering pocket (ISO2768-m) + board-routing (+-0.2) tolerance stack. Floor-span margin absorbs it (0.75 floor is 2.5x the analyzed 0.55).
+# ASYMMETRIC support lip (per side) -- wider = more board-edge support = stiffer PCB. Widths bounded
+# by the nearest B-side part on each edge (v3.0 board, measured):
+lip_W, lip_N, lip_S = 2.5, 2.0, 2.0   # W: long west edge, nearest B-part R14/J1 ~3.4 -> 2.5 clears by ~0.9 (big rigidity gain). N/S: bounded by SC1-4 caps (body max edge ~2.35 from the board edge; datasheet WS17 body 28.5 +0.5/-0.0 long) -> 2.0 clears by ~0.35.
+lip_E      = 1.0                       # E stays narrow through the JP1/TP1 pads (reach x49.6) AND clear of the NFC coil (~x49): lip_E=1.0 -> wall x49.8, east of both. A grounded Ti lip over the coil would detune it.
+lip_E_wide = 2.5                       # E END zones (clear of pads+coil) widen to match the west
+EAST_WIDE_Y = [(0.0, 10.0), (58.0, 88.9)]   # board-y bands the E lip widens: N of the JP1/TP1 pads (y10.8+) and S of the coil (y57.5-)
+lip_w      = lip_E                      # legacy min-lip alias (only the dormant tool_relief helper still reads it)
 boss_r     = 2.60                  # M2 boss / back annulus outer radius
 pilot_r    = 0.80                  # M2 tap-drill hole, CLEAN THROUGH. Boss is TAPPED M2 (brass is soft --
                                    # never let a brass screw thread-form into Ti; cut the threads first).
@@ -115,6 +121,24 @@ RIBS  = [(24.9, 0.0, 25.9, 33.0), (24.9, 56.0, 25.9, 88.9)]   # (x0,y0,x1,y1)  1
 wx = lambda x: x - W/2
 wy = lambda y: y - H/2
 cavW, cavH, cavR = W + 2*edge_fit, H + 2*edge_fit, R + edge_fit
+IR = max(cavR - lip_E, 0.5)            # cavity inner-corner radius (>= tool R); tied to the min lip so it clears the Ø2.0 finisher
+# ---- asymmetric cavity: per-side lips + east-END wide-lip blocks. Round-tool-friendly: every concave
+# junction (block-to-wall, boss-to-wall) is left SHARP so the STEP stays analytic and the finisher just
+# leaves its own radius there (nothing mates in those corners); no acute pockets, no step-down tooling. ----
+def _cav_inner(z0, dz):
+    """asymmetric inner cavity void (per-side lips), corners filleted to IR."""
+    cx, cy = wx((lip_W + W - lip_E)/2.0), wy((lip_N + H - lip_S)/2.0)
+    return (cq.Workplane("XY").workplane(offset=z0).center(cx, cy)
+              .rect(W - lip_E - lip_W, H - lip_S - lip_N).extrude(dz).edges("|Z").fillet(IR))
+def _east_blocks(z0, dz):
+    """solid east-END wide-lip blocks: fill x[W-lip_E_wide, W-lip_E] over the EAST_WIDE_Y bands."""
+    out = None
+    for ya, yb in EAST_WIDE_Y:
+        blk = (cq.Workplane("XY").workplane(offset=z0)
+                 .center(wx((2*W - lip_E_wide - lip_E)/2.0), wy((ya + yb)/2.0))
+                 .rect(lip_E_wide - lip_E, yb - ya).extrude(dz))
+        out = blk if out is None else out.union(blk)
+    return out
 
 # ---- round-tool corner relief (pure-2D, matches the CAD cavity cut exactly) ----
 def _inner_pocket():
@@ -155,11 +179,11 @@ def _poly_solid(poly, z0, dz):
     return cq.Workplane("XY").workplane(offset=z0).polyline(xy).close().extrude(dz)
 
 # ===== build =====
-def build(floor=0.95, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pillars=False, locators=True, prog_window=False, glow_marker=True, tool_relief=False):
+def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pillars=False, locators=True, prog_window=False, glow_marker=True, tool_relief=False):
     bb = floor + cavity                       # board-back / boss-top / lip-top / rib-top plane
     wt = bb + board_th
     outW, outH, outR = cavW + 2*wall_th, cavH + 2*wall_th, cavR + wall_th
-    iw, ih, ir = cavW - 2*lip_w, cavH - 2*lip_w, max(cavR - lip_w, 0.5)
+    ir = IR
 
     res = cq.Workplane("XY").rect(outW, outH).extrude(wt).edges("|Z").fillet(outR)
     if edge_ease > 0:
@@ -167,8 +191,7 @@ def build(floor=0.95, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pill
     # board recess (press fit) + uniform cavity (inset by lip_w)
     res = res.cut(cq.Workplane("XY").workplane(offset=bb).rect(cavW, cavH)
                     .extrude(board_th + 0.02).edges("|Z").fillet(cavR))
-    res = res.cut(cq.Workplane("XY").workplane(offset=floor).rect(iw, ih)
-                    .extrude(cavity).edges("|Z").fillet(ir))
+    res = res.cut(_cav_inner(floor, cavity)).union(_east_blocks(floor, cavity))
     # corner relief (recess depth)
     cwp = cq.Workplane("XY").workplane(offset=bb - 0.01)
     for ccx, ccy in [(R, R), (W - R, R), (R, H - R), (W - R, H - R)]:
@@ -177,8 +200,7 @@ def build(floor=0.95, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pill
     # INNER supports: perimeter lip
     lip = (cq.Workplane("XY").workplane(offset=floor).rect(cavW, cavH)
              .extrude(cavity).edges("|Z").fillet(cavR))
-    lip = lip.cut(cq.Workplane("XY").workplane(offset=floor - 0.01).rect(iw, ih)
-                    .extrude(cavity + 0.02).edges("|Z").fillet(ir))
+    lip = lip.cut(_cav_inner(floor - 0.01, cavity + 0.02))
     res = res.union(lip)
     # bosses (always) + window braces (optional; OFF by default -- ribs+lip already support U2/caps;
     # the braces only propped the window / bare-laminate spans. Removing them frees board (13.6,40.1) &
@@ -211,9 +233,8 @@ def build(floor=0.95, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pill
     if border_h > 0:
         frame = (cq.Workplane("XY").workplane(offset=-border_h).rect(cavW, cavH)
                    .extrude(border_h).edges("|Z").fillet(cavR))
-        frame = frame.cut(cq.Workplane("XY").workplane(offset=-border_h - 0.01).rect(iw, ih)
-                            .extrude(border_h + 0.02).edges("|Z").fillet(ir))
-        res = res.union(frame)
+        frame = frame.cut(_cav_inner(-border_h - 0.01, border_h + 0.02))
+        res = res.union(frame).union(_east_blocks(-border_h, border_h))
         bwp = cq.Workplane("XY").workplane(offset=-border_h)
         for mx, my in mounts:
             bwp = bwp.moveTo(wx(mx), wy(my)).circle(boss_r)
@@ -254,8 +275,8 @@ def build(floor=0.95, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pill
         inner = (cq.Workplane("XY").workplane(offset=floor - MARK_DEPTH - 0.01)
                    .moveTo(wx(cx), wy(cy)).rect(iwd, ihd).extrude(MARK_DEPTH + 0.04))
         res = res.cut(outer.cut(inner))
-    # U2 relief pocket: a local 0.05 mm-deeper cavity floor under U2 (28.5,37) so U2 keeps its full
-    # 0.15 mm air gap while the GENERAL floor is `floor` mm of back-engraving stock. 0.05 = U2_H-cap_H;
+    # U2 relief pocket: a local 0.05 mm-deeper cavity floor under U2 (28.5,37) so U2 keeps a
+    # 0.10 mm air gap (same as the caps) while the GENERAL floor is `floor` mm of back-engraving stock. 0.05 = U2_H-cap_H;
     # the caps (1.70) are the next-tallest, so the general cavity is cap-limited and only U2 needs relief.
     # Sits in the open cavity, clear of the ribs (y33..56 gap), lip, bosses, and the reflector frame.
     if U2_POCKET > 0:
@@ -282,13 +303,13 @@ OUT = "/mnt/user-data/outputs/"
 B = "solar-glow-drh-v3_0-backshell-0p6b-brace"
 jobs = [
     # name                 floor wall  border ribs  prog   note
-    ("Ti-max",             0.95, 1.00, 0.15, False, False, "0.6mm-board DUMB BOX for the resin brace: 0.95 floor + U2 relief pocket + 1.0 walls + 4 bosses + 2 Ø3.0 x 0.4 locator pillars. NO ribs (the brace carries center support). Overall 3.55."),
+    ("Ti-max",             1.00, 1.00, 0.15, False, False, "0.6mm-board DUMB BOX for the resin brace: TRUE 1.00 floor (cavity 1.80, cap gap 0.10) + U2 relief pocket + 1.0 walls + 4 bosses + 2 Ø3.0 x 0.4 locator pillars. NO ribs (the brace carries center support). Overall 3.55."),
     ("Ti-max-progwindow",  0.95, 1.00, 0.15, False, True,  "0.6mm-board / ribs-trimmed + TC2030 re-flash window"),
 ]
 # Ti-conservative (0.60 floor / 1.60 wall) struck: if the shop cannot hold the floor we
 # re-issue to whatever minimum they will hold, so a pre-baked 0.60 fallback is dead weight.
 print(f"cavity={cavity} general (cap {cap_H}+air {cav_margin}; kapton {kapton_th}); U2 pocket {U2_POCKET} deep "
-      f"-> 1.90 local (U2 keeps 0.15)  lip/frame={lip_w}  "
+      f"-> 1.85 local (U2 keeps 0.10)  lips W/N/S/E={lip_W}/{lip_N}/{lip_S}/{lip_E} (E ends {lip_E_wide})  "
       f"braces=OFF (removed; {len(BRACE)} defs retained) ribs={len(RIBS)}  border=0.15  "
       f"cavity tool R{TOOL_R} (Ø{2*TOOL_R}) / back tool R{BACK_TOOL_R} (Ø{2*BACK_TOOL_R})  "
       f"deburr: outer rim {edge_ease}, ends {EDGE_BREAK}  reflector-frame {GLOW_WIN[2]-GLOW_WIN[0]:.1f}x{GLOW_WIN[3]-GLOW_WIN[1]:.1f} laser-marked (full floor under it)  "
