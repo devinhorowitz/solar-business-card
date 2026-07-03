@@ -39,7 +39,8 @@
  *   - session registers (volatile, loaded from config at POR) live at I2C block
  *     0xFE and are reachable ONLY via the sec 9.8 register op (MEMA=FEh).
  *   - NC_REG is at register offset 0x00; NS_REG (session only) at offset 0x06.
- *     (FD-output config in NC_REG is left at its POR default -- FD is not used.)
+ *     (FD-output config in NC_REG is left at its POR default, field-present,
+ *     which is what FD-wake uses -- so no config write is needed.)
  */
 #ifndef NFC_H
 #define NFC_H
