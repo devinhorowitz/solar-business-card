@@ -1,179 +1,121 @@
 /*
- * nfc.c  --  NT3H2211 bring-up: presence, FD field-wake config, NDEF write.
+ * nfc.h  --  NXP NT3H2211 (NTAG I2C plus, 2K) driver: power-gated NDEF write.
  *
- * All transactions are the datasheet ones (sec 9.7 block READ/WRITE, sec 9.8
- * register READ/WRITE), built on the twi.h primitives. The reads follow Figures
- * 18/19 exactly: an address phase (SA+W, MEMA[, REGA]) terminated by a STOP, then
- * a fresh START with SA+R for the data phase -- the standard "set the address
- * pointer, then read" idiom the figures draw. The read (START..NACK..STOP) is run
- * to completion every time; the datasheet warns a partial read leaves the tag
- * stretching the clock forever.
+ * Verified against datasheet NT3H2111_2211 Rev 3.6 (datasheets/NT3H2111_2211.pdf).
+ * U5 is an I2C TARGET on the same TWI0 host bus as the accel (SDA=PC2, SCL=PC3,
+ * TWIROUTEA=ALT2, ext 4.7k pull-ups). 7-bit address 0x55 (no clash with the accel
+ * at 0x18). We reuse the twi.h primitives directly for the NT3H block/register
+ * transactions -- NOT twi_reg_read(), whose bit7 sub-address auto-increment is a
+ * LIS2DH12-ism the NT3H does not use.
  *
- * EEPROM timing (sec 9.7 WARNING): after a block-write STOP, ANY command sent
- * within ~4 ms can terminate and corrupt the in-flight write. So we fix-delay
- * past it rather than polling NS_REG.EEPROM_WR_BUSY (the poll would BE that
- * corrupting early command). Provisioning is one-shot, so a busy delay is fine.
+ * The tag's VCC is power-gated by a high-side load switch enabled on NFC_EN (PA7,
+ * active-HIGH); see board.h. The chip has no sleep state and draws ~195 uA from
+ * VCC continuously, so VCC is kept OFF and only switched on around an I2C access.
+ * nfc_power_on() raises NFC_EN and waits for the tag to boot (bounded ACK-poll);
+ * nfc_power_off() drops it. Both the RF read of the static NDEF by a phone AND the
+ * FD field-detect wake run on the phone's field power and need NO VCC (datasheet
+ * 8.4) -- power-gating only affects the MCU<->tag I2C side.
+ *
+ * Job: write a contact NDEF into the tag EEPROM (one-time provisioning). The NDEF
+ * is RF-readable by a phone even with the supercap flat, and is re-writable.
+ * (FD-wake itself needs no driver code: the chip's POR/config default pulls FD low
+ * on field-present, and main.c senses the PA6 falling edge -- see board.h/main.c.)
+ *
+ * --- memory model (datasheet, I2C perspective; Table 6/7, sec 8.3.2/8.3.8/9.7) ---
+ *   - access is in 16-byte BLOCKS, addressed by a 1-byte block address (MEMA).
+ *   - block 0x00: I2C-addr byte (byte0, reads back 04h) + UID + lock + the
+ *     Capability Container (CC) at bytes 12..15. WRITING block 0 changes the I2C
+ *     address (byte0), so we NEVER touch it. The CC ships = E1 10 6D 00
+ *     (NDEF-capable, 872 B in sector 0), so no CC write is needed.
+ *   - block 0x01 = first user-memory block = WHERE THE NDEF STARTS (NFC page 04h).
+ *   - the NDEF is an NFC-Forum Type-2 TLV: 03h, <len>, <NDEF message>, FEh, padded
+ *     to a whole block with 00h. <len> is 1 byte if <255, else FFh + 2-byte BE.
+ *   - EEPROM block program = ~4 ms; SRAM = ~0.4 ms. After a block-write STOP the
+ *     host MUST stay off the bus >= ~4 ms or the write is corrupted (sec 9.7
+ *     WARNING) -- so we delay, we do NOT poll EEPROM_WR_BUSY right after a write.
+ *
+ * --- registers ---
+ *   - config registers (EEPROM, default-after-POR) live at I2C block 0x3A.
+ *   - session registers (volatile, loaded from config at POR) live at I2C block
+ *     0xFE and are reachable ONLY via the sec 9.8 register op (MEMA=FEh).
+ *   - NC_REG is at register offset 0x00; NS_REG (session only) at offset 0x06.
+ *     (FD-output config in NC_REG is left at its POR default, field-present,
+ *     which is what FD-wake uses -- so no config write is needed.)
  */
-#include "board.h"          /* NT3H_ADDR, F_CPU (needed by util/delay.h) */
-#include "nfc.h"
-#include "twi.h"
-#include <util/delay.h>
+#ifndef NFC_H
+#define NFC_H
 
-#define NFC_EEPROM_WR_MS   6   /* >= ~4 ms datasheet program time, with margin */
+#include <stdint.h>
+#include "board.h"          /* NT3H_ADDR */
 
-/* ---- block READ: START, AA, MEMA, STOP, START, AB, D0..D15(NACK last), STOP ---- */
-uint8_t nfc_read_block(uint8_t blk, uint8_t *dst16)
-{
-    if (twi_start(NT3H_ADDR, 0)) { twi_stop(); return 1; }   /* SA + write   */
-    if (twi_write(blk))          { twi_stop(); return 1; }   /* MEMA         */
-    twi_stop();                                              /* end addr phase (Fig 18) */
-    if (twi_start(NT3H_ADDR, 1)) { twi_stop(); return 1; }   /* START + read */
-    for (uint8_t i = 0; i < NFC_BLOCK_SZ; i++)
-        if (twi_read((uint8_t)(i < (NFC_BLOCK_SZ - 1)), &dst16[i]))  /* ACK all but last */
-            return 1;                                                /* last NACKs + STOPs */
-    return 0;
-}
+/* ---- block addresses (I2C perspective; verified Table 6/7, sec 8.3.12) ---- */
+#define NFC_BLK_USER0     0x01   /* first user block = NDEF start (NFC page 04h) */
+#define NFC_BLK_CONFIG    0x3A   /* configuration registers (EEPROM) -- untouched */
+#define NFC_BLK_SESSION   0xFE   /* session registers (via sec 9.8 register op)  */
+#define NFC_BLK_EEPROM_TOP 0x7A  /* last EEPROM user block, 2K part (sec 9.7)     */
+#define NFC_BLOCK_SZ      16
 
-/* ---- block WRITE: START, AA, MEMA, D0..D15, STOP, then >=4 ms settle ---- */
-uint8_t nfc_write_block(uint8_t blk, const uint8_t *src16)
-{
-    if (twi_start(NT3H_ADDR, 0)) { twi_stop(); return 1; }   /* SA + write */
-    if (twi_write(blk))          { twi_stop(); return 1; }   /* MEMA       */
-    for (uint8_t i = 0; i < NFC_BLOCK_SZ; i++)
-        if (twi_write(src16[i]))  { twi_stop(); return 1; }
-    twi_stop();
-    _delay_ms(NFC_EEPROM_WR_MS);   /* sec 9.7: stay off the bus until the write completes */
-    return 0;
-}
+/* ---- register offsets within a register block (Table 11/12) ---- */
+#define NFC_REG_NC          0x00   /* NC_REG  */
+#define NFC_REG_LAST_NDEF   0x01   /* LAST_NDEF_BLOCK */
+#define NFC_REG_NS          0x06   /* NS_REG (session block only) */
 
-/* ---- sec 9.8 register READ: START, AA, FEh, REGA, STOP, START, AB, DAT(NACK), STOP ---- */
-uint8_t nfc_read_reg(uint8_t reg, uint8_t *val)
-{
-    if (twi_start(NT3H_ADDR, 0))      { twi_stop(); return 1; }
-    if (twi_write(NFC_BLK_SESSION))   { twi_stop(); return 1; }   /* MEMA = FEh */
-    if (twi_write(reg))               { twi_stop(); return 1; }   /* REGA       */
-    twi_stop();                                                   /* end addr phase (Fig 19) */
-    if (twi_start(NT3H_ADDR, 1))      { twi_stop(); return 1; }   /* START + read */
-    return twi_read(0, val);                                      /* NACK + STOP */
-}
+/* ---- NC_REG bit fields (Table 13) ---- */
+#define NFC_NC_FD_OFF_msk   0x30   /* bits 5:4 */
+#define NFC_NC_FD_ON_msk    0x0C   /* bits 3:2 */
+#define NFC_NC_FD_msk       (NFC_NC_FD_OFF_msk | NFC_NC_FD_ON_msk)  /* 0x3C */
+/* FD_ON=00b (field on) + FD_OFF=00b (field off): the field-present mode. */
+#define NFC_NC_FD_FIELD     0x00
 
-/* ---- sec 9.8 register WRITE (mask): START, AA, FEh, REGA, MASK, DAT, STOP ---- */
-uint8_t nfc_write_reg(uint8_t reg, uint8_t mask, uint8_t val)
-{
-    if (twi_start(NT3H_ADDR, 0))    { twi_stop(); return 1; }
-    if (twi_write(NFC_BLK_SESSION)) { twi_stop(); return 1; }   /* MEMA = FEh */
-    if (twi_write(reg))             { twi_stop(); return 1; }   /* REGA       */
-    if (twi_write(mask))            { twi_stop(); return 1; }   /* MASK: 1=modify */
-    if (twi_write(val))             { twi_stop(); return 1; }   /* REGDAT     */
-    twi_stop();
-    return 0;
-}
+/* ---- NS_REG bits (Table 14, session block offset 0x06) ---- */
+#define NFC_NS_NDEF_DATA_READ_bm   0x80
+#define NFC_NS_I2C_LOCKED_bm       0x40
+#define NFC_NS_RF_LOCKED_bm        0x20
+#define NFC_NS_SRAM_I2C_READY_bm   0x10
+#define NFC_NS_SRAM_RF_READY_bm    0x08
+#define NFC_NS_EEPROM_WR_ERR_bm    0x04
+#define NFC_NS_EEPROM_WR_BUSY_bm   0x02
+#define NFC_NS_RF_FIELD_PRESENT_bm 0x01
 
-uint8_t nfc_present(void)
-{
-    uint8_t b0[NFC_BLOCK_SZ];
-    if (nfc_read_block(0x00, b0)) return 0;
-    return (b0[0] == 0x04) ? 1u : 0u;   /* byte0 of block0 reads back UID0 = 04h (NXP) */
-}
+/* factory CC (block 0 bytes 12..15) for an NDEF-capable tag (sec 8.3.8/8.3.10) */
+#define NFC_CC0  0xE1
+#define NFC_CC1  0x10
+#define NFC_CC2  0x6D
+#define NFC_CC3  0x00
 
-uint8_t nfc_check_cc(void)
-{
-    uint8_t b0[NFC_BLOCK_SZ];
-    if (nfc_read_block(0x00, b0)) return 0;
-    return (b0[12] == NFC_CC0 && b0[13] == NFC_CC1 &&
-            b0[14] == NFC_CC2 && b0[15] == NFC_CC3) ? 1u : 0u;
-}
+/* ---- API ---- 0 = OK, non-zero = fault (bus/NACK), same convention as twi.h ---- */
 
-uint8_t nfc_set_fd_field_mode(void)
-{
-    /* clear FD_OFF[5:4] and FD_ON[3:2] to 00b -> FD low on field present,
-     * released on field absent. Other NC_REG bits left untouched by the mask. */
-    return nfc_write_reg(NFC_REG_NC, NFC_NC_FD_msk, NFC_NC_FD_FIELD);
-}
+/* presence: read block 0, byte0 reads back 04h (UID0 = NXP). 1 if seen, else 0. */
+uint8_t nfc_present(void);
 
-uint8_t nfc_write_ndef(const uint8_t *buf, uint16_t len)
-{
-    uint16_t off = 0;
-    uint8_t  blk = NFC_BLK_USER0;
-    uint8_t  rc  = 0;
+/* read/write one 16-byte block. dst/src point at NFC_BLOCK_SZ bytes.
+ * nfc_write_block enforces the >=4 ms post-write EEPROM settle internally. */
+uint8_t nfc_read_block(uint8_t blk, uint8_t *dst16);
+uint8_t nfc_write_block(uint8_t blk, const uint8_t *src16);
 
-    while (off < len) {
-        uint8_t chunk[NFC_BLOCK_SZ];
-        if (blk > NFC_BLK_EEPROM_TOP) return 1;   /* NDEF overruns sector-0 EEPROM */
-        for (uint8_t i = 0; i < NFC_BLOCK_SZ; i++) {
-            uint16_t p = off + i;
-            chunk[i] = (p < len) ? buf[p] : 0x00; /* 00h-pad the last partial block */
-        }
-        rc |= nfc_write_block(blk, chunk);
-        off += NFC_BLOCK_SZ;
-        blk++;
-    }
-    return rc ? 1u : 0u;
-}
+/* session-register access via the sec 9.8 register op (MEMA = 0xFE).
+ * write: only the bits set in `mask` are changed to the matching bits of `val`. */
+uint8_t nfc_read_reg(uint8_t reg, uint8_t *val);
+uint8_t nfc_write_reg(uint8_t reg, uint8_t mask, uint8_t val);
 
-/* -----------------------------------------------------------------------------
- * Built-in default NDEF (one-shot provisioning via nfc_provision_default()).
- *
- * Devin R. Horowitz business-card vCard 3.0, wrapped as an NFC-Forum Type-2 TLV.
- * A phone tap offers "Add to Contacts" with name / title / org / mobile / both
- * emails / website pre-filled. Bytes are machine-generated, not hand-edited;
- * regenerate (do not patch in place) if any field changes.
- *
- * vCard (CRLF line ends; commas in ORG escaped \, per RFC 2426):
- *   BEGIN:VCARD / VERSION:3.0
- *   N:Horowitz;Devin;R.;;     FN:Devin R. Horowitz
- *   ORG:Quintairos\, Prieto\, Wood\, & Boyer\, P.A.     TITLE:Partner
- *   TEL;TYPE=CELL:+14042138076
- *   EMAIL;TYPE=WORK:devin.horowitz@qpwblaw.com
- *   EMAIL;TYPE=HOME:devin@horowitz.law
- *   URL:https://horowitz.law / END:VCARD
- *
- * Framing: TLV 03 FF 01 28 (NDEF message, 296 B) | record C2 0A 00 00 01 18
- * ("text/vcard" MIME, non-short, 280 B payload) | ... | FE terminator. 304 B
- * padded = 19 blocks, written to blocks 0x01..0x13 (sector-0 holds to 0x37 -> fits).
- * --------------------------------------------------------------------------- */
-static const uint8_t ndef_default[] = {
-    0x03, 0xFF, 0x01, 0x28, 0xC2, 0x0A, 0x00, 0x00,
-    0x01, 0x18, 0x74, 0x65, 0x78, 0x74, 0x2F, 0x76,
-    0x63, 0x61, 0x72, 0x64, 0x42, 0x45, 0x47, 0x49,
-    0x4E, 0x3A, 0x56, 0x43, 0x41, 0x52, 0x44, 0x0D,
-    0x0A, 0x56, 0x45, 0x52, 0x53, 0x49, 0x4F, 0x4E,
-    0x3A, 0x33, 0x2E, 0x30, 0x0D, 0x0A, 0x4E, 0x3A,
-    0x48, 0x6F, 0x72, 0x6F, 0x77, 0x69, 0x74, 0x7A,
-    0x3B, 0x44, 0x65, 0x76, 0x69, 0x6E, 0x3B, 0x52,
-    0x2E, 0x3B, 0x3B, 0x0D, 0x0A, 0x46, 0x4E, 0x3A,
-    0x44, 0x65, 0x76, 0x69, 0x6E, 0x20, 0x52, 0x2E,
-    0x20, 0x48, 0x6F, 0x72, 0x6F, 0x77, 0x69, 0x74,
-    0x7A, 0x0D, 0x0A, 0x4F, 0x52, 0x47, 0x3A, 0x51,
-    0x75, 0x69, 0x6E, 0x74, 0x61, 0x69, 0x72, 0x6F,
-    0x73, 0x5C, 0x2C, 0x20, 0x50, 0x72, 0x69, 0x65,
-    0x74, 0x6F, 0x5C, 0x2C, 0x20, 0x57, 0x6F, 0x6F,
-    0x64, 0x5C, 0x2C, 0x20, 0x26, 0x20, 0x42, 0x6F,
-    0x79, 0x65, 0x72, 0x5C, 0x2C, 0x20, 0x50, 0x2E,
-    0x41, 0x2E, 0x0D, 0x0A, 0x54, 0x49, 0x54, 0x4C,
-    0x45, 0x3A, 0x50, 0x61, 0x72, 0x74, 0x6E, 0x65,
-    0x72, 0x0D, 0x0A, 0x54, 0x45, 0x4C, 0x3B, 0x54,
-    0x59, 0x50, 0x45, 0x3D, 0x43, 0x45, 0x4C, 0x4C,
-    0x3A, 0x2B, 0x31, 0x34, 0x30, 0x34, 0x32, 0x31,
-    0x33, 0x38, 0x30, 0x37, 0x36, 0x0D, 0x0A, 0x45,
-    0x4D, 0x41, 0x49, 0x4C, 0x3B, 0x54, 0x59, 0x50,
-    0x45, 0x3D, 0x57, 0x4F, 0x52, 0x4B, 0x3A, 0x64,
-    0x65, 0x76, 0x69, 0x6E, 0x2E, 0x68, 0x6F, 0x72,
-    0x6F, 0x77, 0x69, 0x74, 0x7A, 0x40, 0x71, 0x70,
-    0x77, 0x62, 0x6C, 0x61, 0x77, 0x2E, 0x63, 0x6F,
-    0x6D, 0x0D, 0x0A, 0x45, 0x4D, 0x41, 0x49, 0x4C,
-    0x3B, 0x54, 0x59, 0x50, 0x45, 0x3D, 0x48, 0x4F,
-    0x4D, 0x45, 0x3A, 0x64, 0x65, 0x76, 0x69, 0x6E,
-    0x40, 0x68, 0x6F, 0x72, 0x6F, 0x77, 0x69, 0x74,
-    0x7A, 0x2E, 0x6C, 0x61, 0x77, 0x0D, 0x0A, 0x55,
-    0x52, 0x4C, 0x3A, 0x68, 0x74, 0x74, 0x70, 0x73,
-    0x3A, 0x2F, 0x2F, 0x68, 0x6F, 0x72, 0x6F, 0x77,
-    0x69, 0x74, 0x7A, 0x2E, 0x6C, 0x61, 0x77, 0x0D,
-    0x0A, 0x45, 0x4E, 0x44, 0x3A, 0x56, 0x43, 0x41,
-    0x52, 0x44, 0x0D, 0x0A, 0xFE, 0x00, 0x00, 0x00
-};
+/* power-gate control (NFC_EN = PA7, active-HIGH; see board.h).
+ * nfc_power_on(): drive NFC_EN HIGH, then wait for the tag to answer its I2C
+ *   address (bounded ACK-poll after a short load-switch soft-start). Returns 0
+ *   when the tag is up and reachable, non-zero on timeout (absent / EN not wired).
+ * nfc_power_off(): drive NFC_EN LOW (VCC off). Call immediately after any I2C
+ *   access; it MUST be low before sleep. */
+uint8_t nfc_power_on(void);
+void    nfc_power_off(void);
 
-uint8_t nfc_provision_default(void)
-{
-    return nfc_write_ndef(ndef_default, (uint16_t)sizeof ndef_default);
-}
+/* read-only CC check: 1 if block-0 bytes 12..15 == E1 10 6D 00 (NDEF-capable). */
+uint8_t nfc_check_cc(void);
+
+/* write a pre-built, TLV-wrapped NDEF (03h,len,..,FEh) into user memory starting
+ * at block 1. `len` need not be a block multiple; the last block is 00h-padded.
+ * Whole 16-byte blocks are written (the tag has no partial-block write). */
+uint8_t nfc_write_ndef(const uint8_t *buf, uint16_t len);
+
+/* write the built-in default NDEF (see nfc.c). One-shot provisioning helper. */
+uint8_t nfc_provision_default(void);
+
+#endif /* NFC_H */
