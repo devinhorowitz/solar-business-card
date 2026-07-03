@@ -5,8 +5,8 @@ solar-glow-drh-v3_0-backshell-0p6b-brace-cad.py  -  0.6mm-board DUMB-BOX shell f
 ===================== DUMB BOX (brace direction) =====================
 The metal-pillar approach is retired: the PCB net audit rejected 3 of 4 pillar spots (NW on accel
 INT2; NE/SE on the NFC coil). The dielectric resin brace carries center support instead, so the shell
-reduces to floor + walls + 4 corner bosses + TWO Ø5.0 x 0.4 LOCATOR PILLARS left standing on the
-cavity floor at board (13,35) and (44,54) that engage recesses in the brace bottom. NO ribs. The floor
+reduces to floor + walls + 4 corner bosses + TWO Ø3.0 x 0.6 LOCATOR PILLARS left standing on the
+cavity floor at board (13,35) and (33,55) that engage recesses in the brace bottom. NO ribs. The floor
 stays a full 0.95 everywhere (no holes -> uniform back for engraving) and the brace bottom stays clear
 to sand flat to the fit. A PCB layout change now means a new resin print, never a shell re-machine.
 ======================================================================
@@ -245,7 +245,7 @@ def _poly_solid(poly, z0, dz):
     return cq.Workplane("XY").workplane(offset=z0).polyline(xy).close().extrude(dz)
 
 # ===== build =====
-def build(floor=0.95, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pillars=False, stub_holes=True, prog_window=False, glow_marker=True, tool_relief=False):
+def build(floor=0.95, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pillars=False, locators=True, prog_window=False, glow_marker=True, tool_relief=False):
     bb = floor + cavity                       # board-back / boss-top / lip-top / rib-top plane
     wt = bb + board_th
     outW, outH, outR = cavW + 2*wall_th, cavH + 2*wall_th, cavR + wall_th
@@ -290,13 +290,13 @@ def build(floor=0.95, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pill
     if tool_relief:
         for poly in _relief_for(_cavity_islands(ribs, braces)):
             res = res.union(_poly_solid(poly, floor, cavity))
-    # LOCATOR PILLARS (inverted from stub-holes): two Ø5.0 x 0.4 metal bosses left standing on the
+    # LOCATOR PILLARS (inverted from stub-holes): two Ø3.0 x 0.6 metal pillars left standing on the
     # cavity floor, engaging recesses in the brace bottom. Floor stays a FULL 0.95 everywhere (no holes,
     # uniform back for engraving) + adds metal; and the brace bottom is left clear so it can be sanded
     # flat to the fit (the component pockets are all on the TOP face, so only the bottom is sandable).
-    if stub_holes:
-        for sx, sy in [(13.0, 35.0), (44.0, 54.0)]:
-            res = res.union(cq.Workplane("XY").workplane(offset=floor).moveTo(wx(sx), wy(sy)).circle(5.0/2).extrude(0.4))
+    if locators:
+        for sx, sy in [(13.0, 35.0), (33.0, 55.0)]:
+            res = res.union(cq.Workplane("XY").workplane(offset=floor).moveTo(wx(sx), wy(sy)).circle(3.0/2).extrude(0.6))
     # BACK FACE: frame == lip footprint + boss annuli, raised border_h
     if border_h > 0:
         frame = (cq.Workplane("XY").workplane(offset=-border_h).rect(cavW, cavH)
@@ -372,7 +372,7 @@ OUT = "/mnt/user-data/outputs/"
 B = "solar-glow-drh-v3_0-backshell-0p6b-brace"
 jobs = [
     # name                 floor wall  border ribs  prog   note
-    ("Ti-max",             0.95, 1.00, 0.15, False, False, "0.6mm-board DUMB BOX for the resin brace: 0.95 floor + U2 relief pocket + 1.0 walls + 4 bosses + 2 Ø5.0 locator pillars. NO ribs (the brace carries center support). Overall 3.55."),
+    ("Ti-max",             0.95, 1.00, 0.15, False, False, "0.6mm-board DUMB BOX for the resin brace: 0.95 floor + U2 relief pocket + 1.0 walls + 4 bosses + 2 Ø3.0 locator pillars. NO ribs (the brace carries center support). Overall 3.55."),
     ("Ti-max-progwindow",  0.95, 1.00, 0.15, False, True,  "0.6mm-board / ribs-trimmed + TC2030 re-flash window"),
 ]
 # Ti-conservative (0.60 floor / 1.60 wall) struck: if the shop cannot hold the floor we
