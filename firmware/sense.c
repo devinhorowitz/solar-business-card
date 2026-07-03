@@ -16,6 +16,8 @@
  */
 #include <avr/io.h>
 #include <avr/eeprom.h>
+#include <avr/interrupt.h>
+#include <avr/sleep.h>
 #include "board.h"
 #include "sense.h"
 
@@ -59,6 +61,17 @@ void sense_adc_init(void)
     ADC0.CTRLA   = ADC_RESSEL_12BIT_gc;        /* single-ended, 12-bit, ENABLE = 0 */
 }
 
+/* Result-ready wakes the core out of the IDLE nap in adc_read_raw. The ISR only
+ * clears the flag and records completion; the caller reads the result from RES
+ * after the wake. */
+static volatile uint8_t adc_done;
+
+ISR(ADC0_RESRDY_vect)
+{
+    ADC0.INTFLAGS = ADC_RESRDY_bm;     /* write-1-to-clear */
+    adc_done = 1;
+}
+
 static uint16_t adc_read_raw(uint8_t muxpos)
 {
     uint16_t res = 0;
@@ -66,18 +79,29 @@ static uint16_t adc_read_raw(uint8_t muxpos)
     ADC0.CTRLA   |= ADC_ENABLE_bm;     /* power up ADC; reference begins start-up */
     ADC0.MUXPOS   = muxpos;
     ADC0.INTFLAGS = ADC_RESRDY_bm;     /* clear any stale result-ready flag */
+    adc_done      = 0;
+    ADC0.INTCTRL  = ADC_RESRDY_bm;     /* wake on result-ready */
     ADC0.COMMAND  = ADC_STCONV_bm;     /* INITDLY warm-up is inserted before the sample */
 
-    /* A conversion is INITDLY + (2 + SAMPLEN + 13.5) CLK_ADC cycles, ~350 us
-     * here with DLY128 and SAMPLEN = 31. Bound the wait so a misconfigured or
-     * stuck ADC cannot hang the core; 8000 loops is tens of ms at 1 MHz, well
-     * beyond the conversion. On timeout RES stays 0, which reads as low rail /
-     * dark and fails safe (no glow). */
-    for (uint16_t guard = 0; guard < 8000; guard++)
-        if (ADC0.INTFLAGS & ADC_RESRDY_bm) {   /* reading RES also clears RESRDY */
-            res = ADC0.RES;
-            break;
-        }
+    /* The conversion is INITDLY + (2 + SAMPLEN + 13.5) CLK_ADC cycles, ~350 us here.
+     * IDLE-sleep through it rather than spinning the core in active mode: the ADC
+     * keeps converting in IDLE and RESRDY wakes us (same race-free SEI+SLEEP idiom
+     * as the glow). RESRDY is the first wake in the healthy case; the loop is bounded
+     * so a stuck ADC (RESRDY never arrives) bails after a few wakes with RES = 0 --
+     * reads as low rail / dark, fail-safe no glow, and well under the watchdog -- and
+     * a stray PIT/accel wake just re-checks the flag and sleeps again. */
+    set_sleep_mode(SLEEP_MODE_IDLE);
+    for (uint8_t guard = 0; guard < 3 && !adc_done; guard++) {
+        cli();
+        if (adc_done) { sei(); break; }
+        sleep_enable();
+        sei();                         /* SEI + SLEEP is atomic: no missed RESRDY */
+        sleep_cpu();
+        sleep_disable();
+    }
+    ADC0.INTCTRL = 0;                  /* stop the ADC interrupt */
+    if (adc_done)
+        res = ADC0.RES;                /* reading RES also clears RESRDY */
 
     ADC0.CTRLA   &= ~ADC_ENABLE_bm;    /* power down ADC; reference released */
     return res;

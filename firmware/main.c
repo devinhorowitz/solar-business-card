@@ -92,6 +92,25 @@ static void gpio_init(void)
     PORTD.PIN2CTRL = PORT_ISC_INPUT_DISABLE_gc;
     /* LED pins + TCA routing are owned by led_init(); I2C pins by PORTMUX below. */
     PORTMUX.TWIROUTEA = PORTMUX_TWI0_ALT2_gc;   /* SDA=PC2, SCL=PC3 */
+
+    /* Tie down every unused pin. A floating CMOS input draws shoot-through current
+     * in its buffer whenever it drifts near mid-rail; a pull-up holds it high at ~0
+     * current (and for PA5, the reserved button to GND, and the JP2 breakouts, that
+     * is also the useful resting state). The pins configured above (PA6/PA7/PD2/PF0/
+     * PF1) and the LED pins (PA0-3, in led_init) are left alone; a pull-up bit on a
+     * driven output is ignored anyway. Writes to PORTD pins not bonded on the 28-pin
+     * package are harmless. */
+    PORTA.PIN4CTRL = PORT_PULLUPEN_bm;   /* PA4 spare (JP2.1)   */
+    PORTA.PIN5CTRL = PORT_PULLUPEN_bm;   /* PA5 reserved button */
+    PORTC.PIN0CTRL = PORT_PULLUPEN_bm;   /* PC0 spare (JP2.2)   */
+    PORTC.PIN1CTRL = PORT_PULLUPEN_bm;   /* PC1 spare (JP2.3)   */
+    PORTD.PIN0CTRL = PORT_PULLUPEN_bm;   /* PD0/1/3-7 unused    */
+    PORTD.PIN1CTRL = PORT_PULLUPEN_bm;
+    PORTD.PIN3CTRL = PORT_PULLUPEN_bm;
+    PORTD.PIN4CTRL = PORT_PULLUPEN_bm;
+    PORTD.PIN5CTRL = PORT_PULLUPEN_bm;
+    PORTD.PIN6CTRL = PORT_PULLUPEN_bm;
+    PORTD.PIN7CTRL = PORT_PULLUPEN_bm;
 }
 
 static void rtc_pit_init(void)
