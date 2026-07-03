@@ -62,10 +62,18 @@ the build). Material 364 is their 13.56 MHz redirection grade. 60.00 × 60.00 mm
 **0.38 mm overall stack** (ferrite + PET film + single-sided non-conductive PSA, per the DK
 detailed description — the bare-ferrite "0.3 mm" figure floating around is the layer, not
 the stack). Laser-scored 2 × 2 mm grid cuts cleanly to size; one sheet yields four patches.
-Non-conductive as supplied; datasheet now committed in `datasheets/`. Cheaper 60 × 60
-alternates observed on the same DK page — verify grade and thickness against their
-datasheets before substituting: Würth 3641014 ($4.19), Laird MHLL6060-300 ($6.40); also
-MARUWA FSF131/FSF151, Fair-Rite flexible sheets.
+Non-conductive as supplied; all three datasheets now committed in `datasheets/`.
+
+**Alternates, now verified (both are THIN variants, not cheaper equals):** shield strength
+scales with µ′ × ferrite thickness, and the machined pocket makes thickness free — so the
+thick sheet wins outright. Würth 3641014 (DK 732-13935-ND, $4.19, 379 in stock): same
+µ′ = 150 / µ″ = 3 @ 13.56 MHz material, but only 0.1 mm of ferrite in a 0.14 mm stack —
+about 1/3 the shield. Legitimate fallback if 364006's 51-unit stock dries: **stack three
+3641014 layers** (~$12.57, ~0.42 mm stack) to rebuild ~0.3 mm of ferrite; cut the pocket to
+the measured 3-layer stack − 0.05. Laird MHLL6060-300 (DK 240-2791-ND, $6.40, 4,778 in
+stock): 0.09 mm overall, µ′ published as a graph only — thinnest and weakest, last resort.
+DK also lists mid-family 364103/364104/364105 ($7.46/$8.85/$11.18, thicknesses unverified).
+Whichever sheet is chosen, the pocket rule is the same: depth = measured stack − 0.05 mm.
 
 **Patch size and position (board coords):** cut to **12.2 × 25.8 mm**, covering
 **x 36.8–49.0, y 31.6–57.4** — exactly the antenna keepout box. That is component-free,
