@@ -56,10 +56,16 @@ Q loss both largely vanish, and read range approaches bare-card. The manufacture
 note (Würth ANP022) describes exactly this metal-behind-antenna fix. Ferrite raises the
 coil inductance above bare — the C9 trim absorbs it (see §5).
 
-**Part** (on the project BOM as FER1): Würth **WE-FSFS 364006** — material 364 (their
-13.56 MHz redirection grade), 60 × 60 × 0.3 mm sheet, PET film one face, PSA the other,
-laser-scored in a 2 × 2 mm grid so it cuts cleanly to size. One sheet yields four patches.
-Non-conductive as supplied. Alternates: MARUWA FSF131/FSF151, Fair-Rite flexible sheets.
+**Part** (on the project BOM as FER1): Würth **WE-FSFS 364006**, DigiKey **732-5049-ND**
+(verified: Active, 51 in stock, $17.43, tray; 24-week mfr lead once depleted — order with
+the build). Material 364 is their 13.56 MHz redirection grade. 60.00 × 60.00 mm ×
+**0.38 mm overall stack** (ferrite + PET film + single-sided non-conductive PSA, per the DK
+detailed description — the bare-ferrite "0.3 mm" figure floating around is the layer, not
+the stack). Laser-scored 2 × 2 mm grid cuts cleanly to size; one sheet yields four patches.
+Non-conductive as supplied; datasheet now committed in `datasheets/`. Cheaper 60 × 60
+alternates observed on the same DK page — verify grade and thickness against their
+datasheets before substituting: Würth 3641014 ($4.19), Laird MHLL6060-300 ($6.40); also
+MARUWA FSF131/FSF151, Fair-Rite flexible sheets.
 
 **Patch size and position (board coords):** cut to **12.2 × 25.8 mm**, covering
 **x 36.8–49.0, y 31.6–57.4** — exactly the antenna keepout box. That is component-free,
@@ -69,7 +75,8 @@ y 31.15 and y 57.75, lip seat east of x 49.8).
 
 **Pocket in the brace (board-facing surface):**
 - Outline: patch outline + 0.2 mm cut clearance per side.
-- Depth: **t_sheet − 0.05 mm** (nominal sheet 0.30 → pocket 0.25), so the ferrite sits
+- Depth: **t_sheet − 0.05 mm** (nominal stack 0.38 → pocket 0.33; measure the delivered
+  sheet and cut to measured − 0.05), so the ferrite sits
   ~0.05 mm proud and seating the brace presses it flush against the board back. Target
   0.03–0.08 mm proud; do not exceed ~0.1 mm compression — the sheet is bend-rated
   (segmented grid), not crush-rated.
