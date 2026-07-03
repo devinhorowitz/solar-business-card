@@ -37,12 +37,15 @@ compensate: print the bottom features (recesses, tape recess) ~0.15 deeper for t
 Print ~0.10-0.15 mm PROUD in height, sand the bottom flat to a zero-air fit. Model is the sanded
 nominal at the true 1.85 gap.
 
-WINDOW = aluminum-tape bay (PCB §6a, chosen): a through APERTURE opens the light path to a foil-tape
-reflector adhered to the shell floor and located by the laser-marked frame; a shallow bottom RECESS
-(tape-thick, meeting the frame) seats the tape edge and registers the brace. Trade taken knowingly:
-the window center is now unsupported bare 0.6mm FR4 (no traces there; LEDs held by the surrounding
-brace ring). Tape: thin foil, ~0.1mm (3M 427 = 0.12; thinner specialty ~0.06); set the recess to the
-chosen tape + ~0.03. Resin must be light near the window regardless (avoid black at the LED bays).
+WINDOW = LED-HUG DIFFUSER BACKING (replaces the earlier open tape bay): the white resin fills the window
+region right up behind the FR4, with only the tight D2-D5 LED pockets cut into it. It reads as an even
+lightbox back-panel -- opaque-white resin scatters the LEDs into a uniform sheet and recovers the FR4's
+backscatter a mm away instead of losing it on a round trip to a floor mirror -- and it now BACKS the thin
+0.6mm FR4 window that the open bay had left unsupported. The floor tape + bottom recess are DROPPED (opaque
+resin makes them redundant; a reflective floor can return if a bench test wants more punch). Optional:
+pre-fill the LED pockets with a viscous (non-curing) optical gel at final assembly to index-match + diffuse
+at the die -- removable-ish, but re-apply each time the brace comes off, so dry-fit while iterating C9.
+Resin must be white/translucent near the window (never black at the LED pockets).
 """
 import re
 import cadquery as cq
@@ -142,12 +145,11 @@ fx0,fx1 = max(FER[0]-FER_CLR, BX0+0.2), min(FER[2]+FER_CLR, BX1)   # width walls
 fy0,fy1 = BY0-1.0, BY1+1.0                                          # y open: the cut clears both brace edges
 brace=brace.cut(cq.Workplane("XY").box(fx1-fx0,fy1-fy0,FER_POCKET_DEPTH+0.05,centered=(False,False,False))
                   .translate((wx(fx0),wy(fy0),GAP-FER_POCKET_DEPTH)))
-# window aluminum-tape bay (PCB §6a): through aperture (light path down to the floor tape)
-ax0,ay0,ax1,ay1 = GLOW[0]+APER_INSET, GLOW[1]+APER_INSET, GLOW[2]-APER_INSET, GLOW[3]-APER_INSET
-brace=brace.cut(cq.Workplane("XY").box(ax1-ax0,ay1-ay0,GAP+0.10,centered=(False,False,False)).translate((wx(ax0),wy(ay0),-0.05)))
-# + shallow bottom recess = laser frame + margin: seats the tape edge, registers the brace to the frame
-tx0,ty0,tx1,ty1 = GLOW[0]-TAPE_RECESS_MARGIN, GLOW[1]-TAPE_RECESS_MARGIN, GLOW[2]+TAPE_RECESS_MARGIN, GLOW[3]+TAPE_RECESS_MARGIN
-brace=brace.cut(cq.Workplane("XY").box(tx1-tx0,ty1-ty0,TAPE_RECESS_DEPTH+0.01,centered=(False,False,False)).translate((wx(tx0),wy(ty0),-0.005)))
+# window = LED-HUG DIFFUSER BACKING (replaces the open tape bay): NO aperture, NO tape recess. The white
+# resin now fills the window region right up behind the FR4, minus the tight D2-D5 LED pockets (0.25 clr,
+# cut in the component loop above). It backs the thin FR4 window, scatters as an even lightbox back-panel,
+# and recovers FR4 backscatter locally. The LED pocket clearance doubles as the reservoir if a viscous
+# optical gel is pre-filled at final assembly (optional: index-match + diffuse at the die; not needed to iterate).
 for sx,sy in STUBS:
     brace=brace.cut(cq.Workplane("XY").workplane(offset=-0.01).moveTo(wx(sx),wy(sy)).circle(RECESS_R).extrude(RECESS_DEPTH+0.01))
 
@@ -173,12 +175,8 @@ ax.text((BX0+BX1)/2,BY1-0.9,"WHITE RESIN BRACE (fills the gap, y31.6-57.4)",colo
 ax.add_patch(Rectangle((FER[0]-FER_CLR,BY0),FER[2]-FER[0]+2*FER_CLR,BY1-BY0,fc="#2a2140",ec="#7e57c2",lw=0.9,ls=(0,(3,2)),alpha=0.6))   # open channel (walled x, open y)
 ax.add_patch(Rectangle((FER[0],FER[1]),FER[2]-FER[0],FER[3]-FER[1],fc="#3a2b55",ec="#b39ddb",lw=1.3,alpha=0.9))                                # ferrite 12x26 (runs past the brace y-edges)
 ax.text((FER[0]+FER[2])/2,(FER[1]+FER[3])/2,"FERRITE 12x26\nwidth CRITICAL\nlength forgiving\n(open channel)",color="#d1c4e9",ha="center",va="center",fontsize=5.2,fontweight="bold")
-tx0,ty0,tx1,ty1 = GLOW[0]-TAPE_RECESS_MARGIN,GLOW[1]-TAPE_RECESS_MARGIN,GLOW[2]+TAPE_RECESS_MARGIN,GLOW[3]+TAPE_RECESS_MARGIN
-ax.add_patch(Rectangle((tx0,ty0),tx1-tx0,ty1-ty0,fill=False,ec="#d9a23a",lw=0.8,ls=(0,(2,2))))     # tape recess (bottom)
-ax0,ay0,ax1,ay1 = GLOW[0]+APER_INSET,GLOW[1]+APER_INSET,GLOW[2]-APER_INSET,GLOW[3]-APER_INSET
-ax.add_patch(Rectangle((ax0,ay0),ax1-ax0,ay1-ay0,fc="#111",ec="#d9a23a",lw=1.2))                    # open aperture (light path)
-ax.text((GLOW[0]+GLOW[2])/2,ay0+0.9,"ALUMINUM-TAPE BAY",color="#d9a23a",ha="center",va="bottom",fontsize=5.6,fontweight="bold")
-ax.text((GLOW[0]+GLOW[2])/2,ty1+0.3,"open aperture + tape recess (to laser frame)",color="#d9a23a",ha="center",va="bottom",fontsize=4.8)
+ax.add_patch(Rectangle((GLOW[0],GLOW[1]),GLOW[2]-GLOW[0],GLOW[3]-GLOW[1],fc="#f5efdc",ec="#d9c98a",lw=1.0,alpha=0.20))   # SOLID white resin backing behind the FR4 window (LEDs hug into it)
+ax.text((GLOW[0]+GLOW[2])/2,GLOW[3]+0.5,"LED-HUG DIFFUSER BACKING (solid resin; no aperture, no tape)",color="#d9c98a",ha="center",va="top",fontsize=4.7,fontweight="bold")
 for ref,x0,x1,y0,y1 in comps:
     h=part_height(ref)
     if h is None: continue
@@ -191,7 +189,7 @@ for ref,x0,x1,y0,y1 in comps:
 for sx,sy in STUBS:
     ax.add_patch(Circle((sx,sy),RECESS_R,fc="#4a86e8",ec="#fff",lw=0.8)); ax.text(sx,sy+1.9,"pillar\nhole",color="#8ab",ha="center",fontsize=4.6)
 leg=[mp.Patch(fc="#e0483a",label="through-hole (U2, tall)"),mp.Patch(fc="#e08a3a",label="deep (U6 1.45, U1/U3 1.0)"),
-     mp.Patch(fc="#43a047",label="shallow (0402, LEDs, bridges)"),mp.Patch(fc="#3a2b55",label="ferrite pocket"),mp.Patch(fc="#4a86e8",label="locator stub")]
+     mp.Patch(fc="#43a047",label="shallow (0402, LEDs hug window, bridges)"),mp.Patch(fc="#3a2b55",label="ferrite pocket"),mp.Patch(fc="#4a86e8",label="pillar hole (Ø3.2)")]
 ax.legend(handles=leg,loc="upper left",fontsize=5.2,facecolor="#1a1a1f",edgecolor="#444",labelcolor="#ddd",framealpha=0.9)
 ax.set_xlim(BX0-2,BX1+2); ax.set_ylim(BY0-2,BY1+2); ax.set_aspect("equal"); ax.invert_yaxis(); ax.axis("off")
 ax.set_title("Diffuser brace rev B - pocket map (board-facing face)\nverified heights + ferrite pocket over the coil + cap-bay clearance",color="#d9a23a",fontsize=8)
