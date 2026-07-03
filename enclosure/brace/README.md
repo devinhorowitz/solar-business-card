@@ -32,7 +32,7 @@ down, and it lifts straight out. It does three jobs the bare shell deliberately 
 ## Key features
 
 - **Flat bottom = datum.** The board-facing (top) face carries all the pockets; the shell-facing (bottom) face is flat and is the sanding reference (above).
-- **Locator recesses:** 2× **Ø3.2 × 0.8 deep** in the flat bottom at board (13, 35) and (33, 55). They receive the shell's 2× **Ø3.0 × 0.6** metal pillars (0.6 engagement, 0.1 radial + 0.2 axial clearance). This is the only tie between the brace and the shell.
+- **Locator recesses:** 2× **Ø3.2 × 0.8 deep** in the flat bottom at board (13, 35) and (33, 55). They receive the shell's 2× **Ø3.0 × 0.4** metal pillars (0.4 engagement, 0.1 radial, ~0.25 axial margin after the brace's ~0.15 bottom-sanding). This is the only tie between the brace and the shell.
 - **Ferrite channel** (over the NFC coil): an **open-ended** channel — walled on the **12 mm width (critical, it is edge-limited by the coil/board east edge)** and **open at both ends** (length is forgiving), **0.33 mm** deep. Takes a Würth WE-FSFS 364006 ferrite, nominal **12 × 26 mm** (even on the sheet's 2 mm score grid), PSA'd in; it may overhang the ends slightly.
 - **Window = LED-hug diffuser backing:** solid white resin fills the monogram-window footprint behind the FR4, minus tight D2–D5 LED pockets. No aperture, no floor tape. The LED-pocket clearance doubles as a reservoir if a viscous optical gel is pre-filled at final assembly (optional).
 - **U2 is the one through-pocket** (it is the tallest B-side part, 1.75 mm). Everything else sits in blind pockets at its verified height.

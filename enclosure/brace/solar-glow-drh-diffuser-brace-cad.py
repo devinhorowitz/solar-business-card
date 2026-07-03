@@ -32,7 +32,7 @@ LOCATOR RECESSES (Ø3.2 x 0.8, INVERTED) in the bottom receive two Ø3.0 x 0.4 m
 the shell floor at (13,35) and (33,55). Inverting keeps the shell floor solid (uniform 0.95 back for
 engraving) and -- the point -- leaves the brace BOTTOM clear so it is the face you sand to the height
 fit (the component pockets live on the TOP, so the top cannot be sanded without bottoming parts). Pre-
-compensate: print the bottom features (recesses, tape recess) ~0.15 deeper for the sanding allowance.
+compensate: print the bottom features (the recesses) ~0.15 deeper for the sanding allowance.
 
 Print ~0.10-0.15 mm PROUD in height, sand the bottom flat to a zero-air fit. Model is the sanded
 nominal at the true 1.85 gap.
@@ -66,14 +66,11 @@ FER_T = 0.38                       # OVERALL STACK per DK 732-5049-ND (ferrite+P
                                    # MEASURE the delivered sheet and set pocket = measured - 0.05 (rule holds for any alternate sheet).
 FER_POCKET_DEPTH = FER_T - 0.05    # -> 0.33 nominal (sits ~0.05 proud, seats flush)
 FER_CLR = 0.20
-# window = aluminum-tape BAY (PCB §6a): through aperture (light to the floor tape) + shallow bottom
-# recess meeting the laser frame (seats the tape, registers the brace).
-APER_INSET = 0.6                   # aperture is the laser frame inset this much (brace overlaps the tape edge)
-TAPE_RECESS_DEPTH = 0.15           # clears a ~0.1mm foil tape (3M 427 = 0.12); set to chosen tape + ~0.03
-TAPE_RECESS_MARGIN = 0.20          # recess = laser frame + this (registration + slight tape oversize)
+# window = LED-HUG DIFFUSER BACKING (implemented below). The old aluminum-tape bay (through aperture +
+# tape recess) is retired, so its APER_/TAPE_ constants are removed.
 STUBS = [(13.0, 35.0), (33.0, 55.0)]   # diagonal locators (INVERTED): recesses in the brace bottom that
                                        # receive Ø3.0 metal pillars standing on the shell floor.
-RECESS_R, RECESS_DEPTH = 1.6, 0.8      # Ø3.2 recess, 0.6 deep: takes a 0.4 pillar with room for ~0.15 bottom sanding
+RECESS_R, RECESS_DEPTH = 1.6, 0.8      # Ø3.2 recess, 0.8 deep: takes the shell's Ø3.0 x 0.4 pillar; ~0.15 bottom-sanding leaves ~0.25 axial margin
 W, H = 50.80, 88.90
 def wx(bx): return bx - W/2
 def wy(by): return by - H/2
