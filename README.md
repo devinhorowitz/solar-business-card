@@ -80,7 +80,7 @@ all lives on the back, ready for an optional machined-metal back-shell.
 | LED master switch | **SW2** (solder-bridge) + **R12** | OFF / ON / TINY — TINY routes the LEDs through a 220 Ω ballast for a dim, long-runtime glow |
 | Motion | **ST LIS2DH12** | 3-axis accel; tap / double-tap wakes the MCU via interrupts |
 | Light sense | **R5 / R6 divider → PD2** | VIN ÷ 2 off the *solar input* (not the rail) — tracks light directly; doubles as wake-on-light |
-| NFC | **NXP NT3H2211** (NTAG I²C plus 2K) | present from v3.0 — a contact **vCard** a phone taps to save; field-detect (FD, PA6) also wakes the glow — I²C `0x55`, shares the accel's bus |
+| NFC | **NXP NT3H2211** (NTAG I²C plus 2K) | present from v3.0 — a contact **vCard** a phone taps to save; field-detect (FD, PA6) also wakes the glow — I²C `0x55`, shares the accel's bus; VCC **power-gated by `U6`** (`NFC_EN`/PA7, off by default) |
 
 **Breakouts and features:** a **TC2030** Tag-Connect pad (`TC1`) for hands-free UPDI
 programming, a backup UPDI header (`J1`), a **5-pad bench strip** on the back east edge
@@ -206,8 +206,11 @@ the board gives it:
   tap / double-tap and let it pull the MCU out of sleep.
 - **NFC contact tag** — `U5` (NXP NT3H2211, on the board from v3.0) carries a **vCard** a phone reads on a
   tap to save the contact (RF-powered, so it reads with the cap flat), and its **field-detect**
-  line wakes the same glow. Shares the I²C bus with the accel (`0x55` vs `0x18`). See
-  `firmware/README.md` → *NFC contact card*.
+  line wakes the same glow. The tag has no sleep state and would draw **~195 µA** continuously — the
+  card's largest idle load — so firmware **power-gates** its VCC through a load switch (`U6`) on
+  **NFC_EN (PA7)**, held **off by default** and raised only around an I²C access; the vCard read and
+  the FD-wake both run on the phone's field power, so they still work with the tag's VCC off. Shares
+  the I²C bus with the accel (`0x55` vs `0x18`). See `firmware/README.md` → *NFC contact card*.
 - **Light sensing** — the divider taps the **solar input** (VIN ÷ 2) into **PD2** (AIN2), so it
   reads light directly — ~0 V dark, rising under light; firmware adapts the glow to available
   light and can also read **VDD/10** and the internal temp sensor.
@@ -218,8 +221,9 @@ the board gives it:
   peripheral clock stopped, and the AC isn't a Standby/Power-Down wake source, so it would never
   fire. Instant response isn't lost: the accelerometer interrupt wakes from Power-Down, and
   picking the card up to carry it into the light *is* that motion. (Standing current is
-  dominated by the always-on accelerometer, not the poll — see `firmware/README.md`, and the
-  corrected `solar-glow-drh-v2-hardware.md` §6.)
+  dominated by the always-on accelerometer, not the poll and not the NFC tag, which is
+  power-gated off by default — see `firmware/README.md`, and the corrected
+  `solar-glow-drh-v2-hardware.md` §6.)
 - **Low-power housekeeping** — `VREGCTRL.PMODE = AUTO` for sub-µA power-down; RTC/PIT off the
   internal ULP oscillator (no crystal); an EEPROM “times-activated” counter that survives a
   full supercap drain; and the core **IDLE-sleeps through the breathing glow** while TCA0 keeps
