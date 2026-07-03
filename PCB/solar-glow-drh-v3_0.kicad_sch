@@ -901,7 +901,7 @@
 					)
 				)
 			)
-			(property "Value" "NP0_DNP"
+			(property "Value" "82pF-NP0-trim"
 				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -2037,7 +2037,7 @@
 					)
 				)
 			)
-			(property "Value" "2.76uH"
+			(property "Value" "1.0uH"
 				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -2515,7 +2515,7 @@
 					)
 				)
 			)
-			(property "Value" "SM141K06L"
+			(property "Value" "SM141K06TF"
 				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -2661,7 +2661,7 @@
 					)
 				)
 			)
-			(property "Value" "SM141K06L"
+			(property "Value" "SM141K06TF"
 				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -6453,7 +6453,7 @@
 					)
 				)
 			)
-			(property "Value" "ALD910025SAL"
+			(property "Value" "ALD910025SALI"
 				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -14530,7 +14530,7 @@
 				)
 			)
 		)
-		(property "Value" "2.76uH"
+		(property "Value" "1.0uH"
 			(at 571.5 149.86 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -15475,7 +15475,7 @@
 				)
 			)
 		)
-		(property "Value" "NP0_DNP"
+		(property "Value" "82pF-NP0-trim"
 			(at 571.5 124.46 0)
 			(show_name no)
 			(do_not_autoplace no)
