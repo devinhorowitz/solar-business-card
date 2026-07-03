@@ -21,12 +21,13 @@ card's largest idle load. See **NFC contact card** below.
 > build against a real DFP as below before trusting it on hardware.
 >
 > The **NFC** firmware is verified against the NTAG I2C plus datasheet
-> (NT3H2111_2211 Rev 3.6). The NT3H2211 parts are *placed* in the committed
-> `solar-glow-drh-v2_2.kicad_pcb`, but its net names aren't machine-readable, and
-> the **`NFC_EN` load-switch power-gate (PA7) is a newer hardware addition not yet
-> on a committed board**, so all NFC wiring here (FD→PA6, the I2C nets, NFC_EN→the
-> switch, where `R13` ties) is from the design spec — bench-confirm FD-wake, the
-> NDEF read, and the power-gate on the assembled card.
+> (NT3H2111_2211 Rev 3.6), and the whole front-end is on the committed
+> `solar-glow-drh-v3_0.kicad_pcb`, verified from its copper: tag `U5`, the `U6`
+> (TPS22918) VCC load switch, `R13`, `R14`, and `C8` are placed and wired as this
+> firmware assumes — FD→PA6, NFC_EN→PA7→`U6` enable, `U6` gating VS→the switched
+> tag rail (`VNFC`), `R13` pulling FD to **VS**, `R14` (100 k) holding NFC_EN low.
+> What still needs the bench is electrical, not wiring: that FD swings to a valid
+> logic-low on field power with VCC gated off, the phone NDEF read, and the `C9` tune.
 
 ## Files
 
@@ -143,7 +144,7 @@ AVR64DD28, VQFN-28, on the **back** of the board.
 | 28 | PA2 | LDRV2 | LED D3, TCA0 WO2 |
 | 1 | PA3 | LDRV1 | LED D2, TCA0 WO3 |
 | 4 | PA6 | FD | NFC field-detect in (`U5`); PORTA pin int, **falling**; field-powered (works VCC-off); int pull-up on + ext 10k (R13) → VS |
-| 5 | PA7 | NFC_EN | Enables the NFC VCC load switch (`U6`, TPS22918), **active-HIGH**; init LOW = NFC off. (~100 k pulldown to hold U6 off while PA7 tristates is a **carried bench item — not on the board yet**.) |
+| 5 | PA7 | NFC_EN | Enables the NFC VCC load switch (`U6`, TPS22918), **active-HIGH**; init LOW = NFC off. (`R14`, 100 k, holds `U6` off while PA7 tristates during reset/UPDI/brown-out — **on the v3.0 board** at (4.39, 29.4). Firmware also drives PA7 low-before-output and low-before-sleep, so the window is covered both ends.) |
 | 8 | PC2 | SDA | TWI0 host (PORTMUX **ALT2**), ext 4.7k → VS |
 | 9 | PC3 | SCL | TWI0 host (ALT2), ext 4.7k → VS |
 | 10 | VDDIO2 | VS | tied to VS by SJ1; PORTC at rail, MVIO unused |
@@ -219,8 +220,9 @@ pin **runs on the phone's field power**, so this works with the tag's VCC gated 
 that is why FD-wake survives the power-gate. Field-present (`NC_REG.FD_ON = 00b`) is
 the chip's POR/config default and the chip cold-starts on the field each tap, so no
 I2C setup is needed. PA6 is a **falling-edge** interrupt; firmware also enables PA6's
-**internal pull-up** as belt-and-suspenders so the pin can't float if `R13` is
-marginal or tied to the switched rail (it only sinks while FD is held low). A hard
+**internal pull-up** as belt-and-suspenders. `R13` ties FD to **VS** on the v3.0
+board (confirmed from copper), so the pull-up is redundant insurance and only sinks
+while FD is held low. A hard
 tap that trips both the accel click and FD fires **one** glow, not two (priority is
 tap → nfc → motion → tick; the tap branch clears the NFC flag).
 

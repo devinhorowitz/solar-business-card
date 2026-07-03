@@ -10,10 +10,10 @@
  * MCU: AVR64DD28, 28-pin VQFN, on the BACK of the board.
  *
  *   pad pinfunc  net      role
- *    26 PA0      LDRV1    LED1 (D2) low-side drive  TCA0 WO0
- *    27 PA1      LDRV2    LED2 (D3)                 TCA0 WO1
- *    28 PA2      LDRV3    LED3 (D4)                 TCA0 WO2
- *     1 PA3      LDRV4    LED4 (D5)                 TCA0 WO3
+ *    26 PA0      LDRV4    LED D5 low-side drive    TCA0 WO0
+ *    27 PA1      LDRV3    LED D4                   TCA0 WO1
+ *    28 PA2      LDRV2    LED D3                   TCA0 WO2
+ *     1 PA3      LDRV1    LED D2                   TCA0 WO3
  *     2 PA4      PA4      spare GPIO  (JP2.1)
  *     3 PA5      BTN      reserved button (stub only; v3 hook)
  *     4 PA6      FD       NFC field-detect in (NT3H2211)  FD-wake, falling; field-powered (works VCC-off)
@@ -34,8 +34,8 @@
  *    EP          GND
  *
  * LED channel map (D1/D9 are Schottkys, NOT LEDs):
- *   D2->LDRV1->PA0/WO0 ; D3->LDRV2->PA1/WO1 ; D4->LDRV3->PA2/WO2 ; D5->LDRV4->PA3/WO3
- *   each LED: anode->ANODE common->SW2->VS ; cathode->Kn->150R ballast->LDRVn->pin
+ *   D2->LDRV1->PA3/WO3 ; D3->LDRV2->PA2/WO2 ; D4->LDRV3->PA1/WO1 ; D5->LDRV4->PA0/WO0
+ *   each LED: anode->ANODE common->SW2->VS ; cathode->Kn->150R ballast->LDRV net->pin (see map above)
  */
 #ifndef BOARD_H
 #define BOARD_H
@@ -96,8 +96,9 @@
  * works even with the tag's VCC gated off -- that is why FD-wake survives the
  * power-gate. main.c senses a FALLING edge on PA6 and runs the tap glow; no I2C
  * setup is needed (the field-present default does it). Firmware also enables PA6's
- * internal pull-up as belt-and-suspenders (so the pin can't float if R13 is
- * marginal or tied to the switched rail); it only sinks current while FD is low. */
+ * internal pull-up as belt-and-suspenders. R13 ties FD to VS on the v3.0 board
+ * (confirmed from copper), so the pull-up is redundant insurance -- it only sinks
+ * current while FD is held low. */
 #define FD_PORT         PORTA
 #define FD_PIN_bm       PIN6_bm
 
