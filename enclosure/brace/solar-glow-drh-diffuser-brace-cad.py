@@ -56,7 +56,7 @@ OUT = "/mnt/user-data/outputs/"
 BASE = "solar-glow-drh-diffuser-brace"
 
 BX0, BX1, BY0, BY1 = 2.0, 49.0, 31.6, 57.4
-GAP   = 1.85
+GAP   = 1.80
 CLR   = 0.25
 AIR   = 0.12
 GLOW  = (14.95, 40.8, 35.85, 47.0)

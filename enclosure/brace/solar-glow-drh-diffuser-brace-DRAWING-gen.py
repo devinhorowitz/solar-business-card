@@ -9,7 +9,7 @@ from matplotlib.patches import Rectangle, Circle, Polygon as MplPoly
 
 # ---- brace geometry (mirrors solar-glow-drh-diffuser-brace-cad.py) ----
 BX0,BY0,BX1,BY1 = 2.0,31.6,49.0,57.4          # envelope (fills the cap-gap band)
-GAP = 1.85                                     # brace thickness (fills the 1.85 cavity)
+GAP = 1.80                                     # brace thickness (fills the 1.80 cavity)
 FER = (36.9,31.5,48.9,57.5)                    # ferrite 12 wide (x, CRITICAL) x 26 long (y, forgiving)
 FER_CLR = 0.20; FER_DEPTH = 0.33               # channel walls + pocket depth
 GLOW = (14.95,40.8,35.85,47.0)                 # monogram-window footprint (LED-hug backing behind it)
@@ -88,7 +88,7 @@ ax.add_patch(Rectangle((xl(3.6),zl(GAP-0.83)),1.2*S2,0.83*S2,fc="white",ec=INK,l
 ax.add_patch(Rectangle((xl(0.9),zl(0)),1.6*S2,LOC_DEPTH*S2,fc="white",ec="#2f5bd0",lw=0.7))
 ax.annotate("",xy=(xl(1.7),zl(0)-0.5),xytext=(xl(1.7),zl(0)-4.5),arrowprops=dict(arrowstyle="-|>",lw=0.5,color=GRY,mutation_scale=6))
 ax.text(xl(1.7),zl(0)-5.2,"shell pillar\nenters here",ha="center",va="top",fontsize=4.6,color=GRY)
-dimv(zl(0),zl(GAP),xl(0)-4,"1.85",fs=7,side=1)
+dimv(zl(0),zl(GAP),xl(0)-4,"1.80",fs=7,side=1)
 dimv(zl(GAP-FER_DEPTH),zl(GAP),xl(10.5)+4,"0.33 FERRITE",fs=5.6,side=-1,txtoff=1.0)
 dimv(zl(0),zl(LOC_DEPTH),xl(0.9)-2.5,"0.8",fs=5.2,side=1,txtoff=1.0)
 leader(xl(4.2),zl(GAP-0.83),xl(5.6),zl(GAP)+9,"D2-D5 LED POCKETS (hug the LEDs)",ha="left",fs=5.6)
@@ -103,7 +103,7 @@ notes=[
  "1. PART = SOLAR-GLOW DRH DIFFUSER BRACE. A DROP-IN INSERT, NOT A FASTENED OR BONDED PART. 3D STEP GOVERNS ALL GEOMETRY; THE STL IS THE PRINT SOURCE.",
  "2. PROCESS: SLA / RESIN 3D PRINT (e.g. PCBWay). MATERIAL: TOUGH WHITE RESIN. IT MUST BE OPAQUE-WHITE AND NON-CONDUCTIVE - NO CARBON / GRAPHITE-FILLED RESIN",
  "    (WEAKLY CONDUCTIVE): THE BRACE RESTS ON GND / VS / SIGNAL COPPER, SO A DIELECTRIC IS REQUIRED. WHITE ALSO DRIVES THE WINDOW BACKING (NOTE 6).",
- "3. FIT: PRINT ~0.1 PROUD IN HEIGHT AND SAND THE FLAT BOTTOM (DATUM) DOWN TO A ZERO-AIR FIT IN THE 1.85 CAVITY. ALL POCKETS ARE ON THE TOP FACE, SO THE",
+ "3. FIT: PRINT ~0.1 PROUD IN HEIGHT AND SAND THE FLAT BOTTOM (DATUM) DOWN TO A ZERO-AIR FIT IN THE 1.80 CAVITY. ALL POCKETS ARE ON THE TOP FACE, SO THE",
  "    BOTTOM LAPS FLAT ON GLASS WITHOUT TOUCHING THEM. DO NOT SAND THE TOP (IT SETS THE POCKET DEPTHS).",
  "4. LOCATOR RECESSES (Ø3.2 × 0.8 DEEP, IN THE FLAT BOTTOM): (13,35) ROUND DATUM + (33,55) SLOTTED Ø3.2 × 4.0 ALONG THE 45° PIN-PAIR AXIS. ROUND+SLOT RELEASES",
  "    CENTER-DISTANCE TOLERANCE (SLA SHRINK + CNC + BOARD-IN-SHELL PLAY OVER THE 28.3 SPAN) YET HOLDS X-Y DATUM + ROTATION. RECEIVES THE SHELL'S 2× Ø3.0 × 0.4 PILLARS (0.4 ENGAGE, ~0.25 AXIAL).",
@@ -112,7 +112,7 @@ notes=[
  "6. WINDOW = LED-HUG DIFFUSER BACKING: SOLID WHITE RESIN FILLS THE MONOGRAM-WINDOW FOOTPRINT BEHIND THE FR4, MINUS THE TIGHT D2-D5 LED POCKETS.",
  "    NO APERTURE, NO FLOOR TAPE. THE POCKET CLEARANCE DOUBLES AS A RESERVOIR IF A VISCOUS OPTICAL GEL IS PRE-FILLED AT FINAL ASSEMBLY (OPTIONAL).",
  "7. REMOVABLE / NOT BONDED: THE BRACE MUST LIFT OUT FOR NFC C9 TRIM DURING BENCH BRING-UP. KEEP IT DRY-FIT WHILE ITERATING; ADD ANY GEL ONLY ON THE FINAL CARD.",
- "8. U2 AND U6 ARE THROUGH-POCKETS (U2 TALL AT 1.75; U6 FORCED THROUGH -- ITS BLIND WEB WOULD BE 0.28 < SLA MIN; U6 IS 1.45 IN THE 1.85 CAVITY -> 0.40 AIR TO THE SHELL FLOOR). OTHERS BLIND.",
+ "8. U2 AND U6 ARE THROUGH-POCKETS (U2 TALL AT 1.75; U6 FORCED THROUGH -- ITS BLIND WEB WOULD BE 0.23 < SLA MIN; U6 IS 1.45 IN THE 1.80 CAVITY -> 0.35 AIR TO THE SHELL FLOOR). OTHERS BLIND.",
 ]
 yy=91.5
 for n in notes: ax.text(20,yy,n,fontsize=5.9,color=INK); yy-=3.9
@@ -128,7 +128,7 @@ ax.text(tb_x+tb_w-3,tb_y+27.5,"REV  A",ha="right",fontsize=6.4,va="center",color
 ax.text(tb_x+3,tb_y+18.5,"MATERIAL  TOUGH WHITE SLA (opaque, non-conductive)",fontsize=5.6,va="center",color=INK)
 ax.text(tb_x+3,tb_y+10.5,"UNITS  mm",fontsize=6.2,va="center",color=INK)
 ax.text(tb_x+63,tb_y+10.5,"SCALE  AS NOTED",fontsize=6.2,va="center",color=INK)
-ax.text(tb_x+3,tb_y+3.7,"ENVELOPE 47.0 x 25.8 x 1.85   process: SLA print",fontsize=5.7,va="center",color=INK)
+ax.text(tb_x+3,tb_y+3.7,"ENVELOPE 47.0 x 25.8 x 1.80   process: SLA print",fontsize=5.7,va="center",color=INK)
 ax.text(tb_x+tb_w-3,tb_y+3.7,"SHEET 1/1",ha="right",fontsize=6.2,va="center",color=INK)
 
 fig.savefig("/mnt/user-data/outputs/solar-glow-drh-diffuser-brace-DRAWING.pdf",facecolor="white")

@@ -4,7 +4,7 @@ A single printed resin insert that drops into the titanium back-shell cavity, on
 populated back of the PCB. It is **not fastened and not bonded** — it is held by the shell clamping
 down, and it lifts straight out. It does three jobs the bare shell deliberately does not:
 
-1. **Center support** — fills the 1.85 mm cavity and props the middle of the thin board so the shell's floor can stay a plain 0.95 mm with no internal ribs.
+1. **Center support** — fills the 1.80 mm cavity and props the middle of the thin board so the shell's floor can be a true 1.00 mm with no internal ribs.
 2. **Window backing** — a solid white face sits right behind the FR4 monogram window and turns the four reverse-mount LEDs into an even amber lightbox (no aperture, no reflector tape).
 3. **NFC ferrite carrier** — an open channel over the coil holds a ferrite strip that lifts the antenna off the grounded titanium.
 
@@ -26,7 +26,7 @@ down, and it lifts straight out. It does three jobs the bare shell deliberately 
 
 - **Process:** SLA / resin print (e.g. PCBWay resin).
 - **Material: tough white resin.** It must be **opaque-white and non-conductive** — do **not** use a carbon- or graphite-filled resin. The brace rests directly on GND / VS / signal copper, so it has to be a dielectric; white also drives the window backing.
-- **Fit:** print ~0.1 mm proud in height, then **sand the flat bottom (the datum) down** to a zero-air fit in the 1.85 mm cavity. Every pocket is on the **top** face, so the bottom laps flat on glass without touching them. **Do not sand the top** — it sets the pocket depths.
+- **Fit:** print ~0.1 mm proud in height, then **sand the flat bottom (the datum) down** to a zero-air fit in the 1.80 mm cavity. Every pocket is on the **top** face, so the bottom laps flat on glass without touching them. **Do not sand the top** — it sets the pocket depths.
 - Mass ~2.2 g.
 
 ## Key features
@@ -35,7 +35,7 @@ down, and it lifts straight out. It does three jobs the bare shell deliberately 
 - **Locator recesses:** Ø3.2 × 0.8 deep in the flat bottom, receiving the shell's Ø3.0 × 0.4 metal pillars (0.4 engagement, 0.1 radial, ~0.25 axial margin after the brace's ~0.15 bottom-sanding). **(13, 35) is a round datum; (33, 55) is a slot** — Ø3.2 × 4.0 along the 45° pin-pair axis. Round-plus-slot (not two round holes) releases the center-distance tolerance — SLA shrink + CNC pillar position + board-in-shell play over the 28.3 mm span — while the round hole holds the X-Y datum and the slot width holds rotation. This is the only tie between the brace and the shell.
 - **Ferrite channel** (over the NFC coil): an **open-ended** channel — walled on the **12 mm width (critical, it is edge-limited by the coil/board east edge)** and **open at both ends** (length is forgiving), **0.33 mm** deep. Takes a Würth WE-FSFS 364006 ferrite, nominal **12 × 26 mm** (even on the sheet's 2 mm score grid), PSA'd in; it may overhang the ends slightly.
 - **Window = LED-hug diffuser backing:** solid white resin fills the monogram-window footprint behind the FR4, minus tight D2–D5 LED pockets. No aperture, no floor tape. The LED-pocket clearance doubles as a reservoir if a viscous optical gel is pre-filled at final assembly (optional).
-- **U2 and U6 are through-pockets.** U2 is the tallest B-side part (1.75 mm). U6 (1.45 mm) is forced through because a blind pocket would leave only a 0.28 mm resin ceiling web (below SLA minimum-wall); through, U6's body faces the shell floor with 0.40 mm of air, so it never approaches contact. Everything else sits in blind pockets at its verified height.
+- **U2 and U6 are through-pockets.** U2 is the tallest B-side part (1.75 mm). U6 (1.45 mm) is forced through because a blind pocket would leave only a 0.23 mm resin ceiling web (below SLA minimum-wall); through, U6's body faces the shell floor with 0.35 mm of air, so it never approaches contact. Everything else sits in blind pockets at its verified height.
 
 ## Removable — keep it that way during bring-up
 
