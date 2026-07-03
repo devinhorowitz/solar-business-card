@@ -180,6 +180,11 @@ int main(void)
     if (sense_vdd_mv() >= WINK_FLOOR_MV)
         led_breathe(1, GLOW_BREATH_MS, GLOW_PEAK);
 
+    /* seed the dark->light detector with the actual boot light level, so a card
+     * powered on already in light does not fire a phantom dark->light glow on the
+     * first PIT tick (the wink above is the only intended power-on glow). */
+    prev_light = (sense_vin_mv() >= LIGHT_VIN_MV);
+
     for (;;) {
 #if USE_WDT
         wdt_reset();      /* pet from the loop top: a wedged main loop (even one
