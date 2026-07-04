@@ -18,7 +18,7 @@
       "Y": 89.0
     },
     "LayerNumber": 2,
-    "BoardThickness": 0.8,
+    "BoardThickness": 0.6,
     "Finish": "None"
   },
   "DesignRules": [
@@ -100,7 +100,7 @@
     },
     {
       "Type": "Dielectric",
-      "Thickness": 0.71,
+      "Thickness": 0.51,
       "Material": "FR4",
       "Name": "F.Cu/B.Cu",
       "Notes": "Type: dielectric layer 1 (from F.Cu to B.Cu)"
