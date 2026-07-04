@@ -202,7 +202,7 @@ Summary of the **orderable** lines:
 | U1 | 1 | AVR64DD28 (VQFN-28) | `AVR64DD28-I/STX` |
 | U2 | 1 | Dual SAB MOSFET (SOIC-8) | `ALD910025SALI` |
 | U3 | 1 | LIS2DH12 accelerometer (LGA-12) | `LIS2DH12TR` |
-| U4 | 1 | TLV431B reference (SOT-23) | `TLV431BCDBZR` |
+| U4 | 1 | TLV3011 comparator + 1.242 V ref (SOT-23-6, open-drain) | `TLV3011AIDBVR` |
 | **U5** | 1 | **NFC tag, NT3H2211 (XQFN8 / SOT902-3)** | `NT3H2211W0FHKH` — matches the placed 0.25×0.4 mm land |
 | **U6** | 1 | **Load switch (SOT-23-6) (in the v3_0 BOM)** | `TPS22918DBVR` |
 | Q1 | 1 | PNP, BCP53 family | `BCP5316MTWG` |
