@@ -161,7 +161,9 @@ LEDs are **low-side**: each lights when its PA pin pulls LOW, current set by a
 average below that ballasted ceiling. `D1`/`D9` are Schottkys, not LEDs.
 
 Spare/free: PA4, PC0, PC1 (on JP2); PA5 (`BTN`, reserved stub for v3);
-PD1, PD3–PD7, PF6/RST. (PA6 = NFC `FD`, PA7 = `NFC_EN`.)
+PD1, PD3–PD7, PF6/RST. (PA6 = NFC `FD`, PA7 = `NFC_EN`.) All of these unused pins
+get internal pull-ups in `gpio_init` so a floating input can't leak current — see
+*Power notes*.
 
 ## Behaviour
 
@@ -303,10 +305,22 @@ read, an initialization delay (`ADC0.CTRLD` `INITDLY = DLY128`, 256 µs at
 CLK_ADC = 500 kHz) precedes the sample to cover VREF start-up; that is sized
 conservatively — start-up is ~10 µs on this board's high-frequency clock, and the
 200 µs datasheet figure is the 32 kHz-clock case, which does not apply — and the
-delay costs a fraction of a nanoamp averaged over the 1 s poll. So the
+delay costs a fraction of a nanoamp averaged over the 1 s poll. The conversion
+itself is waited out in **IDLE sleep** rather than a busy-poll — the ADC keeps
+converting with the core clock gated and its result-ready interrupt wakes the core,
+so the ~350 µs poll costs the idle tier, not active-mode current (the wait is bounded
+and falls back to a fail-safe 0 if a conversion never completes). So the
 sleep-current question the old design flagged is **closed in code**; the bench
 run now just *confirms* it (expect the analog domain to be a rounding error,
 ~1 µA total in power-down) rather than deciding whether there is a bug to gate.
+
+**Unused pins don't float.** Every pin the firmware doesn't drive — PA4, PA5, PC0,
+PC1 and the PORTD spares — is given an internal pull-up in `gpio_init` (PD2, the
+analog sense pin, instead has its digital input buffer disabled). A floating CMOS
+input draws shoot-through current in its input buffer whenever it drifts near
+mid-rail; pulling the spares high removes that, so the idle draw is deterministic
+rather than board- and humidity-dependent. A pulled-up pin with no load draws ~0, so
+it costs nothing and changes no behaviour.
 
 ## What to tune (all in `board.h` unless noted)
 
@@ -426,9 +440,10 @@ the sensor.
   especially the LEDs keep drawing — so call it ~5% of glow energy, to be
   confirmed on the bench.
 - **Core runs at 1 MHz (`clocks_init`), on purpose.** Once the core sleeps
-  through the glow it is only active in brief bursts (a few ~350 µs ADC polls plus
-  the one-time boot config), so a slower clock trims the per-burst active current
-  for no behaviour cost here. The knock-ons were handled so nothing actually
+  through the glow — and idle-sleeps through the ADC conversion (see *Power
+  notes*) — it is only active in brief bursts (the wake/compare overhead around
+  each poll plus the one-time boot config), so a slower clock trims the per-burst
+  active current for no behaviour cost here. The knock-ons were handled so nothing actually
   changes functionally: I2C is held at 100 kHz via `MBAUD = 0` (the divider floor
   at this clock, so 100 kHz is also the ceiling — 400 kHz fast-mode is unavailable
   below ~4 MHz CLK_PER); the ADC prescaler is `DIV2` so CLK_ADC = 500 kHz stays in
