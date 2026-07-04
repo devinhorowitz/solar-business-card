@@ -211,10 +211,10 @@ on nothing is probe-able anyway, by design.
   the ICs — see the clamp note). An 85 °C+ / 105 °C cell is the fix if hot storage is a goal.
 - **Rail clamp:** **TLV3011 comparator + on-chip 1.242 V ref (U4)** + PNP (Q1) shunt holds
   **VS ≤ 3.60 V worst-case** (≈3.50 V typ) so the accelerometer **and** the NFC tag stay at/under
-  their shared 3.6 V operating max. Divider **R7 (1.82 M) / R8 (1.00 M)** sets the trip via
+  their shared 3.6 V operating max. Divider **R7 (6.81 M) / R8 (3.74 M)** sets the trip via
   VS = 1.242·(1+R7/R8); it sits on VS (must — both panels feed VS through separate diodes).
   R7/R8 were chosen to put the **worst-case** clamp (ref ±1% + 100 ppm/°C + resistor ±1%) right
-  on 3.60 V, wringing out maximum storage energy (E ∝ V²) while staying under the datasheet max.
+  on 3.60 V, wringing out maximum storage energy (E ∝ V²) while staying under the datasheet max. The divider is high-impedance (6.81 M / 3.74 M ≈ 10.5 MΩ) — the **only** continuous passive drain off the supercaps, ~**0.33 µA** at 3.5 V. This high-Z is only possible because the TLV3011’s ±10 pA input bias makes the resistor offset negligible; the old TLV431’s 0.5 µA Iref would have added ~0.9 V here, which is why it was forced to a low-impedance 1.8 M / 1.0 M divider (≈1.24 µA).
   Open-drain OUT drives Q1 through the R9 pullup. *(Supersedes the earlier TLV431 divider, whose
   0.5 µA Iref across a 1.8 M top resistor pushed the real clamp to ~3.74 V typ / ~4.5 V worst —
   a latent over-voltage the TLV3011's ±10 pA input bias eliminates.)* **Hot-car:** at 85–105 °C
