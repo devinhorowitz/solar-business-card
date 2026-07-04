@@ -60,7 +60,7 @@ MCU: **AVR64DD28**, 28-pin VQFN (footprint `solarglow:U1`). It sits on the **bac
 | 15 | **PD5** | — | free | unconnected (AIN5) |
 | 16 | **PD6** | — | free | unconnected (AIN6 / AINP3 / DAC VOUT) |
 | 17 | **PD7** | — | free | unconnected (VREFA / AIN7) |
-| 18 | **VDD** | `VS` | core supply | the clamped rail, ≤ 3.47 V |
+| 18 | **VDD** | `VS` | core supply | the clamped rail, ≤ 3.60 V worst-case (≈3.50 typ) |
 | 19 | **GND** | `GND` | ground | |
 | 20 | **PF0** | `INT2` | accel INT2 input | PORTF pin interrupt |
 | 21 | **PF1** | `INT1` | accel INT1 input | PORTF pin interrupt |
@@ -82,10 +82,10 @@ Each LED: anode → `ANODE` (common) → **SW2** → VS; cathode → `Kn` → ba
 |------|-----------|
 | `VIN` | PV1 (+) solar node, **before** blocking diode D1. ~0 V in the dark, rises with light. Feeds the VSENSE divider and D1 anode. |
 | `VINB` | PV2 (+) solar node, before blocking diode D9. |
-| `VS` | The storage rail (after D1/D9). = MCU VDD, accel VDD, LED anode source, supercap top. **Clamped ≤ 3.47 V** by the TLV431+PNP shunt (U4/Q1). |
+| `VS` | The storage rail (after D1/D9). = MCU VDD, accel VDD, LED anode source, supercap top. **Clamped ≤ 3.60 V worst-case** by the TLV3011 comparator + PNP shunt (U4/Q1). |
 | `GND` | Ground — **full-board B.Cu pour** (`GND_B`) in v3.0 (was the In1 plane in v2.3), EP, the four M2 mount holes. |
 | `MID` | Supercap series midpoint, balanced by U2 (ALD910025 dual SAB). |
-| `CLBASE` / `CLREF` | Clamp internals — Q1 base / TLV431 reference divider tap. |
+| `CLBASE` / `CLREF` | Clamp internals — Q1 base (U4 open-drain OUT + R9 pullup) / VS sense-divider tap into U4 IN−. |
 | `ANODE` | Common LED-anode node, switched by SW2. |
 | `TINY` | Dim-mode node: LED anodes → VS through R12 (220 Ω) when SW2 = TINY. |
 | `LDRV1‒4` | LED cathode drives → MCU PA0‒PA3. |
@@ -153,7 +153,7 @@ Stackup: **v3.0 is 2-layer** (F / B) — GND = full-board B.Cu pour, VS = routed
   (§8.4), so this works even with `U5`'s VCC gated off; firmware also enables PA6's internal
   pull-up.
 - Supply Vcc → **`VNFC` = `U6` (TPS22918) output**, gated by `NFC_EN` (PA7, active-HIGH; `R14` 100 k pulldown); U6 itself draws ISD ≈ 0.5 µA typ (3.5 µA max) from VS while off and IQ ≈ 8.3 µA while on (SLVSD76C §6.5); the
-  switch input is on VS (clamped ≤ 3.47 V, inside the 3.6 V max). **Off by default** to kill
+  switch input is on VS (clamped ≤ 3.60 V worst-case, inside the 3.6 V max). **Off by default** to kill
   the ~195 µA idle draw (datasheet Table 42); only powered around an MCU↔tag I²C access. `C8`
   (100 nF) decouples the switched VCC; `VOUT` (energy-harvest output) unconnected.
 - Antenna: PCB coil on `LA`/`LB`, tuned to 13.56 MHz by the chip's internal 50 pF
@@ -203,9 +203,23 @@ on nothing is probe-able anyway, by design.
   each behind its own Schottky — **PV1 → D1 → VS** and **PV2 → D9 → VS** (both MMSD301T1G) —
   so a shadow on one panel can't back-drive the other.
 - **Storage:** 4× SCHURTER WS17 (P/N 3-153-438), wired **2P2S → 1 F @ 5.5 V ≈ 15 J**, on one
-  node balanced by **U2 (ALD910025)** at the midpoint.
-- **Rail clamp:** TLV431 (U4) + PNP (Q1) shunt holds **VS ≤ ~3.47 V** so the accelerometer
-  stays inside its 3.6 V max. Divider R7 (1.8 M) / R8 (1 M) sets the trip; it sits on VS.
+  node balanced by **U2 (ALD910025)** at the midpoint. Cell rating is **−40 to +85 °C**; each
+  cell sees only VS/2 (≈1.75 V, far under the 2.75 V rating), so voltage is never the limit,
+  but high heat is: leakage climbs and calendar life roughly halves per 10 °C over 85 °C.
+  **Hot-car caveat** — a matte-black card on a sunlit dash can self-heat to 80–90 °C, at/above
+  the cell rating; this ages the supercaps and speeds self-discharge (it does **not** damage
+  the ICs — see the clamp note). An 85 °C+ / 105 °C cell is the fix if hot storage is a goal.
+- **Rail clamp:** **TLV3011 comparator + on-chip 1.242 V ref (U4)** + PNP (Q1) shunt holds
+  **VS ≤ 3.60 V worst-case** (≈3.50 V typ) so the accelerometer **and** the NFC tag stay at/under
+  their shared 3.6 V operating max. Divider **R7 (1.82 M) / R8 (1.00 M)** sets the trip via
+  VS = 1.242·(1+R7/R8); it sits on VS (must — both panels feed VS through separate diodes).
+  R7/R8 were chosen to put the **worst-case** clamp (ref ±1% + 100 ppm/°C + resistor ±1%) right
+  on 3.60 V, wringing out maximum storage energy (E ∝ V²) while staying under the datasheet max.
+  Open-drain OUT drives Q1 through the R9 pullup. *(Supersedes the earlier TLV431 divider, whose
+  0.5 µA Iref across a 1.8 M top resistor pushed the real clamp to ~3.74 V typ / ~4.5 V worst —
+  a latent over-voltage the TLV3011's ±10 pA input bias eliminates.)* **Hot-car:** at 85–105 °C
+  worst-case creeps to ~3.61–3.65 V, still ~1 V under both parts' 4.6/4.8 V absolute-max damage
+  line, so no damage — only a brief excursion outside the guaranteed operating window.
 - **VDDIO2 = VS** via SJ1, so PORTC runs at the rail and **MVIO is unused** (no separate I/O
   voltage). The MVIO fuse `SYSCFG1.MVSYSCFG` should be set to **SINGLE** to match (factory
   default is DUAL; DUAL also works since VDDIO2 sits at a valid voltage, but SINGLE is the

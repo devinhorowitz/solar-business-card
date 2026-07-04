@@ -59,24 +59,16 @@ now the dominant always-on load and pegs dark-survival at ~half a day); light-se
 sub-µA; MCU sleep ≈ 0.65 µA (AVR-DD power-down, `PMODE=AUTO`). The LEDs are the only mA-scale
 load. See `firmware/README.md` "Power notes" for the corrected model.
 
-> **Ballast note — 150 Ω sets the ceiling; the firmware sets the draw.** The LED-draw figures in the
-> old docs (≈5 mA for 4 LEDs full-on, ≈3 mA breathing, +1.25 mA per added LED) were computed at v0's
-> **1 kΩ** ballast (~1.15 mA/LED at full duty). The committed v3.0 BOM uses **150 Ω** (`R1–R4`), which
-> at the ~3.4 V rail raises the *peak* to ~8 mA/LED, roughly **7×**. That is deliberate: 150 Ω is
-> chosen to give the **PWM its widest range**, not to run brighter. Actual LED current is whatever the
-> firmware duty asks (`GLOW_PEAK`, the gamma ramp, cycle count), always *below* the ballast ceiling, so
-> brightness and energy are tuned **in firmware, not by rescaling `R1–R4`** — if a draw change is
-> needed it happens in the duty, not on the PCB. Net: the ceiling moved up ~7× (headroom to go brighter
-> when the harvest allows); the sustainable *operating* draw is still a firmware duty choice. Read the
-> per-LED numbers below as **full-duty bounds** and dial duty to the measured harvest.
+> **Ballast caveat — re-derive the LED numbers for v2.1.** The LED-draw figures used throughout the
+> old docs (≈5 mA for 4 LEDs full-on, ≈3 mA breathing, +1.25 mA per added LED) were computed at
+> v0's **1 kΩ** ballast. The v2.1 BOM carries a **different ballast (150 Ω, flagged bench-pending)**,
+> which at the same ~3.5 V rail raises per-LED current several-fold. The schematic leaves R1–R4 as a
+> "LED ballast" placeholder, so the BOM is the source of truth for the value. **Re-derive draw and
+> duty against the final ballast before trusting any duty-cycle percentage below.**
 
-**Conclusion to test (the higher ceiling only sharpens this):** continuous *full-duty* breathing is
-**not** sustainable on office light — and at 150 Ω it is ~7× further out than the old 1 kΩ figure,
-so the harvest-sustainable duty fraction scales down by about that factor (the old "~6–10% duty" was a
-1 kΩ number). The indoor mode is unchanged in kind — **harvest-and-pulse** or **continuous dim
-(1 LED)** — but the operating point is now reached by lowering the PWM duty against the 150 Ω ceiling
-(a firmware knob), not by the resistor, with headroom to run bright on a windowsill. Continuous full
-breathing still needs daylight.
+**Conclusion to test (at 1 kΩ; rescale for the final ballast):** continuous full breathing is *not*
+sustainable on office light (~10× short). The natural indoor mode is **harvest-and-pulse (~6–10%
+duty)** or **continuous dim (1 LED)**. Continuous full breathing needs a windowsill / daylight.
 
 **#1 open empirical gate: measure real harvest.** Use the **VDD-proxy ADC** during bring-up (read
 the rail against the internal reference — it charges in light, sags under load), then the real
@@ -139,7 +131,7 @@ belongs in KiCad** (push-shove router, real thermal reliefs, exact mask expansio
 - **Why this part:** **MVIO** (PORTC can run on a separate VDDIO2 — attractive for a mixed-voltage
   rail), **ADC** (light-sense), flexible **TCA/TCB/TCD** PWM (LED breathing / more LEDs), and
   **22 I/O** of headroom. *(As-built, the separate-voltage mode is **not** used: the shunt clamp
-  holds the whole VS rail ≤ 3.47 V and VDDIO2 is tied to VS via SJ1, so the accel is protected by
+  holds the whole VS rail ≤ 3.60 V worst-case and VDDIO2 is tied to VS via SJ1, so the accel is protected by
   the clamp rather than by MVIO. Set the `SYSCFG1.MVSYSCFG` fuse to SINGLE — see firmware README
   "Fuses".)*
 - **Why VQFN, not SSOP-28:** height is irrelevant (U2 at 1.75 mm sets the cavity floor; the QFN is
@@ -244,11 +236,11 @@ Recorded so the history is legible and the dead branches stay dead:
 |---|---|---|---|
 | Stackup | 2-layer, 0.8 mm | 4-layer, 0.4 mm | **6-layer, 0.8 mm** (L1 sig · L2 GND · L3–4 sig · L5 VS · L6 sig) |
 | Storage | 2× WS10, ~2.3 J | 4× WS17 2P2S, ~15 J | **4× WS17 2P2S, 1 F @ 5.5 V, ~15 J** |
-| Accel rail handling | n/a | planned LDO (TPS7A02) for the 3.6 V-max accel | **TLV431B shunt clamp holds VS ≤ 3.47 V** (no LDO) |
+| Accel rail handling | n/a | planned LDO (TPS7A02) for the 3.6 V-max accel | **TLV3011 comparator+ref shunt clamp holds VS ≤ 3.60 V worst-case** (no LDO); supersedes the TLV431 divider (Iref over-voltage) |
 | Accelerometer | none | BMA400 / LIS2DW12 (candidates) | **LIS2DH12, I²C addr 0x18** |
 | Button | snap-dome / cap-touch | dome (cap-touch expendable) | **accel tap-wake** |
 | Solar | SM141K06L (1.8 mm) | SM141K06L | **SM141K06TF (1.2 mm)** — electrically identical, thinner |
-| LED ballast | 1 kΩ | 1 kΩ | **150 Ω (committed v3.0 BOM)** — a ~7× higher ceiling for PWM range; operating draw is a firmware duty knob (§2) |
+| LED ballast | 1 kΩ | 1 kΩ | **150 Ω per BOM (bench-pending)** — rescale the energy budget (§2) |
 | VSENSE pin | — | PA5, later proposed PC3 | **PD2 (AIN2 + AINP0)** |
 | LED timer | TCA0 | TCA0, briefly proposed TCD0 | **TCA0 split, WO0–WO3 = PA0–PA3** |
 
@@ -343,7 +335,7 @@ corners, and the **same BOM**. It is the current board; **v2.3 (4-layer) is the 
   (42.9, 38); east L-tie crossing the coil on F. Plus benign `lib_footprint_issues` + the reserved
   `BTN` `track_dangling`.
 - **Carried bench items** (not resolved here): NFC coil L + C9 trim (~100 pF; now includes the F L-tie
-  crossing and the Ti-shell proximity); scope PA6/FD on a real tap with VCC gated off; **NFC_EN pulldown — resolved this session (R14; see the addendum below)**; LED PWM INVEN polarity in `led.c`; `twi.c` presence — **resolved** (`twi.h` is header-only static-inline by design; no separate `twi.c`, and it links clean — only the DFP compile-test remains); plastic dry-fit;
+  crossing and the Ti-shell proximity); scope PA6/FD on a real tap with VCC gated off; **NFC_EN pulldown — resolved this session (R14; see the addendum below)**; LED PWM INVEN polarity in `led.c`; `twi.c` presence; plastic dry-fit;
   **Ti-shell-behind-coil L/Q** — enclosure-relevant: metal behind the NFC coil pulls its inductance
   and Q, and could force a local change over the coil area if it detunes (measurement, not a CAD
   change yet).

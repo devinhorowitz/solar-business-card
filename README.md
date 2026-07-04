@@ -75,7 +75,7 @@ all lives on the back, ready for an optional machined-metal back-shell.
 | Blocking diodes | **2× onsemi MMSD301T1G** | Schottky, one per panel; isolates the cells *and* the supercaps |
 | Storage | **4× SCHURTER 3-153-438** (WS17) | 1 F / 2.75 V each, wired 2P2S → **1 F @ 5.5 V ≈ 15 J** on one balanced node |
 | Balancer | **ALD910025SALI** | dual SAB MOSFET — the low-leakage way to hold the series midpoint |
-| Rail clamp | **TI TLV431 + onsemi BCP53 PNP** | shunt clamp holds the rail **≤ ~3.47 V** so the accel stays inside its 3.6 V max |
+| Rail clamp | **TI TLV3011 comparator+ref + onsemi BCP53 PNP** | shunt clamp holds the rail **≤ 3.60 V worst-case** so the accel and NFC tag stay under their shared 3.6 V max |
 | LEDs | **4× ams OSRAM LA P47F** (amber) | reverse-mount; glow through the FR4 window, **150 Ω** ballast each |
 | LED master switch | **SW2** (solder-bridge) + **R12** | OFF / ON / TINY — TINY routes the LEDs through a 220 Ω ballast for a dim, long-runtime glow |
 | Motion | **ST LIS2DH12** | 3-axis accel; tap / double-tap wakes the MCU via interrupts |
@@ -107,8 +107,8 @@ Full part numbers, pricing, and per-part datasheet links are in
   *open* over the window on purpose: bare ENIG reflects the LEDs’ light forward instead of
   absorbing it.
 - **Rail discipline.** The supercap stack can sit near 5.5 V, but the accelerometer tops out at
-  3.6 V — so a TLV431-referenced PNP shunt clamp sits on the **VS rail** (after the blocking
-  diodes) and holds VS ≤ ~3.47 V, directly limiting what the accelerometer sees. Its sense
+  3.6 V — so a TLV3011-comparator PNP shunt clamp sits on the **VS rail** (after the blocking
+  diodes) and holds VS ≤ 3.60 V worst-case, directly limiting what the accelerometer sees. Its sense
   divider draws a standing microamp or two from the rail — small against the other always-on
   loads, and the trade for regulating VS itself rather than the solar input.
 - **Power planes** carry the supercap charge/discharge currents; the four cells eat the better
@@ -123,7 +123,7 @@ full-sun number, and indoor light delivers a small fraction of it, while four br
 average several milliamps. The two-panel harvest and the 15 J tank are sized to **harvest
 slowly and glow in bursts** — but that bet has never been put on a meter.
 
-What changed the math since the early notes: the rail is now **clamped to ~3.47 V** and the
+What changed the math since the early notes: the rail is now **clamped to ≤ 3.60 V worst-case** and the
 ballasts are **150 Ω**, so each LED peaks near **~9 mA** rather than the old estimate. Four
 on at once is a real load against an indoor harvest measured in fractions of a milliamp.
 
