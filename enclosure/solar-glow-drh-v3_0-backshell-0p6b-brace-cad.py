@@ -149,15 +149,20 @@ def _lip_inner_pts():
 def _lip_break_cut(bb, c, taper):
     """45deg edge-break on the lip inner top edge: taper-extrude the void outline over the top c mm so it
     grows outward into the lip, and cut it -> the sharp top-inner lip edge is knocked back at 45deg."""
-    return cq.Workplane("XY").workplane(offset=bb-c).polyline(_lip_inner_pts()).close().extrude(c, taper=taper)
+    P=[(lip_W,lip_N),(W-lip_E_wide,lip_N),(W-lip_E_wide,EAST_WIDE_Y[0][1]),(W-lip_E,EAST_WIDE_Y[0][1]),
+       (W-lip_E,EAST_WIDE_Y[1][0]),(W-lip_E_wide,EAST_WIDE_Y[1][0]),(W-lip_E_wide,H-lip_S),(lip_W,H-lip_S)]
+    sk = cq.Sketch().polygon([(wx(x),wy(y)) for x,y in P]).reset().vertices("<Y").fillet(IR).reset().vertices(">Y").fillet(IR)
+    return cq.Workplane("XY").workplane(offset=bb-c).placeSketch(sk).extrude(c, taper=taper)
 
 def _recess_mouth_ease(wt, c):
-    """45deg ease on the recess-mouth top-inner edge (convex, around the board opening). Tapered filled
-    frustum at the recess outline over the top c mm: at wt-c it is the nominal recess (interior already
-    void -> no-op), at wt it grows outward by c into the wall, so only the wall inner-top corner is beveled
-    -> matches the outer-rim edge_ease and gives the board a press-fit lead-in. Robust boolean (no OCC
-    edge-chamfer)."""
-    return cq.Workplane("XY").workplane(offset=wt-c).rect(cavW, cavH).extrude(c, taper=-45)
+    """45deg ease on the recess-mouth top-inner edge, around the board opening. Filleted (cavR) rounded-rect
+    frustum so the ease FOLLOWS the rounded recess corners instead of cutting a straight diagonal across
+    them. At wt-c it is the nominal recess (interior already void -> no-op); at wt it grows outward by c into
+    the wall, beveling only the wall inner-top corner. Robust boolean (no OCC edge-chamfer)."""
+    sk = cq.Sketch().rect(cavW, cavH).vertices().fillet(cavR)
+    for mx, my in mounts:                                   # add the corner-relief circles so the ease follows the
+        sk = sk.push([(wx(mx), wy(my))]).circle(R + corner_clr, mode="a")   # ACTUAL opening (relief r=R+corner_clr at the corners), not the cavR fillet the relief cuts through
+    return cq.Workplane("XY").workplane(offset=wt-c).placeSketch(sk).extrude(c, taper=-45)
 
 # ---- round-tool corner relief (pure-2D, matches the CAD cavity cut exactly) ----
 def _inner_pocket():
@@ -223,16 +228,21 @@ def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pill
              .extrude(cavity).edges("|Z").fillet(cavR))
     lip = lip.cut(_cav_inner(floor - 0.01, cavity + 0.02))
     res = res.union(lip)
+    # interior lip edge-break, cut BEFORE the bosses. _lip_break_cut is a solid frustum spanning the whole
+    # cavity interior, so with the bosses already placed it slices 0.10 off their tops. Cutting it while the
+    # cavity is still empty removes only the chamfer rim on the lip inner edge; the bosses are unioned next
+    # at full height (2.80) and fill the corner regions the break outline would otherwise reach.
+    if lip_break > 0:
+        res = res.cut(_lip_break_cut(bb, lip_break, -45))
     # bosses (always) + window braces (optional; OFF by default -- ribs+lip already support U2/caps;
     # the braces only propped the window / bare-laminate spans. Removing them frees board (13.6,40.1) &
     # (39.5,40.0) for future revs. Analysis: U2 floor clearance unchanged (rib end is its support).)
-    wp = cq.Workplane("XY").workplane(offset=floor)
     for x, y, rr in [(mx, my, boss_r) for mx, my in mounts] + (list(BRACE) if braces else []) + (list(PILLARS) if pillars else []):
-        wp = wp.moveTo(wx(x), wy(y)).circle(rr)
-    res = res.union(wp.extrude(cavity))
-    # interior lip edge-break: 45deg knock-off on the top-inner lip edge (deburr; nothing mates on that edge)
-    if lip_break > 0:
-        res = res.cut(_lip_break_cut(bb, lip_break, -45))
+        b = cq.Workplane("XY").workplane(offset=floor).moveTo(wx(x), wy(y)).circle(rr).extrude(cavity)
+        if lip_break > 0:                                   # convex top-edge break that FOLLOWS the boss circle;
+            try: b = b.faces(">Z").chamfer(lip_break)       # chamfer the bare cylinder BEFORE the union (OCC won't
+            except Exception: pass                          # chamfer the merged internal tops, but a lone cylinder is fine)
+        res = res.union(b)
     # cap-gap ribs (full-cavity walls; also prop the board along the corridor)
     if ribs:
         for x0, y0, x1, y1 in RIBS:
