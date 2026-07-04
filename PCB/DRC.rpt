@@ -1,16 +1,55 @@
 ** Drc report for solar-glow-drh-v3_0.kicad_pcb **
-** Created on 2026-07-04T11:07:14 **
+** Created on 2026-07-04T14:24:29 **
 ** Report includes: Errors, Warnings **
 
-** Found 1 DRC violations **
+** Found 3 DRC violations **
 [tracks_crossing]: Tracks crossing
     Local override; error
     @(41.0000 mm, 52.4200 mm): Track [LA] on B.Cu, length 14.4200 mm
     @(41.0000 mm, 38.0000 mm): Track [LB] on B.Cu, length 1.9000 mm
+[lib_footprint_mismatch]: Footprint 'SOT-23-6' does not match copy in library 'Package_TO_SOT_SMD'
+    Local override; warning
+    @(6.3425 mm, 32.2000 mm): Footprint U6
+[lib_footprint_mismatch]: Footprint 'ADXL367 CC-12-4_ADI' does not match copy in library 'Package_TO_SOT_SMD'
+    Local override; warning
+    @(19.4300 mm, 35.0700 mm): Footprint U3
 
 ** Found 0 unconnected pads **
 
-** Found 0 Footprint errors **
+** Found 11 Footprint errors **
+[footprint_symbol_mismatch]: Value (C9) doesn't match symbol value (NP0_DNP)
+    Local override; warning
+    @(32.0100 mm, 38.5000 mm): Footprint C9
+[footprint_symbol_mismatch]: Value (JP1) doesn't match symbol value (GND VS SCL SDA)
+    Local override; warning
+    @(48.4000 mm, 14.5400 mm): Footprint JP1
+[footprint_symbol_mismatch]: Value (R7) doesn't match symbol value (1.8M)
+    Local override; warning
+    @(46.5000 mm, 72.0000 mm): Footprint R7
+[footprint_symbol_mismatch]: Value (R8) doesn't match symbol value (1M)
+    Local override; warning
+    @(46.5000 mm, 73.5000 mm): Footprint R8
+[footprint_symbol_mismatch]: Value (TP1) doesn't match symbol value (VIN)
+    Local override; warning
+    @(48.4000 mm, 12.0000 mm): Footprint TP1
+[footprint_symbol_mismatch]: Value (U3) doesn't match symbol value ()
+    Local override; warning
+    @(19.4300 mm, 35.0700 mm): Footprint U3
+[footprint_symbol_mismatch]: Package_TO_SOT_SMD:ADXL367 CC-12-4_ADI doesn't match footprint given by symbol (solarglow:U3)
+    Local override; warning
+    @(19.4300 mm, 35.0700 mm): Footprint U3
+[footprint_symbol_field_mismatch]: Field 'Datasheet' differs (PCB: 'b', Schematic: '')
+    Local override; warning
+    @(19.4300 mm, 35.0700 mm): Footprint U3
+[footprint_symbol_mismatch]: Package_TO_SOT_SMD:SOT-23-6 doesn't match footprint given by symbol (solarglow:U4)
+    Local override; warning
+    @(46.5000 mm, 68.0000 mm): Footprint U4
+[footprint_symbol_field_mismatch]: Field 'Datasheet' differs (PCB: 'tlv3011b.pdf', Schematic: '')
+    Local override; warning
+    @(46.5000 mm, 68.0000 mm): Footprint U4
+[extra_footprint]: Extra footprint
+    Local override; warning
+    @(0.0000 mm, 0.0000 mm): Footprint <no reference designator>
 
 ** Ignored checks **
     - Footprint has no courtyard defined

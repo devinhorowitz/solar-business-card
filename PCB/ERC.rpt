@@ -1,25 +1,7 @@
-ERC report (2026-07-04T11:07:32, Encoding UTF8)
+ERC report (2026-07-04T14:24:50, Encoding UTF8)
 Report includes: Errors, Warnings, Exclusions
 
 ***** Sheet /
-[endpoint_off_grid]: Symbol pin or wire end off connection grid
-    ; warning
-    @(4750 mils, 4724 mils): Horizontal Wire, length 200 mils
-[endpoint_off_grid]: Symbol pin or wire end off connection grid
-    ; warning
-    @(4750 mils, 4724 mils): Symbol C11 Pin 1 [1, Passive, Line]
-[endpoint_off_grid]: Symbol pin or wire end off connection grid
-    ; warning
-    @(4750 mils, 4924 mils): Horizontal Wire, length 200 mils
-[endpoint_off_grid]: Symbol pin or wire end off connection grid
-    ; warning
-    @(7874 mils, 4724 mils): Horizontal Wire, length 200 mils
-[endpoint_off_grid]: Symbol pin or wire end off connection grid
-    ; warning
-    @(7874 mils, 4724 mils): Symbol C12 Pin 1 [1, Passive, Line]
-[endpoint_off_grid]: Symbol pin or wire end off connection grid
-    ; warning
-    @(7874 mils, 4924 mils): Horizontal Wire, length 200 mils
 [isolated_pin_label]: Label connected to only one pin
     ; warning
     @(8050 mils, 1700 mils): Global Label 'PA4'
@@ -54,7 +36,7 @@ Report includes: Errors, Warnings, Exclusions
     ; warning
     @(16150 mils, 13858 mils): Symbol TP1 Pin 1 [1, Passive, Line]
 
- ** ERC messages: 17  Errors 0  Warnings 17
+ ** ERC messages: 11  Errors 0  Warnings 11
 
  ** Ignored checks:
     - Global label only appears once in the schematic
