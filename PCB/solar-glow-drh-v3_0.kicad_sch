@@ -12813,6 +12813,282 @@
 			)
 		)
 	)
+	(symbol
+		(lib_id "solarglow:D10")
+		(at 120.65 25.4 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "2e3f123e-1532-4b93-8825-1d02017f29a8")
+		(property "Reference" "D10"
+			(at 131.65 30.48 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "MMSD301T1G"
+			(at 131.65 35.56 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "solarglow:D10"
+			(at 131.65 40.64 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 120.65 25.4 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 120.65 25.4 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "A"
+			(uuid "989088fb-3a7c-4c74-b52a-de08085a1c3f")
+		)
+		(pin "K"
+			(uuid "8a555d6e-00a0-4c34-8912-071973738fb4")
+		)
+		(instances
+			(project "solar-glow-drh-v3_0"
+				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
+					(reference "D10")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(wire
+		(pts
+			(xy 120.65 25.4) (xy 115.57 25.4)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "ebf89140-014e-42f7-ba7d-95c7e1136fac")
+	)
+	(wire
+		(pts
+			(xy 120.65 30.48) (xy 115.57 30.48)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "fbaad05d-8042-46ed-a843-6ac06febe788")
+	)
+	(global_label "VIN"
+		(shape bidirectional)
+		(at 115.57 25.4 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "e942ca09-52f0-417f-ac08-184a8f718baa")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 115.57 25.4 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
+	(global_label "VCMP"
+		(shape bidirectional)
+		(at 115.57 30.48 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "d725ce08-ca01-4748-a36a-1eb23c8f8149")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 115.57 30.48 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "solarglow:D11")
+		(at 120.65 45.72 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "e3ec3e94-6a4d-4a30-805b-df65bcd8c9a5")
+		(property "Reference" "D11"
+			(at 131.65 50.8 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "MMSD301T1G"
+			(at 131.65 55.88 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "solarglow:D11"
+			(at 131.65 60.96 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 120.65 45.72 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 120.65 45.72 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "A"
+			(uuid "2b0c091c-b163-489a-93de-ebff44e1560a")
+		)
+		(pin "K"
+			(uuid "141ecc0b-b572-4dc6-82b4-0bea24d3c82c")
+		)
+		(instances
+			(project "solar-glow-drh-v3_0"
+				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
+					(reference "D11")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(wire
+		(pts
+			(xy 120.65 45.72) (xy 115.57 45.72)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "baea5fe4-fa3e-496b-affb-6a477abcf602")
+	)
+	(wire
+		(pts
+			(xy 120.65 50.8) (xy 115.57 50.8)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "6e0c64cd-ff56-4c63-9d67-d3dcb3afd11e")
+	)
+	(global_label "VINB"
+		(shape bidirectional)
+		(at 115.57 45.72 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "b3d9e2f9-6b8e-4cd7-a7e0-a15d3cebd672")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 115.57 45.72 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
+	(global_label "VCMP"
+		(shape bidirectional)
+		(at 115.57 50.8 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "5b13de64-9b25-44f3-bd52-73d0500549ad")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 115.57 50.8 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
 	(global_label "VS"
 		(shape bidirectional)
 		(at 405.13 302.26 0)
@@ -14275,242 +14551,6 @@
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "D9")
 					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "solarglow:D10")
-		(at 120 25 0)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(uuid "bb9f25c3-6b2c-43c5-add8-6bcd4e1e2262")
-		(property "Reference" "D10"
-			(at 131 30.08 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "MMSD301T1G"
-			(at 131 35.16 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "solarglow:D10"
-			(at 131 40.24 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 120 25 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" ""
-			(at 120 25 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "A"
-			(uuid "93263508-42c9-4b1c-ba53-b9d6fbd79a8a")
-		)
-		(pin "K"
-			(uuid "f6aff1fa-6f17-4823-a6f2-626aa4aa27e9")
-		)
-		(instances
-			(project "solar-glow-drh-v3_0"
-				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
-					(reference "D10")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "solarglow:D11")
-		(at 120 45 0)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(uuid "36e442e4-9857-4d17-a78c-a24e980d996e")
-		(property "Reference" "D11"
-			(at 131 50.08 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "MMSD301T1G"
-			(at 131 55.16 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "solarglow:D11"
-			(at 131 60.24 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 120 45 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" ""
-			(at 120 45 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "A"
-			(uuid "d6ed0b83-fdbe-4327-8474-226f8c36c1cb")
-		)
-		(pin "K"
-			(uuid "dbf442bb-ba99-46df-88ba-e3d92f2c0abb")
-		)
-		(instances
-			(project "solar-glow-drh-v3_0"
-				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
-					(reference "D11")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(global_label "VIN"
-		(shape bidirectional)
-		(at 114.92 25 0)
-		(effects
-			(font
-				(size 1 1)
-			)
-		)
-		(uuid "807a3355-708d-4b35-8b5c-e8b92840afb0")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 114.92 25 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-	)
-	(global_label "VCMP"
-		(shape bidirectional)
-		(at 114.92 30.08 0)
-		(effects
-			(font
-				(size 1 1)
-			)
-		)
-		(uuid "9a4fd947-d515-42bc-8b77-f2201d914751")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 114.92 30.08 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-	)
-	(global_label "VINB"
-		(shape bidirectional)
-		(at 114.92 45 0)
-		(effects
-			(font
-				(size 1 1)
-			)
-		)
-		(uuid "250463cb-d31f-4974-98f7-4c4013256f91")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 114.92 45 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-	)
-	(global_label "VCMP"
-		(shape bidirectional)
-		(at 114.92 50.08 0)
-		(effects
-			(font
-				(size 1 1)
-			)
-		)
-		(uuid "2a0125ae-b217-4f97-a3ae-e09f9ed13941")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 114.92 50.08 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
 				)
 			)
 		)
