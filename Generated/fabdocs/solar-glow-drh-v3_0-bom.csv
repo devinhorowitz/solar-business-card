@@ -19,8 +19,8 @@ Row,Description,Part,References,Value,Footprint,Quantity Per PCB,Status,Datashee
 18,,D11,D11,MMSD301T1G,D11,1, ,
 19,,D9,D9,MMSD301T1G,D9,1, ,
 20,,J1,J1,UPDI hdr,J1,1, ,
-21,,GND VS SCL SDA,JP1,GND VS SCL SDA,JP1,1, ,~
-22,,JP1,JP1,bench hdr,JP1,1, ,
+21,,JP1,JP1,GND VS SCL SDA,JP1,1, ,
+22,,GND VS SCL SDA,JP1,GND VS SCL SDA,JP1,1, ,~
 23,,L1,L1,1.0uH,,1, ,
 24,,MH1,MH1,M2,MH1,1, ,
 25,,MH2,MH2,M2,MH2,1, ,
@@ -41,8 +41,8 @@ Row,Description,Part,References,Value,Footprint,Quantity Per PCB,Status,Datashee
 40,,R14,R14,100k,R14,1, ,
 41,,R5,R5,1M,R5,1, ,
 42,,R6,R6,1M,R6,1, ,
-43,,R8,R8,1M,R8,1, ,
-44,,R7,R7,1.8M,R7,1, ,
+43,,R8,R8,3.74M,R8,1, ,
+44,,R7,R7,6.81M,R7,1, ,
 45,,SB1,SB1,LED1 jmp,SB1,1, ,
 46,,SB2,SB2,LED2 jmp,SB2,1, ,
 47,,SB3,SB3,LED3 jmp,SB3,1, ,
@@ -54,11 +54,11 @@ Row,Description,Part,References,Value,Footprint,Quantity Per PCB,Status,Datashee
 53,,SJ1,SJ1,0R,SJ1,1, ,
 54,,SW2,SW2,LED master,SW2,1, ,
 55,,TC1,TC1,Tag-Connect,TC1,1, ,
-56,,U3,U3,ADXL367,U3,1, ,b
+56,,U3,U3,ADXL367,ADXL367 CC-12-4_ADI,1, ,datasheets/adxl367.pdf
 57,,U2,U2,ALD910025SALI,U2,1, ,
 58,,U1,U1,AVR64DD28 (VQFN28),U1,1, ,
 59,,U5,U5,NT3H2211,U5,1, ,
-60,"Comparator + 1.242V ref, open-drain, SOT-23-6",U4,U4,TLV3011BIDBVR,U4,1, ,tlv3011b.pdf
+60,"Comparator + 1.242V ref, open-drain, SOT-23-6",U4,U4,TLV3011BIDBVR,SOT-23-6,1, ,tlv3011b.pdf
 61,,U6,U6,TPS22918,SOT-23-6,1, ,
 
 
@@ -69,7 +69,7 @@ Project info:
 Schematic:,solar-glow-drh-v3_0
 Variant:,default
 Revision:,
-Date:,2026-07-04_18-28-01
+Date:,2026-07-04_19-06-16
 KiCad Version:,10.0.4-10.0.4~ubuntu25.10.1
 Statistics:
 Component Groups:,62
