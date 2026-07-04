@@ -160,11 +160,11 @@ PCB recess flats are modeled 0.05 mm interference (below CNC tolerance) — trea
 
 ### 9. Internal radii and tooling
 
-Internal concave junctions are modeled **sharp**; a round tool leaves its own fillet (standard for a milled pocket). The whole solid is analytic (planes, cylinders, cones) — verified 173 analytic faces, zero spline/Bezier. Rough the cavity with a Ø3–4 mm tool; finish corners/walls with a Ø2.0.
+Internal concave junctions are modeled **sharp**; a round tool leaves its own fillet (standard for a milled pocket). The whole solid is analytic (planes, cylinders, cones) — verified 204 analytic faces, zero spline/Bezier. Rough the cavity with a Ø3–4 mm tool; finish corners/walls with a Ø2.0.
 
 ### 10. Edge break / deburr (note, do not model)
 
-**Break all sharp edges ~0.1 mm (titanium).** Outer top/bottom rim eased 0.20 × 45° (modeled). Deburr all other exposed edges and hole exits.
+**Break all sharp edges ~0.1 mm (titanium).** All exposed edges are broken 0.10 × 45°, meant to be felt but not seen (modeled). The named breaks called out on Section A-A / Detail B are: the outer rim (top and bottom), the recess mouth around the board, the inner (cavity-side) lip edge, the proud back-frame bottom edges, and the boss/spotface bottom edges. The concave seat and junction corners are left sharp in the model and take the tool's own radius. Deburr all other exposed edges and hole exits.
 
 ### 11. Inspection
 
