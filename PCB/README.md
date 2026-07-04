@@ -44,7 +44,7 @@ PCB/
 | Outline | 50.80 × 88.90 mm rounded rectangle, **3.0 mm corner radius** |
 | Layers | **2 copper**: F.Cu (cells, plating ties, monogram art) · B.Cu (everything else) |
 | Power architecture | **GND = full-board B.Cu pour** (~3000 mm²); **VS = routed B.Cu mesh** |
-| Finished thickness | **0.8 mm** FR4 |
+| Finished thickness | **0.6 mm** FR4 |
 | Surface finish | **ENIG** + **selective hard (electrolytic) gold** on the F.Cu gold set — the plating bus exists to feed it (see the order special request) |
 | Soldermask | **Matte black**, both sides |
 | Silkscreen | White (back-side identifiers / logos); front face is intentionally bare |
@@ -127,7 +127,7 @@ Order parameters, from the committed board:
 | PCBWay field | Set to |
 |---|---|
 | Layers | **2** |
-| Material / thickness | FR4, **0.8 mm** finished |
+| Material / thickness | FR4, **0.6 mm** finished |
 | Surface finish | **ENIG**, plus **selective hard gold** per the special request below |
 | Soldermask color | **Matte black** |
 | Silkscreen | White |
