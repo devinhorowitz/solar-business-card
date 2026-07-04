@@ -9,6 +9,7 @@ from matplotlib.patches import Rectangle, Polygon as MplPoly
 W,H,R = 50.80,88.90,3.0
 wall,lip_w,floor,cavity,board,border = 1.0,2.5,1.00,1.80,0.60,0.15   # lip_w here = WEST lip shown in Section A-A
 lip_W,lip_N,lip_S,lip_E,lip_Ew = 2.5,2.0,2.0,1.0,2.5
+bbw = 2.0                                   # SYMMETRIC exterior back-border width (uniform 4 sides); front lip stays asymmetric
 Wb,Hb = 50.80,88.90
 boss_r,pilot_r,cbore,ease = 2.60,0.80,3.0,0.10
 ef=-0.05
@@ -58,10 +59,10 @@ S1=1.5; Px,Py=42,112
 X=lambda bx:Px+(bx-oxmin)*S1; Y=lambda by:Py+(by-oymin)*S1
 ax.add_patch(MplPoly(rrect(X(oxmin),Y(oymin),outW*S1,outH*S1,outR*S1),closed=True,fill=False,ec=INK,lw=1.0))
 ax.add_patch(MplPoly(rrect(X(oxmin)+wall*S1,Y(oymin)+wall*S1,cavW*S1,cavH*S1,cavR*S1),closed=True,fill=False,ec=GRY,lw=0.5))
-_cav=[(lip_W,lip_N),(Wb-lip_Ew,lip_N),(Wb-lip_Ew,10.0),(Wb-lip_E,10.0),(Wb-lip_E,58.0),(Wb-lip_Ew,58.0),(Wb-lip_Ew,Hb-lip_S),(lip_W,Hb-lip_S)]
-ax.add_patch(MplPoly([(X(bx),Y(by)) for bx,by in _cav],closed=True,fill=False,ec=GRY,lw=0.7,ls=(0,(6,3))))
-for lx,ly,t in [(lip_W/2,44,"W 2.5"),(Wb-lip_E/2,34,"E 1.0"),(Wb-lip_Ew/2,6,"E 2.5"),(Wb-lip_Ew/2,82,"E 2.5"),(25,lip_N/2,"N 2.0"),(25,Hb-lip_S/2,"S 2.0")]:
-    ax.text(X(lx),Y(ly),t,ha="center",va="center",fontsize=4.6,color="#2f5bd0",rotation=(90 if lx<5 or lx>46 else 0))
+_afw,_afh = cavW-2*bbw, cavH-2*bbw          # symmetric recessed art field (equal 2.0 border all sides)
+ax.add_patch(MplPoly(rrect(X(0.05+bbw),Y(0.05+bbw),_afw*S1,_afh*S1,max(cavR-bbw,0.3)*S1),closed=True,fill=False,ec=INK,lw=0.8))
+for lx,ly,rot in [(0.05+bbw/2,44,90),(Wb-0.05-bbw/2,44,90),(25.4,0.05+bbw/2,0),(25.4,Hb-0.05-bbw/2,0)]:
+    ax.text(X(lx),Y(ly),"2.0",ha="center",va="center",fontsize=4.8,color="#2f5bd0",rotation=rot)
 for mx,my in mounts:
     ax.add_patch(plt.Circle((X(mx),Y(my)),boss_r*S1,fill=False,ec=GRY,lw=0.5))
     ax.add_patch(plt.Circle((X(mx),Y(my)),cbore/2*S1,fill=False,ec=GRY,lw=0.5))
@@ -95,7 +96,7 @@ ax.text(150,148,"SECTION A-A \u2192 edge profile      DETAIL B \u2192 corner bos
 # ===================== EDGE SECTION A-A =====================
 S2=13.0; EX,EY=265,202
 xl=lambda v:EX+v*S2; zl=lambda z:EY+(z+border)*S2
-prof=[(0.10,0.0),(wall,0.0),(wall,-border+lb),(wall+lb,-border),(wall+lip_w-lb,-border),(wall+lip_w,-border+lb),(wall+lip_w,0.0),
+prof=[(0.10,0.0),(wall,0.0),(wall,-border+lb),(wall+lb,-border),(wall+bbw-lb,-border),(wall+bbw,-border+lb),(wall+bbw,0.0),
       (8.5,0.0),(8.5,floor),(wall+lip_w,floor),(wall+lip_w,bb-lb),(wall+lip_w-lb,bb),(wall,bb),
       (wall,wt-ease),(wall-ease,wt),(ease,wt),(0.0,wt-ease),(0.0,0.10)]
 ax.add_patch(MplPoly([(xl(x),zl(z)) for x,z in prof],closed=True,fc=HATCH,ec=INK,lw=0.8,hatch="////"))
@@ -103,7 +104,8 @@ dim((xl(0.0),zl(-border)),(xl(0.0),zl(wt)),xl(0.0)-7,"3.55",vert=True,fs=7,side=
 dim((xl(8.5),zl(0.0)),(xl(8.5),zl(floor)),xl(8.5)+7,"1.00",vert=True,fs=6.6,side=-1)
 dim((xl(8.5),zl(floor)),(xl(8.5),zl(bb)),xl(8.5)+7,"1.80 ±0.05",vert=True,fs=7,side=-1)
 dim((xl(0.0),zl(0.0)),(xl(wall),zl(0.0)),zl(-border)-5,"1.0",fs=6.4,side=-1)
-dim((xl(wall),zl(bb)),(xl(wall+lip_w),zl(bb)),zl(bb)+7,"2.5 W-LIP (see plan)",fs=5.2,side=1,txtoff=1.0)
+dim((xl(wall),zl(bb)),(xl(wall+lip_w),zl(bb)),zl(bb)+7,"2.5 W-LIP (front; note 8)",fs=5.2,side=1,txtoff=1.0)
+leader(xl(2.0),zl(-border+0.06),xl(4.6),zl(-border)-6.5,"2.0 BACK BORDER (UNIFORM, 4 PL)",ha="left",fs=5.0)
 dim((xl(wall+lip_w+0.25),zl(-border)),(xl(wall+lip_w+0.25),zl(0.0)),xl(wall+lip_w)+3.0,"0.15",vert=True,fs=5.8,side=-1,txtoff=1.0)
 leader(xl(0.05),zl(wt-0.06),xl(1.7),zl(wt)+4.5,"0.10\u00d745\u00b0 RIM (top)",ha="left",fs=5.2)
 leader(xl(0.90),zl(wt-0.06),xl(4.2),zl(wt)+9.5,"0.10\u00d745\u00b0 MOUTH",ha="left",fs=5.2)
@@ -157,7 +159,7 @@ notes=[
  "6. FLOOR IS NOW A TRUE 1.00 (0.95 LOCAL UNDER THE U2 POCKET), AT THE ~1.0 Ti MIN-WALL GUIDANCE SO IT ALSO CLEARS ALUMINIUM / COPPER / STAINLESS.",
  "    CAVITY 1.80 +-0.05 -> 1.75 WORST-CASE, MINUS WS17 1.70 MAX (DATASHEET CASE WS17 HEIGHT) = 0.05 NON-CONTACT; THE BRACE + SOLAR-CELL SANDWICHES CARRY THE BOARD.",
  "7. U2 RELIEF POCKET: 7.8 x 5.4 CENTERED (28.5, 37) ON THE CAVITY FLOOR, 0.05 DEEP (LOCAL FLOOR 0.95) - U2 (1.75) KEEPS 0.10 AIR. GENERAL FLOOR 1.00. MODELED IN THE STEP.",
- "8. ASYMMETRIC SUPPORT LIP (SEE PLAN): WEST 2.5 / NORTH 2.0 / SOUTH 2.0 FOR PCB RIGIDITY; EAST 1.0 THROUGH THE JP1/TP1 PADS + OVER THE NFC COIL (A GROUNDED LIP WOULD DETUNE IT), WIDENING TO 2.5 AT THE N/S ENDS. BACK-FRAME MIRRORS IT.",
+ "8. FRONT SUPPORT LIP IS ASYMMETRIC (SECTION A-A): WEST 2.5 / NORTH 2.0 / SOUTH 2.0 FOR PCB RIGIDITY; EAST 1.0 THROUGH THE JP1/TP1 PADS + OVER THE NFC COIL (A GROUNDED LIP WOULD DETUNE IT), WIDENING TO 2.5 AT THE N/S ENDS. THE EXTERIOR BACK BORDER (PLAN) IS INDEPENDENT AND UNIFORM 2.0 ON ALL 4 SIDES.",
  "9. NO INTERNAL RIBS OR SUPPORT POSTS: THE RESIN BRACE (SEPARATE PART) CARRIES CENTER SUPPORT. A PCB LAYOUT CHANGE = A BRACE REPRINT, NOT A SHELL RE-MACHINE.",
  "10. PCB RECESS = 0.60 DEEP (RECEIVES THE 0.60 mm BOARD; SLIP FIT, NOT A PRESS FIT). 3D STEP GOVERNS ALL GEOMETRY; STL NOT FOR CNC.",
  "11. PART = BACK-SHELL ONLY. PCB, RESIN BRACE, AND 4× M2×3 BRASS SLOTTED-CHEESE SCREWS (HEAD Ø3.8) SUPPLIED SEPARATELY.",

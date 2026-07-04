@@ -74,6 +74,7 @@ lip_E      = 1.0                       # E stays narrow through the JP1/TP1 pads
 lip_E_wide = 2.5                       # E END zones (clear of pads+coil) widen to match the west
 EAST_WIDE_Y = [(0.0, 10.0), (58.0, 88.9)]   # board-y bands the E lip widens: N of the JP1/TP1 pads (y10.8+) and S of the coil (y57.5-)
 lip_w      = lip_E                      # legacy min-lip alias (only the dormant tool_relief helper still reads it)
+back_border = 2.0                      # SYMMETRIC proud back-frame border, equal on all 4 sides (decoupled from the asymmetric front lip). Front lip stays asymmetric (it clears B-side parts); this is the cosmetic exterior back border only.
 boss_r     = 2.60                  # M2 boss / back annulus outer radius
 pilot_r    = 0.80                  # M2 tap-drill hole, CLEAN THROUGH. Boss is TAPPED M2 (brass is soft --
                                    # never let a brass screw thread-form into Ti; cut the threads first).
@@ -267,8 +268,12 @@ def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pill
     if border_h > 0:
         frame = (cq.Workplane("XY").workplane(offset=-border_h).rect(cavW, cavH)
                    .extrude(border_h).edges("|Z").fillet(cavR))
-        frame = frame.cut(_cav_inner(-border_h - 0.01, border_h + 0.02))
-        res = res.union(frame).union(_east_blocks(-border_h, border_h))
+        # symmetric recessed art field: equal proud border on all 4 sides. Inner fillet is concentric with
+        # the outer frame fillet (cavR - back_border) so the border width stays uniform around the corners too.
+        af = (cq.Workplane("XY").workplane(offset=-border_h - 0.01)
+                .rect(cavW - 2*back_border, cavH - 2*back_border).extrude(border_h + 0.02)
+                .edges("|Z").fillet(max(cavR - back_border, 0.3)))
+        res = res.union(frame.cut(af))
         bwp = cq.Workplane("XY").workplane(offset=-border_h)
         for mx, my in mounts:
             bwp = bwp.moveTo(wx(mx), wy(my)).circle(boss_r)
