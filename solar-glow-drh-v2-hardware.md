@@ -139,12 +139,13 @@ Stackup: **v3.0 is 2-layer** (F / B) — GND = full-board B.Cu pour, VS = routed
 ## 4. Devices on the board
 
 **U3 — ADI ADXL367 accelerometer (the actuator; replaces the LIS2DH12 on backorder).**
-- Interface: **I²C** (SCLK tied low selects I²C mode).
-- **Address: `0x1D`** 7-bit (ASEL → GND). 8-bit: write 0x3A / read 0x3B.
-- Interrupts: **INT1 → PF1** (tap), **INT2 → PF0** (activity). *The ADXL367 is a different
-  package/pinout than the LIS2DH12, so the footprint and INT-pad assignment are PCB-side —
-  confirm on the final board.*
-- Supply Vs/Vsupply → VS; SCL → PC3, SDA → PC2. Decoupled by C6.
+- Interface: **I²C** (SCLK, pin 1 → GND = I²C mode). SDA = pin 2, SCL = pin 4.
+- **Address: `0x1D`** 7-bit (ASEL, pin 3 → GND). 8-bit: write 0x3A / read 0x3B. IDs: DEVID_AD (0x00)
+  = 0xAD, PART_ID (0x02) = 0xF7 (DEVID_MST 0x01 also reads 0x1D, coincidental with the bus address,
+  not the same thing).
+- Interrupts: **INT1 (pin 5) → PF1** (tap), **INT2 (pin 6) → PF0** (activity). Strapping is frozen
+  in the schematic/PCB/BOM as of the ADXL367 swap.
+- Supply Vs/Vsupply → VS; SCL → PC3, SDA → PC2 (MCU side); SDA/SCL pull-ups R10/R11 to VS. Decoupled by C6.
 - Role: tap / double-tap / activity → INT → wakes the MCU. A tap is vibration, so the metal
   back-plate transmits it in the enclosed build. Single-vs-double tap is resolved in the
   ADXL367's own hardware window; the firmware reads STATUS_2 once (see `firmware/README.md`).
