@@ -1,7 +1,34 @@
-ERC report (2026-07-03T22:37:32, Encoding UTF8)
+ERC report (2026-07-04T00:30:45, Encoding UTF8)
 Report includes: Errors, Warnings, Exclusions
 
 ***** Sheet /
+[label_dangling]: Label not connected
+    ; error
+    @(4524 mils, 984 mils): Global Label 'VIN'
+[label_dangling]: Label not connected
+    ; error
+    @(4524 mils, 1184 mils): Global Label 'VCMP'
+[label_dangling]: Label not connected
+    ; error
+    @(4524 mils, 1772 mils): Global Label 'VINB'
+[pin_not_connected]: Pin not connected
+    ; error
+    @(4724 mils, 984 mils): Symbol D10 Pin A [A, Passive, Line]
+[pin_not_connected]: Pin not connected
+    ; error
+    @(4724 mils, 1184 mils): Symbol D10 Pin K [K, Passive, Line]
+[pin_not_connected]: Pin not connected
+    ; error
+    @(4724 mils, 1772 mils): Symbol D11 Pin A [A, Passive, Line]
+[pin_not_connected]: Pin not connected
+    ; error
+    @(4724 mils, 1972 mils): Symbol D11 Pin K [K, Passive, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(4724 mils, 984 mils): Symbol D10 Pin A [A, Passive, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(4724 mils, 1772 mils): Symbol D11 Pin A [A, Passive, Line]
 [isolated_pin_label]: Label connected to only one pin
     ; warning
     @(8050 mils, 1700 mils): Global Label 'PA4'
@@ -36,7 +63,7 @@ Report includes: Errors, Warnings, Exclusions
     ; warning
     @(16150 mils, 13858 mils): Symbol TP1 Pin 1 [1, Passive, Line]
 
- ** ERC messages: 11  Errors 0  Warnings 11
+ ** ERC messages: 20  Errors 7  Warnings 13
 
  ** Ignored checks:
     - Global label only appears once in the schematic

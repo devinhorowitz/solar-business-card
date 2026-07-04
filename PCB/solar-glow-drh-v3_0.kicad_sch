@@ -1655,6 +1655,226 @@
 			)
 			(embedded_fonts no)
 		)
+		(symbol "solarglow:D10"
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "D10"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "MMSD301T1G"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "D10_1_1"
+				(rectangle
+					(start 2.54 2.54)
+					(end 20.32 -7.62)
+					(stroke
+						(width 0.2)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+				(pin passive line
+					(at 0 0 0)
+					(length 2.54)
+					(name "A"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+					(number "A"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -5.08 0)
+					(length 2.54)
+					(name "K"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+					(number "K"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "solarglow:D11"
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "D11"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "MMSD301T1G"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "D11_1_1"
+				(rectangle
+					(start 2.54 2.54)
+					(end 20.32 -7.62)
+					(stroke
+						(width 0.2)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+				(pin passive line
+					(at 0 0 0)
+					(length 2.54)
+					(name "A"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+					(number "A"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -5.08 0)
+					(length 2.54)
+					(name "K"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+					(number "K"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
 		(symbol "solarglow:J1"
 			(exclude_from_sim no)
 			(in_bom yes)
@@ -4135,7 +4355,7 @@
 					)
 				)
 			)
-			(property "Value" "1.82M"
+			(property "Value" "6.81M"
 				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -4245,7 +4465,7 @@
 					)
 				)
 			)
-			(property "Value" "1M"
+			(property "Value" "3.74M"
 				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -11771,7 +11991,7 @@
 			)
 		)
 	)
-	(global_label "VS"
+	(global_label "VCMP"
 		(shape input)
 		(at 152.4 50.8 180)
 		(effects
@@ -13928,7 +14148,7 @@
 				)
 			)
 		)
-		(property "Value" "1.82M"
+		(property "Value" "6.81M"
 			(at 150.7 99.06 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -14055,6 +14275,242 @@
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "D9")
 					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "solarglow:D10")
+		(at 120 25 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "bb9f25c3-6b2c-43c5-add8-6bcd4e1e2262")
+		(property "Reference" "D10"
+			(at 131 30.08 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "MMSD301T1G"
+			(at 131 35.16 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "solarglow:D10"
+			(at 131 40.24 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 120 25 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 120 25 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "A"
+			(uuid "93263508-42c9-4b1c-ba53-b9d6fbd79a8a")
+		)
+		(pin "K"
+			(uuid "f6aff1fa-6f17-4823-a6f2-626aa4aa27e9")
+		)
+		(instances
+			(project "solar-glow-drh-v3_0"
+				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
+					(reference "D10")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "solarglow:D11")
+		(at 120 45 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "36e442e4-9857-4d17-a78c-a24e980d996e")
+		(property "Reference" "D11"
+			(at 131 50.08 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "MMSD301T1G"
+			(at 131 55.16 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "solarglow:D11"
+			(at 131 60.24 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 120 45 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 120 45 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "A"
+			(uuid "d6ed0b83-fdbe-4327-8474-226f8c36c1cb")
+		)
+		(pin "K"
+			(uuid "dbf442bb-ba99-46df-88ba-e3d92f2c0abb")
+		)
+		(instances
+			(project "solar-glow-drh-v3_0"
+				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
+					(reference "D11")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(global_label "VIN"
+		(shape bidirectional)
+		(at 114.92 25 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "807a3355-708d-4b35-8b5c-e8b92840afb0")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 114.92 25 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
+	(global_label "VCMP"
+		(shape bidirectional)
+		(at 114.92 30.08 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "9a4fd947-d515-42bc-8b77-f2201d914751")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 114.92 30.08 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
+	(global_label "VINB"
+		(shape bidirectional)
+		(at 114.92 45 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "250463cb-d31f-4974-98f7-4c4013256f91")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 114.92 45 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
+	(global_label "VCMP"
+		(shape bidirectional)
+		(at 114.92 50.08 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "2a0125ae-b217-4f97-a3ae-e09f9ed13941")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 114.92 50.08 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
 				)
 			)
 		)
@@ -17510,7 +17966,7 @@
 				)
 			)
 		)
-		(property "Value" "1M"
+		(property "Value" "3.74M"
 			(at 150.7 119.38 0)
 			(show_name no)
 			(do_not_autoplace no)
