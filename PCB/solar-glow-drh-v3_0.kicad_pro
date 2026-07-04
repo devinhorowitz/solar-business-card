@@ -78,10 +78,6 @@
         [
           "copper_edge_clearance|25400000|88900000|67b4c014-2d59-42c0-9ea0-d7ffdad5ce35|dfe2ea33-3280-4af4-8d21-d542a52b7241",
           ""
-        ],
-        [
-          "tracks_crossing|41000000|38000000|3d02959a-52d1-4b3d-a148-36df4aae42e1|463118eb-0e6d-49d0-868f-c633afd66f71",
-          ""
         ]
       ],
       "meta": {
@@ -668,8 +664,8 @@
     "subpart_id_separator": 0,
     "top_level_sheets": [
       {
-        "filename": "solar-glow-drh-v2_2.kicad_sch",
-        "name": "solar-glow-drh-v2_2",
+        "filename": "solar-glow-drh-v3_0.kicad_sch",
+        "name": "solar-glow-drh-v3_0",
         "uuid": "bf17630f-b49b-49a7-9335-83fa0a7a44d0"
       }
     ],
@@ -679,7 +675,7 @@
   "sheets": [
     [
       "bf17630f-b49b-49a7-9335-83fa0a7a44d0",
-      "solar-glow-drh-v2_2"
+      "solar-glow-drh-v3_0"
     ]
   ],
   "text_variables": {},

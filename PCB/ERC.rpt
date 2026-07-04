@@ -1,7 +1,67 @@
-ERC report (2026-07-03T22:19:05, Encoding UTF8)
+ERC report (2026-07-03T22:31:35, Encoding UTF8)
 Report includes: Errors, Warnings, Exclusions
 
 ***** Sheet /
+[label_dangling]: Label not connected
+    ; error
+    @(5400 mils, 1600 mils): Global Label 'CLREF'
+[label_dangling]: Label not connected
+    ; error
+    @(5400 mils, 1800 mils): Global Label 'REF_TIE'
+[label_dangling]: Label not connected
+    ; error
+    @(5400 mils, 2000 mils): Global Label 'GND'
+[wire_dangling]: Wires not connected to anything
+    ; error
+    @(5500 mils, 1500 mils): Horizontal Wire, length 200 mils
+[pin_not_connected]: Pin not connected
+    ; error
+    @(5500 mils, 1600 mils): Symbol U4 Pin 4 [IN-, Passive, Line]
+[wire_dangling]: Wires not connected to anything
+    ; error
+    @(5500 mils, 1700 mils): Horizontal Wire, length 200 mils
+[pin_not_connected]: Pin not connected
+    ; error
+    @(5500 mils, 1800 mils): Symbol U4 Pin 3 [IN+, Passive, Line]
+[wire_dangling]: Wires not connected to anything
+    ; error
+    @(5500 mils, 1900 mils): Horizontal Wire, length 200 mils
+[pin_not_connected]: Pin not connected
+    ; error
+    @(5500 mils, 2000 mils): Symbol U4 Pin 2 [V-, Passive, Line]
+[pin_not_connected]: Pin not connected
+    ; error
+    @(6000 mils, 1600 mils): Symbol U4 Pin 1 [OUT, Passive, Line]
+[pin_not_connected]: Pin not connected
+    ; error
+    @(6000 mils, 1800 mils): Symbol U4 Pin 5 [REF, Passive, Line]
+[pin_not_connected]: Pin not connected
+    ; error
+    @(6000 mils, 2000 mils): Symbol U4 Pin 6 [V+, Passive, Line]
+[label_dangling]: Label not connected
+    ; error
+    @(6100 mils, 1600 mils): Global Label 'CLBASE'
+[label_dangling]: Label not connected
+    ; error
+    @(6100 mils, 2000 mils): Global Label 'VS'
+[unconnected_wire_endpoint]: Unconnected wire endpoint
+    ; warning
+    @(5500 mils, 1500 mils): Horizontal Wire, length 200 mils
+[unconnected_wire_endpoint]: Unconnected wire endpoint
+    ; warning
+    @(5500 mils, 1700 mils): Horizontal Wire, length 200 mils
+[unconnected_wire_endpoint]: Unconnected wire endpoint
+    ; warning
+    @(5500 mils, 1900 mils): Horizontal Wire, length 200 mils
+[unconnected_wire_endpoint]: Unconnected wire endpoint
+    ; warning
+    @(5500 mils, 1500 mils): Horizontal Wire, length 200 mils
+[unconnected_wire_endpoint]: Unconnected wire endpoint
+    ; warning
+    @(5500 mils, 1700 mils): Horizontal Wire, length 200 mils
+[unconnected_wire_endpoint]: Unconnected wire endpoint
+    ; warning
+    @(5500 mils, 1900 mils): Horizontal Wire, length 200 mils
 [isolated_pin_label]: Label connected to only one pin
     ; warning
     @(8050 mils, 1700 mils): Global Label 'PA4'
@@ -14,8 +74,29 @@ Report includes: Errors, Warnings, Exclusions
 [isolated_pin_label]: Label connected to only one pin
     ; warning
     @(8050 mils, 2700 mils): Global Label 'PC1'
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(16150 mils, 12677 mils): Symbol JP1 Pin 1 [1, Passive, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(16150 mils, 12677 mils): Horizontal Wire, length 200 mils
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(16150 mils, 12877 mils): Horizontal Wire, length 200 mils
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(16150 mils, 13077 mils): Horizontal Wire, length 200 mils
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(16150 mils, 13277 mils): Horizontal Wire, length 200 mils
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(16150 mils, 13858 mils): Horizontal Wire, length 200 mils
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(16150 mils, 13858 mils): Symbol TP1 Pin 1 [1, Passive, Line]
 
- ** ERC messages: 4  Errors 0  Warnings 4
+ ** ERC messages: 31  Errors 14  Warnings 17
 
  ** Ignored checks:
     - Global label only appears once in the schematic
