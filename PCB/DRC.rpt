@@ -1,55 +1,769 @@
 ** Drc report for solar-glow-drh-v3_0.kicad_pcb **
-** Created on 2026-07-04T14:24:29 **
-** Report includes: Errors, Warnings **
+** Created on 2026-07-04T15:04:03 **
+** Report includes: Errors, Warnings, Exclusions **
 
-** Found 3 DRC violations **
+** Found 222 DRC violations **
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1500 mm)
+    Rule: clearance-marginal-band; warning
+    @(9.4000 mm, 38.0250 mm): Via [LDRV4] on F.Cu - B.Cu
+    @(10.0000 mm, 37.8700 mm): Track [VS] on B.Cu, length 0.3000 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1270 mm)
+    Rule: clearance-marginal-band; warning
+    @(9.8251 mm, 34.4770 mm): Track [VIN] on B.Cu, length 0.4271 mm
+    @(9.9605 mm, 34.8040 mm): Track [SDA] on B.Cu, length 0.4271 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1271 mm)
+    Rule: clearance-marginal-band; warning
+    @(6.1500 mm, 37.2000 mm): Track [SDA] on B.Cu, length 2.7167 mm
+    @(7.8370 mm, 34.9520 mm): Track [VIN] on B.Cu, length 0.2256 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1279 mm)
+    Rule: clearance-marginal-band; warning
+    @(17.5047 mm, 33.3734 mm): Track [SDA] on F.Cu, length 1.7906 mm
+    @(17.0818 mm, 35.9582 mm): Track [SCL] on F.Cu, length 3.3018 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1250 mm)
+    Rule: clearance-marginal-band; warning
+    @(15.9534 mm, 32.8071 mm): Track [SDA] on B.Cu, length 1.2256 mm
+    @(16.1660 mm, 33.4439 mm): Track [GND] on B.Cu, length 0.4068 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1270 mm)
+    Rule: clearance-marginal-band; warning
+    @(9.9051 mm, 31.1520 mm): Track [VIN] on B.Cu, length 3.2164 mm
+    @(11.1525 mm, 31.4790 mm): Track [SDA] on B.Cu, length 1.3732 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1265 mm)
+    Rule: clearance-marginal-band; warning
+    @(16.4050 mm, 35.8750 mm): Via [SCL] on F.Cu - B.Cu
+    @(16.3350 mm, 35.1650 mm): Track [GND] on F.Cu, length 1.0395 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1509 mm)
+    Rule: clearance-marginal-band; warning
+    @(12.2250 mm, 25.1750 mm): Track [GND] on F.Cu, length 5.6001 mm
+    @(12.8500 mm, 30.5650 mm): Via [VNFC] on F.Cu - B.Cu
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1399 mm)
+    Rule: clearance-marginal-band; warning
+    @(17.0500 mm, 33.1000 mm): Via [GND] on F.Cu - B.Cu
+    @(17.0151 mm, 33.8631 mm): Track [SDA] on F.Cu, length 0.6924 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1490 mm)
+    Rule: clearance-marginal-band; warning
+    @(13.7500 mm, 31.3000 mm): Via [GND] on F.Cu - B.Cu
+    @(13.1215 mm, 31.1520 mm): Track [VIN] on B.Cu, length 1.7720 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1279 mm)
+    Rule: clearance-marginal-band; warning
+    @(19.2953 mm, 33.3734 mm): Track [SDA] on F.Cu, length 0.4239 mm
+    @(17.0818 mm, 35.9582 mm): Track [SCL] on F.Cu, length 3.3018 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1270 mm)
+    Rule: clearance-marginal-band; warning
+    @(10.2625 mm, 34.5020 mm): Track [SDA] on B.Cu, length 0.7214 mm
+    @(8.9900 mm, 36.2511 mm): Track [VS] on B.Cu, length 1.9971 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1465 mm)
+    Rule: clearance-marginal-band; warning
+    @(3.9900 mm, 50.4000 mm): Pad 1 [VIN] of R5 on B.Cu
+    @(3.8000 mm, 51.1750 mm): Via [GND] on F.Cu - B.Cu
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1500 mm)
+    Rule: clearance-marginal-band; warning
+    @(8.3000 mm, 37.9000 mm): Via [FD] on F.Cu - B.Cu
+    @(8.8500 mm, 37.7500 mm): Track [LDRV3] on B.Cu, length 0.4007 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1359 mm)
+    Rule: clearance-marginal-band; warning
+    @(16.5100 mm, 34.9600 mm): Pad 2 [VS] of R11 on B.Cu
+    @(16.7452 mm, 34.4300 mm): Track [GND] on B.Cu, length 0.2364 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1270 mm)
+    Rule: clearance-marginal-band; warning
+    @(10.9840 mm, 34.5020 mm): Track [SDA] on B.Cu, length 0.7680 mm
+    @(11.8640 mm, 34.0986 mm): Track [VS] on B.Cu, length 1.0471 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1500 mm)
+    Rule: clearance-marginal-band; warning
+    @(10.5250 mm, 33.5800 mm): Via [SCL] on F.Cu - B.Cu
+    @(9.9500 mm, 35.8300 mm): Track [UPDI] on F.Cu, length 15.3500 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1250 mm)
+    Rule: clearance-marginal-band; warning
+    @(15.9534 mm, 32.8071 mm): Track [SDA] on B.Cu, length 1.2256 mm
+    @(15.8291 mm, 33.1071 mm): Track [GND] on B.Cu, length 0.4763 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1270 mm)
+    Rule: clearance-marginal-band; warning
+    @(6.1500 mm, 42.8485 mm): Track [SDA] on B.Cu, length 5.6485 mm
+    @(5.8230 mm, 42.9840 mm): Track [VIN] on B.Cu, length 6.0180 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1455 mm)
+    Rule: clearance-marginal-band; warning
+    @(6.1500 mm, 42.8485 mm): Track [SDA] on B.Cu, length 5.6485 mm
+    @(5.8400 mm, 43.0010 mm): Track [VIN] on B.Cu, length 0.0240 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1504 mm)
+    Rule: clearance-marginal-band; warning
+    @(10.6500 mm, 47.6250 mm): Via [GND] on F.Cu - B.Cu
+    @(9.9000 mm, 47.6000 mm): Via [VSENSE] on F.Cu - B.Cu
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1270 mm)
+    Rule: clearance-marginal-band; warning
+    @(10.6375 mm, 32.6480 mm): Track [SDA] on B.Cu, length 1.1081 mm
+    @(10.8485 mm, 32.9750 mm): Track [VIN] on B.Cu, length 0.3464 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1435 mm)
+    Rule: clearance-marginal-band; warning
+    @(10.6500 mm, 47.6250 mm): Via [GND] on F.Cu - B.Cu
+    @(10.4140 mm, 47.0880 mm): Track [VS] on B.Cu, length 0.9124 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1517 mm)
+    Rule: clearance-marginal-band; warning
+    @(16.3000 mm, 32.0500 mm): Via [VS] on F.Cu - B.Cu
+    @(13.2500 mm, 31.4250 mm): Track [GND] on F.Cu, length 3.2751 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1503 mm)
+    Rule: clearance-marginal-band; warning
+    @(11.1236 mm, 34.8390 mm): Track [VS] on B.Cu, length 1.0471 mm
+    @(12.1250 mm, 34.6300 mm): Via [SCL] on F.Cu - B.Cu
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1250 mm)
+    Rule: clearance-marginal-band; warning
+    @(15.9534 mm, 32.8071 mm): Track [SDA] on B.Cu, length 1.2256 mm
+    @(15.3528 mm, 33.1071 mm): Track [GND] on B.Cu, length 0.4763 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1450 mm)
+    Rule: clearance-marginal-band; warning
+    @(12.4500 mm, 44.0750 mm): Via [LDRV2] on F.Cu - B.Cu
+    @(11.6513 mm, 43.5500 mm): Track [VDDIO2] on B.Cu, length 2.5487 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1278 mm)
+    Rule: clearance-marginal-band; warning
+    @(16.3350 mm, 33.5320 mm): Track [GND] on F.Cu, length 1.6330 mm
+    @(16.8878 mm, 33.8631 mm): Via [SDA] on F.Cu - B.Cu
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1267 mm)
+    Rule: clearance-marginal-band; warning
+    @(16.1660 mm, 33.8508 mm): Track [GND] on B.Cu, length 0.8191 mm
+    @(16.8878 mm, 33.8631 mm): Via [SDA] on F.Cu - B.Cu
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1250 mm)
+    Rule: clearance-marginal-band; warning
+    @(25.1000 mm, 35.6400 mm): Via [GND] on F.Cu - B.Cu
+    @(24.9000 mm, 36.3650 mm): Pad 2 [VS] of U2 on B.Cu
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1250 mm)
+    Rule: clearance-marginal-band; warning
+    @(16.2000 mm, 32.3000 mm): Track [VS] on F.Cu, length 0.7306 mm
+    @(16.9500 mm, 32.9170 mm): Track [GND] on F.Cu, length 0.8697 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1271 mm)
+    Rule: clearance-marginal-band; warning
+    @(8.0710 mm, 35.2790 mm): Track [SDA] on B.Cu, length 0.1270 mm
+    @(8.0626 mm, 34.9520 mm): Track [VIN] on B.Cu, length 0.6718 mm
 [tracks_crossing]: Tracks crossing
-    Local override; error
+    Rule: clearance-marginal-band; warning
     @(41.0000 mm, 52.4200 mm): Track [LA] on B.Cu, length 14.4200 mm
     @(41.0000 mm, 38.0000 mm): Track [LB] on B.Cu, length 1.9000 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1270 mm)
+    Rule: clearance-marginal-band; warning
+    @(8.1980 mm, 35.2790 mm): Track [SDA] on B.Cu, length 0.6718 mm
+    @(8.0626 mm, 34.9520 mm): Track [VIN] on B.Cu, length 0.6718 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1250 mm)
+    Rule: clearance-marginal-band; warning
+    @(16.2000 mm, 33.0306 mm): Track [VS] on F.Cu, length 0.6924 mm
+    @(16.3350 mm, 33.5320 mm): Track [GND] on F.Cu, length 1.6330 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1269 mm)
+    Rule: clearance-marginal-band; warning
+    @(18.0149 mm, 34.8200 mm): Track [VS] on B.Cu, length 0.4029 mm
+    @(17.2429 mm, 34.9839 mm): Via [GND] on F.Cu - B.Cu
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1270 mm)
+    Rule: clearance-marginal-band; warning
+    @(8.6730 mm, 34.8040 mm): Track [SDA] on B.Cu, length 1.2875 mm
+    @(9.8251 mm, 34.4770 mm): Track [VIN] on B.Cu, length 0.4271 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1500 mm)
+    Rule: clearance-marginal-band; warning
+    @(9.4000 mm, 38.0250 mm): Via [LDRV4] on F.Cu - B.Cu
+    @(8.8500 mm, 37.7500 mm): Track [LDRV3] on B.Cu, length 0.4007 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1500 mm)
+    Rule: clearance-marginal-band; warning
+    @(4.2000 mm, 27.9000 mm): Track [MID] on B.Cu, length 11.3000 mm
+    @(4.8500 mm, 28.5000 mm): Via [GND] on F.Cu - B.Cu
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1270 mm)
+    Rule: clearance-marginal-band; warning
+    @(10.9840 mm, 34.5020 mm): Track [SDA] on B.Cu, length 0.7680 mm
+    @(10.4021 mm, 34.8390 mm): Track [VS] on B.Cu, length 0.7214 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1297 mm)
+    Rule: clearance-marginal-band; warning
+    @(9.1000 mm, 38.9000 mm): Track [LDRV4] on B.Cu, length 0.5750 mm
+    @(8.8500 mm, 38.1507 mm): Track [LDRV3] on B.Cu, length 0.1768 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1270 mm)
+    Rule: clearance-marginal-band; warning
+    @(10.9840 mm, 34.5020 mm): Track [SDA] on B.Cu, length 0.7680 mm
+    @(10.8485 mm, 34.1750 mm): Track [VIN] on B.Cu, length 0.4971 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1270 mm)
+    Rule: clearance-marginal-band; warning
+    @(11.2000 mm, 33.3265 mm): Track [VIN] on B.Cu, length 0.4971 mm
+    @(10.9840 mm, 32.6480 mm): Track [SDA] on B.Cu, length 0.3464 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1270 mm)
+    Rule: clearance-marginal-band; warning
+    @(9.5270 mm, 31.9999 mm): Track [VIN] on B.Cu, length 0.4698 mm
+    @(9.8540 mm, 31.8145 mm): Track [SDA] on B.Cu, length 0.4744 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1297 mm)
+    Rule: clearance-marginal-band; warning
+    @(8.8500 mm, 38.1507 mm): Track [LDRV3] on B.Cu, length 0.1768 mm
+    @(9.1000 mm, 38.3250 mm): Track [LDRV4] on B.Cu, length 0.4243 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1500 mm)
+    Rule: clearance-marginal-band; warning
+    @(9.1000 mm, 42.9000 mm): Pad 10 [VDDIO2] of U1 on B.Cu
+    @(8.7500 mm, 42.9600 mm): Track [SCL] on B.Cu, length 0.7500 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1396 mm)
+    Rule: clearance-marginal-band; warning
+    @(32.6750 mm, 37.3500 mm): Track [FD] on F.Cu, length 11.9888 mm
+    @(23.7778 mm, 36.8058 mm): Via [GND] on F.Cu - B.Cu
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1455 mm)
+    Rule: clearance-marginal-band; warning
+    @(6.1500 mm, 42.8485 mm): Track [SDA] on B.Cu, length 5.6485 mm
+    @(5.8400 mm, 48.4990 mm): Track [VIN] on B.Cu, length 5.4980 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1260 mm)
+    Rule: clearance-marginal-band; warning
+    @(24.9000 mm, 36.3650 mm): Pad 2 [VS] of U2 on B.Cu
+    @(23.7778 mm, 36.8058 mm): Via [GND] on F.Cu - B.Cu
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1270 mm)
+    Rule: clearance-marginal-band; warning
+    @(9.5270 mm, 31.9999 mm): Track [VIN] on B.Cu, length 0.4698 mm
+    @(10.6375 mm, 32.6480 mm): Track [SDA] on B.Cu, length 1.1081 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1270 mm)
+    Rule: clearance-marginal-band; warning
+    @(10.9840 mm, 32.6480 mm): Track [SDA] on B.Cu, length 0.3464 mm
+    @(11.8640 mm, 33.0514 mm): Track [VS] on B.Cu, length 1.3752 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1510 mm)
+    Rule: clearance-marginal-band; warning
+    @(14.3745 mm, 29.8990 mm): Track [VIN] on B.Cu, length 30.7265 mm
+    @(36.2750 mm, 30.4500 mm): Via [GND] on F.Cu - B.Cu
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1490 mm)
+    Rule: clearance-marginal-band; warning
+    @(14.3745 mm, 29.8990 mm): Track [VIN] on B.Cu, length 30.7265 mm
+    @(15.5000 mm, 27.9000 mm): Pad N [MID] of SC1 on B.Cu
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1250 mm)
+    Rule: clearance-marginal-band; warning
+    @(20.2500 mm, 36.8850 mm): Via [INT2] on F.Cu - B.Cu
+    @(20.5880 mm, 36.3850 mm): Track [VREG] on B.Cu, length 1.2971 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1327 mm)
+    Rule: clearance-marginal-band; warning
+    @(17.9864 mm, 34.2871 mm): Via [GND] on F.Cu - B.Cu
+    @(17.3350 mm, 34.3537 mm): Track [VS] on B.Cu, length 0.6594 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1270 mm)
+    Rule: clearance-marginal-band; warning
+    @(11.2000 mm, 33.3265 mm): Track [VIN] on B.Cu, length 0.4971 mm
+    @(11.5270 mm, 33.1910 mm): Track [SDA] on B.Cu, length 0.7680 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1460 mm)
+    Rule: clearance-marginal-band; warning
+    @(30.4000 mm, 30.7790 mm): Track [SDA] on B.Cu, length 5.3500 mm
+    @(34.3250 mm, 31.3500 mm): Via [GND] on F.Cu - B.Cu
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1270 mm)
+    Rule: clearance-marginal-band; warning
+    @(10.9840 mm, 34.5020 mm): Track [SDA] on B.Cu, length 0.7680 mm
+    @(11.1236 mm, 34.8390 mm): Track [VS] on B.Cu, length 1.0471 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1500 mm)
+    Rule: clearance-marginal-band; warning
+    @(6.7000 mm, 42.4380 mm): Via [NFC_EN] on F.Cu - B.Cu
+    @(6.1500 mm, 42.8485 mm): Track [SDA] on B.Cu, length 5.6485 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1490 mm)
+    Rule: clearance-marginal-band; warning
+    @(13.1215 mm, 31.1520 mm): Track [VIN] on B.Cu, length 1.7720 mm
+    @(15.5000 mm, 27.9000 mm): Pad N [MID] of SC1 on B.Cu
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1270 mm)
+    Rule: clearance-marginal-band; warning
+    @(9.8251 mm, 34.4770 mm): Track [VIN] on B.Cu, length 0.4271 mm
+    @(10.2625 mm, 34.5020 mm): Track [SDA] on B.Cu, length 0.7214 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1269 mm)
+    Rule: clearance-marginal-band; warning
+    @(17.7300 mm, 35.1049 mm): Track [VS] on B.Cu, length 0.1719 mm
+    @(17.2429 mm, 34.9839 mm): Via [GND] on F.Cu - B.Cu
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1326 mm)
+    Rule: clearance-marginal-band; warning
+    @(15.5400 mm, 32.4500 mm): Track [SDA] on B.Cu, length 0.5050 mm
+    @(15.8291 mm, 33.1071 mm): Track [GND] on B.Cu, length 0.4763 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1250 mm)
+    Rule: clearance-marginal-band; warning
+    @(16.2000 mm, 33.0306 mm): Track [VS] on F.Cu, length 0.6924 mm
+    @(16.9500 mm, 32.9170 mm): Track [GND] on F.Cu, length 0.8697 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1270 mm)
+    Rule: clearance-marginal-band; warning
+    @(10.8485 mm, 34.1750 mm): Track [VIN] on B.Cu, length 0.4971 mm
+    @(10.2625 mm, 34.5020 mm): Track [SDA] on B.Cu, length 0.7214 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1270 mm)
+    Rule: clearance-marginal-band; warning
+    @(10.5021 mm, 32.9750 mm): Track [VIN] on B.Cu, length 1.3790 mm
+    @(10.6375 mm, 32.6480 mm): Track [SDA] on B.Cu, length 1.1081 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1270 mm)
+    Rule: clearance-marginal-band; warning
+    @(8.5376 mm, 34.4770 mm): Track [VIN] on B.Cu, length 1.2875 mm
+    @(9.9605 mm, 34.8040 mm): Track [SDA] on B.Cu, length 0.4271 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1270 mm)
+    Rule: clearance-marginal-band; warning
+    @(9.8540 mm, 31.8145 mm): Track [SDA] on B.Cu, length 0.4744 mm
+    @(9.9051 mm, 31.1520 mm): Track [VIN] on B.Cu, length 3.2164 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1455 mm)
+    Rule: clearance-marginal-band; warning
+    @(5.8400 mm, 48.4990 mm): Track [VIN] on B.Cu, length 5.4980 mm
+    @(6.5015 mm, 43.2000 mm): Track [SDA] on B.Cu, length 0.4971 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1357 mm)
+    Rule: clearance-marginal-band; warning
+    @(17.2429 mm, 34.9839 mm): Via [GND] on F.Cu - B.Cu
+    @(17.3350 mm, 34.3537 mm): Track [VS] on B.Cu, length 0.6594 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1270 mm)
+    Rule: clearance-marginal-band; warning
+    @(9.9051 mm, 31.1520 mm): Track [VIN] on B.Cu, length 3.2164 mm
+    @(10.1895 mm, 31.4790 mm): Track [SDA] on B.Cu, length 0.9631 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1270 mm)
+    Rule: clearance-marginal-band; warning
+    @(10.9840 mm, 34.5020 mm): Track [SDA] on B.Cu, length 0.7680 mm
+    @(11.2000 mm, 33.8235 mm): Track [VIN] on B.Cu, length 0.4971 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1271 mm)
+    Rule: clearance-marginal-band; warning
+    @(8.0626 mm, 34.9520 mm): Track [VIN] on B.Cu, length 0.6718 mm
+    @(6.1500 mm, 37.2000 mm): Track [SDA] on B.Cu, length 2.7167 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1279 mm)
+    Rule: clearance-marginal-band; warning
+    @(17.5047 mm, 33.3734 mm): Track [SDA] on F.Cu, length 1.7906 mm
+    @(19.4166 mm, 33.6234 mm): Track [SCL] on F.Cu, length 0.7383 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1270 mm)
+    Rule: clearance-marginal-band; warning
+    @(6.1500 mm, 37.2000 mm): Track [SDA] on B.Cu, length 2.7167 mm
+    @(5.8230 mm, 42.9840 mm): Track [VIN] on B.Cu, length 6.0180 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1270 mm)
+    Rule: clearance-marginal-band; warning
+    @(10.9840 mm, 34.5020 mm): Track [SDA] on B.Cu, length 0.7680 mm
+    @(10.1271 mm, 34.1750 mm): Track [VIN] on B.Cu, length 0.7214 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1270 mm)
+    Rule: clearance-marginal-band; warning
+    @(9.5270 mm, 31.9999 mm): Track [VIN] on B.Cu, length 0.4698 mm
+    @(9.8540 mm, 31.8645 mm): Track [SDA] on B.Cu, length 0.0500 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1270 mm)
+    Rule: clearance-marginal-band; warning
+    @(11.2000 mm, 33.8235 mm): Track [VIN] on B.Cu, length 0.4971 mm
+    @(11.5270 mm, 33.1910 mm): Track [SDA] on B.Cu, length 0.7680 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1435 mm)
+    Rule: clearance-marginal-band; warning
+    @(25.1000 mm, 35.6400 mm): Via [GND] on F.Cu - B.Cu
+    @(25.2850 mm, 36.3650 mm): Track [VS] on B.Cu, length 3.8254 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1326 mm)
+    Rule: clearance-marginal-band; warning
+    @(15.8291 mm, 33.1071 mm): Track [GND] on B.Cu, length 0.4763 mm
+    @(15.8971 mm, 32.8071 mm): Track [SDA] on B.Cu, length 0.0563 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1247 mm)
+    Rule: clearance-marginal-band; warning
+    @(17.9864 mm, 34.2871 mm): Via [GND] on F.Cu - B.Cu
+    @(17.8368 mm, 33.7300 mm): Track [VS] on B.Cu, length 0.7097 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1250 mm)
+    Rule: clearance-marginal-band; warning
+    @(18.2700 mm, 33.7300 mm): Track [VS] on B.Cu, length 0.4332 mm
+    @(17.7800 mm, 33.2000 mm): Pad 2 [GND] of C12 on B.Cu
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1270 mm)
+    Rule: clearance-marginal-band; warning
+    @(11.2000 mm, 33.3265 mm): Track [VIN] on B.Cu, length 0.4971 mm
+    @(11.5270 mm, 33.9590 mm): Track [SDA] on B.Cu, length 0.7680 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1270 mm)
+    Rule: clearance-marginal-band; warning
+    @(6.5015 mm, 43.2000 mm): Track [SDA] on B.Cu, length 0.4971 mm
+    @(5.8230 mm, 42.9840 mm): Track [VIN] on B.Cu, length 6.0180 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1359 mm)
+    Rule: clearance-marginal-band; warning
+    @(16.1660 mm, 33.8508 mm): Track [GND] on B.Cu, length 0.8191 mm
+    @(16.5100 mm, 34.9600 mm): Pad 2 [VS] of R11 on B.Cu
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1297 mm)
+    Rule: clearance-marginal-band; warning
+    @(9.1000 mm, 38.9000 mm): Track [LDRV4] on B.Cu, length 0.5750 mm
+    @(8.8500 mm, 37.7500 mm): Track [LDRV3] on B.Cu, length 0.4007 mm
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1456 mm)
+    Rule: clearance-marginal-band; warning
+    @(10.7500 mm, 36.8100 mm): Via [UPDI] on F.Cu - B.Cu
+    @(10.0100 mm, 36.6000 mm): Pad 2 [GND] of C2 on B.Cu
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1500 mm)
+    Rule: clearance-marginal-band; warning
+    @(23.1000 mm, 48.6000 mm): Pad 1 [VS] of SW2 on B.Cu
+    @(24.0000 mm, 48.6000 mm): Pad 2 [ANODE] of SW2 on B.Cu
+[clearance]: Clearance violation (rule 'clearance-marginal-band' clearance 0.1524 mm; actual 0.1500 mm)
+    Rule: clearance-marginal-band; warning
+    @(24.0000 mm, 48.6000 mm): Pad 2 [ANODE] of SW2 on B.Cu
+    @(24.9000 mm, 48.6000 mm): Pad 3 [TINY] of SW2 on B.Cu
 [lib_footprint_mismatch]: Footprint 'SOT-23-6' does not match copy in library 'Package_TO_SOT_SMD'
     Local override; warning
     @(6.3425 mm, 32.2000 mm): Footprint U6
-[lib_footprint_mismatch]: Footprint 'ADXL367 CC-12-4_ADI' does not match copy in library 'Package_TO_SOT_SMD'
-    Local override; warning
-    @(19.4300 mm, 35.0700 mm): Footprint U3
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(18.0000 mm, 35.8200 mm): Track [GND] on F.Cu, length 0.2100 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(23.9342 mm, 36.8058 mm): Track [GND] on F.Cu, length 1.6487 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(49.5500 mm, 85.0500 mm): Track [GND] on F.Cu, length 26.5400 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(17.9864 mm, 34.5168 mm): Track [GND] on F.Cu, length 0.6607 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(48.7300 mm, 57.6900 mm): Track [GND] on F.Cu, length 12.1600 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(17.5192 mm, 34.9839 mm): Track [GND] on F.Cu, length 0.2763 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(14.8000 mm, 33.9000 mm): Track [GND] on F.Cu, length 1.2000 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(17.9864 mm, 34.2871 mm): Track [GND] on F.Cu, length 0.2297 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(36.5100 mm, 57.6300 mm): Track [GND] on F.Cu, length 7.6400 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(49.5500 mm, 58.5100 mm): Track [GND] on F.Cu, length 1.1597 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(23.7778 mm, 36.8058 mm): Track [GND] on F.Cu, length 0.1564 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(14.8000 mm, 35.1000 mm): Track [GND] on F.Cu, length 1.1314 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(36.5700 mm, 57.6900 mm): Track [GND] on F.Cu, length 0.0849 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(36.5100 mm, 49.9900 mm): Track [GND] on F.Cu, length 2.3900 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(44.0000 mm, 68.0000 mm): Track [GND] on F.Cu, length 2.5000 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(17.7900 mm, 35.8200 mm): Track [GND] on F.Cu, length 1.1172 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(14.8100 mm, 33.9100 mm): Track [GND] on B.Cu, length 0.2060 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(16.9816 mm, 34.4300 mm): Track [GND] on B.Cu, length 0.3695 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(25.1000 mm, 35.6400 mm): Track [GND] on B.Cu, length 0.3450 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(23.3720 mm, 36.4000 mm): Track [GND] on B.Cu, length 0.5739 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(14.8000 mm, 33.9000 mm): Track [GND] on B.Cu, length 0.0141 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(15.0160 mm, 33.4439 mm): Track [GND] on B.Cu, length 0.4763 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(16.1660 mm, 33.8508 mm): Track [GND] on B.Cu, length 0.8191 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(19.6800 mm, 34.2064 mm): Track [GND] on B.Cu, length 0.2936 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(46.5000 mm, 69.1375 mm): Track [GND] on B.Cu, length 1.1375 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(17.2429 mm, 34.6913 mm): Track [GND] on B.Cu, length 0.2926 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(19.6800 mm, 34.5000 mm): Track [GND] on B.Cu, length 0.0141 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(18.6800 mm, 34.2064 mm): Track [GND] on B.Cu, length 0.6129 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(18.0671 mm, 34.2064 mm): Track [GND] on B.Cu, length 0.1141 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(16.1660 mm, 33.4439 mm): Track [GND] on B.Cu, length 0.4068 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(15.0160 mm, 33.9100 mm): Track [GND] on B.Cu, length 0.4661 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(16.7452 mm, 34.4300 mm): Track [GND] on B.Cu, length 0.2364 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(15.8291 mm, 33.1071 mm): Track [GND] on B.Cu, length 0.4763 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(15.3528 mm, 33.1071 mm): Track [GND] on B.Cu, length 0.4763 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(18.5000 mm, 35.3200 mm): Track [GND] on B.Cu, length 0.7071 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(45.7500 mm, 59.1500 mm): Track [VINB] on B.Cu, length 1.1500 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(44.7500 mm, 63.0000 mm): Track [VINB] on B.Cu, length 0.3536 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(47.2500 mm, 58.6500 mm): Track [VINB] on B.Cu, length 1.0000 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(44.6000 mm, 59.1500 mm): Track [VINB] on B.Cu, length 0.0707 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(44.5000 mm, 62.7500 mm): Track [VINB] on B.Cu, length 0.6140 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(46.2500 mm, 58.6500 mm): Track [VINB] on B.Cu, length 0.7071 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(46.2500 mm, 30.2500 mm): Track [VIN] on B.Cu, length 1.0607 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(48.5000 mm, 58.6500 mm): Track [VIN] on B.Cu, length 2.1213 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(50.0000 mm, 30.2500 mm): Track [VIN] on B.Cu, length 3.7500 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(50.0000 mm, 57.1500 mm): Track [VIN] on B.Cu, length 26.9000 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(30.1000 mm, 37.6350 mm): Track [MID] on B.Cu, length 1.2700 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(25.6750 mm, 38.9050 mm): Track [MID] on B.Cu, length 1.7961 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(26.9450 mm, 37.6350 mm): Track [MID] on B.Cu, length 3.1550 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(24.9000 mm, 38.9050 mm): Track [MID] on B.Cu, length 0.7750 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(46.5976 mm, 63.3476 mm): Track [VS] on B.Cu, length 0.4452 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(18.2700 mm, 33.7300 mm): Track [VS] on B.Cu, length 0.4332 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(18.8000 mm, 33.2000 mm): Track [VS] on B.Cu, length 0.5000 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(17.8013 mm, 34.8200 mm): Track [VS] on B.Cu, length 0.7143 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(45.8000 mm, 63.7000 mm): Track [VS] on B.Cu, length 0.0707 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(17.7300 mm, 35.2768 mm): Track [VS] on B.Cu, length 0.4313 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(18.8000 mm, 33.2000 mm): Track [VS] on B.Cu, length 0.7495 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(17.7300 mm, 35.1049 mm): Track [VS] on B.Cu, length 0.1719 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(24.9000 mm, 36.3650 mm): Track [VS] on B.Cu, length 1.2700 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(46.1524 mm, 63.3476 mm): Track [VS] on B.Cu, length 0.4984 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(18.5156 mm, 34.8200 mm): Track [VS] on B.Cu, length 0.5007 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(18.8000 mm, 32.7000 mm): Track [VS] on B.Cu, length 0.3536 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(17.7618 mm, 36.3950 mm): Track [VS] on B.Cu, length 0.4568 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(17.4250 mm, 35.5818 mm): Track [VS] on B.Cu, length 0.4763 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(18.0149 mm, 34.8200 mm): Track [VS] on B.Cu, length 0.4029 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(17.3350 mm, 34.2318 mm): Track [VS] on B.Cu, length 0.1219 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(45.7500 mm, 63.6500 mm): Track [VS] on B.Cu, length 0.8000 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(18.2186 mm, 36.3950 mm): Track [VS] on B.Cu, length 0.6525 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(17.4250 mm, 36.0582 mm): Track [VS] on B.Cu, length 0.4763 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(17.3350 mm, 34.3537 mm): Track [VS] on B.Cu, length 0.6594 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(17.8368 mm, 33.7300 mm): Track [VS] on B.Cu, length 0.7097 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(6.7500 mm, 41.6500 mm): Track [NFC_EN] on B.Cu, length 0.9500 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(7.5000 mm, 41.3000 mm): Track [NFC_EN] on B.Cu, length 0.4000 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(7.1000 mm, 41.3000 mm): Track [NFC_EN] on B.Cu, length 0.4950 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(31.7900 mm, 35.5000 mm): Track [VNFC] on B.Cu, length 2.8400 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(31.7900 mm, 32.6600 mm): Track [VNFC] on B.Cu, length 1.4708 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(17.5047 mm, 33.3734 mm): Track [SDA] on F.Cu, length 1.7906 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(17.0151 mm, 33.8631 mm): Track [SDA] on F.Cu, length 0.6924 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(19.2953 mm, 33.3734 mm): Track [SDA] on F.Cu, length 0.4239 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(16.8878 mm, 33.8631 mm): Track [SDA] on F.Cu, length 0.1272 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(16.8200 mm, 33.7300 mm): Track [SDA] on B.Cu, length 0.0959 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(19.1800 mm, 34.2064 mm): Track [SDA] on B.Cu, length 0.3405 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(19.5200 mm, 33.1487 mm): Track [SDA] on B.Cu, length 0.1061 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(19.5200 mm, 33.5259 mm): Track [SDA] on B.Cu, length 0.3772 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(16.8878 mm, 33.7978 mm): Track [SDA] on B.Cu, length 0.0653 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(19.1800 mm, 33.8659 mm): Track [SDA] on B.Cu, length 0.4808 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(47.4101 mm, 69.7128 mm): Track [CLBASE] on F.Cu, length 0.1872 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(48.0000 mm, 64.0000 mm): Track [CLBASE] on F.Cu, length 5.1230 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(48.0000 mm, 69.1230 mm): Track [CLBASE] on F.Cu, length 0.8342 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(46.6718 mm, 64.0000 mm): Track [CLBASE] on F.Cu, length 1.3282 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(47.4101 mm, 69.9000 mm): Track [CLBASE] on B.Cu, length 0.1999 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(47.4101 mm, 70.0999 mm): Track [CLBASE] on B.Cu, length 0.5659 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(46.9000 mm, 64.2282 mm): Track [CLBASE] on B.Cu, length 0.3227 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(46.9000 mm, 64.5000 mm): Track [CLBASE] on B.Cu, length 0.2718 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(45.5500 mm, 68.0629 mm): Track [REF_TIE] on B.Cu, length 1.3435 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(45.5500 mm, 69.1375 mm): Track [REF_TIE] on B.Cu, length 1.0746 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(48.7500 mm, 66.2500 mm): Track [VCMP] on F.Cu, length 0.5000 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(48.5000 mm, 63.7500 mm): Track [VCMP] on F.Cu, length 2.2500 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(48.5000 mm, 66.0000 mm): Track [VCMP] on F.Cu, length 0.3536 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(48.7500 mm, 67.2500 mm): Track [VCMP] on B.Cu, length 0.3536 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(48.5000 mm, 63.7500 mm): Track [VCMP] on B.Cu, length 1.4000 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(48.7500 mm, 66.7500 mm): Track [VCMP] on B.Cu, length 0.5000 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(48.7500 mm, 66.7500 mm): Track [VCMP] on B.Cu, length 1.1875 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(48.5000 mm, 62.3500 mm): Track [VCMP] on B.Cu, length 1.2500 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(17.0818 mm, 35.9582 mm): Track [SCL] on F.Cu, length 3.3018 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(17.0818 mm, 35.9582 mm): Track [SCL] on F.Cu, length 0.5937 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(16.4882 mm, 35.9582 mm): Track [SCL] on F.Cu, length 0.1176 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(19.4166 mm, 33.6234 mm): Track [SCL] on F.Cu, length 0.7383 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(20.1800 mm, 34.2064 mm): Track [SCL] on B.Cu, length 0.5579 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(20.1800 mm, 33.6485 mm): Track [SCL] on B.Cu, length 0.0355 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(20.2500 mm, 36.8850 mm): Track [INT2] on F.Cu, length 1.5839 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(21.3700 mm, 35.7650 mm): Track [INT2] on F.Cu, length 0.9850 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(20.8300 mm, 35.3200 mm): Track [INT2] on B.Cu, length 0.4856 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(20.2500 mm, 36.8850 mm): Track [INT2] on B.Cu, length 0.0449 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(17.0799 mm, 40.1000 mm): Track [INT2] on B.Cu, length 5.5799 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(21.3700 mm, 34.7800 mm): Track [INT2] on B.Cu, length 0.7637 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(20.2500 mm, 36.9299 mm): Track [INT2] on B.Cu, length 4.4832 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(19.4300 mm, 36.9600 mm): Track [INT1] on F.Cu, length 1.3200 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(20.8451 mm, 34.2249 mm): Track [INT1] on F.Cu, length 0.0830 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(19.4300 mm, 35.6400 mm): Track [INT1] on F.Cu, length 2.0013 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(16.6900 mm, 39.7000 mm): Track [INT1] on B.Cu, length 3.8749 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(20.3444 mm, 34.8200 mm): Track [INT1] on B.Cu, length 0.7081 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(11.5000 mm, 39.7000 mm): Track [INT1] on B.Cu, length 5.1900 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(20.8451 mm, 34.3193 mm): Track [INT1] on B.Cu, length 0.1774 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(9.1000 mm, 38.9000 mm): Track [LDRV4] on B.Cu, length 0.5750 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(9.1000 mm, 38.3250 mm): Track [LDRV4] on B.Cu, length 0.4243 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(20.9900 mm, 36.7870 mm): Track [VREG] on B.Cu, length 0.5686 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(20.9900 mm, 37.5000 mm): Track [VREG] on B.Cu, length 0.7130 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(19.2909 mm, 36.3850 mm): Track [VREG] on B.Cu, length 0.1568 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(19.1800 mm, 36.2741 mm): Track [VREG] on B.Cu, length 0.3405 mm
+[track_width]: Track width (rule 'track-marginal-band' min width 0.1524 mm; actual 0.1500 mm)
+    Rule: track-marginal-band; warning
+    @(20.5880 mm, 36.3850 mm): Track [VREG] on B.Cu, length 1.2971 mm
+[copper_edge_clearance]: Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.0000 mm)
+    Rule: board setup constraints edge; error (excluded)
+    @(47.8000 mm, 0.0000 mm): Segment on Edge.Cuts
+    @(25.4000 mm, 1.2500 mm): Segment [GND] on F.Cu
+[copper_edge_clearance]: Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.0000 mm)
+    Rule: board setup constraints edge; error (excluded)
+    @(3.0000 mm, 88.9000 mm): Segment on Edge.Cuts
+    @(25.4000 mm, 87.6500 mm): Segment [GND] on F.Cu
 
 ** Found 0 unconnected pads **
 
-** Found 11 Footprint errors **
-[footprint_symbol_mismatch]: Value (C9) doesn't match symbol value (NP0_DNP)
-    Local override; warning
-    @(32.0100 mm, 38.5000 mm): Footprint C9
-[footprint_symbol_mismatch]: Value (JP1) doesn't match symbol value (GND VS SCL SDA)
-    Local override; warning
-    @(48.4000 mm, 14.5400 mm): Footprint JP1
-[footprint_symbol_mismatch]: Value (R7) doesn't match symbol value (1.8M)
-    Local override; warning
-    @(46.5000 mm, 72.0000 mm): Footprint R7
-[footprint_symbol_mismatch]: Value (R8) doesn't match symbol value (1M)
-    Local override; warning
-    @(46.5000 mm, 73.5000 mm): Footprint R8
-[footprint_symbol_mismatch]: Value (TP1) doesn't match symbol value (VIN)
-    Local override; warning
-    @(48.4000 mm, 12.0000 mm): Footprint TP1
-[footprint_symbol_mismatch]: Value (U3) doesn't match symbol value ()
-    Local override; warning
-    @(19.4300 mm, 35.0700 mm): Footprint U3
-[footprint_symbol_mismatch]: Package_TO_SOT_SMD:ADXL367 CC-12-4_ADI doesn't match footprint given by symbol (solarglow:U3)
-    Local override; warning
-    @(19.4300 mm, 35.0700 mm): Footprint U3
-[footprint_symbol_field_mismatch]: Field 'Datasheet' differs (PCB: 'b', Schematic: '')
-    Local override; warning
-    @(19.4300 mm, 35.0700 mm): Footprint U3
-[footprint_symbol_mismatch]: Package_TO_SOT_SMD:SOT-23-6 doesn't match footprint given by symbol (solarglow:U4)
-    Local override; warning
-    @(46.5000 mm, 68.0000 mm): Footprint U4
-[footprint_symbol_field_mismatch]: Field 'Datasheet' differs (PCB: 'tlv3011b.pdf', Schematic: '')
-    Local override; warning
-    @(46.5000 mm, 68.0000 mm): Footprint U4
-[extra_footprint]: Extra footprint
-    Local override; warning
-    @(0.0000 mm, 0.0000 mm): Footprint <no reference designator>
+** Found 0 Footprint errors **
 
 ** Ignored checks **
     - Footprint has no courtyard defined

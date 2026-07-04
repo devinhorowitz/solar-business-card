@@ -14330,7 +14330,7 @@
 				)
 			)
 		)
-		(property "Footprint" "solarglow:U4"
+		(property "Footprint" "Package_TO_SOT_SMD:SOT-23-6"
 			(at 150.7 53.34 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -14340,7 +14340,7 @@
 				)
 			)
 		)
-		(property "Datasheet" ""
+		(property "Datasheet" "tlv3011b.pdf"
 			(at 139.7 38.1 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -16171,7 +16171,7 @@
 				)
 			)
 		)
-		(property "Value" "VIN tp"
+		(property "Value" "VIN"
 			(at 421.21 362.16 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -17503,7 +17503,7 @@
 				)
 			)
 		)
-		(property "Footprint" "solarglow:U3"
+		(property "Footprint" "Package_TO_SOT_SMD:ADXL367 CC-12-4_ADI"
 			(at 361.52 53.34 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -17513,7 +17513,7 @@
 				)
 			)
 		)
-		(property "Datasheet" ""
+		(property "Datasheet" "datasheets/adxl367.pdf"
 			(at 350.52 38.1 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -18055,7 +18055,7 @@
 				)
 			)
 		)
-		(property "Value" "bench hdr"
+		(property "Value" "GND VS SCL SDA"
 			(at 421.21 332.16 0)
 			(show_name no)
 			(do_not_autoplace no)
