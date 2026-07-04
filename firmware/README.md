@@ -13,7 +13,7 @@ by default — the chip has no sleep state and would otherwise draw ~195 µA, th
 card's largest idle load. See **NFC contact card** below.
 
 > Status: verified at the **register level** against the AVR64DD32/28 datasheet
-> (DS40002315) and the LIS2DH12 datasheet (DM00091513); the pin map is read
+> (DS40002315) and the ADXL367 datasheet; the pin map is read
 > directly from the committed `.kicad_pcb`; and every `_gc`/`_bm` macro, SFR
 > field, struct member, and ISR vector used here was checked against the actual
 > Microchip `ioavr64dd28.h` from the current AVR-Dx pack. It was **not
@@ -35,7 +35,7 @@ card's largest idle load. See **NFC contact card** below.
 |------|------------|
 | `board.h` | as-built pin/route map + tunables. Single source of truth is the PCB. |
 | `twi.h` | header-only blocking I2C host (TWI0); shared by the accel and NFC tag. |
-| `lis2dh12.h/.c` | accelerometer: presence, tap→INT1, motion (IA2)→INT2, latch clear. |
+| `adxl367.h/.c` | accelerometer: presence, tap→INT1, activity→INT2, tap/activity clear. |
 | `nfc.h/.c` | NT3H2211 NFC tag (`U5`): NDEF write + VCC power-gate via `NFC_EN`/`U6`. |
 | `led.h/.c` | TCA0 split-mode PWM on PA0–PA3 + gamma breathing animation. |
 | `sense.h/.c` | ADC rail/light reads + EEPROM activation counter. |
@@ -169,10 +169,10 @@ get internal pull-ups in `gpio_init` so a floating input can't leak current — 
 
 Baseline = **POWER-DOWN**. Wakes:
 
-- **Tap** (LIS2DH12 click, all axes, high-pass filtered) → INT1 → PF1 → full
+- **Tap** (ADXL367 tap, Z-axis, single+double resolved in hardware) → INT1 → PF1 → full
   breathing glow (`GLOW_CYCLES` breaths) + EEPROM activation count++. With
   `USE_DOUBLE_TAP`, a double-tap plays a brighter/longer signature glow instead.
-- **Motion** (LIS2DH12 inertial wake-up, IA2) → INT2 → PF0 → one softer breath.
+- **Motion** (ADXL367 referenced activity) → INT2 → PF0 → one softer breath.
 - **NFC** (NT3H2211 field detect, `U5`) → FD → PA6 → the tap glow, when a phone's
   field appears. FD runs on the phone's field power (datasheet §8.4), so it wakes
   the MCU even though the tag's VCC is gated **off**; field-present is the chip's
@@ -200,7 +200,7 @@ brown out the part.
 
 `U5` is an NXP **NT3H2211** (NTAG I2C plus, 2 KB) — an NFC Forum Type-2 tag on the
 **same TWI0 bus** as the accel, 7-bit address **0x55** (no clash with the accel's
-0x18). Its antenna is a PCB coil on `LA`/`LB` tuned to 13.56 MHz by the chip's
+0x1D). Its antenna is a PCB coil on `LA`/`LB` tuned to 13.56 MHz by the chip's
 internal 50 pF (`C9` is a do-not-populate trim); the radio is invisible to firmware.
 **Power-gate (`NFC_EN`, PA7).** The chip has no sleep state and draws ~195 µA from
 VCC continuously (datasheet Table 42, 3.3 V idle) — the card's largest idle load. A
@@ -258,21 +258,21 @@ The rail is tiny (clamped ≤ 3.47 V supercap, sub-mA indoor harvest), so standi
 current is the whole game, and the wake architecture has to live within it. Two
 things here diverge from the hardware doc's §6:
 
-- **The accelerometer sets the sleep floor, and it runs at 100 Hz on purpose.**
-  A click-armed LIS2DH12 has to sample fast enough to *time* a tap, so it runs
-  **LP, 100 Hz** (`CTRL_REG1 = 0x5F`) = **~10 µA** (datasheet Table 12: 100 Hz
-  LP = 10 µA, 50 Hz = 6 µA, 10 Hz = 3 µA). That ~10 µA dominates the MCU's ~1 µA
-  power-down draw, so the accel ODR is the single biggest lever on dark-survival.
-  We deliberately do **not** use the sleep-to-wake "activity" function, which
-  auto-drops the ODR to 10 Hz when the card is still: the card is *still* exactly
-  when a tap arrives, the click engine cannot time a tap at 10 Hz, so a cold tap
-  from rest would land as generic motion rather than a click and double-tap would
-  be unreachable. Motion / "picked up" is instead sourced from the **IA2 inertial-
-  wake generator** (gravity high-passed), which runs alongside the click engine at
-  100 Hz. Cost of staying at 100 Hz is roughly the extra ~7 µA vs a 10 Hz idle —
-  it about halves dark-survival (order of half a day either way), and any lit use
-  the solar harvest covers. See *What to tune → Motion* for the alternative if you
-  would rather trade reliable cold-tap for runtime.
+- **The accelerometer is no longer the sleep floor.** The board now carries an ADI
+  **ADXL367** (the LIS2DH12 went to backorder). In always-measurement at 100 Hz it
+  draws **0.89 µA** (datasheet), against **~10 µA** for a click-armed LIS2DH12 at the
+  same rate. That one swap drops dark standby from ~11.8 µA to **~2.7 µA**, and now
+  *no single part dominates*: the accel (0.89 µA), the MCU power-down (~1 µA), and the
+  rest of the board leakage are all the same order. Because the ADXL367's floor is
+  already this low, we run it **always-on in measurement** — there is no ODR-drop /
+  sleep-to-wake trade to make, so the LIS2DH12's "a still card can't time a cold tap"
+  corner does not exist here: tap and activity run continuously and a cold tap from
+  rest is just a tap. Two knock-on effects: (1) the µA-level fixes elsewhere in this
+  doc — unused-pin pull-ups, ADC idle-sleep — now move the needle *proportionally more*,
+  since the accel no longer swamps them; (2) BOD-in-power-down (~20 µA if left on, see
+  *Fuses*) is now the single largest *avoidable* draw on the board, so keeping it
+  sampled/off matters more than it did. Tap is single-axis (Z) and the single-vs-double
+  decision is made in the ADXL367's own hardware window; see *What to tune → Tap*.
 - **There is no AC0 "instant" wake-on-light** (the hardware doc's option A).
   On this part the analog comparator keeps running in Standby with `RUNSTDBY`,
   but its **interrupt and status flags do not update while `CLK_PER` is stopped**
@@ -350,47 +350,50 @@ the sensor.
   brightness ever runs backwards, write `255 - duty` in `led_set`/`led_set_all`
   instead, which keeps idle dark.
 
-### Tap / single-click (`lis2dh12.h`)
-- **`LIS_CLICK_THS_RAW`** (`0x30` ≈ 0.75 g; 16 mg/LSb at ±2 g): tap sensitivity,
-  lower = more sensitive. The single most likely knob to need a real-hardware
-  tweak.
-- **`LIS_TIME_LIMIT_VAL` / `LIS_TIME_LATENCY_VAL` / `LIS_TIME_WINDOW_VAL`**
-  (100 / 50 / 100 ms; 10 ms per LSb at 100 Hz): click timing — max over-threshold
-  dwell still counted as a click, post-click dead time, and the second-tap window.
-  Read the double-tap coupling below before changing `TIME_WINDOW`.
-- **`LIS_CLICK_CFG_VAL`** is selected automatically from `USE_DOUBLE_TAP`
-  (`0x15` single-only / `0x3F` single + double) — don't hand-set it.
-- ODR / current is **`LIS_CFG_CTRL_REG1`** (`0x5F` = LP 100 Hz). See the accel
-  power note above before lowering it: below ~50 Hz the click engine starts
-  missing taps, and the sleep-to-wake trap is the whole reason it sits at 100 Hz.
+### Tap (`adxl367.h`)
+- **`ADXL_CFG_TAP_THRESH`** (`0x30`, 8-bit): tap sensitivity, lower = more
+  sensitive. The single most likely knob to need a real-hardware tweak. All the tap
+  tunables are annotated **BARE-CARD** — the enclosed stack changes the tap impulse,
+  so re-tune on the bench (seat → test → lift → adjust).
+- **`ADXL_CFG_TAP_DUR`** (`0x10` = 10 ms; 625 µs/LSb): the max over-threshold dwell
+  still counted as a tap. Raise if firm taps are missed, lower to reject presses.
+- **`ADXL_CFG_TAP_LATENT` / `ADXL_CFG_TAP_WINDOW`** (`0x20` = 40 ms / `0xC0` =
+  240 ms; 1.25 ms/LSb): the double-tap window — wait after the first tap, then how
+  long the second may land. **`TAP_LATENT = 0` disables double-tap.** This window
+  lives in the accel now, not the firmware (see below).
+- **Tap axis** is **`ADXL_CFG_AXIS_MASK`** (`0x20` = Z). Unlike the LIS2DH12's
+  all-axis click, the ADXL367 watches **one** axis; Z is the card-face normal. If
+  bench taps come in off-axis, this is the knob.
+- ODR / current is **`ADXL_CFG_FILTER_CTL`** (`0x23` = ±2 g, 100 Hz). Lowering it is
+  now *safe* — the ADXL367 is always-on at 0.89 µA with no sleep-to-wake trap — but
+  the tap engine still wants enough rate to resolve the impulse, so 100 Hz stays.
 
 ### Double-tap signature (`board.h`)
 - **`USE_DOUBLE_TAP`** (0/1, default 1): when on, a double-tap plays a distinct
-  brighter/longer signature glow. **Latency cost:** to tell single from double
-  before lighting, *every* tap idle-waits `DTAP_WINDOW_MS` before any glow starts,
-  so the common single tap gains that much delay. Set 0 for an instant single tap
-  with no double-tap.
-- **`DTAP_WINDOW_MS`** (300): how long the firmware waits for the second tap. It
-  **must stay ≥** the accel's worst-case double-click assertion time
-  (`TIME_LIMIT + TIME_LATENCY + TIME_WINDOW` = 100 + 50 + 100 = 250 ms), or a slow
-  double registers as a single. Widen this if you widen the accel `TIME_WINDOW`.
+  brighter/longer signature glow. The ADXL367 resolves single-vs-double **in
+  hardware** — with both functions enabled its tap interrupt only fires after its own
+  `TAP_LATENT + TAP_WINDOW` has validated or invalidated a double — so the firmware
+  reads `STATUS_2` once on the interrupt (no software wait). Set 0 for an instant
+  single tap with no double-tap. **Latency note:** a single tap still glows ~one
+  window (`LATENT + WINDOW`, ~280 ms here) after the tap, because the hardware must
+  rule out a second tap first; a double glows as soon as it validates. That window is
+  set by `ADXL_CFG_TAP_LATENT/WINDOW` in `adxl367.h`, not by any firmware timer.
 - **`DTAP_CYCLES` / `DTAP_BREATH_MS` / `DTAP_PEAK`** (3 / 1600 / 255): the
   signature glow — one more breath and brighter than a single tap.
 
-### Motion / "picked up" wake (`lis2dh12.h`) — IA2 inertial wake-up
-- **`LIS_INT2_THS_VAL`** (`0x10` ≈ 0.25 g; 16 mg/LSb at ±2 g): motion threshold
-  for the soft breath. Lower if a gentle pickup doesn't wake it, raise if it's
-  twitchy.
-- **`LIS_INT2_DUR_VAL`** (`0x00` = immediate; ×10 ms at 100 Hz): debounce. Raise a
-  few steps if vibration false-triggers, or if sustained motion gives repeated
-  breaths.
-- **The motion path must stay high-pass filtered** (`LIS_CFG_CTRL_REG2`, value
-  `0x06`, sets `HP_IA2`). Without it the static 1 g gravity exceeds the threshold
-  and pins INT2 high. The shared HP filter is primed by one `REFERENCE` read at
-  init, which assumes the card is roughly **at rest at boot** — true for a cold /
-  just-charged start; a reset mid-handling re-primes on the next boot. If that
-  ever bites, `HPM = 11` (autoreset-on-interrupt) is the robust alternative, but
-  it is shared with the click filter so it's left at `HPM = 00`.
+### Motion / "picked up" wake (`adxl367.h`) — referenced activity
+- **`ADXL_CFG_THRESH_ACT_H/L`** (13-bit; `0x00`/`0xC8` ≈ 50 counts): motion
+  threshold for the soft breath. Lower if a gentle pickup doesn't wake it, raise if
+  it's twitchy. BARE-CARD; bench-tune.
+- **`ADXL_CFG_TIME_ACT`** (`0x02` samples): how many samples over threshold confirm
+  activity — the debounce. Raise a few steps if vibration false-triggers, or if
+  sustained motion gives repeated breaths.
+- **Gravity is removed by the mode, not a separate filter.** `ADXL_CFG_ACT_INACT`
+  (`0x03`) selects **referenced** activity (`ACT_EN = 11`): the part compares against
+  a reference sample it takes itself, so the static 1 g doesn't pin INT2 — there's no
+  `REFERENCE`-read priming step and no at-rest-at-boot assumption the LIS2DH12 needed.
+  Activity is acknowledged by **reading `STATUS`** (the firmware does this in the
+  motion / tap / nfc paths); leave it unacked and INT2 stays high and stops re-firing.
 
 ### Light & rail sensing (`board.h`; ADC in `sense.c`)
 - **`VS_GLOW_FLOOR_MV`** (2600): rail floor below which a glow is refused, so an
