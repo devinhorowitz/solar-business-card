@@ -8368,7 +8368,7 @@
 	)
 	(wire
 		(pts
-			(xy 200 120) (xy 194.92 120)
+			(xy 199.39 119.38) (xy 194.31 119.38)
 		)
 		(stroke
 			(width 0)
@@ -8478,7 +8478,7 @@
 	)
 	(wire
 		(pts
-			(xy 120.65 120) (xy 115.57 120)
+			(xy 120.65 119.38) (xy 115.57 119.38)
 		)
 		(stroke
 			(width 0)
@@ -8768,7 +8768,7 @@
 	)
 	(wire
 		(pts
-			(xy 120.65 125.08) (xy 115.57 125.08)
+			(xy 120.65 124.46) (xy 115.57 124.46)
 		)
 		(stroke
 			(width 0)
@@ -8808,7 +8808,7 @@
 	)
 	(wire
 		(pts
-			(xy 200 125.08) (xy 194.92 125.08)
+			(xy 199.39 124.46) (xy 194.31 124.46)
 		)
 		(stroke
 			(width 0)
@@ -10091,7 +10091,7 @@
 	)
 	(global_label "VS"
 		(shape bidirectional)
-		(at 194.92 120 0)
+		(at 194.31 119.38 0)
 		(effects
 			(font
 				(size 1 1)
@@ -10099,7 +10099,7 @@
 		)
 		(uuid "12e8309d-553d-4f3c-9cf6-d4f09ac846b2")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 194.92 120 0)
+			(at 194.31 119.38 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -10322,7 +10322,7 @@
 	)
 	(global_label "GND"
 		(shape bidirectional)
-		(at 115.57 125.08 0)
+		(at 115.57 124.46 0)
 		(effects
 			(font
 				(size 1 1)
@@ -10330,7 +10330,7 @@
 		)
 		(uuid "25c8e795-cdf0-4e5c-8277-d4c093c0fc08")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 115.57 125.08 0)
+			(at 115.57 124.46 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -11162,7 +11162,7 @@
 	)
 	(global_label "VREG"
 		(shape bidirectional)
-		(at 115.57 120 0)
+		(at 115.57 119.38 0)
 		(effects
 			(font
 				(size 1 1)
@@ -11170,7 +11170,7 @@
 		)
 		(uuid "63bb3d3d-c415-4b4f-baba-9fa926beaa8c")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 115.57 120 0)
+			(at 115.57 119.38 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -12865,7 +12865,7 @@
 	)
 	(global_label "GND"
 		(shape bidirectional)
-		(at 194.92 125.08 0)
+		(at 194.31 124.46 0)
 		(effects
 			(font
 				(size 1 1)
@@ -12873,7 +12873,7 @@
 		)
 		(uuid "cc8fc9a4-262c-4d29-ac67-25c70d00db7e")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 194.92 125.08 0)
+			(at 194.31 124.46 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -14620,7 +14620,7 @@
 	)
 	(symbol
 		(lib_id "solarglow:C11")
-		(at 120.65 120 0)
+		(at 120.65 119.38 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -14630,7 +14630,7 @@
 		(dnp no)
 		(uuid "38d02d2b-1023-4079-8a25-0efb78a19396")
 		(property "Reference" "C11"
-			(at 131.65 125.08 0)
+			(at 131.65 124.46 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -14640,7 +14640,7 @@
 			)
 		)
 		(property "Value" "200nF"
-			(at 131.65 130.16 0)
+			(at 131.65 129.54 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -14650,7 +14650,7 @@
 			)
 		)
 		(property "Footprint" "solarglow:C11"
-			(at 131.65 135.24 0)
+			(at 131.65 134.62 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -14660,7 +14660,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 120.65 120 0)
+			(at 120.65 119.38 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -14670,7 +14670,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 120.65 120 0)
+			(at 120.65 119.38 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -15389,7 +15389,7 @@
 	)
 	(symbol
 		(lib_id "solarglow:C12")
-		(at 200 120 0)
+		(at 199.39 119.38 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -15399,7 +15399,7 @@
 		(dnp no)
 		(uuid "591e9e62-be0f-4a2f-9bb6-d1c795d07d0f")
 		(property "Reference" "C12"
-			(at 211 125.08 0)
+			(at 210.39 124.46 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -15409,7 +15409,7 @@
 			)
 		)
 		(property "Value" "100nF"
-			(at 211 130.16 0)
+			(at 210.39 129.54 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -15419,7 +15419,7 @@
 			)
 		)
 		(property "Footprint" "solarglow:C12"
-			(at 211 135.24 0)
+			(at 210.39 134.62 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -15429,7 +15429,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 200 120 0)
+			(at 199.39 119.38 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -15439,7 +15439,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 200 120 0)
+			(at 199.39 119.38 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
