@@ -10,11 +10,12 @@ W,H,R = 50.80,88.90,3.0
 wall,lip_w,floor,cavity,board,border = 1.0,2.5,1.00,1.80,0.60,0.15   # lip_w here = WEST lip shown in Section A-A
 lip_W,lip_N,lip_S,lip_E,lip_Ew = 2.5,2.0,2.0,1.0,2.5
 Wb,Hb = 50.80,88.90
-boss_r,pilot_r,cbore,ease = 2.60,0.80,3.0,0.20
+boss_r,pilot_r,cbore,ease = 2.60,0.80,3.0,0.10
 ef=-0.05
 cavW,cavH,cavR = W+2*ef,H+2*ef,R+ef
 outW,outH,outR = cavW+2*wall,cavH+2*wall,cavR+wall
 bb,wt = floor+cavity, floor+cavity+board
+lb = 0.10                                  # light interior edge-breaks (felt, not seen), 45deg
 mounts=[(3.0,3.0),(47.8,3.0),(3.0,85.9),(47.8,85.9)]
 oxmin,oymin = -0.95,-0.95
 
@@ -94,9 +95,9 @@ ax.text(150,148,"SECTION A-A \u2192 edge profile      DETAIL B \u2192 corner bos
 # ===================== EDGE SECTION A-A =====================
 S2=13.0; EX,EY=265,202
 xl=lambda v:EX+v*S2; zl=lambda z:EY+(z+border)*S2
-prof=[(0.10,0.0),(wall,0.0),(wall,-border),(wall+lip_w,-border),(wall+lip_w,0.0),
-      (8.5,0.0),(8.5,floor),(wall+lip_w,floor),(wall+lip_w,bb),(wall,bb),
-      (wall,wt),(ease,wt),(0.0,wt-ease),(0.0,0.10)]
+prof=[(0.10,0.0),(wall,0.0),(wall,-border+lb),(wall+lb,-border),(wall+lip_w-lb,-border),(wall+lip_w,-border+lb),(wall+lip_w,0.0),
+      (8.5,0.0),(8.5,floor),(wall+lip_w,floor),(wall+lip_w,bb-lb),(wall+lip_w-lb,bb),(wall,bb),
+      (wall,wt-ease),(wall-ease,wt),(ease,wt),(0.0,wt-ease),(0.0,0.10)]
 ax.add_patch(MplPoly([(xl(x),zl(z)) for x,z in prof],closed=True,fc=HATCH,ec=INK,lw=0.8,hatch="////"))
 dim((xl(0.0),zl(-border)),(xl(0.0),zl(wt)),xl(0.0)-7,"3.55",vert=True,fs=7,side=1)
 dim((xl(8.5),zl(0.0)),(xl(8.5),zl(floor)),xl(8.5)+7,"1.00",vert=True,fs=6.6,side=-1)
@@ -104,8 +105,13 @@ dim((xl(8.5),zl(floor)),(xl(8.5),zl(bb)),xl(8.5)+7,"1.80 ±0.05",vert=True,fs=7,
 dim((xl(0.0),zl(0.0)),(xl(wall),zl(0.0)),zl(-border)-5,"1.0",fs=6.4,side=-1)
 dim((xl(wall),zl(bb)),(xl(wall+lip_w),zl(bb)),zl(bb)+7,"2.5 W-LIP (see plan)",fs=5.2,side=1,txtoff=1.0)
 dim((xl(wall+lip_w+0.25),zl(-border)),(xl(wall+lip_w+0.25),zl(0.0)),xl(wall+lip_w)+3.0,"0.15",vert=True,fs=5.8,side=-1,txtoff=1.0)
-leader(xl(0.06),zl(wt-0.10),xl(2.4),zl(wt)+6,"0.20\u00d745\u00b0 EASE",ha="left",fs=6.2)
+leader(xl(0.05),zl(wt-0.06),xl(1.7),zl(wt)+4.5,"0.10\u00d745\u00b0 RIM (top)",ha="left",fs=5.2)
+leader(xl(0.90),zl(wt-0.06),xl(4.2),zl(wt)+9.5,"0.10\u00d745\u00b0 MOUTH",ha="left",fs=5.2)
 fcf(xl(3.4),zl(bb)+8,["FLAT","0.05"]); leader(xl(2.2),zl(bb),xl(3.4),zl(bb)+8+2.3,"",ha="left")
+leader(xl(3.36),zl(bb-0.04),xl(5.7),zl(2.05),"0.10\u00d745\u00b0 LIP",ha="left",fs=5.2)
+leader(xl(0.05),zl(0.06),xl(-2.6),zl(0.55),"0.10\u00d745\u00b0 RIM (btm)",ha="right",fs=5.0)
+leader(xl(1.08),zl(-0.10),xl(1.35),zl(-border)-9,"0.10\u00d745\u00b0 FRAME (2 PL)",ha="left",fs=5.0)
+leader(xl(3.42),zl(-0.10),xl(1.35),zl(-border)-9,"",ha="left")
 ax.text(xl(0.06),zl(floor)+0.8,"  floor 1.00 TRUE (0.95 local under the U2 pocket, note 7)   •   PCB recess 0.60 (0.60 mm board)",fontsize=5.7,color=GRY,va="bottom")
 ax.text(EX+2,EY-11,"SECTION A-A  (edge)   SCALE 13:1",fontsize=8.5,fontweight="bold",color=INK)
 ax.text(EX+2,EY-16.5,"C1 = cavity depth    C2 = PCB-rest-plane flatness    (back face down; PCB drops in from top)",fontsize=6,color=GRY,style="italic")
@@ -116,7 +122,7 @@ bx=lambda v:BX+v*S3; bz=lambda z:BY+(z+border)*S3
 ax.add_patch(MplPoly([(bx(-4),bz(0)),(bx(4),bz(0)),(bx(4),bz(floor)),(bx(-4),bz(floor))],closed=True,fc=HATCH,ec=INK,lw=0.6,hatch="////"))
 for s in (1,-1):
     ax.add_patch(MplPoly([(bx(x),bz(z)) for x,z in [(s*0.8,0.20),(s*1.5,0.20),(s*1.5,bb),(s*0.8,bb)]],closed=True,fc=HATCH,ec=INK,lw=0.7,hatch="////"))
-    ax.add_patch(MplPoly([(bx(x),bz(z)) for x,z in [(s*1.5,-border),(s*2.6,-border),(s*2.6,bb),(s*1.5,bb)]],closed=True,fc=HATCH,ec=INK,lw=0.7,hatch="////"))
+    ax.add_patch(MplPoly([(bx(x),bz(z)) for x,z in [(s*1.5,-border+lb),(s*(1.5+lb),-border),(s*(2.6-lb),-border),(s*2.6,-border+lb),(s*2.6,bb),(s*1.5,bb)]],closed=True,fc=HATCH,ec=INK,lw=0.7,hatch="////"))
 ax.add_patch(Rectangle((bx(-4),bz(bb)),8*S3,board*S3,fill=False,ec=GRY,lw=0.6,ls=(0,(5,3))))
 ax.add_patch(Rectangle((bx(-1.0),bz(wt)),2.0*S3,1.6*S3,fill=False,ec=GRY,lw=0.6,ls=(0,(5,3))))
 ax.add_patch(Rectangle((bx(-0.9),bz(0.20)),1.8*S3,(wt-0.20)*S3,fill=False,ec=GRY,lw=0.6,ls=(0,(5,3))))
@@ -127,6 +133,7 @@ dim((bx(2.6),bz(-border)),(bx(2.6),bz(0.0)),bx(2.6)+3,"0.15",vert=True,fs=5.8,si
 leader(bx(0.0),bz(1.5),bx(4.6),bz(1.9),"M2 THREAD\n\u00d81.6 TAP DRILL, THRU\nTAP FROM BACK",ha="left",fs=6.2)
 leader(bx(1.0),bz(0.20),bx(3.0),bz(0.20)-7,"spotface bottom = M2\u00d73\nscrew-tip plane (flush)",ha="left",fs=5.7)
 ax.text(bx(0),bz(wt)+1.6*S3+4,"PCB + M2\u00d73 BRASS SCREW \u2014 REF, NOT THIS PART",ha="center",fontsize=5.7,color=GRY,style="italic")
+leader(bx(2.6),bz(-0.07),bx(4.4),bz(-border)-2,"0.10\u00d745\u00b0 BOSS/SPOTFACE (typ)",ha="left",fs=5.0)
 ax.text(BX-92,BY-25,"DETAIL B   (corner boss)   13:1",fontsize=8.5,fontweight="bold",color=INK)
 
 # ===================== CRITICAL DIMS + NOTES =====================
@@ -146,7 +153,7 @@ notes=[
  "3. GENERAL TOLERANCE PER ISO 2768-1 (MEDIUM). C1-C4 TOLERANCED AS LISTED; C1 & C3 = ±0.05. DATUMS: A = LEFT EDGE, B = BOTTOM EDGE, C = PCB-REST PLANE.",
  "4. 2x LOCATOR PILLAR: Ø3.0 x 0.4 TALL, STANDING ON THE CAVITY FLOOR AT (13, 35) AND (33, 55) - BOTH WEST OF THE NFC COIL. LEFT AS ISLANDS IN THE SAME CAVITY PASS AS THE BOSSES.",
  "    LOCATE THE RESIN BRACE (SEPARATE PART) VIA MATCHING Ø3.2 RECESSES. FLOOR STAYS A FULL 1.00 (THE (33,55) RECESS IS SLOTTED). MODELED IN THE STEP.",
- "5. BREAK ALL SHARP EDGES ~0.1 (Ti). OUTER TOP/BOTTOM RIM EASED 0.20x45° (MODELED).",
+ "5. EDGE BREAKS - ALL 0.10x45°, FELT NOT SEEN, MODELED.  CALLED OUT ON SEC A-A / DETAIL B:  RIM = outer rim (top & bottom);  MOUTH = recess mouth (around PCB);  LIP = inner (cavity-side) lip edge;  FRAME = proud back-frame bottom edges;  BOSS = boss + spotface bottom edges (Detail B).  BREAK ALL OTHER EXPOSED EDGES 0.10x45°.  CONCAVE SEAT/JUNCTION CORNERS LEFT SHARP -> ROUND-TOOL RADIUS.",
  "6. FLOOR IS NOW A TRUE 1.00 (0.95 LOCAL UNDER THE U2 POCKET), AT THE ~1.0 Ti MIN-WALL GUIDANCE SO IT ALSO CLEARS ALUMINIUM / COPPER / STAINLESS.",
  "    CAVITY 1.80 +-0.05 -> 1.75 WORST-CASE, MINUS WS17 1.70 MAX (DATASHEET CASE WS17 HEIGHT) = 0.05 NON-CONTACT; THE BRACE + SOLAR-CELL SANDWICHES CARRY THE BOARD.",
  "7. U2 RELIEF POCKET: 7.8 x 5.4 CENTERED (28.5, 37) ON THE CAVITY FLOOR, 0.05 DEEP (LOCAL FLOOR 0.95) - U2 (1.75) KEEPS 0.10 AIR. GENERAL FLOOR 1.00. MODELED IN THE STEP.",

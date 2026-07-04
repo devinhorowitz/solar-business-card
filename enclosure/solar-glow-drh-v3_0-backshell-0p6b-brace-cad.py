@@ -62,7 +62,8 @@ U2_POCKET_WH = (7.8, 5.4)                 # pocket size: pad box + 0.5 margin al
 
 edge_fit   = -0.05                 # press interference on the FLATS
 corner_clr = 0.15                  # corner relief so the press grips the flats
-edge_ease  = 0.20                  # squared-edge chamfer on the outer top/bottom rim (feel/deburr)
+edge_ease  = 0.10                  # light edge-break on the outer rim + recess mouth (felt, not seen)
+lip_break  = 0.10                  # light 45deg edge-break on the inner (cavity-side) lip edge (felt, not seen)
 EDGE_BREAK = 0.10                  # Ti deburr: break the sharp END-FACE edges (back proud frame/annuli
                                    # + front rim + recess mouth) so corners are durable, not knife-sharp.
                                    # Ti edges chip and cut; an edge-break also resists nicking. ~0.1 mm.
@@ -139,6 +140,24 @@ def _east_blocks(z0, dz):
                  .rect(lip_E_wide - lip_E, yb - ya).extrude(dz))
         out = blk if out is None else out.union(blk)
     return out
+def _lip_inner_pts():
+    """lip inner (cavity void) perimeter, MODEL coords: the notched asymmetric outline. West corners are
+    filleted in the real part; here sharp -> a ~lip_break cosmetic over-cut at those 2 corners only."""
+    P=[(lip_W,lip_N),(W-lip_E_wide,lip_N),(W-lip_E_wide,EAST_WIDE_Y[0][1]),(W-lip_E,EAST_WIDE_Y[0][1]),
+       (W-lip_E,EAST_WIDE_Y[1][0]),(W-lip_E_wide,EAST_WIDE_Y[1][0]),(W-lip_E_wide,H-lip_S),(lip_W,H-lip_S)]
+    return [(wx(x),wy(y)) for x,y in P]
+def _lip_break_cut(bb, c, taper):
+    """45deg edge-break on the lip inner top edge: taper-extrude the void outline over the top c mm so it
+    grows outward into the lip, and cut it -> the sharp top-inner lip edge is knocked back at 45deg."""
+    return cq.Workplane("XY").workplane(offset=bb-c).polyline(_lip_inner_pts()).close().extrude(c, taper=taper)
+
+def _recess_mouth_ease(wt, c):
+    """45deg ease on the recess-mouth top-inner edge (convex, around the board opening). Tapered filled
+    frustum at the recess outline over the top c mm: at wt-c it is the nominal recess (interior already
+    void -> no-op), at wt it grows outward by c into the wall, so only the wall inner-top corner is beveled
+    -> matches the outer-rim edge_ease and gives the board a press-fit lead-in. Robust boolean (no OCC
+    edge-chamfer)."""
+    return cq.Workplane("XY").workplane(offset=wt-c).rect(cavW, cavH).extrude(c, taper=-45)
 
 # ---- round-tool corner relief (pure-2D, matches the CAD cavity cut exactly) ----
 def _inner_pocket():
@@ -191,6 +210,8 @@ def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pill
     # board recess (press fit) + uniform cavity (inset by lip_w)
     res = res.cut(cq.Workplane("XY").workplane(offset=bb).rect(cavW, cavH)
                     .extrude(board_th + 0.02).edges("|Z").fillet(cavR))
+    if edge_ease > 0:                                   # ease the recess mouth to match the outer rim (board lead-in)
+        res = res.cut(_recess_mouth_ease(wt, edge_ease))
     res = res.cut(_cav_inner(floor, cavity)).union(_east_blocks(floor, cavity))
     # corner relief (recess depth)
     cwp = cq.Workplane("XY").workplane(offset=bb - 0.01)
@@ -209,6 +230,9 @@ def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pill
     for x, y, rr in [(mx, my, boss_r) for mx, my in mounts] + (list(BRACE) if braces else []) + (list(PILLARS) if pillars else []):
         wp = wp.moveTo(wx(x), wy(y)).circle(rr)
     res = res.union(wp.extrude(cavity))
+    # interior lip edge-break: 45deg knock-off on the top-inner lip edge (deburr; nothing mates on that edge)
+    if lip_break > 0:
+        res = res.cut(_lip_break_cut(bb, lip_break, -45))
     # cap-gap ribs (full-cavity walls; also prop the board along the corridor)
     if ribs:
         for x0, y0, x1, y1 in RIBS:
@@ -304,7 +328,7 @@ B = "solar-glow-drh-v3_0-backshell-0p6b-brace"
 jobs = [
     # name                 floor wall  border ribs  prog   note
     ("Ti-max",             1.00, 1.00, 0.15, False, False, "0.6mm-board DUMB BOX for the resin brace: TRUE 1.00 floor (cavity 1.80, cap gap 0.10) + U2 relief pocket + 1.0 walls + 4 bosses + 2 Ø3.0 x 0.4 locator pillars. NO ribs (the brace carries center support). Overall 3.55."),
-    ("Ti-max-progwindow",  0.95, 1.00, 0.15, False, True,  "0.6mm-board / ribs-trimmed + TC2030 re-flash window"),
+    ("Ti-max-progwindow",  1.00, 1.00, 0.15, False, True,  "0.6mm-board / ribs-trimmed + TC2030 re-flash window"),
 ]
 # Ti-conservative (0.60 floor / 1.60 wall) struck: if the shop cannot hold the floor we
 # re-issue to whatever minimum they will hold, so a pre-baked 0.60 fallback is dead weight.
