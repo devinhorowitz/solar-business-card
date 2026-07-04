@@ -4,9 +4,9 @@
  * Verified against datasheet NT3H2111_2211 Rev 3.6 (datasheets/NT3H2111_2211.pdf).
  * U5 is an I2C TARGET on the same TWI0 host bus as the accel (SDA=PC2, SCL=PC3,
  * TWIROUTEA=ALT2, ext 4.7k pull-ups). 7-bit address 0x55 (no clash with the accel
- * at 0x18). We reuse the twi.h primitives directly for the NT3H block/register
- * transactions -- NOT twi_reg_read(), whose bit7 sub-address auto-increment is a
- * LIS2DH12-ism the NT3H does not use.
+ * at 0x1D). We reuse the twi.h primitives directly for the NT3H block/register
+ * transactions -- NOT twi_reg_read(), whose bit7 sub-address auto-increment is an
+ * ST-ism the NT3H does not use.
  *
  * The tag's VCC is power-gated by a high-side load switch enabled on NFC_EN (PA7,
  * active-HIGH); see board.h. The chip has no sleep state and draws ~195 uA from

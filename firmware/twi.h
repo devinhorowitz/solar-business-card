@@ -1,7 +1,7 @@
 /*
  * twi.h  --  minimal blocking TWI0 host (I2C master) for SOLAR-GLOW DRH.
  *
- * Header-only. One bus, one device (LIS2DH12 @ 0x18), low speed, no IRQ,
+ * Header-only. One bus (ADXL367 accel @ 0x1D + NT3H tag @ 0x55), low speed, no IRQ,
  * no smart mode. Pins are PC2/SDA + PC3/SCL via PORTMUX.TWIROUTEA = ALT2
  * (set in main, not here). External 4.7k pull-ups to VS are fitted, so the
  * internal pull-ups are left off.
@@ -89,8 +89,11 @@ static inline uint8_t twi_reg_write(uint8_t addr7, uint8_t reg, uint8_t val)
     return 0;
 }
 
-/* read n registers starting at reg into dst. burst sets sub-addr bit7
- * (LIS2DH12 auto-increment). returns 0 ok, 1 fault. */
+/* read n registers starting at reg into dst. burst (n>1) sets sub-addr bit7, an
+ * ST/LIS2DH12 auto-increment convention. NOTE: the ADXL367 does NOT use bit7 (it
+ * auto-increments natively), so a multi-byte read of the accel would send the wrong
+ * sub-address -- the accel driver only reads single bytes, so this never bites.
+ * returns 0 ok, 1 fault. */
 static inline uint8_t twi_reg_read(uint8_t addr7, uint8_t reg, uint8_t *dst, uint8_t n)
 {
     if (n == 0) return 0;

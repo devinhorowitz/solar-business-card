@@ -4,8 +4,8 @@
  * Behaviour
  * ---------
  * The card sleeps in POWER-DOWN almost all the time. Four things wake it:
- *   - TAP      (LIS2DH12 click -> INT1 -> PF1, rising)  -> full breathing glow
- *   - MOTION   (LIS2DH12 inertial wake-up -> INT2 -> PF0, rising) -> one soft breath
+ *   - TAP      (ADXL367 tap -> INT1 -> PF1, rising)      -> full breathing glow
+ *   - MOTION   (ADXL367 activity -> INT2 -> PF0, rising) -> one soft breath
  *   - NFC      (NT3H2211 field detect -> FD -> PA6, falling) -> the tap glow:
  *                a phone's RF field pulls FD low (NC_REG FD_ON=00b, the POR default)
  *   - PIT tick (RTC, ~1 s, runs in power-down)          -> sample light, and
@@ -38,7 +38,7 @@
 
 #include "board.h"
 #include "twi.h"
-#include "lis2dh12.h"
+#include "adxl367.h"
 #include "led.h"
 #include "sense.h"
 #include "nfc.h"
@@ -164,8 +164,8 @@ int main(void)
     sense_adc_init();
 
     twi_init();           /* 3. I2C up, talk to the accel */
-    (void)lis2dh12_present();      /* WHO_AM_I sanity (ignored if bus dead) */
-    (void)lis2dh12_init_tap();     /* tap->INT1, activity->INT2             */
+    (void)adxl367_present();       /* device-ID sanity (ignored if bus dead) */
+    (void)adxl367_init_tap();      /* tap->INT1, activity->INT2              */
 
     /* 4. NFC tag (shares the bus) is power-gated OFF by default; we do not touch it
      * at boot. FD-wake needs no setup -- it runs on field power and the chip's POR
@@ -213,14 +213,13 @@ int main(void)
             f_tap = 0;
             uint8_t dbl = 0;
 #if USE_DOUBLE_TAP
-            /* Resolve single vs double BEFORE glowing: idle-wait the window so a
-             * second tap can land, then read CLICK_SRC once (this also clears the
-             * latch). Reading only after the window avoids disturbing the accel's
-             * in-progress double-click timing. */
-            led_wait_ms(DTAP_WINDOW_MS);
-            dbl = (lis2dh12_read_click() & LIS_CLICK_DCLICK_bm) != 0;
+            /* The ADXL367 resolves single vs double IN HARDWARE: with both tap
+             * functions enabled, the tap interrupt fires only after the double-tap
+             * window has validated or invalidated, so we read STATUS_2 once here with
+             * no software wait. TAP_TWO set = double. The read clears + re-arms. */
+            dbl = (adxl367_read_tap() & ADXL_STATUS2_TAP_TWO_bm) != 0;
 #else
-            lis2dh12_clear_click();              /* drop the latched INT1 */
+            adxl367_clear_tap();                 /* drop the tap latch */
 #endif
             if (sense_rail_ok()) {
                 /* tally BEFORE the glow: the EEPROM write then happens at the
@@ -238,6 +237,7 @@ int main(void)
              * the next loop does not chase the tap with a redundant breath or glow. */
             f_motion = 0;
             f_nfc = 0;
+            adxl367_clear_activity();   /* a tap likely tripped activity too; ack INT2 */
         }
         else if (f_nfc) {
             f_nfc = 0;
@@ -250,12 +250,13 @@ int main(void)
             if (sense_rail_ok())
                 led_breathe(GLOW_CYCLES, GLOW_BREATH_MS, GLOW_PEAK);
             f_motion = 0;
+            adxl367_clear_activity();
         }
         else if (f_motion) {
             f_motion = 0;
             if (sense_rail_ok())
                 led_breathe(1, GLOW_BREATH_MS, (uint8_t)(GLOW_PEAK / 2));
-            /* motion int (IA2) is not latched; nothing to clear */
+            adxl367_clear_activity();   /* ADXL367 activity latches; read STATUS to ack INT2 */
         }
         else if (f_tick) {
             f_tick = 0;

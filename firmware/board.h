@@ -49,16 +49,16 @@
  * TCA0 split: WO0..WO2 driven by LCMP0..2 (low timer), WO3 by HCMP0 (high timer).
  * PORTMUX.TCAROUTEA = PORTMUX_TCA0_PORTA_gc (0x00): WO0..WO3 land on PA0..PA3. */
 #define LED_PORT        PORTA
-#define LED_PA0_bm      PIN0_bm   /* LDRV1 / WO0 / LCMP0 */
-#define LED_PA1_bm      PIN1_bm   /* LDRV2 / WO1 / LCMP1 */
-#define LED_PA2_bm      PIN2_bm   /* LDRV3 / WO2 / LCMP2 */
-#define LED_PA3_bm      PIN3_bm   /* LDRV4 / WO3 / HCMP0 */
+#define LED_PA0_bm      PIN0_bm   /* LDRV4 / WO0 / LCMP0 */
+#define LED_PA1_bm      PIN1_bm   /* LDRV3 / WO1 / LCMP1 */
+#define LED_PA2_bm      PIN2_bm   /* LDRV2 / WO2 / LCMP2 */
+#define LED_PA3_bm      PIN3_bm   /* LDRV1 / WO3 / HCMP0 */
 #define LED_ALL_bm      (LED_PA0_bm | LED_PA1_bm | LED_PA2_bm | LED_PA3_bm)
 
 /* ---- accel interrupt inputs on PORTF (no crystal -> PF0/PF1 are GPIO) ---- */
 #define ACC_PORT        PORTF
-#define ACC_INT1_bm     PIN1_bm   /* PF1 <- LIS2DH12 INT1 (tap/double-tap) */
-#define ACC_INT2_bm     PIN0_bm   /* PF0 <- LIS2DH12 INT2 (activity)        */
+#define ACC_INT1_bm     PIN1_bm   /* PF1 <- ADXL367 INT1 (tap, single+double) */
+#define ACC_INT2_bm     PIN0_bm   /* PF0 <- ADXL367 INT2 (activity/motion)    */
 
 /* ---- light/rail sense on PD2 ----
  * VSENSE = VIN/2 (R5/R6 = 1M each, C5 = 10nF). ADC sees ~VIN/2; x2 = VIN.
@@ -66,12 +66,12 @@
 #define VSENSE_AIN          ADC_MUXPOS_AIN2_gc        /* 0x02 */
 #define VSENSE_DIVIDER      2                          /* VIN = VSENSE * 2   */
 
-/* ---- I2C device: LIS2DH12 accelerometer ----
- * CS=VS -> I2C mode ; SA0=GND -> 7-bit address 0x18. */
-#define LIS2DH12_ADDR   0x18
+/* ---- I2C device: ADI ADXL367 accelerometer (replaces LIS2DH12, backorder) ----
+ * SCLK tied low -> I2C mode ; ASEL grounded -> 7-bit address 0x1D. See adxl367.h. */
+#define ADXL367_ADDR    0x1D
 
 /* ---- I2C device: NXP NT3H2211 (NTAG I2C plus 2K), v2.2 NFC addition ----
- * 7-bit address 0x55 (write 0xAA / read 0xAB); shares TWI0 with the accel @0x18,
+ * 7-bit address 0x55 (write 0xAA / read 0xAB); shares TWI0 with the accel @0x1D,
  * no clash. Antenna is the PCB coil on LA/LB, tuned by the chip's internal 50pF
  * (C9 = DNP trim) -- no firmware involvement in the radio.
  *
@@ -129,16 +129,12 @@
 #define GLOW_CYCLES     2     /* breaths per tap */
 
 /* Double-tap = a distinct "signature" glow (brighter + longer) on top of the
- * normal single-tap glow. USE_DOUBLE_TAP=1 enables it. Because the glow blocks
- * for the full animation, single vs double must be resolved BEFORE glowing: on
- * a tap the firmware idle-waits DTAP_WINDOW_MS (long enough for a 2nd tap to
- * register in the accel) and then reads CLICK_SRC once. Cost: that window is
- * added as latency to every tap. Set 0 for instant single-tap with no double.
- * The accel-side double-tap timing lives in lis2dh12.h (TIME_LATENCY/WINDOW). */
+ * normal single-tap glow. USE_DOUBLE_TAP=1 enables it. The ADXL367 resolves single
+ * vs double IN HARDWARE (it waits its own TAP_LATENT + TAP_WINDOW before firing the
+ * tap interrupt), so the firmware just reads STATUS_2 once and needs no software
+ * window. Set 0 for instant single-tap with no double. The double-tap timing lives
+ * in adxl367.h (ADXL_CFG_TAP_LATENT / ADXL_CFG_TAP_WINDOW). */
 #define USE_DOUBLE_TAP  1
-#define DTAP_WINDOW_MS  300   /* must be >= accel worst-case DCLICK assertion
-                               * (TIME_LATENCY+TIME_WINDOW+TIME_LIMIT, see lis2dh12.h);
-                               * currently 250 ms, so 300 leaves ~50 ms margin */
 #define DTAP_CYCLES     3     /* signature glow: more breaths than a single tap */
 #define DTAP_BREATH_MS  1600
 #define DTAP_PEAK       255   /* and brighter (single tap uses GLOW_PEAK)       */
