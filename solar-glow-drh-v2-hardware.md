@@ -224,7 +224,7 @@ on nothing is probe-able anyway, by design.
   other charges it. R9, the divider, and Q1 stay on VS (R9 *must*, or Q1 turns on in the dark and
   shorts VS). Safe because the TLV3011**B**'s fail-safe inputs and its output-pullup-independent-
   of-supply rating mean an unpowered U4 (R9 holding Q1's base at VS) neither back-powers nor
-  leaks through the chip. *(Supersedes the earlier TLV431 divider, whose
+  leaks through the chip. **C10** (100 nF) decouples VCMP at U4's V+ — not strictly required (VCMP carries no switching load; the Q1-drive transient sinks from VS through R9, and the comparator has hysteresis), but standard local decoupling. *(Supersedes the earlier TLV431 divider, whose
   0.5 µA Iref across a 1.8 M top resistor pushed the real clamp to ~3.74 V typ / ~4.5 V worst —
   a latent over-voltage the TLV3011's ±10 pA input bias eliminates.)* **Hot-car:** at 85–105 °C
   worst-case creeps to ~3.61–3.65 V, still ~1 V under both parts' 4.6/4.8 V absolute-max damage
