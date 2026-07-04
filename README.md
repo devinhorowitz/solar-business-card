@@ -8,7 +8,7 @@ a supercapacitor bank that holds the charge.
 ![SOLAR-GLOW · DRH — front and back, gold ENIG on black soldermask](docs/board-preview.png)
 
 > **Status: v3.0 — fully routed, audit-clean. Not yet fabbed.**
-> Two-layer, 0.8 mm FR4, bound for PCBWay, with the 4-layer **v2.3** kept as the committed fallback.
+> Two-layer, 0.6 mm FR4, bound for PCBWay, with the 4-layer **v2.3** kept as the committed fallback.
 > The one thing standing between here and a build is the **energy budget** — harvest vs. draw under
 > real indoor light has never been measured. See *“The open question.”*
 
@@ -17,7 +17,7 @@ a supercapacitor bank that holds the charge.
 | What | Current | Notes / fallback |
 |---|---|---|
 | **PCB** | **v3.0 — 2-layer** (F / B) | GND = full-board B.Cu pour; VS = routed B mesh. **v2.3 (4-layer: F / In1 GND / In2 VS / B) is the committed fallback.** v2.1 was 6-layer (history). |
-| Board | 50.80 × 88.90 mm, r3.0 corners, **0.80 mm** FR4, ENIG, matte-black mask | 0.8-vs-1.0 mm thickness still open |
+| Board | 50.80 × 88.90 mm, r3.0 corners, **0.60 mm** FR4, ENIG, matte-black mask | 0.6 mm — chosen (thinner than the 0.8 baseline; re-validate glow look) |
 | Mounting holes | 4× M2, GND, at **(3.0, 3.0) / (47.8, 3.0) / (3.0, 85.9) / (47.8, 85.9)**, pitch **44.80 × 82.90 mm** | concentric with the r3.0 corner fillets |
 | **Enclosure** | **v3.0 Ti back-shell** — 0.75 floor, 1.85 cavity (1.90 local under U2), overall **3.55 mm**, braces off | matches the v3.0 hole pattern; see `enclosure/README.md` |
 | BOM | **v3_0 masters** — U6 + R14 added, JP1/JP2 dropped (JP1 later reused for the bench pad strip), all passives except SJ1 now 0402 | master is `PCB/solar-glow-drh-v3_0-BOM.xlsx`; placed set in `-BOM-assembly.xlsx` |
@@ -43,7 +43,7 @@ each); read them for lineage, not for current values.
 
 ## What it is
 
-A business-card-sized PCB — **50.8 × 88.9 mm, 0.8 mm FR4, ENIG, rounded corners** — that:
+A business-card-sized PCB — **50.8 × 88.9 mm, 0.6 mm FR4, ENIG, rounded corners** — that:
 
 - **Harvests** indoor light with **two** ANYSOLAR solar cells wired in parallel, each behind
   its own blocking diode so a half-shadow on one can’t back-feed the other.
@@ -96,7 +96,7 @@ Full part numbers, pricing, and per-part datasheet links are in
 
 ## The board
 
-- **Two copper layers** on 0.8 mm FR4 (v3.0): **F.Cu** signal/parts and **B.Cu**. **GND is a
+- **Two copper layers** on 0.6 mm FR4 (v3.0): **F.Cu** signal/parts and **B.Cu**. **GND is a
   full-board B.Cu pour** (`GND_B` zone) with stitch straps, and **VS is a routed mesh on B** — the
   4→2-layer conversion of v2.3, whose internal GND/VS *planes* moved onto the back copper. The
   4-layer **v2.3** (F · In1 GND · In2 VS · B) is the committed fallback if the back-side trace
@@ -168,7 +168,7 @@ The board is a KiCad project — open it, run DRC, and export the fab set:
    x=25.4, the illumination copper inside the glow window, and the benign `lib_footprint_issues`
    plus the reserved `BTN` `track_dangling`). Fill zones (press **B**) before checking.
 3. **Plot Gerbers + drill** from KiCad's own Fabrication Outputs and order from **PCBWay**
-   (**2-layer**, 0.8 mm; selective hard gold + plating bus + resin-fill/cap per `PCB/README.md`).
+   (**2-layer**, 0.6 mm; selective hard gold + plating bus + resin-fill/cap per `PCB/README.md`).
 
 > The supercap land is the one thing to never get wrong. The WS17 cell solders to **flat pads
 > under its body** (the asymmetric P/N widths are the polarity key), **not** to the folded end

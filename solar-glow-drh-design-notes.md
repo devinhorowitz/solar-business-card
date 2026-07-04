@@ -94,8 +94,10 @@ light-sense divider once characterised. That single measurement sizes the whole 
 - **FR4 thickness drives the look.** Thinner FR4 spreads light *less* → a crisper, more edge-lit
   monogram (brightest at the strokes nearest each window); thicker diffuses more. **Validate the
   *look* on a coupon of the ACTUAL board thickness** — a coupon of a different thickness will not
-  predict it. (v2.1 is 0.8 mm, the same as v0, so v0 *does* predict v2.1; the old "validate the
-  0.4 mm look" gate is moot now that the board is 0.8 mm.)
+  predict it. (v2.1 is 0.8 mm, the same as v0, so v0 predicted the v2.1 look — but **v3.0 is now 0.6 mm**,
+  thinner than both, so v0 no longer predicts it and the appearance gate **re-opens**: the amber
+  glow through 0.6 mm FR4 will read brighter/sharper at the strokes than the 0.8 mm coupons, so
+  validate the *look* on a **0.6 mm** coupon before committing the diffuser/window.)
 - **A diffuser film is the lever for full-letter evenness** — including lighting the D/R *bowls* —
   not more boundary LEDs.
 

@@ -96,7 +96,7 @@ Each LED: anode → `ANODE` (common) → **SW2** → VS; cathode → `Kn` → ba
 | `VSENSE` | Light/rail sense → PD2. = VIN/2 (R5/R6 = 1 MΩ each), filtered by C5 (10 nF). |
 | `PA4` / `PC0` / `PC1` | Spare GPIO (the v2-era JP2 breakout is gone — reserved, un-broken-out). |
 
-Stackup: **v3.0 is 2-layer** (F / B) — GND = full-board B.Cu pour, VS = routed B mesh; 0.8 mm. (v2.3 fallback: 4-layer, F · In1 GND · In2 VS · B. v2.1 was 6-layer.)
+Stackup: **v3.0 is 2-layer** (F / B) — GND = full-board B.Cu pour, VS = routed B mesh; 0.6 mm. (v2.3 fallback: 4-layer, F · In1 GND · In2 VS · B. v2.1 was 6-layer.)
 
 ---
 

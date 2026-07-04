@@ -21,7 +21,7 @@ button.** That redesign is done: the v3.0 shell (`solar-glow-drh-v3_0-backshell-
 
 ## 1. Board envelope
 
-- **50.80 × 88.90 mm**, **0.8 mm** FR4, ENIG finish, matte-black soldermask.
+- **50.80 × 88.90 mm**, **0.6 mm** FR4, ENIG finish, matte-black soldermask.
 - Rounded rectangle, **corner radius 3.0 mm** on all four corners (verified from Edge.Cuts).
 - Front face is the show side (naked); the cover is a **back-only shell** that hugs the populated
   rear and presses over the board edge.
