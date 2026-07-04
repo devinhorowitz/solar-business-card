@@ -72,7 +72,7 @@ all lives on the back, ready for an optional machined-metal back-shell.
 |---|---|---|
 | MCU | **AVR64DD28** (28-VQFN) | TCA0 hardware PWM, I²C to the accel, charge/sleep logic; MVIO-capable |
 | Solar | **2× ANYSOLAR SM141K06TF** | monocrystalline indoor cells (Voc 4.15 V), in parallel — two panels ≈ 2× the harvest |
-| Blocking diodes | **2× onsemi MMSD301T1G** | Schottky, one per panel; isolates the cells *and* the supercaps |
+| Schottky diodes | **4× onsemi MMSD301T1G** | 2 per-panel blocking (D1/D9, isolate cells *and* supercaps); 2 the clamp-supply diode-OR (D10/D11, power the comparator from the panels) |
 | Storage | **4× SCHURTER 3-153-438** (WS17) | 1 F / 2.75 V each, wired 2P2S → **1 F @ 5.5 V ≈ 15 J** on one balanced node |
 | Balancer | **ALD910025SALI** | dual SAB MOSFET — the low-leakage way to hold the series midpoint |
 | Rail clamp | **TI TLV3011 comparator+ref + onsemi BCP53 PNP** | shunt clamp holds the rail **≤ 3.60 V worst-case** so the accel and NFC tag stay under their shared 3.6 V max |

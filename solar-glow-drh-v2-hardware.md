@@ -80,12 +80,13 @@ Each LED: anode → `ANODE` (common) → **SW2** → VS; cathode → `Kn` → ba
 
 | Net | What it is |
 |------|-----------|
-| `VIN` | PV1 (+) solar node, **before** blocking diode D1. ~0 V in the dark, rises with light. Feeds the VSENSE divider and D1 anode. |
-| `VINB` | PV2 (+) solar node, before blocking diode D9. |
+| `VIN` | PV1 (+) solar node, **before** blocking diode D1. ~0 V in the dark, rises with light. Feeds the VSENSE divider, D1 anode, and D10 (clamp-supply OR). |
+| `VINB` | PV2 (+) solar node, before blocking diode D9, and D11 (clamp-supply OR). |
 | `VS` | The storage rail (after D1/D9). = MCU VDD, accel VDD, LED anode source, supercap top. **Clamped ≤ 3.60 V worst-case** by the TLV3011 comparator + PNP shunt (U4/Q1). |
 | `GND` | Ground — **full-board B.Cu pour** (`GND_B`) in v3.0 (was the In1 plane in v2.3), EP, the four M2 mount holes. |
 | `MID` | Supercap series midpoint, balanced by U2 (ALD910025 dual SAB). |
 | `CLBASE` / `CLREF` | Clamp internals — Q1 base (U4 open-drain OUT + R9 pullup) / VS sense-divider tap into U4 IN−. |
+| `VCMP` | Clamp-comparator supply — **VIN OR-ed with VINB** through Schottkys D10/D11. Powers U4 only while a panel produces (0 draw in the dark); diode-OR so either panel alone keeps the clamp live under split shade. |
 | `ANODE` | Common LED-anode node, switched by SW2. |
 | `TINY` | Dim-mode node: LED anodes → VS through R12 (220 Ω) when SW2 = TINY. |
 | `LDRV1‒4` | LED cathode drives → MCU PA0‒PA3. |
@@ -215,7 +216,15 @@ on nothing is probe-able anyway, by design.
   VS = 1.242·(1+R7/R8); it sits on VS (must — both panels feed VS through separate diodes).
   R7/R8 were chosen to put the **worst-case** clamp (ref ±1% + 100 ppm/°C + resistor ±1%) right
   on 3.60 V, wringing out maximum storage energy (E ∝ V²) while staying under the datasheet max. The divider is high-impedance (6.81 M / 3.74 M ≈ 10.5 MΩ) — the **only** continuous passive drain off the supercaps, ~**0.33 µA** at 3.5 V. This high-Z is only possible because the TLV3011’s ±10 pA input bias makes the resistor offset negligible; the old TLV431’s 0.5 µA Iref would have added ~0.9 V here, which is why it was forced to a low-impedance 1.8 M / 1.0 M divider (≈1.24 µA).
-  Open-drain OUT drives Q1 through the R9 pullup. *(Supersedes the earlier TLV431 divider, whose
+  Open-drain OUT drives Q1 through the R9 pullup. **Comparator power:** U4's V+ is fed from
+  **VCMP = VIN OR-ed with VINB** through two Schottkys (D10/D11), **not** from VS — so U4's
+  ~2.8 µA quiescent is pulled from the solar cells only while they produce and is **zero in the
+  dark** (the clamp can only ever need to act while charging). The OR (vs VIN alone) keeps the
+  clamp live under **split illumination** — a shadowed panel can't leave VS unclamped while the
+  other charges it. R9, the divider, and Q1 stay on VS (R9 *must*, or Q1 turns on in the dark and
+  shorts VS). Safe because the TLV3011**B**'s fail-safe inputs and its output-pullup-independent-
+  of-supply rating mean an unpowered U4 (R9 holding Q1's base at VS) neither back-powers nor
+  leaks through the chip. *(Supersedes the earlier TLV431 divider, whose
   0.5 µA Iref across a 1.8 M top resistor pushed the real clamp to ~3.74 V typ / ~4.5 V worst —
   a latent over-voltage the TLV3011's ±10 pA input bias eliminates.)* **Hot-car:** at 85–105 °C
   worst-case creeps to ~3.61–3.65 V, still ~1 V under both parts' 4.6/4.8 V absolute-max damage
