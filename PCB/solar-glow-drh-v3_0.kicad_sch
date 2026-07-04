@@ -8878,16 +8878,6 @@
 	)
 	(wire
 		(pts
-			(xy 139.7 38.1) (xy 134.62 38.1)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "c796bab2-073d-4e8f-9bc7-e26aecdba888")
-	)
-	(wire
-		(pts
 			(xy 350.52 58.42) (xy 345.44 58.42)
 		)
 		(stroke
@@ -8925,16 +8915,6 @@
 			(type default)
 		)
 		(uuid "ceb56a17-1611-42cd-bff4-5bf6f37761f8")
-	)
-	(wire
-		(pts
-			(xy 139.7 48.26) (xy 134.62 48.26)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "d0258e6e-d663-4adb-b9d4-647ff75bd3e7")
 	)
 	(wire
 		(pts
@@ -9035,16 +9015,6 @@
 			(type default)
 		)
 		(uuid "e315691e-8990-4a0b-8667-2afcd2c30581")
-	)
-	(wire
-		(pts
-			(xy 139.7 43.18) (xy 134.62 43.18)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "e880ce8e-4da2-48fa-914c-51fac5323384")
 	)
 	(wire
 		(pts
@@ -9302,7 +9272,7 @@
 	)
 	(global_label "CLREF"
 		(shape input)
-		(at 137.16 40.64 0)
+		(at 139.7 40.64 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -9311,7 +9281,7 @@
 		)
 		(uuid "029d34fd-5c95-4d26-ab54-13e5473e35f5")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 137.16 40.64 0)
+			(at 139.7 40.64 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -11760,7 +11730,7 @@
 	)
 	(global_label "REF_TIE"
 		(shape input)
-		(at 154.94 45.72 180)
+		(at 152.4 45.72 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -11803,7 +11773,7 @@
 	)
 	(global_label "VS"
 		(shape input)
-		(at 154.94 50.8 180)
+		(at 152.4 50.8 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -12119,7 +12089,7 @@
 	)
 	(global_label "CLBASE"
 		(shape input)
-		(at 154.94 40.64 180)
+		(at 152.4 40.64 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -12225,7 +12195,7 @@
 	)
 	(global_label "GND"
 		(shape input)
-		(at 137.16 50.8 0)
+		(at 139.7 50.8 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -12234,7 +12204,7 @@
 		)
 		(uuid "d96a640e-fe4b-4835-a185-17e0385d5f8a")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 137.16 50.8 0)
+			(at 139.7 50.8 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -12730,7 +12700,7 @@
 	)
 	(global_label "REF_TIE"
 		(shape input)
-		(at 137.16 45.72 0)
+		(at 139.7 45.72 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -12739,7 +12709,7 @@
 		)
 		(uuid "fa40b851-9f46-4342-b2f3-84f1cf381cc7")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 137.16 45.72 0)
+			(at 139.7 45.72 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
