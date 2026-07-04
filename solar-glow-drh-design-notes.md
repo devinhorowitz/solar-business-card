@@ -53,11 +53,11 @@ The honest energy model, and the reason a bench bring-up gates any feature decis
 | v0: 2× WS10, ~150 mF, ~2.3 J | ≤ harvest; ~40–60 s breathing / ~10–15 min refill |
 | v2.1: 4× WS17, 1 F @ 5.5 V, ~15 J | ≤ harvest; minutes of breathing per charge; refill ~hours |
 
-**Draw line items** (budget against harvest): accel ≈ **10 µA** (a click-armed LIS2DH12 runs at
-100 Hz to time taps — it can't sit at the ~1 µA slow-ODR figure the old docs assumed, so this is
-now the dominant always-on load and pegs dark-survival at ~half a day); light-sense divider
-sub-µA; MCU sleep ≈ 0.65 µA (AVR-DD power-down, `PMODE=AUTO`). The LEDs are the only mA-scale
-load. See `firmware/README.md` "Power notes" for the corrected model.
+**Draw line items** (budget against harvest): accel ≈ **0.89 µA** (an ADI ADXL367, always-on at
+100 Hz for this figure — the LIS2DH12 it replaced drew ~10 µA click-armed); light-sense divider
+sub-µA; MCU sleep ≈ 0.65 µA (AVR-DD power-down, `PMODE=AUTO`). With the accel this low, dark
+standby is **~2.7 µA** and no single part dominates. The LEDs are the only mA-scale load. See
+`firmware/README.md` "Power notes" for the model.
 
 > **Ballast caveat — re-derive the LED numbers for v2.1.** The LED-draw figures used throughout the
 > old docs (≈5 mA for 4 LEDs full-on, ≈3 mA breathing, +1.25 mA per added LED) were computed at
@@ -239,7 +239,7 @@ Recorded so the history is legible and the dead branches stay dead:
 | Stackup | 2-layer, 0.8 mm | 4-layer, 0.4 mm | **6-layer, 0.8 mm** (L1 sig · L2 GND · L3–4 sig · L5 VS · L6 sig) |
 | Storage | 2× WS10, ~2.3 J | 4× WS17 2P2S, ~15 J | **4× WS17 2P2S, 1 F @ 5.5 V, ~15 J** |
 | Accel rail handling | n/a | planned LDO (TPS7A02) for the 3.6 V-max accel | **TLV3011 comparator+ref shunt clamp holds VS ≤ 3.60 V worst-case** (no LDO); supersedes the TLV431 divider (Iref over-voltage) |
-| Accelerometer | none | BMA400 / LIS2DW12 (candidates) | **LIS2DH12, I²C addr 0x18** |
+| Accelerometer | none | BMA400 / LIS2DW12 (candidates) | **ADXL367, I²C addr 0x1D** (swapped from LIS2DH12 on backorder; 0.89 µA vs ~10 µA) |
 | Button | snap-dome / cap-touch | dome (cap-touch expendable) | **accel tap-wake** |
 | Solar | SM141K06L (1.8 mm) | SM141K06L | **SM141K06TF (1.2 mm)** — electrically identical, thinner |
 | LED ballast | 1 kΩ | 1 kΩ | **150 Ω per BOM (bench-pending)** — rescale the energy budget (§2) |

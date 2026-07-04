@@ -9,7 +9,7 @@
 
 **The single source of truth for firmware.** Every line here is taken from the committed
 `solar-glow-drh-v2_1.kicad_pcb` / `.kicad_sch` and cross-checked against the
-AVR64DD32-28 datasheet (DS40002315), the LIS2DH12 datasheet (DM00091513), and the
+AVR64DD32-28 datasheet (DS40002315), the ADXL367 datasheet, and the
 SM141K06TF and SCPC parts. Where a register value is given, it is the value the firmware must
 write to match what is physically routed.
 
@@ -91,7 +91,7 @@ Each LED: anode → `ANODE` (common) → **SW2** → VS; cathode → `Kn` → ba
 | `TINY` | Dim-mode node: LED anodes → VS through R12 (220 Ω) when SW2 = TINY. |
 | `LDRV1‒4` | LED cathode drives → MCU PA0‒PA3. |
 | `K2‒K5` | Individual LED-cathode-to-ballast nets. |
-| `SDA` / `SCL` | I²C bus (accel `0x18` + NFC tag `0x55`); tapped at `JP1.4`/`JP1.3` on the bench strip. |
+| `SDA` / `SCL` | I²C bus (accel `0x1D` + NFC tag `0x55`); tapped at `JP1.4`/`JP1.3` on the bench strip. |
 | `INT1` / `INT2` | Accel interrupt lines → PF1 / PF0. |
 | `VSENSE` | Light/rail sense → PD2. = VIN/2 (R5/R6 = 1 MΩ each), filtered by C5 (10 nF). |
 | `PA4` / `PC0` / `PC1` | Spare GPIO (the v2-era JP2 breakout is gone — reserved, un-broken-out). |
@@ -116,7 +116,7 @@ Stackup: **v3.0 is 2-layer** (F / B) — GND = full-board B.Cu pour, VS = routed
 - **I²C — TWI0, host mode.**
   **`PORTMUX.TWIROUTEA = ALT2`** (puts host SDA/SCL on PC2/PC3 — the default routes to
   PA2/PA3, which are LED pins). External 4.7 kΩ pull-ups are fitted, so don't enable internal
-  ones. Bus is the accelerometer (`0x18`) — and, since **v2.2**, the
+  ones. Bus is the accelerometer (`0x1D`) — and, since **v2.2**, the
   NFC tag `U5` (`0x55`); the two addresses don't clash, so no firmware change beyond
   talking to both. `U5` is reachable on I²C only while `NFC_EN` (PA7) powers it — it is
   gated **off** by default. FD (a pin interrupt on PA6) is separate from the bus, and is
@@ -124,7 +124,7 @@ Stackup: **v3.0 is 2-layer** (F / B) — GND = full-board B.Cu pour, VS = routed
 
 - **Accelerometer wake — PORTF pin interrupts.**
   Configure **PF1** (INT1) and **PF0** (INT2) as inputs with edge interrupts to match whatever
-  the LIS2DH12 INT pins are programmed to assert (tap, double-tap, activity). These are the
+  the ADXL367 INT pins are programmed to assert (tap, double-tap, activity). These are the
   wake source for tap-to-glow.
 
 - **Light sense / wake-on-light — PD2.**
@@ -138,17 +138,20 @@ Stackup: **v3.0 is 2-layer** (F / B) — GND = full-board B.Cu pour, VS = routed
 
 ## 4. Devices on the board
 
-**U3 — LIS2DH12 accelerometer (the actuator).**
-- Interface: **I²C** (CS = pin 2 → VS selects I²C mode).
-- **Address: `0x18`** 7-bit (SDO/SA0 = pin 3 → GND = address LSB 0). 8-bit: write 0x30 / read 0x31.
-- Interrupts: **INT1 (pin 12) → PF1**, **INT2 (pin 11) → PF0**.
-- Supply Vdd/Vdd_IO → VS; SCL → PC3, SDA → PC2. Decoupled by C6.
+**U3 — ADI ADXL367 accelerometer (the actuator; replaces the LIS2DH12 on backorder).**
+- Interface: **I²C** (SCLK tied low selects I²C mode).
+- **Address: `0x1D`** 7-bit (ASEL → GND). 8-bit: write 0x3A / read 0x3B.
+- Interrupts: **INT1 → PF1** (tap), **INT2 → PF0** (activity). *The ADXL367 is a different
+  package/pinout than the LIS2DH12, so the footprint and INT-pad assignment are PCB-side —
+  confirm on the final board.*
+- Supply Vs/Vsupply → VS; SCL → PC3, SDA → PC2. Decoupled by C6.
 - Role: tap / double-tap / activity → INT → wakes the MCU. A tap is vibration, so the metal
-  back-plate transmits it in the enclosed build.
+  back-plate transmits it in the enclosed build. Single-vs-double tap is resolved in the
+  ADXL367's own hardware window; the firmware reads STATUS_2 once (see `firmware/README.md`).
 
 **U5 — NXP NT3H2211 (NTAG I²C plus, 2 KB) — NFC contact tag (v2.2).**
 - Interface: **I²C target, address `0x55`** 7-bit (write 0xAA / read 0xAB); shares the TWI0
-  bus with the accel (0x18), no clash.
+  bus with the accel (0x1D), no clash.
 - **FD (field detect, pin 4) → PA6**, open-drain, ext 10 kΩ (`R13`) to VS: idles HIGH, pulls
   LOW on an NFC field → PA6 falling-edge interrupt wakes the MCU. FD is **field-powered**
   (§8.4), so this works even with `U5`'s VCC gated off; firmware also enables PA6's internal
@@ -193,7 +196,7 @@ Stackup: **v3.0 is 2-layer** (F / B) — GND = full-board B.Cu pour, VS = routed
 No holes, nothing proud of the mask — clip, pogo, or tack a wire on for a bench session and
 wick it off after. **Bench sequence:** inject at `JP1.2`/`JP1.1` → flash via `TC1` → functional
 test → supercaps on → charge test at `TP1` → panels last. With the shell off the strip also
-gives post-assembly I²C access to the NT3H2211 (`0x55`) and LIS2DH12 (`0x18`); with the shell
+gives post-assembly I²C access to the NT3H2211 (`0x55`) and ADXL367 (`0x1D`); with the shell
 on nothing is probe-able anyway, by design.
 
 ---
@@ -246,11 +249,11 @@ on nothing is probe-able anyway, by design.
 > `CLK_PER` is stopped, and Table 13-4 does not list the AC as a Standby or
 > Power-Down wake source, so an AC0 wake would silently never fire. The **wiring
 > below is still correct** and path B works exactly as described; what is stale is
-> the option-A recommendation and the current/darkness estimates, which predate
-> the firmware bring-up (they assume a ~2 µA accelerometer, but a click-armed
-> LIS2DH12 runs at ~10 µA). The corrected wake/power model lives in
-> **`firmware/README.md` ("Power notes / wake architecture")**, which is
-> authoritative for anything in this section.
+> the option-A recommendation (AC0 can't wake from Standby on this part). The
+> current/darkness estimates have moved twice: the firmware bring-up found the old
+> ~2 µA accel figure was really ~10 µA for the click-armed LIS2DH12, and the ADXL367
+> swap then dropped it to ~0.89 µA (standby ~2.7 µA). The authoritative wake/power
+> model lives in **`firmware/README.md` ("Power notes / wake architecture")**.
 
 Confirmed electrically this revision. The divider sits on **VIN (before D1)**, so VSENSE
 collapses to ~0 V in the dark and rises with light; **PD2 = AINP0** is a real AC0 input and
@@ -264,16 +267,16 @@ fits. Two implementations, same wiring — choose per use:
 - `CTRLA.RUNSTDBY = 1`, sleep in **Standby**; the AC0 CMP interrupt wakes the core the moment
   light appears. Use `CTRLA.POWER = 0x2` (slowest, plenty fast for light) ≈ **~12 µA** standing.
 - Dark tolerance (as originally estimated): AC0 (~12 µA) + accel (~2 µA) + standby (~3 µA)
-  ≈ ~16 µA. *Both assumptions are wrong:* A does not work at all on this part, and a
-  click-armed accel runs at ~10 µA (not ~2 µA), so this line does not reflect the shipped
-  design — see the README.
+  ≈ ~16 µA. *The AC0 assumption is wrong* — A does not work at all on this part. The accel
+  figure has since settled at ~0.89 µA (ADXL367), so total dark standby is ~2.7 µA — see the
+  README for the current model.
 
 **B) RTC/PIT poll + ADC — dark-tolerant.**
 - Sleep in **Power-Down**; wake every ~1–2 s off the internal-ULP RTC/PIT; ADC-sample PD2
   (AIN2); escalate to full wake only when the reading clears the light threshold.
 - Detection latency ~1–2 s. (The "~1–3 µA → ~5–7 days" originally written here omitted the
-  always-on accelerometer; with the click-armed accel at ~10 µA the real standing draw is
-  accel-dominated and darkness survival is on the order of **half a day** — see README.)
+  always-on accelerometer; with the ADXL367 at ~0.89 µA the standing draw is ~2.7 µA total —
+  no longer accel-dominated — so darkness survival is back on the order of **days** — see README.)
 - Note: in the deepest Power-Down the AC0 is off, so this is the only wake-on-light that works
   in that mode — and it's the better fit for "card sat in a drawer."
 
@@ -297,7 +300,7 @@ and set the achievable duty cycle.
    fitted); plan to sleep aggressively (the rail is tiny).
 2. **GPIO/PORTMUX:** `TCAROUTEA = DEFAULT`, `TWIROUTEA = ALT2`; PA0‒PA3 outputs (LEDs),
    PF0/PF1 inputs w/ interrupt (accel), PD2 left to the analog peripheral.
-3. **I²C up, talk to the accel** at `0x18`; configure tap → INT1 and motion (IA2) → INT2;
+3. **I²C up, talk to the accel** at `0x1D`; configure tap → INT1 and activity → INT2;
    verify the PF1/PF0 interrupts fire on a physical tap and on a pickup.
 4. **TCA0 split-mode PWM** on the LEDs; **confirm SW2 is ON/TINY** or nothing lights.
 5. **Wake-on-light** (§6) — implement path B (deepest sleep, the only viable path); instant
