@@ -80,7 +80,7 @@ def part_height(ref):
     if ref == "U2": return 1.75
     if ref == "U6": return 1.45
     if ref == "U1": return 1.00
-    if ref == "U3": return 1.00
+    if ref == "U3": return 0.87   # ADXL367 CC-12-4 (ADI datasheet Rev.B): 2.2 x 2.3 x 0.87 mm. Was 1.00 (placeholder LIS2DH12); thinner part -> shallower pocket, thicker resin web.
     if ref == "U5": return 0.50
     r = ref.rstrip("0123456789")
     if r == "SC": return None
