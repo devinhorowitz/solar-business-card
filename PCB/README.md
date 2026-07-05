@@ -1,6 +1,6 @@
 # SOLAR-GLOW · DRH — PCB (v3.0): Order & Build Guide
 
-![test](Generated/docs/solar-glow-drh-v3_0-bottom.png)
+![Generated/docs/solar-glow-drh-v3_0-bottom.png](https://github.com/devinhorowitz/solar-business-card/blob/main/Generated/docs/solar-glow-drh-v3_0-bottom.png)
 
 This folder holds the **board** for SOLAR-GLOW · DRH — the KiCad project, the bill of
 materials, and the artwork reference for the SW2 selector. It is the thing you fab and
