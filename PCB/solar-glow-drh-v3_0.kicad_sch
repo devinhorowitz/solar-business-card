@@ -8538,6 +8538,16 @@
 	)
 	(wire
 		(pts
+			(xy 120 165) (xy 114.92 165)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "38d91e88-7140-4ae0-83d3-278f92f0b289")
+	)
+	(wire
+		(pts
 			(xy 139.7 88.9) (xy 134.62 88.9)
 		)
 		(stroke
@@ -9808,6 +9818,16 @@
 	)
 	(wire
 		(pts
+			(xy 120 170.08) (xy 114.92 170.08)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "fb449eeb-2e20-49b1-8c88-4163a3668017")
+	)
+	(wire
+		(pts
 			(xy 120.65 30.48) (xy 115.57 30.48)
 		)
 		(stroke
@@ -10226,6 +10246,27 @@
 		(uuid "1c4eb66d-fa12-42fa-ba99-9dd4313b9911")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 405.13 104.14 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
+	(global_label "GND"
+		(shape bidirectional)
+		(at 114.92 170.08 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "1cb0b574-2c06-425d-ac6a-65f68732c733")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 114.92 170.08 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -11927,6 +11968,27 @@
 		(uuid "935cb1f5-33f1-4d0d-884b-4f6f8acebd53")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 274.32 205.74 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
+	(global_label "ANODE"
+		(shape bidirectional)
+		(at 114.92 165 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "951b765e-92aa-4690-b1fa-09599f5aa991")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 114.92 165 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -17005,6 +17067,82 @@
 			(project "solar-glow-drh-v3_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "SJ1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "solarglow:C11")
+		(at 120 165 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "8c203874-21ad-4cfe-abe6-702b283620a8")
+		(property "Reference" "C13"
+			(at 131 170.08 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "4.7uF"
+			(at 131 175.16 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "solarglow:C7"
+			(at 131 180.24 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 120 165 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 120 165 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "713b5524-caed-400e-8b4c-24bd3189f1cd")
+		)
+		(pin "2"
+			(uuid "989a2388-8891-4f69-bb52-2e943c3419e0")
+		)
+		(instances
+			(project "solar-glow-drh-v3_0"
+				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
+					(reference "C13")
 					(unit 1)
 				)
 			)
