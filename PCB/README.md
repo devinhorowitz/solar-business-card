@@ -1,5 +1,7 @@
 # SOLAR-GLOW · DRH — PCB (v3.0): Order & Build Guide
 
+![SOLAR-GLOW — back, gold ENIG on black soldermask](Generated/docs/solar-glow-drh-v3_0-bottom.png)
+
 This folder holds the **board** for SOLAR-GLOW · DRH — the KiCad project, the bill of
 materials, and the artwork reference for the SW2 selector. It is the thing you fab and
 populate. This README is the procedure: **how to order the bare PCB, how to order the
