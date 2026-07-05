@@ -1,20 +1,21 @@
 #!/usr/bin/env python3
 """2D print/spec sheet for the SOLAR-GLOW DRH resin diffuser brace -> PDF + PNG.
 A drop-in insert (NOT a machined part): the 3D STEP/STL governs geometry; this sheet carries the
-print-critical callouts (material, ferrite channel, locator recesses, the flat-bottom datum, assembly)."""
+print-critical callouts (material, ferrite channel, the H rails, the flat-bottom datum, assembly)."""
 import numpy as np, matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle, Circle, Polygon as MplPoly
 
 # ---- brace geometry (mirrors solar-glow-drh-diffuser-brace-cad.py) ----
-BX0,BY0,BX1,BY1 = 2.0,31.6,49.0,57.4          # envelope (fills the cap-gap band)
+BX0,BY0,BX1,BY1 = 2.0,31.6,49.0,57.4          # middle band (fills the cap-gap band)
+RW = (2.00,15.0,6.75,74.0)                     # west rail (H-brace leg: backs PV N-tabs, 0.25 W of caps)
+RE = (44.05,15.0,49.0,74.0)                    # east rail (backs PV P-tabs, 0.25 E of caps)
+YT,YB = 15.0,74.0                              # full H y-extent (rails run tab to tab)
 GAP = 1.80                                     # brace thickness (fills the 1.80 cavity)
 FER = (36.9,31.5,48.9,57.5)                    # ferrite 12 wide (x, CRITICAL) x 26 long (y, forgiving)
 FER_CLR = 0.20; FER_DEPTH = 0.33               # channel walls + pocket depth
 GLOW = (14.95,40.8,35.85,47.0)                 # monogram-window footprint (LED-hug backing behind it)
-LOCS = [(13.0,35.0),(33.0,55.0)]              # locator recesses -> shell Ø3.0 pillars
-LOC_D, LOC_DEPTH = 3.2, 0.8
 U2 = (28.5,37.0,7.8,5.4)                        # U2: the one through-hole (tall)
 
 INK="#111111"; GRY="#9a9a9a"; HATCH="#ededed"; PUR="#6a4fb0"; AMB="#c79a2e"
@@ -37,43 +38,36 @@ def leader(xp,yp,xt,yt,text,ha="left",fs=6.0,va="center"):
     ax.text(xt+(0.8 if ha=='left' else -0.8),yt,text,ha=ha,va=va,fontsize=fs,color=INK)
 
 # ===================== PLAN (board-facing face) =====================
-S=3.0; Px,Py=42,158
+S=2.5; Px,Pbot=40,113
 X=lambda bx:Px+(bx-BX0)*S
-Y=lambda by:Py+(BY1-by)*S          # flip: board y31.6 at top of the plan, y57.4 at bottom
-# envelope
-ax.add_patch(Rectangle((X(BX0),Y(BY1)),(BX1-BX0)*S,(BY1-BY0)*S,fill=False,ec=INK,lw=1.1))
-# general component-pocket field (schematic hatch, minus the callout features)
-ax.add_patch(Rectangle((X(BX0)+1,Y(BY1)+1,),(BX1-BX0)*S-2,(BY1-BY0)*S-2,fc=HATCH,ec="none",alpha=0.5,zorder=0))
-# ferrite OPEN CHANNEL (walled x36.7-49, open both y-ends) + the 12x26 ferrite extent
+Y=lambda by:Pbot+(YB-by)*S          # flip: y15 (top rails / PV N+P tabs) high on the plan, y74 low
+# H outline: middle band + two outboard rails (traced clockwise)
+Hpts=[(2,15),(6.75,15),(6.75,31.6),(44.05,31.6),(44.05,15),(49,15),(49,74),(44.05,74),(44.05,57.4),(6.75,57.4),(6.75,74),(2,74)]
+Hxy=[(X(a),Y(b)) for a,b in Hpts]
+ax.add_patch(MplPoly(Hxy,closed=True,fc=HATCH,ec="none",alpha=0.5,zorder=0))
+ax.add_patch(MplPoly(Hxy,closed=True,fill=False,ec=INK,lw=1.1,zorder=3))
+# ferrite OPEN CHANNEL (band; walled on the 12 width, open both y-ends) + the 12x26 ferrite extent
 cxl=max(FER[0]-FER_CLR,BX0+0.2)
 ax.add_patch(Rectangle((X(cxl),Y(BY1)),(BX1-cxl)*S,(BY1-BY0)*S,fc="#efeaf7",ec=PUR,lw=0.9,ls=(0,(4,2))))
 ax.add_patch(Rectangle((X(FER[0]),Y(min(FER[3],BY1))),(FER[2]-FER[0])*S,(min(FER[3],BY1)-max(FER[1],BY0))*S,fc="#d9ccf0",ec=PUR,lw=1.0))
-ax.text(X((FER[0]+FER[2])/2),Y(44.5),"FERRITE\nCHANNEL\n(open-ended)",ha="center",va="center",fontsize=5.2,color="#3a2b66",fontweight="bold")
-# window LED-hug diffuser backing
+ax.text(X((FER[0]+FER[2])/2),Y(44.5),"FERRITE\nCHANNEL",ha="center",va="center",fontsize=4.6,color="#3a2b66",fontweight="bold")
+# window LED-hug diffuser backing (band)
 ax.add_patch(Rectangle((X(GLOW[0]),Y(GLOW[3])),(GLOW[2]-GLOW[0])*S,(GLOW[3]-GLOW[1])*S,fc="#fbf5df",ec=AMB,lw=1.0))
-ax.text(X((GLOW[0]+GLOW[2])/2),Y((GLOW[1]+GLOW[3])/2),"LED-HUG\nBACKING",ha="center",va="center",fontsize=5.0,color="#6b5310",fontweight="bold")
-# U2 through
+ax.text(X((GLOW[0]+GLOW[2])/2),Y((GLOW[1]+GLOW[3])/2),"LED-HUG\nBACKING",ha="center",va="center",fontsize=4.4,color="#6b5310",fontweight="bold")
+# U2 through-pocket (band)
 ax.add_patch(Rectangle((X(U2[0]-U2[2]/2),Y(U2[1]+U2[3]/2)),U2[2]*S,U2[3]*S,fc="#f6d6d0",ec="#b23b2a",lw=0.9))
-ax.text(X(U2[0]),Y(U2[1]),"U2\nTHRU",ha="center",va="center",fontsize=4.6,color="#7a1f12")
-# locator recesses: (13,35) round datum + (33,55) SLOT (Ø3.2 x 4.0 along the 45deg pin-pair axis)
-def _obround(cx,cy,length,width,ang,n=14):
-    r=width/2.0; d=(length-width)/2.0; ca,sa=np.cos(np.radians(ang)),np.sin(np.radians(ang)); pts=[]
-    for t in np.linspace(np.radians(ang-90),np.radians(ang+90),n): pts.append((cx+d*ca+r*np.cos(t),cy+d*sa+r*np.sin(t)))
-    for t in np.linspace(np.radians(ang+90),np.radians(ang+270),n): pts.append((cx-d*ca+r*np.cos(t),cy-d*sa+r*np.sin(t)))
-    return pts
-ax.add_patch(Circle((X(13.0),Y(35.0)),LOC_D/2*S,fc="#d6e2f7",ec="#2f5bd0",lw=1.0))
-ax.add_patch(MplPoly([(X(bx),Y(by)) for bx,by in _obround(33.0,55.0,4.0,LOC_D,45)],closed=True,fc="#d6e2f7",ec="#2f5bd0",lw=1.0))
-for lx,ly in LOCS:
-    ax.plot([X(lx)-1.4,X(lx)+1.4],[Y(ly),Y(ly)],lw=0.4,color="#2f5bd0"); ax.plot([X(lx),X(lx)],[Y(ly)-1.4,Y(ly)+1.4],lw=0.4,color="#2f5bd0")
-    ax.plot([X(lx)-1.4,X(lx)+1.4],[Y(ly),Y(ly)],lw=0.4,color="#2f5bd0"); ax.plot([X(lx),X(lx)],[Y(ly)-1.4,Y(ly)+1.4],lw=0.4,color="#2f5bd0")
-ax.text(X(25.4),Y(BY1)-6,"BOARD-FACING FACE   SCALE 3.0:1",ha="center",fontsize=8.5,fontweight="bold",color=INK)
-# plan dims
-dimh(X(BX0),X(BX1),Y(BY1)-3.5,"47.00",fs=7,side=-1)
-dimv(Y(BY1),Y(BY0),X(BX0)-3.5,"25.80",fs=7,side=1)
-dimh(X(FER[0]),X(FER[2]),Y(BY0)+3.0,"12.0 FERRITE WIDTH (CRITICAL)",fs=5.6,side=1)
-dimh(X(BX0),X(13.0),Y(35.0),"13.0",fs=5.4,side=-1,txtoff=1.0)
-dimv(Y(BY1),Y(35.0),X(13.0),"3.4",fs=5.0,side=1,txtoff=1.0)
-leader(X(33.0),Y(55.0),190,164,"\u00d83.2 LOCATOR RECESS\n2\u00d7 - RECEIVE SHELL\nPILLARS (NOTE 4)",ha="left",fs=5.6)
+ax.text(X(U2[0]),Y(U2[1]),"U2\nTHRU",ha="center",va="center",fontsize=4.0,color="#7a1f12")
+# the 4 panel solder tabs the rails back (red stars)
+for tx,ty in [(4.3,17.0),(46.5,17.0),(4.3,71.9),(46.5,71.9)]:
+    ax.plot(X(tx),Y(ty),marker="*",ms=8,color="#d23b2a",zorder=6)
+ax.text(X(4.4),Y(23.5),"W\nRAIL",ha="center",va="center",fontsize=4.4,color=INK)
+ax.text(X(46.5),Y(23.5),"E\nRAIL",ha="center",va="center",fontsize=4.4,color=INK)
+ax.text(X(25.4),272,"BOARD-FACING FACE   SCALE 2.5:1",ha="center",fontsize=8.2,fontweight="bold",color=INK)
+# plan dims + leaders
+dimh(X(BX0),X(BX1),Y(YB)-3.0,"47.00",fs=7,side=-1)
+dimv(Y(YT),Y(YB),X(BX0)-3.5,"59.00",fs=7,side=1)
+leader(X((FER[0]+FER[2])/2),Y(52.0),X(BX1)+9,Y(52.0)+3,"12.0 WIDE\n(CRITICAL)",ha="left",fs=5.0)
+leader(X(46.5),Y(71.9),X(BX1)+9,Y(71.9)-3,"RAILS BACK THE 4\nPANEL SOLDER TABS\n(NOTE 4)",ha="left",fs=5.0)
 
 # ===================== SECTION B-B (across the brace) =====================
 S2=13.0; EX,EY=244,206
@@ -84,13 +78,8 @@ ax.add_patch(Rectangle((xl(0),zl(0)),10.5*S2,GAP*S2,fc=HATCH,ec=INK,lw=0.9,hatch
 ax.add_patch(Rectangle((xl(7.2),zl(GAP-FER_DEPTH)),3.0*S2,FER_DEPTH*S2,fc="#d9ccf0",ec=PUR,lw=0.7))
 # an LED pocket (top, ~0.83 into the backing)
 ax.add_patch(Rectangle((xl(3.6),zl(GAP-0.83)),1.2*S2,0.83*S2,fc="white",ec=INK,lw=0.6))
-# a locator recess (bottom, 0.8 up) with the shell pillar shown entering (ref)
-ax.add_patch(Rectangle((xl(0.9),zl(0)),1.6*S2,LOC_DEPTH*S2,fc="white",ec="#2f5bd0",lw=0.7))
-ax.annotate("",xy=(xl(1.7),zl(0)-0.5),xytext=(xl(1.7),zl(0)-4.5),arrowprops=dict(arrowstyle="-|>",lw=0.5,color=GRY,mutation_scale=6))
-ax.text(xl(1.7),zl(0)-5.2,"shell pillar\nenters here",ha="center",va="top",fontsize=4.6,color=GRY)
 dimv(zl(0),zl(GAP),xl(0)-4,"1.80",fs=7,side=1)
 dimv(zl(GAP-FER_DEPTH),zl(GAP),xl(10.5)+4,"0.33 FERRITE",fs=5.6,side=-1,txtoff=1.0)
-dimv(zl(0),zl(LOC_DEPTH),xl(0.9)-2.5,"0.8",fs=5.2,side=1,txtoff=1.0)
 leader(xl(4.2),zl(GAP-0.83),xl(5.6),zl(GAP)+9,"D2-D5 LED POCKETS (hug the LEDs)",ha="left",fs=5.6)
 ax.annotate("",xy=(xl(0)-1,zl(0)),xytext=(xl(10.5)+1,zl(0)),arrowprops=dict(arrowstyle="-",lw=1.2,color=INK))
 ax.text(xl(5.25),zl(0)-3.2,"FLAT BOTTOM = SANDING DATUM (lap to the height fit; all pockets are on the TOP face)",ha="center",va="top",fontsize=5.6,color=INK,fontweight="bold")
@@ -105,8 +94,8 @@ notes=[
  "    (WEAKLY CONDUCTIVE): THE BRACE RESTS ON GND / VS / SIGNAL COPPER, SO A DIELECTRIC IS REQUIRED. WHITE ALSO DRIVES THE WINDOW BACKING (NOTE 6).",
  "3. FIT: PRINT ~0.1 PROUD IN HEIGHT AND SAND THE FLAT BOTTOM (DATUM) DOWN TO A ZERO-AIR FIT IN THE 1.80 CAVITY. ALL POCKETS ARE ON THE TOP FACE, SO THE",
  "    BOTTOM LAPS FLAT ON GLASS WITHOUT TOUCHING THEM. DO NOT SAND THE TOP (IT SETS THE POCKET DEPTHS).",
- "4. LOCATOR RECESSES (Ø3.2 × 0.8 DEEP, IN THE FLAT BOTTOM): (13,35) ROUND DATUM + (33,55) SLOTTED Ø3.2 × 4.0 ALONG THE 45° PIN-PAIR AXIS. ROUND+SLOT RELEASES",
- "    CENTER-DISTANCE TOLERANCE (SLA SHRINK + CNC + BOARD-IN-SHELL PLAY OVER THE 28.3 SPAN) YET HOLDS X-Y DATUM + ROTATION. RECEIVES THE SHELL'S 2× Ø3.0 × 0.4 PILLARS (0.4 ENGAGE, ~0.25 AXIAL).",
+ "4. NO LOCATOR PILLARS / RECESSES. THE BRACE REGISTERS TO THE SHELL BY FITMENT: ITS FOUR OUTBOARD RAILS RUN INTO THE CAVITY BESIDE THE SUPERCAPS, THE COMPONENT",
+ "    POCKETS KEY IT TO THE BOARD, AND THE BOARD PRESS-FITS INTO THE RECESS. THE RAILS (W x2.0-6.75 / E x44.05-49.0, y15-74) ALSO BACK THE 4 PANEL SOLDER TABS.",
  "5. FERRITE CHANNEL (OVER THE NFC COIL): OPEN-ENDED CHANNEL, WALLED ON THE 12 WIDTH (CRITICAL - EDGE-LIMITED), OPEN AT BOTH Y-ENDS, 0.33 DEEP.",
  "    FERRITE (Wurth WE-FSFS 364006, NOMINAL 12 \u00d7 26 mm, EVEN ON THE 2mm SCORE GRID) IS PSA'd IN; LENGTH IS FORGIVING AND MAY OVERHANG THE ENDS SLIGHTLY.",
  "6. WINDOW = LED-HUG DIFFUSER BACKING: SOLID WHITE RESIN FILLS THE MONOGRAM-WINDOW FOOTPRINT BEHIND THE FR4, MINUS THE TIGHT D2-D5 LED POCKETS.",
@@ -124,11 +113,11 @@ for yl in (tb_y+32,tb_y+23,tb_y+14,tb_y+7.5): ax.plot([tb_x,tb_x+tb_w],[yl,yl],l
 ax.plot([tb_x+60,tb_x+60],[tb_y,tb_y+14],lw=0.4,color=INK)
 ax.text(tb_x+tb_w/2,tb_y+38,"SOLAR-GLOW DRH  \u2014  RESIN DIFFUSER BRACE",ha="center",va="center",fontsize=8.0,fontweight="bold",color=INK)
 ax.text(tb_x+3,tb_y+27.5,"DWG  solar-glow-drh-diffuser-brace",fontsize=6.0,va="center",color=INK)
-ax.text(tb_x+tb_w-3,tb_y+27.5,"REV  A",ha="right",fontsize=6.4,va="center",color=INK)
+ax.text(tb_x+tb_w-3,tb_y+27.5,"REV  B",ha="right",fontsize=6.4,va="center",color=INK)
 ax.text(tb_x+3,tb_y+18.5,"MATERIAL  TOUGH WHITE SLA (opaque, non-conductive)",fontsize=5.6,va="center",color=INK)
 ax.text(tb_x+3,tb_y+10.5,"UNITS  mm",fontsize=6.2,va="center",color=INK)
 ax.text(tb_x+63,tb_y+10.5,"SCALE  AS NOTED",fontsize=6.2,va="center",color=INK)
-ax.text(tb_x+3,tb_y+3.7,"ENVELOPE 47.0 x 25.8 x 1.80   process: SLA print",fontsize=5.7,va="center",color=INK)
+ax.text(tb_x+3,tb_y+3.7,"ENVELOPE 47.0 x 59.0 x 1.80   process: SLA print",fontsize=5.7,va="center",color=INK)
 ax.text(tb_x+tb_w-3,tb_y+3.7,"SHEET 1/1",ha="right",fontsize=6.2,va="center",color=INK)
 
 fig.savefig("/mnt/user-data/outputs/solar-glow-drh-diffuser-brace-DRAWING.pdf",facecolor="white")
