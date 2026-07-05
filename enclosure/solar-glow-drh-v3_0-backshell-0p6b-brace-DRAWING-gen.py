@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""2D fab drawing for the Ti back-shell v3.0 0.6mm-board DUMB BOX (0.95 floor, 0.60 board, metal locator
-pillars, U2 pocket, NO ribs -- the resin brace carries center support) -> PDF + PNG."""
+"""2D fab drawing for the Ti back-shell v3.0 0.6mm-board DUMB BOX (0.95 floor, 0.60 board, U2 pocket, NO ribs, NO locator
+pillars -- the resin H-brace carries center support + registers by fitment) -> PDF + PNG."""
 import numpy as np, matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -76,7 +76,6 @@ leader(X(u2x-pw/2),Y(u2y-ph/2),100,150,"U2 RELIEF POCKET  (NOTE 7)",ha="left",fs
 for lx,ly in [(13.0,35.0),(33.0,55.0)]:
     ax.add_patch(plt.Circle((X(lx),Y(ly)),1.5*S1,fill=False,ec=GRY,lw=0.7,ls=(0,(4,2))))
     ax.add_patch(plt.Circle((X(lx),Y(ly)),0.35*S1,fc=GRY,ec="none"))
-leader(X(13.0),Y(35.0),96,142,"2\u00d7 LOCATOR PILLAR  \u00d83.0 \u00d7 0.4 TALL (NOTE 4)",ha="left",fs=5.6)
 dim((X(oxmin),Y(oymin)),(X(51.75),Y(oymin)),Py-20,"52.70",fs=8,side=-1)
 dim((X(oxmin),Y(3.0)),(X(3.0),Y(3.0)),Py-8,"3.95",fs=6.3,side=-1)
 dim((X(3.0),Y(3.0)),(X(47.8),Y(3.0)),Py-8,"44.80 ±0.05",fs=6.3,side=-1)
@@ -153,7 +152,7 @@ notes=[
  "1. MATERIAL: TITANIUM Gr5 (TC4) = Ti-6Al-4V GRADE 5.",
  "2. FINISH: BEAD-BLAST MATTE (UNIFORM ON THE STEPPED BACK FACE). REAR ART LASER-MARKED IN THE RECESSED BACK FIELD.",
  "3. GENERAL TOLERANCE PER ISO 2768-1 (MEDIUM). C1-C4 TOLERANCED AS LISTED; C1 & C3 = ±0.05. DATUMS: A = LEFT EDGE, B = BOTTOM EDGE, C = PCB-REST PLANE.",
- "4. 2x LOCATOR PILLAR: Ø3.0 x 0.4 TALL, STANDING ON THE CAVITY FLOOR AT (13, 35) AND (33, 55) - BOTH WEST OF THE NFC COIL. LEFT AS ISLANDS IN THE SAME CAVITY PASS AS THE BOSSES.",
+ "4. BRACE REGISTRATION: THE RESIN H-BRACE REGISTERS TO THIS SHELL BY FITMENT - ITS 4 OUTBOARD RAILS + THE COMPONENT POCKETS + THE BOARD PRESS-FIT. NO LOCATOR PILLARS; THE CAVITY FLOOR IS A FULL 1.00 EVERYWHERE.",
  "    LOCATE THE RESIN BRACE (SEPARATE PART) VIA MATCHING Ø3.2 RECESSES. FLOOR STAYS A FULL 1.00 (THE (33,55) RECESS IS SLOTTED). MODELED IN THE STEP.",
  "5. EDGE BREAKS - ALL 0.10x45°, FELT NOT SEEN, MODELED.  CALLED OUT ON SEC A-A / DETAIL B:  RIM = outer rim (top & bottom);  MOUTH = recess mouth (around PCB);  LIP = inner (cavity-side) lip edge;  FRAME = proud back-frame bottom edges;  BOSS = boss + spotface bottom edges (Detail B).  BREAK ALL OTHER EXPOSED EDGES 0.10x45°.  CONCAVE SEAT/JUNCTION CORNERS LEFT SHARP -> ROUND-TOOL RADIUS.",
  "6. FLOOR IS NOW A TRUE 1.00 (0.95 LOCAL UNDER THE U2 POCKET), AT THE ~1.0 Ti MIN-WALL GUIDANCE SO IT ALSO CLEARS ALUMINIUM / COPPER / STAINLESS.",

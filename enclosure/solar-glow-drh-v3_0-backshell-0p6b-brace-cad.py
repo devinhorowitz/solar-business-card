@@ -204,7 +204,7 @@ def _poly_solid(poly, z0, dz):
     return cq.Workplane("XY").workplane(offset=z0).polyline(xy).close().extrude(dz)
 
 # ===== build =====
-def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pillars=False, locators=True, prog_window=False, glow_marker=True, tool_relief=False):
+def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pillars=False, locators=False, prog_window=False, glow_marker=True, tool_relief=False):
     bb = floor + cavity                       # board-back / boss-top / lip-top / rib-top plane
     wt = bb + board_th
     outW, outH, outR = cavW + 2*wall_th, cavH + 2*wall_th, cavR + wall_th
@@ -342,7 +342,7 @@ OUT = "/mnt/user-data/outputs/"
 B = "solar-glow-drh-v3_0-backshell-0p6b-brace"
 jobs = [
     # name                 floor wall  border ribs  prog   note
-    ("Ti-max",             1.00, 1.00, 0.15, False, False, "0.6mm-board DUMB BOX for the resin brace: TRUE 1.00 floor (cavity 1.80, cap gap 0.10) + U2 relief pocket + 1.0 walls + 4 bosses + 2 Ø3.0 x 0.4 locator pillars. NO ribs (the brace carries center support). Overall 3.55."),
+    ("Ti-max",             1.00, 1.00, 0.15, False, False, "0.6mm-board DUMB BOX for the resin brace: TRUE 1.00 floor (cavity 1.80, cap gap 0.10) + U2 relief pocket + 1.0 walls + 4 bosses. NO locator pillars (retired: the H-brace registers by fitment). NO ribs (the brace carries center support). Overall 3.55."),
     ("Ti-max-progwindow",  1.00, 1.00, 0.15, False, True,  "0.6mm-board / ribs-trimmed + TC2030 re-flash window"),
 ]
 # Ti-conservative (0.60 floor / 1.60 wall) struck: if the shop cannot hold the floor we
