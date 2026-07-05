@@ -19,48 +19,34 @@ Row,Description,Part,References,Value,Footprint,Quantity Per PCB,Status,Datashee
 18,,D10,D10,MMSD301T1G,D10,1, ,
 19,,D11,D11,MMSD301T1G,D11,1, ,
 20,,D9,D9,MMSD301T1G,D9,1, ,
-21,,J1,J1,UPDI hdr,J1,1, ,
-22,,JP1,JP1,GND VS SCL SDA,JP1,1, ,
-23,,GND VS SCL SDA,JP1,GND VS SCL SDA,JP1,1, ,~
-24,,L1,L1,1.0uH,,1, ,
-25,,MH1,MH1,M2,MH1,1, ,
-26,,MH2,MH2,M2,MH2,1, ,
-27,,MH3,MH3,M2,MH3,1, ,
-28,,MH4,MH4,M2,MH4,1, ,
-29,,PV1,PV1,SM141K06TF,PV1,1, ,
-30,,PV2,PV2,SM141K06TF,PV2,1, ,
-31,,Q1,Q1,BCP5316MTWG,Q1,1, ,
-32,,R1,R1,150R,R1,1, ,
-33,,R2,R2,150R,R2,1, ,
-34,,R3,R3,150R,R3,1, ,
-35,,R4,R4,150R,R4,1, ,
-36,,R12,R12,220R,R12,1, ,
-37,,R9,R9,1k,R9,1, ,
-38,,R10,R10,4.7k,R10,1, ,
-39,,R11,R11,4.7k,R11,1, ,
-40,,R13,R13,10k,R13,1, ,
-41,,R14,R14,100k,R14,1, ,
-42,,R5,R5,1M,R5,1, ,
-43,,R6,R6,1M,R6,1, ,
-44,,R8,R8,3.74M,R8,1, ,
-45,,R7,R7,6.81M,R7,1, ,
-46,,SB1,SB1,LED1 jmp,SB1,1, ,
-47,,SB2,SB2,LED2 jmp,SB2,1, ,
-48,,SB3,SB3,LED3 jmp,SB3,1, ,
-49,,SB4,SB4,LED4 jmp,SB4,1, ,
-50,,SC1,SC1,WS17 1F 2.75V,SC1,1, ,
-51,,SC2,SC2,WS17 1F 2.75V,SC2,1, ,
-52,,SC3,SC3,WS17 1F 2.75V,SC3,1, ,
-53,,SC4,SC4,WS17 1F 2.75V,SC4,1, ,
-54,,SJ1,SJ1,0R,SJ1,1, ,
-55,,SW2,SW2,LED master,SW2,1, ,
-56,,TC1,TC1,Tag-Connect,TC1,1, ,
-57,,U3,U3,ADXL367,ADXL367 CC-12-4_ADI,1, ,datasheets/adxl367.pdf
-58,,U2,U2,ALD910025SALI,U2,1, ,
-59,,U1,U1,AVR64DD28 (VQFN28),U1,1, ,
-60,,U5,U5,NT3H2211,U5,1, ,
-61,"Comparator + 1.242V ref, open-drain, SOT-23-6",U4,U4,TLV3011BIDBVR,SOT-23-6,1, ,tlv3011b.pdf
-62,,U6,U6,TPS22918,SOT-23-6,1, ,
+21,,JP1,JP1,GND VS SCL SDA,JP1,1, ,
+22,,L1,L1,1.0uH,,1, ,
+23,,MH1,MH1,M2,MH1,1, ,
+24,,MH2,MH2,M2,MH2,1, ,
+25,,MH3,MH3,M2,MH3,1, ,
+26,,MH4,MH4,M2,MH4,1, ,
+27,,Q1,Q1,BCP5316MTWG,Q1,1, ,
+28,,R1,R1,150R,R1,1, ,
+29,,R2,R2,150R,R2,1, ,
+30,,R3,R3,150R,R3,1, ,
+31,,R4,R4,150R,R4,1, ,
+32,,R12,R12,220R,R12,1, ,
+33,,R9,R9,1k,R9,1, ,
+34,,R10,R10,4.7k,R10,1, ,
+35,,R11,R11,4.7k,R11,1, ,
+36,,R13,R13,10k,R13,1, ,
+37,,R14,R14,100k,R14,1, ,
+38,,R5,R5,1M,R5,1, ,
+39,,R6,R6,1M,R6,1, ,
+40,,R8,R8,3.74M,R8,1, ,
+41,,R7,R7,6.81M,R7,1, ,
+42,,SJ1,SJ1,0R,SJ1,1, ,
+43,,U3,U3,ADXL367,ADXL367 CC-12-4_ADI,1, ,datasheets/adxl367.pdf
+44,,U2,U2,ALD910025SALI,U2,1, ,
+45,,U1,U1,AVR64DD28 (VQFN28),U1,1, ,
+46,,U5,U5,NT3H2211,U5,1, ,
+47,"Comparator + 1.242V ref, open-drain, SOT-23-6",U4,U4,TLV3011BIDBVR,SOT-23-6,1, ,tlv3011b.pdf
+48,,U6,U6,TPS22918,SOT-23-6,1, ,
 
 
 
@@ -70,11 +56,11 @@ Project info:
 Schematic:,solar-glow-drh-v3_0
 Variant:,default
 Revision:,
-Date:,2026-07-05_14-42-38
+Date:,2026-07-05_18-16-30
 KiCad Version:,10.0.4-10.0.4~ubuntu25.10.1
 Statistics:
-Component Groups:,63
-Component Count:,63
-Fitted Components:,62
+Component Groups:,49
+Component Count:,49
+Fitted Components:,48
 Number of PCBs:,1
-Total Components:,62
+Total Components:,48
