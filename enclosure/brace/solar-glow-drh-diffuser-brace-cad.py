@@ -56,6 +56,14 @@ OUT = "/mnt/user-data/outputs/"
 BASE = "solar-glow-drh-diffuser-brace"
 
 BX0, BX1, BY0, BY1 = 2.0, 49.0, 31.6, 57.4
+# H-BRACE: middle band (BX/BY) + two outboard rails running out to the panel solder tabs (y15-74). Downward
+# force on a cell now lands cell -> board -> brace -> Ti instead of flexing the 0.6mm laminate. Rails sit OUTBOARD
+# of the supercap bodies (SC1/SC3 x7.0-24.0, SC2/SC4 x26.8-43.8) with ~0.25mm clearance, backing the Nt/Pt tabs
+# that have no cap behind them; the inboard N/P pads sit over the caps (already near-backed at 0.1mm).
+RAIL_W = (2.00, 15.0, 6.75, 74.0)    # west rail x0,y0,x1,y1  (0.25 W of SC1/SC3 at x7.0)
+RAIL_E = (44.05, 15.0, 49.0, 74.0)   # east rail              (0.25 E of SC2/SC4 at x43.8)
+FP = [(BX0, BY0, BX1, BY1), RAIL_W, RAIL_E]
+def in_fp(x0,x1,y0,y1): return any(not (x1<=r[0] or x0>=r[2] or y1<=r[1] or y0>=r[3]) for r in FP)
 GAP   = 1.80
 CLR   = 0.25
 AIR   = 0.12
@@ -69,9 +77,9 @@ FER_POCKET_DEPTH = FER_T - 0.05    # -> 0.33 nominal (sits ~0.05 proud, seats fl
 FER_CLR = 0.20
 # window = LED-HUG DIFFUSER BACKING (implemented below). The old aluminum-tape bay (through aperture +
 # tape recess) is retired, so its APER_/TAPE_ constants are removed.
-STUBS = [(13.0, 35.0), (33.0, 55.0)]   # diagonal locators (INVERTED): recesses in the brace bottom that
-                                       # receive Ø3.0 metal pillars standing on the shell floor.
-RECESS_R, RECESS_DEPTH = 1.6, 0.8      # Ø3.2 x 0.8 deep: (13,35) round datum + (33,55) slotted 4.0 along the pin axis (see loop). Takes the shell's Ø3.0 x 0.4 pillar; ~0.15 bottom-sanding leaves ~0.25 axial margin
+STUBS = []                             # LOCATOR RECESSES RETIRED (H-brace): the 4 rails + the component pockets + the
+                                       # board press-fit register the brace to the shell by fitment. No metal pillars / recesses.
+RECESS_R, RECESS_DEPTH = 1.6, 0.8      # unused now; kept so the (empty) STUBS loops below stay valid
 W, H = 50.80, 88.90
 def wx(bx): return bx - W/2
 def wy(by): return by - H/2
@@ -124,14 +132,16 @@ for b in fp_blocks():
         rr=max(w,h)/2; xs+=[fx+px-rr,fx+px+rr]; ys+=[fy+py-rr,fy+py+rr]
     if xs: comps.append((ref, min(xs),max(xs),min(ys),max(ys)))
 
-brace = cq.Workplane("XY").box(BX1-BX0, BY1-BY0, GAP, centered=(False,False,False)).translate((wx(BX0), wy(BY0), 0))
+brace = None                                   # H footprint = band + two rails (union of boxes)
+for _rx0,_ry0,_rx1,_ry1 in FP:
+    _b = cq.Workplane("XY").box(_rx1-_rx0,_ry1-_ry0,GAP,centered=(False,False,False)).translate((wx(_rx0),wy(_ry0),0))
+    brace = _b if brace is None else brace.union(_b)
 cut_log=[]; pk=[]
 for ref,x0,x1,y0,y1 in comps:
     h=part_height(ref)
     if h is None: continue
-    ix0,ix1=max(x0,BX0),min(x1,BX1); iy0,iy1=max(y0,BY0),min(y1,BY1)
-    if ix0>=ix1 or iy0>=iy1: continue
-    px0,px1,py0,py1=ix0-CLR,ix1+CLR,iy0-CLR,iy1+CLR
+    if not in_fp(x0,x1,y0,y1): continue                 # only parts under the H (band + rails); SCs/TC1 in the open middle are skipped
+    px0,px1,py0,py1=x0-CLR,x1+CLR,y0-CLR,y1+CLR         # full pad box + CLR; the cut is a no-op where there is no brace
     depth=h+AIR; through=depth>=GAP-0.05 or ref=="U6"   # U6 forced THRU: blind web would be 0.28mm (<SLA min); U6 tops at 1.45 in 1.85 -> 0.40 air to the shell floor when through
     zc=(GAP-depth) if not through else -0.05; dz=(depth+0.05) if not through else GAP+0.10
     brace=brace.cut(cq.Workplane("XY").box(px1-px0,py1-py0,dz,centered=(False,False,False)).translate((wx(px0),wy(py0),zc)))
@@ -190,7 +200,8 @@ try:
     g=GProp_GProps(); BRepGProp.VolumeProperties_s(brace.val().wrapped,g)
     print(f"brace volume {g.Mass()/1000:.2f} cm^3 (~{g.Mass()/1000*1.15:.1f} g tough white SLA)")
 except Exception as e: print("vol:",e)
-print(f"envelope {BX1-BX0:.1f} x {BY1-BY0:.1f} x {GAP} (y31.6-57.4, clears cap bays); {len(cut_log)} pockets")
+_fx=[r[0] for r in FP]+[r[2] for r in FP]; _fy=[r[1] for r in FP]+[r[3] for r in FP]
+print(f"H-brace {max(_fx)-min(_fx):.0f} x {max(_fy)-min(_fy):.0f} x {GAP} (band y31.6-57.4 + 2 rails to y15-74); {len(cut_log)} pockets")
 print(f"through-holes: {[c[0] for c in cut_log if c[2]=='THRU']}")
 print(f"ferrite CHANNEL {fx1-fx0:.1f} wide (walled) x open-ended x {FER_POCKET_DEPTH} deep; ferrite {FER[2]-FER[0]:.0f}x{FER[3]-FER[1]:.0f} nominal (width critical / length forgiving, may overhang)")
 
@@ -199,7 +210,10 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle, Circle
 import matplotlib.patches as mp
 fig,ax=plt.subplots(figsize=(9,5)); ax.set_facecolor("#0d0d10"); fig.patch.set_facecolor("#0d0d10")
-ax.add_patch(Rectangle((BX0,BY0),BX1-BX0,BY1-BY0,fc="#e8e4d8",ec="#fff",lw=1.5,alpha=0.28))
+for _rx0,_ry0,_rx1,_ry1 in FP:
+    ax.add_patch(Rectangle((_rx0,_ry0),_rx1-_rx0,_ry1-_ry0,fc="#e8e4d8",ec="#fff",lw=1.5,alpha=0.28))
+for _tx,_ty,_lb in [(4.3,17.0,"PV1 N-tab"),(46.5,17.0,"PV1 P-tab"),(4.3,71.9,"PV2 N-tab"),(46.5,71.9,"PV2 P-tab")]:
+    ax.plot(_tx,_ty,marker="*",ms=9,color="#ff5252",zorder=8); ax.text(_tx,_ty+2.0,_lb,color="#ff8a80",ha="center",va="bottom",fontsize=4.2,zorder=8)
 ax.text((BX0+BX1)/2,BY1-0.9,"WHITE RESIN BRACE (fills the gap, y31.6-57.4)",color="#eee",ha="center",fontsize=7,fontweight="bold")
 ax.add_patch(Rectangle((FER[0]-FER_CLR,BY0),FER[2]-FER[0]+2*FER_CLR,BY1-BY0,fc="#2a2140",ec="#7e57c2",lw=0.9,ls=(0,(3,2)),alpha=0.6))   # open channel (walled x, open y)
 ax.add_patch(Rectangle((FER[0],FER[1]),FER[2]-FER[0],FER[3]-FER[1],fc="#3a2b55",ec="#b39ddb",lw=1.3,alpha=0.9))                                # ferrite 12x26 (runs past the brace y-edges)
@@ -209,12 +223,11 @@ ax.text((GLOW[0]+GLOW[2])/2,GLOW[3]+0.5,"LED-HUG DIFFUSER BACKING (solid resin; 
 for ref,x0,x1,y0,y1 in comps:
     h=part_height(ref)
     if h is None: continue
-    ix0,ix1=max(x0,BX0),min(x1,BX1); iy0,iy1=max(y0,BY0),min(y1,BY1)
-    if ix0>=ix1 or iy0>=iy1: continue
+    if not in_fp(x0,x1,y0,y1): continue
     depth=h+AIR; thru=depth>=GAP-0.05
     col="#e0483a" if thru else ("#e08a3a" if depth>1.0 else "#43a047")
-    ax.add_patch(Rectangle((ix0-CLR,iy0-CLR),(ix1-ix0)+2*CLR,(iy1-iy0)+2*CLR,fc=col,ec="#222",lw=0.3,alpha=0.9))
-    if (ix1-ix0)>1.8 and (iy1-iy0)>1.3: ax.text((ix0+ix1)/2,(iy0+iy1)/2,ref,color="#111",ha="center",va="center",fontsize=4.6)
+    ax.add_patch(Rectangle((x0-CLR,y0-CLR),(x1-x0)+2*CLR,(y1-y0)+2*CLR,fc=col,ec="#222",lw=0.3,alpha=0.9))
+    if (x1-x0)>1.8 and (y1-y0)>1.3: ax.text((x0+x1)/2,(y0+y1)/2,ref,color="#111",ha="center",va="center",fontsize=4.6)
 for _bx0,_by0,_bw,_bh in bridges:                       # thin-wall bridges: where sub-0.4mm walls were merged out
     if _bw<0.35: _bx0-=(0.35-_bw)/2; _bw=0.35
     if _bh<0.35: _by0-=(0.35-_bh)/2; _bh=0.35
@@ -222,9 +235,9 @@ for _bx0,_by0,_bw,_bh in bridges:                       # thin-wall bridges: whe
 for sx,sy in STUBS:
     ax.add_patch(Circle((sx,sy),RECESS_R,fc="#4a86e8",ec="#fff",lw=0.8)); ax.text(sx,sy+1.9,"pillar\nhole",color="#8ab",ha="center",fontsize=4.6)
 leg=[mp.Patch(fc="#e0483a",label="through-hole (U2, tall)"),mp.Patch(fc="#e08a3a",label="deep (U6 1.45, U1/U3 1.0)"),
-     mp.Patch(fc="#43a047",label="shallow (0402, LEDs hug window, bridges)"),mp.Patch(fc="#3a2b55",label="ferrite pocket"),mp.Patch(fc="#4a86e8",label="pillar hole (Ø3.2)"),mp.Patch(fc="#00e5ff",label=f"thin-wall bridge (merged, {len(bridges)})")]
+     mp.Patch(fc="#43a047",label="shallow (0402, LEDs hug window, bridges)"),mp.Patch(fc="#3a2b55",label="ferrite pocket"),mp.Patch(fc="#00e5ff",label=f"thin-wall bridge (merged, {len(bridges)})")]
 ax.legend(handles=leg,loc="upper left",fontsize=5.2,facecolor="#1a1a1f",edgecolor="#444",labelcolor="#ddd",framealpha=0.9)
-ax.set_xlim(BX0-2,BX1+2); ax.set_ylim(BY0-2,BY1+2); ax.set_aspect("equal"); ax.invert_yaxis(); ax.axis("off")
-ax.set_title("Diffuser brace rev B - pocket map (board-facing face)\nverified heights + ferrite pocket over the coil + cap-bay clearance",color="#d9a23a",fontsize=8)
+ax.set_xlim(-1,52); ax.set_ylim(12,77); ax.set_aspect("equal"); ax.invert_yaxis(); ax.axis("off")
+ax.set_title("Diffuser brace rev C - H-brace (board-facing face)\nband + outboard rails backing the 4 panel solder tabs; ferrite pocket; thin-wall bridges",color="#d9a23a",fontsize=8)
 fig.tight_layout(); fig.savefig(OUT+BASE+"-pocket-map.png",dpi=150,facecolor="#0d0d10")
 print("saved pocket map")
