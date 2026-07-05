@@ -102,6 +102,15 @@
 #define FD_PORT         PORTA
 #define FD_PIN_bm       PIN6_bm
 
+/* NFC read SNR: while a reader's field is present (FD low), hold the LEDs dark so
+ * their PWM edges don't inject broadband noise into the 13.56 MHz band the tag
+ * replies on. 1 = blank during the read (best SNR; the acknowledge glow fires when
+ * the field leaves). 0 = ignore FD and glow through the read. led.c reads FD live
+ * and aborts an in-flight breath; main.c fires the post-read glow on FD's rising
+ * edge. To DIM instead of fully blank, the FD path would run a reduced-peak breath
+ * instead -- kept simple (blank) here since a read is only milliseconds. */
+#define NFC_BLANK_ON_FIELD  1
+
 /* One-shot NDEF provisioning. The tag is RF-powered by the phone, so the NDEF is
  * read even with the supercap flat, and it only has to be written once. Set to 1
  * for a SINGLE flash to write the NDEF into the tag EEPROM, confirm the phone

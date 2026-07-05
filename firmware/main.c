@@ -6,8 +6,10 @@
  * The card sleeps in POWER-DOWN almost all the time. Four things wake it:
  *   - TAP      (ADXL367 tap -> INT1 -> PF1, rising)      -> full breathing glow
  *   - MOTION   (ADXL367 activity -> INT2 -> PF0, rising) -> one soft breath
- *   - NFC      (NT3H2211 field detect -> FD -> PA6, falling) -> the tap glow:
- *                a phone's RF field pulls FD low (NC_REG FD_ON=00b, the POR default)
+ *   - NFC      (NT3H2211 field detect -> FD -> PA6, both edges) -> while the reader's
+ *                field is present the LEDs are held dark (a clean 13.56 MHz band for the
+ *                tag's reply) and the core stays quiet; the acknowledge glow fires when
+ *                the field leaves (FD rising)
  *   - PIT tick (RTC, ~1 s, runs in power-down)          -> sample light, and
  *                if we just crossed dark->light, do a glow
  * All of these pin interrupts sense fully asynchronously, so they wake the core
@@ -78,14 +80,15 @@ static void gpio_init(void)
      * powered transiently around an I2C access (nfc_power_on/off). */
     NFC_EN_PORT.OUTCLR = NFC_EN_PIN_bm;
     NFC_EN_PORT.DIRSET = NFC_EN_PIN_bm;
-    /* NFC field-detect on PA6: input, falling-edge sense. FD is field-powered
-     * (datasheet 8.4), so it wakes us on a phone tap even with NFC VCC gated off;
-     * the chip's POR/config default already pulls FD low on field-present, so no
-     * I2C setup is needed. FD is open-drain with an external 10k (R13) to VS; we
-     * ALSO enable PA6's internal pull-up as belt-and-suspenders so the pin can't
-     * float (covers a marginal R13, or R13 tied to the switched rail), at the cost
-     * of a little extra sink only while FD is held low (i.e. during a tap). */
-    FD_PORT.PIN6CTRL = PORT_ISC_FALLING_gc | PORT_PULLUPEN_bm;
+    /* NFC field-detect on PA6: input, BOTH-edges sense. FD is field-powered
+     * (datasheet 8.4), so it wakes us even with NFC VCC gated off; the chip's
+     * POR/config default already pulls FD low on field-present, so no I2C setup is
+     * needed. Both edges because we act on each: FALLING (field arrives) -> the LED
+     * layer blanks and the core goes quiet for the read; RISING (field leaves) ->
+     * fire the acknowledge glow. FD is open-drain with an external 10k (R13) to VS;
+     * we ALSO enable PA6's internal pull-up as belt-and-suspenders so the pin can't
+     * float, at the cost of a little extra sink only while FD is held low. */
+    FD_PORT.PIN6CTRL = PORT_ISC_BOTHEDGES_gc | PORT_PULLUPEN_bm;
     /* PD2 (VSENSE) is analog only: disable its digital input buffer so the
      * Schmitt trigger doesn't toggle (and burn current) on a slow mid-rail
      * analog level. ADC/AC read the analog path regardless of this bit. */
@@ -241,12 +244,14 @@ int main(void)
         }
         else if (f_nfc) {
             f_nfc = 0;
-            /* a phone's field woke us via FD (the tag's VCC stays gated off; FD runs
-             * on field power). Same glow as a single accel tap, rail-gated. The phone
-             * also jostles the card, so the accel motion int likely set f_motion too
-             * -- clear it after so we don't chase this with a soft breath. (Deliberately
-             * NOT counted by sense_count_inc(): that tracks physical taps; move it here
-             * if you'd rather count every interaction.) */
+            /* the reader's field just LEFT (FD rose): the exchange is done, so it is
+             * now safe to light up. Acknowledge the read with the same breath as a
+             * single tap, rail-gated. During the read the LEDs were held dark (led.c
+             * blanks while FD is low) and the core stayed asleep, keeping the 13.56 MHz
+             * band clean for the tag's load-modulation. The phone also jostles the card,
+             * so the accel motion int likely set f_motion too -- clear it after so we
+             * don't chase this with a soft breath. (Deliberately NOT counted by
+             * sense_count_inc(): that tracks physical taps; move it here to count reads.) */
             if (sense_rail_ok())
                 led_breathe(GLOW_CYCLES, GLOW_BREATH_MS, GLOW_PEAK);
             f_motion = 0;
@@ -281,13 +286,18 @@ ISR(PORTF_PORT_vect)
     PORTF.INTFLAGS = fl;                   /* write-1-to-clear */
 }
 
-/* NFC field-detect on PA6 (PORTA pin-interrupt vector). A phone's RF field pulls
- * FD low (FD_ON=00b, field-present); FD is field-powered, so this fires even with
- * the tag's VCC gated off. Wakes the core from Power-Down. */
+/* NFC field-detect on PA6 (PORTA pin-interrupt vector), both edges. FD is field-
+ * powered (datasheet 8.4), so this fires even with the tag's VCC gated off, and
+ * wakes the core from Power-Down. We flag f_nfc only on the RISING edge (field
+ * gone) to schedule the post-read acknowledge glow. A FALLING edge (field present)
+ * sets no flag -- it just wakes the core so an in-flight breath can blank (led.c
+ * reads FD live) and the loop falls back to sleep, keeping the MCU quiet for the read. */
 ISR(PORTA_PORT_vect)
 {
     uint8_t fl = PORTA.INTFLAGS;
-    if (fl & FD_PIN_bm) f_nfc = 1;
+    if (fl & FD_PIN_bm) {
+        if (FD_PORT.IN & FD_PIN_bm) f_nfc = 1;   /* pin high now = rising = field left */
+    }
     PORTA.INTFLAGS = fl;                   /* write-1-to-clear */
 }
 

@@ -68,13 +68,14 @@ flash: $(TARGET).hex
 	avrdude -c $(PROG) -P $(PORT) -b $(BAUD) -p $(MCU) -U flash:w:$<:i
 
 # Optional: enable BOD as a SAMPLED brown-out (low duty) so it guards the rail
-# without the ~17 uA of continuous BOD. Confirm the exact BODCFG byte for your
-# desired level/sample-rate against the datasheet before flashing this.
-#   ACTIVE=SAMPLED, SLEEP=SAMPLED, SAMPFREQ + LVL bits -> see BODCFG fuse table.
+# without the ~17 uA of continuous BOD. BODCFG (fuse 0x01) = LVL[7:5] SAMPFREQ[4]
+# ACTIVE[3:2] SLEEP[1:0]. For 1.9 V sampled at 128 Hz: LVL=0x0 (1.9 V), SAMPFREQ=0
+# (128 Hz), ACTIVE=0x2 (sampled), SLEEP=0x2 (sampled) -> 0x0A. 1.9 V sits below the
+# 2.6 V glow floor (so a glow-load sag never trips it) and above the 1.8 V core min.
+# For more margin use LVL=0x1 (2.45 V) -> 0x2A; do NOT use 2.70/2.85 V (above the floor).
 fuses:
 	@echo "Set fuses deliberately; see README 'Fuses' section for the full set."
-	@echo "Compute whole-byte values from the datasheet fuse tables, then e.g.:"
-	@echo "  avrdude -c $(PROG) -P $(PORT) -p $(MCU) -U bodcfg:w:0xXX:m   # sampled BOD"
+	@echo "  avrdude -c $(PROG) -P $(PORT) -p $(MCU) -U bodcfg:w:0x0A:m   # 1.9 V sampled BOD, 128 Hz"
 	@echo "  avrdude -c $(PROG) -P $(PORT) -p $(MCU) -U syscfg1:w:0xXX:m  # MVSYSCFG=SINGLE"
 	@echo "  avrdude -c $(PROG) -P $(PORT) -p $(MCU) -U syscfg0:w:0xXX:m  # EESAVE (keep counter)"
 

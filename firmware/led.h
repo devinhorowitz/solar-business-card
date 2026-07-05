@@ -35,12 +35,9 @@ void led_off(void);
 
 /* blocking "breathing" glow: `cycles` smooth in/out breaths, each lasting
  * `breath_ms`, peaking at `peak` duty. Returns with LEDs off. Perceptual
- * (gamma-corrected) ramp so it looks like a breath, not a triangle. */
+ * (gamma-corrected) ramp so it looks like a breath, not a triangle.
+ * Aborts early (LEDs blanked) if an NFC reader field appears mid-breath, so the
+ * read gets a clean 13.56 MHz band -- see NFC_BLANK_ON_FIELD in board.h. */
 void led_breathe(uint8_t cycles, uint16_t breath_ms, uint8_t peak);
-
-/* Idle-sleep the core for `ms` (LEDs untouched). Same 1 ms TCB timebase as the
- * breathing animation, so it costs the idle tier, not a 4/1 MHz busy-spin.
- * Requires interrupts enabled. Used for the double-tap disambiguation window. */
-void led_wait_ms(uint16_t ms);
 
 #endif /* LED_H */

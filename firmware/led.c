@@ -113,16 +113,33 @@ static void tcb_stop(void)
     TCB0.INTFLAGS = TCB_CAPT_bm;
 }
 
+/* Reader-field gate: the NT3H2211's FD pin (PA6) is pulled LOW while an NFC reader's
+ * RF field is present. During that window the tag replies by load-modulating at
+ * 13.56 MHz, and our LED PWM edges would inject broadband noise across that band, so
+ * we hold the LEDs dark for the read (see NFC_BLANK_ON_FIELD in board.h). led.c reads
+ * the pin directly -- no shared flag -- so the check is always current. */
+#if NFC_BLANK_ON_FIELD
+static inline uint8_t reader_field_active(void)
+{
+    return (uint8_t)((FD_PORT.IN & FD_PIN_bm) == 0);   /* FD low = reader field present */
+}
+#else
+static inline uint8_t reader_field_active(void) { return 0; }
+#endif
+
 /* sleep the core in IDLE for `ms` TCB ticks (1 ms each). Only the TCB tick ends
  * a nap; PIT/accel interrupts may wake the core but leave tcb_tick clear, so a
  * wake event during a glow is latched (for the main loop) without cutting the
- * animation short. Requires TCB running (tcb_start_1ms) and interrupts enabled. */
-static void idle_nap_ms(uint16_t ms)
+ * animation short. Requires TCB running (tcb_start_1ms) and interrupts enabled.
+ * Returns 1 (and blanks the LEDs) if an NFC reader field appears mid-nap, so the
+ * caller can bail out of the animation and let the core go quiet for the read. */
+static uint8_t idle_nap_ms(uint16_t ms)
 {
     set_sleep_mode(SLEEP_MODE_IDLE);
     while (ms--) {
         tcb_tick = 0;
         for (;;) {
+            if (reader_field_active()) { led_off(); return 1; }   /* reader up: blank + bail */
             cli();
             if (tcb_tick) { sei(); break; }
             sleep_enable();
@@ -134,6 +151,7 @@ static void idle_nap_ms(uint16_t ms)
         wdt_reset();                 /* pet across the whole glow, ~1 ms cadence */
 #endif
     }
+    return 0;
 }
 
 void led_breathe(uint8_t cycles, uint16_t breath_ms, uint8_t peak)
@@ -142,27 +160,22 @@ void led_breathe(uint8_t cycles, uint16_t breath_ms, uint8_t peak)
     uint16_t step_ms = breath_ms / (uint16_t)(2u * steps);
     if (step_ms == 0) step_ms = 1;
 
+    /* if a reader field is already up, stay dark -- the read owns the RF band. */
+    if (reader_field_active()) { led_off(); return; }
+
     tcb_start_1ms();                           /* 1 ms timebase for the idle naps */
     for (uint8_t c = 0; c < cycles; c++) {
         for (uint8_t i = 0; i <= steps; i++) {              /* in  */
             uint8_t lin = (uint8_t)(((uint16_t)peak * i) / steps);
             led_set_all(gamma2(lin));
-            idle_nap_ms(step_ms);
+            if (idle_nap_ms(step_ms)) { tcb_stop(); led_off(); return; }   /* field: blanked, bail */
         }
         for (uint8_t i = steps; i > 0; i--) {               /* out */
             uint8_t lin = (uint8_t)(((uint16_t)peak * (i - 1)) / steps);
             led_set_all(gamma2(lin));
-            idle_nap_ms(step_ms);
+            if (idle_nap_ms(step_ms)) { tcb_stop(); led_off(); return; }   /* field: blanked, bail */
         }
     }
     tcb_stop();
     led_off();
-}
-
-void led_wait_ms(uint16_t ms)
-{
-    if (ms == 0) return;
-    tcb_start_1ms();
-    idle_nap_ms(ms);
-    tcb_stop();
 }

@@ -143,7 +143,7 @@ AVR64DD28, VQFN-28, on the **back** of the board.
 | 27 | PA1 | LDRV3 | LED D4, TCA0 WO1 |
 | 28 | PA2 | LDRV2 | LED D3, TCA0 WO2 |
 | 1 | PA3 | LDRV1 | LED D2, TCA0 WO3 |
-| 4 | PA6 | FD | NFC field-detect in (`U5`); PORTA pin int, **falling**; field-powered (works VCC-off); int pull-up on + ext 10k (R13) → VS |
+| 4 | PA6 | FD | NFC field-detect in (`U5`); PORTA pin int, **both edges**; field-powered (works VCC-off); int pull-up on + ext 10k (R13) → VS |
 | 5 | PA7 | NFC_EN | Enables the NFC VCC load switch (`U6`, TPS22918), **active-HIGH**; init LOW = NFC off. (`R14`, 100 k, holds `U6` off while PA7 tristates during reset/UPDI/brown-out — **on the v3.0 board** at (4.39, 29.4). Firmware also drives PA7 low-before-output and low-before-sleep, so the window is covered both ends.) |
 | 8 | PC2 | SDA | TWI0 host (PORTMUX **ALT2**), ext 4.7k → VS |
 | 9 | PC3 | SCL | TWI0 host (ALT2), ext 4.7k → VS |
@@ -173,9 +173,10 @@ Baseline = **POWER-DOWN**. Wakes:
   breathing glow (`GLOW_CYCLES` breaths) + EEPROM activation count++. With
   `USE_DOUBLE_TAP`, a double-tap plays a brighter/longer signature glow instead.
 - **Motion** (ADXL367 referenced activity) → INT2 → PF0 → one softer breath.
-- **NFC** (NT3H2211 field detect, `U5`) → FD → PA6 → the tap glow, when a phone's
-  field appears. FD runs on the phone's field power (datasheet §8.4), so it wakes
-  the MCU even though the tag's VCC is gated **off**; field-present is the chip's
+- **NFC** (NT3H2211 field detect, `U5`) → FD → PA6 → LEDs held dark during the read
+  (clean 13.56 MHz for the tag reply), acknowledge glow when the field leaves. FD runs
+  on the reader's field power (datasheet §8.4), so it works even though the tag's VCC is
+  gated **off**; field-present is the chip's
   POR default (`NC_REG.FD_ON = 00b`), so no setup is needed. Detail under **NFC
   contact card** below.
 - **PIT tick** (~1 s, RTC off the internal ULP, runs in power-down) → ADC-sample
@@ -216,17 +217,19 @@ mobile / work + personal email / website) and offers "Add to Contacts." The tag 
 powered by the **phone's field**, so the read works with VCC off and even with the
 supercap flat. Written once, re-writable.
 
-**Field-detect wake (also VCC-off).** FD (`U5` pin 4 → **PA6**) pulls LOW when a
-phone's field appears and wakes the MCU into the tap glow. Per datasheet §8.4 the FD
-pin **runs on the phone's field power**, so this works with the tag's VCC gated off —
-that is why FD-wake survives the power-gate. Field-present (`NC_REG.FD_ON = 00b`) is
-the chip's POR/config default and the chip cold-starts on the field each tap, so no
-I2C setup is needed. PA6 is a **falling-edge** interrupt; firmware also enables PA6's
-**internal pull-up** as belt-and-suspenders. `R13` ties FD to **VS** on the v3.0
-board (confirmed from copper), so the pull-up is redundant insurance and only sinks
-while FD is held low. A hard
-tap that trips both the accel click and FD fires **one** glow, not two (priority is
-tap → nfc → motion → tick; the tap branch clears the NFC flag).
+**Field-detect wake + read blanking (VCC-off).** FD (`U5` pin 4 → **PA6**) pulls LOW
+when a reader's field appears. Per datasheet §8.4 the FD pin **runs on the reader's field
+power**, so this works with the tag's VCC gated off — that is why it survives the
+power-gate. Field-present (`NC_REG.FD_ON = 00b`) is the chip's POR/config default, so no
+I2C setup is needed. PA6 is a **both-edges** interrupt with an **internal pull-up** (plus
+`R13` to **VS**, confirmed from copper — redundant insurance, sinks only while FD is low).
+The two edges do different jobs: on the **falling** edge (field arrives) the LEDs are held
+dark and the core stays asleep for the read — `led.c` reads FD live and aborts any in-flight
+breath — so the card's PWM/switching don't inject broadband noise into the 13.56 MHz band
+the tag replies on (raising read SNR and range at zero cost); on the **rising** edge (field
+leaves) the card fires the acknowledge glow. Set `NFC_BLANK_ON_FIELD = 0` (`board.h`) to
+disable blanking and glow through the read instead. A hard tap that trips both the accel and
+FD still resolves to one interaction (priority is tap → nfc → motion → tick).
 
 ### Writing the NDEF (one-time)
 
@@ -462,17 +465,20 @@ the sensor.
 
 Fuses are configuration bytes the **programmer** writes during flashing; the
 running firmware can read them but can't change them. Set these deliberately —
-the `fuses` Makefile target is a stub, fill in the bytes from the datasheet fuse
-tables:
+the `fuses` target now prints the exact `avrdude` commands (BODCFG filled in below):
 
-- **`BODCFG` — brown-out (the main one).** `sense_rail_ok()` is only a *software*
-  floor checked before each glow; for a hardware guard against the rail collapsing
-  mid-operation, enable BOD as a **sampled** brown-out: `ACTIVE = SAMPLE`,
-  `SLEEP = SAMPLE`, `SAMPFREQ = 32 Hz` (lower current), `LVL` = a level below the
-  3.47 V rail (pick from the BOD level table). Byte-wise the low nibble is `0x0A`
-  (`ACTIVE = SAMPLE` in bits 3:2, `SLEEP = SAMPLE` in bits 1:0), so
-  `BODCFG = (LVL << 5) | (SAMPFREQ << 4) | 0x0A`. Continuous BOD (`ENABLE`) is ~17 µA,
-  far too heavy for this rail; sampled costs a small fraction of that.
+- **`BODCFG` — brown-out (the main one), now filled in.** `sense_rail_ok()` is only a
+  *software* floor checked before each glow; for a hardware guard against the rail
+  collapsing mid-operation, BOD runs as a **sampled** brown-out. The `fuses` target prints
+  the exact command: **`BODCFG = 0x0A`** = `LVL = 0` (**1.9 V**), `SAMPFREQ = 0` (**128 Hz**),
+  `ACTIVE = SAMPLE`, `SLEEP = SAMPLE`. 1.9 V is chosen deliberately: it sits **below** the
+  2.6 V glow floor (`VS_GLOW_FLOOR_MV`), so a glow-load rail sag can never trip a spurious
+  reset, and **above** the 1.8 V core minimum, so it resets before the CPU can misexecute.
+  Continuous BOD (`ENABLE`) is ~17 µA, far too heavy for this rail; sampled costs a small
+  fraction. For more margin use `LVL = 1` (2.45 V) → `0x2A`; do **not** use 2.70/2.85 V —
+  those are above the glow floor and would reset the card before it could glow. Drop to
+  `SAMPFREQ = 1` (32 Hz, `+0x10` → `0x1A`) to shave a little more standby if the slower
+  ~31 ms detection is acceptable.
 - **`SYSCFG1.MVSYSCFG` — MVIO.** Set to **SINGLE** (factory default is DUAL). The
   board ties VDDIO2 to VS, so PORTC runs off the main rail with no separate I/O
   voltage, which is what SINGLE means. (DUAL also works here since VDDIO2 sits at a
