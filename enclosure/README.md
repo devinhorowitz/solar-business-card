@@ -5,7 +5,7 @@ board and is held by four corner M2 screws; the bare show-front (two solar cells
 DRH monogram window) stays exposed. Retention is the four screws clamping, not a press fit.
 
 This is the **0.6 mm-board "dumb box"** shell. It reduces to a floor, walls, four corner bosses,
-a U2 relief pocket, and **two metal locator pillars** — nothing else. All center support and all
+a U2 relief pocket — nothing else. All center support and all
 optical/EMI features live in a separate **resin diffuser brace** (see `brace/`), so a PCB layout
 change is a brace reprint, never a shell re-machine. The shell is aligned to
 `PCB/solar-glow-drh-v3_0.kicad_pcb` (bosses on the v3.0 hole pattern, concentric with the r3.0
@@ -21,7 +21,7 @@ board-corner fillets).
 | File | Purpose |
 |---|---|
 | `solar-glow-drh-v3_0-backshell-0p6b-brace-cad.py` | Parametric CadQuery generator. **Source of truth** — regenerates the STEP/STL from the PCB anchors. |
-| `solar-glow-drh-v3_0-backshell-0p6b-brace-Ti-max.step` | **Send this to the fab.** 1.00 floor, 1.80 cavity, 0.60 board recess, U2 relief pocket, 2 locator pillars, no ribs, 1.0 walls, asymmetric lip (W2.5/N2.0/S2.0/E1.0), 3.55 overall. |
+| `solar-glow-drh-v3_0-backshell-0p6b-brace-Ti-max.step` | **Send this to the fab.** 1.00 floor, 1.80 cavity, 0.60 board recess, U2 relief pocket, no ribs, no locator pillars, 1.0 walls, asymmetric lip (W2.5/N2.0/S2.0/E1.0), 3.55 overall. |
 | `solar-glow-drh-v3_0-backshell-0p6b-brace-Ti-max.stl` | Same geometry, for a quick plastic dry-fit print before committing to titanium. |
 | `solar-glow-drh-v3_0-backshell-0p6b-brace-DRAWING.pdf` / `.png` | **Current** 2D dimensioned drawing (plan + Section A-A + Detail B + critical dims + notes + title block). Attach to the CNC quote. |
 | `brace/` | The resin diffuser brace — separate printed part. Has its own README, generator, STEP/STL, and drawing. |
@@ -32,14 +32,14 @@ The mating PCB, the resin brace, and the four M2 screws are separate parts, not 
 ## What changed from the earlier shells
 
 - **Floor 0.75 → 0.95 → 1.00 (true 1 mm)**, on a **0.60 mm board** (was 0.80). Same 3.55 overall. The final 0.95 → 1.00 step comes from trimming the cavity 1.85 → 1.80 (cap air 0.15 → 0.10): the brace and the solar-cell sandwiches carry the board, and the WS17 datasheet confirms 1.70 mm is the cap **max** height (worst-case gap 0.05 mm). A true 1.00 floor also clears aluminium / copper / stainless, not just Ti.
-- **Ribs removed; two metal locator pillars added.** The old cap-gap ribs and window posts are gone — the resin brace carries center support. Two Ø3.0 × 0.4 pillars stand on the cavity floor at (13, 35) and (33, 55) (both west of the NFC coil) and locate the brace via matching recesses. They are left as islands in the same cavity pass as the bosses, so the floor stays a full 1.00 everywhere (no locating holes).
+- **Ribs and locator pillars removed.** The old cap-gap ribs and window posts are gone, and the locator pillars are retired — the resin H-brace carries center support and registers to the shell by fitment (its four outboard rails + the component pockets + the board press-fit). The cavity floor stays a full 1.00 everywhere.
 - **Support lip widened and made asymmetric.** The old uniform 1.00 lip is now **W 2.5 / N 2.0 / S 2.0** for a stiffer PCB (widths bounded by the nearest B-side part on each edge). **East stays 1.0** through the JP1/TP1 pads and over the NFC coil (a grounded Ti lip would detune it), **widening to 2.5 at the two N/S ends** clear of both. The exterior back border is independent of the lip and **uniform 2.0 on all 4 sides**.
 - **Reflector frame + floor tape dropped.** The monogram window is now backed by the brace's white LED-hug diffuser face, so the laser-marked reflector frame and the adhesive floor strip are no longer used.
 
 ## The 2D drawing
 
 `solar-glow-drh-v3_0-backshell-0p6b-brace-DRAWING.pdf` is current and matches the committed STEP
-(1.00 floor / 1.80 cavity / 0.60 board recess / 44.80 × 82.90 pitch / metal pillars / 3.55 overall).
+(1.00 floor / 1.80 cavity / 0.60 board recess / 44.80 × 82.90 pitch / 3.55 overall).
 The old `v2_1` drawing is stale and must not be sent. The **STEP governs** all geometry; the drawing
 and the notes below flag the few dimensions that need tighter-than-standard control.
 
@@ -72,8 +72,8 @@ Paste into **Other special request**:
   takes the local floor to 0.95 mm over a 7.8 x 5.4 mm area only. If you cannot
   reliably hold 1.00 mm titanium over this ~48 x 86 mm pocket, advise the minimum
   floor you can hold and we will re-issue the STEP.
-- Two Ø3.0 x 0.4 mm metal pillars stand on the cavity floor (locators for a resin
-  insert). Leave them as islands in the cavity pass; do not drill them through.
+- No locator pillars: the resin H-brace registers by fitment (4 outboard rails +
+  component pockets + board press-fit). Cavity floor is a full 1.00 everywhere.
 - 4x M2 x 0.4 tapped through-holes, tapped from the back face. (M2 x 0.4 is a
   standard coarse thread; please tap per this note rather than letting the 0.6 mm
   minimum-pitch auto-checker reject it.)
@@ -91,7 +91,7 @@ Expect the instant price to move: the thin floor routes this to manual engineeri
 | Field | Value |
 |---|---|
 | Part | SOLAR-GLOW DRH v3.0 back-shell — 0.6 mm-board dumb box (single piece) |
-| Revision | v3.0 (0.6-board dumb box: 1.00 floor, 1.80 cavity, metal locator pillars, no ribs) |
+| Revision | v3.0 (0.6-board dumb box: 1.00 floor, 1.80 cavity, no ribs, no locator pillars) |
 | Material | **Titanium Gr5 (TC4) = Ti-6Al-4V Grade 5** (PCBWay stock) |
 | Process | 3-axis CNC milling, 2 setups (cavity face + back face) |
 | Finish | Bead-blast matte. Rear art laser-marked in the recessed field after finishing. |
@@ -106,7 +106,6 @@ Expect the instant price to move: the thin floor routes this to manual engineeri
   - back frame and 4 boss annuli: **proud 0.15 mm** (to Z −0.15)
   - recessed rear art field: at Z 0
   - cavity floor: at **Z +1.00** (0.95 local under the U2 pocket)
-  - locator pillar tops: at **Z +1.40** (0.4 tall, on the cavity floor)
   - boss / lip tops (the PCB rest plane): **Z +2.80**
   - PCB recess: Z +2.80 to +3.40 (receives the 0.60 mm board)
 - Wall 1.00 mm. **Asymmetric perimeter lip: W 2.5 / N 2.0 / S 2.0 / E 1.0 mm (E widens to 2.5 at the N/S ends).** Exterior back border is **uniform 2.0 on all 4 sides** (independent of the lip).** Back-frame step 0.15 mm. **No internal ribs or posts.**
@@ -134,10 +133,9 @@ not present during machining). Please proceed one of two ways and note which on 
 - **(A)** Machine the uniform 1.00 mm floor **as-is**; or
 - **(B)** If you cannot reliably hold 1.00 mm, advise the **minimum floor you will hold** in Ti-6Al-4V for this ~48 × 86 mm pocket, and we will re-issue the model.
 
-### 4. Locator pillars
+### 4. Brace registration (no locator pillars)
 
-- **2× Ø3.0 × 0.4 mm** metal pillars standing on the cavity floor at board **(13, 35)** and **(33, 55)** — both west of the NFC coil region. Left as **islands** in the cavity milling pass (the four bosses are already islands, so no new operation). Modeled in the STEP.
-- They locate the resin brace via matching recesses, brace-side (one round datum + one slot). **Do not drill them through** — the floor stays a full 1.00 mm beneath them.
+- **Retired.** The resin H-brace registers to this shell by **fitment** — its four outboard rails run into the cavity beside the supercaps, the component pockets key it to the board, and the board press-fits into the recess. No pillars, no recesses, no locating holes; the cavity floor is a full **1.00 mm** everywhere.
 
 ### 5. Threads / tapped holes
 
@@ -160,7 +158,7 @@ PCB recess flats are modeled 0.05 mm interference (below CNC tolerance) — trea
 
 ### 9. Internal radii and tooling
 
-Internal concave junctions are modeled **sharp**; a round tool leaves its own fillet (standard for a milled pocket). The whole solid is analytic (planes, cylinders, cones) — verified 171 analytic faces, zero spline/Bezier. Rough the cavity with a Ø3–4 mm tool; finish corners/walls with a Ø2.0.
+Internal concave junctions are modeled **sharp**; a round tool leaves its own fillet (standard for a milled pocket). The whole solid is analytic (planes, cylinders, cones) — verified 167 analytic faces, zero spline/Bezier. Rough the cavity with a Ø3–4 mm tool; finish corners/walls with a Ø2.0.
 
 ### 10. Edge break / deburr (note, do not model)
 
@@ -185,7 +183,7 @@ consequences the board must respect in an enclosed build:
 
 - **v2.1 shell** (`solar-glow-drh-v2_1-backshell-*`): 0.55 floor, 1.90 cavity, brace posts, old 3.5 mm hole inset. Matches the old PCB hole positions. **Superseded.**
 - **v3.0 0.75-floor ribbed shell** (interim, not in this folder): floor pushed to 0.75, braces removed, two cap-gap ribs added, U2 pocket added, holes re-symmetrized to the v3.0 pattern. **Superseded** by the dumb box.
-- **v3.0 0.6-board dumb box** (this README, `...-0p6b-brace-*`): 0.60 board frees the floor to 1.00 (cavity 1.80); ribs removed; two metal locator pillars added; the resin brace (`brace/`) carries center support and the window/EMI features; reflector frame and floor tape dropped. Overall stays 3.55.
+- **v3.0 0.6-board dumb box** (this README, `...-0p6b-brace-*`): 0.60 board frees the floor to 1.00 (cavity 1.80); ribs and locator pillars removed; the resin H-brace (`brace/`) carries center support and registers by fitment, and the window/EMI features; reflector frame and floor tape dropped. Overall stays 3.55.
 
 ---
 
