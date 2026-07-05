@@ -55,7 +55,7 @@ Row,Description,Part,References,Value,Footprint,Quantity Per PCB,Status,Datashee
 54,,SJ1,SJ1,0R,SJ1,1, ,
 55,,SW2,SW2,LED master,SW2,1, ,
 56,,TC1,TC1,Tag-Connect,TC1,1, ,
-57,,U3,U3,,ADXL367 CC-12-4_ADI,1, ,datasheets/adxl367.pdf
+57,,U3,U3,ADXL367,ADXL367 CC-12-4_ADI,1, ,datasheets/adxl367.pdf
 58,,U2,U2,ALD910025SALI,U2,1, ,
 59,,U1,U1,AVR64DD28 (VQFN28),U1,1, ,
 60,,U5,U5,NT3H2211,U5,1, ,
@@ -70,7 +70,7 @@ Project info:
 Schematic:,solar-glow-drh-v3_0
 Variant:,default
 Revision:,
-Date:,2026-07-05_13-17-52
+Date:,2026-07-05_14-42-38
 KiCad Version:,10.0.4-10.0.4~ubuntu25.10.1
 Statistics:
 Component Groups:,63
