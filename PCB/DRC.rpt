@@ -1,28 +1,30 @@
 ** Drc report for solar-glow-drh-v3_0.kicad_pcb **
-** Created on 2026-07-04T16:55:59 **
-** Report includes: Errors, Warnings **
+** Created on 2026-07-05T01:00:12 **
+** Report includes: Errors, Warnings, Exclusions **
 
-** Found 3 DRC violations **
+** Found 5 DRC violations **
+[annular_width]: Annular width (rule 'annular-hard-floor' min annular width 0.1249 mm; actual 0.1000 mm)
+    Rule: annular-hard-floor; error
+    @(36.0680 mm, 50.8000 mm): Via [GND] on F.Cu - B.Cu
 [tracks_crossing]: Tracks crossing
-    Rule: clearance-hard-floor; error
+    Rule: clearance-hard-floor; error (excluded)
     @(41.0000 mm, 52.4200 mm): Track [LA] on B.Cu, length 14.4200 mm
     @(41.0000 mm, 38.0000 mm): Track [LB] on B.Cu, length 1.9000 mm
+[copper_edge_clearance]: Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.0000 mm)
+    Rule: board setup constraints edge; error (excluded)
+    @(47.8000 mm, 0.0000 mm): Segment on Edge.Cuts
+    @(25.4000 mm, 1.2500 mm): Segment [GND] on F.Cu
+[copper_edge_clearance]: Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.0000 mm)
+    Rule: board setup constraints edge; error (excluded)
+    @(3.0000 mm, 88.9000 mm): Segment on Edge.Cuts
+    @(25.4000 mm, 87.6500 mm): Segment [GND] on F.Cu
 [lib_footprint_mismatch]: Footprint 'SOT-23-6' does not match copy in library 'Package_TO_SOT_SMD'
-    Local override; warning
+    Local override; warning (excluded)
     @(6.3425 mm, 32.2000 mm): Footprint U6
-[lib_footprint_mismatch]: Footprint 'ADXL367 CC-12-4_ADI' does not match copy in library 'Package_TO_SOT_SMD'
-    Local override; warning
-    @(19.4300 mm, 35.0700 mm): Footprint U3
 
 ** Found 0 unconnected pads **
 
-** Found 2 Footprint errors **
-[footprint_symbol_field_mismatch]: Field 'Description' differs (PCB: 'Comparator + 1.242V ref, open-drain, SOT-23-6', Schematic: '')
-    Local override; warning
-    @(46.5000 mm, 68.0000 mm): Footprint U4
-[extra_footprint]: Extra footprint
-    Local override; warning
-    @(0.0000 mm, 0.0000 mm): Footprint <no reference designator>
+** Found 0 Footprint errors **
 
 ** Ignored checks **
     - Footprint has no courtyard defined

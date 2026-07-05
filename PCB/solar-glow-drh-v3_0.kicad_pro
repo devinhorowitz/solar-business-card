@@ -39,9 +39,9 @@
         "other_text_thickness": 0.15,
         "other_text_upright": false,
         "pads": {
-          "drill": 0.8,
-          "height": 1.27,
-          "width": 1.27
+          "drill": 0.0,
+          "height": 0.59,
+          "width": 0.66
         },
         "silk_line_width": 0.1,
         "silk_text_italic": false,
@@ -77,6 +77,14 @@
         ],
         [
           "copper_edge_clearance|25400000|88900000|67b4c014-2d59-42c0-9ea0-d7ffdad5ce35|dfe2ea33-3280-4af4-8d21-d542a52b7241",
+          ""
+        ],
+        [
+          "lib_footprint_mismatch|6342500|32200000|14e033c8-b52e-4911-bd36-ffa160428a36|00000000-0000-0000-0000-000000000000",
+          ""
+        ],
+        [
+          "tracks_crossing|41000000|38000000|3d02959a-52d1-4b3d-a148-36df4aae42e1|463118eb-0e6d-49d0-868f-c633afd66f71",
           ""
         ]
       ],
@@ -527,7 +535,16 @@
     },
     "net_colors": null,
     "netclass_assignments": null,
-    "netclass_patterns": []
+    "netclass_patterns": [
+      {
+        "netclass": "Default",
+        "pattern": "ANODE"
+      },
+      {
+        "netclass": "Default",
+        "pattern": "GND"
+      }
+    ]
   },
   "pcbnew": {
     "last_paths": {
@@ -669,7 +686,7 @@
         "uuid": "bf17630f-b49b-49a7-9335-83fa0a7a44d0"
       }
     ],
-    "used_designators": "",
+    "used_designators": "C13",
     "variants": []
   },
   "sheets": [
