@@ -125,7 +125,7 @@ for b in fp_blocks():
     if xs: comps.append((ref, min(xs),max(xs),min(ys),max(ys)))
 
 brace = cq.Workplane("XY").box(BX1-BX0, BY1-BY0, GAP, centered=(False,False,False)).translate((wx(BX0), wy(BY0), 0))
-cut_log=[]
+cut_log=[]; pk=[]
 for ref,x0,x1,y0,y1 in comps:
     h=part_height(ref)
     if h is None: continue
@@ -135,7 +135,33 @@ for ref,x0,x1,y0,y1 in comps:
     depth=h+AIR; through=depth>=GAP-0.05 or ref=="U6"   # U6 forced THRU: blind web would be 0.28mm (<SLA min); U6 tops at 1.45 in 1.85 -> 0.40 air to the shell floor when through
     zc=(GAP-depth) if not through else -0.05; dz=(depth+0.05) if not through else GAP+0.10
     brace=brace.cut(cq.Workplane("XY").box(px1-px0,py1-py0,dz,centered=(False,False,False)).translate((wx(px0),wy(py0),zc)))
-    cut_log.append((ref,round(depth,2),"THRU" if through else "pkt"))
+    cut_log.append((ref,round(depth,2),"THRU" if through else "pkt")); pk.append((ref,px0,px1,py0,py1,round(depth,2),through))
+
+# THIN-WALL ELIMINATION: any two pockets separated by a sub-SLA-min wall would print as a fragile fin (or fail
+# to form and shed into the pocket). Bridge each such pair so it merges into one clean recess. The wall stands
+# full fin-height on the solid base, so the bridge goes to the DEEPER pocket's depth (through, if either neighbour
+# is a through-pocket -> the blind recess opens into that hole). Only clearance pockets are merged; the window
+# diffuser backing is untouched (it is solid resin OUTSIDE these pocket boxes). Threshold 0.40 sits in the clean
+# gap between the real thin walls (<=0.16) and the next-nearest (>=0.49), so marginal-but-printable walls stay.
+WALL_MIN=0.40; nbridge=0; _bl=[]; bridges=[]
+for i in range(len(pk)):
+    for j in range(i+1,len(pk)):
+        ra,ax0,ax1,ay0,ay1,da,ta=pk[i]; rb,bx0,bx1,by0,by1,db,tb=pk[j]
+        ox=min(ax1,bx1)-max(ax0,bx0); oy=min(ay1,by1)-max(ay0,by0)
+        if ox>=0 and oy>=0: continue                                  # already touching/overlapping -> no wall
+        gx=max(0.0,max(ax0,bx0)-min(ax1,bx1)); gy=max(0.0,max(ay0,by0)-min(ay1,by1))
+        wall=(gx*gx+gy*gy)**0.5
+        if not (0.0<wall<WALL_MIN): continue
+        if ta or tb: bz,bdz=-0.05,GAP+0.10                            # through neighbour -> full-height bridge
+        else: bd=max(da,db); bz,bdz=GAP-bd,bd+0.05                    # blind -> deeper pocket depth (removes full fin)
+        if oy>0 and gx>0:   bxr=(min(ax1,bx1)-0.02,max(ax0,bx0)+0.02); byr=(max(ay0,by0),min(ay1,by1))   # x-wall
+        elif ox>0 and gy>0: bxr=(max(ax0,bx0),min(ax1,bx1)); byr=(min(ay1,by1)-0.02,max(ay0,by0)+0.02)   # y-wall
+        else: continue                                                # diagonal corner nick, not a face wall
+        w=bxr[1]-bxr[0]; hh=byr[1]-byr[0]
+        if w<=0 or hh<=0: continue
+        brace=brace.cut(cq.Workplane("XY").box(w,hh,bdz,centered=(False,False,False)).translate((wx(bxr[0]),wy(byr[0]),bz)))
+        nbridge+=1; _bl.append(f"{ra}-{rb}({wall:.2f})"); bridges.append((bxr[0],byr[0],w,hh))
+print(f"thin-wall bridges (<{WALL_MIN}mm): {nbridge}  {_bl}")
 # ferrite pocket = OPEN CHANNEL: WIDTH (x) walled (critical, edge-limited); LENGTH (y) OPEN at both ends
 # so the ferrite can be cut long/short and extend slightly past the brace. Two walls + PSA + the clamped
 # PCB overhead retain it (PCB: full 4-edge capture unnecessary).
@@ -189,10 +215,14 @@ for ref,x0,x1,y0,y1 in comps:
     col="#e0483a" if thru else ("#e08a3a" if depth>1.0 else "#43a047")
     ax.add_patch(Rectangle((ix0-CLR,iy0-CLR),(ix1-ix0)+2*CLR,(iy1-iy0)+2*CLR,fc=col,ec="#222",lw=0.3,alpha=0.9))
     if (ix1-ix0)>1.8 and (iy1-iy0)>1.3: ax.text((ix0+ix1)/2,(iy0+iy1)/2,ref,color="#111",ha="center",va="center",fontsize=4.6)
+for _bx0,_by0,_bw,_bh in bridges:                       # thin-wall bridges: where sub-0.4mm walls were merged out
+    if _bw<0.35: _bx0-=(0.35-_bw)/2; _bw=0.35
+    if _bh<0.35: _by0-=(0.35-_bh)/2; _bh=0.35
+    ax.add_patch(Rectangle((_bx0,_by0),_bw,_bh,fc="#00e5ff",ec="#fff",lw=1.0,alpha=0.95,zorder=6))
 for sx,sy in STUBS:
     ax.add_patch(Circle((sx,sy),RECESS_R,fc="#4a86e8",ec="#fff",lw=0.8)); ax.text(sx,sy+1.9,"pillar\nhole",color="#8ab",ha="center",fontsize=4.6)
 leg=[mp.Patch(fc="#e0483a",label="through-hole (U2, tall)"),mp.Patch(fc="#e08a3a",label="deep (U6 1.45, U1/U3 1.0)"),
-     mp.Patch(fc="#43a047",label="shallow (0402, LEDs hug window, bridges)"),mp.Patch(fc="#3a2b55",label="ferrite pocket"),mp.Patch(fc="#4a86e8",label="pillar hole (Ø3.2)")]
+     mp.Patch(fc="#43a047",label="shallow (0402, LEDs hug window, bridges)"),mp.Patch(fc="#3a2b55",label="ferrite pocket"),mp.Patch(fc="#4a86e8",label="pillar hole (Ø3.2)"),mp.Patch(fc="#00e5ff",label=f"thin-wall bridge (merged, {len(bridges)})")]
 ax.legend(handles=leg,loc="upper left",fontsize=5.2,facecolor="#1a1a1f",edgecolor="#444",labelcolor="#ddd",framealpha=0.9)
 ax.set_xlim(BX0-2,BX1+2); ax.set_ylim(BY0-2,BY1+2); ax.set_aspect("equal"); ax.invert_yaxis(); ax.axis("off")
 ax.set_title("Diffuser brace rev B - pocket map (board-facing face)\nverified heights + ferrite pocket over the coil + cap-bay clearance",color="#d9a23a",fontsize=8)
