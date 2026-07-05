@@ -19,34 +19,29 @@ Row,Description,Part,References,Value,Footprint,Quantity Per PCB,Status,Datashee
 18,,D10,D10,MMSD301T1G,D10,1, ,
 19,,D11,D11,MMSD301T1G,D11,1, ,
 20,,D9,D9,MMSD301T1G,D9,1, ,
-21,,JP1,JP1,GND VS SCL SDA,JP1,1, ,
-22,,L1,L1,1.0uH,,1, ,
-23,,MH1,MH1,M2,MH1,1, ,
-24,,MH2,MH2,M2,MH2,1, ,
-25,,MH3,MH3,M2,MH3,1, ,
-26,,MH4,MH4,M2,MH4,1, ,
-27,,Q1,Q1,BCP5316MTWG,Q1,1, ,
-28,,R1,R1,150R,R1,1, ,
-29,,R2,R2,150R,R2,1, ,
-30,,R3,R3,150R,R3,1, ,
-31,,R4,R4,150R,R4,1, ,
-32,,R12,R12,220R,R12,1, ,
-33,,R9,R9,1k,R9,1, ,
-34,,R10,R10,4.7k,R10,1, ,
-35,,R11,R11,4.7k,R11,1, ,
-36,,R13,R13,10k,R13,1, ,
-37,,R14,R14,100k,R14,1, ,
-38,,R5,R5,1M,R5,1, ,
-39,,R6,R6,1M,R6,1, ,
-40,,R8,R8,3.74M,R8,1, ,
-41,,R7,R7,6.81M,R7,1, ,
-42,,SJ1,SJ1,0R,SJ1,1, ,
-43,,U3,U3,ADXL367,ADXL367 CC-12-4_ADI,1, ,datasheets/adxl367.pdf
-44,,U2,U2,ALD910025SALI,U2,1, ,
-45,,U1,U1,AVR64DD28 (VQFN28),U1,1, ,
-46,,U5,U5,NT3H2211,U5,1, ,
-47,"Comparator + 1.242V ref, open-drain, SOT-23-6",U4,U4,TLV3011BIDBVR,SOT-23-6,1, ,tlv3011b.pdf
-48,,U6,U6,TPS22918,SOT-23-6,1, ,
+21,,L1,L1,1.0uH,,1, ,
+22,,Q1,Q1,BCP5316MTWG,Q1,1, ,
+23,,R1,R1,150R,R1,1, ,
+24,,R2,R2,150R,R2,1, ,
+25,,R3,R3,150R,R3,1, ,
+26,,R4,R4,150R,R4,1, ,
+27,,R12,R12,220R,R12,1, ,
+28,,R9,R9,1k,R9,1, ,
+29,,R10,R10,4.7k,R10,1, ,
+30,,R11,R11,4.7k,R11,1, ,
+31,,R13,R13,10k,R13,1, ,
+32,,R14,R14,100k,R14,1, ,
+33,,R5,R5,1M,R5,1, ,
+34,,R6,R6,1M,R6,1, ,
+35,,R8,R8,3.74M,R8,1, ,
+36,,R7,R7,6.81M,R7,1, ,
+37,,SJ1,SJ1,0R,SJ1,1, ,
+38,,U3,U3,ADXL367,ADXL367 CC-12-4_ADI,1, ,datasheets/adxl367.pdf
+39,,U2,U2,ALD910025SALI,U2,1, ,
+40,,U1,U1,AVR64DD28 (VQFN28),U1,1, ,
+41,,U5,U5,NT3H2211,U5,1, ,
+42,"Comparator + 1.242V ref, open-drain, SOT-23-6",U4,U4,TLV3011BIDBVR,SOT-23-6,1, ,tlv3011b.pdf
+43,,U6,U6,TPS22918,SOT-23-6,1, ,
 
 
 
@@ -56,11 +51,11 @@ Project info:
 Schematic:,solar-glow-drh-v3_0
 Variant:,default
 Revision:,
-Date:,2026-07-05_18-16-30
+Date:,2026-07-05_21-21-06
 KiCad Version:,10.0.4-10.0.4~ubuntu25.10.1
 Statistics:
-Component Groups:,49
-Component Count:,49
-Fitted Components:,48
+Component Groups:,44
+Component Count:,44
+Fitted Components:,43
 Number of PCBs:,1
-Total Components:,48
+Total Components:,43
