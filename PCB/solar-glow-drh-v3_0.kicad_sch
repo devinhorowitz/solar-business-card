@@ -8538,7 +8538,7 @@
 	)
 	(wire
 		(pts
-			(xy 120 165) (xy 114.92 165)
+			(xy 120.65 165.1) (xy 115.57 165.1)
 		)
 		(stroke
 			(width 0)
@@ -9818,7 +9818,7 @@
 	)
 	(wire
 		(pts
-			(xy 120 170.08) (xy 114.92 170.08)
+			(xy 120.65 170.18) (xy 115.57 170.18)
 		)
 		(stroke
 			(width 0)
@@ -10258,7 +10258,7 @@
 	)
 	(global_label "GND"
 		(shape bidirectional)
-		(at 114.92 170.08 0)
+		(at 115.57 170.18 0)
 		(effects
 			(font
 				(size 1 1)
@@ -10266,7 +10266,7 @@
 		)
 		(uuid "1cb0b574-2c06-425d-ac6a-65f68732c733")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 114.92 170.08 0)
+			(at 115.57 170.18 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -11980,7 +11980,7 @@
 	)
 	(global_label "ANODE"
 		(shape bidirectional)
-		(at 114.92 165 0)
+		(at 115.57 165.1 0)
 		(effects
 			(font
 				(size 1 1)
@@ -11988,7 +11988,7 @@
 		)
 		(uuid "951b765e-92aa-4690-b1fa-09599f5aa991")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 114.92 165 0)
+			(at 115.57 165.1 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -14412,7 +14412,7 @@
 				)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Comparator + 1.242V ref, open-drain, SOT-23-6"
 			(at 139.7 38.1 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -17074,7 +17074,7 @@
 	)
 	(symbol
 		(lib_id "solarglow:C11")
-		(at 120 165 0)
+		(at 120.65 165.1 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -17084,7 +17084,7 @@
 		(dnp no)
 		(uuid "8c203874-21ad-4cfe-abe6-702b283620a8")
 		(property "Reference" "C13"
-			(at 131 170.08 0)
+			(at 131.65 170.18 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -17094,7 +17094,7 @@
 			)
 		)
 		(property "Value" "4.7uF"
-			(at 131 175.16 0)
+			(at 131.65 175.26 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -17104,7 +17104,7 @@
 			)
 		)
 		(property "Footprint" "solarglow:C7"
-			(at 131 180.24 0)
+			(at 131.65 180.34 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -17114,7 +17114,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 120 165 0)
+			(at 120.65 165.1 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -17124,7 +17124,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 120 165 0)
+			(at 120.65 165.1 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects

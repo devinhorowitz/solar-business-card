@@ -6543,7 +6543,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" ""
+		(property "Value" "ADXL367"
 			(at 0 0 90)
 			(unlocked yes)
 			(layer "B.Fab")
