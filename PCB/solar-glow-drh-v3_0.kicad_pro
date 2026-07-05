@@ -40,8 +40,8 @@
         "other_text_upright": false,
         "pads": {
           "drill": 0.0,
-          "height": 0.381,
-          "width": 0.3302
+          "height": 1.4,
+          "width": 1.0
         },
         "silk_line_width": 0.1,
         "silk_text_italic": false,
@@ -77,6 +77,14 @@
         ],
         [
           "copper_edge_clearance|25400000|88900000|67b4c014-2d59-42c0-9ea0-d7ffdad5ce35|dfe2ea33-3280-4af4-8d21-d542a52b7241",
+          ""
+        ],
+        [
+          "lib_footprint_mismatch|19430000|35070000|b66fa3c4-94d5-41b9-a1ce-c693058f12bb|00000000-0000-0000-0000-000000000000",
+          ""
+        ],
+        [
+          "lib_footprint_mismatch|6342500|32200000|14e033c8-b52e-4911-bd36-ffa160428a36|00000000-0000-0000-0000-000000000000",
           ""
         ],
         [
