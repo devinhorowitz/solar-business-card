@@ -5,7 +5,7 @@ A business card that runs on light. An AVR microcontroller breathes four amber L
 backlight it through the bare fiberglass — while a pair of indoor solar cells trickle-charge
 a supercapacitor bank that holds the charge.
 
-![SOLAR-GLOW · DRH — front and back, gold ENIG on black soldermask](docs/board-preview.png)
+![SOLAR-GLOW · DRH — front and back, gold ENIG on black soldermask](https://github.com/devinhorowitz/solar-business-card/blob/main/Generated/docs/solar-glow-drh-v3_0-top.png)
 
 > **Status: v3.0 — fully routed, audit-clean. Not yet fabbed.**
 > Two-layer, 0.8 mm FR4, bound for PCBWay, with the 4-layer **v2.3** kept as the committed fallback.
