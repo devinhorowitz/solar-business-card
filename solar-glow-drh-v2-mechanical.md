@@ -1,10 +1,11 @@
 # SOLAR-GLOW · DRH — As-Built Mechanical Reference (v2-era; v3.0 deltas inline)
 
 > **Superseded for the enclosure — read the v3.0 deltas.** The authoritative shell spec is now
-> `enclosure/README.md` and the generator `enclosure/solar-glow-drh-v3_0-backshell-cad.py`; the board
+> `enclosure/README.md` and the generator `enclosure/solar-glow-drh-v3_0-backshell-0p6b-brace-cad.py`; the board
 > is **v3.0** (`PCB/solar-glow-drh-v3_0.kicad_pcb`). Since this doc was written the shell was built
-> and aligned: the **mounting holes moved** (v3.0 positions below), the **floor is 0.75 mm** (0.70
-> under a small U2 relief pocket), the **braces are removed**, and the **overall height is 3.55 mm**.
+> and aligned: the **mounting holes moved** (v3.0 positions below), the **floor is 1.00 mm** (0.95
+> under a small U2 relief pocket), the **ribs are removed** (a resin diffuser brace carries center
+> support), and the **overall height is 3.55 mm**.
 > Use this doc for the board envelope, keepouts, and programming access; defer to `enclosure/README.md`
 > for every shell number.
 
@@ -69,15 +70,15 @@ Two parts set the cavity; everything else clears under it.
 | **U2** | balancer, SOIC-8 | **~1.75 mm (tallest)** | (28.5, 37.0) |
 | **SC1–SC4** | WS17 supercaps | **1.7 mm** | see §6 |
 | D1, D9 | blocking Schottky | ~1.1 mm | (44.0, 43.9), (43.5, 53.5) |
-| U4 | TLV431, SOT-23 | ~1.1 mm | (43.0, 49.0) |
+| U4 | TLV3011, SOT-23-6 | ~1.1 mm | (43.0, 49.0) |
 | U3 | accelerometer, LGA-12 | ~1.0 mm | (20.0, 35.9) |
 | U1 | MCU, VQFN-28 (4×4) | ~0.9 mm | (9.5, 40.9) |
 | D2–D5 | LEDs, LA P47F (reverse-mount) | ~0.83 mm | row at y 43.9 |
 | R / C | 1206 / 0805 | 0.6–0.7 mm | central band, y 32–55 |
 
-→ The v3.0 shell uses a **general cavity of 1.85 mm** (cap-limited by the four 1.70 mm supercaps),
+→ The v3.0 shell uses a **general cavity of 1.80 mm** (cap-limited by the four 1.70 mm supercaps),
 with a **0.05 mm relief pocket under U2** (1.75 mm) so the tallest part keeps its air while the floor
-stays 0.75 mm — a *different* pocket than the old thin-skin one, and for a different reason
+stays 1.00 mm — a *different* pocket than the old thin-skin one, and for a different reason
 (engraving-stock floor, not a U2-limited cavity). See `enclosure/README.md`. **No through-hole
 headers exist** (every connector is flat SMD), so nothing else stands
 proud; the stack really is U2/cell-limited.
@@ -112,7 +113,7 @@ no-pillar keepout**.
 - **No edge castellations.** Verified: zero pads within 1.5 mm of the rim. The old CAD's biggest
   electrical hazard — press-fit walls shorting the right-edge VS/SDA/SCL castellations — **is gone.**
   Walls can press over the bare-FR4 edge with no edge-pad short.
-- **U2 relief pocket (v3.0).** A 0.05 mm pocket under U2 lets the general floor run 0.75 mm (engraving stock) while U2 keeps its 0.15 mm air; general cavity 1.85 mm. (Not the old U2-limited thin-skin pocket.) See `enclosure/README.md`.
+- **U2 relief pocket (v3.0).** A 0.05 mm pocket under U2 lets the general floor run 1.00 mm while U2 keeps its 0.10 mm air; general cavity 1.80 mm. (Not the old U2-limited thin-skin pocket.) See `enclosure/README.md`.
 - **VQFN-28, not QFN-20** (height-irrelevant at 0.9 mm; noted for accuracy).
 - **No button.** The actuator is the accelerometer tap, which the metal back-plate *transmits*. No
   dome, no button hole, no cap-touch window.
@@ -141,11 +142,12 @@ back-side flat pads.
 - **Material:** **Ti-6Al-4V Grade 5**, single material (yield ~880 MPa). The earlier 7075-T6 fallback
   is dropped — titanium's strength is what lets the floor run thin.
 - **Machining (v3.0):** **fully 3-axis CNC-milled** (the photochemical-etch idea is dropped),
-  bead-blast finish. **0.75 mm floor** (0.70 under the U2 relief pocket) backed by two ribs — the
-  brace posts are removed; reflector frame laser-marked, not cut; overall height 3.55 mm. Full CAD,
+  bead-blast finish. **1.00 mm floor** (0.95 under the U2 relief pocket), no ribs — a resin diffuser
+  brace carries center support; the window is backed by the brace's white diffuser face (reflector
+  frame dropped); overall height 3.55 mm. Full CAD,
   callouts, and fab notes are in `enclosure/README.md`.
-- **Floor thickness:** one shipping floor (**0.75 mm**, engraving stock); the old 0.55 / standard /
-  0.2 mm-skin / 0.60 mm variants are retired. The floor is the single value re-issued to PCBWay's minimum.
+- **Floor thickness:** one shipping floor (**1.00 mm**, on the 0.6 mm board); the old 0.55 / 0.75 /
+  standard / 0.2 mm-skin variants are retired. The floor is the single value re-issued to PCBWay's minimum.
 - **Open vs enclosed:** with no castellations, the old "enclosed variant drops the edge bus"
   complication disappears — the enclosed build is simpler than it was.
 
@@ -153,4 +155,4 @@ back-side flat pads.
 
 - **Shell design rules, material, machining, CAD knobs:** `enclosure/README.md`.
 - **Why four cells / the rear real-estate logic / energy model:** `solar-glow-drh-design-notes.md` §4.
-- **Exact pad and keepout geometry:** open `solar-glow-drh-v2_1.kicad_pcb` in KiCad.
+- **Exact pad and keepout geometry:** open `solar-glow-drh-v3_0.kicad_pcb` in KiCad.

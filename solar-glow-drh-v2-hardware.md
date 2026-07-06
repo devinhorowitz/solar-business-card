@@ -8,7 +8,7 @@
 > values carry forward unchanged.
 
 **The single source of truth for firmware.** Every line here is taken from the committed
-`solar-glow-drh-v2_1.kicad_pcb` / `.kicad_sch` and cross-checked against the
+`solar-glow-drh-v3_0.kicad_pcb` / `.kicad_sch` and cross-checked against the
 AVR64DD32-28 datasheet (DS40002315), the ADXL367 datasheet, and the
 SM141K06TF and SCPC parts. Where a register value is given, it is the value the firmware must
 write to match what is physically routed.

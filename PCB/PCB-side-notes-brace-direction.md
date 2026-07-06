@@ -151,12 +151,12 @@ The table below matters only if the ferrite is omitted. Surface resistance Rs = 
 | Stainless 304/316 | ~0.72 | ~116 µm | ~6.0 | Between brass and Ti. **Austenitic only** — ferritic/martensitic grades (410/430) are magnetic (µr ≫ 1); the one genuinely bad choice behind an unshielded coil. |
 
 Computed bounds from the committed coil (no ferrite, retrimmed by C9): bare L₀ = 0.98 µH;
-perfect-conductor floor at 1.85 mm bounds L_eff at 0.68 µH (70 % kept). Every option works
+perfect-conductor floor at 1.80 mm bounds L_eff at 0.68 µH (70 % kept). Every option works
 for tap-range; with the ferrite, every option approaches bare-card.
 
 ## 8. Remaining 0.6 mm items and small notes
 
-- **Cavity math confirmed from your own stack** (0.95 + 1.85 + 0.60 + 0.15 = 3.55): the
+- **Cavity math confirmed from your own stack** (1.00 + 1.80 + 0.60 + 0.15 = 3.55): the
   coil-to-floor standoff is unchanged by the thickness change, and the spiral is entirely
   B.Cu — only the ~30 mm F.Cu bridge moves 0.2 mm closer. Sub-1 % inductance effect. No new
   retune burden beyond the parked bench item.
@@ -170,7 +170,7 @@ for tap-range; with the ferrite, every option approaches bare-card.
 - **Isolation layering — don't double-stack.** Insulating layers now in the system:
   soldermask (always), the brace + ferrite (middle third), and the optional Kapton blanket.
   The brace-covered middle third needs no Kapton. In the supercap bays the caps sit
-  1.70 mm tall under a 1.85 mm cavity — 0.15 mm air; a 0.05 mm Kapton sheet there eats a
+  1.70 mm tall under a 1.80 mm cavity — 0.10 mm air; a 0.05 mm Kapton sheet there eats a
   third of that headroom. Decide blanket extent vs brace extent as one plan and send the
   final stack; the PCB side will sanity-check clearances.
 - **Shell grounding is unchanged**: the shell ties to board GND through the four corner M2

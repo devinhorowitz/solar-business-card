@@ -3,8 +3,8 @@
 Durable engineering rationale, hard-won findings, and future-variant ideas, distilled from the v0/v1 planning docs (since retired).
 
 **Authority order.** For the *current* design, the committed `solar-glow-drh-v3_0.kicad_pcb` /
-`.kicad_sch` (v3.0, 2-layer) plus `README.md`'s current-revision table are ground truth; the 4-layer
-`solar-glow-drh-v2_3.kicad_pcb` is the committed fallback. This file is the *reasoning archive* — the
+`.kicad_sch` (v3.0, 2-layer) plus `README.md`'s current-revision table are ground truth; the 4-layer v2.3
+(in git history) is the fallback design. This file is the *reasoning archive* — the
 "why" and the "don't do that again" — with the **v3.0 deltas collected in §12**. Where an as-built
 doc already owns a topic, this points at it rather than duplicating. (The `solar-glow-drh-v2-*` docs
 are v2-era; their v3.0 deltas are banner-noted at their tops.)
@@ -186,10 +186,10 @@ re-spin for the enclosure:
 - **Grounded body → short risk.** In the enclosed variant, **drop the right-edge castellations**;
   land support pillars **only on GND pour**; keep a **die-cut Kapton (~0.05 mm)** blanket isolation
   layer in reserve if a later via audit on the rib lines finds an untented via.
-- **General cavity 1.85 mm (cap-limited), plus a U2 relief pocket** — the four **1.70 mm WS17
-  supercaps** set the general cavity (1.85 = cap + 0.15 mm air, toleranced 1.85 ±0.05). U2 (SOIC-8,
-  1.75 mm) is the single tallest part but sits over a **local 0.05 mm relief pocket** (floor 0.70 mm
-  there vs 0.75 general), so it keeps its full 0.15 mm air while the general cavity stays 1.85. The
+- **General cavity 1.80 mm (cap-limited), plus a U2 relief pocket** — the four **1.70 mm WS17
+  supercaps** set the general cavity (1.80 = cap + 0.10 mm air, toleranced 1.80 ±0.05). U2 (SOIC-8,
+  1.75 mm) is the single tallest part but sits over a **local 0.05 mm relief pocket** (floor 0.95 mm
+  there vs 1.00 general), so it keeps 0.10 mm air while the general cavity stays 1.80. The
   0.9 mm QFN is irrelevant. ("Cells" elsewhere can mean the 1.2 mm **solar** cells on the front — a
   different part; don't conflate the two.)
 - **No tall back-side parts.** The cavity budget assumes the tallest *populated* rear part is U2 at
@@ -199,8 +199,9 @@ re-spin for the enclosure:
 - **The button is the accel tap** (cap-touch dies behind a grounded plate; the old "snap-dome"
   actuator is superseded).
 - **Shell, current approach (v3.0):** Ti-6Al-4V Grade 5, **fully 3-axis CNC-milled** (no etching),
-  **bead-blast** finish, with a **0.75 mm floor** (0.70 under the U2 pocket) backed by two ribs — the
-  brace posts are **removed** — and the reflector frame **laser-marked, not cut**. Overall height
+  **bead-blast** finish, with a **1.00 mm floor** (0.95 under the U2 pocket), **no ribs** — center
+  support comes from a separate resin diffuser brace — and the window is backed by the brace's white
+  diffuser face (the laser-marked reflector frame is dropped). Overall height
   3.55 mm; the four bosses sit on the **v3.0 hole pattern** (concentric with the r3.0 fillets),
   retained by four corner M2 screws (~2.2 mm Ti engagement). The earlier 0.3 mm-skin / 7075-fallback /
   photochemical-etch plan is dropped. Full CAD, callouts, and fab notes are in `enclosure/README.md`.
@@ -254,7 +255,7 @@ the LDRV fan moved):
 | rev | stackup | note |
 |---|---|---|
 | v2.2 | 6-layer | intermediate |
-| **v2.3** | **4-layer** — F · In1 GND · In2 VS · B | the committed **fallback** |
+| **v2.3** | **4-layer** — F · In1 GND · In2 VS · B | **fallback** design (git history) |
 | **v3.0** | **2-layer** — F · B | **current** — GND = full-board B.Cu pour, VS = routed B mesh (the 4→2 conversion of v2.3). See §12. |
 
 
@@ -268,7 +269,7 @@ the LDRV fan moved):
   energy, not the farads.
 - **Pin authority — one source only.** Earlier drafts of this design carried two *different* pin
   assignments (VSENSE on PA5 with BTN on PA7; and the LEDs on PA4–PA7 / TCD0 with VSENSE on PC3)
-  — **neither matches the board.** The committed `solar-glow-drh-v2_1.kicad_sch` and
+  — **neither matches the board.** The committed `solar-glow-drh-v3_0.kicad_sch` and
   `solar-glow-drh-v2-hardware.md` are the only authoritative pin reference: LEDs PA0–PA3 / TCA0,
   VSENSE PD2, BTN PA5, I²C PC2/PC3, accel INT PF0/PF1. If anything else disagrees, it is wrong. **v3.0 permuted which LDRV net lands on which of PA0–PA3** (the fan untangle) — the pins are still PA0–PA3/TCA0, but the LDRV↔pin↔LED map changed; see §12 and `firmware/README.md`.
 
@@ -285,7 +286,7 @@ dominant line, and the reason the 4-cell array is a deliberate reroute rather th
 ## 12. v3.0 — the 2-layer redesign (current)
 
 v3.0 re-implements v2.3's 4-layer board on **two layers** (F / B) — same 50.80 × 88.90 card, r3.0
-corners, and the **same BOM**. It is the current board; **v2.3 (4-layer) is the committed fallback.**
+corners, and the **same BOM**. It is the current board; **v2.3 (4-layer) is the fallback design, in git history.**
 
 - **GND and VS come off the inner planes.** In1 (GND plane) becomes a **full-board B.Cu pour**
   (`GND_B` zone) plus stitch straps; In2 (VS plane) becomes a **routed mesh on B** (w0.4 trunk).

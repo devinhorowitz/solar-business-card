@@ -85,7 +85,7 @@ switchable **3 V / 5 V** supply built in, so there's no resistor to wire and it 
 power the card itself. Its 3-pin JST-SH cable is colour-coded **white = UPDI**,
 **black = GND**, **red = PWR** (same three signals on the 0.1" header).
 
-1. **Set the voltage switch to 3 V.** The VS rail clamps at 3.47 V, so 3 V power and
+1. **Set the voltage switch to 3 V.** The VS rail clamps at ~3.5 V (≤3.60 V worst-case), so 3 V power and
    logic are safe; **never 5 V** — it over-drives the UPDI pin and exceeds the clamp.
 2. Wire by signal to TC1 (or J1): **white/UPDI → UPDI**, **black/GND → GND**, and
    **red/PWR → the connector's Vcc pin** (it sits on VS). Confirm the TC1/J1 pin
@@ -152,7 +152,7 @@ AVR64DD28, VQFN-28, on the **back** of the board.
 | 20 | PF0 | INT2 | accel motion in (rising) |
 | 21 | PF1 | INT1 | accel tap in (rising) |
 | 23 | UPDI | UPDI | program |
-| 18,24 | VDD | VS | clamped rail ≤ 3.47 V |
+| 18,24 | VDD | VS | clamped rail ≤ 3.60 V worst-case (~3.50 typ) |
 | 19,25,EP | GND | GND | |
 
 LEDs are **low-side**: each lights when its PA pin pulls LOW, current set by a
@@ -257,7 +257,7 @@ fallback `text/x-vCard` is a one-line change in the generator.
 
 ## Power notes / wake architecture (these correct the hardware doc's §6)
 
-The rail is tiny (clamped ≤ 3.47 V supercap, sub-mA indoor harvest), so standing
+The rail is tiny (clamped ≤ 3.60 V supercap, sub-mA indoor harvest), so standing
 current is the whole game, and the wake architecture has to live within it. Two
 things here diverge from the hardware doc's §6:
 
