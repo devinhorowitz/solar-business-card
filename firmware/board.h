@@ -24,7 +24,7 @@
  *     9 PC3      SCL      TWI0 host SCL  (TWIROUTEA=ALT2)  ext 4.7k to VS
  *    10 VDDIO2   VDDIO2   tied to VS by SJ1 -> PORTC at rail, MVIO unused
  *    12 PD2      VSENSE   light/rail sense  AIN2 (ADC) + AINP0 (AC0+)
- *    18 VDD      VS       clamped rail <= 3.47V
+ *    18 VDD      VS       clamped rail <= 3.60V (~3.50 typ)
  *    19 GND      GND
  *    20 PF0      INT2     accel INT2 in  (PORTF pin interrupt)
  *    21 PF1      INT1     accel INT1 in  (PORTF pin interrupt)

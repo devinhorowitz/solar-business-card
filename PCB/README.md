@@ -19,8 +19,8 @@ PCB/
 ├── solar-glow-drh-v3_0-BOM-assembly.xlsx  # trimmed PCBA BOM (36 placed parts)
 ├── sw2-anode-selector.png            # how to read/set the SW2 OFF/ON/TINY bridge
 ├── led-orientation-D2-D5.png         # reverse-mount LED rotation reference for PCBA
-├── DRC.rpt / ERC.rpt                 # last GUI report exports (CI keeps live copies in ../Generated/)
-└── solar-glow-drh-v2_1.* / v2_2.* / v2_3.*   # prior revisions, kept as history — do not fab
+└── DRC.rpt / ERC.rpt                 # last GUI report exports (CI keeps live copies in ../Generated/)
+                                      # (v2_1 / v2_2 / v2_3 revisions live in git history, not this folder)
 ```
 
 > **The board is the source of truth.** `solar-glow-drh-v3_0.kicad_pcb` / `.kicad_sch`
@@ -115,7 +115,7 @@ CI-built set from `../Generated/gerbers/`, which comes from the same exporter).
 
 **Drill (Excellon):**
 - **File → Fabrication Outputs → Drill Files…** Generate Excellon + a drill map.
-- Plated holes: the 91 vias (uniform 0.30 mm) and the four M2 mount holes (Ø 2.2 mm).
+- Plated holes: the 79 vias (uniform 0.30 mm) and the four M2 mount holes (Ø 2.2 mm).
   Non-plated: the TC2030 latch/alignment holes. Export PTH and NPTH per PCBWay's preference.
 
 **Bundle** the Gerbers + drill into one zip for upload.
@@ -134,7 +134,7 @@ Order parameters, from the committed board:
 | Soldermask color | **Matte black** |
 | Silkscreen | White |
 | Min track / spacing used | **0.15 mm track / 0.127 mm spacing** (the marginal-band corridors) |
-| Vias | **Uniform: 0.30 mm drill / 0.60 mm pad** (0.15 mm annular), 94 total, tented (resin-fill + cap ordered board-wide) |
+| Vias | **Uniform: 0.30 mm drill / 0.60 mm pad** (0.15 mm annular), 79 total, tented (resin-fill + cap ordered board-wide) |
 | Non-plated holes | TC2030: Ø **2.3749 mm** (4× leg-latch) and Ø **0.9906 mm** (3× alignment) |
 | Plated mount holes | Ø **2.2 mm** ×4 (M2, corners, tied to GND) |
 | Castellations | **None** (verified — only the corner mount holes sit within 1.5 mm of the rim) |
@@ -195,7 +195,7 @@ hand-tinning. Order it alongside the board.
 (those headers left the board in v3.0), and **every passive except SJ1 converted to 0402** to match
 the board's placed lands — the v2.2 file still listed 0805 MPNs for most R/C. Converted and added
 lines have their **prices blanked pending a fresh quote**; the old 0805 prices don't carry. The
-`v2 2` and older BOM files remain in the repo as lineage.
+`v2 2` and older BOM files remain in git history as lineage.
 
 Summary of the **orderable** lines:
 
@@ -203,7 +203,7 @@ Summary of the **orderable** lines:
 |---|---:|---|---|
 | U1 | 1 | AVR64DD28 (VQFN-28) | `AVR64DD28-I/STX` |
 | U2 | 1 | Dual SAB MOSFET (SOIC-8) | `ALD910025SALI` |
-| U3 | 1 | LIS2DH12 accelerometer (LGA-12) | `LIS2DH12TR` |
+| U3 | 1 | ADXL367 accelerometer (LGA-12) | `ADXL367BCCZ-RL7` |
 | U4 | 1 | TLV3011 comparator + 1.242 V ref (SOT-23-6, open-drain) | `TLV3011BIDBVR` |
 | **U5** | 1 | **NFC tag, NT3H2211 (XQFN8 / SOT902-3)** | `NT3H2211W0FHKH` — matches the placed 0.25×0.4 mm land |
 | **U6** | 1 | **Load switch (SOT-23-6) (in the v3_0 BOM)** | `TPS22918DBVR` |
@@ -213,8 +213,9 @@ Summary of the **orderable** lines:
 | D2–D5 | 4 | Amber LED, reverse-mount | `LA P47F-V2BB-24-3B5A-30-R18-Z` |
 | **SC1–SC4** | **4** | **1 F / 2.75 V (WS17)** | `3-153-438` |
 | R1–R4 | 4 | **150 Ω 1% 0402 — SIZED** | `RC0402FR-07150RL` |
-| R5, R6, R8 | 3 | 1 MΩ 0402 | `RC0402FR-071ML` |
-| R7 | 1 | 1.8 MΩ 0402 | `RC0402FR-071M8L` |
+| R5, R6 | 2 | 1 MΩ 0402 | `RC0402FR-071ML` |
+| R7 | 1 | 6.81 MΩ 0402 | `RC0402FR-076M81L` (confirm stock) |
+| R8 | 1 | 3.74 MΩ 0402 | `RC0402FR-073M74L` (confirm stock) |
 | R9 | 1 | 1 kΩ 0402 | `RC0402FR-071KL` |
 | R10, R11 | 2 | 4.7 kΩ 0402 (I²C pull-ups) | `RC0402FR-074K7L` |
 | R12 | 1 | 220 Ω 0402 | `RC0402FR-07220RL` |
