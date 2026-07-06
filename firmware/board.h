@@ -1,7 +1,7 @@
 /*
- * board.h  --  SOLAR-GLOW DRH v2.1  as-built pin/route map.
+ * board.h  --  SOLAR-GLOW DRH v3.0  as-built pin/route map.
  *
- * Single source of truth = the committed solar-glow-drh-v2_1.kicad_pcb
+ * Single source of truth = the committed solar-glow-drh-v3_0.kicad_pcb
  * (pad -> pinfunction -> net read directly from the board) cross-checked
  * against solar-glow-drh-v2-hardware.md and the AVR64DD32-28 datasheet
  * (DS40002315). Every PORTMUX/peripheral value below is the value the
