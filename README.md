@@ -1,268 +1,190 @@
-# SOLAR-GLOW · DRH
+# SOLAR-GLOW DRH v3.0 — Titanium Back-Shell (enclosure)
 
-A business card that runs on light. An AVR microcontroller breathes four amber LEDs
-*through* the board — a monogram cut into the front copper that glows when the rear LEDs
-backlight it through the bare fiberglass — while a pair of indoor solar cells trickle-charge
-a supercapacitor bank that holds the charge.
+Back-only titanium shell for the SOLAR-GLOW DRH PCB. It drops over the populated back of the
+board and is held by four corner M2 screws; the bare show-front (two solar cells + the backlit
+DRH monogram window) stays exposed. Retention is the four screws clamping, not a press fit.
 
-![SOLAR-GLOW · DRH — front and back, gold ENIG on black soldermask](https://github.com/devinhorowitz/solar-business-card/blob/main/Generated/docs/solar-glow-drh-v3_0-top.png)
+This is the **0.6 mm-board "dumb box"** shell. It reduces to a floor, walls, four corner bosses,
+a U2 relief pocket — nothing else. All center support and all
+optical/EMI features live in a separate **resin diffuser brace** (see `brace/`), so a PCB layout
+change is a brace reprint, never a shell re-machine. The shell is aligned to
+`PCB/solar-glow-drh-v3_0.kicad_pcb` (bosses on the v3.0 hole pattern, concentric with the r3.0
+board-corner fillets).
 
-> **Status: v3.0 — fully routed, audit-clean. Not yet fabbed.**
-> Two-layer, 0.8 mm FR4, bound for PCBWay, with the 4-layer **v2.3** kept as the committed fallback.
-> The one thing standing between here and a build is the **energy budget** — harvest vs. draw under
-> real indoor light has never been measured. See *“The open question.”*
+> **Source of truth.** `solar-glow-drh-v3_0-backshell-0p6b-brace-cad.py` is authoritative for all
+> geometry — it prints the full Z-stack when run and regenerates the STEP/STL from the PCB anchors.
+> Every number in this README is echoed from that generator; if one ever disagrees, re-run it and
+> trust the generator. This README is the **fab + ordering companion**, not an independent spec.
 
-### Current revision — the one canonical summary
+## Files
 
-| What | Current | Notes / fallback |
-|---|---|---|
-| **PCB** | **v3.0 — 2-layer** (F / B) | GND = full-board B.Cu pour; VS = routed B mesh. **v2.3 (4-layer: F / In1 GND / In2 VS / B) is the committed fallback.** v2.1 was 6-layer (history). |
-| Board | 50.80 × 88.90 mm, r3.0 corners, **0.80 mm** FR4, ENIG, matte-black mask | 0.8-vs-1.0 mm thickness still open |
-| Mounting holes | 4× M2, GND, at **(3.0, 3.0) / (47.8, 3.0) / (3.0, 85.9) / (47.8, 85.9)**, pitch **44.80 × 82.90 mm** | concentric with the r3.0 corner fillets |
-| **Enclosure** | **v3.0 Ti back-shell** — 0.75 floor, 1.85 cavity (1.90 local under U2), overall **3.55 mm**, braces off | matches the v3.0 hole pattern; see `enclosure/README.md` |
-| BOM | **v3_0 masters** — U6 + R14 added, JP1/JP2 dropped (JP1 later reused for the bench pad strip), all passives except SJ1 now 0402 | master is `PCB/solar-glow-drh-v3_0-BOM.xlsx`; placed set in `-BOM-assembly.xlsx` |
-| Firmware | register-verified C, not yet on hardware | LED pin map re-mapped in v3.0 (see `firmware/README.md`) |
-
-### Where the truth lives — how these docs stay from drifting
-
-Each fact has exactly one home; everything else points at it rather than restating it.
-
-| Domain | Source of truth |
+| File | Purpose |
 |---|---|
-| Board copper / geometry / holes | `PCB/solar-glow-drh-v3_0.kicad_pcb` + `.kicad_sch` |
-| Enclosure geometry | `enclosure/solar-glow-drh-v3_0-backshell-cad.py` (prints the Z-stack; regenerates the STEP) |
-| Firmware pin map + knobs | `firmware/README.md` (matches the schematic) |
-| BOM | `PCB/solar-glow-drh-v3_0-BOM.xlsx` (v3.0 master — converted lines have prices blanked pending quote; see `PCB/README.md` Step 4) |
-| Design *reasoning* / lineage | `solar-glow-drh-design-notes.md` |
+| `solar-glow-drh-v3_0-backshell-0p6b-brace-cad.py` | Parametric CadQuery generator. **Source of truth** — regenerates the STEP/STL from the PCB anchors. |
+| `solar-glow-drh-v3_0-backshell-0p6b-brace-Ti-max.step` | **Send this to the fab.** 1.00 floor, 1.80 cavity, 0.60 board recess, U2 relief pocket, no ribs, no locator pillars, 1.0 walls, asymmetric lip (W2.5/N2.0/S2.0/E1.0), 3.55 overall. |
+| `solar-glow-drh-v3_0-backshell-0p6b-brace-Ti-max.stl` | Same geometry, for a quick plastic dry-fit print before committing to titanium. |
+| `solar-glow-drh-v3_0-backshell-0p6b-brace-DRAWING.pdf` / `.png` | **Current** 2D dimensioned drawing (plan + Section A-A + Detail B + critical dims + notes + title block). Attach to the CNC quote. |
+| `brace/` | The resin diffuser brace — separate printed part. Has its own README, generator, STEP/STL, and drawing. |
+| `solar-glow-drh-v2_1-backshell-DRAWING.pdf` / `.png` | **STALE — v2.1 numbers (0.55 floor / 1.90 cavity / 43.80 pitch / brace posts).** Superseded by the drawing above; do **not** send this. Kept only as history; safe to delete. |
 
-When a number here disagrees with a source-of-truth file, the source file wins and this table is the
-thing to correct. The `solar-glow-drh-v2-*` docs are v2-era history (banner-marked at the top of
-each); read them for lineage, not for current values.
+The mating PCB, the resin brace, and the four M2 screws are separate parts, not part of this CNC order.
 
----
+## What changed from the earlier shells
 
-## What it is
+- **Floor 0.75 → 0.95 → 1.00 (true 1 mm)**, on a **0.60 mm board** (was 0.80). Same 3.55 overall. The final 0.95 → 1.00 step comes from trimming the cavity 1.85 → 1.80 (cap air 0.15 → 0.10): the brace and the solar-cell sandwiches carry the board, and the WS17 datasheet confirms 1.70 mm is the cap **max** height (worst-case gap 0.05 mm). A true 1.00 floor also clears aluminium / copper / stainless, not just Ti.
+- **Ribs and locator pillars removed.** The old cap-gap ribs and window posts are gone, and the locator pillars are retired — the resin H-brace carries center support and registers to the shell by fitment (its four outboard rails + the component pockets + the board press-fit). The cavity floor stays a full 1.00 everywhere.
+- **Support lip widened and made asymmetric.** The old uniform 1.00 lip is now **W 2.5 / N 2.0 / S 2.0** for a stiffer PCB (widths bounded by the nearest B-side part on each edge). **East stays 1.0** through the JP1/TP1 pads, over the NFC coil (a grounded Ti lip would detune it), and past the C10/D10 cluster near the north end (they overhang a wider lip), **widening to 2.5 only at the two N/S ends** clear of all three. The exterior back border is independent of the lip and **uniform 2.0 on all 4 sides**.
+- **Reflector frame + floor tape dropped.** The monogram window is now backed by the brace's white LED-hug diffuser face, so the laser-marked reflector frame and the adhesive floor strip are no longer used.
 
-A business-card-sized PCB — **50.8 × 88.9 mm, 0.8 mm FR4, ENIG, rounded corners** — that:
+## The 2D drawing
 
-- **Harvests** indoor light with **two** ANYSOLAR solar cells wired in parallel, each behind
-  its own blocking diode so a half-shadow on one can’t back-feed the other.
-- **Stores** energy in **four** series-parallel supercapacitors — **1 F at 5.5 V, ≈ 15 J** —
-  kept balanced by a dual SAB-MOSFET, and held to a safe voltage by a shunt clamp.
-- **Glows** by back-lighting a **“DRH” monogram** that’s cut into the front copper: a gold
-  ENIG field with the three letters opened to bare FR4. Four reverse-mounted amber LEDs on the
-  back fire up through the translucent substrate, so the letters themselves light up — and PWM
-  on the LED drives makes them breathe.
-- **Wakes** to a **tap.** A 3-axis accelerometer feels you pick the card up (or the enclosure
-  being tapped) and interrupts the MCU out of sleep — no button, no moving parts.
+`solar-glow-drh-v3_0-backshell-0p6b-brace-DRAWING.pdf` is current and matches the committed STEP
+(1.00 floor / 1.80 cavity / 0.60 board recess / 44.80 × 82.90 pitch / 3.55 overall).
+The old `v2_1` drawing is stale and must not be sent. The **STEP governs** all geometry; the drawing
+and the notes below flag the few dimensions that need tighter-than-standard control.
 
-The front face stays naked — solar cells and the glowing monogram exposed — and the dense work
-all lives on the back, ready for an optional machined-metal back-shell.
+## What to send PCBWay
 
-> **A note on lineage:** earlier revisions (REV J and before) were *generated from Python* —
-> geometry and Gerbers emitted by script, no layout tool in the loop. **v2.1 is a full KiCad
-> design** (schematic + board), continued through v3.0. The old generators are kept only as
-> history; the KiCad files are the source of truth.
+The **`...-0p6b-brace-Ti-max.step`** + the **`...-0p6b-brace-DRAWING.pdf`** + the callouts below.
+Material: **Titanium Gr5 (TC4)**.
 
----
+## Ordering instructions (PCBWay)
 
-## How it works
+Form settings on the CNC quote page (the on-screen selections override the drawing, so set these to match it):
 
-| Block | Part | Notes |
-|---|---|---|
-| MCU | **AVR64DD28** (28-VQFN) | TCA0 hardware PWM, I²C to the accel, charge/sleep logic; MVIO-capable |
-| Solar | **2× ANYSOLAR SM141K06TF** | monocrystalline indoor cells (Voc 4.15 V), in parallel — two panels ≈ 2× the harvest |
-| Blocking diodes | **2× onsemi MMSD301T1G** | Schottky, one per panel; isolates the cells *and* the supercaps |
-| Storage | **4× SCHURTER 3-153-438** (WS17) | 1 F / 2.75 V each, wired 2P2S → **1 F @ 5.5 V ≈ 15 J** on one balanced node |
-| Balancer | **ALD910025SALI** | dual SAB MOSFET — the low-leakage way to hold the series midpoint |
-| Rail clamp | **TI TLV431 + onsemi BCP53 PNP** | shunt clamp holds the rail **≤ ~3.47 V** so the accel stays inside its 3.6 V max |
-| LEDs | **4× ams OSRAM LA P47F** (amber) | reverse-mount; glow through the FR4 window, **150 Ω** ballast each |
-| LED master switch | **SW2** (solder-bridge) + **R12** | OFF / ON / TINY — TINY routes the LEDs through a 220 Ω ballast for a dim, long-runtime glow |
-| Motion | **ADI ADXL367** | 3-axis accel; tap / double-tap wakes the MCU via interrupts; 0.89 µA (swapped from LIS2DH12 on backorder) |
-| Light sense | **R5 / R6 divider → PD2** | VIN ÷ 2 off the *solar input* (not the rail) — tracks light directly; doubles as wake-on-light |
-| NFC | **NXP NT3H2211** (NTAG I²C plus 2K) | present from v3.0 — a contact **vCard** a phone taps to save; field-detect (FD, PA6) also wakes the glow — I²C `0x55`, shares the accel's bus; VCC **power-gated by `U6`** (`NFC_EN`/PA7, off by default) |
+- **Process:** CNC machining, 3-axis milling.
+- **Material:** Titanium → **Titanium Gr5 (TC4)**. **Color:** Silver (natural Ti). *(Bare metal — the shell ties to board GND through the four screws; do not anodize/plate.)*
+- **Units:** mm. **Quantity:** 1 (prototype).
+- **Technical drawing:** attach `...-0p6b-brace-DRAWING.pdf`; do not attach the stale v2.1 file.
+- **Threads / tapped holes: Yes** — `4× M2×0.4 tapped through, from the back face`.
+- **Tolerance: leave on standard / ISO 2768** — do **not** enable "Tighter tolerances required." That toggle trips an automated review gate that rejects the order with a templated "tighter tolerance not specified at position" message even though the drawing marks it. Marked callouts govern regardless of the toggle. Two dims are marked **±0.05**: **C1 cavity depth 1.80 ±0.05** (Section A-A) and **C3 mounting-hole pattern pitch 44.80 / 82.90 ±0.05** (plan). **C1 is the non-negotiable one.** Flatness C2 = 0.05 rides along as a form callout. Paste into the notes box: *"Two dimensions are marked ±0.05 and must be held as marked: cavity depth 1.80 ±0.05 (Section A-A), and mounting-hole pattern pitch 44.80 / 82.90 ±0.05 (plan). All other dimensions per ISO 2768-1 medium."*
+- **Surface finish: Bead blasting** (matte, uniform on the stepped back face) — **not Brushed.** The back face is stepped (recessed art field, raised frame and boss annuli), so a brushed grain cannot run continuously; bead-blast covers into the corners and gives better laser-mark contrast.
+- **Surface roughness:** 250 µin / 6.3 µm Ra (default).
+- **Finished appearance: Standard** for the first article.
+- **Inspection: Standard Inspection with Formal Report** (you want the measured cavity depth and floor thickness back). CMM-with-report if you also want flatness and hole position verified.
+- **Part marking:** none (rear branding/art is a later laser step).
+- **Product description:** DIY / Demonstration model.
 
-**Breakouts and features:** a **TC2030** Tag-Connect pad (`TC1`) for hands-free UPDI
-programming, a backup UPDI header (`J1`), a **5-pad bench strip** on the back east edge
-(`TP1` VIN + `JP1` GND/VS/SCL/SDA — bare SMD probe pads for bench power injection and an I²C
-tap; pinout in `solar-glow-drh-v2-hardware.md`), per-LED disable jumpers (`SB1–4`), a VDDIO2
-tie jumper (`SJ1`), and **four grounded M2 mounting holes** at the corners. (The v2-era
-`JP1`/`JP2` 2.54 mm breakout headers are gone; the `JP1` name is reused for the strip.)
-
-Full part numbers, pricing, and per-part datasheet links are in
-**`PCB/solar-glow-drh-v3_0-BOM.xlsx`** — the master BOM (v3.0): **U6 (TPS22918) and R14 (100 k `NFC_EN` pulldown) included**, the stale JP1/JP2 rows dropped (the `JP1` designator is reused in v3.0 for the bench pad strip — bare pads, no BOM part), and every passive except SJ1 converted to **0402** to match the board lands. Converted/added lines have prices blanked pending a fresh quote (U6 quoted: TPS22918DBVR $0.55 @ qty 1, DigiKey 2026-07-02). Lineage: v2.2 added the NFC parts (U5 / C8 / C9 / R13); the `v2 2` and older BOM files stay in the repo as history.
-
----
-
-## The board
-
-- **Two copper layers** on 0.8 mm FR4 (v3.0): **F.Cu** signal/parts and **B.Cu**. **GND is a
-  full-board B.Cu pour** (`GND_B` zone) with stitch straps, and **VS is a routed mesh on B** — the
-  4→2-layer conversion of v2.3, whose internal GND/VS *planes* moved onto the back copper. The
-  4-layer **v2.3** (F · In1 GND · In2 VS · B) is the committed fallback if the back-side trace
-  texture showing faintly on the naked front reads wrong.
-- **The glow window is a keepout on every layer.** The monogram cutout and the four LED
-  light-paths are voided through both layers so nothing — copper pour, trace, or via —
-  shadows the light between the rear LEDs and the front face. The rear soldermask is left
-  *open* over the window on purpose: bare ENIG reflects the LEDs’ light forward instead of
-  absorbing it.
-- **Rail discipline.** The supercap stack can sit near 5.5 V, but the accelerometer tops out at
-  3.6 V — so a TLV431-referenced PNP shunt clamp sits on the **VS rail** (after the blocking
-  diodes) and holds VS ≤ ~3.47 V, directly limiting what the accelerometer sees. Its sense
-  divider draws a standing microamp or two from the rail — small against the other always-on
-  loads, and the trade for regulating VS itself rather than the solar input.
-- **Power planes** carry the supercap charge/discharge currents; the four cells eat the better
-  part of the back, so the layout is geometry-bound and the planes earn their layers.
-
----
-
-## The open question — read this before building a batch
-
-The board is well-verified; the **energy budget is not.** A solar cell’s headline rating is a
-full-sun number, and indoor light delivers a small fraction of it, while four breathing LEDs
-average several milliamps. The two-panel harvest and the 15 J tank are sized to **harvest
-slowly and glow in bursts** — but that bet has never been put on a meter.
-
-What changed the math since the early notes: the rail is now **clamped to ~3.47 V** and the
-ballasts are **150 Ω**, so each LED peaks near **~9 mA** rather than the old estimate. Four
-on at once is a real load against an indoor harvest measured in fractions of a milliamp.
-
-**First move when boards arrive:** put the cells under your actual target lighting and measure
-**harvest current against LED draw** before you populate a full stack. That single number sizes
-the duty cycle, the feature set, and whether the always-on accelerometer earns its microamps.
-
----
-
-## Repository layout
+Paste into **Other special request**:
 
 ```
-solar-business-card/
-├── README.md                       # this file (canonical current-revision summary)
-├── PCB/                            # KiCad projects + fabrication BOM
-│   ├── solar-glow-drh-v3_0.kicad_pcb   # the board — v3.0, 2-layer (source of truth)
-│   ├── solar-glow-drh-v3_0.kicad_sch   # schematic (v3.0)
-│   ├── solar-glow-drh-v2_3.kicad_pcb   # 4-layer fallback — kept, not deleted
-│   ├── solar-glow-drh-v3_0-BOM.xlsx    # bill of materials — v3.0 master (U6 + R14; all-0402)
-│   ├── solar-glow-drh-v3_0-BOM-assembly.xlsx  # placed-parts BOM for PCBA (36 parts)
-│   └── README.md                       # order & build guide
-├── solar-glow-drh-v2-hardware.md   # as-built wiring & pin map (v2-era; v3.0 LED-map delta noted at top)
-├── solar-glow-drh-v2-mechanical.md # board mechanics, keepouts, access (v2-era; v3.0 hole/enclosure deltas at top)
-├── solar-glow-drh-design-notes.md  # design rationale, energy model, lineage (incl. the v3.0 chapter)
-├── firmware/                       # bare-metal C (AVR64DD28); register-verified, see firmware/README.md
-├── datasheets/                     # every component's datasheet
-├── docs/                           # renders and figures
-├── enclosure/                      # machined-titanium back-shell: CAD / STEP / STL / README (v3.0 + v2.1 kept)
-└── v0 prototype/                   # the original prototype, kept for posterity
+- Cavity floor is a uniform 1.00 mm, with one shallow relief pocket under U2 that
+  takes the local floor to 0.95 mm over a 7.8 x 5.4 mm area only. If you cannot
+  reliably hold 1.00 mm titanium over this ~48 x 86 mm pocket, advise the minimum
+  floor you can hold and we will re-issue the STEP.
+- No locator pillars: the resin H-brace registers by fitment (4 outboard rails +
+  component pockets + board press-fit). Cavity floor is a full 1.00 everywhere.
+- 4x M2 x 0.4 tapped through-holes, tapped from the back face. (M2 x 0.4 is a
+  standard coarse thread; please tap per this note rather than letting the 0.6 mm
+  minimum-pitch auto-checker reject it.)
+- Break all sharp edges ~0.1 mm (titanium).
 ```
 
----
-
-## Building the board
-
-The board is a KiCad project — open it, run DRC, and export the fab set:
-
-1. Open `solar-glow-drh-v3_0.kicad_pro` in **KiCad** (2026 file format).
-2. **Run DRC.** It comes back clean apart from the intentional exceptions catalogued in
-   `PCB/README.md` and `solar-glow-drh-design-notes.md` (the NFC coil `LA`↔`LB` short, the four
-   GND-tie mounting-hole/gold-frame contacts, the two plating-bus stubs crossing Edge.Cuts at
-   x=25.4, the illumination copper inside the glow window, and the benign `lib_footprint_issues`
-   plus the reserved `BTN` `track_dangling`). Fill zones (press **B**) before checking.
-3. **Plot Gerbers + drill** from KiCad's own Fabrication Outputs and order from **PCBWay**
-   (**2-layer**, 0.8 mm; selective hard gold + plating bus + resin-fill/cap per `PCB/README.md`).
-
-> The supercap land is the one thing to never get wrong. The WS17 cell solders to **flat pads
-> under its body** (the asymmetric P/N widths are the polarity key), **not** to the folded end
-> tabs — those are non-solderable mechanical locators. The footprint in this design is built to
-> the correct under-body land; don’t substitute an end-tab land.
+Expect the instant price to move: the thin floor routes this to manual engineering review, which is where the floor answer comes from.
 
 ---
 
-## Assembly order (when boards arrive)
+## CNC fabrication notes / drawing callouts
 
-1. **Validate the energy budget first** — harvest vs. LED draw under real lighting (above).
-2. **Reflow the SMD parts** — the QFN MCU and the LGA accelerometer need hot air / a hotplate;
-   the EP and the accel pad reflow to their planes.
-3. **Hand-solder last** — the solar cells (heat-sensitive: ≤ 260 °C / 2 s, no IPA), and set the
-   **SW2** bridge for OFF / ON / TINY.
-4. **Flash firmware** over UPDI — the Tag-Connect pad (`TC1`) is the no-header path; `J1` is the
-   backup header.
+### Title / process
 
----
+| Field | Value |
+|---|---|
+| Part | SOLAR-GLOW DRH v3.0 back-shell — 0.6 mm-board dumb box (single piece) |
+| Revision | v3.0 (0.6-board dumb box: 1.00 floor, 1.80 cavity, no ribs, no locator pillars) |
+| Material | **Titanium Gr5 (TC4) = Ti-6Al-4V Grade 5** (PCBWay stock) |
+| Process | 3-axis CNC milling, 2 setups (cavity face + back face) |
+| Finish | Bead-blast matte. Rear art laser-marked in the recessed field after finishing. |
+| Source model | `solar-glow-drh-v3_0-backshell-0p6b-brace-Ti-max.step` |
+| Units | mm |
 
-## Firmware
+### 1. Overall dimensions and datum
 
-A first implementation now lives in **`firmware/`** — bare-metal C, **verified at the register
-level** against the AVR64DD28 and ADXL367 datasheets but **not yet compiled against a real
-toolchain or run on hardware**. Its knobs, wake model, and power notes are in
-**`firmware/README.md`** (authoritative); the wiring it targets is in
-**`solar-glow-drh-v2-hardware.md`** (complete pin map, PORTMUX, the accel at I²C `0x1D`). Final
-duty-cycle and feature tuning stay **gated on the energy-budget measurement** below. In short,
-the board gives it:
+- Bounding box: **52.70 × 90.80 × 3.55 mm**.
+- Datum **Z0 = outer back face**. +Z is into the part toward the PCB.
+- Z stack from the back face:
+  - back frame and 4 boss annuli: **proud 0.15 mm** (to Z −0.15)
+  - recessed rear art field: at Z 0
+  - cavity floor: at **Z +1.00** (0.95 local under the U2 pocket)
+  - boss / lip tops (the PCB rest plane): **Z +2.80**
+  - PCB recess: Z +2.80 to +3.40 (receives the 0.60 mm board)
+- Wall 1.00 mm. **Asymmetric perimeter lip: W 2.5 / N 2.0 / S 2.0 / E 1.0 mm (E widens to 2.5 at the N/S ends).** Exterior back border is **uniform 2.0 on all 4 sides** (independent of the lip).** Back-frame step 0.15 mm. **No internal ribs or posts.**
 
-- **LED breathing** — the four LEDs sink into **PA0–PA3 = TCA0 WO0–WO3**, so split-mode PWM
-  drives all four as independent 8-bit channels (the 150 Ω ballast sets the peak; PWM sets the
-  average, so you trim brightness *below* that ceiling).
-- **Tap-to-wake** — the accelerometer’s two interrupts land on **PF1 / PF0**; configure
-  tap / double-tap and let it pull the MCU out of sleep.
-- **NFC contact tag** — `U5` (NXP NT3H2211, on the board from v3.0) carries a **vCard** a phone reads on a
-  tap to save the contact (RF-powered, so it reads with the cap flat), and its **field-detect**
-  line wakes the same glow. The tag has no sleep state and would draw **~195 µA** continuously — the
-  card's largest idle load — so firmware **power-gates** its VCC through a load switch (`U6`) on
-  **NFC_EN (PA7)**, held **off by default** and raised only around an I²C access; the vCard read and
-  the FD-wake both run on the phone's field power, so they still work with the tag's VCC off. Shares
-  the I²C bus with the accel (`0x55` vs `0x1D`). See `firmware/README.md` → *NFC contact card*.
-- **Light sensing** — the divider taps the **solar input** (VIN ÷ 2) into **PD2** (AIN2), so it
-  reads light directly — ~0 V dark, rising under light; firmware adapts the glow to available
-  light and can also read **VDD/10** and the internal temp sensor.
-- **Wake-on-light** — the card can also wake when light appears, with no tap. The implemented
-  path is an **RTC-timed ADC poll** in deep Power-Down (sample PD2/AIN2 every ~1–2 s, glow on a
-  dark→light rise). The tempting *instant* AC0-comparator version was checked against the
-  datasheet and found **non-viable on this part** — the AC interrupt doesn't update with the
-  peripheral clock stopped, and the AC isn't a Standby/Power-Down wake source, so it would never
-  fire. Instant response isn't lost: the accelerometer interrupt wakes from Power-Down, and
-  picking the card up to carry it into the light *is* that motion. (Standing current is ~2.7 µA total — the
-  always-on accelerometer (ADXL367, ~0.89 µA) no longer dominates it, and neither the poll nor the NFC tag do, the latter being
-  power-gated off by default — see `firmware/README.md`, and the corrected
-  `solar-glow-drh-v2-hardware.md` §6.)
-- **Low-power housekeeping** — `VREGCTRL.PMODE = AUTO` for sub-µA power-down; RTC/PIT off the
-  internal ULP oscillator (no crystal); an EEPROM “times-activated” counter that survives a
-  full supercap drain; and the core **IDLE-sleeps through the breathing glow** while TCA0 keeps
-  the PWM running, rather than busy-waiting. (An autonomous CCL + EVSYS light-wake is a possible
-  v-next, but isn't what the current firmware does.)
+### 2. Critical dimensions — flag these for tighter control
 
-Still open (what the bench measurement unlocks): final breathing-curve and tap-gesture tuning,
-charge / brown-out management around the supercap bank, and the duty-cycle adaptation the
-harvest number sizes.
+Default everything to ISO 2768-1 general. Control **only** the items below.
 
----
+| # | Feature | Nominal | Requested tolerance | Why |
+|---|---|---|---|---|
+| C1 | Cavity depth (boss-top plane → cavity floor) | **1.80 mm** | **±0.05** | Range 1.75–1.85. Air gap over the four 1.70 mm WS17 supercaps (datasheet **max** height): 0.05–0.15 mm. Must not be under 1.70 or the floor contacts the caps. |
+| C2 | PCB-rest plane flatness (lip + 4 corner bosses, coplanar at Z +2.80) | — | flatness **0.05 mm** | Board must seat flat so the screws clamp evenly. |
+| C3 | 4× mounting-hole pattern (pitch, linear) | 44.80 × 82.90 mm | **±0.05** | Must align with PCB mounts MH1–4 (v3.0 positions). |
+| C4 | Mounting-hole diameter (tapped) | **M2** (tap-drill Ø1.6, through) | standard | Thread fit for the M2 screws. |
 
-## Enclosure (parked)
+> **Cavity note.** The cavity is **cap-limited**: the four WS17 supercaps set it. The SCHURTER SCPC datasheet (Case WS17) gives height **max 1.7 mm** and body 28.5 +0.5/−0.0 long, so the general cavity is **1.80 mm** (0.10 nominal air; worst-case 1.75 − 1.70 = 0.05, non-contact). U2 (SOIC-8, 1.75 mm) is the single tallest part but sits over the local relief pocket (note 7), which drops the floor 0.05 mm there so U2 keeps a 0.10 mm air gap. The freed 0.05 mm went into the floor (0.95 → 1.00).
 
-An optional back-only **machined-titanium** shell hugs the populated rear; the front stays naked.
-CAD, STEP, STL, fab notes and a dimensioned drawing are in `enclosure/`, on ice until the board is
-validated — see `enclosure/README.md`.
+### 3. Thin-wall advisory (read before quoting)
 
-![Titanium back-shell (Ti-max) — design render, not yet built](docs/enclosure-hero.png)
+The cavity floor is a **uniform 1.00 mm** (0.95 mm over the small U2 relief pocket only). That is
+still below the titanium min-wall guidance (~1.0 mm) but a healthy step above the earlier 0.55/0.75.
+The floor no longer has ribs behind it (the resin brace carries center support in service, but is
+not present during machining). Please proceed one of two ways and note which on the quote:
 
-The decisions that matter once it’s cut: **titanium (Ti-6Al-4V Grade 5)**, **3-axis CNC-milled** by
-PCBWay, **bead-blast** finish; the general cavity is **cap-limited to 1.85 mm** by the four 1.70 mm
-supercaps (U2 at 1.75 mm sits over a small **relief pocket** that drops the local floor 0.05 mm so it
-still clears), the floor runs to **0.75 mm** of engraving stock backed by ribs, and the overall height
-is **3.55 mm**. The four bosses sit on the **v3.0 hole pattern** (concentric with the r3.0 corner
-fillets), the internal braces are **removed**, and retention is **four corner M2 screws**, not a press
-fit. The electrical gotcha — the screws tie the metal body to board GND, so the enclosed variant
-**drops the edge castellations** (or adds a die-cut Kapton layer) so nothing shorts to the grounded
-shell, and the **accelerometer tap is the actuator** (cap-touch dies behind a grounded plate). The
-dimensioned drawing is mid-regeneration for v3.0 — see `enclosure/README.md`.
+- **(A)** Machine the uniform 1.00 mm floor **as-is**; or
+- **(B)** If you cannot reliably hold 1.00 mm, advise the **minimum floor you will hold** in Ti-6Al-4V for this ~48 × 86 mm pocket, and we will re-issue the model.
 
----
+### 4. Brace registration (no locator pillars)
 
-## Cost
+- **Retired.** The resin H-brace registers to this shell by **fitment** — its four outboard rails run into the cavity beside the supercaps, the component pockets key it to the board, and the board press-fits into the recess. No pillars, no recesses, no locating holes; the cavity floor is a full **1.00 mm** everywhere.
 
-- **Per board ≈ $100** at quantity one, and the **four supercaps are the dominant line** —
-  well over half the BOM. This is a showpiece, not a hand-out-by-the-hundred card.
-- The energy tank is where the money goes; everything else is comparatively cheap.
+### 5. Threads / tapped holes
+
+- 4× **M2** tapped, **through-holes**, drilled Ø1.6 then tapped, from the **back face**. Engagement ~2.2 mm.
+- M2 coarse pitch is 0.4 mm, below the 0.6 mm minimum-pitch gate on the quote form — tap per this note.
+- Bosses (r2.60) sit a uniform 0.40 mm off the cavity corner wall (a sub-Ø2.0-cutter cusp that fuses into the corner).
+- Customer-supplied fasteners: 4× **brass M2 × 3 mm slotted cheese head**, head Ø3.8 (DIN 84). Tip seats flush in the back spotface (note 6).
+
+### 6. Spotfaces
+
+- 4× back-face spotface **Ø3.0 mm**, concentric with the mounting holes, depth ~0.2 mm (screw tip seats flush below the proud boss annulus). Modeled.
+
+### 7. U2 relief pocket
+
+- **7.8 × 5.4 mm** in the cavity floor, centered at board **(28.5, 37.0)**, **0.05 mm deep** (local floor 0.95), R1.0 corners. U2 (1.75) keeps 0.10 mm air. General floor stays 1.00. Modeled.
+
+### 8. Press fit — do NOT rely on it
+
+PCB recess flats are modeled 0.05 mm interference (below CNC tolerance) — treat as a **slip fit**; the four screws retain and clamp.
+
+### 9. Internal radii and tooling
+
+Internal concave junctions are modeled **sharp**; a round tool leaves its own fillet (standard for a milled pocket). The whole solid is analytic (planes, cylinders, cones) — verified 167 analytic faces, zero spline/Bezier. Rough the cavity with a Ø3–4 mm tool; finish corners/walls with a Ø2.0.
+
+### 10. Edge break / deburr (note, do not model)
+
+**Break all sharp edges ~0.1 mm (titanium).** All exposed edges are broken 0.10 × 45°, meant to be felt but not seen (modeled). The named breaks called out on Section A-A / Detail B are: the outer rim (top and bottom), the recess mouth around the board, the inner (cavity-side) lip edge, the proud back-frame bottom edges, and the boss/spotface bottom edges. The concave seat and junction corners are left sharp in the model and take the tool's own radius. Deburr all other exposed edges and hole exits.
+
+### 11. Inspection
+
+- Report C1–C3 on the FAI. Confirm the achieved cavity floor thickness (the at-risk dimension).
 
 ---
 
-*© 2026 Devin R. Horowitz. Released under the [MIT License](LICENSE).*
+## Board-side electrical caveats (grounded shell)
+
+The four M2 screws thread into the titanium body, and the PCB mount pads (MH1–4) are **GND** and
+overlap the front-side gold plating frame, so the shell is tied to board GND through the screws. Two
+consequences the board must respect in an enclosed build:
+
+- **Edge castellations** (any VS/SDA/SCL at the board rim) would short against the grounded press-fit walls — drop them or add a die-cut ~0.05 mm Kapton isolation layer.
+- **Capacitive touch is dead** behind a grounded metal plate — the actuator is the accelerometer tap, not a self-cap button.
+
+## Design lineage
+
+- **v2.1 shell** (`solar-glow-drh-v2_1-backshell-*`): 0.55 floor, 1.90 cavity, brace posts, old 3.5 mm hole inset. Matches the old PCB hole positions. **Superseded.**
+- **v3.0 0.75-floor ribbed shell** (interim, not in this folder): floor pushed to 0.75, braces removed, two cap-gap ribs added, U2 pocket added, holes re-symmetrized to the v3.0 pattern. **Superseded** by the dumb box.
+- **v3.0 0.6-board dumb box** (this README, `...-0p6b-brace-*`): 0.60 board frees the floor to 1.00 (cavity 1.80); ribs and locator pillars removed; the resin H-brace (`brace/`) carries center support and registers by fitment, and the window/EMI features; reflector frame and floor tape dropped. Overall stays 3.55.
+
+---
+
+*Part of SOLAR-GLOW · DRH. © 2026 Devin R. Horowitz. MIT License (see `../LICENSE`).*
