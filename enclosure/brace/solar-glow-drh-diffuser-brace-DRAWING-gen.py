@@ -8,10 +8,10 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle, Circle, Polygon as MplPoly
 
 # ---- brace geometry (mirrors solar-glow-drh-diffuser-brace-cad.py) ----
-BX0,BY0,BX1,BY1 = 2.0,31.6,49.0,57.4          # middle band (fills the cap-gap band)
-RW = (2.00,15.0,6.75,74.0)                     # west rail (H-brace leg: backs PV N-tabs, 0.25 W of caps)
-RE = (44.05,15.0,49.0,74.0)                    # east rail (backs PV P-tabs, 0.25 E of caps)
-YT,YB = 15.0,74.0                              # full H y-extent (rails run tab to tab)
+BX0,BY0,BX1,BY1 = 2.60,31.6,49.70,57.4        # middle band, full width (W/E walls contacted)
+RW = (2.60,2.10,6.75,86.80)                    # west rail, full length S->N wall; backs PV N-tabs, 0.25 W of caps
+RE = (44.05,2.10,49.70,86.80)                  # east rail, full length; east edge STEPPED (x48.20 ends / x49.70 mid) to follow the wall
+YT,YB = 2.10,86.80                             # rails run S wall to N wall (contact)
 GAP = 1.80                                     # brace thickness (fills the 1.80 cavity)
 FER = (36.9,31.5,48.9,57.5)                    # ferrite 12 wide (x, CRITICAL) x 26 long (y, forgiving)
 FER_CLR = 0.20; FER_DEPTH = 0.33               # channel walls + pocket depth
@@ -38,12 +38,18 @@ def leader(xp,yp,xt,yt,text,ha="left",fs=6.0,va="center"):
     ax.text(xt+(0.8 if ha=='left' else -0.8),yt,text,ha=ha,va=va,fontsize=fs,color=INK)
 
 # ===================== PLAN (board-facing face) =====================
-S=2.5; Px,Pbot=40,113
+S=1.7; Px,Pbot=40,113
 X=lambda bx:Px+(bx-BX0)*S
 Y=lambda by:Pbot+(YB-by)*S          # flip: y15 (top rails / PV N+P tabs) high on the plan, y74 low
-# H outline: middle band + two outboard rails (traced clockwise)
-Hpts=[(2,15),(6.75,15),(6.75,31.6),(44.05,31.6),(44.05,15),(49,15),(49,74),(44.05,74),(44.05,57.4),(6.75,57.4),(6.75,74),(2,74)]
-Hxy=[(X(a),Y(b)) for a,b in Hpts]
+# outline: band + two full-length rails (east edge stepped), 4 corner-boss reliefs cut clear
+from shapely.geometry import box as _sbox, Point as _spt
+from shapely.ops import unary_union as _uu
+_FP=[(BX0,BY0,BX1,BY1),RW,(44.05,2.10,48.20,10.0),(44.05,10.0,49.70,72.0),(44.05,72.0,48.20,86.80)]
+_out=_uu([_sbox(a,b,c,d) for a,b,c,d in _FP])
+for _bx,_by in [(3,3),(47.8,3),(3,85.9),(47.8,85.9)]:
+    _out=_out.difference(_spt(_bx,_by).buffer(3.0,resolution=32))
+_g=max(_out.geoms,key=lambda q:q.area) if _out.geom_type=="MultiPolygon" else _out
+Hxy=[(X(x),Y(y)) for x,y in _g.exterior.coords]
 ax.add_patch(MplPoly(Hxy,closed=True,fc=HATCH,ec="none",alpha=0.5,zorder=0))
 ax.add_patch(MplPoly(Hxy,closed=True,fill=False,ec=INK,lw=1.1,zorder=3))
 # ferrite OPEN CHANNEL (band; walled on the 12 width, open both y-ends) + the 12x26 ferrite extent
@@ -62,10 +68,10 @@ for tx,ty in [(4.3,17.0),(46.5,17.0),(4.3,71.9),(46.5,71.9)]:
     ax.plot(X(tx),Y(ty),marker="*",ms=8,color="#d23b2a",zorder=6)
 ax.text(X(4.4),Y(23.5),"W\nRAIL",ha="center",va="center",fontsize=4.4,color=INK)
 ax.text(X(46.5),Y(23.5),"E\nRAIL",ha="center",va="center",fontsize=4.4,color=INK)
-ax.text(X(25.4),272,"BOARD-FACING FACE   SCALE 2.5:1",ha="center",fontsize=8.2,fontweight="bold",color=INK)
+ax.text(X(25.4),272,"BOARD-FACING FACE   SCALE 1.7:1",ha="center",fontsize=8.2,fontweight="bold",color=INK)
 # plan dims + leaders
-dimh(X(BX0),X(BX1),Y(YB)-3.0,"47.00",fs=7,side=-1)
-dimv(Y(YT),Y(YB),X(BX0)-3.5,"59.00",fs=7,side=1)
+dimh(X(BX0),X(BX1),Y(YB)-3.0,"47.10",fs=7,side=-1)
+dimv(Y(YT),Y(YB),X(BX0)-3.5,"84.70",fs=7,side=1)
 leader(X((FER[0]+FER[2])/2),Y(52.0),X(BX1)+9,Y(52.0)+3,"12.0 WIDE\n(CRITICAL)",ha="left",fs=5.0)
 leader(X(46.5),Y(71.9),X(BX1)+9,Y(71.9)-3,"RAILS BACK THE 4\nPANEL SOLDER TABS\n(NOTE 4)",ha="left",fs=5.0)
 
@@ -94,8 +100,8 @@ notes=[
  "    (WEAKLY CONDUCTIVE): THE BRACE RESTS ON GND / VS / SIGNAL COPPER, SO A DIELECTRIC IS REQUIRED. WHITE ALSO DRIVES THE WINDOW BACKING (NOTE 6).",
  "3. FIT: PRINT ~0.1 PROUD IN HEIGHT AND SAND THE FLAT BOTTOM (DATUM) DOWN TO A ZERO-AIR FIT IN THE 1.80 CAVITY. ALL POCKETS ARE ON THE TOP FACE, SO THE",
  "    BOTTOM LAPS FLAT ON GLASS WITHOUT TOUCHING THEM. DO NOT SAND THE TOP (IT SETS THE POCKET DEPTHS).",
- "4. NO LOCATOR PILLARS / RECESSES. THE BRACE REGISTERS TO THE SHELL BY FITMENT: ITS FOUR OUTBOARD RAILS RUN INTO THE CAVITY BESIDE THE SUPERCAPS, THE COMPONENT",
- "    POCKETS KEY IT TO THE BOARD, AND THE BOARD PRESS-FITS INTO THE RECESS. THE RAILS (W x2.0-6.75 / E x44.05-49.0, y15-74) ALSO BACK THE 4 PANEL SOLDER TABS.",
+ "4. PRECISION FIT, NO RATTLE: THE OUTER EDGES CONTACT ALL FOUR FLAT CAVITY WALLS AT ~0.05 (W x2.60 / S y2.10 / N y86.80; E STEPPED x49.70 MID, x48.20 ENDS). THE FOUR",
+ "    CORNER BOSSES (r2.6) + ROUNDED CORNERS ARE RELIEVED (NEED NOT FIT). RAILS RUN S->N WALL OUTBOARD OF THE CAPS + BACK THE 4 PANEL SOLDER TABS; POCKETS KEY TO THE BOARD.",
  "5. FERRITE CHANNEL (OVER THE NFC COIL): OPEN-ENDED CHANNEL, WALLED ON THE 12 WIDTH (CRITICAL - EDGE-LIMITED), OPEN AT BOTH Y-ENDS, 0.33 DEEP.",
  "    FERRITE (Wurth WE-FSFS 364006, NOMINAL 12 \u00d7 26 mm, EVEN ON THE 2mm SCORE GRID) IS PSA'd IN; LENGTH IS FORGIVING AND MAY OVERHANG THE ENDS SLIGHTLY.",
  "6. WINDOW = LED-HUG DIFFUSER BACKING: SOLID WHITE RESIN FILLS THE MONOGRAM-WINDOW FOOTPRINT BEHIND THE FR4, MINUS THE TIGHT D2-D5 LED POCKETS.",
@@ -117,7 +123,7 @@ ax.text(tb_x+tb_w-3,tb_y+27.5,"REV  B",ha="right",fontsize=6.4,va="center",color
 ax.text(tb_x+3,tb_y+18.5,"MATERIAL  TOUGH WHITE SLA (opaque, non-conductive)",fontsize=5.6,va="center",color=INK)
 ax.text(tb_x+3,tb_y+10.5,"UNITS  mm",fontsize=6.2,va="center",color=INK)
 ax.text(tb_x+63,tb_y+10.5,"SCALE  AS NOTED",fontsize=6.2,va="center",color=INK)
-ax.text(tb_x+3,tb_y+3.7,"ENVELOPE 47.0 x 59.0 x 1.80   process: SLA print",fontsize=5.7,va="center",color=INK)
+ax.text(tb_x+3,tb_y+3.7,"ENVELOPE 47.1 x 84.7 x 1.80   process: SLA print",fontsize=5.7,va="center",color=INK)
 ax.text(tb_x+tb_w-3,tb_y+3.7,"SHEET 1/1",ha="right",fontsize=6.2,va="center",color=INK)
 
 fig.savefig("/mnt/user-data/outputs/solar-glow-drh-diffuser-brace-DRAWING.pdf",facecolor="white")

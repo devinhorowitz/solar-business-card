@@ -55,14 +55,16 @@ PCB = "/home/claude/repo4/sbc/PCB/solar-glow-drh-v3_0.kicad_pcb"
 OUT = "/mnt/user-data/outputs/"
 BASE = "solar-glow-drh-diffuser-brace"
 
-BX0, BX1, BY0, BY1 = 2.0, 49.0, 31.6, 57.4
-# H-BRACE: middle band (BX/BY) + two outboard rails running out to the panel solder tabs (y15-74). Downward
-# force on a cell now lands cell -> board -> brace -> Ti instead of flexing the 0.6mm laminate. Rails sit OUTBOARD
-# of the supercap bodies (SC1/SC3 x7.0-24.0, SC2/SC4 x26.8-43.8) with ~0.25mm clearance, backing the Nt/Pt tabs
-# that have no cap behind them; the inboard N/P pads sit over the caps (already near-backed at 0.1mm).
-RAIL_W = (2.00, 15.0, 6.75, 74.0)    # west rail x0,y0,x1,y1  (0.25 W of SC1/SC3 at x7.0)
-RAIL_E = (44.05, 15.0, 49.0, 74.0)   # east rail              (0.25 E of SC2/SC4 at x43.8)
-FP = [(BX0, BY0, BX1, BY1), RAIL_W, RAIL_E]
+BX0, BX1, BY0, BY1 = 2.60, 49.70, 31.6, 57.4  # band fills the SC gap (y31.15-57.75) full width; W edge x2.60 + E edge x49.70 CONTACT the flat walls (x2.55 / x49.75) at ~0.05mm
+# H-BRACE, PRECISION FIT: middle band + two outboard rails, sized so all four FLAT cavity walls are CONTACTED
+# (~0.05mm) for a no-rattle fit; the four corner bosses (r2.6) + rounded corners are RELIEVED (need not fit).
+# Rails run the FULL length (y2.10->86.80, S wall to N wall) OUTBOARD of the supercaps (SC1/SC3 x7-24, SC2/SC4
+# x26.8-43.8, 0.25mm gap), so they also back the Nt/Pt panel tabs. Band fills the SC gap (y31.15-57.75) full width.
+RAIL_W = (2.60, 2.10, 6.75, 86.80)   # west rail: x0 2.60 CONTACTS the W wall (x2.55); runs S->N wall (y2.10-86.80); x1 0.25 W of SC1/SC3
+RAIL_E_S = (44.05, 2.10, 48.20, 10.0)  # east rail S: widened-lip band (y0-10, wall x48.25) -> x48.20 CONTACT
+RAIL_E_M = (44.05, 10.0, 49.70, 72.0)  # east rail MID: pinched band (y10-72, wall x49.75) -> x49.70 CONTACT
+RAIL_E_N = (44.05, 72.0, 48.20, 86.80) # east rail N: widened-lip band (y72-88.9, wall x48.25) -> x48.20 CONTACT
+FP = [(BX0, BY0, BX1, BY1), RAIL_W, RAIL_E_S, RAIL_E_M, RAIL_E_N]
 def in_fp(x0,x1,y0,y1): return any(not (x1<=r[0] or x0>=r[2] or y1<=r[1] or y0>=r[3]) for r in FP)
 GAP   = 1.80
 CLR   = 0.25
@@ -136,6 +138,10 @@ brace = None                                   # H footprint = band + two rails 
 for _rx0,_ry0,_rx1,_ry1 in FP:
     _b = cq.Workplane("XY").box(_rx1-_rx0,_ry1-_ry0,GAP,centered=(False,False,False)).translate((wx(_rx0),wy(_ry0),0))
     brace = _b if brace is None else brace.union(_b)
+# relieve the 4 corner bosses (r2.6) + rounded cavity corners: the brace need not fit them, only the flat walls.
+BOSS_RELIEF=[(3.0,3.0),(47.8,3.0),(3.0,85.9),(47.8,85.9)]
+for _bx,_by in BOSS_RELIEF:
+    brace = brace.cut(cq.Workplane("XY").workplane(offset=-0.1).moveTo(wx(_bx),wy(_by)).circle(3.0).extrude(GAP+0.2))
 cut_log=[]; pk=[]
 for ref,x0,x1,y0,y1 in comps:
     h=part_height(ref)
