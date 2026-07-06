@@ -40,6 +40,7 @@ rounded corners are **relieved** (cut clear — the brace need not fit them). It
 - **Corner bosses relieved.** A circular relief (r3.0) at each of the four M2 bosses (r2.6) clears the boss **and** the rounded cavity corner; the brace does not seat on them, only on the flat walls.
 - **Rails run the full length (y2.10–86.80)** outboard of the supercaps (SC1/SC3 x7–24, SC2/SC4 x26.8–43.8, 0.25 mm gap). The caps sit in the two open bays; the rails back the four PV solder tabs.
 - **Band fills the cap gap** (y31.15–57.75), full width x2.60–49.70, carrying the window backing and the ferrite channel.
+- **Corners relieved to the as-milled radius.** The shell is milled, so its internal concave corners (the 4 boss-to-wall junctions and the 2 east pinch/widen steps) carry the finisher's R1.0 radius, which the sharp STEP does not show. The brace footprint is clipped to the tool-reachable cavity, backing each of those corners off by R1.0 so it clears the real metal while the flat-wall contact stays at 0.05 mm.
 
 ## Key features
 

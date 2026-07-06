@@ -142,6 +142,24 @@ for _rx0,_ry0,_rx1,_ry1 in FP:
 BOSS_RELIEF=[(3.0,3.0),(47.8,3.0),(3.0,85.9),(47.8,85.9)]
 for _bx,_by in BOSS_RELIEF:
     brace = brace.cut(cq.Workplane("XY").workplane(offset=-0.1).moveTo(wx(_bx),wy(_by)).circle(3.0).extrude(GAP+0.2))
+# ---- DFM: back every INTERNAL concave corner off by the finisher radius (Ø2.0 finisher -> R1.0) so the
+#      brace clears what the mill actually leaves. The shell STEP stays analytic-sharp (PCBWay needs that);
+#      R1.0 is its drawing spec. Concave corners = 4 boss-wall junctions + the 2 east pinch/widen steps.
+#      Flat-wall contact (0.05) is preserved -- only the corners relieve. as-milled = tool-reachable = the
+#      sharp cavity void morphologically OPENED by the tool radius; brace footprint = that, inset by 0.05. ----
+from shapely.geometry import box as _bx2, Point as _pt2
+_TOOLR, _WCLR = 1.0, 0.05
+_x0,_y0,_x1,_y1,_ir = 2.55,2.05,49.75,86.85,1.45
+_cav=_bx2(_x0+_ir,_y0,_x1-_ir,_y1).union(_bx2(_x0,_y0+_ir,_x1,_y1-_ir))
+for _cx,_cy in [(_x0+_ir,_y0+_ir),(_x1-_ir,_y0+_ir),(_x0+_ir,_y1-_ir),(_x1-_ir,_y1-_ir)]:
+    _cav=_cav.union(_pt2(_cx,_cy).buffer(_ir,resolution=48))
+_cav=_cav.difference(_bx2(48.25,_y0,49.75,10.0)).difference(_bx2(48.25,72.0,49.75,_y1))   # east widened-lip bands (wall x48.25)
+for _bx,_by in BOSS_RELIEF: _cav=_cav.difference(_pt2(_bx,_by).buffer(2.60,resolution=64))  # boss bumps (r2.6)
+_milled=_cav.buffer(-_TOOLR,join_style=1,resolution=48).buffer(_TOOLR,join_style=1,resolution=48)
+_fp=_milled.buffer(-_WCLR,join_style=1,resolution=48)
+_fp=max(_fp.geoms,key=lambda g:g.area) if _fp.geom_type=="MultiPolygon" else _fp
+_clip=cq.Workplane("XY").polyline([(wx(x),wy(y)) for x,y in list(_fp.exterior.coords)]).close().extrude(GAP+0.4).translate((0,0,-0.2))
+brace=brace.intersect(_clip)
 cut_log=[]; pk=[]
 for ref,x0,x1,y0,y1 in comps:
     h=part_height(ref)
