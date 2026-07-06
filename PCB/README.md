@@ -324,7 +324,7 @@ and the glow-window mask staying open (Step 3) — a tented window kills the opt
    > **Programming caution:** `NFC_EN` (PA7) now has a **100 kΩ pulldown (`R14`)** — U6
    > defaults hard-off while PA7 floats during reset / UPDI. Still drive PA7 low early in
    > init as belt-and-suspenders. The **U6 pin-map check is done** — TI SLVSD76C
-   > (`../datasheets/tps22918.pdf`; the -Q1 doc in the repo matches identically) showed the symbol had **VIN/VOUT and GND/QOD
+   > (`../datasheets/U6  TPS22918DBVR  $0.55.pdf`; the -Q1 twin matches identically) showed the symbol had **VIN/VOUT and GND/QOD
    > transposed**; the board was **fixed 2026-07-02** (pads renetted to TI truth, schematic
    > pin numbers corrected, local copper reworked). Details in
    > `../solar-glow-drh-design-notes.md`, U6 pin-map addendum.

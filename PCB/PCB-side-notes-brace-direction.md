@@ -161,7 +161,7 @@ for tap-range; with the ferrite, every option approaches bare-card.
   B.Cu — only the ~30 mm F.Cu bridge moves 0.2 mm closer. Sub-1 % inductance effect. No new
   retune burden beyond the parked bench item.
 - **TC2030 leg retention at 0.6 mm — verify.** The legged programming cable latches through
-  the board; the repo TC2030-MCP.pdf is silent on minimum board thickness. Confirm against
+  the board; the repo `TC1  Tag-Connect TC2030-MCP  $0.pdf` is silent on minimum board thickness. Confirm against
   Tag-Connect's footprint documentation (or bench) before the thickness locks. PCB side
   flagged, either side can close it.
 - **Reflow carrier** at 0.6 mm: acknowledged as a PCB-side/order item.
