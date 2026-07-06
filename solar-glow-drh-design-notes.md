@@ -17,7 +17,7 @@ are v2-era; their v3.0 deltas are banner-noted at their tops.)
 3.5 × 3.5 mm pads on a diagonal (36.5 × 16 pattern, centres ±16.5 / ±6.25) that land on the cell's
 folded **end tabs**. Those tabs are coated, **non-solderable** mechanical locators, so a board built
 to that land makes **zero electrical contact**. The root cause: the datasheet's single generic
-"Soldering pads to Case WS10/13/17" diagram (`datasheets/typ_SCPC-2.pdf`) was misread as the WS17
+"Soldering pads to Case WS10/13/17" diagram (`datasheets/SC1-SC4  SCHURTER 3-153-438  $15.48.pdf`) was misread as the WS17
 land.
 
 **The correct land (LOCKED).** The real solderable terminals are flat pads **under the body**:
@@ -406,11 +406,9 @@ corners, and the **same BOM**. It is the current board; **v2.3 (4-layer) is the 
 ## Addendum — U6 pin-map defect + fix (2026-07-02)
 
 **The check that had been open since U6 landed is closed, and it caught a fabrication-fatal
-defect.** Devin committed both TI datasheet variants: **SLVSD76C** (`datasheets/tps22918.pdf` —
-TPS22918 Rev C, the doc for the ordered `TPS22918DBVR`) and **SLVSCZ8B**
-(`datasheets/tps22918-q1.pdf` — the -Q1 automotive twin). Pin tables and every §6.5 number
-compared below are **identical** across the two, so SLVSD76C is the citation of record and
-the -Q1 doc stays as a cross-check. The DBV pin table reads: **1 = VIN, 2 = GND, 3 = ON, 4 = CT, 5 = QOD, 6 = VOUT.** The board's
+defect.** The citation of record is TI **SLVSD76C** (`datasheets/U6  TPS22918DBVR  $0.55.pdf` —
+TPS22918 Rev C, the doc for the ordered `TPS22918DBVR`). The **SLVSCZ8B** -Q1 automotive twin has an
+identical pin table and every §6.5 number (compared and verified at the time); it is not kept in the repo. The DBV pin table reads: **1 = VIN, 2 = GND, 3 = ON, 4 = CT, 5 = QOD, 6 = VOUT.** The board's
 symbol had **1 = VOUT, 2 = QOD, 5 = GND, 6 = VIN** — VIN/VOUT and GND/QOD transposed across
 the package; only ON (3) and CT (4) were right. As routed, the chip would have had **no
 ground** and VS driven into VOUT. Two design choices survived the check unchanged: **CT may

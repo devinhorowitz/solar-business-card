@@ -21,8 +21,8 @@ holds `NFC_EN` low whenever PA7 tristates (UPDI, reset, brown-out). All of it is
 `solar-glow-drh-v3_0.kicad_pcb`, and the NFC net wiring below has been **verified off the board
 copper**: FD→PA6 ✓, `NFC_EN`→U6.ON ✓, `U5` Vcc→`VNFC` = U6.VOUT ✓, `R13`→VS (the always-on
 rail, not the switched one) ✓, `R14` `NFC_EN`→GND ✓. The **U6 pin map is now verified against TI SLVSD76C (TPS22918 Rev C, committed at
-`datasheets/tps22918.pdf` — the doc for the ordered DBVR part; the -Q1 doc SLVSCZ8B, also in
-the repo, matches it identically)** — and the check caught a real defect: the symbol had
+`datasheets/U6  TPS22918DBVR  $0.55.pdf` — the doc for the ordered DBVR part; the -Q1 automotive
+twin SLVSCZ8B has an identical pin table)** — and the check caught a real defect: the symbol had
 **VIN/VOUT and GND/QOD transposed** (board said 1=VOUT, 2=QOD, 5=GND, 6=VIN; only ON=3 and
 CT=4 were right). As routed it would have left U6 with no ground and fed VS into VOUT.
 **Fixed on the board 2026-07-02**: pads renetted to TI truth (1=VIN, 2=GND, 3=ON,
