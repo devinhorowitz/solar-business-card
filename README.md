@@ -8,7 +8,7 @@ a supercapacitor bank that holds the charge.
 ![SOLAR-GLOW · DRH — front and back, gold ENIG on black soldermask](https://github.com/devinhorowitz/solar-business-card/blob/main/Generated/docs/solar-glow-drh-v3_0-top.png)
 
 > **Status: v3.0 — fully routed, audit-clean. Not yet fabbed.**
-> Two-layer, 0.8 mm FR4, bound for PCBWay, with the 4-layer **v2.3** kept as the committed fallback.
+> Two-layer, 0.8 mm FR4, bound for PCBWay; the 4-layer **v2.3** is the fallback design, kept in git history (not the working tree).
 > The one thing standing between here and a build is the **energy budget** — harvest vs. draw under
 > real indoor light has never been measured. See *“The open question.”*
 
@@ -16,7 +16,7 @@ a supercapacitor bank that holds the charge.
 
 | What | Current | Notes / fallback |
 |---|---|---|
-| **PCB** | **v3.0 — 2-layer** (F / B) | GND = full-board B.Cu pour; VS = routed B mesh. **v2.3 (4-layer: F / In1 GND / In2 VS / B) is the committed fallback.** v2.1 was 6-layer (history). |
+| **PCB** | **v3.0 — 2-layer** (F / B) | GND = full-board B.Cu pour; VS = routed B mesh. **v2.3 (4-layer: F / In1 GND / In2 VS / B) is the fallback design, in git history.** v2.1 was 6-layer (history). |
 | Board | 50.80 × 88.90 mm, r3.0 corners, **0.80 mm** FR4, ENIG, matte-black mask | 0.8-vs-1.0 mm thickness still open |
 | Mounting holes | 4× M2, GND, at **(3.0, 3.0) / (47.8, 3.0) / (3.0, 85.9) / (47.8, 85.9)**, pitch **44.80 × 82.90 mm** | concentric with the r3.0 corner fillets |
 | **Enclosure** | **v3.0 Ti back-shell** — 0.75 floor, 1.85 cavity (1.90 local under U2), overall **3.55 mm**, braces off | matches the v3.0 hole pattern; see `enclosure/README.md` |
@@ -99,8 +99,8 @@ Full part numbers, pricing, and per-part datasheet links are in
 - **Two copper layers** on 0.8 mm FR4 (v3.0): **F.Cu** signal/parts and **B.Cu**. **GND is a
   full-board B.Cu pour** (`GND_B` zone) with stitch straps, and **VS is a routed mesh on B** — the
   4→2-layer conversion of v2.3, whose internal GND/VS *planes* moved onto the back copper. The
-  4-layer **v2.3** (F · In1 GND · In2 VS · B) is the committed fallback if the back-side trace
-  texture showing faintly on the naked front reads wrong.
+  4-layer **v2.3** (F · In1 GND · In2 VS · B) is the fallback (recoverable from git history) if the
+  back-side trace texture showing faintly on the naked front reads wrong.
 - **The glow window is a keepout on every layer.** The monogram cutout and the four LED
   light-paths are voided through both layers so nothing — copper pour, trace, or via —
   shadows the light between the rear LEDs and the front face. The rear soldermask is left
@@ -141,7 +141,6 @@ solar-business-card/
 ├── PCB/                            # KiCad projects + fabrication BOM
 │   ├── solar-glow-drh-v3_0.kicad_pcb   # the board — v3.0, 2-layer (source of truth)
 │   ├── solar-glow-drh-v3_0.kicad_sch   # schematic (v3.0)
-│   ├── solar-glow-drh-v2_3.kicad_pcb   # 4-layer fallback — kept, not deleted
 │   ├── solar-glow-drh-v3_0-BOM.xlsx    # bill of materials — v3.0 master (U6 + R14; all-0402)
 │   ├── solar-glow-drh-v3_0-BOM-assembly.xlsx  # placed-parts BOM for PCBA (36 parts)
 │   └── README.md                       # order & build guide
