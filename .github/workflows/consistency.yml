@@ -1,0 +1,33 @@
+# .github/workflows/consistency.yml — drift guard for docs vs firmware vs board.
+# Runs scripts/check_consistency.py (firmware pin contract, BOM parity, and
+# referenced-file existence) inside the KiCad 10 container so kicad-cli is on
+# hand to export the schematic netlist. Errors fail the build; doc-reference
+# drift is reported as a warning.
+name: Consistency check
+
+on:
+  push:
+    paths:
+      - 'PCB/**'
+      - 'firmware/board.h'
+      - 'firmware/README.md'
+      - 'README.md'
+      - 'scripts/check_consistency.py'
+      - '.github/workflows/consistency.yml'
+  pull_request:
+    paths:
+      - 'PCB/**'
+      - 'firmware/board.h'
+      - 'firmware/README.md'
+      - 'README.md'
+      - 'scripts/check_consistency.py'
+      - '.github/workflows/consistency.yml'
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    container: ghcr.io/inti-cmnb/kicad10_auto_full:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run consistency check
+        run: python3 scripts/check_consistency.py
