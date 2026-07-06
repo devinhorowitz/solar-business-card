@@ -2958,7 +2958,7 @@
 
 (property "Description" "Accelerometer VREG_OUT decoupling 0.22 uF" (at 120.65 119.38 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)))) (pin "1" (uuid "651c3aab-8a81-4774-a4d0-af52122f27a7")) (pin "2" (uuid "dda7ec2c-88df-4b11-b55b-ab11ad930747")) (instances (project "solar-glow-drh-v3_0" (path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0" (reference "C11") (unit 1)))) 
 
-(property "MPN" "GRM155 0.22uF (verify MPN)" (at 120.65 119.38 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27))))) 
+(property "MPN" "GRM155R71C224KA12D" (at 120.65 119.38 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27))))) 
 
 (symbol (lib_id "solarglow:D3") (at 279.4 99.06 0) (unit 1) (body_style 1) (exclude_from_sim no) (in_bom yes) (on_board yes) (in_pos_files yes) (dnp no) (uuid "3d2f01f7-0905-4dc1-828b-6a0e0018387f") 
 
@@ -3388,7 +3388,7 @@
 
 (property "Description" "LED-anode bulk 4.7 uF" (at 120.65 165.1 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)))) (pin "1" (uuid "713b5524-caed-400e-8b4c-24bd3189f1cd")) (pin "2" (uuid "989a2388-8891-4f69-bb52-2e943c3419e0")) (instances (project "solar-glow-drh-v3_0" (path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0" (reference "C13") (unit 1)))) 
 
-(property "MPN" "GRM155R61A475ME15D" (at 120.65 165.1 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27))))) 
+(property "MPN" "GRM155R61A475MEAAD" (at 120.65 165.1 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27))))) 
 
 (symbol (lib_id "solarglow:SW2") (at 279.4 281.94 0) (unit 1) (body_style 1) (exclude_from_sim no) (in_bom no) (on_board yes) (in_pos_files yes) (dnp yes) (uuid "901c1ae2-c499-4e61-b05f-00d579dbafc7") 
 
