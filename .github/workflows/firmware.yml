@@ -1,0 +1,56 @@
+# .github/workflows/firmware.yml — compile the AVR64DD28 firmware on every change.
+# Turns the "register-verified but never compile-tested" firmware into a checked
+# build: fetch Microchip's AVR-Dx toolchain + device pack, run `make`, upload the hex.
+#
+# NOTE: the toolchain download is Microchip's WAF-protected server; the Referer
+# header below is what gets past its 403. If that ever breaks, the documented
+# fallback is `apt-get install gcc-avr avr-libc` (Atmel-patched builds recognize
+# avr64dd28 with the DFP specs) — see firmware/README.md "Install the toolchain".
+name: Firmware build
+
+on:
+  push:
+    paths:
+      - 'firmware/**'
+      - '.github/workflows/firmware.yml'
+  pull_request:
+    paths:
+      - 'firmware/**'
+      - '.github/workflows/firmware.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch AVR-Dx toolchain + device pack
+        run: |
+          set -euo pipefail
+          UA='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36'
+          mkdir -p "$HOME/avr" && cd "$HOME/avr"
+          curl -fsSL --retry 3 --retry-delay 5 -A "$UA" -H 'Referer: https://www.microchip.com/' \
+            -o tc.tar.gz \
+            'https://ww1.microchip.com/downloads/aemDocuments/documents/DEV/ProductDocuments/SoftwareTools/avr8-gnu-toolchain-3.7.0.1796-linux.any.x86_64.tar.gz'
+          tar xzf tc.tar.gz
+          curl -fsSL --retry 3 --retry-delay 5 -o dfp.atpack \
+            'https://packs.download.microchip.com/Microchip.AVR-Dx_DFP.2.8.343.atpack'
+          mkdir -p AVR-Dx_DFP && (cd AVR-Dx_DFP && unzip -oq ../dfp.atpack)
+          echo "$HOME/avr/$(ls -d avr8-gnu-toolchain-*/ | head -1)bin" >> "$GITHUB_PATH"
+
+      - name: Build
+        run: |
+          set -euo pipefail
+          avr-gcc --version | head -1
+          make -C firmware DFP="$HOME/avr/AVR-Dx_DFP"
+          echo "----- size -----"
+          avr-size firmware/solar-glow.elf
+
+      - name: Upload firmware image
+        uses: actions/upload-artifact@v4
+        with:
+          name: solar-glow-firmware
+          path: |
+            firmware/solar-glow.hex
+            firmware/solar-glow.elf
+          if-no-files-found: error

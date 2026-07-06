@@ -1,0 +1,5 @@
+# firmware build artifacts (produced by `make`)
+*.o
+*.elf
+*.hex
+*.eep
