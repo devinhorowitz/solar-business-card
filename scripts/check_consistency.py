@@ -24,6 +24,7 @@ import os
 import re
 import sys
 import csv
+import glob
 import shutil
 import subprocess
 import tempfile
@@ -121,9 +122,16 @@ def check_bom_parity(comps):
 def check_doc_file_refs():
     print("[3] referenced .kicad_* files exist")
     pat = re.compile(r'solar-glow-drh-v[0-9_]+\.kicad_(?:pcb|sch|pro|prl)')
+    files = sorted(os.path.relpath(p, ROOT)
+                   for p in glob.glob(os.path.join(ROOT, "**", "*.md"), recursive=True))
+    files.append("firmware/board.h")
     seen = set()
-    for rel in ("firmware/board.h", "README.md", "firmware/README.md"):
-        for name in pat.findall(open(os.path.join(ROOT, rel)).read()):
+    for rel in files:
+        try:
+            txt = open(os.path.join(ROOT, rel)).read()
+        except OSError:
+            continue
+        for name in pat.findall(txt):
             seen.add((rel, name))
     for rel, name in sorted(seen):
         if os.path.exists(os.path.join(ROOT, "PCB", name)):
