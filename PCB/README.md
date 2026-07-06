@@ -115,7 +115,7 @@ CI-built set from `../Generated/gerbers/`, which comes from the same exporter).
 
 **Drill (Excellon):**
 - **File → Fabrication Outputs → Drill Files…** Generate Excellon + a drill map.
-- Plated holes: the 91 vias (uniform 0.30 mm) and the four M2 mount holes (Ø 2.2 mm).
+- Plated holes: the 79 vias (uniform 0.30 mm) and the four M2 mount holes (Ø 2.2 mm).
   Non-plated: the TC2030 latch/alignment holes. Export PTH and NPTH per PCBWay's preference.
 
 **Bundle** the Gerbers + drill into one zip for upload.
@@ -134,7 +134,7 @@ Order parameters, from the committed board:
 | Soldermask color | **Matte black** |
 | Silkscreen | White |
 | Min track / spacing used | **0.15 mm track / 0.127 mm spacing** (the marginal-band corridors) |
-| Vias | **Uniform: 0.30 mm drill / 0.60 mm pad** (0.15 mm annular), 94 total, tented (resin-fill + cap ordered board-wide) |
+| Vias | **Uniform: 0.30 mm drill / 0.60 mm pad** (0.15 mm annular), 79 total, tented (resin-fill + cap ordered board-wide) |
 | Non-plated holes | TC2030: Ø **2.3749 mm** (4× leg-latch) and Ø **0.9906 mm** (3× alignment) |
 | Plated mount holes | Ø **2.2 mm** ×4 (M2, corners, tied to GND) |
 | Castellations | **None** (verified — only the corner mount holes sit within 1.5 mm of the rim) |
@@ -203,7 +203,7 @@ Summary of the **orderable** lines:
 |---|---:|---|---|
 | U1 | 1 | AVR64DD28 (VQFN-28) | `AVR64DD28-I/STX` |
 | U2 | 1 | Dual SAB MOSFET (SOIC-8) | `ALD910025SALI` |
-| U3 | 1 | ADXL367 accelerometer (LGA-12) | ADI `ADXL367` — confirm order code (was wrongly listed LIS2DH12TR) |
+| U3 | 1 | ADXL367 accelerometer (LGA-12) | `ADXL367BCCZ-RL7` |
 | U4 | 1 | TLV3011 comparator + 1.242 V ref (SOT-23-6, open-drain) | `TLV3011BIDBVR` |
 | **U5** | 1 | **NFC tag, NT3H2211 (XQFN8 / SOT902-3)** | `NT3H2211W0FHKH` — matches the placed 0.25×0.4 mm land |
 | **U6** | 1 | **Load switch (SOT-23-6) (in the v3_0 BOM)** | `TPS22918DBVR` |
