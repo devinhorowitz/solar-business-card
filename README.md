@@ -34,6 +34,7 @@ Each fact has exactly one home; everything else points at it rather than restati
 | Firmware pin map + knobs | `firmware/README.md` (matches the schematic) |
 | BOM | `PCB/solar-glow-drh-v3_0-BOM.xlsx` (v3.0 master — converted lines have prices blanked pending quote; see `PCB/README.md` Step 4) |
 | Design *reasoning* / lineage | `solar-glow-drh-design-notes.md` |
+| Open work / cross-domain to-dos | `TODO.md` (an index of what's left; each item points back at the files above) |
 
 When a number here disagrees with a source-of-truth file, the source file wins and this table is the
 thing to correct. The `solar-glow-drh-v2-*` docs are v2-era history (banner-marked at the top of
