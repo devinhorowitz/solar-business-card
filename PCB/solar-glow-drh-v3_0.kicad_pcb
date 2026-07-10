@@ -8023,7 +8023,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "200nF"
+		(property "Value" "220nF"
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
