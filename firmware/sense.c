@@ -114,6 +114,21 @@ uint16_t sense_vin_mv(void)
     return (uint16_t)(mv * VSENSE_DIVIDER);                  /* x2 -> VIN */
 }
 
+/* Light-present threshold as a raw 12-bit ADC count, folded at COMPILE time from
+ * the board's mV threshold. VSENSE reads the pin (= VIN/2) and LIGHT_THRESH_MV is
+ * that pin threshold, so count c means pin_mv = c*ADC_VREF_MV/4096; thus
+ * pin_mv >= LIGHT_THRESH_MV  <=>  c >= ceil(LIGHT_THRESH_MV*4096/ADC_VREF_MV).
+ * That is the SAME boolean the old (sense_vin_mv() >= LIGHT_THRESH_MV*VSENSE_DIVIDER)
+ * produced (the divider's x2 cancels the threshold's x2), for every threshold value. */
+#define LIGHT_COUNT \
+    ((uint16_t)(((uint32_t)LIGHT_THRESH_MV * 4096UL + (ADC_VREF_MV - 1UL)) / ADC_VREF_MV))
+
+uint8_t sense_light(void)
+{
+    /* one ADC read (same sampling as sense_vin_mv), compared raw -- no mV math. */
+    return (adc_read_raw(VSENSE_AIN) >= LIGHT_COUNT) ? 1u : 0u;
+}
+
 uint16_t sense_vdd_mv(void)
 {
     uint32_t res = adc_read_raw(ADC_MUXPOS_VDDDIV10_gc);     /* internal VDD/10 */
@@ -121,9 +136,20 @@ uint16_t sense_vdd_mv(void)
     return (uint16_t)(mv * 10UL);                            /* undo /10 */
 }
 
+/* Rail-floor threshold as a raw VDD/10-channel count, folded at COMPILE time.
+ * sense_vdd_mv() = floor(c*ADC_VREF_MV/4096)*10, so
+ *   sense_vdd_mv() >= VS_GLOW_FLOOR_MV
+ *     <=> c >= ceil( ceil(VS_GLOW_FLOOR_MV/10) * 4096 / ADC_VREF_MV )
+ * -- the inner ceil reproduces the channel's 10 mV quantization exactly, so this
+ * is the SAME boolean as the old compare for every floor value, with no mV math. */
+#define RAIL_FLOOR_10MV (((uint32_t)VS_GLOW_FLOOR_MV + 9UL) / 10UL)   /* ceil(mV/10) */
+#define RAIL_COUNT      ((uint16_t)((RAIL_FLOOR_10MV * 4096UL + (ADC_VREF_MV - 1UL)) / ADC_VREF_MV))
+
 uint8_t sense_rail_ok(void)
 {
-    return (sense_vdd_mv() >= VS_GLOW_FLOOR_MV) ? 1u : 0u;
+    /* raw VDD/10 count vs compile-time floor -- same result as sense_vdd_mv() >= floor,
+     * same fail-safe (a stuck ADC reads 0 -> not ok -> no glow). */
+    return (adc_read_raw(ADC_MUXPOS_VDDDIV10_gc) >= RAIL_COUNT) ? 1u : 0u;
 }
 
 /* ---------- EEPROM lifetime activation counter ---------- */

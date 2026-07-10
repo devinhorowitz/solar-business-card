@@ -1,4 +1,4 @@
-# Makefile -- SOLAR-GLOW DRH v2.1 firmware
+# Makefile -- SOLAR-GLOW DRH v3.0 firmware
 #
 # Targets a MODERN avr-gcc (>= ~12, with AVR-Dx support) plus Microchip's
 # AVR-Dx Device Family Pack (DFP). The DFP supplies the avr64dd28 device

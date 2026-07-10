@@ -34,8 +34,10 @@ uint8_t nfc_read_block(uint8_t blk, uint8_t *dst16)
     twi_stop();                                              /* end addr phase (Fig 18) */
     if (twi_start(NT3H_ADDR, 1)) { twi_stop(); return 1; }   /* START + read */
     for (uint8_t i = 0; i < NFC_BLOCK_SZ; i++)
-        if (twi_read((uint8_t)(i < (NFC_BLOCK_SZ - 1)), &dst16[i]))  /* ACK all but last */
-            return 1;                                                /* last NACKs + STOPs */
+        if (twi_read((uint8_t)(i < (NFC_BLOCK_SZ - 1)), &dst16[i])) { /* ACK all but last */
+            twi_stop();                                              /* bus fault: STOP so the tag can't clock-stretch forever */
+            return 1;
+        }
     return 0;
 }
 

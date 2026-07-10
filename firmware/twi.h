@@ -101,8 +101,10 @@ static inline uint8_t twi_reg_read(uint8_t addr7, uint8_t reg, uint8_t *dst, uin
     if (twi_write((n > 1) ? (uint8_t)(reg | 0x80) : reg)) { twi_stop(); return 1; }
     if (twi_start(addr7, 1))                          { twi_stop(); return 1; }  /* repeated start */
     for (uint8_t i = 0; i < n; i++)
-        if (twi_read((uint8_t)(i < (n - 1)), &dst[i]))    /* ACK all but last; last NACKs + STOPs */
-            return 1;                                     /* bus fault -> dst not trustworthy */
+        if (twi_read((uint8_t)(i < (n - 1)), &dst[i])) {  /* ACK all but last; last NACKs + STOPs */
+            twi_stop();                                   /* bus fault: STOP so the target can't clock-stretch (dst not trustworthy) */
+            return 1;
+        }
     return 0;
 }
 

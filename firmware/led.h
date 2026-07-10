@@ -3,7 +3,7 @@
  *
  * 4 low-side LED channels (D2..D5). The LED lights when its PORTA pin pulls
  * LOW (cathode side, through a 150R ballast). The ballast fixes the PEAK
- * current on the clamped rail (~9 mA); PWM only trims the time-average below
+ * current on the clamped rail (~8 mA); PWM only trims the time-average below
  * that ceiling, so duty is purely a brightness/energy control and can never
  * push the LED past its ballasted peak.
  *
