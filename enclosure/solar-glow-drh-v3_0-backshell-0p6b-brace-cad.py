@@ -90,6 +90,16 @@ CBORE_D    = 3.0                   # back spotface dia at each hole; depth auto-
 GLOW_WIN   = (14.95, 40.8, 35.85, 47.0)   # board coords (x0,y0,x1,y1); 20.9 x 6.2 mm, centered (25.4,43.9)
 MARK_W     = 0.25                  # frame outline width (in-plane), hairline -- laser-marked, no material removed
 MARK_DEPTH = 0.00                  # 0 = laser mark (no cut). >0 would engrave a groove (thins the floor); kept off.
+# ---- rear MAKER'S MARK: hard-engraved into the recessed back field (tucked lower-left, asymmetric). Cut
+# 0.20mm into the 1.0mm floor stock -> a real machined mark, not a surface etch. Mirrored about the board
+# center X so it reads correctly when the card is turned over. Name in Bold, the line above it in Regular. ----
+MAKER_DEPTH  = 0.20
+MAKER_FONT_R = "/home/claude/fonts/JetBrainsMono-Regular.ttf"
+MAKER_FONT_B = "/home/claude/fonts/JetBrainsMono-Bold.ttf"
+MAKER_LINES  = [                       # (text, LEFT-edge x, centerline y, cap height, font)  board coords, readable
+    ("DESIGNED & MADE BY", 7.0, 79.3, 1.20, MAKER_FONT_R),
+    ("DEVIN HOROWITZ",     7.0, 81.9, 1.65, MAKER_FONT_B),
+]
 
 # round-tool relief: a spinning end mill cannot cut a sharp INTERNAL (concave) corner -- it always
 # leaves its own radius. Convex features (the bosses, brace posts, rib ends) are fine; the tool just
@@ -203,8 +213,26 @@ def _poly_solid(poly, z0, dz):
     xy = [(wx(x), wy(y)) for x, y in list(poly.exterior.coords)[:-1]]
     return cq.Workplane("XY").workplane(offset=z0).polyline(xy).close().extrude(dz)
 
+def _maker_text(txt, lx, cy, capH, fontpath):
+    """Readable all-caps engraving text: LEFT edge at x=lx, vertically centered at y=cy, cap height ~capH.
+    Returns shapely geometry in BOARD coords (pre-mirror)."""
+    import shapely.affinity as _aff
+    from shapely.geometry import Polygon as _Poly
+    from shapely.ops import unary_union as _uu
+    from matplotlib.textpath import TextPath as _TP
+    from matplotlib.font_manager import FontProperties as _FP
+    from matplotlib.path import Path as _MP
+    from functools import reduce as _rd
+    tp=_TP((0,0),txt,size=100.0,prop=_FP(fname=fontpath))
+    if not len(tp.vertices): return None
+    conts=[c for c in _MP(tp.vertices,tp.codes).to_polygons(closed_only=True) if len(c)>=4]
+    geom=_rd(lambda a,b:a.symmetric_difference(b),[_Poly(c).buffer(0) for c in conts])
+    mnx,mny,mxx,mxy=geom.bounds; sc=capH/(mxy-mny)
+    geom=_aff.scale(geom,xfact=sc,yfact=sc,origin=(mnx,mny)); mnx,mny,mxx,mxy=geom.bounds
+    return _aff.translate(geom, lx-mnx, cy-(mny+mxy)/2)
+
 # ===== build =====
-def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pillars=False, locators=False, prog_window=False, glow_marker=True, tool_relief=False):
+def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pillars=False, locators=False, prog_window=False, glow_marker=True, maker_mark=True, tool_relief=False):
     bb = floor + cavity                       # board-back / boss-top / lip-top / rib-top plane
     wt = bb + board_th
     outW, outH, outR = cavW + 2*wall_th, cavH + 2*wall_th, cavR + wall_th
@@ -314,6 +342,21 @@ def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pill
         inner = (cq.Workplane("XY").workplane(offset=floor - MARK_DEPTH - 0.01)
                    .moveTo(wx(cx), wy(cy)).rect(iwd, ihd).extrude(MARK_DEPTH + 0.04))
         res = res.cut(outer.cut(inner))
+    # rear MAKER'S MARK: engrave into the recessed back field, mirrored about board center X so it reads
+    # right when the card is turned over to the back. Lower-left, clear of the bottom boss annuli (y<83.3).
+    if maker_mark:
+        import shapely.affinity as _aff
+        from shapely.ops import unary_union as _uu
+        _mk=[g for g in (_maker_text(t,lx,cy,cH,fp) for t,lx,cy,cH,fp in MAKER_LINES) if g is not None]
+        if _mk:
+            _mg=_aff.scale(_uu(_mk), xfact=-1, yfact=1, origin=(25.4,44.45))
+            for _p in (_mg.geoms if _mg.geom_type=="MultiPolygon" else [_mg]):
+                _cut=(cq.Workplane("XY").workplane(offset=-0.05)
+                        .polyline([(wx(x),wy(y)) for x,y in list(_p.exterior.coords)]).close().extrude(MAKER_DEPTH+0.05))
+                for _r in _p.interiors:
+                    _cut=_cut.cut(cq.Workplane("XY").workplane(offset=-0.10)
+                            .polyline([(wx(x),wy(y)) for x,y in list(_r.coords)]).close().extrude(MAKER_DEPTH+0.20))
+                res=res.cut(_cut)
     # U2 relief pocket: a local 0.05 mm-deeper cavity floor under U2 (28.5,37) so U2 keeps a
     # 0.10 mm air gap (same as the caps) while the GENERAL floor is `floor` mm of back-engraving stock. 0.05 = U2_H-cap_H;
     # the caps (1.70) are the next-tallest, so the general cavity is cap-limited and only U2 needs relief.
