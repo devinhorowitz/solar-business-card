@@ -148,6 +148,17 @@
 #define DTAP_BREATH_MS  1600
 #define DTAP_PEAK       255   /* and brighter (single tap uses GLOW_PEAK)       */
 
+/* In-sun "loading" chase (the strong-sun + caps-full tell): a bright bump sweeps
+ * left->right across D2..D5, each LED fading up then down and overlapping its
+ * neighbour so that as one dims the next brightens. Fires only when the caps are
+ * full and the panel is in strong sun, so it never drains the pack (power is free in
+ * sun). Tune the feel by eye / with the simulator. Physical L->R = D2,D3,D4,D5, which
+ * led.c maps to channels 3,2,1,0. */
+#define SWEEP_PASSES    2     /* left->right wipes per invocation */
+#define SWEEP_PASS_MS   800   /* ms per wipe (lower = faster "loading" feel) */
+#define SWEEP_PEAK      235   /* peak per-LED brightness at each bump centre (0..255) */
+#define SWEEP_OVERLAP   320   /* bump half-width, Q8 spacing: 256 = cross ~50%, >256 = softer */
+
 /* charge floor: skip the glow (stay dark) below this rail voltage, mV.
  * Read via ADC VDD/10. Keeps a brown-out from bricking mid-animation. */
 #define VS_GLOW_FLOOR_MV   2600
