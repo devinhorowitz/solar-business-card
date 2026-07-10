@@ -30,8 +30,13 @@ void     sense_adc_init(void);
 /* one-shot reads, in millivolts at the real-world node:
  *   sense_vin_mv() : VIN (already x2 for the divider).
  *   sense_vdd_mv() : the MCU/supercap rail VDD (via VDD/10 channel).
- * Both power the ADC + reference up for the conversion and back down after;
- * cheap enough to call from the poll path. */
+ * Both power the ADC + reference up for the conversion and back down after.
+ * NOTE the recurring paths deliberately do NOT use these: the light poll uses
+ * sense_light() and the rail gate uses sense_rail_ok(), both raw-count (no mV
+ * math). These mV accessors are the human-readable API -- sense_vdd_mv() backs
+ * the boot wink, and sense_vin_mv() is the accessor the (not-yet-wired) in-sun
+ * sweep trigger will use for its VIN >= SUN_THRESHOLD test. So sense_vin_mv()
+ * reads as uncalled today BY DESIGN; keep it. */
 uint16_t sense_vin_mv(void);
 uint16_t sense_vdd_mv(void);
 

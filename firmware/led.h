@@ -9,8 +9,13 @@
  *
  * Polarity: the pins use pad-level invert (PORTA.PINnCTRL INVEN, set in
  * led_init) so a LARGER compare value = brighter (more low-time at the pad).
- * If a bench check shows brightness running backwards, drop INVEN in
- * led_init -- that is the whole fix.
+ * INVEN is LOAD-BEARING for the dark-off idle, not merely a brightness choice:
+ * with it, compare 0 parks the pad HIGH -> LED dark (also while TCA is stopped
+ * in sleep). WITHOUT it, compare 0 parks the pad LOW -> every LED sits ON
+ * whenever the card is meant to be dark. So if brightness ever runs backwards,
+ * invert in SOFTWARE (write 255 - duty); do NOT drop INVEN. (This is the
+ * CLAUDE.md "INVEN is load-bearing" gotcha -- an earlier note here wrongly said
+ * to drop it, which would light the monogram at idle.)
  *
  * SW2 (master anode switch) is pure hardware and invisible to firmware: with
  * SW2 OFF the anodes are disconnected and nothing lights no matter what TCA

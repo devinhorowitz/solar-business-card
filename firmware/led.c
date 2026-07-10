@@ -31,7 +31,10 @@ static inline uint8_t gamma2(uint8_t v)
 
 void led_init(void)
 {
-    /* drive the four LED pins; invert at the pad so bigger duty = brighter */
+    /* Drive the four LED pins; invert at the pad (INVEN) so bigger duty = brighter
+     * AND compare 0 parks the pad HIGH = LED dark at idle. INVEN is LOAD-BEARING
+     * for that dark-off state: do NOT drop it to "fix" a backwards brightness (that
+     * lights every LED at duty 0) -- write 255 - duty instead. See led.h. */
     LED_PORT.DIRSET = LED_ALL_bm;
     PORTA.PIN0CTRL |= PORT_INVEN_bm;
     PORTA.PIN1CTRL |= PORT_INVEN_bm;
@@ -180,7 +183,14 @@ void led_breathe(uint8_t cycles, uint16_t breath_ms, uint8_t peak)
     led_off();
 }
 
-/* Sequential "loading" chase for the in-sun tell: a bright bump sweeps left->right
+/* Sequential "loading" chase for the in-sun tell.
+ *
+ * NOTE: nothing calls this yet -- the trigger is intentionally UNWIRED, pending the
+ * PCB team's VIN-at-clamp number (see board.h SWEEP_* and the firmware->PCB note).
+ * This is finished, tuned library code awaiting one constant, NOT dead code -- do
+ * not remove it as unused.
+ *
+ * A bright bump sweeps left->right
  * across the four LEDs, each fading up then down and overlapping its neighbour so
  * that as one dims the next brightens. Physical left->right is D2,D3,D4,D5, which on
  * this board is channel order 3,2,1,0 (the WO/channel numbering runs right->left

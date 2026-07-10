@@ -53,6 +53,12 @@ uint8_t nfc_write_block(uint8_t blk, const uint8_t *src16)
     return 0;
 }
 
+/* Session-register access (nfc_read_reg / nfc_write_reg) and the CC check
+ * (nfc_check_cc) are provided API that the default one-shot provisioning does NOT
+ * call -- FD-wake uses the tag's POR default, so no NC_REG write is needed (nfc.h).
+ * Kept for config/diagnostic use; --gc-sections drops whatever stays uncalled.
+ * Intentional, not dead code. */
+
 /* ---- sec 9.8 register READ: START, AA, FEh, REGA, STOP, START, AB, DAT(NACK), STOP ---- */
 uint8_t nfc_read_reg(uint8_t reg, uint8_t *val)
 {
