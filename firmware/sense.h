@@ -35,6 +35,12 @@ void     sense_adc_init(void);
 uint16_t sense_vin_mv(void);
 uint16_t sense_vdd_mv(void);
 
+/* light-present predicate for the ~1 s poll: compares the raw VSENSE ADC count
+ * against LIGHT_THRESH_MV folded to a count at COMPILE time, so the hot path
+ * skips the per-poll mV conversion. Bit-identical result to the old
+ * (sense_vin_mv() >= LIGHT_THRESH_MV * VSENSE_DIVIDER). */
+uint8_t  sense_light(void);
+
 /* true if the rail is above the glow floor (safe to run the animation). */
 uint8_t  sense_rail_ok(void);
 

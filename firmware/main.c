@@ -45,10 +45,6 @@
 #include "sense.h"
 #include "nfc.h"
 
-/* VIN threshold (mV) for "light present". LIGHT_THRESH_MV is defined at the
- * VSENSE pin (= VIN/2); sense_vin_mv() already returns VIN, so scale up. */
-#define LIGHT_VIN_MV  ((uint16_t)(LIGHT_THRESH_MV * VSENSE_DIVIDER))
-
 static volatile uint8_t f_tap;     /* PF1 click   */
 static volatile uint8_t f_motion;  /* PF0 activity */
 static volatile uint8_t f_tick;    /* RTC PIT     */
@@ -167,8 +163,7 @@ int main(void)
     sense_adc_init();
 
     twi_init();           /* 3. I2C up, talk to the accel */
-    (void)adxl367_present();       /* device-ID sanity (ignored if bus dead) */
-    (void)adxl367_init_tap();      /* tap->INT1, activity->INT2              */
+    (void)adxl367_init_tap();      /* full accel config; validates DEVID after its soft reset */
 
     /* 4. NFC tag (shares the bus) is power-gated OFF by default; we do not touch it
      * at boot. FD-wake needs no setup -- it runs on field power and the chip's POR
@@ -205,7 +200,7 @@ int main(void)
     /* seed the dark->light detector with the actual boot light level, so a card
      * powered on already in light does not fire a phantom dark->light glow on the
      * first PIT tick (the wink above is the only intended power-on glow). */
-    prev_light = (sense_vin_mv() >= LIGHT_VIN_MV);
+    prev_light = sense_light();
 
     for (;;) {
 #if USE_WDT
@@ -234,7 +229,7 @@ int main(void)
                 else
                     led_breathe(GLOW_CYCLES, GLOW_BREATH_MS, GLOW_PEAK);
             }
-            prev_light = (sense_vin_mv() >= LIGHT_VIN_MV);
+            prev_light = sense_light();
             /* a tap is also motion (and, if a phone caused it, a field event), so
              * INT2 and/or FD likely fired too. Clear both here (after the glow) so
              * the next loop does not chase the tap with a redundant breath or glow. */
@@ -265,7 +260,7 @@ int main(void)
         }
         else if (f_tick) {
             f_tick = 0;
-            uint8_t light = (sense_vin_mv() >= LIGHT_VIN_MV);
+            uint8_t light = sense_light();
             if (light && !prev_light && sense_rail_ok())
                 led_breathe(GLOW_CYCLES, GLOW_BREATH_MS, GLOW_PEAK);   /* dark->light edge */
             prev_light = light;
