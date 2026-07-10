@@ -40,4 +40,10 @@ void led_off(void);
  * read gets a clean 13.56 MHz band -- see NFC_BLANK_ON_FIELD in board.h. */
 void led_breathe(uint8_t cycles, uint16_t breath_ms, uint8_t peak);
 
+/* "loading" chase: a bump sweeps left->right across the four LEDs, neighbours
+ * overlapping so that as one dims the next brightens (the in-sun tell). Returns
+ * with LEDs off; aborts blanked if an NFC reader field appears mid-sweep. `overlap`
+ * is the bump half-width in Q8 units of LED spacing (256 = neighbours cross ~50%). */
+void led_sweep(uint8_t passes, uint16_t pass_ms, uint8_t peak, uint16_t overlap);
+
 #endif /* LED_H */
