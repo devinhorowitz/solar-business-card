@@ -36,7 +36,7 @@
 
 (property "Reference" "C11" (at 0 0 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)))) 
 
-(property "Value" "200nF" (at 0 0 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)))) 
+(property "Value" "220nF" (at 0 0 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)))) 
 
 (property "Footprint" "" (at 0 0 0) (show_name no) (do_not_autoplace no) (hide yes) (effects (font (size 1.27 1.27)))) 
 
@@ -2950,7 +2950,7 @@
 
 (property "Reference" "C11" (at 131.65 124.46 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)))) 
 
-(property "Value" "200nF" (at 131.65 129.54 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)))) 
+(property "Value" "220nF" (at 131.65 129.54 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)))) 
 
 (property "Footprint" "solarglow:C11" (at 131.65 134.62 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)))) 
 
@@ -3382,7 +3382,7 @@
 
 (property "Value" "4.7uF" (at 131.65 175.26 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)))) 
 
-(property "Footprint" "solarglow:C7" (at 131.65 180.34 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)))) 
+(property "Footprint" "solarglow:C13" (at 131.65 180.34 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)))) 
 
 (property "Datasheet" "" (at 120.65 165.1 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)))) 
 
