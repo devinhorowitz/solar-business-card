@@ -2259,7 +2259,7 @@
 		)
 		(embedded_fonts no)
 	)
-	(footprint "solarglow:C7"
+	(footprint "solarglow:C13"
 		(layer "B.Cu")
 		(uuid "355e5d4a-65cc-44fb-ae72-5b8291626657")
 		(at 26.89 48.62 90)
