@@ -153,12 +153,45 @@
  * neighbour so that as one dims the next brightens. Fires only when the caps are
  * full and the panel is in strong sun, so it never drains the pack (power is free in
  * sun). Tune the feel by eye / with the simulator. Physical L->R = D2,D3,D4,D5, which
- * led.c maps to channels 3,2,1,0. NOTE: the trigger is not wired yet -- these knobs
- * and led_sweep() stand ready, pending the PCB team's VIN-at-clamp SUN threshold. */
+ * led.c maps to channels 3,2,1,0. WIRED: main.c's ~1 s poll fires it when
+ * sense_vin_flags() reports SENSE_SUN_bm (VIN past SWEEP_SUN_VIN_MV) with the caps
+ * full (sense_caps_full()); the two thresholds are just below. */
 #define SWEEP_PASSES    2     /* left->right wipes per invocation */
 #define SWEEP_PASS_MS   800   /* ms per wipe (lower = faster "loading" feel) */
 #define SWEEP_PEAK      235   /* peak per-LED brightness at each bump centre (0..255) */
 #define SWEEP_OVERLAP   320   /* bump half-width, Q8 spacing: 256 = cross ~50%, >256 = softer */
+
+/* Master enable for the in-sun sweep. 1 = wired (default); set 0 to compile the
+ * trigger out of the poll path entirely (led_sweep() stays linked as library code).
+ * The one flag to flip if the tell ever proves visually busy on the bench. */
+#define USE_SUN_SWEEP   1
+
+/* SWEEP_SUN_VIN_MV -- the in-sun trigger: VIN (solar node, panel side of blocking
+ * diode D1; = VSENSE pin x2) at/above which we call it "strong sun." This is the
+ * number the PCB side owed firmware; derived here, bench-tunable (it sets feel, not
+ * safety -- SWEEP_CAPS_FULL_MV below is the hard gate).
+ *
+ * Derivation. When the caps top out, the TLV3011B clamp turns Q1 on to hold VS at its
+ * trip (VS ~3.50 V nominal, 3.60 V worst case) and shunt the panel's excess. VIN then
+ * sits one blocking-diode drop ABOVE that held VS: VIN = VS + Vf(D1). The panel is a
+ * current source rolling off toward Voc, so the operating point self-settles between
+ * VS (~3.50 V, as Vf->0) and Voc (SM141K06TF Voc 4.15 V, as current->0) and never
+ * exceeds Voc -- the naive "VS_trip + Vf(Isc)" over-predicts because MMSD301T1G is a
+ * high-Vf SIGNAL Schottky and the panel cannot source full Isc that far up its knee.
+ * We pick VIN >= 3.60 V: above the held VS (=> real forward current through D1 =>
+ * genuine sun lifting the node, not merely a full cap), yet below Voc and below the
+ * realistic hard-clamp VIN => it trips reliably in strong sun. It also sits far above
+ * indoor light (VIN ~0.8-2.1 V), and the caps-full co-gate rejects the bright-indoor
+ * corner (indoor rarely tops the caps AND lifts VIN this high at once). ADC: VSENSE
+ * pin = VIN/2 vs the 2.500 V ref, so 3.60 V -> 2950 counts, which sense.c folds at
+ * compile time (SUN_COUNT) so the poll compares raw, no per-poll mV math. */
+#define SWEEP_SUN_VIN_MV   3600
+
+/* SWEEP_CAPS_FULL_MV -- the sweep's HARD safety gate: sweep only when the rail VS is
+ * at/above this (caps full). Independent of the clamp and of SWEEP_SUN_VIN_MV, so the
+ * animation can never draw the pack down -- it only ever spends solar the clamp would
+ * otherwise burn as Q1 heat. Read via the ADC VDD/10 channel (sense_caps_full()). */
+#define SWEEP_CAPS_FULL_MV 3300
 
 /* charge floor: skip the glow (stay dark) below this rail voltage, mV.
  * Read via ADC VDD/10. Keeps a brown-out from bricking mid-animation. */

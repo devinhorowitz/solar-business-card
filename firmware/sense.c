@@ -129,6 +129,28 @@ uint8_t sense_light(void)
     return (adc_read_raw(VSENSE_AIN) >= LIGHT_COUNT) ? 1u : 0u;
 }
 
+/* Strong-sun threshold as a raw 12-bit count, folded at COMPILE time like LIGHT_COUNT.
+ * One wrinkle: LIGHT_THRESH_MV is already a pin voltage, but SWEEP_SUN_VIN_MV is stated
+ * at the VIN node, so this also divides by VSENSE_DIVIDER (pin_mv = VIN_mv/VSENSE_DIVIDER).
+ * A count c means pin_mv = c*ADC_VREF_MV/4096, so c >= SUN_COUNT is exactly
+ * VIN >= SWEEP_SUN_VIN_MV. (3600 mV -> 2950, matching the VIN_mV*0.8192 rule.) */
+#define SUN_COUNT \
+    ((uint16_t)(((uint32_t)SWEEP_SUN_VIN_MV * 4096UL + (VSENSE_DIVIDER * ADC_VREF_MV - 1UL)) \
+                / (VSENSE_DIVIDER * ADC_VREF_MV)))
+
+/* One VSENSE read -> both the light and strong-sun predicates (SENSE_LIGHT_bm /
+ * SENSE_SUN_bm), each a raw-count compare so the ~1 s poll does no mV math. SUN
+ * implies LIGHT (SUN_COUNT > LIGHT_COUNT). The poll uses this where it needs both;
+ * the pure-light baselines keep sense_light(). */
+uint8_t sense_vin_flags(void)
+{
+    uint16_t raw = adc_read_raw(VSENSE_AIN);
+    uint8_t  f   = 0;
+    if (raw >= LIGHT_COUNT) f |= SENSE_LIGHT_bm;
+    if (raw >= SUN_COUNT)   f |= SENSE_SUN_bm;
+    return f;
+}
+
 uint16_t sense_vdd_mv(void)
 {
     uint32_t res = adc_read_raw(ADC_MUXPOS_VDDDIV10_gc);     /* internal VDD/10 */
@@ -150,6 +172,18 @@ uint8_t sense_rail_ok(void)
     /* raw VDD/10 count vs compile-time floor -- same result as sense_vdd_mv() >= floor,
      * same fail-safe (a stuck ADC reads 0 -> not ok -> no glow). */
     return (adc_read_raw(ADC_MUXPOS_VDDDIV10_gc) >= RAIL_COUNT) ? 1u : 0u;
+}
+
+/* Caps-full gate for the in-sun sweep: VS at/above SWEEP_CAPS_FULL_MV. Same VDD/10
+ * channel and compile-time fold as RAIL_COUNT, just a higher floor (3300 mV -> 541);
+ * same fail-safe (a stuck ADC reads 0 -> not full -> no sweep). Only ever called after
+ * the SUN flag is set, so the extra VDD read stays off the common poll path. */
+#define CAPS_FULL_10MV  (((uint32_t)SWEEP_CAPS_FULL_MV + 9UL) / 10UL)   /* ceil(mV/10) */
+#define CAPS_FULL_COUNT ((uint16_t)((CAPS_FULL_10MV * 4096UL + (ADC_VREF_MV - 1UL)) / ADC_VREF_MV))
+
+uint8_t sense_caps_full(void)
+{
+    return (adc_read_raw(ADC_MUXPOS_VDDDIV10_gc) >= CAPS_FULL_COUNT) ? 1u : 0u;
 }
 
 /* ---------- EEPROM lifetime activation counter ---------- */

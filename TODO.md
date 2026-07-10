@@ -10,15 +10,19 @@ shell re-machine. Updated 2026-07-10._
 
 ## Cross-domain (link two+ teams — easiest to forget)
 
-- [ ] **VIN-at-clamp / SUN_THRESHOLD** — _PCB → firmware._ Firmware's in-sun
-  `led_sweep` glow is built but intentionally **unwired** until the PCB side
-  gives the VIN level at which the TLV3011B clamp holds (VS ~3.50 V nominal).
-  Then firmware wires the trigger. See `firmware-to-pcb-open-items.md` and the
-  `SWEEP_*` knobs in `firmware/board.h`.
-- [ ] **Solar-cell thickness** — _hardware → enclosure._ The front panel fence
-  needs the **actual** ANYSOLAR SM141K06TF cell thickness (est ~1.2 mm) from the
-  datasheet or a caliper — do not guess. The fence top must land on the panel top
-  or the "melted-in" look fails.
+- [x] **VIN-at-clamp / SUN_THRESHOLD** — _PCB → firmware. DONE 2026-07-10._ Derived
+  VIN **>= 3.60 V** as the strong-sun trigger (above the held VS ~3.50 V so there is
+  real forward current through D1, below panel Voc 4.15 V; full derivation at
+  `firmware/board.h` `SWEEP_SUN_VIN_MV`). Firmware is now **wired**: the ~1 s poll
+  fires `led_sweep` on strong-sun + caps-full via `sense_vin_flags()` /
+  `sense_caps_full()`, behind the `USE_SUN_SWEEP` gate. Feel-tunable on the bench;
+  the caps-full gate is the hard safety, so the number only sets when-in-sun it kicks.
+- [x] **Solar-cell thickness** — _hardware → enclosure. DONE 2026-07-10._ ANYSOLAR
+  SM141K06TF body is **1.2 mm ± 0.3 mm** thick (datasheet page 1 "W x L x H = 42 x 23
+  x 1.2 ± 0.3" and the page-3 mechanical drawing; `datasheets/PV1,PV2  SM141K06TF
+  $6.98.pdf`). Enclosure fence designs to 1.2 mm nominal; the ± 0.3 mm spread is wide
+  for a "melted-in" fit, so a caliper check on the actual cells at bring-up before
+  cutting fence height is still wise.
 - [ ] **Physical button (BTN / PA5)** — _all three._ Reserved net only,
   unpopulated. If ever fitted: PCB placement (a "v2.2 surgery"), the firmware
   `PA5` stub becomes real, and the enclosure needs a pocket/hole plus front-fence
@@ -34,9 +38,12 @@ shell re-machine. Updated 2026-07-10._
   axis (Z), tap/activity thresholds, INT edge/polarity, LED `INVEN` polarity.
 - [ ] **Energy-budget bench measurement** — the project's #1 gate; sets the real
   achievable glow duty.
-- [ ] **Wire `led_sweep`** once SUN_THRESHOLD lands (see cross-domain).
+- [x] **Wire `led_sweep`** — DONE: fires on strong sun (VIN >= `SWEEP_SUN_VIN_MV`)
+  with caps full, one VSENSE read via `sense_vin_flags()`, gated by `USE_SUN_SWEEP`
+  (see the cross-domain item above).
 - Recently closed: real AVR-Dx compile (green in CI), bus-fault STOP hardening,
-  compile-time ADC-threshold efficiency, documentary-clarity pass.
+  compile-time ADC-threshold efficiency, documentary-clarity pass, in-sun `led_sweep`
+  wired (SUN threshold derived).
 
 ## PCB — `PCB/solar-glow-drh-v3_0.kicad_pcb` / `.kicad_sch`
 
@@ -51,11 +58,13 @@ shell re-machine. Updated 2026-07-10._
   `T-H70W567099A` PCBA); get the LED package dimension answer (1.25 vs 1.9 mm)
   and the merged PCB+PCBA total; decide the U2 spare (8-week lead); ensure the PO
   uses the confirmed C11/C13 MPNs.
-- [ ] _Optional:_ KiBot group-by-MPN BOM grouping (`group_fields: ['MPN']` in
-  `PCB/solar-glow-drh.kibot.yaml`) so identical parts collapse in the CI BOM.
-- Recently closed: C13 footprint id, C11 value (200→220 nF), L1 value — merged,
-  CI-green. Left by design: R5/R6 "VSENSE div" etc. are intentional house-style
-  value labels; the origin `NPTH_mech` footprint carries real non-plated holes.
+- [x] KiBot group-by-MPN BOM grouping (`group_fields: ['MPN']` in
+  `PCB/solar-glow-drh.kibot.yaml`) — DONE: identical parts now collapse to one CI-BOM
+  line + qty. Safe because every component carries a non-empty MPN (checked); grouped
+  on MPN alone so a stale footprint *field* (e.g. C13's) cannot split a real pair.
+- Recently closed: C13 footprint id, C11 value (200→220 nF), L1 value, MPN-grouped CI
+  BOM — merged, CI-green. Left by design: R5/R6 "VSENSE div" etc. are intentional
+  house-style value labels; the origin `NPTH_mech` footprint carries real non-plated holes.
 
 ## Enclosure — `enclosure/…-backshell-…-cad.py`, `enclosure/brace/`
 
@@ -65,9 +74,9 @@ shell re-machine. Updated 2026-07-10._
   mirrored (consistent with the intended left-to-right flip); still needs the real
   physical/STEP flip confirmed. Knob: maker-mark `aff.scale(xfact=-1, yfact=1, …)`
   (set `yfact=-1` for a top-bottom flip).
-- [ ] **Front solar-panel fence** — concept only. Blocked on: panel height
-  (cross-domain), attachment (M2 screws / adhesive / snap-fit), and direction A
-  (full-perimeter, recommended) vs B (per-panel rings).
+- [ ] **Front solar-panel fence** — concept only. Panel height now known (cell
+  1.2 mm ± 0.3 mm, cross-domain item above); still blocked on attachment (M2 screws /
+  adhesive / snap-fit) and direction A (full-perimeter, recommended) vs B (per-panel rings).
 - [ ] Add the maker's mark to `enclosure/README.md` once the wording is locked.
 - [ ] Confirm the committed `.step`/`.stl` match the current generators (running
   a generator clobbers its STEP/STL).
