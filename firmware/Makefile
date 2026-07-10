@@ -76,8 +76,8 @@ flash: $(TARGET).hex
 fuses:
 	@echo "Set fuses deliberately; see README 'Fuses' section for the full set."
 	@echo "  avrdude -c $(PROG) -P $(PORT) -p $(MCU) -U bodcfg:w:0x0A:m   # 1.9 V sampled BOD, 128 Hz"
-	@echo "  avrdude -c $(PROG) -P $(PORT) -p $(MCU) -U syscfg1:w:0xXX:m  # MVSYSCFG=SINGLE"
-	@echo "  avrdude -c $(PROG) -P $(PORT) -p $(MCU) -U syscfg0:w:0xXX:m  # EESAVE (keep counter)"
+	@echo "  avrdude -c $(PROG) -P $(PORT) -p $(MCU) -U syscfg1:w:0xXX:m  # <FILL IN 0xXX -- compute from datasheet, do not send literally> MVSYSCFG=SINGLE"
+	@echo "  avrdude -c $(PROG) -P $(PORT) -p $(MCU) -U syscfg0:w:0xXX:m  # <FILL IN 0xXX -- compute from datasheet, do not send literally> EESAVE (keep counter)"
 
 clean:
 	rm -f $(OBJ) $(TARGET).elf $(TARGET).hex $(TARGET).eep

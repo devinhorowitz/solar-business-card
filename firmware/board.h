@@ -153,7 +153,8 @@
  * neighbour so that as one dims the next brightens. Fires only when the caps are
  * full and the panel is in strong sun, so it never drains the pack (power is free in
  * sun). Tune the feel by eye / with the simulator. Physical L->R = D2,D3,D4,D5, which
- * led.c maps to channels 3,2,1,0. */
+ * led.c maps to channels 3,2,1,0. NOTE: the trigger is not wired yet -- these knobs
+ * and led_sweep() stand ready, pending the PCB team's VIN-at-clamp SUN threshold. */
 #define SWEEP_PASSES    2     /* left->right wipes per invocation */
 #define SWEEP_PASS_MS   800   /* ms per wipe (lower = faster "loading" feel) */
 #define SWEEP_PEAK      235   /* peak per-LED brightness at each bump centre (0..255) */

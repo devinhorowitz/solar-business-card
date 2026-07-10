@@ -154,8 +154,15 @@ uint8_t sense_rail_ok(void)
 
 /* ---------- EEPROM lifetime activation counter ---------- */
 
-#define EE_COUNT_ADDR  ((uint32_t *)0)     /* 4 bytes at EEPROM offset 0 */
+/* Address 0 in the EEPROM address space -- NOT a RAM null pointer. avr-libc's
+ * eeprom_*_dword take an address within EEPROM, where 0 is the first cell; the
+ * (uint32_t *) cast is the avr-libc idiom for that, not a null-pointer deref. */
+#define EE_COUNT_ADDR  ((uint32_t *)0)     /* 4-byte counter at EEPROM offset 0 */
 
+/* Read the lifetime tap counter. The firmware only ever increments it at runtime
+ * (sense_count_inc); this reader exists for external readout over UPDI/debug and
+ * future use -- uncalled on-chip BY DESIGN, kept as API (--gc-sections drops it if
+ * it stays unused). Not dead code. */
 uint32_t sense_count_get(void)
 {
     return eeprom_read_dword(EE_COUNT_ADDR);
