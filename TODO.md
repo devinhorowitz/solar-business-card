@@ -41,9 +41,12 @@ shell re-machine. Updated 2026-07-10._
 ## PCB — `PCB/solar-glow-drh-v3_0.kicad_pcb` / `.kicad_sch`
 
 - [ ] **Q1 thermal copper** _(owner: Devin, manual push)._ Solid pad3→pour
-  (`zone_connect 1`→`2`) + a GND thermal-via cluster on pad3 + a top-side GND
-  flood over Q1, inside 9.7 mm of the coil keepout and clear of the x50.8 east
-  edge. Still open (Q1 region has zero vias; pad3 is still thermal-relief).
+  (`zone_connect 1`→`2`) + a GND thermal-via cluster **adjacent to** pad3 (not
+  in-pad, to avoid solder wicking) + a top-side GND flood over Q1 biased east
+  into the x46.4–50.3 strip (clear of the PV2 cell), inside 9.7 mm of the coil
+  keepout and clear of the x50.8 edge. Layout mockup:
+  `docs/solar-glow-drh-q1-thermal-via-mockup.svg`. Still open (Q1 region has
+  zero vias; pad3 is still thermal-relief).
 - [ ] **PCBWay orders** — confirm both replies sent (`W567099ASH69` bare fab,
   `T-H70W567099A` PCBA); get the LED package dimension answer (1.25 vs 1.9 mm)
   and the merged PCB+PCBA total; decide the U2 spare (8-week lead); ensure the PO
