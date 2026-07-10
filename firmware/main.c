@@ -260,9 +260,19 @@ int main(void)
         }
         else if (f_tick) {
             f_tick = 0;
-            uint8_t light = sense_light();
+            uint8_t vf    = sense_vin_flags();               /* one VSENSE read -> light + sun */
+            uint8_t light = (vf & SENSE_LIGHT_bm) ? 1u : 0u;
             if (light && !prev_light && sense_rail_ok())
-                led_breathe(GLOW_CYCLES, GLOW_BREATH_MS, GLOW_PEAK);   /* dark->light edge */
+                led_breathe(GLOW_CYCLES, GLOW_BREATH_MS, GLOW_PEAK);   /* dark->light greeting */
+#if USE_SUN_SWEEP
+            /* Already lit and basking: strong sun (VIN past the clamp) with the caps full ->
+             * play the "loading" sweep. Caps-full (sense_caps_full()) is the hard gate, so it
+             * can never draw the pack down; it re-arms each poll, looping while the sun holds
+             * and spending the clamp's excess as light instead of Q1 heat. The greeting above
+             * wins on the entry edge (one breath in), then this runs while the card sits. */
+            else if ((vf & SENSE_SUN_bm) && sense_caps_full())
+                led_sweep(SWEEP_PASSES, SWEEP_PASS_MS, SWEEP_PEAK, SWEEP_OVERLAP);
+#endif
             prev_light = light;
         }
 

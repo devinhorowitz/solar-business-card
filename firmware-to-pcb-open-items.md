@@ -15,6 +15,18 @@ your side.
 
 ## 1. Primary ask — VIN at the clamp point (for the in-sun sweep)
 
+> **RESOLVED 2026-07-10 (PCB → firmware).** VIN at the clamp = **≥ 3.60 V**, wired.
+> When the caps top out the TLV3011B holds VS at ~3.50 V and Q1 shunts the excess;
+> VIN then rides one blocking-diode drop above that, self-settling between VS (~3.50 V,
+> as Vf→0) and panel Voc (4.15 V, as current→0) and never above Voc — the naive
+> "VS_trip + Vf(Isc)" over-predicts because MMSD301T1G is a high-Vf *signal* Schottky
+> and the panel cannot source full Isc that far up its knee. 3.60 V sits above the held
+> VS (⇒ real forward current through D1 = genuine sun, not just a full cap) yet below
+> Voc, and far above indoor light (VIN ~0.8–2.1 V). Firmware wired it as
+> `SWEEP_SUN_VIN_MV = 3600` (board.h, folded to 2950 ADC counts), with the independent
+> caps-full safety gate `SWEEP_CAPS_FULL_MV = 3300` and a `USE_SUN_SWEEP` master flag.
+> The original ask is kept below for context.
+
 We have an optional UX "tell": in **strong sun with the caps full**, the card
 plays a left→right "loading" sweep across the DRH LEDs (`led_sweep`, already
 written and tuned). It only ever runs when the caps are *already* full, so it
@@ -59,6 +71,9 @@ firmware brightness/interlock rework.
 ---
 
 ## 3. Minor — C13 footprint field mislabel (non-electrical)
+
+> **RESOLVED.** C13's footprint field now reads `solarglow:C13` in the schematic; the
+> stale `solarglow:C7` is gone. Left here for the record.
 
 Heads-up for your next schematic touch: **C13**'s footprint *field* reads
 `solarglow:C7`, while the reference designator itself is correctly "C13". No

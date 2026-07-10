@@ -185,9 +185,10 @@ void led_breathe(uint8_t cycles, uint16_t breath_ms, uint8_t peak)
 
 /* Sequential "loading" chase for the in-sun tell.
  *
- * NOTE: nothing calls this yet -- the trigger is intentionally UNWIRED, pending the
- * PCB team's VIN-at-clamp number (see board.h SWEEP_* and the firmware->PCB note).
- * This is finished, tuned library code awaiting one constant, NOT dead code -- do
+ * WIRED: main.c's ~1 s poll calls this when sense_vin_flags() reports strong sun
+ * (VIN >= SWEEP_SUN_VIN_MV) with the caps full (sense_caps_full()). The VIN-at-clamp
+ * threshold was derived on the PCB side and lives in board.h SWEEP_SUN_VIN_MV. With
+ * USE_SUN_SWEEP 0 the call compiles out but this stays linked as library code, so do
  * not remove it as unused.
  *
  * A bright bump sweeps left->right

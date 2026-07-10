@@ -31,12 +31,12 @@ void     sense_adc_init(void);
  *   sense_vin_mv() : VIN (already x2 for the divider).
  *   sense_vdd_mv() : the MCU/supercap rail VDD (via VDD/10 channel).
  * Both power the ADC + reference up for the conversion and back down after.
- * NOTE the recurring paths deliberately do NOT use these: the light poll uses
- * sense_light() and the rail gate uses sense_rail_ok(), both raw-count (no mV
- * math). These mV accessors are the human-readable API -- sense_vdd_mv() backs
- * the boot wink, and sense_vin_mv() is the accessor the (not-yet-wired) in-sun
- * sweep trigger will use for its VIN >= SUN_THRESHOLD test. So sense_vin_mv()
- * reads as uncalled today BY DESIGN; keep it. */
+ * NOTE the recurring paths deliberately do NOT use these: the poll reads light+sun
+ * via sense_vin_flags() and the rail/caps gates via sense_rail_ok()/sense_caps_full(),
+ * all raw-count (no mV math). These mV accessors are the human-readable siblings --
+ * sense_vdd_mv() backs the boot wink; sense_vin_mv() mirrors, in real millivolts, the
+ * exact VIN the sweep trigger tests (SWEEP_SUN_VIN_MV) for UPDI/debug readout, so it
+ * reads as uncalled on-chip BY DESIGN (like sense_count_get); keep it. */
 uint16_t sense_vin_mv(void);
 uint16_t sense_vdd_mv(void);
 
@@ -46,8 +46,20 @@ uint16_t sense_vdd_mv(void);
  * (sense_vin_mv() >= LIGHT_THRESH_MV * VSENSE_DIVIDER). */
 uint8_t  sense_light(void);
 
+/* sense_vin_flags(): one VSENSE read returning both predicates as bit flags, for the
+ * poll spot that needs light AND strong-sun together (the in-sun sweep). Both are
+ * raw-count compares (no mV math); SENSE_SUN_bm implies SENSE_LIGHT_bm. */
+#define SENSE_LIGHT_bm  0x01u   /* VIN >= LIGHT_THRESH_MV   (any light)  */
+#define SENSE_SUN_bm    0x02u   /* VIN >= SWEEP_SUN_VIN_MV  (strong sun) */
+uint8_t  sense_vin_flags(void);
+
 /* true if the rail is above the glow floor (safe to run the animation). */
 uint8_t  sense_rail_ok(void);
+
+/* true if the caps are full (VS >= SWEEP_CAPS_FULL_MV): the in-sun sweep's hard gate,
+ * so the animation can never draw the pack down. Raw-count, same VDD/10 channel as
+ * sense_rail_ok(). */
+uint8_t  sense_caps_full(void);
 
 /* EEPROM lifetime activation counter (survives power loss). */
 uint32_t sense_count_get(void);

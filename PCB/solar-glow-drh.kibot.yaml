@@ -94,8 +94,14 @@ outputs:
       units: millimeters
 
   - name: bom_csv
-    comment: Flat BOM snapshot
+    comment: BOM snapshot, grouped by MPN (identical parts collapse to one line + qty)
     type: bom
     dir: fabdocs
     options:
       format: CSV
+      # Group solely on MPN: same manufacturer part -> one line with a qty and the
+      # refdes list. Every component carries a non-empty MPN (checked), so nothing
+      # collapses by accident. Grouping on MPN alone (not also Value/Footprint) is
+      # deliberate: identical parts still merge even if a footprint *field* drifts,
+      # whereas the default Value+Footprint grouping would split them on that drift.
+      group_fields: ['MPN']
