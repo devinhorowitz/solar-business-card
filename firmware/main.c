@@ -1,5 +1,5 @@
 /*
- * main.c  --  SOLAR-GLOW DRH v2.1 firmware top level.
+ * main.c  --  SOLAR-GLOW DRH v3.0 firmware top level.
  *
  * Behaviour
  * ---------
@@ -28,7 +28,7 @@
  *
  * Two hardware gates are invisible to this code and documented in the README:
  *   - SW2 (master anode switch): OFF -> no LED current, no matter what TCA does.
- *   - the accel itself is the only "button"; there is no GPIO button in v2.1.
+ *   - the accel itself is the only "button"; there is no GPIO button in v3.0.
  *
  * Bring-up order below follows hardware doc section 7 exactly.
  */
