@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SOLAR-GLOW DRH — in-sun loading chase tuner</title>
+<style>
+  :root { --amber:#ffb43c; --bg:#0b0c0f; --panel:#15171c; --ink:#e7e3d8; --dim:#8b8f98; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink);
+         font:14px/1.5 ui-monospace,"SF Mono",Menlo,Consolas,monospace; padding:24px; }
+  h1 { font-size:15px; font-weight:600; letter-spacing:.02em; margin:0 0 2px; }
+  .sub { color:var(--dim); font-size:12px; margin:0 0 18px; }
+  .wrap { max-width:680px; margin:0 auto; }
+  .stage { background:linear-gradient(180deg,#101319,#0a0b0e); border:1px solid #23262d;
+           border-radius:14px; padding:26px 18px 20px; position:relative; overflow:hidden; }
+  canvas { display:block; width:100%; height:180px; }
+  .card-note { position:absolute; top:10px; left:14px; color:#3a3f49; font-size:11px; letter-spacing:.14em; }
+  .controls { margin-top:20px; display:grid; gap:16px; }
+  .row { display:grid; grid-template-columns:120px 1fr 96px; align-items:center; gap:14px; }
+  .row label { color:var(--dim); font-size:12px; }
+  .row output { text-align:right; color:var(--amber); font-variant-numeric:tabular-nums; }
+  input[type=range]{ -webkit-appearance:none; appearance:none; height:4px; border-radius:3px;
+    background:#2a2e37; outline:none; }
+  input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:16px; height:16px; border-radius:50%;
+    background:var(--amber); cursor:pointer; border:2px solid #0b0c0f; }
+  input[type=range]::-moz-range-thumb{ width:16px; height:16px; border-radius:50%; background:var(--amber);
+    cursor:pointer; border:2px solid #0b0c0f; }
+  .defs { margin-top:20px; background:var(--panel); border:1px solid #23262d; border-radius:10px;
+          padding:14px 16px; font-size:13px; }
+  .defs .t { color:var(--dim); font-size:11px; letter-spacing:.1em; margin-bottom:8px; }
+  .defs code { color:var(--ink); }
+  .defs .k { color:#7fb0ff; }
+  .defs .v { color:var(--amber); }
+  .foot { color:var(--dim); font-size:11.5px; margin-top:16px; }
+  .foot b { color:#b7bcc6; font-weight:600; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>In-sun "loading" chase — tuner</h1>
+  <p class="sub">Simulates <code>led_sweep()</code> with the firmware's exact math (triangle bump + gamma², physical L→R = D2 D3 D4 D5). Dial the feel; the values below drop into <code>board.h</code>.</p>
+
+  <div class="stage">
+    <div class="card-note">D R H · back-lit</div>
+    <canvas id="c" width="1240" height="360"></canvas>
+  </div>
+
+  <div class="controls">
+    <div class="row"><label>PASS_MS</label><input id="passms" type="range" min="250" max="1800" step="10" value="800"><output id="o_passms"></output></div>
+    <div class="row"><label>PEAK</label><input id="peak" type="range" min="40" max="255" step="1" value="235"><output id="o_peak"></output></div>
+    <div class="row"><label>OVERLAP</label><input id="ovl" type="range" min="120" max="512" step="4" value="320"><output id="o_ovl"></output></div>
+    <div class="row"><label>PASSES</label><input id="passes" type="range" min="1" max="4" step="1" value="2"><output id="o_passes"></output></div>
+  </div>
+
+  <div class="defs">
+    <div class="t">board.h</div>
+    <code><span class="k">#define</span> SWEEP_PASSES&nbsp;&nbsp;&nbsp;&nbsp;<span class="v" id="d_passes">2</span></code><br>
+    <code><span class="k">#define</span> SWEEP_PASS_MS&nbsp;&nbsp;&nbsp;<span class="v" id="d_passms">800</span></code><br>
+    <code><span class="k">#define</span> SWEEP_PEAK&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="v" id="d_peak">235</span></code><br>
+    <code><span class="k">#define</span> SWEEP_OVERLAP&nbsp;&nbsp;&nbsp;<span class="v" id="d_ovl">320</span></code>
+  </div>
+
+  <p class="foot"><b>Reading it:</b> OVERLAP 256 = neighbours cross at ~50% (clean hand-off); &gt;256 = softer, more of the row lit at once; &lt;256 = a dark gap between LEDs (sequential blink, not a crossfade). PASS_MS is one L→R wipe; PASSES wipes then a short pause, mimicking the tell re-firing each ~1&nbsp;s poll while in sun. Brightness here tracks the pre-gamma perceptual value, which is what the eye sees on the real card after the firmware's gamma² correction.</p>
+</div>
+
+<script>
+(function(){
+  const cv = document.getElementById('c'), g = cv.getContext('2d');
+  const W = cv.width, H = cv.height;
+  const N = 4;                              // LEDs
+  const Q = 256;                            // Q8 unit = one LED spacing
+  const marginX = W*0.13, spanX = W - 2*marginX;
+  const ledX = i => marginX + spanX * (i/(N-1));
+  const ledY = H*0.42, glowR = spanX/(N-1) * 0.92;
+
+  const ctl = {
+    passms: document.getElementById('passms'),
+    peak:   document.getElementById('peak'),
+    ovl:    document.getElementById('ovl'),
+    passes: document.getElementById('passes'),
+  };
+  const out = {
+    passms: document.getElementById('o_passms'), peak: document.getElementById('o_peak'),
+    ovl: document.getElementById('o_ovl'), passes: document.getElementById('o_passes'),
+  };
+  const def = {
+    passms: document.getElementById('d_passms'), peak: document.getElementById('d_peak'),
+    ovl: document.getElementById('d_ovl'), passes: document.getElementById('d_passes'),
+  };
+  function sync(){
+    for (const k in ctl){ out[k].textContent = ctl[k].value; def[k].textContent = ctl[k].value; }
+  }
+  for (const k in ctl) ctl[k].addEventListener('input', sync);
+  sync();
+
+  const gamma2 = v => (v*v)/255;           // matches firmware
+  const GAP_MS = 650;                      // pause between invocations (sim only)
+
+  // brightness (0..1, perceptual) of LED i at Q8 position p
+  function bright(i, p, peak, ovl){
+    let d = Math.abs(p - i*Q);
+    let b = d >= ovl ? 0 : 255*(1 - d/ovl); // triangle, 0..255
+    let lin = b * peak / 255;               // scale to peak
+    return lin/255;                         // perceptual (pre-hardware-gamma)
+  }
+
+  function draw(ts){
+    const passms = +ctl.passms.value, peak = +ctl.peak.value, ovl = +ctl.ovl.value, passes = +ctl.passes.value;
+    const p_lo = -ovl, p_hi = (N-1)*Q + ovl;
+    const cycle = passes*passms + GAP_MS;
+    const t = ts % cycle;
+
+    let bvals = [0,0,0,0];
+    if (t < passes*passms){
+      const frac = (t % passms) / passms;   // 0..1 within a wipe
+      const p = p_lo + frac*(p_hi - p_lo);
+      for (let i=0;i<N;i++) bvals[i] = bright(i, p, peak, ovl);
+    }
+
+    // background card
+    g.clearRect(0,0,W,H);
+    g.fillStyle = '#0a0b0e'; g.fillRect(0,0,W,H);
+
+    // faint LED seats
+    for (let i=0;i<N;i++){
+      g.beginPath(); g.arc(ledX(i), ledY, 7, 0, 7); g.fillStyle='#1c2027'; g.fill();
+    }
+
+    // additive amber glow
+    g.globalCompositeOperation = 'lighter';
+    for (let i=0;i<N;i++){
+      const b = bvals[i]; if (b<=0.001) continue;
+      const r = glowR*(0.35 + 0.65*b);
+      const grd = g.createRadialGradient(ledX(i),ledY,0, ledX(i),ledY,r);
+      grd.addColorStop(0, `rgba(255,190,70,${0.95*b})`);
+      grd.addColorStop(0.35, `rgba(255,150,40,${0.55*b})`);
+      grd.addColorStop(1, 'rgba(255,120,20,0)');
+      g.fillStyle = grd; g.beginPath(); g.arc(ledX(i),ledY,r,0,7); g.fill();
+      // hot core
+      g.fillStyle = `rgba(255,225,150,${b})`; g.beginPath(); g.arc(ledX(i),ledY,7*(0.6+0.8*b),0,7); g.fill();
+    }
+    g.globalCompositeOperation = 'source-over';
+
+    // DRH letters, brightened where the glow sits under them
+    const letters = ['D','R','H'];
+    const lx = [0.5, 1.5, 2.5];             // letter positions between the 4 LEDs
+    g.font = '600 92px ui-monospace,Menlo,monospace';
+    g.textAlign='center'; g.textBaseline='middle';
+    for (let j=0;j<letters.length;j++){
+      const px = marginX + spanX*(lx[j]/(N-1));
+      // local illumination = interp of neighbouring LED brightness
+      const li = Math.floor(lx[j]), f = lx[j]-li;
+      const loc = bvals[li]*(1-f) + bvals[li+1]*f;
+      const a = 0.10 + 0.85*loc;
+      g.fillStyle = `rgba(255,${Math.round(150+70*loc)},${Math.round(60+40*loc)},${a})`;
+      g.fillText(letters[j], px, ledY);
+    }
+
+    requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
+})();
+</script>
+</body>
+</html>
