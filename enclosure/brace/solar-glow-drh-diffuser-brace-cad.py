@@ -63,7 +63,13 @@ BX0, BX1, BY0, BY1 = 2.60, 49.70, 31.6, 57.4  # band fills the SC gap (y31.15-57
 RAIL_W = (2.60, 2.10, 6.75, 86.80)   # west rail: x0 2.60 CONTACTS the W wall (x2.55); runs S->N wall (y2.10-86.80); x1 0.25 W of SC1/SC3
 RAIL_E_S = (44.05, 2.10, 48.20, 10.0)  # east rail S: widened-lip band (y0-10, wall x48.25) -> x48.20 CONTACT
 RAIL_E_M = (44.05, 10.0, 49.70, 72.0)  # east rail MID: pinched band (y10-72, wall x49.75) -> x49.70 CONTACT
-RAIL_E_N = (44.05, 72.0, 48.20, 86.80) # east rail N: widened-lip band (y72-88.9, wall x48.25) -> x48.20 CONTACT
+RAIL_E_N = (44.05, 72.0, 49.70, 86.80) # east rail N: shell east lip PINCHED here 2026-07-11 (was the 2.5 wide
+                                       # lip, wall x48.25; removed to clear the relocated clamp cluster). Now the
+                                       # wall is the pinched x49.75, so the rail extends to x49.70 CONTACT, like
+                                       # RAIL_E_M. The moved parts (U4 x49.20, R7/R9 48.98, C10 48.81, C7 49.55)
+                                       # sit under this band and get pocketed; VERIFY on regen that the rail web
+                                       # outboard of each pocket (esp. C7 @ east 49.55, ~0.15mm of rail to x49.70)
+                                       # still prints/supports -- if not, split RAIL_E_N to skip the C7 y82-83 slice.
 FP = [(BX0, BY0, BX1, BY1), RAIL_W, RAIL_E_S, RAIL_E_M, RAIL_E_N]
 def in_fp(x0,x1,y0,y1): return any(not (x1<=r[0] or x0>=r[2] or y1<=r[1] or y0>=r[3]) for r in FP)
 GAP   = 1.80
