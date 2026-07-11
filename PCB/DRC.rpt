@@ -1,5 +1,5 @@
 ** Drc report for solar-glow-drh-v3_0.kicad_pcb **
-** Created on 2026-07-05T17:19:01 **
+** Created on 2026-07-11T17:28:45 **
 ** Report includes: Errors, Warnings, Exclusions **
 
 ** Found 5 DRC violations **
@@ -17,14 +17,228 @@
     @(25.4000 mm, 87.6500 mm): Segment [GND] on F.Cu
 [lib_footprint_mismatch]: Footprint 'SOT-23-6' does not match copy in library 'Package_TO_SOT_SMD'
     Local override; warning (excluded)
-    @(6.3425 mm, 32.2000 mm): Footprint U6
+    @(7.4600 mm, 31.6700 mm): Footprint U6
 [lib_footprint_mismatch]: Footprint 'ADXL367 CC-12-4_ADI' does not match copy in library 'Package_TO_SOT_SMD'
     Local override; warning (excluded)
     @(19.4300 mm, 35.0700 mm): Footprint U3
 
 ** Found 0 unconnected pads **
 
-** Found 1 Footprint errors **
+** Found 71 Footprint errors **
+[duplicate_footprints]: Duplicate footprints
+    Local override; warning
+    @(47.8000 mm, 60.4000 mm): Footprint <no reference designator>
+    @(3.0000 mm, 60.4000 mm): Footprint <no reference designator>
+[duplicate_footprints]: Duplicate footprints
+    Local override; warning
+    @(3.0000 mm, 28.5000 mm): Footprint <no reference designator>
+    @(3.0000 mm, 60.4000 mm): Footprint <no reference designator>
+[duplicate_footprints]: Duplicate footprints
+    Local override; warning
+    @(47.8000 mm, 28.5000 mm): Footprint <no reference designator>
+    @(3.0000 mm, 60.4000 mm): Footprint <no reference designator>
+[duplicate_footprints]: Duplicate footprints
+    Local override; warning
+    @(0.0000 mm, 0.0000 mm): Footprint <no reference designator>
+    @(3.0000 mm, 60.4000 mm): Footprint <no reference designator>
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(9.5000 mm, 45.5000 mm): Footprint C1
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(9.5000 mm, 36.6000 mm): Footprint C2
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(12.7270 mm, 48.0289 mm): Footprint C3
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(13.7000 mm, 36.8900 mm): Footprint C4
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(4.7700 mm, 45.5200 mm): Footprint C5
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(12.8000 mm, 36.9000 mm): Footprint C6
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(48.7500 mm, 82.3600 mm): Footprint C7
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(32.3000 mm, 34.7500 mm): Footprint C8
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(35.6600 mm, 39.1400 mm): Footprint C9
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(48.0100 mm, 72.8500 mm): Footprint C10
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(17.8000 mm, 36.7000 mm): Footprint C11
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(18.2700 mm, 33.1200 mm): Footprint C12
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(26.8900 mm, 48.6200 mm): Footprint C13
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(46.5000 mm, 12.0000 mm): Footprint D1
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(16.1000 mm, 43.9000 mm): Footprint D2
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(22.4000 mm, 43.9000 mm): Footprint D3
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(28.7000 mm, 43.9000 mm): Footprint D4
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(34.7000 mm, 43.9000 mm): Footprint D5
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(45.8200 mm, 68.6200 mm): Footprint D9
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(47.1300 mm, 65.3600 mm): Footprint D10
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(43.9500 mm, 66.1600 mm): Footprint D11
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(4.7000 mm, 38.4000 mm): Footprint J1
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(48.4000 mm, 14.5400 mm): Footprint JP1
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(3.0000 mm, 85.9000 mm): Footprint MH1
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(47.8000 mm, 85.9000 mm): Footprint MH2
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(3.0000 mm, 3.0000 mm): Footprint MH3
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(47.8000 mm, 3.0000 mm): Footprint MH4
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(25.4000 mm, 17.0000 mm): Footprint PV1
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(25.4000 mm, 71.9000 mm): Footprint PV2
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(47.9100 mm, 68.1300 mm): Footprint Q1
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(16.0652 mm, 48.0210 mm): Footprint R1
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(22.4000 mm, 49.6000 mm): Footprint R2
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(28.8800 mm, 49.5900 mm): Footprint R3
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(34.8200 mm, 48.3000 mm): Footprint R4
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(5.6700 mm, 45.5400 mm): Footprint R5
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(6.6100 mm, 45.5400 mm): Footprint R6
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(48.1800 mm, 78.2200 mm): Footprint R7
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(46.6900 mm, 78.7000 mm): Footprint R8
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(48.1700 mm, 79.1100 mm): Footprint R9
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(8.4000 mm, 35.8500 mm): Footprint R10
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(11.9000 mm, 36.9500 mm): Footprint R11
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(31.5500 mm, 48.6000 mm): Footprint R12
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(33.7500 mm, 37.1000 mm): Footprint R13
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(4.3600 mm, 31.7700 mm): Footprint R14
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(17.6200 mm, 48.5100 mm): Footprint SB1
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(23.9000 mm, 50.0500 mm): Footprint SB2
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(30.4000 mm, 50.1600 mm): Footprint SB3
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(34.9800 mm, 49.6000 mm): Footprint SB4
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(15.5000 mm, 16.9000 mm): Footprint SC1
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(35.3000 mm, 16.9000 mm): Footprint SC2
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(15.5000 mm, 72.0000 mm): Footprint SC3
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(35.3000 mm, 72.0000 mm): Footprint SC4
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(13.3000 mm, 46.0000 mm): Footprint SJ1
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(24.0000 mm, 48.6000 mm): Footprint SW2
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(13.3000 mm, 16.9000 mm): Footprint TC1
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(48.4000 mm, 12.0000 mm): Footprint TP1
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(9.5000 mm, 40.9000 mm): Footprint U1
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(27.5000 mm, 37.0000 mm): Footprint U2
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(19.4300 mm, 35.0700 mm): Footprint U3
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(47.3600 mm, 75.5000 mm): Footprint U4
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(35.0520 mm, 34.0000 mm): Footprint U5
+[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
+    Local override; warning
+    @(7.4600 mm, 31.6700 mm): Footprint U6
+[extra_footprint]: Extra footprint
+    Local override; warning
+    @(3.0000 mm, 60.4000 mm): Footprint <no reference designator>
+[extra_footprint]: Extra footprint
+    Local override; warning
+    @(47.8000 mm, 60.4000 mm): Footprint <no reference designator>
+[extra_footprint]: Extra footprint
+    Local override; warning
+    @(3.0000 mm, 28.5000 mm): Footprint <no reference designator>
+[extra_footprint]: Extra footprint
+    Local override; warning
+    @(47.8000 mm, 28.5000 mm): Footprint <no reference designator>
 [extra_footprint]: Extra footprint
     Local override; warning
     @(0.0000 mm, 0.0000 mm): Footprint <no reference designator>
