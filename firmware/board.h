@@ -16,7 +16,7 @@
  *     1 PA3      LDRV1    LED D2                   TCA0 WO3
  *     2 PA4      PA4      spare GPIO  (JP2.1)
  *     3 PA5      BTN      reserved button (stub only; v3 hook)
- *     4 PA6      FD       NFC field-detect in (NT3H2211)  FD-wake, falling; field-powered (works VCC-off)
+ *     4 PA6      FD       NFC field-detect in (NT3H2211)  FD-wake, both edges; field-powered (works VCC-off)
  *     5 PA7      NFC_EN   NFC VCC load-switch enable (active-HIGH)  output, LOW = NFC off
  *     6 PC0      PC0      spare GPIO  (JP2.2)
  *     7 PC1      PC1      spare GPIO  (JP2.3)
@@ -94,8 +94,10 @@
  * FD-WAKE: a phone's field pulls FD low (FD_ON=00b, field-present = the POR
  * default). Per datasheet 8.4 the FD pin runs on the phone's field power, so it
  * works even with the tag's VCC gated off -- that is why FD-wake survives the
- * power-gate. main.c senses a FALLING edge on PA6 and runs the tap glow; no I2C
- * setup is needed (the field-present default does it). Firmware also enables PA6's
+ * power-gate. main.c senses PA6 on BOTH edges: the falling edge (field arrives)
+ * wakes the core to blank the LEDs for the read, and the rising edge (field leaves)
+ * fires the acknowledge glow (see NFC_BLANK_ON_FIELD below). No I2C setup is needed
+ * -- the field-present default does it. Firmware also enables PA6's
  * internal pull-up as belt-and-suspenders. R13 ties FD to VS on the v3.0 board
  * (confirmed from copper), so the pull-up is redundant insurance -- it only sinks
  * current while FD is held low. */
@@ -211,9 +213,10 @@
 #define WINK_FLOOR_MV      3000
 
 /* watchdog: recover from an unexpected lockup on a fielded card. 1 = on.
- * Petted from the main loop (top) and from inside led_breathe, never from an
- * ISR. Timeout (~8 s) must stay well above POLL_PERIOD_S and the longest glow
- * (GLOW_CYCLES * GLOW_BREATH_MS); the PIT wakes the loop every poll to pet it,
+ * Petted from the main loop (top) and from inside the animation naps (idle_nap_ms,
+ * shared by led_breathe AND led_sweep), never from an ISR. Timeout (~8 s) must stay
+ * well above POLL_PERIOD_S and the longest animation (the double-tap glow,
+ * DTAP_CYCLES * DTAP_BREATH_MS ~ 4.8 s); the PIT wakes the loop every poll to pet it,
  * so power-down sleep never trips it. */
 #define USE_WDT            1
 

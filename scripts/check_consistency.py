@@ -7,7 +7,7 @@ change to one that isn't mirrored in the others fails loudly (in CI or locally):
 
   [1] PIN CONTRACT  -- the pad -> net map documented in firmware/board.h must
       match the schematic netlist for the MCU (U1).            [ERROR on drift]
-  [2] BOM PARITY    -- every reference in the assembly BOM must be a real
+  [2] BOM PARITY    -- every reference in the CI-generated BOM must be a real
       component in the netlist (no phantom BOM lines).         [ERROR on drift]
   [3] DOC FILE REFS -- every solar-glow-drh-*.kicad_* file named in board.h,
       README.md, or firmware/README.md must actually exist.    [WARN on drift]
@@ -101,7 +101,7 @@ def check_pin_contract(netpins):
 
 
 def check_bom_parity(comps):
-    print("[2] assembly BOM vs netlist components")
+    print("[2] CI-generated BOM vs netlist components")
     bomrefs = set()
     with open(BOM) as f:
         for row in csv.DictReader(f):
@@ -115,7 +115,7 @@ def check_bom_parity(comps):
         ok(f"all {len(bomrefs)} BOM refs exist in the netlist")
     excluded = sorted(comps - bomrefs)
     if excluded:
-        print(f"  note:   {len(excluded)} netlist parts not in the assembly BOM "
+        print(f"  note:   {len(excluded)} netlist parts not in the CI-generated BOM "
               f"(mechanical / DNP / bare-pad / hand-soldered): {' '.join(excluded)}")
 
 

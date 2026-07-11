@@ -31,7 +31,7 @@ Each fact has exactly one home; everything else points at it rather than restati
 |---|---|
 | Board copper / geometry / holes | `PCB/solar-glow-drh-v3_0.kicad_pcb` + `.kicad_sch` |
 | Enclosure geometry | `enclosure/solar-glow-drh-v3_0-backshell-0p6b-brace-cad.py` (prints the Z-stack; regenerates the STEP) |
-| Firmware pin map + knobs | `firmware/README.md` (matches the schematic) |
+| Firmware pin map + knobs | `firmware/board.h` (+ `firmware/README.md`; both match the schematic) |
 | BOM | `PCB/solar-glow-drh-v3_0-BOM.xlsx` (v3.0 master — converted lines have prices blanked pending quote; see `PCB/README.md` Step 4) |
 | Design *reasoning* / lineage | `solar-glow-drh-design-notes.md` |
 | Open work / cross-domain to-dos | `TODO.md` (an index of what's left; each item points back at the files above) |
@@ -125,7 +125,8 @@ average several milliamps. The two-panel harvest and the 15 J tank are sized to 
 slowly and glow in bursts** — but that bet has never been put on a meter.
 
 What changed the math since the early notes: the rail is now **clamped to ~3.50 V (≤ 3.60 V worst-case)** and the
-ballasts are **150 Ω**, so each LED peaks near **~9 mA** rather than the old estimate. Four
+ballasts are **150 Ω**, so each LED peaks near **~9 mA** at the 3.60 V worst-case clamp (~8 mA
+at the ~3.5 V typical rail, the figure `firmware/README.md` quotes) rather than the old estimate. Four
 on at once is a real load against an indoor harvest measured in fractions of a milliamp.
 
 **First move when boards arrive:** put the cells under your actual target lighting and measure

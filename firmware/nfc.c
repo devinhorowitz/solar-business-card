@@ -132,7 +132,7 @@ uint8_t nfc_write_ndef(const uint8_t *buf, uint16_t len)
 
     while (off < len) {
         uint8_t chunk[NFC_BLOCK_SZ];
-        if (blk > NFC_BLK_EEPROM_TOP) return 1;   /* NDEF overruns sector-0 EEPROM */
+        if (blk > NFC_BLK_NDEF_TOP) return 1;     /* NDEF overruns sector-0 -> reject before the 0x3A config block */
         for (uint8_t i = 0; i < NFC_BLOCK_SZ; i++) {
             uint16_t p = off + i;
             chunk[i] = (p < len) ? buf[p] : 0x00; /* 00h-pad the last partial block */
