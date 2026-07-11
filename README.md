@@ -144,7 +144,7 @@ solar-business-card/
 │   ├── solar-glow-drh-v3_0.kicad_pcb   # the board — v3.0, 2-layer (source of truth)
 │   ├── solar-glow-drh-v3_0.kicad_sch   # schematic (v3.0)
 │   ├── solar-glow-drh-v3_0-BOM.xlsx    # bill of materials — v3.0 master (U6 + R14; all-0402)
-│   ├── solar-glow-drh-v3_0-BOM-assembly.xlsx  # placed-parts BOM for PCBA (36 parts)
+│   ├── solar-glow-drh-v3_0-BOM-assembly.xlsx  # placed-parts BOM for PCBA (42 parts; xlsx regen pending)
 │   └── README.md                       # order & build guide
 ├── solar-glow-drh-v2-hardware.md   # as-built wiring & pin map (v2-era; v3.0 LED-map delta noted at top)
 ├── solar-glow-drh-v2-mechanical.md # board mechanics, keepouts, access (v2-era; v3.0 hole/enclosure deltas at top)

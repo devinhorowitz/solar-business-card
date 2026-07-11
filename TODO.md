@@ -6,7 +6,7 @@ live in the source files it points to (see the "Where the truth lives" table in
 `README.md`). Check items off in the GitHub UI as they land.
 
 _Board is electrically frozen: a PCB layout change means a brace reprint, not a
-shell re-machine. Updated 2026-07-10._
+shell re-machine. Updated 2026-07-11._
 
 ## Cross-domain (link two+ teams — easiest to forget)
 
@@ -43,7 +43,9 @@ shell re-machine. Updated 2026-07-10._
   (see the cross-domain item above).
 - Recently closed: real AVR-Dx compile (green in CI), bus-fault STOP hardening,
   compile-time ADC-threshold efficiency, documentary-clarity pass, in-sun `led_sweep`
-  wired (SUN threshold derived).
+  wired (SUN threshold derived), cross-pillar harmony pass, and the NFC NDEF-write
+  guard bounded to the sector-0 top (`NFC_BLK_NDEF_TOP` 0x37, was 0x7A — now rejects a
+  write before the 0x3A config block; latent-only, current vCard unaffected).
 
 ## PCB — `PCB/solar-glow-drh-v3_0.kicad_pcb` / `.kicad_sch`
 
@@ -58,6 +60,20 @@ shell re-machine. Updated 2026-07-10._
   `T-H70W567099A` PCBA); get the LED package dimension answer (1.25 vs 1.9 mm)
   and the merged PCB+PCBA total; decide the U2 spare (8-week lead); ensure the PO
   uses the confirmed C11/C13 MPNs.
+- [ ] **BOM completeness — D10/D11/C10 absent from the orderable BOMs** _(audit find,
+  2026-07-11)._ The board (schematic / CI BOM) carries D10, D11 (MMSD301T1G,
+  comparator-supply OR) and C10 (100 nF) as fitted SMD, but `-BOM-assembly.xlsx` lists
+  only 39 (missing all three) and the docs said "36". Correct machine-place count =
+  **42**. `PCB/README.md` order table + counts and root `README.md` are now fixed to 42;
+  **the `-BOM-assembly.xlsx` master still needs regenerating to 42** (binary; owner: Devin).
+- [ ] **DRC/ERC prose vs the committed reports** _(audit find)._ The board is DRC/ERC
+  **clean** (0 unexcluded errors). But `PCB/README.md` + `solar-glow-drh-design-notes.md`
+  describe "~61 marginal-band warnings" present in neither committed report (GUI: 5
+  violations / 3 excluded; CI: 6 clearance + 62 MPN-parity). Decide whether the two-tier
+  `.kicad_dru` rules should be loaded in the run, then align the prose. Minor: the ERC
+  `isolated_pin_label` (PA4/PC0/PC1) + `endpoint_off_grid` (JP1/TP1) aren't catalogued.
+- [ ] _(Cosmetic)_ C13 schematic `lib_id` is still `solarglow:C11` (clone leftover);
+  surfaces as Part="C11" in the CI BOM. Same class as the C13 footprint-field fix.
 - [x] KiBot group-by-MPN BOM grouping (`group_fields: ['MPN']` in
   `PCB/solar-glow-drh.kibot.yaml`) — DONE: identical parts now collapse to one CI-BOM
   line + qty. Safe because every component carries a non-empty MPN (checked); grouped
@@ -80,6 +96,21 @@ shell re-machine. Updated 2026-07-10._
 - [ ] Add the maker's mark to `enclosure/README.md` once the wording is locked.
 - [ ] Confirm the committed `.step`/`.stl` match the current generators (running
   a generator clobbers its STEP/STL).
+- [ ] **[geometry] Brace↔shell mating walls disagree by 0.05 mm** _(audit find,
+  2026-07-11)._ The brace models the flat cavity walls 0.05 mm inboard of where the
+  shell places them, so the brace edges sit **0.10 mm** off each true wall — double the
+  intended ~0.05 mm no-rattle contact the brace's fit relies on. Shell is source-of-truth;
+  resolve the brace rail coords (or add `edge_fit` to the shell `_cav_inner`), then regen.
+  (`…-backshell-…-cad.py` vs `…-diffuser-brace-cad.py`.)
+- [ ] **[geometry] U2 relief pocket is 1.0 mm east of the real U2** _(audit find)._ PCB
+  has U2 at (27.5, 37); `…-backshell-…-cad.py` `U2_POS = (28.5, 37)`. ~0.5 mm of the
+  tallest B-side part overhangs the un-relieved floor. PCB is frozen truth → fix `U2_POS`
+  + regen the STEP/STL (and the derived drawing/README note-7 copies).
+- [ ] **Fab drawing still renders the retired locator pillars** _(audit find)_ + NOTE 4
+  (Ø3.2 recesses), contradicting the pillar-free STEP — and it's the file attached to the
+  PCBWay CNC quote. De-pillar `…-backshell-…-DRAWING-gen.py` and regenerate the PDF/PNG.
+  (Also low: several generator docstrings still cite the pre-redesign floor 0.95 / cavity
+  1.85 / two locator pillars, and "four" vs "two" outboard rails.)
 - [ ] _(Cosmetic)_ brace drawing silhouettes still show the pre-DFM-clip outline.
 
 ## Locked — do NOT re-open
