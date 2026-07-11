@@ -16,7 +16,7 @@ GAP = 1.80                                     # brace thickness (fills the 1.80
 FER = (36.9,31.5,48.9,57.5)                    # ferrite 12 wide (x, CRITICAL) x 26 long (y, forgiving)
 FER_CLR = 0.20; FER_DEPTH = 0.33               # channel walls + pocket depth
 GLOW = (14.95,40.8,35.85,47.0)                 # monogram-window footprint (LED-hug backing behind it)
-U2 = (28.5,37.0,7.8,5.4)                        # U2: the one through-hole (tall)
+U2 = (30.10,37.64,7.8,5.4)                      # U2: the one through-hole (tall). Re-derived origin (moved +1.6E/+0.64S in the consolidation).
 
 INK="#111111"; GRY="#9a9a9a"; HATCH="#ededed"; PUR="#6a4fb0"; AMB="#c79a2e"
 fig=plt.figure(figsize=(420/25.4,297/25.4))
@@ -44,7 +44,7 @@ Y=lambda by:Pbot+(YB-by)*S          # flip: y15 (top rails / PV N+P tabs) high o
 # outline: band + two full-length rails (east edge stepped), 4 corner-boss reliefs cut clear
 from shapely.geometry import box as _sbox, Point as _spt
 from shapely.ops import unary_union as _uu
-_FP=[(BX0,BY0,BX1,BY1),RW,(44.05,2.10,48.20,10.0),(44.05,10.0,49.70,72.0),(44.05,72.0,48.20,86.80)]
+_FP=[(BX0,BY0,BX1,BY1),RW,(44.05,2.10,48.20,10.0),(44.05,10.0,49.70,72.0),(44.05,72.0,49.70,86.80)]  # N end pinched to x49.70 (was x48.20) -- matches RAIL_E_N in the cad script (clamp-cluster backing)
 _out=_uu([_sbox(a,b,c,d) for a,b,c,d in _FP])
 for _bx,_by in [(3,3),(47.8,3),(3,85.9),(47.8,85.9)]:
     _out=_out.difference(_spt(_bx,_by).buffer(3.0,resolution=32))
@@ -100,7 +100,7 @@ notes=[
  "    (WEAKLY CONDUCTIVE): THE BRACE RESTS ON GND / VS / SIGNAL COPPER, SO A DIELECTRIC IS REQUIRED. WHITE ALSO DRIVES THE WINDOW BACKING (NOTE 6).",
  "3. FIT: PRINT ~0.1 PROUD IN HEIGHT AND SAND THE FLAT BOTTOM (DATUM) DOWN TO A ZERO-AIR FIT IN THE 1.80 CAVITY. ALL POCKETS ARE ON THE TOP FACE, SO THE",
  "    BOTTOM LAPS FLAT ON GLASS WITHOUT TOUCHING THEM. DO NOT SAND THE TOP (IT SETS THE POCKET DEPTHS).",
- "4. PRECISION FIT, NO RATTLE: THE OUTER EDGES CONTACT ALL FOUR FLAT CAVITY WALLS AT ~0.05 (W x2.60 / S y2.10 / N y86.80; E STEPPED x49.70 MID, x48.20 ENDS). THE FOUR",
+ "4. PRECISION FIT, NO RATTLE: THE OUTER EDGES CONTACT ALL FOUR FLAT CAVITY WALLS AT ~0.05 (W x2.60 / S y2.10 / N y86.80; E STEPPED x49.70 MID+N, x48.20 S END (y0-10) ONLY). THE FOUR",
  "    CORNER BOSSES (r2.6) + ROUNDED CORNERS ARE RELIEVED (NEED NOT FIT). RAILS RUN S->N WALL OUTBOARD OF THE CAPS + BACK THE 4 PANEL SOLDER TABS; POCKETS KEY TO THE BOARD.",
  "5. FERRITE CHANNEL (OVER THE NFC COIL): OPEN-ENDED CHANNEL, WALLED ON THE 12 WIDTH (CRITICAL - EDGE-LIMITED), OPEN AT BOTH Y-ENDS, 0.33 DEEP.",
  "    FERRITE (Wurth WE-FSFS 364006, NOMINAL 12 \u00d7 26 mm, EVEN ON THE 2mm SCORE GRID) IS PSA'd IN; LENGTH IS FORGIVING AND MAY OVERHANG THE ENDS SLIGHTLY.",

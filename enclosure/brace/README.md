@@ -36,7 +36,7 @@ rounded corners are **relieved** (cut clear — the brace need not fit them). It
 
 ## Geometry — precision fit
 
-- **Contacts all four flat walls at ~0.05 mm.** West edge x2.60 (wall x2.55), south edge y2.10 (wall y2.05), north edge y86.80 (wall y86.85). The **east edge follows the shell's stepped east wall**: x49.70 through the pinched middle (y10–72, wall x49.75) and x48.20 at the two widened-lip ends (wall x48.25).
+- **Contacts all four flat walls at ~0.05 mm.** West edge x2.60 (wall x2.55), south edge y2.10 (wall y2.05), north edge y86.80 (wall y86.85). The **east edge follows the shell's stepped east wall**: x49.70 through the pinched middle **and north end** (y10–86.80, wall x49.75) and x48.20 at the one widened-lip end (y0–10 south, wall x48.25).
 - **Corner bosses relieved.** A circular relief (r3.0) at each of the four M2 bosses (r2.6) clears the boss **and** the rounded cavity corner; the brace does not seat on them, only on the flat walls.
 - **Rails run the full length (y2.10–86.80)** outboard of the supercaps (SC1/SC3 x7–24, SC2/SC4 x26.8–43.8, 0.25 mm gap). The caps sit in the two open bays; the rails back the four PV solder tabs.
 - **Band fills the cap gap** (y31.15–57.75), full width x2.60–49.70, carrying the window backing and the ferrite channel.
@@ -48,7 +48,7 @@ rounded corners are **relieved** (cut clear — the brace need not fit them). It
 - **Ferrite channel** over the NFC coil: an **open-ended** channel — walled on the **12 mm width** (edge-limited by the coil/board east edge), **open at both ends** (length is forgiving), **0.33 mm** deep. Takes a Würth WE-FSFS 364006 ferrite, nominal **12 × 26 mm**, PSA'd in; it may overhang the ends slightly.
 - **Window = LED-hug diffuser backing:** solid white resin fills the monogram-window footprint behind the FR4, minus tight D2–D5 LED pockets. No aperture, no floor tape.
 - **U2 and U6 are through-pockets.** U2 is the tallest B-side part (1.75 mm). U6 (1.45 mm) is forced through because a blind pocket would leave a sub-0.4 mm resin ceiling; through, its body faces the shell floor with 0.35 mm of air. Everything else sits in blind pockets at its verified height.
-- **Thin-wall bridges.** Where two pockets would leave a resin wall thinner than 0.40 mm, the generator merges the pair into one recess. The current board merges 14 such pairs, all in the dense clusters; the STEP/STL already reflect them.
+- **Thin-wall bridges.** Where two pockets would leave a resin wall thinner than 0.40 mm, the generator merges the pair into one recess. It prints the merged-pair count when run (they cluster in the dense areas); the regenerated STEP/STL reflect the current board (the count shifts as parts move — C10 was removed and the clamp cluster relocated).
 
 ## Removable — keep it that way during bring-up
 

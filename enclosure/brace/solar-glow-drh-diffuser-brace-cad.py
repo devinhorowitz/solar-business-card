@@ -66,10 +66,13 @@ RAIL_E_M = (44.05, 10.0, 49.70, 72.0)  # east rail MID: pinched band (y10-72, wa
 RAIL_E_N = (44.05, 72.0, 49.70, 86.80) # east rail N: shell east lip PINCHED here 2026-07-11 (was the 2.5 wide
                                        # lip, wall x48.25; removed to clear the relocated clamp cluster). Now the
                                        # wall is the pinched x49.75, so the rail extends to x49.70 CONTACT, like
-                                       # RAIL_E_M. The moved parts (U4 x49.20, R7/R9 48.98, C10 48.81, C7 49.55)
-                                       # sit under this band and get pocketed; VERIFY on regen that the rail web
-                                       # outboard of each pocket (esp. C7 @ east 49.55, ~0.15mm of rail to x49.70)
-                                       # still prints/supports -- if not, split RAIL_E_N to skip the C7 y82-83 slice.
+                                       # RAIL_E_M. The moved parts (U4 x49.16, R7/R9 48.98, Q1 48.51, C7 49.55; C10
+                                       # was DELETED in the passive consolidation) sit under this band and get pocketed.
+                                       # Re-verified vs the committed board: C7 is the east-closest -- its pocket (pad
+                                       # east 49.55 + 0.25 CLR = 49.80) EXCEEDS the rail edge x49.70, so it clips FLUSH
+                                       # to the east face (an open-edge pocket), NOT a fragile 0.15mm rail fin. No split
+                                       # needed. NOTE: the _clip cavity model below (line ~163) must reach x49.75 here
+                                       # too, or the intersect would pull this rail back to the OLD x48.25 -- fixed there.
 FP = [(BX0, BY0, BX1, BY1), RAIL_W, RAIL_E_S, RAIL_E_M, RAIL_E_N]
 def in_fp(x0,x1,y0,y1): return any(not (x1<=r[0] or x0>=r[2] or y1<=r[1] or y0>=r[3]) for r in FP)
 GAP   = 1.80
@@ -160,7 +163,7 @@ _x0,_y0,_x1,_y1,_ir = 2.55,2.05,49.75,86.85,1.45
 _cav=_bx2(_x0+_ir,_y0,_x1-_ir,_y1).union(_bx2(_x0,_y0+_ir,_x1,_y1-_ir))
 for _cx,_cy in [(_x0+_ir,_y0+_ir),(_x1-_ir,_y0+_ir),(_x0+_ir,_y1-_ir),(_x1-_ir,_y1-_ir)]:
     _cav=_cav.union(_pt2(_cx,_cy).buffer(_ir,resolution=48))
-_cav=_cav.difference(_bx2(48.25,_y0,49.75,10.0)).difference(_bx2(48.25,72.0,49.75,_y1))   # east widened-lip bands (wall x48.25)
+_cav=_cav.difference(_bx2(48.25,_y0,49.75,10.0))   # east widened-lip band (wall x48.25) -- SOUTH end (y0-10) ONLY. The NORTH end (y72-86.85) is now PINCHED to x49.75 (RAIL_E_N, 2026 clamp-cluster fix), so it is no longer carved back; leaving the old north carve here would clip RAIL_E_N to x48.25 and defeat the pinch.
 for _bx,_by in BOSS_RELIEF: _cav=_cav.difference(_pt2(_bx,_by).buffer(2.60,resolution=64))  # boss bumps (r2.6)
 _milled=_cav.buffer(-_TOOLR,join_style=1,resolution=48).buffer(_TOOLR,join_style=1,resolution=48)
 _fp=_milled.buffer(-_WCLR,join_style=1,resolution=48)

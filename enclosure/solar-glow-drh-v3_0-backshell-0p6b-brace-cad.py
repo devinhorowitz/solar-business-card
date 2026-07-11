@@ -45,7 +45,7 @@ from shapely.ops import unary_union
 W, H, R   = 50.80, 88.90, 3.0
 board_th  = 0.60
 mounts = [(3.0, 3.0), (47.8, 3.0), (3.0, 85.9), (47.8, 85.9),      # 4x corner M2, GND, 2.2 drill -- v3.0: concentric with the r3.0 corner fillets (x-inset 3.5->3.0; matches committed PCB v3_0 MH1-4)
-          (3.0, 28.5), (47.8, 28.5), (3.0, 60.4), (47.8, 60.4)]    # +4 panel-corner M2, GND -- match PCB nudge (holes at panel inner corners). 2-col 8-mount pattern. Verify STEP: W(3.0,28.5) boss r2.6 lands ~0.8mm from R14; E bosses at x47.8 merge into the pinched east lip like the corner bosses do.
+          (3.0, 28.5), (47.8, 28.5), (3.0, 60.4), (47.8, 60.4)]    # +4 panel-corner M2, GND -- match PCB nudge (holes at panel inner corners). 2-col 8-mount pattern. Verified vs committed board: W(3.0,28.5) boss r2.6 clears R14 by 0.34 (R14 y0 31.44, boss top y31.10) and U6 by 0.25 (U6 x0 5.85, boss E x5.60) -- TIGHT; a board-side nudge of U6/R14 (or a local boss trim there) buys margin if a fit check wants it. E bosses at x47.8 merge into the pinched east lip like the corner bosses.
 
 # ===== fixed shell knobs =====
 U2_H       = 1.75                  # U2 (SOIC-8 max, datasheet): the single tallest back part
@@ -58,8 +58,8 @@ cavity     = round(cap_H + kapton_th + cav_margin, 3)   # 1.85 general (cap-limi
 # 0.05 thicker for back-engraving stock. 0.05 = U2_H - cap_H is the ceiling for this trick: beyond it
 # you'd have to pocket the caps (17x28.5 mm each, x4 = a second cavity). Pocket = U2 pad box + margin.
 U2_POCKET    = round(U2_H - cap_H, 3)     # 0.05 mm local floor relief under U2
-U2_POS       = (28.5, 37.0)               # U2 origin, board coords (committed PCB); pad box 6.8 x 4.4
-U2_POCKET_WH = (7.8, 5.4)                 # pocket size: pad box + 0.5 margin all round (clears ribs/frame)
+U2_POS       = (30.10, 37.64)             # U2 origin, board coords (committed PCB v3.0, re-derived): part shifted +1.60 E / +0.64 S in the passive-consolidation reflow. Pad box 6.75 x 4.41 (unchanged footprint), centered here.
+U2_POCKET_WH = (7.8, 5.4)                 # pocket size: pad box + ~0.5 margin all round. At the new U2_POS the pocket spans y[34.94,40.34] -> N edge 0.46 clear of the glow window (y40.80); E edge x34.0 covers the U2 east pad (x33.48).
 
 edge_fit   = -0.05                 # press interference on the FLATS
 corner_clr = 0.15                  # corner relief so the press grips the flats
@@ -75,12 +75,13 @@ lip_E      = 1.0                       # E stays narrow through the JP1/TP1 pads
 lip_E_wide = 2.5                       # E END zones (clear of pads+coil) widen to match the west
 EAST_WIDE_Y = [(0.0, 10.0)]   # board-y bands the E lip widens to 2.5 (else pinched to 1.0, wall x49.8).
 # 2026-07-11: NORTH wide band (72,88.9) REMOVED -> east lip is now pinched (1.0, wall x49.8) over all of
-# y10-88.9. The relocated clamp cluster (owner's board edit: Q1/U4/R7/R9/C7/C10 moved to clear the PV2-corner
-# screw) now sits in y72-88.9 with east edges up to C7 @ x49.55 (also U4 49.20, D10 49.18, R7/R9 48.98), which
-# overhang the old 2.5 wide lip (wall x48.3) and collided with it. The 1.0 pinch (wall x49.8) clears C7 by
-# 0.24mm -- the SAME tolerance the existing pinch runs (it clears JP1/TP1 at x49.6). Edge-support lost here is
-# picked up by the brace east rail (RAIL_E_N extended to x49.70, in the brace generator).
-# ACTION: regenerate the STEP/STL and inspect the C7 spot (0.24mm to wall) + confirm the coil is still cleared.
+# y10-88.9. The relocated clamp cluster (owner's board edit: Q1/U4/R7/R9/C7 moved to clear the PV2-corner
+# screw; C10 was DELETED in the passive consolidation) sits in y72-88.9 with east edges C7 @ x49.55, U4 49.16,
+# R7/R9 48.98, Q1 48.51 -- these overhang the old 2.5 wide lip (wall x48.3). Re-verified vs the committed board:
+# the tightest east part overall is D10 @ x49.58 (y64.86, in the mid pinch band, not the clamp cluster); the
+# 1.0 pinch (wall x49.8) clears D10 by 0.22 and C7 by 0.25 -- the SAME tolerance class as the JP1/TP1 pinch at
+# x49.6. The NFC coil (east copper ~x48.4) stays well clear of the x49.8 wall. Edge-support lost under the pinch
+# is picked up by the brace east rail (RAIL_E_N extended to x49.70, in the brace generator).
 lip_w      = lip_E                      # legacy min-lip alias (only the dormant tool_relief helper still reads it)
 back_border = 2.0                      # SYMMETRIC proud back-frame border, equal on all 4 sides (decoupled from the asymmetric front lip). Front lip stays asymmetric (it clears B-side parts); this is the cosmetic exterior back border only.
 boss_r     = 2.60                  # M2 boss / back annulus outer radius
@@ -365,7 +366,7 @@ def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pill
                     _cut=_cut.cut(cq.Workplane("XY").workplane(offset=-0.10)
                             .polyline([(wx(x),wy(y)) for x,y in list(_r.coords)]).close().extrude(MAKER_DEPTH+0.20))
                 res=res.cut(_cut)
-    # U2 relief pocket: a local 0.05 mm-deeper cavity floor under U2 (28.5,37) so U2 keeps a
+    # U2 relief pocket: a local 0.05 mm-deeper cavity floor under U2 (30.10,37.64) so U2 keeps a
     # 0.10 mm air gap (same as the caps) while the GENERAL floor is `floor` mm of back-engraving stock. 0.05 = U2_H-cap_H;
     # the caps (1.70) are the next-tallest, so the general cavity is cap-limited and only U2 needs relief.
     # Sits in the open cavity, clear of the ribs (y33..56 gap), lip, bosses, and the reflector frame.
