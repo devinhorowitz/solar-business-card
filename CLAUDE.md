@@ -43,7 +43,7 @@ should be `(excluded)` and map to that list; a *new* unexcluded error is a real 
 ```sh
 python3 scripts/check_consistency.py
 ```
-Verifies `board.h` pin map ↔ schematic netlist, assembly BOM ↔ netlist, and that
+Verifies `board.h` pin map ↔ schematic netlist, CI-generated BOM ↔ netlist, and that
 every `.kicad_*` file referenced in the docs exists.
 
 ## CI

@@ -37,7 +37,7 @@ card's largest idle load. See **NFC contact card** below.
 | `twi.h` | header-only blocking I2C host (TWI0); shared by the accel and NFC tag. |
 | `adxl367.h/.c` | accelerometer: presence, tap→INT1, activity→INT2, tap/activity clear. |
 | `nfc.h/.c` | NT3H2211 NFC tag (`U5`): NDEF write + VCC power-gate via `NFC_EN`/`U6`. |
-| `led.h/.c` | TCA0 split-mode PWM on PA0–PA3 + gamma breathing animation. |
+| `led.h/.c` | TCA0 split-mode PWM on PA0–PA3 + gamma breathing glow + in-sun loading sweep. |
 | `sense.h/.c` | ADC rail/light reads + EEPROM activation counter. |
 | `main.c` | init (per hardware doc §7), sleep/wake state machine, ISRs. |
 | `Makefile` | build + UPDI flash. |
@@ -180,7 +180,9 @@ Baseline = **POWER-DOWN**. Wakes:
   POR default (`NC_REG.FD_ON = 00b`), so no setup is needed. Detail under **NFC
   contact card** below.
 - **PIT tick** (~1 s, RTC off the internal ULP, runs in power-down) → ADC-sample
-  the light level; on a dark→light edge, glow.
+  the light level; on a dark→light edge, glow. In **strong sun with the caps full**
+  it instead plays the in-sun "loading" sweep (`USE_SUN_SWEEP`; see *What to tune*) —
+  free solar spent as light, and gated so it can never drain the pack.
 
 All PORT pins sense fully asynchronously, so the rising-edge accel interrupts and
 the falling-edge FD interrupt wake the core from power-down with the peripheral
@@ -416,6 +418,26 @@ the sensor.
 - **EEPROM counter** (`sense.c`) rewrites the same 4-byte cell every tap; only a
   concern past ~100 k lifetime taps, where you'd rotate the cell address.
 
+### In-sun loading sweep (`board.h`; animation in `led.c`)
+The "charging in the sun" tell: on the ~1 s poll, when VIN is past the clamp (strong
+sun) **and** the caps are full, the card plays a left→right loading sweep across
+D2–D5. The caps-full gate is the hard safety — the sweep can never draw the pack down;
+it only spends solar the clamp would otherwise dump as Q1 heat. One VSENSE read yields
+both the light and strong-sun predicates (`sense_vin_flags()`, raw-count, no mV math).
+- **`USE_SUN_SWEEP`** (0/1, default 1): master enable. 0 compiles the trigger out of
+  the poll path entirely (`led_sweep` stays linked as library code) — the one flag to
+  flip if the tell proves visually busy on the bench.
+- **`SWEEP_SUN_VIN_MV`** (3600): the strong-sun trip, VIN in mV (solar node, panel
+  side of `D1`). Derived to sit above the clamped VS (~3.50 V) so it means real forward
+  current through `D1`, below panel Voc (4.15 V), and far above indoor light. Sets
+  *feel*, not safety — bench-tunable. Folded to a raw ADC count at compile time (`sense.c`).
+- **`SWEEP_CAPS_FULL_MV`** (3300): the hard caps-full gate, VS in mV. Independent of
+  the clamp and of `SWEEP_SUN_VIN_MV`, so the animation can never draw the pack down.
+- **`SWEEP_PASSES` / `SWEEP_PASS_MS` / `SWEEP_PEAK` / `SWEEP_OVERLAP`** (2 / 800 / 235 /
+  320): wipes per invocation, ms per wipe, per-LED peak duty, and bump half-width (Q8
+  units of LED spacing; 256 = neighbours cross ~50%). Tune the feel with
+  `docs/led-sweep-tuner.html`.
+
 ### System (`board.h` / `main.c`)
 - **`USE_WDT`** (0/1, default 1): the watchdog (see Robustness below).
 - **Core clock** is 1 MHz OSCHF (`clocks_init`, see Robustness for the why and the
@@ -426,12 +448,13 @@ the sensor.
 
 - **Watchdog (`USE_WDT`, on by default).** An ~8 s WDT (runs in every sleep mode
   off the ULP oscillator) recovers the card from an unexpected lockup. It is
-  petted from the **main-loop top** and from **inside `led_breathe`** (~1 ms
-  cadence), never from an ISR — petting from an ISR would mask a wedged main
-  loop, which is exactly the failure to catch. The PIT wakes the loop every
-  `POLL_PERIOD_S`, so power-down sleep never trips it. The timeout must stay well
-  above both the poll period and the longest glow (`GLOW_CYCLES * GLOW_BREATH_MS`);
-  at the 8 s setting and the defaults there is wide margin.
+  petted from the **main-loop top** and from **inside the animation naps**
+  (`idle_nap_ms`, shared by `led_breathe` and `led_sweep`; ~1 ms cadence), never from
+  an ISR — petting from an ISR would mask a wedged main loop, which is exactly the
+  failure to catch. The PIT wakes the loop every `POLL_PERIOD_S`, so power-down sleep
+  never trips it. The timeout must stay well above both the poll period and the longest
+  animation (the double-tap glow, `DTAP_CYCLES * DTAP_BREATH_MS` ≈ 4.8 s); at the 8 s
+  setting and the defaults there is wide margin.
 - **All hardware waits are bounded.** The I2C paths break on bus timeout /
   arbitration loss (a dead or shorted accel cannot wedge boot), and the ADC
   conversion wait is bounded and returns 0 (reads as low-rail / dark, fails safe)

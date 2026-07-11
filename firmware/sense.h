@@ -49,8 +49,8 @@ uint8_t  sense_light(void);
 /* sense_vin_flags(): one VSENSE read returning both predicates as bit flags, for the
  * poll spot that needs light AND strong-sun together (the in-sun sweep). Both are
  * raw-count compares (no mV math); SENSE_SUN_bm implies SENSE_LIGHT_bm. */
-#define SENSE_LIGHT_bm  0x01u   /* VIN >= LIGHT_THRESH_MV   (any light)  */
-#define SENSE_SUN_bm    0x02u   /* VIN >= SWEEP_SUN_VIN_MV  (strong sun) */
+#define SENSE_LIGHT_bm  0x01u   /* VSENSE pin >= LIGHT_THRESH_MV (VIN/2)  (any light)  */
+#define SENSE_SUN_bm    0x02u   /* VIN >= SWEEP_SUN_VIN_MV                (strong sun) */
 uint8_t  sense_vin_flags(void);
 
 /* true if the rail is above the glow floor (safe to run the animation). */

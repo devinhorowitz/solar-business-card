@@ -37,7 +37,7 @@ the layer you cannot see; these are datasheet-verified maxima in mm:
 | U2 (SOIC-8, cap balancer) | 28.5, 37 | **1.75** | Tall pole — brace thickness derives from it (existing relief pocket logic carries over) |
 | U6 (SOT-23-6) | 6.34, 32.2 | 1.45 | TI DBV, with leads |
 | U1 (VQFN-28) | 9.5, 40.9 | 1.0 | |
-| U3 (LGA-12 accel) | 20, 35.9 | 1.0 | |
+| U3 (LGA-12 accel) | 20, 35.9 | 0.87 | ADXL367 (CC-12-4); was 1.0 for the retired LIS2DH12 |
 | D2–D5 (reverse-mount LEDs) | 16.1 / 22.4 / 28.7 / 34.7, y 43.9 | 0.83 | Inside the window bay — see §6 |
 | U5 (XQFN8, NFC) | 34.8, 34 | 0.5 | SOT902-3, 1.6 × 1.6 × 0.5 verbatim |
 | All 0402 R/C | various | 0.55 budget | Includes solder |

@@ -7,9 +7,12 @@
 ## Where firmware stands
 Firmware is code-complete and link-clean — every module symbol resolves, `led.c`
 is intact, and it reviews warning-free. It has **not** been through a real AVR-Dx
-build + bench yet; that gap is on us (toolchain / DFP), not you. One feature is
-fully built but **intentionally left unwired**, waiting on a single number from
-your side.
+build + bench yet; that gap is on us (toolchain / DFP), not you.
+
+> **Update 2026-07-10:** the one number below (VIN at the clamp) has since been
+> derived and the in-sun sweep is now **wired** (VIN ≥ 3.60 V, `USE_SUN_SWEEP=1`).
+> See the **RESOLVED** banner in §1. This memo is kept for the derivation record and
+> for the two confirmations in §2–§3.
 
 ---
 
