@@ -72,7 +72,14 @@ EDGE_BREAK = 0.10                  # Ti deburr: break the sharp END-FACE edges (
 lip_W, lip_N, lip_S = 2.5, 2.0, 2.0   # W: long west edge, nearest B-part R14/J1 ~3.4 -> 2.5 clears by ~0.9 (big rigidity gain). N/S: bounded by SC1-4 caps (body max edge ~2.35 from the board edge; datasheet WS17 body 28.5 +0.5/-0.0 long) -> 2.0 clears by ~0.35.
 lip_E      = 1.0                       # E stays narrow through the JP1/TP1 pads (reach x49.6) AND clear of the NFC coil (~x49): lip_E=1.0 -> wall x49.8, east of both. A grounded Ti lip over the coil would detune it.
 lip_E_wide = 2.5                       # E END zones (clear of pads+coil) widen to match the west
-EAST_WIDE_Y = [(0.0, 10.0), (72.0, 88.9)]   # board-y bands the E lip widens to 2.5 (else pinched to 1.0, wall x49.8). North band start 58->72: the 1.0 pinch now clears C10 (x48.83, y67-69) and D10 (x49.10, y58-63), which overhung the 2.5 lip. Only change made for that clearance.
+EAST_WIDE_Y = [(0.0, 10.0)]   # board-y bands the E lip widens to 2.5 (else pinched to 1.0, wall x49.8).
+# 2026-07-11: NORTH wide band (72,88.9) REMOVED -> east lip is now pinched (1.0, wall x49.8) over all of
+# y10-88.9. The relocated clamp cluster (owner's board edit: Q1/U4/R7/R9/C7/C10 moved to clear the PV2-corner
+# screw) now sits in y72-88.9 with east edges up to C7 @ x49.55 (also U4 49.20, D10 49.18, R7/R9 48.98), which
+# overhang the old 2.5 wide lip (wall x48.3) and collided with it. The 1.0 pinch (wall x49.8) clears C7 by
+# 0.24mm -- the SAME tolerance the existing pinch runs (it clears JP1/TP1 at x49.6). Edge-support lost here is
+# picked up by the brace east rail (RAIL_E_N extended to x49.70, in the brace generator).
+# ACTION: regenerate the STEP/STL and inspect the C7 spot (0.24mm to wall) + confirm the coil is still cleared.
 lip_w      = lip_E                      # legacy min-lip alias (only the dormant tool_relief helper still reads it)
 back_border = 2.0                      # SYMMETRIC proud back-frame border, equal on all 4 sides (decoupled from the asymmetric front lip). Front lip stays asymmetric (it clears B-side parts); this is the cosmetic exterior back border only.
 boss_r     = 2.60                  # M2 boss / back annulus outer radius
