@@ -145,7 +145,8 @@ for _rx0,_ry0,_rx1,_ry1 in FP:
     _b = cq.Workplane("XY").box(_rx1-_rx0,_ry1-_ry0,GAP,centered=(False,False,False)).translate((wx(_rx0),wy(_ry0),0))
     brace = _b if brace is None else brace.union(_b)
 # relieve the 4 corner bosses (r2.6) + rounded cavity corners: the brace need not fit them, only the flat walls.
-BOSS_RELIEF=[(3.0,3.0),(47.8,3.0),(3.0,85.9),(47.8,85.9)]
+BOSS_RELIEF=[(3.0,3.0),(47.8,3.0),(3.0,85.9),(47.8,85.9),
+             (3.0,28.5),(47.8,28.5),(3.0,60.4),(47.8,60.4)]  # +4 panel-corner bosses (PCB nudge): W pair falls inside RAIL_W, E pair inside RAIL_E_M -- relieve so the rails clear them
 for _bx,_by in BOSS_RELIEF:
     brace = brace.cut(cq.Workplane("XY").workplane(offset=-0.1).moveTo(wx(_bx),wy(_by)).circle(3.0).extrude(GAP+0.2))
 # ---- DFM: back every INTERNAL concave corner off by the finisher radius (Ø2.0 finisher -> R1.0) so the
