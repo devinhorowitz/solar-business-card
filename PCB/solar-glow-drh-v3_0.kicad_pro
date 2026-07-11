@@ -39,9 +39,9 @@
         "other_text_thickness": 0.15,
         "other_text_upright": false,
         "pads": {
-          "drill": 0.0,
-          "height": 1.4,
-          "width": 1.0
+          "drill": 2.2,
+          "height": 3.6,
+          "width": 3.6
         },
         "silk_line_width": 0.1,
         "silk_text_italic": false,
@@ -62,7 +62,7 @@
           "hatch_thickness": 1.0,
           "min_clearance": 0.5,
           "min_island_area": 10.0,
-          "min_thickness": 0.25,
+          "min_thickness": 0.15,
           "pad_connection": 1,
           "remove_islands": 0,
           "thermal_relief_gap": 0.5,
@@ -80,7 +80,7 @@
           ""
         ],
         [
-          "lib_footprint_mismatch|6342500|32200000|14e033c8-b52e-4911-bd36-ffa160428a36|00000000-0000-0000-0000-000000000000",
+          "lib_footprint_mismatch|19430000|35070000|b66fa3c4-94d5-41b9-a1ce-c693058f12bb|00000000-0000-0000-0000-000000000000",
           ""
         ],
         [
