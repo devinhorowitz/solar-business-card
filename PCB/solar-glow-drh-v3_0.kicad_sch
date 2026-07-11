@@ -2936,15 +2936,15 @@
 
 (property "Reference" "R14" (at 697.23 69.85 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)))) 
 
-(property "Value" "100k" (at 697.23 74.93 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)))) 
+(property "Value" "1M" (at 697.23 74.93 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)))) 
 
 (property "Footprint" "solarglow:R14" (at 697.23 80.01 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)))) 
 
 (property "Datasheet" "" (at 685.8 69.85 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)))) 
 
-(property "Description" "NFC_EN pulldown 100 kohm" (at 685.8 69.85 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)))) (pin "1" (uuid "e1415172-f8a9-481a-8c39-f6d1ab84a36f")) (pin "2" (uuid "d652547b-ef33-46d5-bea9-c18432798d7a")) (instances (project "solar-glow-drh-v3_0" (path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0" (reference "R14") (unit 1)))) 
+(property "Description" "NFC_EN pulldown 1 Mohm" (at 685.8 69.85 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)))) (pin "1" (uuid "e1415172-f8a9-481a-8c39-f6d1ab84a36f")) (pin "2" (uuid "d652547b-ef33-46d5-bea9-c18432798d7a")) (instances (project "solar-glow-drh-v3_0" (path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0" (reference "R14") (unit 1)))) 
 
-(property "MPN" "RC0402FR-07100KL" (at 685.8 69.85 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27))))) 
+(property "MPN" "RC0402FR-071ML" (at 685.8 69.85 0) (hide yes) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27))))) 
 
 (symbol (lib_id "solarglow:C11") (at 120.65 119.38 0) (unit 1) (body_style 1) (exclude_from_sim no) (in_bom yes) (on_board yes) (in_pos_files yes) (dnp no) (uuid "38d02d2b-1023-4079-8a25-0efb78a19396") 
 
@@ -3124,7 +3124,7 @@
 
 (property "MPN" "RC0402FR-07150RL" (at 279.4 241.3 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27))))) 
 
-(symbol (lib_id "solarglow:C10") (at 120.65 64.77 0) (unit 1) (body_style 1) (exclude_from_sim no) (in_bom yes) (on_board yes) (in_pos_files yes) (dnp no) (uuid "604829dd-62d0-4b64-b0f0-2eed9a25ac0a") 
+(symbol (lib_id "solarglow:C10") (at 120.65 64.77 0) (unit 1) (body_style 1) (exclude_from_sim no) (in_bom yes) (on_board yes) (in_pos_files yes) (dnp yes) (uuid "604829dd-62d0-4b64-b0f0-2eed9a25ac0a") 
 
 (property "Reference" "C10" (at 131.65 69.85 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)))) 
 
@@ -3488,7 +3488,7 @@
 
 (property "MPN" "ADXL367BCCZ-RL7" (at 350.52 38.1 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27))))) 
 
-(symbol (lib_id "solarglow:R13") (at 560.07 69.85 0) (unit 1) (body_style 1) (exclude_from_sim no) (in_bom yes) (on_board yes) (in_pos_files yes) (dnp no) (uuid "c3e2a081-27f4-4044-9029-3e1b2a5c48f9") 
+(symbol (lib_id "solarglow:R13") (at 560.07 69.85 0) (unit 1) (body_style 1) (exclude_from_sim no) (in_bom yes) (on_board yes) (in_pos_files yes) (dnp yes) (uuid "c3e2a081-27f4-4044-9029-3e1b2a5c48f9") 
 
 (property "Reference" "R13" (at 571.5 69.85 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)))) 
 
@@ -3520,29 +3520,29 @@
 
 (property "Reference" "C5" (at 421.21 226.06 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)))) 
 
-(property "Value" "10nF" (at 421.21 231.14 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)))) 
+(property "Value" "100nF" (at 421.21 231.14 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)))) 
 
 (property "Footprint" "solarglow:C5" (at 421.21 236.22 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)))) 
 
 (property "Datasheet" "" (at 410.21 220.98 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)))) 
 
-(property "Description" "VSENSE filter 10 nF" (at 410.21 220.98 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)))) (pin "1" (uuid "99aeeaf5-3b8b-4cf9-9199-89450fb86fb0")) (pin "2" (uuid "2d0eb425-2991-4323-8cd6-d4fa35e8a389")) (instances (project "solar-glow-drh-v3_0" (path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0" (reference "C5") (unit 1)))) 
+(property "Description" "VSENSE filter 100 nF" (at 410.21 220.98 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)))) (pin "1" (uuid "99aeeaf5-3b8b-4cf9-9199-89450fb86fb0")) (pin "2" (uuid "2d0eb425-2991-4323-8cd6-d4fa35e8a389")) (instances (project "solar-glow-drh-v3_0" (path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0" (reference "C5") (unit 1)))) 
 
-(property "MPN" "GRM155R71C103KA01D" (at 410.21 220.98 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27))))) 
+(property "MPN" "GRM155R71C104KA88D" (at 410.21 220.98 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27))))) 
 
 (symbol (lib_id "solarglow:C4") (at 410.21 302.26 0) (unit 1) (body_style 1) (exclude_from_sim no) (in_bom yes) (on_board yes) (in_pos_files yes) (dnp no) (uuid "cdbabcec-6c85-4efe-bf76-6508f82983be") 
 
 (property "Reference" "C4" (at 421.21 307.34 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)))) 
 
-(property "Value" "1uF" (at 421.21 312.42 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)))) 
+(property "Value" "4.7uF" (at 421.21 312.42 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)))) 
 
 (property "Footprint" "solarglow:C4" (at 421.21 317.5 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)))) 
 
 (property "Datasheet" "" (at 410.21 302.26 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)))) 
 
-(property "Description" "VS bulk 1 uF" (at 410.21 302.26 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)))) (pin "1" (uuid "51a82b99-9297-4062-aaa7-0917701ae28d")) (pin "2" (uuid "1cb47447-c3d8-4e9f-8491-1774fba3e420")) (instances (project "solar-glow-drh-v3_0" (path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0" (reference "C4") (unit 1)))) 
+(property "Description" "VS bulk 4.7 uF" (at 410.21 302.26 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27)))) (pin "1" (uuid "51a82b99-9297-4062-aaa7-0917701ae28d")) (pin "2" (uuid "1cb47447-c3d8-4e9f-8491-1774fba3e420")) (instances (project "solar-glow-drh-v3_0" (path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0" (reference "C4") (unit 1)))) 
 
-(property "MPN" "GRM155R61A105KE15D" (at 410.21 302.26 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27))))) 
+(property "MPN" "GRM155R61A475MEAAD" (at 410.21 302.26 0) (show_name no) (do_not_autoplace no) (effects (font (size 1.27 1.27))))) 
 
 (symbol (lib_id "solarglow:SB2") (at 279.4 139.7 0) (unit 1) (body_style 1) (exclude_from_sim no) (in_bom no) (on_board yes) (in_pos_files yes) (dnp yes) (uuid "d187c3a3-023a-4ac7-87ef-8da2ab3ccd0b") 
 

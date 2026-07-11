@@ -23,9 +23,9 @@ card's largest idle load. See **NFC contact card** below.
 > The **NFC** firmware is verified against the NTAG I2C plus datasheet
 > (NT3H2111_2211 Rev 3.6), and the whole front-end is on the committed
 > `solar-glow-drh-v3_0.kicad_pcb`, verified from its copper: tag `U5`, the `U6`
-> (TPS22918) VCC load switch, `R13`, `R14`, and `C8` are placed and wired as this
+> (TPS22918) VCC load switch, `R14` and `C8` are placed (`R13` land present, DNP) and wired as this
 > firmware assumes — FD→PA6, NFC_EN→PA7→`U6` enable, `U6` gating VS→the switched
-> tag rail (`VNFC`), `R13` pulling FD to **VS**, `R14` (100 k) holding NFC_EN low.
+> tag rail (`VNFC`), the internal PA6 pull-up holding FD to **VS** (`R13` now DNP), `R14` (1 M) holding NFC_EN low.
 > What still needs the bench is electrical, not wiring: that FD swings to a valid
 > logic-low on field power with VCC gated off, the phone NDEF read, and the `C9` tune.
 
@@ -144,7 +144,7 @@ AVR64DD28, VQFN-28, on the **back** of the board.
 | 28 | PA2 | LDRV2 | LED D3, TCA0 WO2 |
 | 1 | PA3 | LDRV1 | LED D2, TCA0 WO3 |
 | 4 | PA6 | FD | NFC field-detect in (`U5`); PORTA pin int, **both edges**; field-powered (works VCC-off); int pull-up on + ext 10k (R13) → VS |
-| 5 | PA7 | NFC_EN | Enables the NFC VCC load switch (`U6`, TPS22918), **active-HIGH**; init LOW = NFC off. (`R14`, 100 k, holds `U6` off while PA7 tristates during reset/UPDI/brown-out — **on the v3.0 board** at (4.39, 29.4). Firmware also drives PA7 low-before-output and low-before-sleep, so the window is covered both ends.) |
+| 5 | PA7 | NFC_EN | Enables the NFC VCC load switch (`U6`, TPS22918), **active-HIGH**; init LOW = NFC off. (`R14`, 1 M, holds `U6` off while PA7 tristates during reset/UPDI/brown-out — **on the v3.0 board** at (4.39, 29.4). Firmware also drives PA7 low-before-output and low-before-sleep, so the window is covered both ends.) |
 | 8 | PC2 | SDA | TWI0 host (PORTMUX **ALT2**), ext 4.7k → VS |
 | 9 | PC3 | SCL | TWI0 host (ALT2), ext 4.7k → VS |
 | 10 | VDDIO2 | VS | tied to VS by SJ1; PORTC at rail, MVIO unused |

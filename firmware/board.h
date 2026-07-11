@@ -61,7 +61,7 @@
 #define ACC_INT2_bm     PIN0_bm   /* PF0 <- ADXL367 INT2 (activity/motion)    */
 
 /* ---- light/rail sense on PD2 ----
- * VSENSE = VIN/2 (R5/R6 = 1M each, C5 = 10nF). ADC sees ~VIN/2; x2 = VIN.
+ * VSENSE = VIN/2 (R5/R6 = 1M each, C5 = 100nF). ADC sees ~VIN/2; x2 = VIN.
  * PD2 = AIN2 (ADC MUXPOS 0x02) and AINP0 (AC0 MUXPOS 0x00). */
 #define VSENSE_AIN          ADC_MUXPOS_AIN2_gc        /* 0x02 */
 #define VSENSE_DIVIDER      2                          /* VIN = VSENSE * 2   */
@@ -90,17 +90,16 @@
 #define NFC_EN_PORT     PORTA
 #define NFC_EN_PIN_bm   PIN7_bm
 
-/* FD (field detect, U5 pin4) -> PA6, open-drain, external 10k (R13) to VS.
+/* FD (field detect, U5 pin4) -> PA6, open-drain; the internal PA6 pull-up holds it (R13, the former external 10k, is now DNP).
  * FD-WAKE: a phone's field pulls FD low (FD_ON=00b, field-present = the POR
  * default). Per datasheet 8.4 the FD pin runs on the phone's field power, so it
  * works even with the tag's VCC gated off -- that is why FD-wake survives the
  * power-gate. main.c senses PA6 on BOTH edges: the falling edge (field arrives)
  * wakes the core to blank the LEDs for the read, and the rising edge (field leaves)
  * fires the acknowledge glow (see NFC_BLANK_ON_FIELD below). No I2C setup is needed
- * -- the field-present default does it. Firmware also enables PA6's
- * internal pull-up as belt-and-suspenders. R13 ties FD to VS on the v3.0 board
- * (confirmed from copper), so the pull-up is redundant insurance -- it only sinks
- * current while FD is held low. */
+ * -- the field-present default does it. Firmware enables PA6's
+ * internal pull-up, now the SOLE FD pull-up (R13 dropped to DNP in the passive
+ * consolidation); it only sinks current while FD is held low. */
 #define FD_PORT         PORTA
 #define FD_PIN_bm       PIN6_bm
 

@@ -191,7 +191,7 @@ hand-tinning. Order it alongside the board.
 
 **BOM state.** The masters are now **`solar-glow-drh-v3_0-BOM.xlsx`** and
 **`solar-glow-drh-v3_0-BOM-assembly.xlsx`**, generated from the v2.2 files with three fixes:
-**U6 (TPS22918) and R14 (100 k `NFC_EN` pulldown) added**, the stale **JP1/JP2 rows dropped** (the `JP1` designator is reused for the v3.0 bench pad strip — bare pads, not a BOM part)
+**U6 (TPS22918) and R14 (1 M `NFC_EN` pulldown) added**, the stale **JP1/JP2 rows dropped** (the `JP1` designator is reused for the v3.0 bench pad strip — bare pads, not a BOM part)
 (those headers left the board in v3.0), and **every passive except SJ1 converted to 0402** to match
 the board's placed lands — the v2.2 file still listed 0805 MPNs for most R/C. Converted and added
 lines have their **prices blanked pending a fresh quote**; the old 0805 prices don't carry. The
@@ -219,11 +219,11 @@ Summary of the **orderable** lines:
 | R9 | 1 | 1 kΩ 0402 | `RC0402FR-071KL` |
 | R10, R11 | 2 | 4.7 kΩ 0402 (I²C pull-ups) | `RC0402FR-074K7L` |
 | R12 | 1 | 220 Ω 0402 | `RC0402FR-07220RL` |
-| **R13** | 1 | **10 kΩ 0402 (FD pull-up to VS)** | `RC0402FR-0710KL` |
-| **R14** | 1 | **100 kΩ 0402 (`NFC_EN` pulldown — v3.0 R14 patch)** | `RC0402FR-07100KL` |
-| C1, C2, C3, C6, C7, **C8, C10, C12** | 8 | 100 nF X7R 0402 | `GRM155R71C104KA88D` (Murata) |
-| C4 | 1 | 1 µF X5R 0402 | `GRM155R61A105KE15D` (Murata) |
-| C5 | 1 | 10 nF X7R 0402 | `GRM155R71C103KA01D` (Murata) |
+| **R13** | (1) | **10 kΩ 0402 — DNP (FD pull-up; the internal PA6 pull-up covers it)** | `RC0402FR-0710KL` |
+| **R14** | 1 | **1 MΩ 0402 (`NFC_EN` pulldown; consolidated onto the R5/R6 reel)** | `RC0402FR-071ML` |
+| C1, C2, C3, **C5**, C6, C7, **C8, C12** | 8 | 100 nF X7R 0402 | `GRM155R71C104KA88D` (Murata) |
+| C4 | 1 | 4.7 µF X5R 0402 (consolidated onto the C13 reel) | `GRM155R61A475MEAAD` (Murata) |
+| **C10** | (1) | **100 nF X7R 0402 — DNP (VCMP decoupling; not strictly required)** | `GRM155R71C104KA88D` (Murata) |
 | **C11** | 1 | **0.22 µF (220 nF) X7R 0402 — accel VREG_OUT decoupling** | `GRM155R71C224KA12D` (Murata) |
 | **C13** | 1 | **4.7 µF X5R 0402 — LED-anode bulk** | `GRM155R61A475MEAAD` (Murata) |
 | **C9** | (1) | **NP0 0402, DNP — coil trim** | buy an NP0 range ~47–150 pF for the bench |
@@ -255,15 +255,14 @@ them on the **back**; the front stays naked until you fit the cells. You finish 
 types by hand afterward.
 
 **The split**
-- **PCBWay machine-places** (reflow, bottom, **42 parts**): U1–U6, Q1, D1, D9, D10, D11, D2–D5,
-  R1–R14, SJ1, C1–C8, C10–C13. `solar-glow-drh-v3_0-BOM-assembly.xlsx` is that trimmed file —
-  **regenerate it to 42**: the committed copy still lists 39, missing D10, D11, C10 (all fitted
-  SMD on the board per the schematic / CI BOM).
+- **PCBWay machine-places** (reflow, bottom, **40 parts**): U1–U6, Q1, D1, D9, D10, D11, D2–D5,
+  R1–R12, R14 (R13 is DNP), SJ1, C1–C8, C11–C13 (C10 is DNP). `solar-glow-drh-v3_0-BOM-assembly.xlsx` is that trimmed file —
+  **regenerate it to 40**: D10/D11 are fitted SMD, and R13 + C10 are now DNP (consolidation) so they drop off the placement list.
 - **You hand-solder afterward:** SC1–SC4 supercaps and PV1–PV2 solar cells. They are kept
   **off** the PCBA BOM on purpose — the supercaps are manual-solder only (SCHURTER SCPC),
   and the cells are heat-sensitive.
 - **Not placed:** SW2, SB1–SB4 (solder bridges you set), TC1 (Tag-Connect pad), J1
-  (optional header), MH1–MH4 (mounting holes), C9 (DNP).
+  (optional header), MH1–MH4 (mounting holes), C9, R13, C10 (DNP).
 
 **Sourcing:** turnkey, with the standing instruction that anything PCBWay can't source they
 flag and you consign from DigiKey — **no substitutes without approval**. The likeliest to
@@ -325,7 +324,7 @@ and the glow-window mask staying open (Step 3) — a tented window kills the opt
    solder a 3-pin header on `J1` as the backup. Firmware lives in **`../firmware/`**; its
    knobs and wake model are in `../firmware/README.md`, and the pin map it targets is
    `../solar-glow-drh-v2-hardware.md`.
-   > **Programming caution:** `NFC_EN` (PA7) now has a **100 kΩ pulldown (`R14`)** — U6
+   > **Programming caution:** `NFC_EN` (PA7) now has a **1 MΩ pulldown (`R14`)** — U6
    > defaults hard-off while PA7 floats during reset / UPDI. Still drive PA7 low early in
    > init as belt-and-suspenders. The **U6 pin-map check is done** — TI SLVSD76C
    > (`../datasheets/U6  TPS22918DBVR  $0.55.pdf`; the -Q1 twin matches identically) showed the symbol had **VIN/VOUT and GND/QOD
