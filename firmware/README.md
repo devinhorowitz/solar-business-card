@@ -149,8 +149,8 @@ AVR64DD28, VQFN-28, on the **back** of the board.
 | 9 | PC3 | SCL | TWI0 host (ALT2), ext 4.7k → VS |
 | 10 | VDDIO2 | VS | tied to VS by SJ1; PORTC at rail, MVIO unused |
 | 12 | PD2 | VSENSE | light/rail sense: ADC AIN2 + AC0 AINP0 |
-| 20 | PF0 | INT2 | accel motion in (rising) |
-| 21 | PF1 | INT1 | accel tap in (rising) |
+| 20 | PF0 | INT1 | accel tap in (rising) |
+| 21 | PF1 | INT2 | accel motion in (rising) |
 | 23 | UPDI | UPDI | program |
 | 18,24 | VDD | VS | clamped rail ≤ 3.60 V worst-case (~3.50 typ) |
 | 19,25,EP | GND | GND | |
@@ -169,10 +169,10 @@ get internal pull-ups in `gpio_init` so a floating input can't leak current — 
 
 Baseline = **POWER-DOWN**. Wakes:
 
-- **Tap** (ADXL367 tap, Z-axis, single+double resolved in hardware) → INT1 → PF1 → full
+- **Tap** (ADXL367 tap, Z-axis, single+double resolved in hardware) → INT1 → PF0 → full
   breathing glow (`GLOW_CYCLES` breaths) + EEPROM activation count++. With
   `USE_DOUBLE_TAP`, a double-tap plays a brighter/longer signature glow instead.
-- **Motion** (ADXL367 referenced activity) → INT2 → PF0 → one softer breath.
+- **Motion** (ADXL367 referenced activity) → INT2 → PF1 → one softer breath.
 - **NFC** (NT3H2211 field detect, `U5`) → FD → PA6 → LEDs held dark during the read
   (clean 13.56 MHz for the tag reply), acknowledge glow when the field leaves. FD runs
   on the reader's field power (datasheet §8.4), so it works even though the tag's VCC is

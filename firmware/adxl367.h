@@ -3,17 +3,17 @@
  *
  * Replaces the LIS2DH12 (backorder). ADI register map, not the ST femto map.
  * ASEL grounded on the board -> 7-bit I2C address 0x1D (see board.h). INT1 -> MCU
- * PF1, INT2 -> MCU PF0 (same pins the LIS2DH12 used). SCLK tied low = I2C mode.
+ * PF0, INT2 -> MCU PF1 (same pins the LIS2DH12 used). SCLK tied low = I2C mode.
  * Values below are verified against the ADXL367 data sheet (Rev. B, Table 11 map;
  * the per-register bit tables for the config words).
  *
  * Two engines, mapped to the two INT pins (config while in standby, then MEASURE):
- *   - TAP (single + double, Z-axis) -> INT1 -> PF1. The ADXL367 resolves
+ *   - TAP (single + double, Z-axis) -> INT1 -> PF0. The ADXL367 resolves
  *     single-vs-double IN HARDWARE: with both functions enabled, the single-tap
  *     interrupt fires only after the double-tap window validates/invalidates, so
  *     firmware reads STATUS_2 once on the interrupt (TAP_TWO set = double) with NO
  *     software window. Reading STATUS_2 clears the tap flags and re-arms.
- *   - ACTIVITY (referenced, gravity-removed motion) -> INT2 -> PF0. Must be acked
+ *   - ACTIVITY (referenced, gravity-removed motion) -> INT2 -> PF1. Must be acked
  *     by reading STATUS (LINKLOOP = 00). Drives the motion soft-breath.
  *
  * Running mode: measurement, +/-2 g, 100 Hz (FILTER_CTL = 0x23, the reset default

@@ -26,8 +26,8 @@
  *    12 PD2      VSENSE   light/rail sense  AIN2 (ADC) + AINP0 (AC0+)
  *    18 VDD      VS       clamped rail <= 3.60V (~3.50 typ)
  *    19 GND      GND
- *    20 PF0      INT2     accel INT2 in  (PORTF pin interrupt)
- *    21 PF1      INT1     accel INT1 in  (PORTF pin interrupt)
+ *    20 PF0      INT1     accel INT1 in  (PORTF pin interrupt)
+ *    21 PF1      INT2     accel INT2 in  (PORTF pin interrupt)
  *    23 UPDI     UPDI     program (TC2030 pad TC1 / header J1)
  *    24 VDD      VS
  *    25 GND      GND
@@ -57,8 +57,8 @@
 
 /* ---- accel interrupt inputs on PORTF (no crystal -> PF0/PF1 are GPIO) ---- */
 #define ACC_PORT        PORTF
-#define ACC_INT1_bm     PIN1_bm   /* PF1 <- ADXL367 INT1 (tap, single+double) */
-#define ACC_INT2_bm     PIN0_bm   /* PF0 <- ADXL367 INT2 (activity/motion)    */
+#define ACC_INT1_bm     PIN0_bm   /* PF0 <- ADXL367 INT1 (tap, single+double) */
+#define ACC_INT2_bm     PIN1_bm   /* PF1 <- ADXL367 INT2 (activity/motion)    */
 
 /* ---- light/rail sense on PD2 ----
  * VSENSE = VIN/2 (R5/R6 = 1M each, C5 = 100nF). ADC sees ~VIN/2; x2 = VIN.

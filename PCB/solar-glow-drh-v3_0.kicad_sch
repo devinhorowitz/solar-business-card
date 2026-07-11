@@ -10550,7 +10550,7 @@
 			)
 		)
 	)
-	(global_label "INT1"
+	(global_label "INT2"
 		(shape bidirectional)
 		(at 204.47 139.7 0)
 		(effects
@@ -11453,7 +11453,7 @@
 			)
 		)
 	)
-	(global_label "INT2"
+	(global_label "INT1"
 		(shape bidirectional)
 		(at 204.47 134.62 0)
 		(effects
