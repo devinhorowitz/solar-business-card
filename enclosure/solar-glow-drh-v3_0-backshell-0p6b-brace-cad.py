@@ -44,7 +44,8 @@ from shapely.ops import unary_union
 # ===== board (committed PCB) =====
 W, H, R   = 50.80, 88.90, 3.0
 board_th  = 0.60
-mounts = [(3.0, 3.0), (47.8, 3.0), (3.0, 85.9), (47.8, 85.9)]      # 4x M2, GND, 2.2 drill -- v3.0: concentric with the r3.0 corner fillets (x-inset 3.5->3.0; matches committed PCB v3_0 MH1-4)
+mounts = [(3.0, 3.0), (47.8, 3.0), (3.0, 85.9), (47.8, 85.9),      # 4x corner M2, GND, 2.2 drill -- v3.0: concentric with the r3.0 corner fillets (x-inset 3.5->3.0; matches committed PCB v3_0 MH1-4)
+          (3.0, 28.5), (47.8, 28.5), (3.0, 60.4), (47.8, 60.4)]    # +4 panel-corner M2, GND -- match PCB nudge (holes at panel inner corners). 2-col 8-mount pattern. Verify STEP: W(3.0,28.5) boss r2.6 lands ~0.8mm from R14; E bosses at x47.8 merge into the pinched east lip like the corner bosses do.
 
 # ===== fixed shell knobs =====
 U2_H       = 1.75                  # U2 (SOIC-8 max, datasheet): the single tallest back part
