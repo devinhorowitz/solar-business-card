@@ -52,7 +52,14 @@
 #define NFC_BLK_USER0     0x01   /* first user block = NDEF start (NFC page 04h) */
 #define NFC_BLK_CONFIG    0x3A   /* configuration registers (EEPROM) -- untouched */
 #define NFC_BLK_SESSION   0xFE   /* session registers (via sec 9.8 register op)  */
-#define NFC_BLK_EEPROM_TOP 0x7A  /* last EEPROM user block, 2K part (sec 9.7)     */
+/* Last block the linear NDEF write may occupy. This tag's CC declares 872 B of NDEF
+ * area in sector 0 (E1 10 6D 00), which from block 0x01 fills through block 0x37; the
+ * config-register block (NFC_BLK_CONFIG) sits just above at 0x3A. This driver writes
+ * linearly from 0x01 with NO sector-select, so the write MUST stop below 0x3A or it
+ * runs straight through the config registers -- hence the sector-0 NDEF top 0x37, NOT
+ * the 2K part's raw block ceiling (0x7A, which is above the config block and so could
+ * not guard it). nfc_write_ndef rejects any NDEF that would overrun this. */
+#define NFC_BLK_NDEF_TOP  0x37
 #define NFC_BLOCK_SZ      16
 
 /* ---- register offsets within a register block (Table 11/12) ---- */
