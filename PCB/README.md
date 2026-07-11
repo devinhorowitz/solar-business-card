@@ -209,7 +209,7 @@ Summary of the **orderable** lines:
 | **U6** | 1 | **Load switch (SOT-23-6) (in the v3_0 BOM)** | `TPS22918DBVR` |
 | Q1 | 1 | PNP, BCP53 family | `BCP5316MTWG` |
 | PV1, PV2 | 2 | SM141K06TF solar cell | `SM141K06TF` |
-| D1, D9 | 2 | Schottky, SOD-123 | `MMSD301T1G` |
+| D1, D9, D10, D11 | 4 | Schottky, SOD-123 (D1/D9 = per-panel blocking · D10/D11 = comparator-supply OR) | `MMSD301T1G` |
 | D2–D5 | 4 | Amber LED, reverse-mount | `LA P47F-V2BB-24-3B5A-30-R18-Z` |
 | **SC1–SC4** | **4** | **1 F / 2.75 V (WS17)** | `3-153-438` |
 | R1–R4 | 4 | **150 Ω 1% 0402 — SIZED** | `RC0402FR-07150RL` |
@@ -221,9 +221,11 @@ Summary of the **orderable** lines:
 | R12 | 1 | 220 Ω 0402 | `RC0402FR-07220RL` |
 | **R13** | 1 | **10 kΩ 0402 (FD pull-up to VS)** | `RC0402FR-0710KL` |
 | **R14** | 1 | **100 kΩ 0402 (`NFC_EN` pulldown — v3.0 R14 patch)** | `RC0402FR-07100KL` |
-| C1, C2, C3, C6, C7, **C8** | 6 | 100 nF X7R 0402 | `GRM155R71C104KA88D` (Murata) |
+| C1, C2, C3, C6, C7, **C8, C10, C12** | 8 | 100 nF X7R 0402 | `GRM155R71C104KA88D` (Murata) |
 | C4 | 1 | 1 µF X5R 0402 | `GRM155R61A105KE15D` (Murata) |
 | C5 | 1 | 10 nF X7R 0402 | `GRM155R71C103KA01D` (Murata) |
+| **C11** | 1 | **0.22 µF (220 nF) X7R 0402 — accel VREG_OUT decoupling** | `GRM155R71C224KA12D` (Murata) |
+| **C13** | 1 | **4.7 µF X5R 0402 — LED-anode bulk** | `GRM155R61A475MEAAD` (Murata) |
 | **C9** | (1) | **NP0 0402, DNP — coil trim** | buy an NP0 range ~47–150 pF for the bench |
 | SJ1 | 1 | 0 Ω jumper 0805 | `RC0805JR-070RL` |
 
@@ -253,8 +255,10 @@ them on the **back**; the front stays naked until you fit the cells. You finish 
 types by hand afterward.
 
 **The split**
-- **PCBWay machine-places** (reflow, bottom, **36 parts**): U1–U6, Q1, D1, D9, D2–D5,
-  R1–R14, SJ1, C1–C8. `solar-glow-drh-v3_0-BOM-assembly.xlsx` is that trimmed file (36 parts, U6 + R14 included).
+- **PCBWay machine-places** (reflow, bottom, **42 parts**): U1–U6, Q1, D1, D9, D10, D11, D2–D5,
+  R1–R14, SJ1, C1–C8, C10–C13. `solar-glow-drh-v3_0-BOM-assembly.xlsx` is that trimmed file —
+  **regenerate it to 42**: the committed copy still lists 39, missing D10, D11, C10 (all fitted
+  SMD on the board per the schematic / CI BOM).
 - **You hand-solder afterward:** SC1–SC4 supercaps and PV1–PV2 solar cells. They are kept
   **off** the PCBA BOM on purpose — the supercaps are manual-solder only (SCHURTER SCPC),
   and the cells are heat-sensitive.
