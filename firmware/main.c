@@ -4,8 +4,8 @@
  * Behaviour
  * ---------
  * The card sleeps in POWER-DOWN almost all the time. Four things wake it:
- *   - TAP      (ADXL367 tap -> INT1 -> PF1, rising)      -> full breathing glow
- *   - MOTION   (ADXL367 activity -> INT2 -> PF0, rising) -> one soft breath
+ *   - TAP      (ADXL367 tap -> INT1 -> PF0, rising)      -> full breathing glow
+ *   - MOTION   (ADXL367 activity -> INT2 -> PF1, rising) -> one soft breath
  *   - NFC      (NT3H2211 field detect -> FD -> PA6, both edges) -> while the reader's
  *                field is present the LEDs are held dark (a clean 13.56 MHz band for the
  *                tag's reply) and the core stays quiet; the acknowledge glow fires when
@@ -45,8 +45,8 @@
 #include "sense.h"
 #include "nfc.h"
 
-static volatile uint8_t f_tap;     /* PF1 click   */
-static volatile uint8_t f_motion;  /* PF0 activity */
+static volatile uint8_t f_tap;     /* PF0 click   */
+static volatile uint8_t f_motion;  /* PF1 activity */
 static volatile uint8_t f_tick;    /* RTC PIT     */
 static volatile uint8_t f_nfc;     /* PA6 NFC field-detect (FD, field-powered) */
 
@@ -69,8 +69,8 @@ static void gpio_init(void)
 {
     /* accel interrupt inputs on PF0/PF1: input (default), rising-edge sense.
      * INT pads are push-pull active-high, so no pull resistor. */
-    PORTF.PIN0CTRL = PORT_ISC_RISING_gc;   /* INT2 / activity */
-    PORTF.PIN1CTRL = PORT_ISC_RISING_gc;   /* INT1 / tap      */
+    PORTF.PIN0CTRL = PORT_ISC_RISING_gc;   /* INT1 / tap      */
+    PORTF.PIN1CTRL = PORT_ISC_RISING_gc;   /* INT2 / activity */
     /* NFC power-gate enable on PA7 (NFC_EN, active-HIGH): drive LOW = NFC VCC off.
      * Set OUT low first, then DIR out, so the pin never glitches HIGH. VCC is only
      * powered transiently around an I2C access (nfc_power_on/off). */
@@ -282,12 +282,12 @@ int main(void)
 
 /* ---------------- ISRs ---------------- */
 
-/* accel interrupts share PORTF: PF1 = tap, PF0 = activity. */
+/* accel interrupts share PORTF: PF0 = tap, PF1 = activity. */
 ISR(PORTF_PORT_vect)
 {
     uint8_t fl = PORTF.INTFLAGS;
-    if (fl & ACC_INT1_bm) f_tap = 1;       /* PF1 */
-    if (fl & ACC_INT2_bm) f_motion = 1;    /* PF0 */
+    if (fl & ACC_INT1_bm) f_tap = 1;       /* PF0 */
+    if (fl & ACC_INT2_bm) f_motion = 1;    /* PF1 */
     PORTF.INTFLAGS = fl;                   /* write-1-to-clear */
 }
 
