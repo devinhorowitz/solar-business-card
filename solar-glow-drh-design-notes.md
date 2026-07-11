@@ -378,7 +378,7 @@ corners, and the **same BOM**. It is the current board; **v2.3 (4-layer) is the 
 
 ## R14 patch — NFC_EN pulldown + NPTH cleanup (2026-07-02)
 
-- **R14 (100 kΩ, 0402)** added at **(4.39, 29.4)** rot 0, in the north pocket between the MID bus and
+- **R14 (1 MΩ, 0402)** added at **(4.39, 29.4)** rot 0, in the north pocket between the MID bus and
   U6's top pad row: pad 1 = `NFC_EN` (3.88, 29.4), pad 2 = `GND` (4.9, 29.4) dropping straight into
   the existing GND via at (4.9, 28.5). `NFC_EN` reaches the U6-side stub through a **new via pair**
   (3.88, 30.6) → F.Cu → (3.88, 33.35); the F crossing threads west of SCL's F column. Why the hop:

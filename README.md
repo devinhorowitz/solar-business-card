@@ -91,7 +91,7 @@ tie jumper (`SJ1`), and **four grounded M2 mounting holes** at the corners. (The
 `JP1`/`JP2` 2.54 mm breakout headers are gone; the `JP1` name is reused for the strip.)
 
 Full part numbers, pricing, and per-part datasheet links are in
-**`PCB/solar-glow-drh-v3_0-BOM.xlsx`** — the master BOM (v3.0): **U6 (TPS22918) and R14 (100 k `NFC_EN` pulldown) included**, the stale JP1/JP2 rows dropped (the `JP1` designator is reused in v3.0 for the bench pad strip — bare pads, no BOM part), and every passive except SJ1 converted to **0402** to match the board lands. Converted/added lines have prices blanked pending a fresh quote (U6 quoted: TPS22918DBVR $0.55 @ qty 1, DigiKey 2026-07-02). Lineage: v2.2 added the NFC parts (U5 / C8 / C9 / R13); the `v2 2` and older BOM files stay in the repo as history.
+**`PCB/solar-glow-drh-v3_0-BOM.xlsx`** — the master BOM (v3.0): **U6 (TPS22918) and R14 (1 M `NFC_EN` pulldown) included**, the stale JP1/JP2 rows dropped (the `JP1` designator is reused in v3.0 for the bench pad strip — bare pads, no BOM part), and every passive except SJ1 converted to **0402** to match the board lands. Converted/added lines have prices blanked pending a fresh quote (U6 quoted: TPS22918DBVR $0.55 @ qty 1, DigiKey 2026-07-02). Lineage: v2.2 added the NFC parts (U5 / C8 / C9 / R13); the `v2 2` and older BOM files stay in the repo as history.
 
 ---
 
