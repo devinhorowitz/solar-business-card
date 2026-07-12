@@ -186,6 +186,34 @@ uint8_t sense_caps_full(void)
     return (adc_read_raw(ADC_MUXPOS_VDDDIV10_gc) >= CAPS_FULL_COUNT) ? 1u : 0u;
 }
 
+/* ---------- rail-adaptive glow brightness (brownout stretch) ---------- */
+
+/* Scale a requested glow peak by rail headroom: full `peak` at/above VS_GLOW_FULL_MV, a
+ * straight-line ramp down to a dim floor as the rail sags to VS_GLOW_FLOOR_MV, and 0 below
+ * the floor (the caller then skips the glow). This turns the old hard cliff -- full peak
+ * right up to the floor, then nothing -- into a graceful fade that also stretches the
+ * reserve, since a dimmer near-empty breath spends less charge. The dim floor is
+ * VS_GLOW_DIM_PEAK on GLOW_PEAK's scale, re-scaled here to whatever base `peak` was asked
+ * for, so a half-bright breath (the motion soft breath) dims in proportion too. Costs one
+ * VDD/10 read -- the same read sense_rail_ok() did at these sites; with the stretch off it
+ * IS sense_rail_ok() (peak above the floor, 0 below). */
+uint8_t sense_glow_peak(uint8_t peak)
+{
+#if USE_BROWNOUT_STRETCH
+    uint16_t mv = sense_vdd_mv();
+    if (mv <  VS_GLOW_FLOOR_MV) return 0;                     /* below floor: dark, let it charge */
+    if (mv >= VS_GLOW_FULL_MV)  return peak;                  /* healthy rail: full brightness    */
+    /* linear ramp between the dim floor and `peak`. dim < peak always (VS_GLOW_DIM_PEAK <
+     * GLOW_PEAK), so peak-dim never underflows; span is a positive compile-time constant. */
+    uint8_t  dim  = (uint8_t)(((uint16_t)peak * VS_GLOW_DIM_PEAK) / GLOW_PEAK);
+    uint16_t over = mv - VS_GLOW_FLOOR_MV;
+    uint16_t span = VS_GLOW_FULL_MV - VS_GLOW_FLOOR_MV;
+    return (uint8_t)(dim + (uint32_t)(peak - dim) * over / span);
+#else
+    return sense_rail_ok() ? peak : 0u;                      /* original hard cutoff at the floor */
+#endif
+}
+
 /* ---------- EEPROM lifetime activation counter ---------- */
 
 /* Address 0 in the EEPROM address space -- NOT a RAM null pointer. avr-libc's
@@ -208,4 +236,38 @@ void sense_count_inc(void)
     if (c == 0xFFFFFFFFUL) c = 0;          /* erased EEPROM reads all-ones */
     c++;
     eeprom_update_dword(EE_COUNT_ADDR, c); /* update = no write if unchanged */
+}
+
+/* ---------- EEPROM sun diary (lifetime strong-sun hours) ---------- */
+
+/* A card that runs on harvested light may as well remember how much light it has lived
+ * in. The poll already computes the strong-sun tell (SENSE_SUN_bm); main.c calls
+ * sense_sun_tick() on every poll where it is set. The catch is EEPROM endurance (~100k
+ * writes): ticking a cell once per ~1 s poll would wear it out in a day of sun. So the
+ * partial hour is accumulated in RAM (sun_polls) and EEPROM is touched only when a whole
+ * hour rolls over -- lifetime writes then equal lifetime sun-hours (tens of thousands
+ * across a card's years, comfortably under endurance). The RAM count is lost on a full
+ * supercap drain, so at most the current sub-hour (< 1 h) is forgotten across a drain --
+ * fine for a whole-hours keepsake. Not shared with any ISR, so no volatile needed. */
+#define EE_SUN_HOURS_ADDR  ((uint16_t *)4)   /* 2-byte counter at EEPROM offset 4 (past the dword tap count at 0) */
+#define SUN_POLLS_PER_HOUR ((uint16_t)(3600UL / POLL_PERIOD_S))   /* strong-sun polls that make one banked hour */
+
+static uint16_t sun_polls;                   /* strong-sun polls counted in the current partial hour */
+
+/* Banked whole-hours of strong sun. Erased EEPROM reads all-ones -> report 0. Uncalled
+ * on-chip BY DESIGN (UPDI/NDEF readout), like sense_count_get; kept as API. */
+uint16_t sense_sun_hours_get(void)
+{
+    uint16_t h = eeprom_read_word(EE_SUN_HOURS_ADDR);
+    return (h == 0xFFFFu) ? 0u : h;
+}
+
+void sense_sun_tick(void)
+{
+    if (++sun_polls < SUN_POLLS_PER_HOUR)
+        return;                              /* still inside the current hour */
+    sun_polls = 0;
+    uint16_t h = sense_sun_hours_get();
+    if (h < 0xFFFEu)                         /* saturate near the top (and never store 0xFFFF, which reads as 0) */
+        eeprom_update_word(EE_SUN_HOURS_ADDR, (uint16_t)(h + 1u));
 }

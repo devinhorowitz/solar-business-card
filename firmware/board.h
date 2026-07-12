@@ -194,9 +194,30 @@
  * otherwise burn as Q1 heat. Read via the ADC VDD/10 channel (sense_caps_full()). */
 #define SWEEP_CAPS_FULL_MV 3300
 
+/* Sun diary: bank lifetime whole-HOURS of strong sun (the SENSE_SUN_bm tell the poll
+ * already reads) into EEPROM, so a card that lives on harvested light also records how
+ * much light it has seen -- read out over UPDI, or surfaced in the NDEF later. Free:
+ * no extra sensing (the sun flag is already in hand each poll), and the in-progress
+ * hour is counted in RAM so EEPROM is written only once per banked hour (endurance-safe;
+ * see sense_sun_tick). 1 = on; 0 = compile it out entirely. */
+#define USE_SUN_DIARY      1
+
 /* charge floor: skip the glow (stay dark) below this rail voltage, mV.
  * Read via ADC VDD/10. Keeps a brown-out from bricking mid-animation. */
 #define VS_GLOW_FLOOR_MV   2600
+
+/* Brownout stretch: fade the glow as the reserve drains instead of a hard cliff at the
+ * floor. Full brightness at/above VS_GLOW_FULL_MV, ramped down to VS_GLOW_DIM_PEAK as the
+ * rail sags to VS_GLOW_FLOOR_MV, dark below it. In normal use (rail near the ~3.5 V clamp)
+ * this is invisible -- it only bites once the reserve is genuinely low, where a dimmer
+ * breath both reads gracefully and spends less charge, so more breaths fit before the
+ * floor. Free: reuses the very rail read that already gates the glow (sense_glow_peak
+ * replaces the sense_rail_ok gate). 1 = on; 0 = original hard cutoff at the floor.
+ * VS_GLOW_FULL_MV is the full-bright knee (>= VS_GLOW_FLOOR_MV, <= the clamped rail);
+ * VS_GLOW_DIM_PEAK is the floor brightness on GLOW_PEAK's 0..255 scale (bench-tunable). */
+#define USE_BROWNOUT_STRETCH 1
+#define VS_GLOW_FULL_MV      3000
+#define VS_GLOW_DIM_PEAK     70
 
 /* wake-on-light threshold on VSENSE (= VIN/2), mV at the pin.
  * ~0 in dark, ~1.2-2.1 V in light. ~0.4 V sits comfortably above dark. */

@@ -38,7 +38,7 @@ card's largest idle load. See **NFC contact card** below.
 | `adxl367.h/.c` | accelerometer: presence, tap→INT1, activity→INT2, tap/activity clear. |
 | `nfc.h/.c` | NT3H2211 NFC tag (`U5`): NDEF write + VCC power-gate via `NFC_EN`/`U6`. |
 | `led.h/.c` | TCA0 split-mode PWM on PA0–PA3 + gamma breathing glow + in-sun loading sweep. |
-| `sense.h/.c` | ADC rail/light reads + EEPROM activation counter. |
+| `sense.h/.c` | ADC rail/light reads, rail-scaled glow (brownout stretch), EEPROM activation counter + sun diary. |
 | `main.c` | init (per hardware doc §7), sleep/wake state machine, ISRs. |
 | `Makefile` | build + UPDI flash. |
 
@@ -182,13 +182,16 @@ Baseline = **POWER-DOWN**. Wakes:
 - **PIT tick** (~1 s, RTC off the internal ULP, runs in power-down) → ADC-sample
   the light level; on a dark→light edge, glow. In **strong sun with the caps full**
   it instead plays the in-sun "loading" sweep (`USE_SUN_SWEEP`; see *What to tune*) —
-  free solar spent as light, and gated so it can never drain the pack.
+  free solar spent as light, and gated so it can never drain the pack. The same poll
+  banks **sun-hours** to EEPROM whenever the strong-sun tell is set (`USE_SUN_DIARY`),
+  so the card keeps a lifetime tally of the light it has lived in.
 
 All PORT pins sense fully asynchronously, so the rising-edge accel interrupts and
 the falling-edge FD interrupt wake the core from power-down with the peripheral
-clock stopped (datasheet §18.3.3.1). Every glow is gated by `sense_rail_ok()`:
-below `VS_GLOW_FLOOR_MV` the card stays dark and charges, so an animation can't
-brown out the part.
+clock stopped (datasheet §18.3.3.1). Every glow is gated on the rail (`sense_glow_peak()`):
+below `VS_GLOW_FLOOR_MV` the card stays dark and charges, and with `USE_BROWNOUT_STRETCH`
+the breath *fades* toward the floor rather than cutting off at it — so an animation can't
+brown out the part, and a low reserve degrades gracefully instead of hitting a cliff.
 
 ### Two hardware gates (not visible to firmware)
 
@@ -347,6 +350,13 @@ the sensor.
   189 actual peak duty (and even 255 maps to 254). Lower it to stretch the budget.
 - **`GLOW_BREATH_MS`** (1600) **/ `GLOW_CYCLES`** (2): breath duration and breaths
   per tap.
+- **`USE_BROWNOUT_STRETCH`** (0/1, default 1) **/ `VS_GLOW_FULL_MV`** (3000) **/
+  `VS_GLOW_DIM_PEAK`** (70): fade the glow as the reserve drains instead of a hard
+  cutoff at `VS_GLOW_FLOOR_MV`. Full brightness at/above `VS_GLOW_FULL_MV`, ramped down
+  to `VS_GLOW_DIM_PEAK` (on `GLOW_PEAK`'s scale) at the floor, dark below it. Invisible
+  with a healthy rail; near-empty it both reads gracefully and stretches the reserve (a
+  dimmer breath spends less charge, so more breaths fit before the floor). Reuses the very
+  rail read that already gated the glow — free. 0 restores the original hard cutoff.
 - **LED PWM polarity** (`led_init`): the LED pins use pad **INVEN**. It is
   analyzed-correct for a low-side LED on TCA split mode (which down-counts),
   giving larger duty = brighter, and it is **load-bearing for the dark idle
@@ -402,7 +412,8 @@ the sensor.
 
 ### Light & rail sensing (`board.h`; ADC in `sense.c`)
 - **`VS_GLOW_FLOOR_MV`** (2600): rail floor below which a glow is refused, so an
-  animation can't brown the part out mid-breath.
+  animation can't brown the part out mid-breath. With `USE_BROWNOUT_STRETCH` (LED glow
+  section) the breath fades down to this floor rather than cutting off at it.
 - **`WINK_FLOOR_MV`** (3000, set ≥ floor): the power-on wink only fires with this
   much headroom, so a marginal just-charged card can't wink itself back under the
   floor.
@@ -415,8 +426,13 @@ the sensor.
   divider source impedance. Do **not** re-enable `ALWAYSON` (standing current in
   sleep). If you change CLK_ADC, re-check `INITDLY ≥ tVREF_ST` and keep the long
   sample length.
-- **EEPROM counter** (`sense.c`) rewrites the same 4-byte cell every tap; only a
-  concern past ~100 k lifetime taps, where you'd rotate the cell address.
+- **EEPROM counter** (`sense.c`) rewrites the same 4-byte cell (offset 0) every tap;
+  only a concern past ~100 k lifetime taps, where you'd rotate the cell address.
+- **`USE_SUN_DIARY`** (0/1, default 1): bank lifetime whole-hours of strong sun to a
+  2-byte EEPROM cell (offset 4), read out over UPDI or surfaced in the NDEF later. The
+  in-progress hour is counted in RAM and written only once per banked hour, so EEPROM sees
+  ~one write per sun-hour (endurance-safe); a full supercap drain forgets at most the
+  current sub-hour. Free — the poll already reads the strong-sun tell.
 
 ### In-sun loading sweep (`board.h`; animation in `led.c`)
 The "charging in the sun" tell: on the ~1 s poll, when VIN is past the clamp (strong

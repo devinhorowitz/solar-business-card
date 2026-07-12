@@ -219,15 +219,17 @@ int main(void)
 #else
             adxl367_clear_tap();                 /* drop the tap latch */
 #endif
-            if (sense_rail_ok()) {
+            uint8_t peak = sense_glow_peak(dbl ? DTAP_PEAK : GLOW_PEAK);
+            if (peak) {
                 /* tally BEFORE the glow: the EEPROM write then happens at the
                  * higher pre-glow rail, not after the glow has sagged it. The
-                 * ~13 ms write is imperceptible ahead of the animation. */
+                 * ~13 ms write is imperceptible ahead of the animation. peak is the
+                 * rail-scaled brightness (brownout stretch), 0 below the floor. */
                 sense_count_inc();
                 if (dbl)
-                    led_breathe(DTAP_CYCLES, DTAP_BREATH_MS, DTAP_PEAK);  /* signature */
+                    led_breathe(DTAP_CYCLES, DTAP_BREATH_MS, peak);  /* signature */
                 else
-                    led_breathe(GLOW_CYCLES, GLOW_BREATH_MS, GLOW_PEAK);
+                    led_breathe(GLOW_CYCLES, GLOW_BREATH_MS, peak);
             }
             prev_light = sense_light();
             /* a tap is also motion (and, if a phone caused it, a field event), so
@@ -247,23 +249,35 @@ int main(void)
              * so the accel motion int likely set f_motion too -- clear it after so we
              * don't chase this with a soft breath. (Deliberately NOT counted by
              * sense_count_inc(): that tracks physical taps; move it here to count reads.) */
-            if (sense_rail_ok())
-                led_breathe(GLOW_CYCLES, GLOW_BREATH_MS, GLOW_PEAK);
+            uint8_t peak = sense_glow_peak(GLOW_PEAK);
+            if (peak)
+                led_breathe(GLOW_CYCLES, GLOW_BREATH_MS, peak);
             f_motion = 0;
             adxl367_clear_activity();
         }
         else if (f_motion) {
             f_motion = 0;
-            if (sense_rail_ok())
-                led_breathe(1, GLOW_BREATH_MS, (uint8_t)(GLOW_PEAK / 2));
+            uint8_t peak = sense_glow_peak((uint8_t)(GLOW_PEAK / 2));
+            if (peak)
+                led_breathe(1, GLOW_BREATH_MS, peak);
             adxl367_clear_activity();   /* ADXL367 activity latches; read STATUS to ack INT2 */
         }
         else if (f_tick) {
             f_tick = 0;
             uint8_t vf    = sense_vin_flags();               /* one VSENSE read -> light + sun */
             uint8_t light = (vf & SENSE_LIGHT_bm) ? 1u : 0u;
-            if (light && !prev_light && sense_rail_ok())
-                led_breathe(GLOW_CYCLES, GLOW_BREATH_MS, GLOW_PEAK);   /* dark->light greeting */
+#if USE_SUN_DIARY
+            /* bank strong-sun time -- free: the sun tell is already in vf. Independent of
+             * the glow logic below, so it also counts the greeting-edge poll. EEPROM is
+             * only written once per banked hour (sense_sun_tick handles the wear policy). */
+            if (vf & SENSE_SUN_bm)
+                sense_sun_tick();
+#endif
+            if (light && !prev_light) {
+                uint8_t peak = sense_glow_peak(GLOW_PEAK);            /* rail-scaled (brownout stretch) */
+                if (peak)
+                    led_breathe(GLOW_CYCLES, GLOW_BREATH_MS, peak);  /* dark->light greeting */
+            }
 #if USE_SUN_SWEEP
             /* Already lit and basking: strong sun (VIN past the clamp) with the caps full ->
              * play the "loading" sweep. Caps-full (sense_caps_full()) is the hard gate, so it
