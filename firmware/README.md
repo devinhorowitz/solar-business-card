@@ -38,7 +38,7 @@ card's largest idle load. See **NFC contact card** below.
 | `adxl367.h/.c` | accelerometer: presence, tap→INT1, activity→INT2, tap/activity clear. |
 | `nfc.h/.c` | NT3H2211 NFC tag (`U5`): NDEF write + VCC power-gate via `NFC_EN`/`U6`. |
 | `led.h/.c` | TCA0 split-mode PWM on PA0–PA3 + gamma breathing glow + in-sun loading sweep. |
-| `sense.h/.c` | ADC rail/light/temp reads, rail-scaled glow (brownout stretch), EEPROM activation counter + sun diary + max-temp log. |
+| `sense.h/.c` | ADC rail/light/temp reads, rail-scaled glow (brownout stretch), EEPROM telemetry: activation counter + sun diary + max-temp log + black box (min-rail, power-cycles). |
 | `main.c` | init (per hardware doc §7), sleep/wake state machine, ISRs. |
 | `Makefile` | build + UPDI flash. |
 
@@ -448,6 +448,12 @@ the sensor.
   `TEMP_SAMPLE_POLLS` polls (abuse temps move over minutes) and written only on a new max, so
   it essentially never writes after the first warm spell. Runs even while face-down dormant.
   Read it back with `sense_temp_max_get()` over UPDI.
+- **`USE_HEALTH_LOG`** (0/1, default 1) **/ `VMIN_SAMPLE_POLLS`** (16): the field **black box** —
+  the *lowest rail (VS) ever* (2-byte cell, offset 7; sampled every `VMIN_SAMPLE_POLLS`, written only
+  on a new low) and the *power-cycle / full-drain count* (2-byte cell, offset 9; +1 per cold power-on
+  reset, gated on `RSTCTRL.RSTFR` PORF so watchdog/UPDI resets don't count). With max-temp, that's the
+  four-way forensic — heat vs. starvation vs. shipped-dark vs. overuse — from one UPDI scan
+  (`sense_vmin_get()` / `sense_boot_count_get()`). Both near-free and run even while dormant.
 
 ### In-sun loading sweep (`board.h`; animation in `led.c`)
 The "charging in the sun" tell: on the ~1 s poll, when VIN is past the clamp (strong

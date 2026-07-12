@@ -169,6 +169,9 @@ int main(void)
     gpio_init();          /* 2. GPIO / PORTMUX            */
     led_init();
     sense_adc_init();
+#if USE_HEALTH_LOG
+    sense_boot_log();     /* black box: +1 the power-cycle count if this was a cold power-on (POR) */
+#endif
 
     twi_init();           /* 3. I2C up, talk to the accel */
     (void)adxl367_init_tap();      /* full accel config; validates DEVID after its soft reset */
@@ -292,6 +295,11 @@ int main(void)
              * and writes EEPROM only on a new max. Before the dormancy gate on purpose, so a
              * baking face-down card is still logged. */
             sense_temp_log();
+#endif
+#if USE_HEALTH_LOG
+            /* black box: lowest rail ever -- self-rate-limited, writes only on a new low. Also
+             * before the dormancy gate, so a quietly-starving stowed card is still recorded. */
+            sense_vmin_tick();
 #endif
 #if USE_FACEDOWN_DORMANT
             /* orientation watch. Accumulate face-down time and go dormant past the timer;

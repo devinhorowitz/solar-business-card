@@ -11,6 +11,33 @@ constraints. Nothing below requires a board re-spin -- see "Trace-change verdict
 > energy-**spending** features (any continuous or bursty LED draw) are gated behind the
 > bench measurement.
 
+## Disposition (2026-07-12) -- brainstorm resolved
+
+The clean, energy-safe, no-product-decision features are **integrated**; the rest are triaged
+below so this is a decision ledger, not an open list. The per-item tiers further down still hold
+for detail.
+
+- **Integrated** (default-on `board.h` knobs, all reuse reads the poll already does -- effectively
+  free): sun diary, brownout-stretch brightness, face-down dormant, thermal-abuse max-temp log, and
+  the micro-power **black box** (lowest-rail-ever + power-cycle count). EEPROM map: tap 0-3, sun-hours
+  4-5, max-temp 6, min-rail 7-8, power-cycles 9-10.
+- **Deferred to the energy-budget bench** (the #1 gate -- these spend LED energy or need measured
+  constants): zero-CPU reflex glow (EVSYS->TCA0), CCL "heartbeat" glow, ambient auto-brightness (also
+  a dim-when-you-want-it risk + a lux->duty curve), shadow-abort / hardware brownout-reflex
+  (AC0->CCL, plus the errata), PoV air-message, free-fall catch, FIFO air-gestures, circadian
+  duty-cycling.
+- **Deferred -- product decision, not a technical block**: dynamic NDEF telemetry and
+  orientation-keyed NFC. Both need a runtime NFC write (doable safely, gated on `NS_REG` no-field),
+  but they put data on / reshape the *contact card* -- a brand call, and bounded by the locked
+  **offline-first vCard** rule (`../TODO.md`).
+- **Won't do -- a real conflict or physics wall**: "suppress glow when dark" coma (kills the
+  dark-room tap-glow -- VSENSE can't tell a nightstand from a pocket; only orientation can, which
+  face-down already uses); mains-flicker classification (the ~3 Hz VSENSE low-pass attenuates
+  100/120 Hz ~30x); cap-touch hover / front-face touch (the ~500 kΩ // 100 nF solar node is a poor,
+  noisy electrode); analog PUF / NFC OTA / TOTP (speculative, high-effort); tally-counter LED display
+  (collides with tap-to-breathe); "just-handled" thermal sense (marginal); and the novelty set
+  (digital dice, secret-knock, two-way guestbook, read-receipt, VLC).
+
 ## Trace-change verdict: none required
 
 Every enabling signal is already routed on v3.0 (verified against `board.h`):
@@ -114,9 +141,11 @@ energy-gate lens as Phases 1-3.
   EEPROM counter of lifetime whole-HOURS. The in-progress hour lives in RAM and flushes once per
   hour, so EEPROM sees ~one write per sun-hour (not per second) -- endurance-safe. Surface "N
   sun-hours banked" in the NDEF later. A keepsake that records its own life in the light.
-- **Micro-power "black box"** -- Tier 2. Extend telemetry into an EEPROM lifecycle record: max
-  temp, sun-hours, tap count, lowest-rail-ever, brownout-abort count. One scan dumps the card's
-  history; doubles as field-failure forensics (heat vs. shipped-dark).
+- **Micro-power "black box"** -- Tier 2. *(**implemented** -- `USE_HEALTH_LOG`, `sense_vmin_tick()` /
+  `sense_boot_log()`, joining the tap / sun-hours / max-temp cells.)* An EEPROM lifecycle record:
+  max temp, sun-hours, tap count, **lowest-rail-ever**, and **power-cycle (full-drain) count** (a
+  cleaner starvation tell than brownout-abort count -- one write per drain, no wear). One UPDI scan
+  dumps the card's history; field-failure forensics (heat vs. starved vs. shipped-dark vs. overused).
 
 ### Smarter light sensing
 

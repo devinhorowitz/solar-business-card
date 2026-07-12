@@ -95,4 +95,15 @@ int16_t  sense_temp_c(void);
 void     sense_temp_log(void);
 int8_t   sense_temp_max_get(void);
 
+/* EEPROM "black box" (USE_HEALTH_LOG): lowest rail ever + power-cycle count.
+ *   sense_vmin_tick()      : call every poll; samples VS every VMIN_SAMPLE_POLLS, keeps the min.
+ *   sense_vmin_get()       : lowest rail mV ever seen (0xFFFF = never sampled).
+ *   sense_boot_log()       : call once at boot; +1 the power-cycle count on a power-on reset (POR).
+ *   sense_boot_count_get() : power-cycle (full-drain) count (erased EEPROM = 0).
+ * The getters are uncalled on-chip BY DESIGN (UPDI/NDEF readout), like sense_count_get. */
+uint16_t sense_vmin_get(void);
+void     sense_vmin_tick(void);
+void     sense_boot_log(void);
+uint16_t sense_boot_count_get(void);
+
 #endif /* SENSE_H */
