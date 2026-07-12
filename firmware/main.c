@@ -284,6 +284,14 @@ int main(void)
                 peak = 0;
             }
 #endif
+#if USE_DARK_MOTION_MUTE
+            /* Stowed in the dark (last poll saw no light): mute the *motion* soft-breath so a card
+             * jostling in a pocket/bag on a walk can't fire a breath per activity trip and bleed the
+             * reserve. A deliberate TAP is untouched (its branch never checks light), so the monogram
+             * still lights when tapped in a dark room -- the marquee moment stays. */
+            if (!prev_light)
+                peak = 0;
+#endif
             if (peak)
                 led_breathe(1, GLOW_BREATH_MS, peak);
             adxl367_clear_activity();   /* ADXL367 activity latches; read STATUS to ack INT2 */

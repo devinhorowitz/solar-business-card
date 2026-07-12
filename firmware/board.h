@@ -275,4 +275,15 @@
 #define FACEDOWN_Z_THRESH      (-32) /* ZDATA_8 below this = face-down (~-0.5 g)              */
 #define FACEDOWN_DORMANT_POLLS (FACEDOWN_DORMANT_S / POLL_PERIOD_S)   /* derived: polls, not seconds */
 
+/* Dark-motion mute: suppress the MOTION soft-breath while the card is in the dark (the last poll
+ * saw no light, VSENSE < LIGHT_THRESH) -- i.e. stowed in a pocket / bag. This closes a real carry-
+ * drain: a charged card jostling in a dark pocket fires a ~1.6 s soft breath on every activity trip
+ * and would empty the reserve on a long walk. The deliberate TAP is left untouched (its branch never
+ * checks light), so the monogram still lights when tapped in a dark room -- the marquee moment stays;
+ * only the incidental motion breath is muted, and only when dark. Near-free (reuses the cached poll
+ * light). Complements face-down dormant (which needs the card face-down; this works in any orientation
+ * a pocket leaves it). 1 = on. (Distilled from Gemini's "sensory fusion": only auto-glow on motion when
+ * there is light to see it in; always honor a tap.) */
+#define USE_DARK_MOTION_MUTE  1
+
 #endif /* BOARD_H */

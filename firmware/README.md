@@ -172,7 +172,9 @@ Baseline = **POWER-DOWN**. Wakes:
 - **Tap** (ADXL367 tap, Z-axis, single+double resolved in hardware) → INT1 → PF0 → full
   breathing glow (`GLOW_CYCLES` breaths) + EEPROM activation count++. With
   `USE_DOUBLE_TAP`, a double-tap plays a brighter/longer signature glow instead.
-- **Motion** (ADXL367 referenced activity) → INT2 → PF1 → one softer breath.
+- **Motion** (ADXL367 referenced activity) → INT2 → PF1 → one softer breath — **muted when the
+  card is in the dark** (`USE_DARK_MOTION_MUTE`), so a card jostling in a pocket can't bleed the
+  reserve on repeated motion breaths; a deliberate tap still glows.
 - **NFC** (NT3H2211 field detect, `U5`) → FD → PA6 → LEDs held dark during the read
   (clean 13.56 MHz for the tag reply), acknowledge glow when the field leaves. FD runs
   on the reader's field power (datasheet §8.4), so it works even though the tag's VCC is
@@ -484,6 +486,12 @@ both the light and strong-sun predicates (`sense_vin_flags()`, raw-count, no mV 
   it reads face-down (~64 LSB/g, so −32 ≈ −0.5 g). **Bench-confirm the sign:** read Z face-up
   (should be ~+64); if it reads ~−64, this board's accel has +Z reversed, so negate the byte in
   `adxl367_read_z`. Net energy win — one accel read per poll, dwarfed by the glows it suppresses.
+- **`USE_DARK_MOTION_MUTE`** (0/1, default 1): mute the *motion* soft-breath when the last poll
+  saw no light (card stowed in a dark pocket/bag), closing a real carry-drain — a jostling card
+  would otherwise fire a ~1.6 s breath on every activity trip and empty the reserve on a walk. The
+  deliberate **tap** glow is untouched (dark or light), so the dark-room tap-to-glow moment stays.
+  Near-free (reuses the cached poll light); complements face-down dormant by covering *any*
+  orientation a pocket leaves the card in.
 - **Core clock** is 1 MHz OSCHF (`clocks_init`, see Robustness for the why and the
   knock-ons). Note VREF start-up time — and therefore the `INITDLY` sizing above —
   depends on this being the high-frequency clock, not a 32 kHz main clock.

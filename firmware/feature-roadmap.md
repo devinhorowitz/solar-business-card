@@ -18,9 +18,10 @@ below so this is a decision ledger, not an open list. The per-item tiers further
 for detail.
 
 - **Integrated** (default-on `board.h` knobs, all reuse reads the poll already does -- effectively
-  free): sun diary, brownout-stretch brightness, face-down dormant, thermal-abuse max-temp log, and
-  the micro-power **black box** (lowest-rail-ever + power-cycle count). EEPROM map: tap 0-3, sun-hours
-  4-5, max-temp 6, min-rail 7-8, power-cycles 9-10.
+  free): sun diary, brownout-stretch brightness, face-down dormant, **dark-motion mute** (mute the
+  motion breath when dark so a pocket-carry can't drain the reserve; a tap still glows), thermal-abuse
+  max-temp log, and the micro-power **black box** (lowest-rail-ever + power-cycle count). EEPROM map:
+  tap 0-3, sun-hours 4-5, max-temp 6, min-rail 7-8, power-cycles 9-10.
 - **Deferred to the energy-budget bench** (the #1 gate -- these spend LED energy or need measured
   constants): zero-CPU reflex glow (EVSYS->TCA0), CCL "heartbeat" glow, ambient auto-brightness (also
   a dim-when-you-want-it risk + a lux->duty curve), shadow-abort / hardware brownout-reflex
@@ -34,9 +35,11 @@ for detail.
   safe channel for either is the tag's 64-byte **SRAM mailbox** read by a companion app (leaves the
   offline vCard untouched) -- worth building only if such an app ever exists; until then the counters
   stay UPDI-readable. Kept as a v-next revival hook, not a v3.0 feature.
-- **Won't do -- a real conflict or physics wall**: "suppress glow when dark" coma (kills the
-  dark-room tap-glow -- VSENSE can't tell a nightstand from a pocket; only orientation can, which
-  face-down already uses); mains-flicker classification (the ~3 Hz VSENSE low-pass attenuates
+- **Won't do -- a real conflict or physics wall**: the *naive* "suppress ALL glows when dark" coma
+  would kill the dark-room tap-glow (VSENSE can't tell a nightstand from a pocket) -- but its clean
+  distillation **shipped** as dark-motion mute above (mute only the *motion* breath when dark, always
+  honor a tap; credit: Gemini's sensory-fusion reframe); mains-flicker classification (the ~3 Hz VSENSE
+  low-pass attenuates
   100/120 Hz ~30x); cap-touch hover / front-face touch (the ~500 kΩ // 100 nF solar node is a poor,
   noisy electrode); analog PUF / NFC OTA / TOTP (speculative, high-effort); tally-counter LED display
   (collides with tap-to-breathe); "just-handled" thermal sense (marginal); and the novelty set
