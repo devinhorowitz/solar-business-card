@@ -160,18 +160,29 @@ def _east_blocks(z0, dz):
                  .rect(lip_E_wide - lip_E, yb - ya).extrude(dz))
         out = blk if out is None else out.union(blk)
     return out
+def _lip_void_P():
+    """Cavity-void perimeter in BOARD coords: straight W/N/S edges + the NOTCHED east edge, built from
+    EAST_WIDE_Y so it is correct for ANY number of wide bands -- one pinch-step for the current single
+    south band [(0,10)]; two for the older wide-both-ends layout. East x = W-lip_E_wide inside a wide
+    band, else W-lip_E. (Previously this polygon hard-coded EAST_WIDE_Y[0] and [1]; that indexed out of
+    range once the north wide band was removed, so the generator could not run until this rewrite.)"""
+    y0, y1 = lip_N, H - lip_S
+    wide = lambda y: any(a <= y < b for a, b in EAST_WIDE_Y)
+    xw, xp = W - lip_E_wide, W - lip_E
+    xat = lambda y: (xw if wide(y) else xp)
+    east = [(xat(y0 + 1e-6), y0)]
+    for by in sorted({b for band in EAST_WIDE_Y for b in band if y0 < b < y1}):
+        east += [(xat(by - 1e-6), by), (xat(by + 1e-6), by)]      # step at each wide/pinch boundary
+    east.append((xat(y1 - 1e-6), y1))
+    return [(lip_W, lip_N)] + east + [(lip_W, y1)]
 def _lip_inner_pts():
     """lip inner (cavity void) perimeter, MODEL coords: the notched asymmetric outline. West corners are
     filleted in the real part; here sharp -> a ~lip_break cosmetic over-cut at those 2 corners only."""
-    P=[(lip_W,lip_N),(W-lip_E_wide,lip_N),(W-lip_E_wide,EAST_WIDE_Y[0][1]),(W-lip_E,EAST_WIDE_Y[0][1]),
-       (W-lip_E,EAST_WIDE_Y[1][0]),(W-lip_E_wide,EAST_WIDE_Y[1][0]),(W-lip_E_wide,H-lip_S),(lip_W,H-lip_S)]
-    return [(wx(x),wy(y)) for x,y in P]
+    return [(wx(x),wy(y)) for x,y in _lip_void_P()]
 def _lip_break_cut(bb, c, taper):
     """45deg edge-break on the lip inner top edge: taper-extrude the void outline over the top c mm so it
     grows outward into the lip, and cut it -> the sharp top-inner lip edge is knocked back at 45deg."""
-    P=[(lip_W,lip_N),(W-lip_E_wide,lip_N),(W-lip_E_wide,EAST_WIDE_Y[0][1]),(W-lip_E,EAST_WIDE_Y[0][1]),
-       (W-lip_E,EAST_WIDE_Y[1][0]),(W-lip_E_wide,EAST_WIDE_Y[1][0]),(W-lip_E_wide,H-lip_S),(lip_W,H-lip_S)]
-    sk = cq.Sketch().polygon([(wx(x),wy(y)) for x,y in P]).reset().vertices("<Y").fillet(IR).reset().vertices(">Y").fillet(IR)
+    sk = cq.Sketch().polygon([(wx(x),wy(y)) for x,y in _lip_void_P()]).reset().vertices("<Y").fillet(IR).reset().vertices(">Y").fillet(IR)
     return cq.Workplane("XY").workplane(offset=bb-c).placeSketch(sk).extrude(c, taper=taper)
 
 def _recess_mouth_ease(wt, c):
@@ -394,7 +405,7 @@ OUT = "/mnt/user-data/outputs/"
 B = "solar-glow-drh-v3_0-backshell-0p6b-brace"
 jobs = [
     # name                 floor wall  border ribs  prog   note
-    ("Ti-max",             1.00, 1.00, 0.15, False, False, "0.6mm-board DUMB BOX for the resin brace: TRUE 1.00 floor (cavity 1.80, cap gap 0.10) + U2 relief pocket + 1.0 walls + 4 bosses. NO locator pillars (retired: the H-brace registers by fitment). NO ribs (the brace carries center support). Overall 3.55."),
+    ("Ti-max",             1.00, 1.00, 0.15, False, False, "0.6mm-board DUMB BOX for the resin brace: TRUE 1.00 floor (cavity 1.80, cap gap 0.10) + U2 relief pocket + 1.0 walls + 8 bosses (4 corner + 4 panel-corner). NO locator pillars (retired: the H-brace registers by fitment). NO ribs (the brace carries center support). Overall 3.55."),
     ("Ti-max-progwindow",  1.00, 1.00, 0.15, False, True,  "0.6mm-board / ribs-trimmed + TC2030 re-flash window"),
 ]
 # Ti-conservative (0.60 floor / 1.60 wall) struck: if the shop cannot hold the floor we
