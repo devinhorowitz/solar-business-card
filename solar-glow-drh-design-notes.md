@@ -25,7 +25,8 @@ land.
 - **P (positive) pad: 7.8 × 3.5 mm**
 - **N (negative) pad: 12.2 × 3.5 mm** — the asymmetric widths are the **polarity key**
 - Both centred on the cell axis at **±11 mm** from cell centre, ~1.5 mm in from each end, inside the
-  28.5 × 17 mm body.
+  39.0 × 17 mm body (SS17 can, per the datasheet drawing; the earlier 28.5 was the solar-cell length,
+  mistakenly carried over -- both parts share the 17 mm width, which is what confused it).
 - Protruding end tabs are finish-coated locators only — **not** solder pads.
 - Placement rotations as built: SC1/SC4 → 90°, SC2/SC3 → 270°.
 
@@ -239,7 +240,8 @@ re-spin for the enclosure:
     z2.80 on a tight one. Use a conformal filler that spans the range at low force.
   - *Electrically insulating -- mandatory.* The Ti body is GND (see the "grounded body → short risk" rule
     above); a live cap can shorted to it through a conductive TIM is a dead short. Same reflex as the
-    reserved Kapton blanket.
+    reserved Kapton blanket. **(Superseded -- see the Resolution below: the WS17 can top bench-tested
+    non-conductive, so a conductive TIM on the can top is safe and the best-thermal option is now open.)**
   - *Low compression force + serviceable.* Do not preload the board off its z2.80 rest, and keep it
     re-applyable -- the shell opens on four M2 screws, so a cured RTV is a teardown hazard where a
     re-usable gap pad/putty is not.
@@ -250,6 +252,57 @@ re-spin for the enclosure:
     sustained hot ambient: there the shell is the heat *ingress*, not a sink, so coupling to it cannot cool
     the caps. Treat it as a transient buffer + sensing aid held in reserve (like the Kapton), not a hot-car
     survival fix -- survival stays the cap's own temperature rating and "don't bake the card."
+- **Resolution (2026-07-12) -- TIM adopted: conductive graphite, per-unit fit.** Two of the traps above
+  are retired -- one by a bench test, one by the build reality -- so the TIM moves from "held in reserve"
+  to the v4 plan, as the thermal-abatement lever (the supercap's 85 °C is the fixed ceiling; the accel is
+  a second immovable 85 °C part; no better cap or accel exists -- so managing the heat is the only move).
+  - *Insulating is no longer mandatory -- conductive graphite is now the pick.* Bench-tested the actual
+    WS17 can: its **top half is non-conductive** (looks like bare foil, reads open to every terminal), so
+    a conductive TIM on the can top cannot short -- it only extends the GND shell onto an isolated
+    surface. That frees the best-thermal material: **t-Global T62-1 graphite**
+    (`datasheets/TIM (SC1-SC4)  t-Global T62-1 graphite  0.16mm.pdf`) -- **15 W/m·K through-plane** and,
+    the real prize, **400 W/m·K in-plane**. The in-plane number is the lever: it lets the poor-conductor
+    Ti shell (~6.7 W/m·K) still spread heat laterally across the cap face, which is exactly the
+    "consolidate the mass / mitigate stagnation" job. (Through-plane k is *not* the lever -- the thin pad
+    and the Ti are the series limits -- so a 15 W/m·K pad is not "3x" a 5 W/m·K one here; the graphite is
+    chosen for its lateral spread + low contact resistance, not its Z number.) *Placement rule:* pad on
+    the non-conductive can top and the GND shell only, clear of the cap terminals / conductive lower body.
+  - *Variant: **T62-1**, never T62-2 (the PET trap).* The family: raw **T62** (0.13 mm, 20 W/m·K, no
+    adhesive), **T62-1** (0.16 mm, 15 W/m·K, **graphite + one-side adhesive, no carrier**), **T62-2**
+    (0.2 mm, 5 W/m·K, **PET | graphite | adhesive**). Use **T62-1**: T62-2's permanent PET layer sits in
+    the through-path (PET ~0.2 W/m·K adds as much series resistance as the whole graphite bulk, or more)
+    and quietly throttles the cap->shell coupling the TIM exists for. T62-1's integrated thin PSA also
+    beats "raw T62 + a separate double-sided thermal tape," which just re-introduces a thicker, more
+    resistive adhesive layer plus an extra interface. *Orientation:* bare graphite face to the **cap**
+    (clean heat entry), adhesive face to the **Ti shell** (already the Ti-limited side, so the thin PSA
+    costs least there). Cut ~14 x 30 mm strips from a 150 mm sheet (`T62-1-150-150-0.16`).
+  - *"Compliant filler, not a fixed pad" is met by per-unit fit, not by the material.* Graphite is a firm
+    fixed-thickness sheet, which fights the 0.05-0.15 mm gap *spread* in volume production -- but this is a
+    **one-or-two-off build**, so the fix is to measure the real can-to-shell gap on the assembled board
+    and pick the graphite thickness to match (T62 family **0.13 / 0.16 / 0.2 mm**, custom on request),
+    optionally recessed in a shallow milled pocket for a light, defined contact. Per-unit fitting
+    sidesteps the tolerance-range trap that would otherwise force a lower-k conformal filler onto a
+    volume design.
+  - *Pocket plan (shell side; does not touch the resin brace).* The brace deliberately clears the cap
+    bays, so a shell-floor pocket over the caps interferes with nothing. Plan: **one "pane" pocket per
+    cap-pair** (2 total, simpler to machine than 4 per-can), each **laterally oversized ~0.5-1 mm per
+    side** beyond the pad so it drops in without binding on the walls. **Depth D approximately = pad
+    thickness - measured gap** (0.16 - ~0.10 -> **~0.05-0.06 mm** at the nominal gap; the range is
+    0.01-0.11 mm across the 0.05-0.15 mm gap tolerance). **Bias slightly deep on purpose:** the two
+    error modes are asymmetric -- too shallow **jacks the board off its z2.80 seat** (unrecoverable
+    without re-machining titanium), while too deep just **floats the pad**, which is recoverable
+    *additively* -- shim the pocket floor with **copper-foil tape** (~0.05-0.07 mm/layer, and thermally
+    transparent at ~400 W/m·K, so it costs the path nothing but its own thin PSA) or step up the pad
+    thickness. So mill ~0.03-0.05 mm **deeper** than the just-fill depth and shim up to a light contact.
+    The copper shim rides the shell/adhesive side (on the GND Ti floor, under the graphite) -- no short,
+    since the cap top is non-conductive. A 0.05-0.10 mm pocket is negligible against the ~1 mm Ti floor.
+    *Caveat for the single pane:* it assumes the two caps in a pair sit coplanar; measure both gaps, and
+    if they differ by more than ~0.02 mm, shim the low one or fall back to per-can pockets. Final depth
+    + the `enclosure/README.md` pocket spec await the measured gap.
+  - *Everything else above still binds:* low preload (do not jack the board off its z2.80 seat),
+    serviceable (a dry, re-appliable pad -- no cured RTV), and the honest scope (a transient buffer +
+    sensing aid, not a hot-car steady-state cure). **Open input:** the measured can-to-shell gap on the
+    built unit, which sets the final pad thickness + pocket depth.
 
 ---
 
