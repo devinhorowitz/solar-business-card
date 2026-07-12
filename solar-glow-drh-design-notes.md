@@ -676,16 +676,29 @@ prioritization rather than a blanket "everything AEC-Q100" sweep.
   / thermal-mass-consolidation work in §7, previously parked, is the real lever on the failure mode.
   The grade bumps below are cheap margin taken along the way; the TIM is what moves the needle.
 
-- **Bumped to 125 °C (both drop-in, orderable, no design change):**
+- **Bumped to automotive / higher temp (all drop-in, same footprint, no design change).** For a
+  one-or-two-off custom build the orderability/cost friction barely matters, so a better grade is a
+  free longevity win wherever it does not fight the design:
   - **MCU: `AVR64DD28-I-STX` -> `AVR64DD28-E/STX`.** The `-I-` grade is only -40 to +85 °C; the `-E`
     (Extended) grade is -40 to +125 °C -- same die, same VQFN28 footprint, same firmware. The MCU is
     always powered, so it should not be the first thing to give out at the cap's limit.
   - **FRAM: `MB85RC512TY` (AEC-Q100, 125 °C)** -- see the note above; taken for the retention win
     independent of the ceiling (the archive should survive heat even after the cap has degraded).
+  - **Load switch U6: `TPS22918` -> `TPS22918-Q1`** (AEC-Q100; orderable `TPS22918QDBVRQ1`, same
+    SOT-23-6 / DBV footprint -- the base datasheet cross-references the -Q1 directly). It only gates the
+    NFC/FRAM VCC, so thermal stress is low, but it is a zero-cost drop-in, so taken.
 
-- **Deliberately NOT bumped** (already fine, or not the issue when hot): the LEDs are already
-  **AEC-Q102**; the clamp comparator (TLV3011B) and U2 (ALD910025) are already **125 °C**; the load
-  switch (TPS22918) is 105 °C. The accelerometer (ADXL367, ~85 °C) has no clean automotive drop-in,
-  the NFC tag is RF-powered (no standing heat), and the discretes (Q1 / diodes) are robust -- chasing
-  AEC-Q100 across these buys qualification pedigree, not a higher ceiling (which the cap owns), and
-  hits the same orderability wall the FRAM DFN did. Skipped by design.
+- **Evaluated and rejected -- accelerometer.** The obvious automotive ADI accel in range, the
+  **ADXL316**, is the wrong *class* of part, not merely a different footprint: it has **analog voltage
+  outputs** (no I²C), draws **350 µA continuously** (vs the ADXL367's ~1 µA in wake-on-motion), and has
+  **no autonomous tap/activity interrupt**. Adopting it would break the I²C bus, the energy budget, and
+  the whole tap-to-wake / sleep-almost-always design at once. So **U3 stays the ADXL367** (85 °C) --
+  which makes the accel a *second* ceiling part alongside the supercap, with no viable automotive
+  alternative in its ultra-low-power digital-wake niche. Reinforces the point: the card is 85 °C-limited
+  by parts that are already best-in-role, so thermal abatement (§7 TIM) is the only real lever.
+
+- **Left alone (already fine):** the LEDs are already **AEC-Q102**; the clamp comparator (TLV3011B) and
+  U2 (ALD910025) are already **125 °C**; the NFC tag is RF-powered (no standing heat) and the discretes
+  (Q1 / diodes) are robust -- no upgrade needed. Datasheets for parts new to the project are filed in
+  `datasheets/` per house practice (the `MB85RC512TY` FRAM is added there as tentative refdes **U7**;
+  the MCU-E and TPS22918-Q1 reuse the existing U1 / U6 datasheets, which cover their grade variants).
