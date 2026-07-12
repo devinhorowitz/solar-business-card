@@ -191,7 +191,7 @@ def _recess_mouth_ease(wt, c):
     them. At wt-c it is the nominal recess (interior already void -> no-op); at wt it grows outward by c into
     the wall, beveling only the wall inner-top corner. Robust boolean (no OCC edge-chamfer)."""
     sk = cq.Sketch().rect(cavW, cavH).vertices().fillet(cavR)
-    for mx, my in mounts:                                   # add the corner-relief circles so the ease follows the
+    for mx, my in [(R, R), (W - R, R), (R, H - R), (W - R, H - R)]:   # ONLY the 4 board CORNERS carry the corner_clr relief (same set build() cuts). The 4 panel-corner mounts sit mid-edge; stamping a circle there bulged the recess-mouth outline into a semicircle -> the "semi-moon" crescents on the top lip. They get no relief circle.
         sk = sk.push([(wx(mx), wy(my))]).circle(R + corner_clr, mode="a")   # ACTUAL opening (relief r=R+corner_clr at the corners), not the cavR fillet the relief cuts through
     return cq.Workplane("XY").workplane(offset=wt-c).placeSketch(sk).extrude(c, taper=-45)
 
