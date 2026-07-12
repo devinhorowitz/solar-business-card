@@ -50,6 +50,14 @@ static volatile uint8_t f_motion;  /* PF1 activity */
 static volatile uint8_t f_tick;    /* RTC PIT     */
 static volatile uint8_t f_nfc;     /* PA6 NFC field-detect (FD, field-powered) */
 
+#if USE_FACEDOWN_DORMANT
+/* face-down dormant state (main-context only, not shared with any ISR -> no volatile).
+ * dormant = every glow suppressed until turned face-up; facedown_polls = consecutive
+ * face-down polls counted toward FACEDOWN_DORMANT_POLLS. */
+static uint8_t  dormant;
+static uint16_t facedown_polls;
+#endif
+
 /* ---------------- init ---------------- */
 
 static void clocks_init(void)
@@ -219,15 +227,20 @@ int main(void)
 #else
             adxl367_clear_tap();                 /* drop the tap latch */
 #endif
-            if (sense_rail_ok()) {
+            uint8_t peak = sense_glow_peak(dbl ? DTAP_PEAK : GLOW_PEAK);
+#if USE_FACEDOWN_DORMANT
+            if (dormant) peak = 0;   /* face-down: suppress the glow + tally (latches still acked below) */
+#endif
+            if (peak) {
                 /* tally BEFORE the glow: the EEPROM write then happens at the
                  * higher pre-glow rail, not after the glow has sagged it. The
-                 * ~13 ms write is imperceptible ahead of the animation. */
+                 * ~13 ms write is imperceptible ahead of the animation. peak is the
+                 * rail-scaled brightness (brownout stretch), 0 below the floor. */
                 sense_count_inc();
                 if (dbl)
-                    led_breathe(DTAP_CYCLES, DTAP_BREATH_MS, DTAP_PEAK);  /* signature */
+                    led_breathe(DTAP_CYCLES, DTAP_BREATH_MS, peak);  /* signature */
                 else
-                    led_breathe(GLOW_CYCLES, GLOW_BREATH_MS, GLOW_PEAK);
+                    led_breathe(GLOW_CYCLES, GLOW_BREATH_MS, peak);
             }
             prev_light = sense_light();
             /* a tap is also motion (and, if a phone caused it, a field event), so
@@ -247,33 +260,81 @@ int main(void)
              * so the accel motion int likely set f_motion too -- clear it after so we
              * don't chase this with a soft breath. (Deliberately NOT counted by
              * sense_count_inc(): that tracks physical taps; move it here to count reads.) */
-            if (sense_rail_ok())
-                led_breathe(GLOW_CYCLES, GLOW_BREATH_MS, GLOW_PEAK);
+            uint8_t peak = sense_glow_peak(GLOW_PEAK);
+#if USE_FACEDOWN_DORMANT
+            if (dormant) peak = 0;   /* face-down: no acknowledge glow */
+#endif
+            if (peak)
+                led_breathe(GLOW_CYCLES, GLOW_BREATH_MS, peak);
             f_motion = 0;
             adxl367_clear_activity();
         }
         else if (f_motion) {
             f_motion = 0;
-            if (sense_rail_ok())
-                led_breathe(1, GLOW_BREATH_MS, (uint8_t)(GLOW_PEAK / 2));
+            uint8_t peak = sense_glow_peak((uint8_t)(GLOW_PEAK / 2));
+#if USE_FACEDOWN_DORMANT
+            if (dormant) {
+                /* motion while dormant may be the flip back face-up: re-check Z now for an
+                 * instant wake (the ~1 s poll is only a backstop). No glow on the wake
+                 * motion itself either way. */
+                if (adxl367_read_z() >= FACEDOWN_Z_THRESH) { dormant = 0; facedown_polls = 0; }
+                peak = 0;
+            }
+#endif
+            if (peak)
+                led_breathe(1, GLOW_BREATH_MS, peak);
             adxl367_clear_activity();   /* ADXL367 activity latches; read STATUS to ack INT2 */
         }
         else if (f_tick) {
             f_tick = 0;
-            uint8_t vf    = sense_vin_flags();               /* one VSENSE read -> light + sun */
-            uint8_t light = (vf & SENSE_LIGHT_bm) ? 1u : 0u;
-            if (light && !prev_light && sense_rail_ok())
-                led_breathe(GLOW_CYCLES, GLOW_BREATH_MS, GLOW_PEAK);   /* dark->light greeting */
-#if USE_SUN_SWEEP
-            /* Already lit and basking: strong sun (VIN past the clamp) with the caps full ->
-             * play the "loading" sweep. Caps-full (sense_caps_full()) is the hard gate, so it
-             * can never draw the pack down; it re-arms each poll, looping while the sun holds
-             * and spending the clamp's excess as light instead of Q1 heat. The greeting above
-             * wins on the entry edge (one breath in), then this runs while the card sits. */
-            else if ((vf & SENSE_SUN_bm) && sense_caps_full())
-                led_sweep(SWEEP_PASSES, SWEEP_PASS_MS, SWEEP_PEAK, SWEEP_OVERLAP);
+#if USE_TEMP_LOG
+            /* lifetime max die temp -- self-rate-limited (samples every TEMP_SAMPLE_POLLS)
+             * and writes EEPROM only on a new max. Before the dormancy gate on purpose, so a
+             * baking face-down card is still logged. */
+            sense_temp_log();
 #endif
-            prev_light = light;
+#if USE_FACEDOWN_DORMANT
+            /* orientation watch. Accumulate face-down time and go dormant past the timer;
+             * clear dormancy once face-up (a backstop to the motion-driven wake). While
+             * dormant, skip all light/glow/sun work below -- just watch for face-up. */
+            uint8_t skip = 0;
+            int8_t z = adxl367_read_z();
+            if (dormant) {
+                if (z >= FACEDOWN_Z_THRESH) { dormant = 0; facedown_polls = 0; }
+                skip = 1;                                    /* resume normal work next poll */
+            } else if (z < FACEDOWN_Z_THRESH) {
+                if (++facedown_polls >= FACEDOWN_DORMANT_POLLS) { dormant = 1; skip = 1; }
+            } else {
+                facedown_polls = 0;
+            }
+            if (!skip)
+#endif
+            {
+                uint8_t vf    = sense_vin_flags();               /* one VSENSE read -> light + sun */
+                uint8_t light = (vf & SENSE_LIGHT_bm) ? 1u : 0u;
+#if USE_SUN_DIARY
+                /* bank strong-sun time -- free: the sun tell is already in vf. Independent of
+                 * the glow logic below, so it also counts the greeting-edge poll. EEPROM is
+                 * only written once per banked hour (sense_sun_tick handles the wear policy). */
+                if (vf & SENSE_SUN_bm)
+                    sense_sun_tick();
+#endif
+                if (light && !prev_light) {
+                    uint8_t peak = sense_glow_peak(GLOW_PEAK);            /* rail-scaled (brownout stretch) */
+                    if (peak)
+                        led_breathe(GLOW_CYCLES, GLOW_BREATH_MS, peak);  /* dark->light greeting */
+                }
+#if USE_SUN_SWEEP
+                /* Already lit and basking: strong sun (VIN past the clamp) with the caps full ->
+                 * play the "loading" sweep. Caps-full (sense_caps_full()) is the hard gate, so it
+                 * can never draw the pack down; it re-arms each poll, looping while the sun holds
+                 * and spending the clamp's excess as light instead of Q1 heat. The greeting above
+                 * wins on the entry edge (one breath in), then this runs while the card sits. */
+                else if ((vf & SENSE_SUN_bm) && sense_caps_full())
+                    led_sweep(SWEEP_PASSES, SWEEP_PASS_MS, SWEEP_PEAK, SWEEP_OVERLAP);
+#endif
+                prev_light = light;
+            }
         }
 
         go_to_sleep();

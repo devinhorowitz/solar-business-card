@@ -28,6 +28,7 @@
 /* ---- register addresses (ADXL367 data sheet Rev. B, Table 11) ---- */
 #define ADXL_DEVID_AD       0x00   /* -> 0xAD                                         */
 #define ADXL_PART_ID        0x02   /* -> 0xF7 (ADXL362 is 0xF2; check 0xF7 specifically) */
+#define ADXL_ZDATA8         0x0A   /* Z accel, 8 MSBs, signed (~64 LSB/g at +-2 g); data sheet Table 11 / Reg 0x0A */
 #define ADXL_STATUS         0x0B   /* ERR(7) AWAKE(6) INACT(5) ACT(4) ... DATA_RDY(0) */
 #define ADXL_SOFT_RESET     0x1F   /* write 0x52 ('R') to reset                       */
 #define ADXL_THRESH_ACT_H   0x20   /* THRESH_ACT[12:6]                                */
@@ -103,5 +104,7 @@ uint8_t adxl367_init_tap(void);       /* full config: tap->INT1, activity->INT2 
 uint8_t adxl367_read_tap(void);       /* read STATUS_2 (clears+re-arms); tap flags */
 void    adxl367_clear_tap(void);      /* read STATUS_2 to drop the tap latch      */
 void    adxl367_clear_activity(void); /* read STATUS to ack the INT2 activity     */
+int8_t  adxl367_read_z(void);         /* signed 8-bit Z (ZDATA_8, ~64 LSB/g at +-2 g);
+                                       * 0 on bus fault = level = fail-safe not-face-down */
 
 #endif /* ADXL367_H */

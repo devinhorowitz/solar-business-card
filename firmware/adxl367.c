@@ -77,3 +77,14 @@ void adxl367_clear_activity(void)
     uint8_t st;
     (void)twi_reg_read(ADXL367_ADDR, ADXL_STATUS, &st, 1);   /* reading STATUS acks ACT */
 }
+
+int8_t adxl367_read_z(void)
+{
+    /* One 8-bit Z sample: the card-face normal (same axis the tap engine watches). At
+     * rest it reads ~+1 g (~+64) face-up and ~-1 g (~-64) face-down. Reading a data
+     * register does not disturb the tap/activity latches. On a bus fault return 0 (level),
+     * which the face-down logic treats as "not face-down" -- a glitch can't force dormancy. */
+    uint8_t z = 0;
+    if (twi_reg_read(ADXL367_ADDR, ADXL_ZDATA8, &z, 1)) return 0;
+    return (int8_t)z;
+}

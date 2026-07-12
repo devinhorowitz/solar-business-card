@@ -56,6 +56,13 @@ uint8_t  sense_vin_flags(void);
 /* true if the rail is above the glow floor (safe to run the animation). */
 uint8_t  sense_rail_ok(void);
 
+/* Rail-adaptive glow peak: returns `peak` scaled down by how close the rail sits to
+ * the glow floor (brownout stretch, see USE_BROWNOUT_STRETCH), or 0 below the floor so
+ * a caller keeps the `if (peak) glow` shape. One VDD/10 read -- the SAME cost as the
+ * sense_rail_ok() gate it replaces at the breath sites. With USE_BROWNOUT_STRETCH=0 it
+ * is exactly that gate: `peak` above the floor, 0 below. */
+uint8_t  sense_glow_peak(uint8_t peak);
+
 /* true if the caps are full (VS >= SWEEP_CAPS_FULL_MV): the in-sun sweep's hard gate,
  * so the animation can never draw the pack down. Raw-count, same VDD/10 channel as
  * sense_rail_ok(). */
@@ -64,5 +71,28 @@ uint8_t  sense_caps_full(void);
 /* EEPROM lifetime activation counter (survives power loss). */
 uint32_t sense_count_get(void);
 void     sense_count_inc(void);
+
+/* EEPROM sun diary (USE_SUN_DIARY): lifetime whole-hours of strong sun.
+ *   sense_sun_tick() : call once per poll while the SENSE_SUN_bm tell is set; it counts
+ *                      the partial hour in RAM and writes EEPROM only on each hour rolled
+ *                      over (so ~one write per banked hour, not per poll -- endurance).
+ *   sense_sun_hours_get() : the banked whole-hour count (survives power loss; the
+ *                      in-progress partial hour is RAM-only and lost on a full drain).
+ * Like sense_count_get, the getter is uncalled on-chip BY DESIGN (UPDI/NDEF readout);
+ * --gc-sections drops it if nothing references it. */
+uint16_t sense_sun_hours_get(void);
+void     sense_sun_tick(void);
+
+/* MCU internal die temperature + EEPROM lifetime-max log (USE_TEMP_LOG).
+ *   sense_temp_c()       : one-shot die temperature in degrees C (pulsed ADC read against
+ *                          the internal 2.048 V ref + SIGROW cal, per DS40002315 sec 33.3.3.8).
+ *                          Returns INT16_MIN on a stuck ADC.
+ *   sense_temp_log()     : call every poll; samples sparsely (every TEMP_SAMPLE_POLLS) and
+ *                          writes EEPROM only when a new lifetime max is seen.
+ *   sense_temp_max_get() : the stored lifetime max in degrees C (signed; erased EEPROM = -1).
+ *                          Uncalled on-chip BY DESIGN (UPDI/NDEF readout), like sense_count_get. */
+int16_t  sense_temp_c(void);
+void     sense_temp_log(void);
+int8_t   sense_temp_max_get(void);
 
 #endif /* SENSE_H */

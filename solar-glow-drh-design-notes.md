@@ -172,7 +172,9 @@ All firmware-only, no board change:
   never fire. Wake-on-light is instead the **RTC-timed ADC poll** (deep Power-Down), and instant
   pickup response comes from the **accelerometer interrupt**. See the corrected
   `solar-glow-drh-v2-hardware.md` §6 and `firmware/README.md`.
-- **Internal temperature sensor** is available if wanted.
+- **Internal temperature sensor** is available if wanted -- and by design it is the card's *only*
+  thermal sensor (per-cap thermistors are unwarranted, and no spare pin is ADC-capable anyway; see §7
+  "Supercap thermal").
 
 Not useful on this part: ZCD (mains only), op-amps (the DD family lacks them), PTC cap-touch (see §5).
 
@@ -205,6 +207,49 @@ re-spin for the enclosure:
   3.55 mm; the four bosses sit on the **v3.0 hole pattern** (concentric with the r3.0 fillets),
   retained by four corner M2 screws (~2.2 mm Ti engagement). The earlier 0.3 mm-skin / 7075-fallback /
   photochemical-etch plan is dropped. Full CAD, callouts, and fab notes are in `enclosure/README.md`.
+- **Supercap thermal -- vulnerability, sensing, and why no per-cap thermistors.** The four WS17
+  EDLCs are the heat-sensitive parts (a 2.75 V cell derates in both working voltage and life with
+  temperature; EDLC life roughly halves per ~10 °C, Arrhenius rule of thumb), so "how hot do the caps
+  get, and must we measure them *there*?" is a fair question. Answer: **no dedicated per-cap
+  thermistors.**
+  - *The single internal sensor suffices.* There is no internal heat source of consequence -- the only
+    dissipators are the Q1/TLV3011 shunt clamp (≤~0.2 W, and only under strong direct sun) and the brief
+    LED breaths -- so in the failure mode that actually matters (hot car / sun-soak) the whole 54 x 86 mm
+    card floats to ambient and sits near-isothermal. Across 0.6 mm FR4 with a thermally-coupled Ti shell,
+    any MCU-to-cap gradient collapses well within the max-temp logging timescale. The cap centers are
+    25-40 mm from U1 (SC1 24.7, SC3 31.7, SC2 35.2, SC4 40.4 mm), but the long cap bodies reach within a
+    few mm of the MCU at their near ends. A max-temp / derating flag needs only coarse accuracy (±5 °C),
+    which the AVR internal sensor (§6) meets after a one-point cal.
+  - *And an NTC has nowhere to land.* No spare pin is ADC-capable -- the free GPIO (PA4 / PC0 / PC1) are
+    not on PORT D/E/F, the only ADC-input ports on this AVR-Dx -- so an analog thermistor cannot be added
+    without a re-spin. If a future rev ever needs a genuine per-cap reading, add **one I²C temp sensor**
+    on the existing PC2/PC3 bus near the cap cluster, not analog NTCs. Either path: bench-confirm the
+    isothermal assumption once (two thermocouples -- a cap can vs the MCU die, under a heat-soak) before
+    trusting the single-sensor proxy in firmware.
+- **Optional supercap-to-shell thermal-interface material (TIM).** A compliant gap-filler could bridge
+  each supercap can to the Ti shell floor across the ~0.10 mm cavity air gap (the caps hang 1.70 mm off
+  the B-side into the 1.80 mm cavity; the brace's H-band and edge rails deliberately clear the cap bays,
+  so the space directly behind each can is air to the shell floor, *not* resin -- so a TIM there couples
+  the cap to the shell, not to the inert brace). A nice-to-have, not a requirement; if ever added, spec
+  it against these traps:
+  - *Compliant gap-filler, NOT a fixed-thickness pad.* The gap is ~0.10 mm nominal and **0.05-0.15 mm**
+    across the cavity tolerance alone (1.80 ±0.05 over the 1.70 mm-**max** WS17 can; `enclosure/README.md`
+    C1), and opens further if a production can sits below its datasheet-max height. A hard 0.10 mm pad
+    would either float on a tall gap (no contact, useless) or jack the board off its brace/lip seat at
+    z2.80 on a tight one. Use a conformal filler that spans the range at low force.
+  - *Electrically insulating -- mandatory.* The Ti body is GND (see the "grounded body → short risk" rule
+    above); a live cap can shorted to it through a conductive TIM is a dead short. Same reflex as the
+    reserved Kapton blanket.
+  - *Low compression force + serviceable.* Do not preload the board off its z2.80 rest, and keep it
+    re-applyable -- the shell opens on four M2 screws, so a cured RTV is a teardown hazard where a
+    re-usable gap pad/putty is not.
+  - *What it buys, and what it does not.* Ti-6Al-4V is a poor conductor (~6.7 W/m·K, ~1/20th of aluminium)
+    but a real thermal **mass**: the TIM buffers transients (a warm hand, a sun-driven clamp burst) into
+    the shell and homogenizes the card -- which usefully tightens the cap-to-internal-sensor coupling and
+    makes the single-sensor proxy above a better one. It does **not** lower steady-state temperature under
+    sustained hot ambient: there the shell is the heat *ingress*, not a sink, so coupling to it cannot cool
+    the caps. Treat it as a transient buffer + sensing aid held in reserve (like the Kapton), not a hot-car
+    survival fix -- survival stays the cap's own temperature rating and "don't bake the card."
 
 ---
 

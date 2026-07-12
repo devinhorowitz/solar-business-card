@@ -194,9 +194,40 @@
  * otherwise burn as Q1 heat. Read via the ADC VDD/10 channel (sense_caps_full()). */
 #define SWEEP_CAPS_FULL_MV 3300
 
+/* Sun diary: bank lifetime whole-HOURS of strong sun (the SENSE_SUN_bm tell the poll
+ * already reads) into EEPROM, so a card that lives on harvested light also records how
+ * much light it has seen -- read out over UPDI, or surfaced in the NDEF later. Free:
+ * no extra sensing (the sun flag is already in hand each poll), and the in-progress
+ * hour is counted in RAM so EEPROM is written only once per banked hour (endurance-safe;
+ * see sense_sun_tick). 1 = on; 0 = compile it out entirely. */
+#define USE_SUN_DIARY      1
+
+/* Thermal-abuse log: keep the lifetime MAX die temperature (deg C) in EEPROM -- the hot-car
+ * supercap-degradation tell (see ../solar-glow-drh-design-notes.md sec 7 "Supercap thermal").
+ * Uses the MCU's OWN sensor via a PULSED ADC read (no standing current, unlike the accel's
+ * TEMP_EN), sampled every TEMP_SAMPLE_POLLS polls since abuse temps move over minutes; EEPROM
+ * is written only on a NEW max, so after the first warm spell it essentially never writes.
+ * Near-zero energy; runs even while face-down dormant (a baking stowed card is the point).
+ * 1 = on. */
+#define USE_TEMP_LOG       1
+#define TEMP_SAMPLE_POLLS  64   /* polls between temp samples (64 s at POLL_PERIOD_S=1) */
+
 /* charge floor: skip the glow (stay dark) below this rail voltage, mV.
  * Read via ADC VDD/10. Keeps a brown-out from bricking mid-animation. */
 #define VS_GLOW_FLOOR_MV   2600
+
+/* Brownout stretch: fade the glow as the reserve drains instead of a hard cliff at the
+ * floor. Full brightness at/above VS_GLOW_FULL_MV, ramped down to VS_GLOW_DIM_PEAK as the
+ * rail sags to VS_GLOW_FLOOR_MV, dark below it. In normal use (rail near the ~3.5 V clamp)
+ * this is invisible -- it only bites once the reserve is genuinely low, where a dimmer
+ * breath both reads gracefully and spends less charge, so more breaths fit before the
+ * floor. Free: reuses the very rail read that already gates the glow (sense_glow_peak
+ * replaces the sense_rail_ok gate). 1 = on; 0 = original hard cutoff at the floor.
+ * VS_GLOW_FULL_MV is the full-bright knee (>= VS_GLOW_FLOOR_MV, <= the clamped rail);
+ * VS_GLOW_DIM_PEAK is the floor brightness on GLOW_PEAK's 0..255 scale (bench-tunable). */
+#define USE_BROWNOUT_STRETCH 1
+#define VS_GLOW_FULL_MV      3000
+#define VS_GLOW_DIM_PEAK     70
 
 /* wake-on-light threshold on VSENSE (= VIN/2), mV at the pin.
  * ~0 in dark, ~1.2-2.1 V in light. ~0.4 V sits comfortably above dark. */
@@ -218,5 +249,22 @@
  * DTAP_CYCLES * DTAP_BREATH_MS ~ 4.8 s); the PIT wakes the loop every poll to pet it,
  * so power-down sleep never trips it. */
 #define USE_WDT            1
+
+/* Face-down dormant ("dead-man") mode: if the card lies FACE-DOWN (accel Z clearly
+ * negative) continuously for FACEDOWN_DORMANT_S seconds, go dormant -- suppress every glow
+ * (tap / motion / NFC-ack / greeting / sweep) until it is turned face-up again, so a stowed
+ * card (face-down in a drawer, under papers) can't bleed the ~15 J reserve on false-trigger
+ * glows. Flipping it face-up resumes at once (the flip is motion, and the poll re-checks
+ * orientation as a backstop). Net ENERGY WIN -- the only overhead is one accel Z read per
+ * poll, dwarfed by the glows it suppresses; the passive RF vCard read is untouched (it is
+ * hardware). 1 = on.
+ *   FACEDOWN_Z_THRESH: face-down when ZDATA_8 < this. Signed, ~64 LSB/g, so -32 ~ -0.5 g.
+ *   BENCH-CONFIRM THE SIGN: read Z with the card face-up -- it should be ~+64. If it reads
+ *   ~-64, this board's accel has +Z pointing the other way; negate the byte in
+ *   adxl367_read_z (do NOT just flip the threshold sign -- the compare direction matters). */
+#define USE_FACEDOWN_DORMANT  1
+#define FACEDOWN_DORMANT_S     180   /* seconds lying face-down before going dormant (~3 min) */
+#define FACEDOWN_Z_THRESH      (-32) /* ZDATA_8 below this = face-down (~-0.5 g)              */
+#define FACEDOWN_DORMANT_POLLS (FACEDOWN_DORMANT_S / POLL_PERIOD_S)   /* derived: polls, not seconds */
 
 #endif /* BOARD_H */

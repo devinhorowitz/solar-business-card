@@ -41,12 +41,16 @@ not "just enable it."
 
 Each of these *reduces* draw and attacks the open energy question directly.
 
-- **Face-down / in-pocket deep sleep.** Read the accel gravity vector (needs orientation
-  config) + `VSENSE`-dark; if the card is face-down or bagged, lock out tap/motion glow so
-  false triggers cannot drain the ~15 J reserve. Combines Gemini's face-down + pocket ideas.
-- **Voltage-adaptive brightness (brownout stretch).** Instead of the hard cutoff at
-  `VS_GLOW_FLOOR_MV` (2600), linearly scale `GLOW_PEAK` down as the rail drains toward the
-  floor. Nearly free: the firmware already reads the rail via VDD/10 for the floor check.
+- **Face-down / in-pocket deep sleep.** *(**face-down half implemented** -- `USE_FACEDOWN_DORMANT`,
+  `adxl367_read_z()`.)* If the card lies face-down (accel Z clearly negative) for
+  `FACEDOWN_DORMANT_S` (~3 min), go dormant: suppress every glow until it is turned face-up
+  again, so a stowed card can't drain the ~15 J reserve on false triggers. Reads the accel Z
+  directly (no orientation-engine config needed); flip-to-wake is instant (the flip is motion)
+  with the poll as a backstop. *Still open:* the `VSENSE`-dark "in a bag/pocket" co-condition.
+- **Voltage-adaptive brightness (brownout stretch).** *(**implemented** -- `USE_BROWNOUT_STRETCH`,
+  `sense_glow_peak()`.)* Instead of the hard cutoff at `VS_GLOW_FLOOR_MV` (2600), scale the glow
+  peak down as the rail drains toward the floor (full at `VS_GLOW_FULL_MV`, dimming to
+  `VS_GLOW_DIM_PEAK`). Nearly free: reuses the very rail read that already gated the glow.
 - **Ambient auto-brightness.** Use the `VSENSE` ADC as a lux proxy; dim rooms need far less
   PWM through the 0.6 mm FR4. Large reserve savings for equal apparent brightness.
 
@@ -57,8 +61,10 @@ Each of these *reduces* draw and attacks the open energy question directly.
   checks. Temp needs the internal sensor brought up.
 - **"Find the sun" alignment mode.** A gesture turns the 4 LEDs into a `VSENSE` harvest
   bar-graph so a user can find a charging spot -- directly addresses the harvest problem.
-- **Thermal-abuse logging.** AVR internal temp → EEPROM lifetime max; matches the CLAUDE.md
-  hot-car warning about supercap degradation.
+- **Thermal-abuse logging.** *(**implemented** -- `USE_TEMP_LOG`, `sense_temp_log()`.)* MCU
+  internal temp (pulsed ADC, 2.048 V ref + SIGROW cal per DS40002315 sec 33.3.3.8) → EEPROM
+  lifetime max; matches the CLAUDE.md hot-car warning about supercap degradation. Sampled
+  sparsely and written only on a new max, so near-zero energy; runs even while face-down dormant.
 - **Shipping / "coma" mode.** Halt RTC/ADC, wake only on a sustained solar spike; protects
   the caps during a dark shipping box. Low effort, real value.
 - **Shadow-abort (AC0 zero-cross).** Use AC0 (VSENSE on AINP0 vs. internal DAC) to halt an
@@ -103,10 +109,11 @@ energy-gate lens as Phases 1-3.
 
 ### The card as a passive logger
 
-- **"Sun diary"** -- Tier 1, near-zero energy. The firmware already detects basking (VIN past
-  `SWEEP_SUN_VIN_MV` + `sense_caps_full()`). Accumulate that condition as an EEPROM sun-seconds
-  counter on the existing 1 s poll; surface "N sun-hours banked" in the NDEF. A keepsake that
-  records its own life in the light.
+- **"Sun diary"** -- Tier 1, near-zero energy. *(**implemented** -- `USE_SUN_DIARY`,
+  `sense_sun_tick()`.)* The poll already reads the strong-sun tell (`SENSE_SUN_bm`); bank it as an
+  EEPROM counter of lifetime whole-HOURS. The in-progress hour lives in RAM and flushes once per
+  hour, so EEPROM sees ~one write per sun-hour (not per second) -- endurance-safe. Surface "N
+  sun-hours banked" in the NDEF later. A keepsake that records its own life in the light.
 - **Micro-power "black box"** -- Tier 2. Extend telemetry into an EEPROM lifecycle record: max
   temp, sun-hours, tap count, lowest-rail-ever, brownout-abort count. One scan dumps the card's
   history; doubles as field-failure forensics (heat vs. shipped-dark).
