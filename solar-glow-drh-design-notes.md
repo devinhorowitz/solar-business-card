@@ -688,17 +688,27 @@ prioritization rather than a blanket "everything AEC-Q100" sweep.
     SOT-23-6 / DBV footprint -- the base datasheet cross-references the -Q1 directly). It only gates the
     NFC/FRAM VCC, so thermal stress is low, but it is a zero-cost drop-in, so taken.
 
-- **Evaluated and rejected -- accelerometer.** The obvious automotive ADI accel in range, the
-  **ADXL316**, is the wrong *class* of part, not merely a different footprint: it has **analog voltage
-  outputs** (no I²C), draws **350 µA continuously** (vs the ADXL367's ~1 µA in wake-on-motion), and has
-  **no autonomous tap/activity interrupt**. Adopting it would break the I²C bus, the energy budget, and
-  the whole tap-to-wake / sleep-almost-always design at once. So **U3 stays the ADXL367** (85 °C) --
-  which makes the accel a *second* ceiling part alongside the supercap, with no viable automotive
-  alternative in its ultra-low-power digital-wake niche. Reinforces the point: the card is 85 °C-limited
-  by parts that are already best-in-role, so thermal abatement (§7 TIM) is the only real lever.
+- **Evaluated and rejected -- automotive accelerometer (full survey + FXLS8961 head-to-head).**
+  Surveyed all 34 in-stock AEC-Q accelerometers against the ADXL367's role. 28 are airbag/crash sensors
+  (±100-250 g, 5-30 V, PSI5/DSI/PCM bus) -- wrong class; the ADI **ADXL316** was likewise wrong-class
+  (analog voltage output, no I²C, 350 µA continuous, no wake interrupt). Of the 6 rail-compatible I²C
+  parts, the **NXP FXLS8961AF** (AEC-Q100, 105 °C, I²C, ultra-low-power wake, 3×3) was the one genuine
+  candidate, so it got a full datasheet head-to-head. It loses on the two things that matter: its
+  always-on motion-watch current is **~1.4-1.7 µA** (low-power mode + SDCD; it cannot detect motion from
+  Standby or Hibernate) versus the ADXL367's **180 nA** -- ~8-10x worse -- and standby is 1.01 µA vs
+  40 nA (25x): a real regression on the **#1 energy gate**, where the accel is already a co-dominant
+  ~0.89 µA sleep line. And it has **no hardware tap engine** (its SDCD flags a tap only as a generic
+  transient, with no single-vs-double discrimination), so the double-tap "signature" glow would move
+  into firmware -- waking the MCU on every tap and compounding the power loss. It is also bigger and
+  thicker (3×3×**1.25 mm** vs 2.2×2.3×**0.87 mm**) under an already-thin shell. Its only win -- 105 °C --
+  is the exact headroom the 85 °C supercap makes unusable. So **U3 stays the ADXL367**: best-in-role, and
+  no automotive accel is worth the swap *even with the respin free*. That makes the accel a *second*
+  immovable 85 °C part alongside the supercap -- which again points the whole thermal problem at
+  abatement (§7 TIM), not a hotter part. (`datasheets/FXLS8961AFR1.pdf` filed for reference.)
 
 - **Left alone (already fine):** the LEDs are already **AEC-Q102**; the clamp comparator (TLV3011B) and
   U2 (ALD910025) are already **125 °C**; the NFC tag is RF-powered (no standing heat) and the discretes
   (Q1 / diodes) are robust -- no upgrade needed. Datasheets for parts new to the project are filed in
-  `datasheets/` per house practice (the `MB85RC512TY` FRAM is added there as tentative refdes **U7**;
-  the MCU-E and TPS22918-Q1 reuse the existing U1 / U6 datasheets, which cover their grade variants).
+  `datasheets/` per house practice: the `MB85RC512TY` FRAM (tentative refdes **U7**) and the
+  `TPS22918QDBVRQ1` -Q1 load switch (under **U6**); the MCU-E reuses the existing U1 datasheet, which
+  covers the -I / -E grade variants.
