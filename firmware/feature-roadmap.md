@@ -41,9 +41,12 @@ not "just enable it."
 
 Each of these *reduces* draw and attacks the open energy question directly.
 
-- **Face-down / in-pocket deep sleep.** Read the accel gravity vector (needs orientation
-  config) + `VSENSE`-dark; if the card is face-down or bagged, lock out tap/motion glow so
-  false triggers cannot drain the ~15 J reserve. Combines Gemini's face-down + pocket ideas.
+- **Face-down / in-pocket deep sleep.** *(**face-down half implemented** -- `USE_FACEDOWN_DORMANT`,
+  `adxl367_read_z()`.)* If the card lies face-down (accel Z clearly negative) for
+  `FACEDOWN_DORMANT_S` (~3 min), go dormant: suppress every glow until it is turned face-up
+  again, so a stowed card can't drain the ~15 J reserve on false triggers. Reads the accel Z
+  directly (no orientation-engine config needed); flip-to-wake is instant (the flip is motion)
+  with the poll as a backstop. *Still open:* the `VSENSE`-dark "in a bag/pocket" co-condition.
 - **Voltage-adaptive brightness (brownout stretch).** *(**implemented** -- `USE_BROWNOUT_STRETCH`,
   `sense_glow_peak()`.)* Instead of the hard cutoff at `VS_GLOW_FLOOR_MV` (2600), scale the glow
   peak down as the rail drains toward the floor (full at `VS_GLOW_FULL_MV`, dimming to

@@ -193,6 +193,14 @@ below `VS_GLOW_FLOOR_MV` the card stays dark and charges, and with `USE_BROWNOUT
 the breath *fades* toward the floor rather than cutting off at it — so an animation can't
 brown out the part, and a low reserve degrades gracefully instead of hitting a cliff.
 
+**Face-down dormant** (`USE_FACEDOWN_DORMANT`). If the card lies face-down (accel Z clearly
+negative) for `FACEDOWN_DORMANT_S` (~3 min), it goes dormant and suppresses *every* glow —
+tap, motion, NFC-ack, greeting, sweep — until it is turned face-up again, so a stowed card
+(face-down in a drawer, under papers) can't bleed the reserve on false triggers. Flipping it
+face-up wakes it at once (the flip is motion; the ~1 s poll re-checks orientation as a
+backstop). The passive RF vCard read is unaffected (it's hardware). Net energy win — the only
+cost is one accel Z read per poll.
+
 ### Two hardware gates (not visible to firmware)
 
 1. **SW2**, the master anode switch, is pure hardware. With SW2 **OFF** the LED
@@ -456,6 +464,13 @@ both the light and strong-sun predicates (`sense_vin_flags()`, raw-count, no mV 
 
 ### System (`board.h` / `main.c`)
 - **`USE_WDT`** (0/1, default 1): the watchdog (see Robustness below).
+- **`USE_FACEDOWN_DORMANT`** (0/1, default 1) **/ `FACEDOWN_DORMANT_S`** (180) **/
+  `FACEDOWN_Z_THRESH`** (−32): lie the card face-down for `FACEDOWN_DORMANT_S` seconds and it
+  goes dormant — every glow suppressed until it is turned face-up — so a stowed card can't
+  drain the reserve on false triggers. `FACEDOWN_Z_THRESH` is the ADXL367 8-bit Z below which
+  it reads face-down (~64 LSB/g, so −32 ≈ −0.5 g). **Bench-confirm the sign:** read Z face-up
+  (should be ~+64); if it reads ~−64, this board's accel has +Z reversed, so negate the byte in
+  `adxl367_read_z`. Net energy win — one accel read per poll, dwarfed by the glows it suppresses.
 - **Core clock** is 1 MHz OSCHF (`clocks_init`, see Robustness for the why and the
   knock-ons). Note VREF start-up time — and therefore the `INITDLY` sizing above —
   depends on this being the high-frequency clock, not a 32 kHz main clock.

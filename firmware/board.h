@@ -240,4 +240,21 @@
  * so power-down sleep never trips it. */
 #define USE_WDT            1
 
+/* Face-down dormant ("dead-man") mode: if the card lies FACE-DOWN (accel Z clearly
+ * negative) continuously for FACEDOWN_DORMANT_S seconds, go dormant -- suppress every glow
+ * (tap / motion / NFC-ack / greeting / sweep) until it is turned face-up again, so a stowed
+ * card (face-down in a drawer, under papers) can't bleed the ~15 J reserve on false-trigger
+ * glows. Flipping it face-up resumes at once (the flip is motion, and the poll re-checks
+ * orientation as a backstop). Net ENERGY WIN -- the only overhead is one accel Z read per
+ * poll, dwarfed by the glows it suppresses; the passive RF vCard read is untouched (it is
+ * hardware). 1 = on.
+ *   FACEDOWN_Z_THRESH: face-down when ZDATA_8 < this. Signed, ~64 LSB/g, so -32 ~ -0.5 g.
+ *   BENCH-CONFIRM THE SIGN: read Z with the card face-up -- it should be ~+64. If it reads
+ *   ~-64, this board's accel has +Z pointing the other way; negate the byte in
+ *   adxl367_read_z (do NOT just flip the threshold sign -- the compare direction matters). */
+#define USE_FACEDOWN_DORMANT  1
+#define FACEDOWN_DORMANT_S     180   /* seconds lying face-down before going dormant (~3 min) */
+#define FACEDOWN_Z_THRESH      (-32) /* ZDATA_8 below this = face-down (~-0.5 g)              */
+#define FACEDOWN_DORMANT_POLLS (FACEDOWN_DORMANT_S / POLL_PERIOD_S)   /* derived: polls, not seconds */
+
 #endif /* BOARD_H */
