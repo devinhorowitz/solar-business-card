@@ -25,7 +25,8 @@ land.
 - **P (positive) pad: 7.8 × 3.5 mm**
 - **N (negative) pad: 12.2 × 3.5 mm** — the asymmetric widths are the **polarity key**
 - Both centred on the cell axis at **±11 mm** from cell centre, ~1.5 mm in from each end, inside the
-  28.5 × 17 mm body.
+  39.0 × 17 mm body (SS17 can, per the datasheet drawing; the earlier 28.5 was the solar-cell length,
+  mistakenly carried over -- both parts share the 17 mm width, which is what confused it).
 - Protruding end tabs are finish-coated locators only — **not** solder pads.
 - Placement rotations as built: SC1/SC4 → 90°, SC2/SC3 → 270°.
 
