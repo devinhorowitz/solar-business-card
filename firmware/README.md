@@ -143,7 +143,7 @@ AVR64DD28, VQFN-28, on the **back** of the board.
 | 27 | PA1 | LDRV3 | LED D4, TCA0 WO1 |
 | 28 | PA2 | LDRV2 | LED D3, TCA0 WO2 |
 | 1 | PA3 | LDRV1 | LED D2, TCA0 WO3 |
-| 4 | PA6 | FD | NFC field-detect in (`U5`); PORTA pin int, **both edges**; field-powered (works VCC-off); int pull-up on + ext 10k (R13) → VS |
+| 4 | PA6 | FD | NFC field-detect in (`U5`); PORTA pin int, **both edges**; field-powered (works VCC-off); int pull-up on (sole FD pull-up; ext 10k `R13` to VS is DNP) |
 | 5 | PA7 | NFC_EN | Enables the NFC VCC load switch (`U6`, TPS22918), **active-HIGH**; init LOW = NFC off. (`R14`, 1 M, holds `U6` off while PA7 tristates during reset/UPDI/brown-out — **on the v3.0 board** at (4.39, 29.4). Firmware also drives PA7 low-before-output and low-before-sleep, so the window is covered both ends.) |
 | 8 | PC2 | SDA | TWI0 host (PORTMUX **ALT2**), ext 4.7k → VS |
 | 9 | PC3 | SCL | TWI0 host (ALT2), ext 4.7k → VS |
@@ -209,6 +209,17 @@ cost is one accel Z read per poll.
    anodes are disconnected and nothing lights regardless of what the firmware
    does. There is no GPIO sense for it; the code just drives PWM. If the board
    is dark, check SW2 first.
+   *TINY is a low-fidelity mode by design.* SW2 = **TINY** feeds all four anodes
+   through one **shared** 220 Ω (`R12`) -- unlike **ON**, which ties the common
+   anode straight to VS and leaves each LED independent on its own 150 Ω cathode
+   ballast. Sharing R12 makes per-LED brightness depend on how many channels are
+   lit at once (a single lit LED sees ~3× the current of all four lit), so a
+   `led_breathe` (all four together) and the tail of a `led_sweep` (one at a time)
+   won't match in TINY the way they do in ON. The firmware **cannot** correct this:
+   it can't sense SW2, and scaling duty by active-channel count would wreck ON mode
+   (where no correction is wanted). TINY is the dim/long-runtime hack; treat animation
+   fidelity as an ON-mode property. *(v4: move the ballast to the individual cathodes
+   so TINY is linear -- see design notes.)*
 2. The **accelerometer is the only actuator** on this card. `PA5/BTN` is a routed
    stub for a future revision, not populated.
 
@@ -236,13 +247,16 @@ supercap flat. Written once, re-writable.
 when a reader's field appears. Per datasheet §8.4 the FD pin **runs on the reader's field
 power**, so this works with the tag's VCC gated off — that is why it survives the
 power-gate. Field-present (`NC_REG.FD_ON = 00b`) is the chip's POR/config default, so no
-I2C setup is needed. PA6 is a **both-edges** interrupt with an **internal pull-up** (plus
-`R13` to **VS**, confirmed from copper — redundant insurance, sinks only while FD is low).
+I2C setup is needed. PA6 is a **both-edges** interrupt with an **internal pull-up** that is now
+the **sole** FD pull-up (`R13`, the former external 10k to **VS**, is **DNP** since the passive
+consolidation; the internal pull-up only passes current while FD is held low).
 The two edges do different jobs: on the **falling** edge (field arrives) the LEDs are held
 dark and the core stays asleep for the read — `led.c` reads FD live and aborts any in-flight
 breath — so the card's PWM/switching don't inject broadband noise into the 13.56 MHz band
 the tag replies on (raising read SNR and range at zero cost); on the **rising** edge (field
-leaves) the card fires the acknowledge glow. Set `NFC_BLANK_ON_FIELD = 0` (`board.h`) to
+leaves) the card fires the acknowledge glow -- **rate-limited** to one per `NFC_ACK_COOLDOWN_S`
+(`USE_NFC_ACK_COOLDOWN`), so a phone parked in-field and re-polling can't fire a breath per pulse
+and drain the reserve. Set `NFC_BLANK_ON_FIELD = 0` (`board.h`) to
 disable blanking and glow through the read instead. A hard tap that trips both the accel and
 FD still resolves to one interaction (priority is tap → nfc → motion → tick).
 
@@ -492,6 +506,14 @@ both the light and strong-sun predicates (`sense_vin_flags()`, raw-count, no mV 
   deliberate **tap** glow is untouched (dark or light), so the dark-room tap-to-glow moment stays.
   Near-free (reuses the cached poll light); complements face-down dormant by covering *any*
   orientation a pocket leaves the card in.
+- **`USE_NFC_ACK_COOLDOWN`** (0/1, default 1) **/ `NFC_ACK_COOLDOWN_S`** (3): rate-limit the
+  field-leave acknowledge glow to at most one per `NFC_ACK_COOLDOWN_S`. The `FD` pin tracks the
+  reader's field, and a phone parked in-field keeps *polling* (its NFC discovery loop pulses the
+  carrier a few times a second), so every pulse's trailing edge would otherwise fire a fresh ack
+  breath -- a phone left face-down on top of the card could bleed the reserve breath by breath. The
+  first read still acks instantly; re-polls inside the window are muted (the RF vCard read itself is
+  hardware and untouched). The rail floor already stops a brownout; this stops the wasteful bleed
+  *to* the floor. Near-free (one main-local byte, aged one count per poll tick).
 - **Core clock** is 1 MHz OSCHF (`clocks_init`, see Robustness for the why and the
   knock-ons). Note VREF start-up time — and therefore the `INITDLY` sizing above —
   depends on this being the high-frequency clock, not a 32 kHz main clock.

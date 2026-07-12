@@ -19,9 +19,11 @@ for detail.
 
 - **Integrated** (default-on `board.h` knobs, all reuse reads the poll already does -- effectively
   free): sun diary, brownout-stretch brightness, face-down dormant, **dark-motion mute** (mute the
-  motion breath when dark so a pocket-carry can't drain the reserve; a tap still glows), thermal-abuse
-  max-temp log, and the micro-power **black box** (lowest-rail-ever + power-cycle count). EEPROM map:
-  tap 0-3, sun-hours 4-5, max-temp 6, min-rail 7-8, power-cycles 9-10.
+  motion breath when dark so a pocket-carry can't drain the reserve; a tap still glows), **NFC-ack
+  cooldown** (rate-limit the field-leave glow to one per few seconds so a parked, re-polling phone
+  can't bleed the reserve breath by breath), thermal-abuse max-temp log, and the micro-power **black
+  box** (lowest-rail-ever + power-cycle count). EEPROM map: tap 0-3, sun-hours 4-5, max-temp 6,
+  min-rail 7-8, power-cycles 9-10.
 - **Deferred to the energy-budget bench** (the #1 gate -- these spend LED energy or need measured
   constants): zero-CPU reflex glow (EVSYS->TCA0), CCL "heartbeat" glow, ambient auto-brightness (also
   a dim-when-you-want-it risk + a lux->duty curve), shadow-abort / hardware brownout-reflex
@@ -44,6 +46,33 @@ for detail.
   noisy electrode); analog PUF / NFC OTA / TOTP (speculative, high-effort); tally-counter LED display
   (collides with tap-to-breathe); "just-handled" thermal sense (marginal); and the novelty set
   (digital dice, secret-knock, two-way guestbook, read-receipt, VLC).
+
+### Edge-case pass (2026-07-12) -- Gemini, verified against source
+
+Five "sub-microamp intersection" edge cases raised; each checked against the actual `.c` / netlist /
+BOM rather than the prose docs:
+
+1. **WDT reset in the stowed-motion loop** -- *not a bug.* The watchdog is petted at the main-loop
+   **top** (above the dark-motion mute), and the RTC PIT wakes the loop every 1 s in power-down, so
+   the 8 s dog is fed at least once a second regardless of motion or muted breaths (animations also
+   pet every ~1 ms). The premise (mute path skips the pet) doesn't match the loop structure.
+2. **NFC FD interrupt-storm bleed** -- *real, low-severity; **fixed**.* A phone parked in-field keeps
+   polling and re-toggles FD; every rising edge fired a fresh ack breath. Bounded by the rail floor
+   (no brownout/brick) but a real slow bleed -> shipped `USE_NFC_ACK_COOLDOWN` (one ack per few s).
+3. **TINY shared-ballast droop** -- *real physics, not firmware-fixable; documented.* SW2 = TINY
+   shares one 220 R (`R12`) across all anodes, so per-LED brightness varies with channel count. The
+   firmware can't sense SW2 and can't correct without wrecking ON mode; TINY is a dim hack by design.
+   Documented as low-fidelity in `README`; **v4:** move the ballast to the individual cathodes so TINY
+   is linear.
+4. **Titanium eddy currents kill NFC** -- *already solved.* The `FER1` ferrite (Würth WE-FSFS 364006)
+   sits in a dedicated brace channel between coil and shell; physics + no-ferrite fallback are in
+   `../PCB/PCB-side-notes-brace-direction.md` §3. Underlying concern correct; the design already
+   answers it.
+5. **Cold-start slow-ramp stall** -- *legit bench item; captured.* Not "latch-up" but a brown-out
+   stall: the MCU released by POR (~1.4 V) can draw more than a dim-light uA harvest supplies and
+   stall below the operating point. The decided `BODCFG=0x0A` (1.9 V sampled) is the mitigation
+   (holds the core in low-current reset until 1.9 V) -- **program the fuse** (`../TODO.md`) and
+   bench-verify a 0 V cold-start under dim light.
 
 ## Trace-change verdict: none required
 

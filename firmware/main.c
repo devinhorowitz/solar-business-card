@@ -9,7 +9,8 @@
  *   - NFC      (NT3H2211 field detect -> FD -> PA6, both edges) -> while the reader's
  *                field is present the LEDs are held dark (a clean 13.56 MHz band for the
  *                tag's reply) and the core stays quiet; the acknowledge glow fires when
- *                the field leaves (FD rising)
+ *                the field leaves (FD rising), rate-limited by USE_NFC_ACK_COOLDOWN so a
+ *                parked, re-polling phone can't bleed the reserve breath by breath
  *   - PIT tick (RTC, ~1 s, runs in power-down)          -> sample light, and
  *                if we just crossed dark->light, do a glow
  * All of these pin interrupts sense fully asynchronously, so they wake the core
@@ -164,6 +165,9 @@ static void go_to_sleep(void)
 int main(void)
 {
     uint8_t prev_light = 0;
+#if USE_NFC_ACK_COOLDOWN
+    uint8_t nfc_cooldown = 0;   /* polls remaining before another NFC-ack glow may fire (0 = ready) */
+#endif
 
     clocks_init();        /* 1. clocks / power            */
     gpio_init();          /* 2. GPIO / PORTMUX            */
@@ -267,8 +271,18 @@ int main(void)
 #if USE_FACEDOWN_DORMANT
             if (dormant) peak = 0;   /* face-down: no acknowledge glow */
 #endif
-            if (peak)
+#if USE_NFC_ACK_COOLDOWN
+            /* rate-limit: a phone parked in-field keeps polling and re-toggling FD; ack at most
+             * once per NFC_ACK_COOLDOWN_S so a stowed re-poll can't bleed the reserve breath by
+             * breath. The cooldown is armed only on an ack that actually fired (below). */
+            if (nfc_cooldown) peak = 0;
+#endif
+            if (peak) {
                 led_breathe(GLOW_CYCLES, GLOW_BREATH_MS, peak);
+#if USE_NFC_ACK_COOLDOWN
+                nfc_cooldown = NFC_ACK_COOLDOWN_POLLS;   /* arm only when we actually acked */
+#endif
+            }
             f_motion = 0;
             adxl367_clear_activity();
         }
@@ -298,6 +312,9 @@ int main(void)
         }
         else if (f_tick) {
             f_tick = 0;
+#if USE_NFC_ACK_COOLDOWN
+            if (nfc_cooldown) nfc_cooldown--;   /* age the NFC-ack rate-limit on the poll tick (~1 s) */
+#endif
 #if USE_TEMP_LOG
             /* lifetime max die temp -- self-rate-limited (samples every TEMP_SAMPLE_POLLS)
              * and writes EEPROM only on a new max. Before the dormancy gate on purpose, so a
