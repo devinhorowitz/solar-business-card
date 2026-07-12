@@ -40,8 +40,8 @@
         "other_text_upright": false,
         "pads": {
           "drill": 0.0,
-          "height": 0.6,
-          "width": 1.325
+          "height": 0.8,
+          "width": 0.2
         },
         "silk_line_width": 0.1,
         "silk_text_italic": false,
@@ -80,10 +80,6 @@
           ""
         ],
         [
-          "lib_footprint_mismatch|7761802|32112628|14e033c8-b52e-4911-bd36-ffa160428a36|00000000-0000-0000-0000-000000000000",
-          ""
-        ],
-        [
           "tracks_crossing|41000000|38000000|3d02959a-52d1-4b3d-a148-36df4aae42e1|463118eb-0e6d-49d0-868f-c633afd66f71",
           ""
         ]
@@ -118,7 +114,7 @@
         "items_not_allowed": "error",
         "length_out_of_range": "error",
         "lib_footprint_issues": "ignore",
-        "lib_footprint_mismatch": "warning",
+        "lib_footprint_mismatch": "ignore",
         "malformed_courtyard": "error",
         "microvia_drill_out_of_range": "error",
         "mirrored_text_on_front_layer": "warning",

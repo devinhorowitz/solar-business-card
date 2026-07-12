@@ -1,8 +1,8 @@
 ** Drc report for solar-glow-drh-v3_0.kicad_pcb **
-** Created on 2026-07-11T22:55:34 **
+** Created on 2026-07-11T23:46:01 **
 ** Report includes: Errors, Warnings, Exclusions **
 
-** Found 4 DRC violations **
+** Found 3 DRC violations **
 [tracks_crossing]: Tracks crossing
     Rule: clearance-hard-floor; error (excluded)
     @(41.0000 mm, 52.4200 mm): Track [LA] on B.Cu, length 14.4200 mm
@@ -15,9 +15,6 @@
     Rule: board setup constraints edge; error (excluded)
     @(3.0000 mm, 88.9000 mm): Segment on Edge.Cuts
     @(25.4000 mm, 87.6500 mm): Segment [GND] on F.Cu
-[lib_footprint_mismatch]: Footprint 'SOT-23-6' does not match copy in library 'Package_TO_SOT_SMD'
-    Local override; warning (excluded)
-    @(7.7618 mm, 32.1126 mm): Footprint U6
 
 ** Found 0 unconnected pads **
 
@@ -31,5 +28,6 @@
     - Footprint doesn't match symbol's footprint filters
     - Footprint component type doesn't match footprint pads
     - Footprint not found in libraries
+    - Footprint doesn't match copy in library
 
 ** End of Report **
