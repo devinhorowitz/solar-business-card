@@ -647,8 +647,45 @@ bytes live in `firmware/Makefile` + `firmware/README.md`, the write-guard code i
   fine for a keepsake, and eliminated outright by the v4 FRAM (~10^13 endurance). Credit: the reviewing
   team.
 
-- **v4 note (FRAM, decided):** the archival log lands on an **MB85RC512T** (512 Kbit = 64 KB, I2C,
-  1.7-3.6 V, 8-SOP, ~1.75 mm -> ~0.1 mm shell pocket), strapped to **0x50** (A0-A2 device-select) to
-  clear the NFC tag at 0x55; power-gated like the tag (retains with VDD off). This same write-safety
-  discipline carries over -- FRAM's µs, charge-pump-free writes are far more brownout-tolerant than the
-  AVR EEPROM, but the "commit from a healthy rail" habit still applies to any multi-byte record.
+- **v4 note (FRAM, decided -- automotive grade):** the archival log lands on the **MB85RC512TY**
+  (`MB85RC512TYPNF-GS-BCERE1`, 512 Kbit = 64 KB, I2C, AEC-Q100, 8-SOP, 1.75 mm -> ~0.1 mm shell
+  pocket), strapped to **0x50** (A0-A2 device-select) to clear the NFC tag at 0x55; power-gated like
+  the tag (retains with VDD off). Chosen over the standard `MB85RC512T` because its retention holds
+  through the hot-car regime the card is built to survive: **70.4 yr @ 85 °C** vs the standard part's
+  10 yr (also 19.1 yr @ 105 °C, 5.9 yr @ 125 °C) -- a ~7x margin exactly where it matters, since the
+  archive should outlive the supercap. It is also lower-power across the board (sleep **0.20 µA** vs
+  4 µA, standby 10 vs 15 µA, active 0.24 vs 0.71 mA) at a moot cost (Vmin 1.8 vs 1.7 V -- irrelevant,
+  it is power-gated and only written from a healthy rail -- and +$0.22). The thinner 8-DFN
+  (`MB85RC512TYPN-GS-AWE1`) would suit a card better but is unorderable, so the 1.75 mm SOP stands.
+  The EEPROM write-safety discipline carries over -- FRAM's µs, charge-pump-free writes are far more
+  brownout-tolerant than the AVR EEPROM, but the "commit from a healthy rail" habit still applies to
+  any multi-byte record.
+
+## Addendum (2026-07-12) -- v4 automotive-grade bumps + the supercap thermal ceiling
+
+The card's one real abuse mode is heat (hot car -> supercap degradation, the reason for the max-temp
+logger). Reviewing the BOM for automotive (AEC-Q) grade with that in mind lands on a clear, honest
+prioritization rather than a blanket "everything AEC-Q100" sweep.
+
+- **The supercap is the binding thermal ceiling, and it cannot be raised.** SC1-SC4 (SCHURTER SCPC
+  3-153-438) are rated to **85 °C**, and no better part exists in the 1 F / 2.75 V / ~1.7 mm-thin
+  envelope this card needs -- searched, none found. A system is only as thermally robust as its
+  weakest part, so the whole card is **85 °C-limited** regardless of what grade the silicon is. This is
+  exactly why the answer to "it gets too hot" is **thermal abatement, not a hotter part**: since the
+  cap can't be upgraded, the mitigation is to spread and sink heat away from it -- the thermal-interface
+  / thermal-mass-consolidation work in §7, previously parked, is the real lever on the failure mode.
+  The grade bumps below are cheap margin taken along the way; the TIM is what moves the needle.
+
+- **Bumped to 125 °C (both drop-in, orderable, no design change):**
+  - **MCU: `AVR64DD28-I-STX` -> `AVR64DD28-E/STX`.** The `-I-` grade is only -40 to +85 °C; the `-E`
+    (Extended) grade is -40 to +125 °C -- same die, same VQFN28 footprint, same firmware. The MCU is
+    always powered, so it should not be the first thing to give out at the cap's limit.
+  - **FRAM: `MB85RC512TY` (AEC-Q100, 125 °C)** -- see the note above; taken for the retention win
+    independent of the ceiling (the archive should survive heat even after the cap has degraded).
+
+- **Deliberately NOT bumped** (already fine, or not the issue when hot): the LEDs are already
+  **AEC-Q102**; the clamp comparator (TLV3011B) and U2 (ALD910025) are already **125 °C**; the load
+  switch (TPS22918) is 105 °C. The accelerometer (ADXL367, ~85 °C) has no clean automotive drop-in,
+  the NFC tag is RF-powered (no standing heat), and the discretes (Q1 / diodes) are robust -- chasing
+  AEC-Q100 across these buys qualification pedigree, not a higher ceiling (which the cap owns), and
+  hits the same orderability wall the FRAM DFN did. Skipped by design.
