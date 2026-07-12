@@ -288,9 +288,14 @@ re-spin for the enclosure:
     cap-pair** (2 total, simpler to machine than 4 per-can), each **laterally oversized ~0.5-1 mm per
     side** beyond the pad so it drops in without binding on the walls. **Depth D approximately = pad
     thickness - measured gap** (0.16 - ~0.10 -> **~0.05-0.06 mm** at the nominal gap; the range is
-    0.01-0.11 mm across the 0.05-0.15 mm gap tolerance), tuned per unit so the firm pad just fills the
-    gap at near-zero preload -- do **not** over-deepen (pad floats, loses contact) or under-deepen (pad
-    jacks the board off its z2.80 seat). A 0.05-0.10 mm pocket is negligible against the ~1 mm Ti floor.
+    0.01-0.11 mm across the 0.05-0.15 mm gap tolerance). **Bias slightly deep on purpose:** the two
+    error modes are asymmetric -- too shallow **jacks the board off its z2.80 seat** (unrecoverable
+    without re-machining titanium), while too deep just **floats the pad**, which is recoverable
+    *additively* -- shim the pocket floor with **copper-foil tape** (~0.05-0.07 mm/layer, and thermally
+    transparent at ~400 W/m·K, so it costs the path nothing but its own thin PSA) or step up the pad
+    thickness. So mill ~0.03-0.05 mm **deeper** than the just-fill depth and shim up to a light contact.
+    The copper shim rides the shell/adhesive side (on the GND Ti floor, under the graphite) -- no short,
+    since the cap top is non-conductive. A 0.05-0.10 mm pocket is negligible against the ~1 mm Ti floor.
     *Caveat for the single pane:* it assumes the two caps in a pair sit coplanar; measure both gaps, and
     if they differ by more than ~0.02 mm, shim the low one or fall back to per-can pockets. Final depth
     + the `enclosure/README.md` pocket spec await the measured gap.
