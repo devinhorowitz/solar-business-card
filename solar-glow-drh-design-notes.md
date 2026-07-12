@@ -520,3 +520,32 @@ must land in the same commit or update-from-schematic will fight you).
   gone; JP2 has no successor). JP1/TP1 are bare pads — **no BOM part; mark both DNP in the CPL**
   alongside SC1–SC4 / PV1–PV2 / J1 / C9. Pinout + bench ritual live in
   `solar-glow-drh-v2-hardware.md`; fab-facing notes in `PCB/README.md`.
+
+## Addendum (2026-07-12) -- v4 idea: I²C FRAM for archival / high-rate telemetry
+
+Not a v3.0 change (the board is electrically frozen); logged here as a **v4 consideration**.
+
+- **The limit today.** v3.0 logs telemetry (tap count / sun-hours / max-temp) to the AVR's
+  **internal EEPROM**: 256 B, **100k** write cycles, **40 yr retention @ 55 °C** (DS40002315).
+  Two ceilings bite for a keepsake: the tap counter can approach 100k over a very active life
+  (`firmware/README.md`), and EEPROM retention derates ~2x per 10 °C -- so a card baked on a hot
+  dashboard, the exact abuse the temp-logger watches for, can fall well short of 40 yr. A third:
+  EEPROM write energy (charge-pump, ~4-13 ms) is *why* the sun diary throttles to one write per
+  banked hour and max-temp writes only on a new max.
+- **Why FRAM clears all three.** A ferroelectric-RAM part (Infineon FM24V / Fujitsu MB85RC class)
+  gives ~10^12-10^14 write endurance (effectively unlimited), **>100 yr** retention that degrades
+  far less when hot, and **µs bus-speed writes with no charge pump** (orders of magnitude less
+  energy). That would allow a rolling "black box" -- per-brownout, per-tap timestamp, per-second
+  sun -- at negligible energy, which the current budget flatly forbids.
+- **The v4 hook.** A hard, **I²C-shared, persistent store the MCU owns and a reader can reach** --
+  the card as a keepsake that permanently records its own life. The bus already exists: SDA/SCL =
+  PC2/PC3, broken out at `JP1.3/JP1.4`.
+- **How it fits, cheaply.** An I²C FRAM shares that host bus at a new 7-bit address -- no clash
+  with the accel (0x1D) or the NFC tag (0x55), **no new signal pins**. **Power-gate it** like the
+  NFC tag (own load switch on a spare GPIO -- PA4 / PC0 / PC1 are free) so its µs writes cost ~0
+  standby; the fast write makes gating trivial. ~$1-3 + switch + decoupling.
+- **The free near-term alternative (no re-spin).** The `NT3H2211` already carries ~1.7 KB of spare
+  EEPROM the MCU can write **and a phone can read over RF with the card unpowered** -- but
+  ~10-20 yr retention and ~195 µA/write, so it is the *phone-readable-now* path (= the NDEF
+  telemetry idea in `firmware/feature-roadmap.md`), not archival. FRAM is the archival answer, and
+  because it is a board add it belongs to **v4**, not a v3.0 respin.
