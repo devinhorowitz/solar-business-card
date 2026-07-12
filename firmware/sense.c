@@ -317,3 +317,53 @@ int8_t sense_temp_max_get(void)
 {
     return (int8_t)eeprom_read_byte(EE_TMAX_ADDR);
 }
+
+/* ---------- EEPROM "black box" -- lowest rail ever + power-cycle count ---------- */
+
+/* Lowest rail (VS, mV) ever seen -- the starvation half of the field black box (max-temp is the
+ * heat half). Sampled sparsely (every VMIN_SAMPLE_POLLS; the supercap sags over minutes) and
+ * written only on a new low, so it rarely writes. Erased EEPROM reads 0xFFFF, a perfect "no low
+ * yet" ceiling -- the first real reading wins. Called every poll before the dormancy gate, so a
+ * stowed (face-down) card that is quietly starving is still recorded. */
+#define EE_VMIN_ADDR  ((uint16_t *)7)   /* 2-byte min-rail mV at EEPROM offset 7 (past max-temp at 6) */
+
+static uint16_t vmin_ctr;
+
+void sense_vmin_tick(void)
+{
+    if (++vmin_ctr < VMIN_SAMPLE_POLLS)
+        return;                                   /* not time to sample yet */
+    vmin_ctr = 0;
+    uint16_t mv = sense_vdd_mv();
+    if (mv == 0) return;                          /* stuck ADC -> skip */
+    if (mv < eeprom_read_word(EE_VMIN_ADDR))      /* erased 0xFFFF ceiling -> first real reading wins */
+        eeprom_update_word(EE_VMIN_ADDR, mv);
+}
+
+uint16_t sense_vmin_get(void)
+{
+    return eeprom_read_word(EE_VMIN_ADDR);        /* 0xFFFF = never sampled */
+}
+
+/* Power-cycle (full-drain) count: +1 per cold power-on. A supercap that fully drains and recharges
+ * cold-boots the MCU (power-on reset); watchdog / UPDI / brown-out-recovery resets do NOT count.
+ * Reads and clears RSTCTRL.RSTFR at boot so only a genuine POR bumps it. One write per drain, and
+ * drains are rare, so endurance is a non-issue. */
+#define EE_BOOT_ADDR  ((uint16_t *)9)   /* 2-byte power-cycle count at EEPROM offset 9 */
+
+void sense_boot_log(void)
+{
+    uint8_t fr = RSTCTRL.RSTFR;
+    RSTCTRL.RSTFR = fr;                           /* write-1-to-clear the flags we just latched */
+    if (!(fr & RSTCTRL_PORF_bm))                  /* only a power-on reset = a real power cycle */
+        return;
+    uint16_t n = sense_boot_count_get();
+    if (n < 0xFFFEu)                              /* saturate (never store 0xFFFF, which reads as 0) */
+        eeprom_update_word(EE_BOOT_ADDR, (uint16_t)(n + 1u));
+}
+
+uint16_t sense_boot_count_get(void)
+{
+    uint16_t n = eeprom_read_word(EE_BOOT_ADDR);
+    return (n == 0xFFFFu) ? 0u : n;              /* erased EEPROM reads all-ones */
+}

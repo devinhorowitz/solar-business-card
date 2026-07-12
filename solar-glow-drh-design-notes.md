@@ -558,3 +558,21 @@ Not a v3.0 change (the board is electrically frozen); logged here as a **v4 cons
   ~10-20 yr retention and ~195 µA/write, so it is the *phone-readable-now* path (= the NDEF
   telemetry idea in `firmware/feature-roadmap.md`), not archival. FRAM is the archival answer, and
   because it is a board add it belongs to **v4**, not a v3.0 respin.
+
+## Addendum (2026-07-12) -- v4 sense-front-end backlog (edge touch + pre-filter light)
+
+Two v4 hardware hooks that unlock features the frozen v3.0 analog front-ends block (from the
+Gemini iteration). Both are board adds -> v4, logged for the respin.
+
+- **Edge-swipe cap-touch.** v3.0 has no usable touch electrode -- the only candidate node (the
+  solar cell, ~500 kΩ // 100 nF) is a poor, noisy sensor, so the actuator is the accel tap. A v4
+  could route a **dedicated capacitive electrode** along the card's right edge (or into the DRH
+  monogram copper) to a touch front-end (ADC-driven QTouch, or AC0). That turns the interaction from
+  a kinetic *strike* into a smooth *swipe* of the thumb -- a more premium feel -- while the accel tap
+  stays as the offline/always-works fallback.
+- **Pre-RC light tap for flicker / indoor-vs-outdoor logging.** `VSENSE` sits behind a ~500 kΩ //
+  100 nF (~3 Hz) low-pass, which throws away the 100/120 Hz mains-flicker signature (so on-card
+  flicker classification is dead on v3.0). A v4 could tap the cell **before** that filter into a fast
+  comparator (AC0) to detect flicker directly -- which then logs **outdoor DC-sun vs indoor AC-lit
+  hours** into the black box. That is real characterization data for **supercap sizing** and the
+  still-open energy budget: how the card actually lives in the wild.

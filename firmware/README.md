@@ -38,7 +38,7 @@ card's largest idle load. See **NFC contact card** below.
 | `adxl367.h/.c` | accelerometer: presence, tap→INT1, activity→INT2, tap/activity clear. |
 | `nfc.h/.c` | NT3H2211 NFC tag (`U5`): NDEF write + VCC power-gate via `NFC_EN`/`U6`. |
 | `led.h/.c` | TCA0 split-mode PWM on PA0–PA3 + gamma breathing glow + in-sun loading sweep. |
-| `sense.h/.c` | ADC rail/light/temp reads, rail-scaled glow (brownout stretch), EEPROM activation counter + sun diary + max-temp log. |
+| `sense.h/.c` | ADC rail/light/temp reads, rail-scaled glow (brownout stretch), EEPROM telemetry: activation counter + sun diary + max-temp log + black box (min-rail, power-cycles). |
 | `main.c` | init (per hardware doc §7), sleep/wake state machine, ISRs. |
 | `Makefile` | build + UPDI flash. |
 
@@ -172,7 +172,9 @@ Baseline = **POWER-DOWN**. Wakes:
 - **Tap** (ADXL367 tap, Z-axis, single+double resolved in hardware) → INT1 → PF0 → full
   breathing glow (`GLOW_CYCLES` breaths) + EEPROM activation count++. With
   `USE_DOUBLE_TAP`, a double-tap plays a brighter/longer signature glow instead.
-- **Motion** (ADXL367 referenced activity) → INT2 → PF1 → one softer breath.
+- **Motion** (ADXL367 referenced activity) → INT2 → PF1 → one softer breath — **muted when the
+  card is in the dark** (`USE_DARK_MOTION_MUTE`), so a card jostling in a pocket can't bleed the
+  reserve on repeated motion breaths; a deliberate tap still glows.
 - **NFC** (NT3H2211 field detect, `U5`) → FD → PA6 → LEDs held dark during the read
   (clean 13.56 MHz for the tag reply), acknowledge glow when the field leaves. FD runs
   on the reader's field power (datasheet §8.4), so it works even though the tag's VCC is
@@ -448,6 +450,12 @@ the sensor.
   `TEMP_SAMPLE_POLLS` polls (abuse temps move over minutes) and written only on a new max, so
   it essentially never writes after the first warm spell. Runs even while face-down dormant.
   Read it back with `sense_temp_max_get()` over UPDI.
+- **`USE_HEALTH_LOG`** (0/1, default 1) **/ `VMIN_SAMPLE_POLLS`** (16): the field **black box** —
+  the *lowest rail (VS) ever* (2-byte cell, offset 7; sampled every `VMIN_SAMPLE_POLLS`, written only
+  on a new low) and the *power-cycle / full-drain count* (2-byte cell, offset 9; +1 per cold power-on
+  reset, gated on `RSTCTRL.RSTFR` PORF so watchdog/UPDI resets don't count). With max-temp, that's the
+  four-way forensic — heat vs. starvation vs. shipped-dark vs. overuse — from one UPDI scan
+  (`sense_vmin_get()` / `sense_boot_count_get()`). Both near-free and run even while dormant.
 
 ### In-sun loading sweep (`board.h`; animation in `led.c`)
 The "charging in the sun" tell: on the ~1 s poll, when VIN is past the clamp (strong
@@ -478,6 +486,12 @@ both the light and strong-sun predicates (`sense_vin_flags()`, raw-count, no mV 
   it reads face-down (~64 LSB/g, so −32 ≈ −0.5 g). **Bench-confirm the sign:** read Z face-up
   (should be ~+64); if it reads ~−64, this board's accel has +Z reversed, so negate the byte in
   `adxl367_read_z`. Net energy win — one accel read per poll, dwarfed by the glows it suppresses.
+- **`USE_DARK_MOTION_MUTE`** (0/1, default 1): mute the *motion* soft-breath when the last poll
+  saw no light (card stowed in a dark pocket/bag), closing a real carry-drain — a jostling card
+  would otherwise fire a ~1.6 s breath on every activity trip and empty the reserve on a walk. The
+  deliberate **tap** glow is untouched (dark or light), so the dark-room tap-to-glow moment stays.
+  Near-free (reuses the cached poll light); complements face-down dormant by covering *any*
+  orientation a pocket leaves the card in.
 - **Core clock** is 1 MHz OSCHF (`clocks_init`, see Robustness for the why and the
   knock-ons). Note VREF start-up time — and therefore the `INITDLY` sizing above —
   depends on this being the high-frequency clock, not a 32 kHz main clock.

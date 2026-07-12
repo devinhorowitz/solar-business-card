@@ -212,6 +212,14 @@
 #define USE_TEMP_LOG       1
 #define TEMP_SAMPLE_POLLS  64   /* polls between temp samples (64 s at POLL_PERIOD_S=1) */
 
+/* Field "black box" -- the starvation companions to the max-temp heat log: the lowest rail (VS)
+ * ever seen and the power-cycle (full-drain) count. Both near-free: vmin samples VS every
+ * VMIN_SAMPLE_POLLS (the supercap sags over minutes) and writes EEPROM only on a new low; the
+ * power-cycle count writes once per cold boot (POR). Together they answer "did this card fail from
+ * heat, starvation, or overuse?" from one UPDI read. Runs even while face-down dormant. 1 = on. */
+#define USE_HEALTH_LOG     1
+#define VMIN_SAMPLE_POLLS  16   /* polls between rail-min samples (16 s at POLL_PERIOD_S=1) */
+
 /* charge floor: skip the glow (stay dark) below this rail voltage, mV.
  * Read via ADC VDD/10. Keeps a brown-out from bricking mid-animation. */
 #define VS_GLOW_FLOOR_MV   2600
@@ -266,5 +274,16 @@
 #define FACEDOWN_DORMANT_S     180   /* seconds lying face-down before going dormant (~3 min) */
 #define FACEDOWN_Z_THRESH      (-32) /* ZDATA_8 below this = face-down (~-0.5 g)              */
 #define FACEDOWN_DORMANT_POLLS (FACEDOWN_DORMANT_S / POLL_PERIOD_S)   /* derived: polls, not seconds */
+
+/* Dark-motion mute: suppress the MOTION soft-breath while the card is in the dark (the last poll
+ * saw no light, VSENSE < LIGHT_THRESH) -- i.e. stowed in a pocket / bag. This closes a real carry-
+ * drain: a charged card jostling in a dark pocket fires a ~1.6 s soft breath on every activity trip
+ * and would empty the reserve on a long walk. The deliberate TAP is left untouched (its branch never
+ * checks light), so the monogram still lights when tapped in a dark room -- the marquee moment stays;
+ * only the incidental motion breath is muted, and only when dark. Near-free (reuses the cached poll
+ * light). Complements face-down dormant (which needs the card face-down; this works in any orientation
+ * a pocket leaves it). 1 = on. (Distilled from Gemini's "sensory fusion": only auto-glow on motion when
+ * there is light to see it in; always honor a tap.) */
+#define USE_DARK_MOTION_MUTE  1
 
 #endif /* BOARD_H */
