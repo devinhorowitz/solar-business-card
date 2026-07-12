@@ -239,7 +239,8 @@ re-spin for the enclosure:
     z2.80 on a tight one. Use a conformal filler that spans the range at low force.
   - *Electrically insulating -- mandatory.* The Ti body is GND (see the "grounded body → short risk" rule
     above); a live cap can shorted to it through a conductive TIM is a dead short. Same reflex as the
-    reserved Kapton blanket.
+    reserved Kapton blanket. **(Superseded -- see the Resolution below: the WS17 can top bench-tested
+    non-conductive, so a conductive TIM on the can top is safe and the best-thermal option is now open.)**
   - *Low compression force + serviceable.* Do not preload the board off its z2.80 rest, and keep it
     re-applyable -- the shell opens on four M2 screws, so a cured RTV is a teardown hazard where a
     re-usable gap pad/putty is not.
@@ -250,6 +251,32 @@ re-spin for the enclosure:
     sustained hot ambient: there the shell is the heat *ingress*, not a sink, so coupling to it cannot cool
     the caps. Treat it as a transient buffer + sensing aid held in reserve (like the Kapton), not a hot-car
     survival fix -- survival stays the cap's own temperature rating and "don't bake the card."
+- **Resolution (2026-07-12) -- TIM adopted: conductive graphite, per-unit fit.** Two of the traps above
+  are retired -- one by a bench test, one by the build reality -- so the TIM moves from "held in reserve"
+  to the v4 plan, as the thermal-abatement lever (the supercap's 85 °C is the fixed ceiling; the accel is
+  a second immovable 85 °C part; no better cap or accel exists -- so managing the heat is the only move).
+  - *Insulating is no longer mandatory -- conductive graphite is now the pick.* Bench-tested the actual
+    WS17 can: its **top half is non-conductive** (looks like bare foil, reads open to every terminal), so
+    a conductive TIM on the can top cannot short -- it only extends the GND shell onto an isolated
+    surface. That frees the best-thermal material: **t-Global T62 graphite**
+    (`datasheets/TIM (SC1-SC4)  t-Global T62-1 graphite  0.16mm.pdf`) -- **15 W/m·K through-plane** and,
+    the real prize, **400 W/m·K in-plane**. The in-plane number is the lever: it lets the poor-conductor
+    Ti shell (~6.7 W/m·K) still spread heat laterally across the cap face, which is exactly the
+    "consolidate the mass / mitigate stagnation" job. (Through-plane k is *not* the lever -- the thin pad
+    and the Ti are the series limits -- so a 15 W/m·K pad is not "3x" a 5 W/m·K one here; the graphite is
+    chosen for its lateral spread + low contact resistance, not its Z number.) *Placement rule:* pad on
+    the non-conductive can top and the GND shell only, clear of the cap terminals / conductive lower body.
+  - *"Compliant filler, not a fixed pad" is met by per-unit fit, not by the material.* Graphite is a firm
+    fixed-thickness sheet, which fights the 0.05-0.15 mm gap *spread* in volume production -- but this is a
+    **one-or-two-off build**, so the fix is to measure the real can-to-shell gap on the assembled board
+    and pick the graphite thickness to match (T62 family **0.13 / 0.16 / 0.2 mm**, custom on request),
+    optionally recessed in a shallow milled pocket for a light, defined contact. Per-unit fitting
+    sidesteps the tolerance-range trap that would otherwise force a lower-k conformal filler onto a
+    volume design.
+  - *Everything else above still binds:* low preload (do not jack the board off its z2.80 seat),
+    serviceable (a dry, re-appliable pad -- no cured RTV), and the honest scope (a transient buffer +
+    sensing aid, not a hot-car steady-state cure). **Open input:** the measured can-to-shell gap on the
+    built unit, which sets the final pad thickness + pocket depth.
 
 ---
 
