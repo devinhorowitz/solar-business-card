@@ -537,6 +537,15 @@ Not a v3.0 change (the board is electrically frozen); logged here as a **v4 cons
   far less when hot, and **µs bus-speed writes with no charge pump** (orders of magnitude less
   energy). That would allow a rolling "black box" -- per-brownout, per-tap timestamp, per-second
   sun -- at negligible energy, which the current budget flatly forbids.
+- **Net power: an *enabler*, not a reducer.** FRAM does NOT lower the card's baseline draw. The
+  internal EEPROM already costs **zero** standby; an added FRAM only *ties* that, and only if
+  power-gated (ungated it *adds* µA-class standby to the ~2.7 µA budget). Its energy edge is
+  *per-write* (µs bus-speed vs the EEPROM's multi-ms charge-pump write, ~8x less) and only matters
+  at high write **volume** -- i.e. the dense-logging case above. Keep the sparse telemetry and FRAM
+  saves nothing; log a per-event black box and FRAM is what keeps it inside the budget, where the
+  EEPROM's write energy + 100k endurance make it impossible. (A free firmware lever exists first:
+  sleep the MCU through the ~few-ms EEPROM write instead of busy-waiting -- skipped today only
+  because the writes are so rare.)
 - **The v4 hook.** A hard, **I²C-shared, persistent store the MCU owns and a reader can reach** --
   the card as a keepsake that permanently records its own life. The bus already exists: SDA/SCL =
   PC2/PC3, broken out at `JP1.3/JP1.4`.
