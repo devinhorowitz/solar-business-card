@@ -562,29 +562,44 @@ both the light and strong-sun predicates (`sense_vin_flags()`, raw-count, no mV 
 
 Fuses are configuration bytes the **programmer** writes during flashing; the
 running firmware can read them but can't change them. Set these deliberately —
-the `fuses` target now prints the exact `avrdude` commands (BODCFG filled in below):
+the `fuses` target prints the exact `avrdude` commands (all three values derived below):
 
-- **`BODCFG` — brown-out (the main one), now filled in.** `sense_rail_ok()` is only a
-  *software* floor checked before each glow; for a hardware guard against the rail
-  collapsing mid-operation, BOD runs as a **sampled** brown-out. The `fuses` target prints
-  the exact command: **`BODCFG = 0x0A`** = `LVL = 0` (**1.9 V**), `SAMPFREQ = 0` (**128 Hz**),
-  `ACTIVE = SAMPLE`, `SLEEP = SAMPLE`. 1.9 V is chosen deliberately: it sits **below** the
-  2.6 V glow floor (`VS_GLOW_FLOOR_MV`), so a glow-load rail sag can never trip a spurious
-  reset, and **above** the 1.8 V core minimum, so it resets before the CPU can misexecute.
-  Continuous BOD (`ENABLE`) is ~17 µA, far too heavy for this rail; sampled costs a small
-  fraction. For more margin use `LVL = 1` (2.45 V) → `0x2A`; do **not** use 2.70/2.85 V —
-  those are above the glow floor and would reset the card before it could glow. Drop to
-  `SAMPFREQ = 1` (32 Hz, `+0x10` → `0x1A`) to shave a little more standby if the slower
-  ~31 ms detection is acceptable.
-- **`SYSCFG1.MVSYSCFG` — MVIO.** Set to **SINGLE** (factory default is DUAL). The
-  board ties VDDIO2 to VS, so PORTC runs off the main rail with no separate I/O
-  voltage, which is what SINGLE means. (DUAL also works here since VDDIO2 sits at a
-  valid voltage, but SINGLE is the correct intent. Note: PORTC ADC/AC inputs would
-  *require* SINGLE — this design doesn't use them, VSENSE is on PD2.)
-- **`SYSCFG0.EESAVE` — keep the tap counter across reflashes.** A UPDI chip-erase
-  (every reflash) wipes EEPROM unless `EESAVE` is set, which skips EEPROM on erase.
-  Set it if you want `sense`'s activation counter to survive firmware updates. (A
-  *locked* device erases EEPROM regardless; this board isn't locked.)
+- **`BODCFG` -- brown-out, corrected.** `sense_rail_ok()` / `sense_glow_peak()` are only a
+  *software* floor checked before each glow; for a hardware guard against the rail collapsing
+  mid-operation the BOD runs as a **sampled** brown-out. **Value: `BODCFG = 0x2A`** = `LVL = 0x1`
+  (**2.45 V**), `SAMPFREQ = 0` (**128 Hz**), `ACTIVE = SAMPLE`, `SLEEP = SAMPLE`.
+  **Do NOT use `0x0A`.** That is `LVL = 0x0` = BODLEVEL0 = 1.9 V, which the datasheet
+  (DS40002315C p.207) enables **only during chip erase** -- in normal operation writing `LVL = 0x0`
+  is **the same as disabling the BOD**. A card burned with `0x0A` ships with *no* brown-out detection
+  and *no* VLM, not a 1.9 V guard. The lowest real normal-op level is `LVL = 0x1` = **2.45 V**.
+  2.45 V is the right pick: it sits **below** the 2.6 V glow floor (`VS_GLOW_FLOOR_MV`), so a
+  glow-load sag never trips a spurious reset (glows already stop at 2.6 V), and **above** the 1.8 V
+  core minimum, so it resets before the CPU can misexecute. It also **holds the core in low-current
+  reset until 2.45 V**, which is the mitigation for the slow-ramp cold-start stall (a dead-battery
+  card can't release the CPU into an active draw the µA harvest can't sustain). Continuous BOD
+  (`ENABLE`) is ~17 µA, far too heavy for this rail; sampled costs a small fraction. `SAMPFREQ = 1`
+  (32 Hz → `0x3A`) shaves a little more standby at ~31 ms detection latency. Do **not** use
+  2.70/2.85 V -- above the glow floor, they would reset the card before it could glow.
+- **EEPROM-write safety (a software VLM).** Even a correct 2.45 V BOD does not fully protect a write:
+  the BOD only *aborts* a write already in progress (DS40002315C sec 11.3.3), and the sampled BOD checks
+  at just 128 Hz. So firmware refuses to **start** a telemetry write unless the rail is above
+  **`EE_WRITE_FLOOR_MV`** (2.7 V) -- the job the datasheet assigns to the VLM, done in software so it holds
+  between BOD samples and even if the BOD is off. The two lifetime-extreme loggers (min-rail, max-temp)
+  track their value in RAM and only *commit* above the floor, so a recoverable sag or heat spell is still
+  captured; the power-cycle count is flagged at boot and committed once the rail has charged (a cold boot
+  lands right at the reset-release voltage). Only a terminal drain below the floor goes unrecorded --
+  unavoidable, since you cannot safely write EEPROM as the rail collapses.
+- **`SYSCFG1.MVSYSCFG` -- MVIO. Value: `SYSCFG1 = 0x10`** (`MVSYSCFG = SINGLE`, `SUT = 0`; factory
+  default is `0x08` = DUAL). The board ties VDDIO2 to VS, so PORTC runs off the main rail with no
+  separate I/O voltage, which is what SINGLE means. (DUAL also works here since VDDIO2 sits at a
+  valid voltage, but SINGLE is the correct intent. Note: PORTC ADC/AC inputs would *require* SINGLE --
+  this design doesn't use them, VSENSE is on PD2.)
+- **`SYSCFG0.EESAVE` -- keep the black box across reflashes. Value: `SYSCFG0 = 0xD1`** = factory
+  default `0xD0` **+ EESAVE** (bit 0). A UPDI chip-erase (every reflash) wipes EEPROM unless `EESAVE`
+  is set, which skips EEPROM on erase -- without it a reflash wipes the tap counter, sun diary,
+  max-temp, and black box, so the "lifetime" framing only holds with this set. `0xD1` leaves
+  `UPDIPINCFG = 1` (UPDI stays usable) and `RSTPINCFG = 0` (PF6 input, factory default) untouched.
+  (A *locked* device erases EEPROM regardless; this board isn't locked.)
 - **`SYSCFG0.UPDIPINCFG` — leave UPDI alone.** UPDI on pin 23 (TC2030 pad / J1) is
   the only program path; do not repurpose that pin or you lose programming access.
 - **`OSCCFG`** can stay at default — the firmware selects the 1 MHz OSCHF clock in

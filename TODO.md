@@ -30,15 +30,15 @@ shell re-machine. Updated 2026-07-11._
 
 ## Firmware — `firmware/`, `firmware/README.md`
 
-- [ ] **Program fuses on hardware.** BOD `bodcfg 0x0A` is decided, but
-  `syscfg0`/`syscfg1` are still `0xXX` placeholders in the Makefile `fuses`
-  target — compute the real bytes from the AVR64DD28 datasheet (MVSYSCFG=SINGLE,
-  EESAVE). Fuses are not in the flash image. **Priority note:** the BOD is also the
-  mitigation for the cold-start stall below -- it holds the core in low-current reset
-  until 1.9 V, so a slow-rising rail can't release the CPU into an active-current draw
-  the harvest can't sustain.
+- [ ] **Program fuses on hardware** (values now computed from DS40002315C -- verify before burning):
+  **`bodcfg 0x2A`** = 2.45 V sampled BOD. **NOT `0x0A`** -- that is `LVL=0x0` = BODLEVEL0, which is
+  chip-erase-only, so `0x0A` ships the card with the BOD *off* (DS40002315C p.207). **`syscfg0 0xD1`**
+  = factory `0xD0` + EESAVE (keeps the black box across a reflash; UPDI stays enabled). **`syscfg1
+  0x10`** = MVSYSCFG=SINGLE. Fuses are not in the flash image; `make fuses` prints the commands. The
+  2.45 V BOD is also the cold-start guard (below) and the hardware backstop to the software
+  EEPROM-write floor (`EE_WRITE_FLOOR_MV`).
 - [ ] **Bench-verify a dead-battery cold-start.** From supercaps at 0 V under *dim*
-  indoor light (worst harvest), confirm the rail climbs cleanly past the 1.9 V BOD
+  indoor light (worst harvest), confirm the rail climbs cleanly past the 2.45 V BOD
   release without stalling -- i.e. the AVR's reset-state draw on a very slow (mV/s)
   ramp stays below the harvest current so it never sticks at an intermediate voltage.
   (Raised by Gemini as "cold-start latch-up"; it's a brown-out *stall*, not latch-up.

@@ -186,6 +186,19 @@ uint8_t sense_caps_full(void)
     return (adc_read_raw(ADC_MUXPOS_VDDDIV10_gc) >= CAPS_FULL_COUNT) ? 1u : 0u;
 }
 
+/* EEPROM write-safety gate: rail at/above EE_WRITE_FLOOR_MV, so a ~13 ms EEPROM write can start and
+ * finish without the rail collapsing through it (the corruption window, DS40002315 sec 11.3.3). The
+ * BOD only ABORTS an in-progress write; this is the firmware "don't start near the edge" guard (the
+ * VLM's role), so it holds between the sampled BOD's checks. Same VDD/10 channel and compile-time
+ * fold as the other rail gates; same fail-safe -- a stuck ADC reads 0 -> not safe -> no write. */
+#define EE_SAFE_10MV  (((uint32_t)EE_WRITE_FLOOR_MV + 9UL) / 10UL)   /* ceil(mV/10) */
+#define EE_SAFE_COUNT ((uint16_t)((EE_SAFE_10MV * 4096UL + (ADC_VREF_MV - 1UL)) / ADC_VREF_MV))
+
+static uint8_t sense_ee_safe(void)
+{
+    return (adc_read_raw(ADC_MUXPOS_VDDDIV10_gc) >= EE_SAFE_COUNT) ? 1u : 0u;
+}
+
 /* ---------- rail-adaptive glow brightness (brownout stretch) ---------- */
 
 /* Scale a requested glow peak by rail headroom: full `peak` at/above VS_GLOW_FULL_MV, a
@@ -301,6 +314,7 @@ int16_t sense_temp_c(void)
 void sense_temp_log(void)
 {
     static uint8_t ctr;
+    static int8_t  tmax_ram = -128;                /* session max in RAM; committed to EEPROM only from a safe rail */
     if (++ctr < TEMP_SAMPLE_POLLS)
         return;                                    /* not time to sample yet */
     ctr = 0;
@@ -308,9 +322,13 @@ void sense_temp_log(void)
     if (c == INT16_MIN)                            /* stuck ADC -> skip this sample */
         return;
     if (c > 127) c = 127;                          /* clamp into the signed-byte store */
+    if ((int16_t)c > tmax_ram) tmax_ram = (int8_t)c;   /* track the true max in RAM -- wear-free, rail-safe */
+    /* commit a new lifetime max only from a healthy rail: a heat spell can coincide with a draining
+     * rail (a dark hot car), and an EEPROM write on a collapsing rail can corrupt (DS40002315 sec
+     * 11.3.3). The RAM max means a peak-while-low is still written once the rail recovers, not lost. */
     int8_t stored = (int8_t)eeprom_read_byte(EE_TMAX_ADDR);
-    if ((int16_t)stored < c)                       /* only a genuine new max touches EEPROM */
-        eeprom_update_byte(EE_TMAX_ADDR, (uint8_t)(int8_t)c);
+    if ((int16_t)stored < tmax_ram && sense_ee_safe())
+        eeprom_update_byte(EE_TMAX_ADDR, (uint8_t)tmax_ram);
 }
 
 int8_t sense_temp_max_get(void)
@@ -321,13 +339,18 @@ int8_t sense_temp_max_get(void)
 /* ---------- EEPROM "black box" -- lowest rail ever + power-cycle count ---------- */
 
 /* Lowest rail (VS, mV) ever seen -- the starvation half of the field black box (max-temp is the
- * heat half). Sampled sparsely (every VMIN_SAMPLE_POLLS; the supercap sags over minutes) and
- * written only on a new low, so it rarely writes. Erased EEPROM reads 0xFFFF, a perfect "no low
- * yet" ceiling -- the first real reading wins. Called every poll before the dormancy gate, so a
- * stowed (face-down) card that is quietly starving is still recorded. */
+ * heat half). Sampled sparsely (every VMIN_SAMPLE_POLLS; the supercap sags over minutes). The catch
+ * is that a "new low" is by definition the WORST moment to write EEPROM -- a ~13 ms write on a
+ * collapsing rail can corrupt (DS40002315 sec 11.3.3). So the running low is tracked in RAM (vmin_ram,
+ * wear-free and safe at any rail) and only COMMITTED to EEPROM from a healthy rail (>= EE_WRITE_FLOOR_MV).
+ * A recoverable sag is thus captured and written once the rail climbs back; only a terminal drain
+ * below the floor goes unrecorded, which is unavoidable. Erased EEPROM reads 0xFFFF, a perfect "no low
+ * yet" ceiling. Called every poll before the dormancy gate, so a stowed card quietly starving is still
+ * tracked (and committed if it recovers). */
 #define EE_VMIN_ADDR  ((uint16_t *)7)   /* 2-byte min-rail mV at EEPROM offset 7 (past max-temp at 6) */
 
 static uint16_t vmin_ctr;
+static uint16_t vmin_ram = 0xFFFF;      /* lowest rail this power session, RAM-tracked (no low-rail EEPROM write) */
 
 void sense_vmin_tick(void)
 {
@@ -336,8 +359,11 @@ void sense_vmin_tick(void)
     vmin_ctr = 0;
     uint16_t mv = sense_vdd_mv();
     if (mv == 0) return;                          /* stuck ADC -> skip */
-    if (mv < eeprom_read_word(EE_VMIN_ADDR))      /* erased 0xFFFF ceiling -> first real reading wins */
-        eeprom_update_word(EE_VMIN_ADDR, mv);
+    if (mv < vmin_ram) vmin_ram = mv;             /* track the true low in RAM -- always safe, wear-free */
+    /* commit only from a healthy rail, so the write never lands on the sag itself (the corruption
+     * window); erased 0xFFFF is the ceiling -> the first real low wins. */
+    if (mv >= EE_WRITE_FLOOR_MV && vmin_ram < eeprom_read_word(EE_VMIN_ADDR))
+        eeprom_update_word(EE_VMIN_ADDR, vmin_ram);
 }
 
 uint16_t sense_vmin_get(void)
@@ -347,16 +373,27 @@ uint16_t sense_vmin_get(void)
 
 /* Power-cycle (full-drain) count: +1 per cold power-on. A supercap that fully drains and recharges
  * cold-boots the MCU (power-on reset); watchdog / UPDI / brown-out-recovery resets do NOT count.
- * Reads and clears RSTCTRL.RSTFR at boot so only a genuine POR bumps it. One write per drain, and
- * drains are rare, so endurance is a non-issue. */
+ * sense_boot_log() reads and clears RSTCTRL.RSTFR at boot so only a genuine POR is flagged, but it
+ * DEFERS the EEPROM write: a cold boot happens right at the reset-release voltage (a poor moment for
+ * a ~13 ms write), so sense_boot_commit() does the write once the rail has charged past the write
+ * floor. One write per drain, and drains are rare, so endurance is a non-issue. */
 #define EE_BOOT_ADDR  ((uint16_t *)9)   /* 2-byte power-cycle count at EEPROM offset 9 */
+
+static uint8_t boot_pending;            /* a power-on reset seen at boot, awaiting a safe rail to record */
 
 void sense_boot_log(void)
 {
     uint8_t fr = RSTCTRL.RSTFR;
     RSTCTRL.RSTFR = fr;                           /* write-1-to-clear the flags we just latched */
-    if (!(fr & RSTCTRL_PORF_bm))                  /* only a power-on reset = a real power cycle */
+    if (fr & RSTCTRL_PORF_bm)                     /* a power-on reset = a real power cycle */
+        boot_pending = 1;                         /* record it once the rail can take a clean write */
+}
+
+void sense_boot_commit(void)
+{
+    if (!boot_pending || !sense_ee_safe())        /* wait for a healthy rail before the write */
         return;
+    boot_pending = 0;
     uint16_t n = sense_boot_count_get();
     if (n < 0xFFFEu)                              /* saturate (never store 0xFFFF, which reads as 0) */
         eeprom_update_word(EE_BOOT_ADDR, (uint16_t)(n + 1u));

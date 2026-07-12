@@ -237,6 +237,20 @@
 #define VS_GLOW_FULL_MV      3000
 #define VS_GLOW_DIM_PEAK     70
 
+/* EEPROM write-safety floor, mV: the rail must be at/above this for firmware to START an EEPROM
+ * write (the telemetry loggers -- min-rail, max-temp, power-cycle count). A Flash/EEPROM write on a
+ * collapsing rail can corrupt (DS40002315 sec 11.3.3 "Preventing Flash/EEPROM Corruption"); the
+ * hardware BOD only *aborts* a write already in progress, so this is the software "don't start a
+ * write near the edge" guard -- the job the datasheet assigns to the VLM, done here so it holds
+ * between the sampled BOD's checks (and even if the BOD is off). Set comfortably above the BOD level
+ * (2.45 V at BODCFG=0x2A) so a started ~13 ms write completes above it; the write's MCU-only load
+ * barely moves the 1 F rail, so the margin is ample. The lifetime-extreme loggers track their value
+ * in RAM and only COMMIT here, so a recoverable sag/heat spell is still captured -- only a terminal
+ * drain below this floor goes unrecorded, which is unavoidable (you cannot safely write EEPROM as the
+ * rail collapses). Sits just above the 2.6 V glow floor, so if the card is healthy enough to have
+ * been glowing, it is healthy enough to commit a log entry. */
+#define EE_WRITE_FLOOR_MV  2700
+
 /* wake-on-light threshold on VSENSE (= VIN/2), mV at the pin.
  * ~0 in dark, ~1.2-2.1 V in light. ~0.4 V sits comfortably above dark. */
 #define LIGHT_THRESH_MV    400

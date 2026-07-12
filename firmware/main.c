@@ -322,9 +322,12 @@ int main(void)
             sense_temp_log();
 #endif
 #if USE_HEALTH_LOG
-            /* black box: lowest rail ever -- self-rate-limited, writes only on a new low. Also
-             * before the dormancy gate, so a quietly-starving stowed card is still recorded. */
+            /* black box: lowest rail ever (RAM-tracked, committed to EEPROM only from a healthy rail)
+             * plus the deferred power-cycle count. Before the dormancy gate, so a quietly-starving
+             * stowed card is still tracked. Both defer their EEPROM write off a low/collapsing rail so
+             * it can't corrupt (DS40002315 sec 11.3.3). */
             sense_vmin_tick();
+            sense_boot_commit();   /* write a boot-flagged power cycle once the rail has charged past the write floor */
 #endif
 #if USE_FACEDOWN_DORMANT
             /* orientation watch. Accumulate face-down time and go dormant past the timer;
