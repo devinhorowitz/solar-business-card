@@ -26,10 +26,14 @@ for detail.
   a dim-when-you-want-it risk + a lux->duty curve), shadow-abort / hardware brownout-reflex
   (AC0->CCL, plus the errata), PoV air-message, free-fall catch, FIFO air-gestures, circadian
   duty-cycling.
-- **Deferred -- product decision, not a technical block**: dynamic NDEF telemetry and
-  orientation-keyed NFC. Both need a runtime NFC write (doable safely, gated on `NS_REG` no-field),
-  but they put data on / reshape the *contact card* -- a brand call, and bounded by the locked
-  **offline-first vCard** rule (`../TODO.md`).
+- **Declined after review -- conflict with the offline-first vCard** (`../TODO.md`): dynamic NDEF
+  telemetry and orientation-keyed NFC. Both need a runtime NFC write that rewrites/reshapes the
+  contact record. Orientation-keying would *hide* the vCard in one orientation and needs the MCU
+  powered during the read (breaking the flat-card RF read -- the dead-signal case). Telemetry-on-the-
+  card puts "42 taps / 51 C" on a professional contact and risks the vCard on every rewrite. The only
+  safe channel for either is the tag's 64-byte **SRAM mailbox** read by a companion app (leaves the
+  offline vCard untouched) -- worth building only if such an app ever exists; until then the counters
+  stay UPDI-readable. Kept as a v-next revival hook, not a v3.0 feature.
 - **Won't do -- a real conflict or physics wall**: "suppress glow when dark" coma (kills the
   dark-room tap-glow -- VSENSE can't tell a nightstand from a pocket; only orientation can, which
   face-down already uses); mains-flicker classification (the ~3 Hz VSENSE low-pass attenuates
