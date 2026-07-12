@@ -286,4 +286,20 @@
  * there is light to see it in; always honor a tap.) */
 #define USE_DARK_MOTION_MUTE  1
 
+/* NFC-ack cooldown: rate-limit the field-leave acknowledge glow. The NT3H2211 FD pin (PA6) tracks
+ * the reader's field, and a phone that sits in-field and keeps *polling* (its NFC discovery loop
+ * pulses the RF carrier a few times a second) toggles FD on every pulse -- each rising edge would
+ * otherwise fire a fresh ack breath. A phone parked face-down on top of the card (screen awake, NFC
+ * on) could thus bleed the reserve one courtesy breath at a time. This gates the ack to at most one
+ * per NFC_ACK_COOLDOWN_S: the first read still acks instantly, re-polls inside the window are muted.
+ * The RF vCard read itself is hardware and untouched -- only the courtesy glow is rate-limited. The
+ * rail floor already stops a brownout; this stops the wasteful bleed *to* the floor. Near-free: one
+ * main-local byte, aged one count per poll tick. 1 = on.
+ *   NFC_ACK_COOLDOWN_S should be >= POLL_PERIOD_S (else the derived poll count floors to 0 = no
+ *   cooldown, a harmless no-op). A genuine second tap seconds later still acks; only rapid re-polls
+ *   inside the window are dropped. */
+#define USE_NFC_ACK_COOLDOWN   1
+#define NFC_ACK_COOLDOWN_S     3
+#define NFC_ACK_COOLDOWN_POLLS (NFC_ACK_COOLDOWN_S / POLL_PERIOD_S)   /* derived: polls, not seconds */
+
 #endif /* BOARD_H */

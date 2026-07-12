@@ -576,3 +576,38 @@ Gemini iteration). Both are board adds -> v4, logged for the respin.
   comparator (AC0) to detect flicker directly -- which then logs **outdoor DC-sun vs indoor AC-lit
   hours** into the black box. That is real characterization data for **supercap sizing** and the
   still-open energy budget: how the card actually lives in the wild.
+
+## Addendum (2026-07-12) -- Gemini edge-case pass (verified against source)
+
+Gemini flagged five "sub-microamp intersection" edge cases. Each was checked against the actual
+firmware `.c` / the netlist / the BOM (not the prose), per the house rule that the source wins.
+Outcome: one real free fix shipped, two captured here, two already handled. The firmware-side
+disposition table lives in `firmware/feature-roadmap.md` (Edge-case pass); this note keeps the two
+that touch **hardware / v4** reasoning.
+
+- **TINY-mode ballast is on the common anode (v4: move it per-cathode).** SW2 = TINY routes all four
+  LED anodes to VS through a **single shared** 220 Ω (`R12`), while ON ties the common anode straight
+  to VS and each LED keeps its own 150 Ω *cathode* ballast. Shared R12 makes per-LED current depend on
+  how many channels are lit: solving the divider, one lit LED draws ~3.1 mA but all four lit draw
+  ~1.1 mA each -- a ~3× swing, so a `led_breathe` (all four) and a `led_sweep` (one-at-a-time tail)
+  don't match in TINY the way they do in ON. This is inherent to the shared-ballast hack and **cannot
+  be corrected in firmware** (it can't sense SW2, and duty-scaling by active-channel count would wreck
+  ON mode, where the channels are already independent). Documented as an ON-mode-only fidelity property
+  in `firmware/README.md`. **v4 fix:** give TINY its own per-cathode ballasts (or a small per-channel
+  series R after the anode node) so brightness is load-independent in both switch positions. Credit:
+  Gemini.
+- **Dead-battery cold-start: watch for a brown-out *stall* on a very slow ramp.** From supercaps at
+  0 V, indoor harvest is µA-scale, so VS creeps up over minutes. The AVR's POR releases around ~1.4 V;
+  if the freed core then draws more active current than the harvest supplies, the rail can stick at an
+  intermediate voltage and never reach the operating point -- a brown-out stall (Gemini called it
+  "latch-up"; the mechanism is a stall, not a parasitic SCR). The **mitigation is already decided**:
+  `BODCFG = 0x0A` (1.9 V, sampled) holds the core in low-current reset until 1.9 V, so it doesn't try
+  to run until there is rail to sustain it -- which is exactly why programming that fuse (`TODO.md`) is
+  the priority, and why a 0 V-under-dim-light cold-start belongs on the energy-budget bench checklist.
+  This sharpens the existing cold-start note in §"diminishing returns" (bigger bucket = slower
+  cold-start): the risk is not just *slow*, it is *stall* if harvest < reset-state draw.
+
+*(The other three: the watchdog is petted at the main-loop top + every 1 s PIT wake, so the
+stowed-motion path can't starve it; the NFC FD interrupt-storm bleed is closed by
+`USE_NFC_ACK_COOLDOWN`; and the Ti-behind-coil detune is already handled by the `FER1` ferrite in the
+brace channel -- see `PCB/PCB-side-notes-brace-direction.md` §3.)*

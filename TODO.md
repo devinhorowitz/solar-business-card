@@ -33,7 +33,16 @@ shell re-machine. Updated 2026-07-11._
 - [ ] **Program fuses on hardware.** BOD `bodcfg 0x0A` is decided, but
   `syscfg0`/`syscfg1` are still `0xXX` placeholders in the Makefile `fuses`
   target — compute the real bytes from the AVR64DD28 datasheet (MVSYSCFG=SINGLE,
-  EESAVE). Fuses are not in the flash image.
+  EESAVE). Fuses are not in the flash image. **Priority note:** the BOD is also the
+  mitigation for the cold-start stall below -- it holds the core in low-current reset
+  until 1.9 V, so a slow-rising rail can't release the CPU into an active-current draw
+  the harvest can't sustain.
+- [ ] **Bench-verify a dead-battery cold-start.** From supercaps at 0 V under *dim*
+  indoor light (worst harvest), confirm the rail climbs cleanly past the 1.9 V BOD
+  release without stalling -- i.e. the AVR's reset-state draw on a very slow (mV/s)
+  ramp stays below the harvest current so it never sticks at an intermediate voltage.
+  (Raised by Gemini as "cold-start latch-up"; it's a brown-out *stall*, not latch-up.
+  Program the BOD fuse first -- it's the guard.)
 - [ ] **Bench validation** (bare-card starting points, re-tune enclosed): tap
   axis (Z), tap/activity thresholds, INT edge/polarity, LED `INVEN` polarity.
 - [ ] **Energy-budget bench measurement** — the project's #1 gate; sets the real
