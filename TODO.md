@@ -123,3 +123,8 @@ shell re-machine. Updated 2026-07-11._
 - Supercap footprint SCHURTER SCPC 3-153-438 (flat under-body pads, asymmetric
   widths = polarity key). The old REV-J diagonal-pad land is WRONG — never reuse.
 - Ti-6Al-4V (Grade 5); grounded M2 bosses tie the body to GND.
+- **NFC contact is offline-first.** The full vCard is **embedded** in the tag (`text/vcard`
+  NDEF, `nfc.c`), read RF-powered by the phone with the card's supercap flat and **no
+  reception** (the dead-signal courtroom case). A URL / App Clip is only ever an OPTIONAL
+  rich-content extra -- **never** a dependency for the contact import. Do not swap the embedded
+  vCard for a URL-only record.
