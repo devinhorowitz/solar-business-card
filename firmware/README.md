@@ -143,7 +143,7 @@ AVR64DD28, VQFN-28, on the **back** of the board.
 | 27 | PA1 | LDRV3 | LED D4, TCA0 WO1 |
 | 28 | PA2 | LDRV2 | LED D3, TCA0 WO2 |
 | 1 | PA3 | LDRV1 | LED D2, TCA0 WO3 |
-| 4 | PA6 | FD | NFC field-detect in (`U5`); PORTA pin int, **both edges**; field-powered (works VCC-off); int pull-up on + ext 10k (R13) → VS |
+| 4 | PA6 | FD | NFC field-detect in (`U5`); PORTA pin int, **both edges**; field-powered (works VCC-off); int pull-up on (sole FD pull-up; ext 10k `R13` to VS is DNP) |
 | 5 | PA7 | NFC_EN | Enables the NFC VCC load switch (`U6`, TPS22918), **active-HIGH**; init LOW = NFC off. (`R14`, 1 M, holds `U6` off while PA7 tristates during reset/UPDI/brown-out — **on the v3.0 board** at (4.39, 29.4). Firmware also drives PA7 low-before-output and low-before-sleep, so the window is covered both ends.) |
 | 8 | PC2 | SDA | TWI0 host (PORTMUX **ALT2**), ext 4.7k → VS |
 | 9 | PC3 | SCL | TWI0 host (ALT2), ext 4.7k → VS |
@@ -247,8 +247,9 @@ supercap flat. Written once, re-writable.
 when a reader's field appears. Per datasheet §8.4 the FD pin **runs on the reader's field
 power**, so this works with the tag's VCC gated off — that is why it survives the
 power-gate. Field-present (`NC_REG.FD_ON = 00b`) is the chip's POR/config default, so no
-I2C setup is needed. PA6 is a **both-edges** interrupt with an **internal pull-up** (plus
-`R13` to **VS**, confirmed from copper — redundant insurance, sinks only while FD is low).
+I2C setup is needed. PA6 is a **both-edges** interrupt with an **internal pull-up** that is now
+the **sole** FD pull-up (`R13`, the former external 10k to **VS**, is **DNP** since the passive
+consolidation; the internal pull-up only passes current while FD is held low).
 The two edges do different jobs: on the **falling** edge (field arrives) the LEDs are held
 dark and the core stays asleep for the read — `led.c` reads FD live and aborts any in-flight
 breath — so the card's PWM/switching don't inject broadband noise into the 13.56 MHz band
