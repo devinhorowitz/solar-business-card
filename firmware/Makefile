@@ -67,17 +67,24 @@ $(TARGET).eep: $(TARGET).elf
 flash: $(TARGET).hex
 	avrdude -c $(PROG) -P $(PORT) -b $(BAUD) -p $(MCU) -U flash:w:$<:i
 
-# Optional: enable BOD as a SAMPLED brown-out (low duty) so it guards the rail
-# without the ~17 uA of continuous BOD. BODCFG (fuse 0x01) = LVL[7:5] SAMPFREQ[4]
-# ACTIVE[3:2] SLEEP[1:0]. For 1.9 V sampled at 128 Hz: LVL=0x0 (1.9 V), SAMPFREQ=0
-# (128 Hz), ACTIVE=0x2 (sampled), SLEEP=0x2 (sampled) -> 0x0A. 1.9 V sits below the
-# 2.6 V glow floor (so a glow-load sag never trips it) and above the 1.8 V core min.
-# For more margin use LVL=0x1 (2.45 V) -> 0x2A; do NOT use 2.70/2.85 V (above the floor).
+# BOD as a SAMPLED brown-out (low duty) so it guards the rail without the ~17 uA of continuous BOD.
+# BODCFG (fuse 0x01) = LVL[7:5] SAMPFREQ[4] ACTIVE[3:2] SLEEP[1:0].
+#   CAUTION (DS40002315C p.207): LVL=0x0 = BODLEVEL0 = 1.9 V is enabled ONLY during chip erase; in
+#   normal operation writing LVL=0x0 is the SAME AS DISABLING THE BOD. So the old 0x0A shipped the
+#   card with NO brown-out detection (and no VLM) -- not a 1.9 V guard. The lowest REAL normal-op
+#   level is LVL=0x1 = BODLEVEL1 = 2.45 V.
+#   Use LVL=0x1 (2.45 V), SAMPFREQ=0 (128 Hz), ACTIVE=0x2 (sampled), SLEEP=0x2 (sampled) -> 0x2A.
+#   2.45 V sits below the 2.6 V glow floor (so a glow-load sag never trips it) and above the 1.8 V
+#   core min; it also holds the core in low-current reset until 2.45 V, guarding the slow-ramp
+#   cold-start. Do NOT use 2.70/2.85 V (above the glow floor -- would reset before the card can glow).
+# SYSCFG0 (0x05): factory default 0xD0; set EESAVE (bit 0) to keep the EEPROM black box across a UPDI
+#   chip-erase (reflash) -> 0xD1. Leaves UPDIPINCFG=1 (UPDI stays usable) and RSTPINCFG=0 (default).
+# SYSCFG1 (0x06): factory default 0x08 (MVSYSCFG=DUAL); set MVSYSCFG=SINGLE (VDDIO2 tied to VS) -> 0x10.
 fuses:
-	@echo "Set fuses deliberately; see README 'Fuses' section for the full set."
-	@echo "  avrdude -c $(PROG) -P $(PORT) -p $(MCU) -U bodcfg:w:0x0A:m   # 1.9 V sampled BOD, 128 Hz"
-	@echo "  avrdude -c $(PROG) -P $(PORT) -p $(MCU) -U syscfg1:w:0xXX:m  # <FILL IN 0xXX -- compute from datasheet, do not send literally> MVSYSCFG=SINGLE"
-	@echo "  avrdude -c $(PROG) -P $(PORT) -p $(MCU) -U syscfg0:w:0xXX:m  # <FILL IN 0xXX -- compute from datasheet, do not send literally> EESAVE (keep counter)"
+	@echo "Set fuses deliberately; see README 'Fuses' section for the derivation."
+	@echo "  avrdude -c $(PROG) -P $(PORT) -p $(MCU) -U bodcfg:w:0x2A:m   # 2.45 V sampled BOD, 128 Hz  (0x0A = BOD OFF -- do NOT use)"
+	@echo "  avrdude -c $(PROG) -P $(PORT) -p $(MCU) -U syscfg1:w:0x10:m  # MVSYSCFG=SINGLE, SUT=0"
+	@echo "  avrdude -c $(PROG) -P $(PORT) -p $(MCU) -U syscfg0:w:0xD1:m  # factory 0xD0 + EESAVE (keep the black box across reflash)"
 
 clean:
 	rm -f $(OBJ) $(TARGET).elf $(TARGET).hex $(TARGET).eep

@@ -611,3 +611,44 @@ that touch **hardware / v4** reasoning.
 stowed-motion path can't starve it; the NFC FD interrupt-storm bleed is closed by
 `USE_NFC_ACK_COOLDOWN`; and the Ti-behind-coil detune is already handled by the `FER1` ferrite in the
 brace channel -- see `PCB/PCB-side-notes-brace-direction.md` §3.)*
+
+## Addendum (2026-07-12) -- BOD level + EEPROM-write safety (firmware review, verified against source)
+
+A second-team firmware review found two datasheet-grounded issues in the brown-out / EEPROM story,
+both confirmed against the committed `datasheets/U1 AVR64DD28...pdf` (DS40002315C) and both catchable
+before fuses are burned. This note is the source-of-truth home for the corrected reasoning; the fuse
+bytes live in `firmware/Makefile` + `firmware/README.md`, the write-guard code in `firmware/sense.c`.
+
+- **The planned `BODCFG=0x0A` was BOD-*off*, not a 1.9 V guard.** `0x0A` selects `LVL=0x0` =
+  BODLEVEL0 = 1.9 V, but p.207 states BODLEVEL0 "will only be enabled during chip erase. During normal
+  operation, writing '0x0' to this bit field will be the same as disabling the BOD." So a card burned
+  with `0x0A` would ship with no brown-out reset *and* no VLM. The lowest real normal-op level is
+  `LVL=0x1` = **2.45 V** (`BODCFG=0x2A`). 2.45 V is correct for this rail: it is below the 2.6 V glow
+  floor (so it never trips a glow-load sag -- glows already stop at 2.6 V) and above the 1.8 V core
+  min. It is also the mitigation for the slow-ramp cold-start stall (holds the core in low-current
+  reset until 2.45 V), so it closes that earlier bench item's guard question too. The full computed
+  fuse set: **`BODCFG=0x2A`**, **`SYSCFG0=0xD1`** (factory `0xD0` + EESAVE, so the black box survives a
+  reflash; UPDI stays enabled), **`SYSCFG1=0x10`** (MVSYSCFG=SINGLE).
+
+- **EEPROM writes on a collapsing rail can corrupt -- and the BOD alone doesn't prevent it.** p.80
+  (sec 11.3.3 "Preventing Flash/EEPROM Corruption") warns that a write at too-low a voltage corrupts,
+  and lists the VLM as the mechanism to "prevent *starting* a write to the EEPROM close to the BOD
+  level." The BOD by itself only *aborts* an in-progress write (leaving it half-done), and the sampled
+  BOD checks at just 128 Hz -- so a hardware BOD is necessary but not sufficient. The `vmin` logger was
+  the sharp case: it wrote EEPROM exactly on a *new low* -- the worst instant. Fix (in `sense.c`): a
+  software write floor (`EE_WRITE_FLOOR_MV` = 2.7 V) gates every telemetry write -- a firmware VLM that
+  holds between BOD samples and even with the BOD off. The two lifetime extremes (min-rail, max-temp)
+  now track their value in **RAM** and only *commit* to EEPROM from a healthy rail, so a recoverable
+  sag or heat spell is still captured (written on recovery, at a safe rail); the power-cycle count is
+  flagged at boot and committed once the rail has charged past the floor (a cold boot lands right at
+  the reset-release voltage). Only a terminal drain below the floor goes unrecorded -- which is
+  inherent (you cannot safely write EEPROM as the rail dies). The tap counter was already implicitly
+  safe (its write is gated upstream by the glow-peak floor) but wears its low byte at ~100k taps --
+  fine for a keepsake, and eliminated outright by the v4 FRAM (~10^13 endurance). Credit: the reviewing
+  team.
+
+- **v4 note (FRAM, decided):** the archival log lands on an **MB85RC512T** (512 Kbit = 64 KB, I2C,
+  1.7-3.6 V, 8-SOP, ~1.75 mm -> ~0.1 mm shell pocket), strapped to **0x50** (A0-A2 device-select) to
+  clear the NFC tag at 0x55; power-gated like the tag (retains with VDD off). This same write-safety
+  discipline carries over -- FRAM's µs, charge-pump-free writes are far more brownout-tolerant than the
+  AVR EEPROM, but the "commit from a healthy rail" habit still applies to any multi-byte record.

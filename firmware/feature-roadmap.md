@@ -70,9 +70,10 @@ BOM rather than the prose docs:
    answers it.
 5. **Cold-start slow-ramp stall** -- *legit bench item; captured.* Not "latch-up" but a brown-out
    stall: the MCU released by POR (~1.4 V) can draw more than a dim-light uA harvest supplies and
-   stall below the operating point. The decided `BODCFG=0x0A` (1.9 V sampled) is the mitigation
-   (holds the core in low-current reset until 1.9 V) -- **program the fuse** (`../TODO.md`) and
-   bench-verify a 0 V cold-start under dim light.
+   stall below the operating point. The mitigation is the sampled BOD at **2.45 V** (`BODCFG=0x2A`;
+   holds the core in low-current reset until 2.45 V) -- **program the fuse** (`../TODO.md`) and
+   bench-verify a 0 V cold-start under dim light. *(The earlier `0x0A`/1.9 V figure was wrong: LVL=0x0
+   is chip-erase-only, so `0x0A` = BOD off. See the design-notes BOD addendum.)*
 
 ## Trace-change verdict: none required
 
