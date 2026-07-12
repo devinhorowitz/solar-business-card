@@ -202,6 +202,16 @@
  * see sense_sun_tick). 1 = on; 0 = compile it out entirely. */
 #define USE_SUN_DIARY      1
 
+/* Thermal-abuse log: keep the lifetime MAX die temperature (deg C) in EEPROM -- the hot-car
+ * supercap-degradation tell (see ../solar-glow-drh-design-notes.md sec 7 "Supercap thermal").
+ * Uses the MCU's OWN sensor via a PULSED ADC read (no standing current, unlike the accel's
+ * TEMP_EN), sampled every TEMP_SAMPLE_POLLS polls since abuse temps move over minutes; EEPROM
+ * is written only on a NEW max, so after the first warm spell it essentially never writes.
+ * Near-zero energy; runs even while face-down dormant (a baking stowed card is the point).
+ * 1 = on. */
+#define USE_TEMP_LOG       1
+#define TEMP_SAMPLE_POLLS  64   /* polls between temp samples (64 s at POLL_PERIOD_S=1) */
+
 /* charge floor: skip the glow (stay dark) below this rail voltage, mV.
  * Read via ADC VDD/10. Keeps a brown-out from bricking mid-animation. */
 #define VS_GLOW_FLOOR_MV   2600

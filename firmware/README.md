@@ -38,7 +38,7 @@ card's largest idle load. See **NFC contact card** below.
 | `adxl367.h/.c` | accelerometer: presence, tap→INT1, activity→INT2, tap/activity clear. |
 | `nfc.h/.c` | NT3H2211 NFC tag (`U5`): NDEF write + VCC power-gate via `NFC_EN`/`U6`. |
 | `led.h/.c` | TCA0 split-mode PWM on PA0–PA3 + gamma breathing glow + in-sun loading sweep. |
-| `sense.h/.c` | ADC rail/light reads, rail-scaled glow (brownout stretch), EEPROM activation counter + sun diary. |
+| `sense.h/.c` | ADC rail/light/temp reads, rail-scaled glow (brownout stretch), EEPROM activation counter + sun diary + max-temp log. |
 | `main.c` | init (per hardware doc §7), sleep/wake state machine, ISRs. |
 | `Makefile` | build + UPDI flash. |
 
@@ -441,6 +441,13 @@ the sensor.
   in-progress hour is counted in RAM and written only once per banked hour, so EEPROM sees
   ~one write per sun-hour (endurance-safe); a full supercap drain forgets at most the
   current sub-hour. Free — the poll already reads the strong-sun tell.
+- **`USE_TEMP_LOG`** (0/1, default 1) **/ `TEMP_SAMPLE_POLLS`** (64): keep the lifetime **max
+  die temperature** in a 1-byte EEPROM cell (offset 6) — the hot-car supercap-degradation tell.
+  Uses the MCU's own sensor via a **pulsed** ADC read (2.048 V ref + `SIGROW` cal per
+  DS40002315 §33.3.3.8 — no standing current, unlike the accel's `TEMP_EN`), sampled every
+  `TEMP_SAMPLE_POLLS` polls (abuse temps move over minutes) and written only on a new max, so
+  it essentially never writes after the first warm spell. Runs even while face-down dormant.
+  Read it back with `sense_temp_max_get()` over UPDI.
 
 ### In-sun loading sweep (`board.h`; animation in `led.c`)
 The "charging in the sun" tell: on the ~1 s poll, when VIN is past the clamp (strong

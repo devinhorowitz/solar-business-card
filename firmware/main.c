@@ -287,6 +287,12 @@ int main(void)
         }
         else if (f_tick) {
             f_tick = 0;
+#if USE_TEMP_LOG
+            /* lifetime max die temp -- self-rate-limited (samples every TEMP_SAMPLE_POLLS)
+             * and writes EEPROM only on a new max. Before the dormancy gate on purpose, so a
+             * baking face-down card is still logged. */
+            sense_temp_log();
+#endif
 #if USE_FACEDOWN_DORMANT
             /* orientation watch. Accumulate face-down time and go dormant past the timer;
              * clear dormancy once face-up (a backstop to the motion-driven wake). While

@@ -83,4 +83,16 @@ void     sense_count_inc(void);
 uint16_t sense_sun_hours_get(void);
 void     sense_sun_tick(void);
 
+/* MCU internal die temperature + EEPROM lifetime-max log (USE_TEMP_LOG).
+ *   sense_temp_c()       : one-shot die temperature in degrees C (pulsed ADC read against
+ *                          the internal 2.048 V ref + SIGROW cal, per DS40002315 sec 33.3.3.8).
+ *                          Returns INT16_MIN on a stuck ADC.
+ *   sense_temp_log()     : call every poll; samples sparsely (every TEMP_SAMPLE_POLLS) and
+ *                          writes EEPROM only when a new lifetime max is seen.
+ *   sense_temp_max_get() : the stored lifetime max in degrees C (signed; erased EEPROM = -1).
+ *                          Uncalled on-chip BY DESIGN (UPDI/NDEF readout), like sense_count_get. */
+int16_t  sense_temp_c(void);
+void     sense_temp_log(void);
+int8_t   sense_temp_max_get(void);
+
 #endif /* SENSE_H */

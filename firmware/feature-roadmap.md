@@ -61,8 +61,10 @@ Each of these *reduces* draw and attacks the open energy question directly.
   checks. Temp needs the internal sensor brought up.
 - **"Find the sun" alignment mode.** A gesture turns the 4 LEDs into a `VSENSE` harvest
   bar-graph so a user can find a charging spot -- directly addresses the harvest problem.
-- **Thermal-abuse logging.** AVR internal temp → EEPROM lifetime max; matches the CLAUDE.md
-  hot-car warning about supercap degradation.
+- **Thermal-abuse logging.** *(**implemented** -- `USE_TEMP_LOG`, `sense_temp_log()`.)* MCU
+  internal temp (pulsed ADC, 2.048 V ref + SIGROW cal per DS40002315 sec 33.3.3.8) → EEPROM
+  lifetime max; matches the CLAUDE.md hot-car warning about supercap degradation. Sampled
+  sparsely and written only on a new max, so near-zero energy; runs even while face-down dormant.
 - **Shipping / "coma" mode.** Halt RTC/ADC, wake only on a sustained solar spike; protects
   the caps during a dark shipping box. Low effort, real value.
 - **Shadow-abort (AC0 zero-cross).** Use AC0 (VSENSE on AINP0 vs. internal DAC) to halt an

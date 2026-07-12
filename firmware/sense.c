@@ -271,3 +271,49 @@ void sense_sun_tick(void)
     if (h < 0xFFFEu)                         /* saturate near the top (and never store 0xFFFF, which reads as 0) */
         eeprom_update_word(EE_SUN_HOURS_ADDR, (uint16_t)(h + 1u));
 }
+
+/* ---------- MCU internal die temperature + lifetime-max log ---------- */
+
+/* One-shot die temperature in degrees C via the on-chip sensor, per DS40002315 sec 33.3.3.8.
+ * The sensor is specified against the internal 2.048 V reference (not our usual 2.500 V), so
+ * bracket the read with a VREF switch and restore it after; the ADC's existing INITDLY
+ * (DLY128, >= 25 us) and SAMPLEN (31 cyc = 62 us, >= 28 us) already satisfy the sensor's
+ * timing, so only VREF and MUXPOS change. The per-part factory calibration (slope/offset for
+ * the 2.048 V ref) lives in SIGROW.TEMPSENSE0/1; the arithmetic is the datasheet's, widened to
+ * int32 so the 16-bit intermediate cannot wrap. Pulsed like every other read -> no standing
+ * current (unlike the accel's TEMP_EN). Returns INT16_MIN on a stuck ADC (RES stayed 0). */
+int16_t sense_temp_c(void)
+{
+    VREF.ADC0REF = VREF_REFSEL_2V048_gc;                    /* temp-sensor reference */
+    uint16_t raw = adc_read_raw(ADC_MUXPOS_TEMPSENSE_gc);   /* 12-bit, right-adjusted */
+    VREF.ADC0REF = VREF_REFSEL_2V500_gc;                    /* restore for rail/light reads */
+    if (raw == 0) return INT16_MIN;                         /* stuck ADC -> sentinel (max logger ignores) */
+    int32_t offset = (int32_t)SIGROW.TEMPSENSE1;            /* calibration offset (unsigned in SIGROW) */
+    int32_t slope  = (int32_t)SIGROW.TEMPSENSE0;            /* calibration slope  */
+    int32_t k = ((offset - (int32_t)raw) * slope + 2048) / 4096;   /* -> Kelvin (SCALING_FACTOR = 4096) */
+    return (int16_t)(k - 273);                              /* Kelvin -> Celsius */
+}
+
+/* 1-byte signed lifetime-max temperature (deg C) at EEPROM offset 6 (past the dword tap count
+ * at 0 and the sun-hours word at 4-5). Erased EEPROM reads 0xFF = -1 C, a harmless cold floor. */
+#define EE_TMAX_ADDR  ((uint8_t *)6)
+
+void sense_temp_log(void)
+{
+    static uint8_t ctr;
+    if (++ctr < TEMP_SAMPLE_POLLS)
+        return;                                    /* not time to sample yet */
+    ctr = 0;
+    int16_t c = sense_temp_c();
+    if (c == INT16_MIN)                            /* stuck ADC -> skip this sample */
+        return;
+    if (c > 127) c = 127;                          /* clamp into the signed-byte store */
+    int8_t stored = (int8_t)eeprom_read_byte(EE_TMAX_ADDR);
+    if ((int16_t)stored < c)                       /* only a genuine new max touches EEPROM */
+        eeprom_update_byte(EE_TMAX_ADDR, (uint8_t)(int8_t)c);
+}
+
+int8_t sense_temp_max_get(void)
+{
+    return (int8_t)eeprom_read_byte(EE_TMAX_ADDR);
+}
