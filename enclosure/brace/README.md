@@ -32,7 +32,7 @@ rounded corners are **relieved** (cut clear — the brace need not fit them). It
 - **Process:** SLA / resin print. **Material must be opaque-white and non-conductive** — no carbon- or graphite-filled resin (the brace rests directly on GND / VS / signal copper, and white drives the window backing).
 - **Height fit:** print ~0.1 mm proud, then **sand the flat bottom (the datum)** to a zero-air fit in the 1.80 mm cavity. Every pocket is on the **top** face, so the bottom laps flat on glass. **Do not sand the top** — it sets the pocket depths.
 - **Wall fit:** the four outer edges are sized **0.05 mm inside the cavity walls** (contact, no rattle). If the print comes out tight, lightly sand the outer edges the same way as the bottom — **do not touch the four corner reliefs**.
-- Envelope **47 × 85 × 1.80 mm**; volume ~2.7 cm³, mass ~3.0 g.
+- Envelope **47 × 85 × 1.80 mm**; volume ~2.6 cm³, mass ~3.0 g (tough white SLA).
 
 ## Geometry — precision fit
 
