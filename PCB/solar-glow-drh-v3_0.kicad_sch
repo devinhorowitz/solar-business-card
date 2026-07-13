@@ -11054,7 +11054,7 @@
 			)
 		)
 	)
-	(global_label "VS"
+	(global_label "MID"
 		(shape bidirectional)
 		(at 74.93 83.82 0)
 		(effects
@@ -11936,7 +11936,7 @@
 			)
 		)
 	)
-	(global_label "MID"
+	(global_label "GND"
 		(shape bidirectional)
 		(at 74.93 78.74 0)
 		(effects
@@ -12377,7 +12377,7 @@
 			)
 		)
 	)
-	(global_label "MID"
+	(global_label "VS"
 		(shape bidirectional)
 		(at 74.93 63.5 0)
 		(effects
@@ -13284,7 +13284,7 @@
 			)
 		)
 	)
-	(global_label "GND"
+	(global_label "MID"
 		(shape bidirectional)
 		(at 74.93 58.42 0)
 		(effects
