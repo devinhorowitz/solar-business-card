@@ -12125,7 +12125,7 @@
 			)
 		)
 	)
-	(global_label "VS"
+	(global_label "VCMP"
 		(shape bidirectional)
 		(at 405.13 261.62 0)
 		(effects

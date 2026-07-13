@@ -223,7 +223,7 @@ Summary of the **orderable** lines:
 | **R14** | 1 | **1 MΩ 0402 (`NFC_EN` pulldown; consolidated onto the R5/R6 reel)** | `RC0402FR-071ML` |
 | C1, C2, C3, **C5**, C6, C7, **C8, C12** | 8 | 100 nF X7R 0402 | `GRM155R71C104KA88D` (Murata) |
 | C4 | 1 | 4.7 µF X5R 0402 (consolidated onto the C13 reel) | `GRM155R61A475MEAAD` (Murata) |
-| **C10** | (1) | **100 nF X7R 0402 — DNP (VCMP decoupling; not strictly required)** | `GRM155R71C104KA88D` (Murata) |
+| **C10** | (1) | **100 nF X7R 0402, DNP (reserved VCMP decoupling; VCMP is now populated instead by C2, relocated from the VS rail)** | `GRM155R71C104KA88D` (Murata) |
 | **C11** | 1 | **0.22 µF (220 nF) X7R 0402 — accel VREG_OUT decoupling** | `GRM155R71C224KA12D` (Murata) |
 | **C13** | 1 | **4.7 µF X5R 0402 — LED-anode bulk** | `GRM155R61A475MEAAD` (Murata) |
 | **C9** | (1) | **NP0 0402, DNP — coil trim** | buy an NP0 range ~47–150 pF for the bench |
