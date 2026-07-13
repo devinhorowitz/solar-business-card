@@ -1,12 +1,40 @@
 ** Drc report for solar-glow-drh-v3_0.kicad_pcb **
-** Created on 2026-07-11T23:46:01 **
+** Created on 2026-07-13T00:08:35 **
 ** Report includes: Errors, Warnings, Exclusions **
 
-** Found 3 DRC violations **
+** Found 10 DRC violations **
 [tracks_crossing]: Tracks crossing
     Rule: clearance-hard-floor; error (excluded)
     @(41.0000 mm, 52.4200 mm): Track [LA] on B.Cu, length 14.4200 mm
     @(41.0000 mm, 38.0000 mm): Track [LB] on B.Cu, length 1.9000 mm
+[npth_inside_courtyard]: NPTH inside courtyard
+    Local override; error (excluded)
+    @(10.7600 mm, 14.3600 mm): NPTH pad of 
+    @(15.5000 mm, 21.2500 mm): Footprint SC1
+[npth_inside_courtyard]: NPTH inside courtyard
+    Local override; error (excluded)
+    @(10.7600 mm, 17.5350 mm): NPTH pad of 
+    @(15.5000 mm, 21.2500 mm): Footprint SC1
+[npth_inside_courtyard]: NPTH inside courtyard
+    Local override; error (excluded)
+    @(12.2840 mm, 19.4400 mm): NPTH pad of 
+    @(15.5000 mm, 21.2500 mm): Footprint SC1
+[npth_inside_courtyard]: NPTH inside courtyard
+    Local override; error (excluded)
+    @(13.3000 mm, 14.3600 mm): NPTH pad of 
+    @(15.5000 mm, 21.2500 mm): Footprint SC1
+[npth_inside_courtyard]: NPTH inside courtyard
+    Local override; error (excluded)
+    @(14.3160 mm, 19.4400 mm): NPTH pad of 
+    @(15.5000 mm, 21.2500 mm): Footprint SC1
+[npth_inside_courtyard]: NPTH inside courtyard
+    Local override; error (excluded)
+    @(15.8400 mm, 14.3600 mm): NPTH pad of 
+    @(15.5000 mm, 21.2500 mm): Footprint SC1
+[npth_inside_courtyard]: NPTH inside courtyard
+    Local override; error (excluded)
+    @(15.8400 mm, 17.5350 mm): NPTH pad of 
+    @(15.5000 mm, 21.2500 mm): Footprint SC1
 [copper_edge_clearance]: Board edge clearance violation (board setup constraints edge clearance 0.5000 mm; actual 0.0000 mm)
     Rule: board setup constraints edge; error (excluded)
     @(47.8000 mm, 0.0000 mm): Segment on Edge.Cuts
