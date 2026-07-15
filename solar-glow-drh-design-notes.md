@@ -840,6 +840,10 @@ Three genuine contenders, each winning a different axis:
   overvoltage and the accel now lives on the LDO; **D10/D11 + C2** comparator-supply OR (no comparator);
   **D1/D9** blocking diodes -> AEM harvest front-end.
 
+The pin-by-pin net assignments and the full deletion list for a manual respin are in
+`v4-aem10300-prewiring.md` (place the new parts to the side, wire each pin to the named net, delete the
+listed parts).
+
 ### NFC noise: bonafide but engineerable (physics)
 
 At 13.56 MHz, λ/2π = 3.5 m, so the whole card is in the **near field** -> the switcher couples inductively
