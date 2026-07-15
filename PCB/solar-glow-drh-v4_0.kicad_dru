@@ -1,0 +1,44 @@
+(version 1)
+
+# SOLAR-GLOW DRH v3.0 — PCBWay 2-layer capability rules
+#
+# SINGLE-TIER HARD FLOORS (revised 2026-07-04).
+#
+# Why the old two-tier scheme was dropped:
+#   The previous rules paired an error floor (min 0.126 mm) with a looser marginal-band
+#   WARNING (min 0.1524 mm). That does not do what it reads like. KiCad resolves ONE
+#   effective clearance per object pair — the most restrictive applicable min — and reports
+#   under the rule that set it. Because the marginal band's 0.1524 is looser (larger) than
+#   the 0.126 floor, the band always won: every sub-6-mil spot came back as a WARNING and
+#   the 0.126 error floor never fired. Result: genuine sub-floor clearances (the zone-refill
+#   spots down to 0.1247 mm near U3) were masked as warnings and would have shipped.
+#   Two clearance tiers (error < A, warning < B, A < B) simply cannot coexist in KiCad.
+#
+# What this does now:
+#   One floor, severity error, at 0.126 mm ("do not ship below this"). The board's intentional
+#   uniform 0.15 mm trace/space passes clean (>= 0.126). Anything that drops below the floor —
+#   a too-tight pour, a pinched escape — fires as a real error, uncluttered by the ~200 warnings
+#   the old band produced against the intentional 0.15 mm design.
+#
+# PCBWay stated capability: 0.1 mm / 4 mil trace+space, drill 0.2-6.3 mm, annular 0.15 mm / 6 mil.
+# Every floor here sits above PCBWay's stated minimum by design (margin against their process).
+# The 0.1247 min the refill hit is inside PCBWay capability but below our own floor — that is the
+# call to fix (bump the GND zone clearance near U3 and re-fill), which this rule now surfaces.
+
+(rule "clearance-hard-floor"
+  (severity error)
+  (constraint clearance (min 0.126mm)))
+
+(rule "track-hard-floor"
+  (severity error)
+  (constraint track_width (min 0.126mm)))
+
+# Uniform 0.6/0.3 vias sit at exactly 0.15 mm annular by construction; floor set just below spec
+# (0.1249) so an at-spec via does not coin-flip on floating-point rounding.
+(rule "annular-hard-floor"
+  (severity error)
+  (constraint annular_width (min 0.1249mm)))
+
+(rule "drill-floor"
+  (severity error)
+  (constraint hole_size (min 0.2mm)))

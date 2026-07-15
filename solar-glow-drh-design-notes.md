@@ -2,7 +2,7 @@
 
 Durable engineering rationale, hard-won findings, and future-variant ideas, distilled from the v0/v1 planning docs (since retired).
 
-**Authority order.** For the *current* design, the committed `solar-glow-drh-v3_0.kicad_pcb` /
+**Authority order.** For the *current* design, the committed `solar-glow-drh-v4_0.kicad_pcb` /
 `.kicad_sch` (v3.0, 2-layer) plus `README.md`'s current-revision table are ground truth; the 4-layer v2.3
 (in git history) is the fallback design. This file is the *reasoning archive* — the
 "why" and the "don't do that again" — with the **v3.0 deltas collected in §12**. Where an as-built
@@ -367,7 +367,7 @@ the LDRV fan moved):
   energy, not the farads.
 - **Pin authority — one source only.** Earlier drafts of this design carried two *different* pin
   assignments (VSENSE on PA5 with BTN on PA7; and the LEDs on PA4–PA7 / TCD0 with VSENSE on PC3)
-  — **neither matches the board.** The committed `solar-glow-drh-v3_0.kicad_sch` and
+  — **neither matches the board.** The committed `solar-glow-drh-v4_0.kicad_sch` and
   `solar-glow-drh-v2-hardware.md` are the only authoritative pin reference: LEDs PA0–PA3 / TCA0,
   VSENSE PD2, BTN PA5, I²C PC2/PC3, accel INT PF0/PF1. If anything else disagrees, it is wrong. **v3.0 permuted which LDRV net lands on which of PA0–PA3** (the fan untangle) — the pins are still PA0–PA3/TCA0, but the LDRV↔pin↔LED map changed; see §12 and `firmware/README.md`.
 
@@ -765,3 +765,142 @@ prioritization rather than a blanket "everything AEC-Q100" sweep.
   `datasheets/` per house practice: the `MB85RC512TY` FRAM (tentative refdes **U7**) and the
   `TPS22918QDBVRQ1` -Q1 load switch (under **U6**); the MCU-E reuses the existing U1 datasheet, which
   covers the -I / -E grade variants.
+
+## Addendum (2026-07-15) -- v4 active-harvest option: AEM10300 PMIC (field survey + firmware feasibility)
+
+**Status: v4.0 ADOPTED -- the managed-solar revision, and where development now goes.** v3.0 (passive diode
+feed + shunt clamp) is frozen as the final unmanaged-solar revision; the `v4_0` files start as a copy of it
+and are being reworked to the architecture below.
+This records the reasoning and a firmware feasibility check so the analysis does not evaporate.
+
+### The problem it addresses
+
+The as-built harvest path is passive: the two **parallel** panels feed VS through blocking diodes D1/D9,
+and the TLV3011/Q1 shunt clamp holds VS at its ~3.50 V trip (divider R7/R8 into the 1.242 V ref:
+`VS = 1.242 x (6.81+3.74)/3.74 = 3.50 V`). Two consequences leave the pack badly underused:
+
+- **The clamp is the ceiling, but not the only one.** VS is clamped to 3.50 V to protect the 3.6 V-max
+  accelerometer (the whole rail, since VDDIO2 ties to VS via SJ1 and there is no accel LDO). So the 2S
+  pack only reaches 1.75 V/cell, and of its ~15 J rating only `½·1·(3.50² − 2.60²) ≈ 2.76 J` is spendable
+  to the firmware glow floor -- about **18%**. And the parallel ~4.15 V-Voc panels physically cannot fill
+  a 5.5 V pack anyway (they top near ~3.7 V in sun, ~2 V indoors), so removing the clamp alone buys almost
+  nothing.
+- **Using more of the pack means decoupling storage voltage from both the panel voltage and the
+  accel-limited rail** -- an active MPPT boost charger into the caps plus a regulated load rail. That is a
+  harvest PMIC.
+
+### The field survey (evaluated ~40 parts; verified against datasheets where it mattered)
+
+Two DigiKey "energy harvesting" pulls plus the Mouser-only e-peas line, triaged against four priorities the
+design calls for: **supercap management, depth of charge, dark power, NFC noise**. The field collapses fast:
+
+- **Wrong source / class:** Powercast PCC110/P2110B (915 MHz RF), LTC3108/3109/3107 (thermoelectric,
+  20-500 mV transformer input), LTC3588 (piezo, 2.7-20 V), LTC3105/3127/3330/3331 (400 µA-6 mA Iq or high-V).
+- **Dead:** Infineon S6AE102A/103A (**Obsolete**), AKM AP4470/4473 (**Not For New Designs**), TI TPS65290 (Obsolete).
+- **Disqualified on a hard number -- EM8504** (EM Microelectronic): a strong ultra-low-power 4-rail PMIC
+  (15-125 nA, lux meter, EEPROM config), but built for **Dye-Sensitized Solar Cells** -- its harvester input
+  `VDD_HRV` is **2.0 V abs max** and its MPPT tops out at 1.8 V. Our crystalline-Si SM141K06TF panels are
+  **4.15 V Voc** with a ~3.2 V MPP: over 2x the input limit and untrackable. Its output LDOs also cap at
+  2.6 V (too low for a bright LED rail). Ruled out -- the same input-voltage mismatch the WS17/SS17 saga
+  taught us to verify at the source.
+- **The finding that settles it:** across the whole field, the **integrated dual-cell supercapacitor
+  balancer exists nowhere except e-peas** -- exactly priority #1 for a 2S stack. The survey reinforces
+  rather than dethrones the front-runner.
+
+Datasheets for the evaluated shortlist (`aem10300.pdf`, `bq25570.pdf`, `neh7100.pdf`, `em8504.pdf`) are
+filed in `datasheets/` per house practice.
+
+Three genuine contenders, each winning a different axis:
+
+| Part | Wins | Loses |
+|---|---|---|
+| **e-peas AEM10300** | supercap mgmt (balancer + deep-cycle mode), dark power (~6 nA) | charger-only (add an LDO); >=10 MHz switching |
+| **TI BQ25570** | depth (5.5 V ceiling, 1.95 V floor) | no balancer (keep U2); mid dark power; 2 inductors |
+| **Nexperia NEH7100** | noise (inductorless, 32 k-1 MHz tunable), complete + I²C | ~2 µA dark power; no balancer; 4.5 V ceiling |
+
+### Why AEM10300 leads (verified against DS-AEM10300-v1.4)
+
+- **Supercap management (priority #1):** on-chip 2-cell balancer (BAL holds the midpoint at VSTO/2) plus a
+  purpose-built dual-cell mode -- `STO_CFG[3:0] = LLHH` sets VOVCH 4.65 V / VCHRDY 1.00 V / VOVDIS 0.20 V,
+  i.e. it deep-cycles the pack nearly fully.
+- **Depth:** charge to 4.65 V (a gentle **2.32 V/cell**, kinder on the 85 °C cap life than BQ's 2.7 V),
+  drain to ~2 V at the load -> **~9-10 J usable vs today's 2.76 J (~3.5x)**, essentially tying BQ's raw depth
+  without stressing the cells.
+- **Dark power:** IQ **~6 nA** on STO (DS Table 5) -- ~80x better than BQ (488 nA), ~300x the NEH7100 (2 µA).
+- **SRC compatibility (the EM8504 killer, re-checked):** SRC abs max **5.5 V**, operating VSRC to 4.5 V --
+  our 4.15 V panels fit with margin. `R_MPP[2:0] = HLL` sets 80% Voc, the right ratio for silicon.
+- **The one weak axis -- noise:** the DCDC switches at **>=10 MHz** (DS §9.8.2), near the 13.56 MHz NFC band.
+  Handled by layout + gating (below), not by rejecting the part.
+
+### Board delta (roughly parts-neutral; real estate is not the constraint here)
+
+- **Add:** AEM10300 (QFN 4x4); one **10 µH** inductor (ISAT >=1 A, low-profile for the cavity); a nanopower
+  LDO (TPS7A02, 25 nA -> **3.3 V** for accel + MCU); CSRC 22 µF; CINT 10 µF; optional CSTO >=100 µF; an
+  island ferrite + cap on the STO feed.
+- **Delete (now redundant):** **U2 (ALD910025) balancer** -> the AEM's BAL pin (the headline simplification:
+  the SS17/WS17 balancing problem evaporates); **Q1 + U4 (TLV3011) + R7/R8** shunt clamp -> VOVCH does
+  overvoltage and the accel now lives on the LDO; **D10/D11 + C2** comparator-supply OR (no comparator);
+  **D1/D9** blocking diodes -> AEM harvest front-end.
+
+The pin-by-pin net assignments and the full deletion list for a manual respin are in
+`v4-aem10300-prewiring.md` (place the new parts to the side, wire each pin to the named net, delete the
+listed parts).
+
+### NFC noise: bonafide but engineerable (physics)
+
+At 13.56 MHz, λ/2π = 3.5 m, so the whole card is in the **near field** -> the switcher couples inductively
+(transformer-like) with field ~**1/r³** (-18 dB per doubling). Even adjacent, the switcher field models at
+~36 dB below the reader carrier, so distance is a strong lever. Strategy:
+
+- **Far-corner island** opposite the coil (~78 mm on this outline) -> **~-45 dB** vs adjacent, well past
+  sufficient (~40 mm already clears the load-modulation-depth band).
+- **Contain the conducted path** (distance does NOT fix it): keep the LIN/LOUT hot-loop tight and local,
+  moat the island ground with a single-point star tie, ferrite-filter the STO feed. (EMC guidance:
+  "return currents must not share the radio's return plane.")
+- **Gate it in time:** the DCDC switches only while harvesting; drive `EN_STO_CH` low during an NFC read so
+  it is silent for the ~ms that matter.
+
+### Firmware feasibility (the ask: validate it is possible, not a rework)
+
+Checked against the as-built `sense.c` / `main.c` / `board.h`. **Verdict: feasible, localized, no
+architectural blocker.**
+
+- **The one real change -- rail-sensing re-point.** Today `sense_vdd_mv()` reads the internal **VDD/10**
+  channel; that works only because VDD *is* the supercap rail. With the MCU on a regulated 3.3 V LDO,
+  VDD/10 goes constant and the cap-state gates (`sense_rail_ok`, `sense_caps_full`, the `sense_glow_peak`
+  brownout-stretch, `sense_ee_safe`, `sense_vmin`) go blind. Fix: a divider from **STO** (÷2, like the
+  existing R5/R6 VSENSE divider; STO 4.65 V -> 2.32 V, under the 2.500 V ref) into a spare ADC channel,
+  re-point `sense_vdd_mv()` to that AIN, and re-scale the four glow-threshold constants to the STO range.
+  A channel + scale edit, not new machinery -- the brownout-stretch is *exactly* what a direct-on-STO LED
+  rail wants, just re-pointed.
+- **The gate slots into existing code.** `main.c` already senses FD on PA6 both edges
+  (`PORT_ISC_BOTHEDGES_gc`) and blanks the LEDs on field-present. Add: FD falling -> drive `EN_STO_CH` low;
+  FD rising -> release. `EN_STO_CH` is 2.75 V-max, so emulate open-drain (drive low / go Hi-Z with an
+  external pull-up to VINT) -- standard on the AVR.
+- **Pin budget fits.** Spares today: PA4, PC0, PC1 (JP2.x), and only AIN2/PD2 of the ADC is used. Need one
+  ADC input (STO divider) + one GPIO (EN_STO_CH); ST_STO status is optional (the STO reading already gives
+  charge state). Comfortable, especially on a respin.
+- **Flash/RAM: trivial.** ~+150 B on a 64 KB part currently using ~2.4 KB; a few bytes RAM.
+- **Robustness bonus.** A regulated MCU rail removes the cold-start brown-out-stall risk flagged in §2 (the
+  AVR POR-release-vs-harvest race): the AEM owns the boost and hands the core a clean rail once charged, so
+  the stall-mitigation logic relaxes rather than grows.
+- **What does NOT change:** the TCA0 PWM engine (`led.c`, INVEN polarity included), the accel driver, NFC
+  provisioning, the tap/motion/dormancy logic, and the EEPROM loggers -- they inherit the re-pointed sense
+  functions unchanged.
+
+### Open items before adoption
+
+- **LED ballast + brightness:** at 4.65 V, 150 Ω gives ~16 mA/LED; resize to ~300 Ω (or cap PWM duty) and
+  re-tune the brightness-vs-STO curve across the wider swing.
+- **Keep MCU + accel on the same 3.3 V LDO** so the I²C bus sits at one level -- running the MCU off raw STO
+  (4.65 V) while the accel is at 3.3 V would over-volt the accel's SDA/SCL pins.
+- **Level-shift the AEM control pins:** EN_STO_CH open-drain to VINT; ST_STO (swings to VSTO) via a divider
+  before the 3.6 V-max MCU pin. A TVS on SRC is cheap insurance (panels are under the 5.5 V abs max, and
+  EN_STO_FT ties to GND since our source never exceeds 5 V).
+- **Inductor:** pick a specific 10 µH / >=1 A part thin enough for the cavity floor (the caps set 1.75 mm).
+- **The perennial #1 gate:** measure real indoor harvest -- the entire case for an active PMIC is
+  MPPT-in-dim-light, and that number is still unmeasured (§2).
+- **Enclosure:** the `v3_0-backshell` files stay frozen and are mechanically valid for `v4_0` as-is (the
+  cavity/outline are unchanged by the scaffold). Re-verify against the reworked board only if the rework
+  changes the Z-stack (e.g. a tall 10 uH inductor) or the outline; regenerate as a `v4_0-backshell` at that
+  point, not before.

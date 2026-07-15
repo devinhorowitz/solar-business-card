@@ -22,7 +22,7 @@ card's largest idle load. See **NFC contact card** below.
 >
 > The **NFC** firmware is verified against the NTAG I2C plus datasheet
 > (NT3H2111_2211 Rev 3.6), and the whole front-end is on the committed
-> `solar-glow-drh-v3_0.kicad_pcb`, verified from its copper: tag `U5`, the `U6`
+> `solar-glow-drh-v4_0.kicad_pcb`, verified from its copper: tag `U5`, the `U6`
 > (TPS22918) VCC load switch, `R14` and `C8` are placed (`R13` land present, DNP) and wired as this
 > firmware assumes — FD→PA6, NFC_EN→PA7→`U6` enable, `U6` gating VS→the switched
 > tag rail (`VNFC`), the internal PA6 pull-up holding FD to **VS** (`R13` now DNP), `R14` (1 M) holding NFC_EN low.
@@ -133,7 +133,7 @@ avrdude pattern; fill in the bytes from the datasheet fuse tables.
 > PA0–PA3 and the LED placements (D2–D5) are unchanged. (The PWM `INVEN` polarity in `led.c` is a
 > carried bench item — a one-line fix if the glow reads inverted.)
 
-## Pin map (read from `solar-glow-drh-v3_0.kicad_pcb`)
+## Pin map (read from `solar-glow-drh-v4_0.kicad_pcb`)
 
 AVR64DD28, VQFN-28, on the **back** of the board.
 

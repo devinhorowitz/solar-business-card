@@ -56,7 +56,7 @@ shell re-machine. Updated 2026-07-11._
   guard bounded to the sector-0 top (`NFC_BLK_NDEF_TOP` 0x37, was 0x7A — now rejects a
   write before the 0x3A config block; latent-only, current vCard unaffected).
 
-## PCB — `PCB/solar-glow-drh-v3_0.kicad_pcb` / `.kicad_sch`
+## PCB — `PCB/solar-glow-drh-v4_0.kicad_pcb` / `.kicad_sch`
 
 - [ ] **Q1 thermal copper** _(owner: Devin, manual push)._ Solid pad3→pour
   (`zone_connect 1`→`2`) + a GND thermal-via cluster **adjacent to** pad3 (not
