@@ -132,3 +132,48 @@ Nets removed: `CLBASE`, `CLREF`, `REF_TIE`, `VCMP`, `VIN`, `VINB`.
 - `scripts/check_consistency.py`: board.h pin map picks up PD1/PA4 additions; BOM gains U8/U9/L2/... and loses U2/U4/Q1/R7-9/D1/D9-11/C2.
 - Firmware (see the design-notes addendum firmware section): re-point `sense_vdd_mv()` from VDD/10 to the
   `STO_SNS` AIN, re-scale glow thresholds, add the EN_STO_CH gate on the FD edge.
+
+## 7. board.h additions (apply in lockstep with the schematic)
+
+`scripts/check_consistency.py` parses board.h's pin-map table and compares it against the **schematic
+netlist**, so these edits must land in the **same commit as the schematic net rename** (PD1 -> `STO_SNS`,
+PA4 -> `EN_STO_CH`). Do NOT apply them to board.h before the reworked board/schematic is in, or CI will flag
+board.h as ahead of the netlist. Staged here so the apply is mechanical.
+
+**Pin-map table** -- change the PA4 line, add a PD1 line (keep the column format the parser reads; net name
+must match the schematic exactly):
+
+```
+ *     2 PA4      EN_STO_CH  AEM10300 charge gate (open-drain, LOW = disable during NFC read)
+ *    11 PD1      STO_SNS    supercap-state sense  AIN1 (STO via R15/R16 divide-by-3)
+```
+
+PA4 was `spare GPIO (JP2.1)`; PD1 was unconnected. PD2/`VSENSE` keeps its pin but now senses `SRC` (light) --
+update its role comment; no functional change.
+
+**New #defines** (add near the existing sense / NFC blocks):
+
+```c
+/* ---- supercap-state sense on PD1 (AEM10300 STO via divide-by-3) ----
+ * VS is now the regulated 3.3 V LDO output (constant), so the old VDD/10 read no longer tracks
+ * the pack. STO (0.2..4.65 V) is divided by 3 into AIN1/PD1; the re-pointed sense_vdd_mv() reads
+ * this channel and scales back: STO_mv = pin_mv * STO_DIVIDER. */
+#define STO_SNS_AIN     ADC_MUXPOS_AIN1_gc     /* PD1 = AIN1 */
+#define STO_DIVIDER     3                       /* R15 / R16 = 2 M / 1 M */
+
+/* ---- AEM10300 charge gate on PA4 (EN_STO_CH), ACTIVE-LOW, emulated open-drain ----
+ * Drive OUTPUT-LOW to disable AEM charging -> the >=10 MHz DCDC goes quiet for an NFC read;
+ * RELEASE (set INPUT / Hi-Z) to re-enable (R17 pulls it to VINT). Driven from the FD both-edge
+ * handler in main.c (FD falling -> low, FD rising -> release). Open-drain because EN_STO_CH is
+ * 2.75 V-max while the MCU rail is 3.3 V. */
+#define ENSTOCH_PORT    PORTA
+#define ENSTOCH_PIN_bm  PIN4_bm
+```
+
+**Re-scale, do not add:** the existing glow gates (`VS_GLOW_FLOOR_MV`, `VS_GLOW_FULL_MV`,
+`SWEEP_CAPS_FULL_MV`, `EE_WRITE_FLOOR_MV`, `VS_GLOW_DIM_PEAK`) are now read against STO's 0.2..4.65 V range
+instead of the old clamped 2.6..3.5 V rail (the sense.c re-point makes `sense_vdd_mv()` return STO).
+Bench-tune the values; no new symbols needed.
+
+When the reworked board lands, I apply the two table lines + the #defines to board.h and make the matching
+`STO_SNS` / `EN_STO_CH` net names in the schematic in one commit, and `check_consistency.py` passes.
