@@ -888,6 +888,41 @@ architectural blocker.**
   provisioning, the tap/motion/dormancy logic, and the EEPROM loggers -- they inherit the re-pointed sense
   functions unchanged.
 
+### Supercap aging: the 2.32 V/cell float is safe for desk life (commit confirmed)
+
+The depth-vs-longevity worry -- does floating the cells higher (2.32 V vs today's 1.75 V) shorten a card
+meant to live on a desk for years? -- resolves in favor of committing. The SCHURTER SCPC catalog sheet
+(`SC1-SC4 ... 3-153-438`) gives only two aging-relevant hard numbers: **2.75 V/cell rating** and **85 °C
+max** -- no endurance hours, no voltage- or temperature-derating curve (those live in SCHURTER's separate
+approvals doc, not the catalog page). So the trade is *modeled* with the standard EDLC calendar-life law,
+anchored to those two facts: life roughly halves per **+10 °C** and per **+0.1-0.2 V** of cell voltage; the
+endurance spec is measured at (rated V, max T), and "end of life" is capacitance down to 70-80% / ESR
+doubled -- a *degraded* cell, not a dead one. Anchor L0 ~1000 h at (2.75 V, 85 °C), the industry norm for
+this low-ESR prismatic class.
+
+- **The card is temperature-limited, not voltage-limited.** On a desk (~25 °C) the cells sit **60 °C below
+  the 85 °C rating** -> `2^(60/10) = 64x` life before voltage even enters. The "occasional morning sun" is
+  thermally negligible: 2 h/day warming the board to ~42 °C moves the duty-weighted average to **26.4 °C**
+  (still ~58x). Heat, not float voltage, is what actually ages these caps -- and desk use keeps it benign.
+- **Both designs vastly outlive the product at desk temp.** Modeled years to endurance-EOL: unmanaged
+  1.75 V/cell -> **~234-7500 yr**; managed 2.32 V/cell -> **~32-139 yr**. Managed ages ~7-50x faster in
+  *relative* terms (the datasheet's 2.75 V rating confirms that band), but its **worst case ~32 yr** still
+  dwarfs a 10-20 yr business-card life. The margin you would "save" by floating lower is margin you can
+  never spend.
+- **2.32 V/cell is the sweet spot.** It is the knee of the energy-vs-life curve: 100% of the configured
+  usable energy, a comfortable **~0.42 V margin** below the 2.75 V rating, and the AEM's dual-cell balancer
+  keeps neither series cell drifting above it. Backing off buys longevity you cannot use at the cost of the
+  runtime that justifies the upgrade; pushing past ~2.55 V/cell finally drops life toward the product
+  window and eats the warm-day headroom.
+- **The one real aging risk is abuse heat, and it is dial-back-able.** A card baked at 65 °C (hot car,
+  summer windowsill) drops managed to **~2-9 yr** -- but that regime ages the unmanaged design too, the fix
+  is "do not bake a supercap," and VOVCH is a solder-strap (`STO_CFG`) choice: it can be set gentler later
+  with zero board respin. No engineering reason to pre-emptively surrender the energy.
+
+**Conclusion: commit to managed-solar at the configured 2.32 V/cell.** Desk temperature already wins the
+longevity war (the 64x thermal margin); the higher float just collects the ~3.5x usable-energy and
+MPPT-harvest prize on top, at a lifetime cost that is theoretical for this indoor-desk use profile.
+
 ### Open items before adoption
 
 - **LED ballast + brightness:** at 4.65 V, 150 Ω gives ~16 mA/LED; resize to ~300 Ω (or cap PWM duty) and
