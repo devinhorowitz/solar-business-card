@@ -2,7 +2,7 @@
 
 From the PCB side, responding to "Coordination items for the PCB side", the pivot from four
 Ti pillars to a resin sandwich brace, and the ferrite-backing addition. The committed
-`PCB/solar-glow-drh-v3_0.kicad_pcb` remains the source of truth; nothing below changes the
+`PCB/solar-glow-drh-v4_0.kicad_pcb` remains the source of truth; nothing below changes the
 board. Sections 1–2 close out your items; 3 is the new ferrite pocket spec (build this);
 4–8 are supporting notes.
 

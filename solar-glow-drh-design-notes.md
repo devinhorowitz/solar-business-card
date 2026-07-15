@@ -2,7 +2,7 @@
 
 Durable engineering rationale, hard-won findings, and future-variant ideas, distilled from the v0/v1 planning docs (since retired).
 
-**Authority order.** For the *current* design, the committed `solar-glow-drh-v3_0.kicad_pcb` /
+**Authority order.** For the *current* design, the committed `solar-glow-drh-v4_0.kicad_pcb` /
 `.kicad_sch` (v3.0, 2-layer) plus `README.md`'s current-revision table are ground truth; the 4-layer v2.3
 (in git history) is the fallback design. This file is the *reasoning archive* — the
 "why" and the "don't do that again" — with the **v3.0 deltas collected in §12**. Where an as-built
@@ -367,7 +367,7 @@ the LDRV fan moved):
   energy, not the farads.
 - **Pin authority — one source only.** Earlier drafts of this design carried two *different* pin
   assignments (VSENSE on PA5 with BTN on PA7; and the LEDs on PA4–PA7 / TCD0 with VSENSE on PC3)
-  — **neither matches the board.** The committed `solar-glow-drh-v3_0.kicad_sch` and
+  — **neither matches the board.** The committed `solar-glow-drh-v4_0.kicad_sch` and
   `solar-glow-drh-v2-hardware.md` are the only authoritative pin reference: LEDs PA0–PA3 / TCA0,
   VSENSE PD2, BTN PA5, I²C PC2/PC3, accel INT PF0/PF1. If anything else disagrees, it is wrong. **v3.0 permuted which LDRV net lands on which of PA0–PA3** (the fan untangle) — the pins are still PA0–PA3/TCA0, but the LDRV↔pin↔LED map changed; see §12 and `firmware/README.md`.
 
@@ -768,7 +768,9 @@ prioritization rather than a blanket "everything AEC-Q100" sweep.
 
 ## Addendum (2026-07-15) -- v4 active-harvest option: AEM10300 PMIC (field survey + firmware feasibility)
 
-**Status: v4 OPTION, not adopted. v3.0 (passive diode feed + shunt clamp) remains the current board.**
+**Status: v4.0 ADOPTED -- the managed-solar revision, and where development now goes.** v3.0 (passive diode
+feed + shunt clamp) is frozen as the final unmanaged-solar revision; the `v4_0` files start as a copy of it
+and are being reworked to the architecture below.
 This records the reasoning and a firmware feasibility check so the analysis does not evaporate.
 
 ### The problem it addresses
@@ -898,3 +900,7 @@ architectural blocker.**
 - **Inductor:** pick a specific 10 µH / >=1 A part thin enough for the cavity floor (the caps set 1.75 mm).
 - **The perennial #1 gate:** measure real indoor harvest -- the entire case for an active PMIC is
   MPPT-in-dim-light, and that number is still unmeasured (§2).
+- **Enclosure:** the `v3_0-backshell` files stay frozen and are mechanically valid for `v4_0` as-is (the
+  cavity/outline are unchanged by the scaffold). Re-verify against the reworked board only if the rework
+  changes the Z-stack (e.g. a tall 10 uH inductor) or the outline; regenerate as a `v4_0-backshell` at that
+  point, not before.

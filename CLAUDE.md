@@ -7,15 +7,19 @@ A business-card-sized PCB that runs on harvested indoor light: an **AVR64DD28**
 breathes four amber LEDs through a "DRH" monogram cut into the front copper
 (backlit through bare FR4), while two indoor solar cells trickle-charge a
 **1 F / 5.5 V supercap tank**. Tap-to-wake via accelerometer (no button); an NFC
-tag serves a contact vCard. Current revision: **v3.0, 2-layer, fully routed, not
-yet fabbed.**
+tag serves a contact vCard. Current revision: **v4.0 -- the managed-solar redesign
+(AVR64DD28 + AEM10300 active harvest), in progress; the working files are `v4_0`.**
+v3.0 (2-layer, fully routed, passive diode feed + shunt clamp) is frozen as the
+**final unmanaged-solar revision**. The v4 rework is specified in the v4 addendum of
+`solar-glow-drh-design-notes.md` and the net/pin plan `v4-aem10300-prewiring.md`; the
+`v4_0` files currently start as a copy of `v3_0` and are being reworked from there.
 
 ## Where the truth lives
 Each fact has exactly one home; everything else points at it. The canonical map
 is the "Where the truth lives" table in `README.md`. In short:
-- Board copper / geometry → `PCB/solar-glow-drh-v3_0.kicad_pcb` / `.kicad_sch`
+- Board copper / geometry → `PCB/solar-glow-drh-v4_0.kicad_pcb` / `.kicad_sch`
 - Firmware pin map + tunables → `firmware/board.h` and `firmware/README.md`
-- BOM master → `PCB/solar-glow-drh-v3_0-BOM.xlsx`
+- BOM master → `PCB/solar-glow-drh-v4_0-BOM.xlsx`
 - Design reasoning / lineage → `solar-glow-drh-design-notes.md`
 
 When a doc disagrees with a source file, **the source file wins** and the doc is
@@ -32,8 +36,8 @@ Should compile **warning-free** (`-Wall -Wextra -Wundef`); ~2.4 KB flash, 6 B RA
 
 **PCB** (KiCad 10 `kicad-cli`):
 ```sh
-kicad-cli sch erc --severity-all PCB/solar-glow-drh-v3_0.kicad_sch
-kicad-cli pcb drc --refill-zones --schematic-parity --severity-all PCB/solar-glow-drh-v3_0.kicad_pcb
+kicad-cli sch erc --severity-all PCB/solar-glow-drh-v4_0.kicad_sch
+kicad-cli pcb drc --refill-zones --schematic-parity --severity-all PCB/solar-glow-drh-v4_0.kicad_pcb
 ```
 DRC/ERC are **not** expected to be zero — the intentional exceptions are catalogued
 in `README.md` and filtered in `PCB/solar-glow-drh.kibot.yaml`. Every real DRC error

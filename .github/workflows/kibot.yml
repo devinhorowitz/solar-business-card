@@ -26,8 +26,8 @@ jobs:
         with:
           config: PCB/solar-glow-drh.kibot.yaml
           dir: Generated
-          board: PCB/solar-glow-drh-v3_0.kicad_pcb
-          schema: PCB/solar-glow-drh-v3_0.kicad_sch
+          board: PCB/solar-glow-drh-v4_0.kicad_pcb
+          schema: PCB/solar-glow-drh-v4_0.kicad_sch
  
       - name: Commit generated outputs
         run: |

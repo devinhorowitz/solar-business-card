@@ -84,7 +84,7 @@ def make(render_path, out_path, mirrored, side_label):
 if __name__ == "__main__":
     root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     g = lambda p: os.path.join(root, p)
-    make(g("Generated/docs/solar-glow-drh-v3_0-top.png"),
+    make(g("Generated/docs/solar-glow-drh-v4_0-top.png"),
          g("docs/solar-glow-drh-panel-outline-top.png"), False, "F.Cu (front)")
-    make(g("Generated/docs/solar-glow-drh-v3_0-bottom.png"),
+    make(g("Generated/docs/solar-glow-drh-v4_0-bottom.png"),
          g("docs/solar-glow-drh-panel-outline-bottom.png"), True, "B.Cu (back, mirrored)")

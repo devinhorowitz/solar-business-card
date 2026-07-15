@@ -1,6 +1,6 @@
 # SOLAR-GLOW · DRH — PCB (v3.0): Order & Build Guide
 
-![Generated/docs/solar-glow-drh-v3_0-bottom.png](https://github.com/devinhorowitz/solar-business-card/blob/main/Generated/docs/solar-glow-drh-v3_0-bottom.png)
+![Generated/docs/solar-glow-drh-v4_0-bottom.png](https://github.com/devinhorowitz/solar-business-card/blob/main/Generated/docs/solar-glow-drh-v4_0-bottom.png)
 
 This folder holds the **board** for SOLAR-GLOW · DRH — the KiCad project, the bill of
 materials, and the artwork reference for the SW2 selector. It is the thing you fab and
@@ -9,21 +9,21 @@ parts, and how to build the assembly.**
 
 ```
 PCB/
-├── solar-glow-drh-v3_0.kicad_pro     # KiCad project (open this)
-├── solar-glow-drh-v3_0.kicad_sch     # schematic
-├── solar-glow-drh-v3_0.kicad_pcb     # board — 2-layer, routed, teardropped (source of truth)
-├── solar-glow-drh-v3_0.kicad_prl     # local project state
-├── solar-glow-drh-v3_0.kicad_dru     # two-tier design rules (PCBWay floor + marginal band)
+├── solar-glow-drh-v4_0.kicad_pro     # KiCad project (open this)
+├── solar-glow-drh-v4_0.kicad_sch     # schematic
+├── solar-glow-drh-v4_0.kicad_pcb     # board — 2-layer, routed, teardropped (source of truth)
+├── solar-glow-drh-v4_0.kicad_prl     # local project state
+├── solar-glow-drh-v4_0.kicad_dru     # two-tier design rules (PCBWay floor + marginal band)
 ├── solar-glow-drh.kibot.yaml         # CI recipe — regenerates ../Generated/ on every push
-├── solar-glow-drh-v3_0-BOM.xlsx      # bill of materials — v3.0 master (U6 + R14; all-0402)
-├── solar-glow-drh-v3_0-BOM-assembly.xlsx  # trimmed PCBA BOM (36 placed parts)
+├── solar-glow-drh-v4_0-BOM.xlsx      # bill of materials — v3.0 master (U6 + R14; all-0402)
+├── solar-glow-drh-v4_0-BOM-assembly.xlsx  # trimmed PCBA BOM (36 placed parts)
 ├── sw2-anode-selector.png            # how to read/set the SW2 OFF/ON/TINY bridge
 ├── led-orientation-D2-D5.png         # reverse-mount LED rotation reference for PCBA
 └── DRC.rpt / ERC.rpt                 # last GUI report exports (CI keeps live copies in ../Generated/)
                                       # (v2_1 / v2_2 / v2_3 revisions live in git history, not this folder)
 ```
 
-> **The board is the source of truth.** `solar-glow-drh-v3_0.kicad_pcb` / `.kicad_sch`
+> **The board is the source of truth.** `solar-glow-drh-v4_0.kicad_pcb` / `.kicad_sch`
 > govern. The design *reasoning* lives one level up:
 > - `../solar-glow-drh-v2-hardware.md` — as-built pin map and net list (the firmware target).
 > - `../solar-glow-drh-v2-mechanical.md` — board envelope, heights, mount holes, keepouts.
@@ -73,11 +73,11 @@ crossing or to flood the region gets declined.
 
 ## Step 1 — Open the project and run DRC
 
-1. Open `solar-glow-drh-v3_0.kicad_pro` in **KiCad** (designed in the 2026 file format).
+1. Open `solar-glow-drh-v4_0.kicad_pro` in **KiCad** (designed in the 2026 file format).
 2. Register the footprint library: the board uses a local `solarglow` library that is not
    registered on a fresh machine. Add it under **Preferences → Manage Footprint Libraries**
    (or accept KiCad's prompt) so the footprints resolve.
-3. **Run DRC.** The project carries a two-tier rule file (`solar-glow-drh-v3_0.kicad_dru`):
+3. **Run DRC.** The project carries a two-tier rule file (`solar-glow-drh-v4_0.kicad_dru`):
    - **error tier** = the do-not-ship floor (clearance/track ≥ 0.126 mm, annular ≥ 0.125,
      drill ≥ 0.2) — sized against PCBWay's stated 2-layer capability;
    - **warning tier** = the *marginal band* [0.126, 0.1524): PCBWay-legal geometry that is
@@ -189,8 +189,8 @@ hand-tinning. Order it alongside the board.
 
 ## Step 4 — Order the parts
 
-**BOM state.** The masters are now **`solar-glow-drh-v3_0-BOM.xlsx`** and
-**`solar-glow-drh-v3_0-BOM-assembly.xlsx`**, generated from the v2.2 files with three fixes:
+**BOM state.** The masters are now **`solar-glow-drh-v4_0-BOM.xlsx`** and
+**`solar-glow-drh-v4_0-BOM-assembly.xlsx`**, generated from the v2.2 files with three fixes:
 **U6 (TPS22918) and R14 (1 M `NFC_EN` pulldown) added**, the stale **JP1/JP2 rows dropped** (the `JP1` designator is reused for the v3.0 bench pad strip — bare pads, not a BOM part)
 (those headers left the board in v3.0), and **every passive except SJ1 converted to 0402** to match
 the board's placed lands — the v2.2 file still listed 0805 MPNs for most R/C. Converted and added
@@ -256,7 +256,7 @@ types by hand afterward.
 
 **The split**
 - **PCBWay machine-places** (reflow, bottom, **40 parts**): U1–U6, Q1, D1, D9, D10, D11, D2–D5,
-  R1–R12, R14 (R13 is DNP), SJ1, C1–C8, C11–C13 (C10 is DNP). `solar-glow-drh-v3_0-BOM-assembly.xlsx` is that trimmed file —
+  R1–R12, R14 (R13 is DNP), SJ1, C1–C8, C11–C13 (C10 is DNP). `solar-glow-drh-v4_0-BOM-assembly.xlsx` is that trimmed file —
   **regenerate it to 40**: D10/D11 are fitted SMD, and R13 + C10 are now DNP (consolidation) so they drop off the placement list.
 - **You hand-solder afterward:** SC1–SC4 supercaps and PV1–PV2 solar cells. They are kept
   **off** the PCBA BOM on purpose — the supercaps are manual-solder only (SCHURTER SCPC),

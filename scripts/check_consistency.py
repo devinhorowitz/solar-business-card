@@ -31,7 +31,10 @@ import tempfile
 import xml.etree.ElementTree as ET
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SCH = os.path.join(ROOT, "PCB", "solar-glow-drh-v3_0.kicad_sch")
+SCH = os.path.join(ROOT, "PCB", "solar-glow-drh-v4_0.kicad_sch")
+# v4_0 board is a copy of v3_0 at scaffold time, so the frozen v3_0 BOM still matches the v4_0
+# netlist. kibot regenerates a v4_0 BOM on the next PCB push; bump this to v4_0-bom.csv in lockstep
+# with the managed-solar rework (when the netlist actually diverges). See v4-aem10300-prewiring.md.
 BOM = os.path.join(ROOT, "Generated", "fabdocs", "solar-glow-drh-v3_0-bom.csv")
 MCU = "U1"
 

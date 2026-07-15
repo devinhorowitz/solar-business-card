@@ -5,9 +5,12 @@ A business card that runs on light. An AVR microcontroller breathes four amber L
 backlight it through the bare fiberglass — while a pair of indoor solar cells trickle-charge
 a supercapacitor bank that holds the charge.
 
-![SOLAR-GLOW · DRH — front and back, gold ENIG on black soldermask](https://github.com/devinhorowitz/solar-business-card/blob/main/Generated/docs/solar-glow-drh-v3_0-top.png)
+![SOLAR-GLOW · DRH — front and back, gold ENIG on black soldermask](https://github.com/devinhorowitz/solar-business-card/blob/main/Generated/docs/solar-glow-drh-v4_0-top.png)
 
-> **Status: v3.0 — fully routed, audit-clean. Not yet fabbed.**
+> **Status: v4.0 (managed-solar redesign) in progress** -- working files are `v4_0`, currently the v3.0
+> baseline being reworked to the AEM10300 active-harvest architecture (see the design-notes v4 addendum +
+> `v4-aem10300-prewiring.md`). **v3.0 -- fully routed, audit-clean, not yet fabbed -- is frozen as the final
+> unmanaged-solar revision.**
 > Two-layer, 0.6 mm FR4, bound for PCBWay; the 4-layer **v2.3** is the fallback design, kept in git history (not the working tree).
 > The one thing standing between here and a build is the **energy budget** — harvest vs. draw under
 > real indoor light has never been measured. See *“The open question.”*
@@ -20,7 +23,7 @@ a supercapacitor bank that holds the charge.
 | Board | 50.80 × 88.90 mm, r3.0 corners, **0.60 mm** FR4, ENIG, matte-black mask | 0.6 mm — committed in the board stackup (frees the shell floor to 1.0 mm) |
 | Mounting holes | 4× M2, GND, at **(3.0, 3.0) / (47.8, 3.0) / (3.0, 85.9) / (47.8, 85.9)**, pitch **44.80 × 82.90 mm** | concentric with the r3.0 corner fillets |
 | **Enclosure** | **v3.0 Ti back-shell** — 1.00 floor, 1.80 cavity (0.95 local under U2), overall **3.55 mm**; center support via the resin diffuser brace | matches the v3.0 hole pattern; see `enclosure/README.md` |
-| BOM | **v3_0 masters** — U6 + R14 added, JP1/JP2 dropped (JP1 later reused for the bench pad strip), all passives except SJ1 now 0402 | master is `PCB/solar-glow-drh-v3_0-BOM.xlsx`; placed set in `-BOM-assembly.xlsx` |
+| BOM | **v3_0 masters** — U6 + R14 added, JP1/JP2 dropped (JP1 later reused for the bench pad strip), all passives except SJ1 now 0402 | master is `PCB/solar-glow-drh-v4_0-BOM.xlsx`; placed set in `-BOM-assembly.xlsx` |
 | Firmware | register-verified C, not yet on hardware | LED pin map re-mapped in v3.0 (see `firmware/README.md`) |
 
 ### Where the truth lives — how these docs stay from drifting
@@ -29,10 +32,10 @@ Each fact has exactly one home; everything else points at it rather than restati
 
 | Domain | Source of truth |
 |---|---|
-| Board copper / geometry / holes | `PCB/solar-glow-drh-v3_0.kicad_pcb` + `.kicad_sch` |
+| Board copper / geometry / holes | `PCB/solar-glow-drh-v4_0.kicad_pcb` + `.kicad_sch` |
 | Enclosure geometry | `enclosure/solar-glow-drh-v3_0-backshell-0p6b-brace-cad.py` (prints the Z-stack; regenerates the STEP) |
 | Firmware pin map + knobs | `firmware/board.h` (+ `firmware/README.md`; both match the schematic) |
-| BOM | `PCB/solar-glow-drh-v3_0-BOM.xlsx` (v3.0 master — converted lines have prices blanked pending quote; see `PCB/README.md` Step 4) |
+| BOM | `PCB/solar-glow-drh-v4_0-BOM.xlsx` (v3.0 master — converted lines have prices blanked pending quote; see `PCB/README.md` Step 4) |
 | Design *reasoning* / lineage | `solar-glow-drh-design-notes.md` |
 | Open work / cross-domain to-dos | `TODO.md` (an index of what's left; each item points back at the files above) |
 
@@ -91,7 +94,7 @@ tie jumper (`SJ1`), and **four grounded M2 mounting holes** at the corners. (The
 `JP1`/`JP2` 2.54 mm breakout headers are gone; the `JP1` name is reused for the strip.)
 
 Full part numbers, pricing, and per-part datasheet links are in
-**`PCB/solar-glow-drh-v3_0-BOM.xlsx`** — the master BOM (v3.0): **U6 (TPS22918) and R14 (1 M `NFC_EN` pulldown) included**, the stale JP1/JP2 rows dropped (the `JP1` designator is reused in v3.0 for the bench pad strip — bare pads, no BOM part), and every passive except SJ1 converted to **0402** to match the board lands. Converted/added lines have prices blanked pending a fresh quote (U6 quoted: TPS22918DBVR $0.55 @ qty 1, DigiKey 2026-07-02). Lineage: v2.2 added the NFC parts (U5 / C8 / C9 / R13); the `v2 2` and older BOM files stay in the repo as history.
+**`PCB/solar-glow-drh-v4_0-BOM.xlsx`** — the master BOM (v3.0): **U6 (TPS22918) and R14 (1 M `NFC_EN` pulldown) included**, the stale JP1/JP2 rows dropped (the `JP1` designator is reused in v3.0 for the bench pad strip — bare pads, no BOM part), and every passive except SJ1 converted to **0402** to match the board lands. Converted/added lines have prices blanked pending a fresh quote (U6 quoted: TPS22918DBVR $0.55 @ qty 1, DigiKey 2026-07-02). Lineage: v2.2 added the NFC parts (U5 / C8 / C9 / R13); the `v2 2` and older BOM files stay in the repo as history.
 
 ---
 
@@ -141,10 +144,10 @@ the duty cycle, the feature set, and whether the always-on accelerometer earns i
 solar-business-card/
 ├── README.md                       # this file (canonical current-revision summary)
 ├── PCB/                            # KiCad projects + fabrication BOM
-│   ├── solar-glow-drh-v3_0.kicad_pcb   # the board — v3.0, 2-layer (source of truth)
-│   ├── solar-glow-drh-v3_0.kicad_sch   # schematic (v3.0)
-│   ├── solar-glow-drh-v3_0-BOM.xlsx    # bill of materials — v3.0 master (U6 + R14; all-0402)
-│   ├── solar-glow-drh-v3_0-BOM-assembly.xlsx  # placed-parts BOM for PCBA (42 parts; xlsx regen pending)
+│   ├── solar-glow-drh-v4_0.kicad_pcb   # the board — v3.0, 2-layer (source of truth)
+│   ├── solar-glow-drh-v4_0.kicad_sch   # schematic (v3.0)
+│   ├── solar-glow-drh-v4_0-BOM.xlsx    # bill of materials — v3.0 master (U6 + R14; all-0402)
+│   ├── solar-glow-drh-v4_0-BOM-assembly.xlsx  # placed-parts BOM for PCBA (42 parts; xlsx regen pending)
 │   └── README.md                       # order & build guide
 ├── solar-glow-drh-v2-hardware.md   # as-built wiring & pin map (v2-era; v3.0 LED-map delta noted at top)
 ├── solar-glow-drh-v2-mechanical.md # board mechanics, keepouts, access (v2-era; v3.0 hole/enclosure deltas at top)
@@ -162,7 +165,7 @@ solar-business-card/
 
 The board is a KiCad project — open it, run DRC, and export the fab set:
 
-1. Open `solar-glow-drh-v3_0.kicad_pro` in **KiCad** (2026 file format).
+1. Open `solar-glow-drh-v4_0.kicad_pro` in **KiCad** (2026 file format).
 2. **Run DRC.** It comes back clean apart from the intentional exceptions catalogued in
    `PCB/README.md` and `solar-glow-drh-design-notes.md` (the NFC coil `LA`↔`LB` short, the four
    GND-tie mounting-hole/gold-frame contacts, the two plating-bus stubs crossing Edge.Cuts at
