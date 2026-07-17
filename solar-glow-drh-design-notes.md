@@ -923,6 +923,16 @@ this low-ESR prismatic class.
 longevity war (the 64x thermal margin); the higher float just collects the ~3.5x usable-energy and
 MPPT-harvest prize on top, at a lifetime cost that is theoretical for this indoor-desk use profile.
 
+![Supercap aging: life vs float voltage, desk vs abuse heat](images/supercap-aging.png)
+
+*Modeled SCPC calendar life vs cell float voltage: at desk temperature both floats vastly outlive the
+product; managed's worst case is still ~32 yr.*
+
+![Unmanaged vs managed: what the upgrade buys](images/managed-vs-unmanaged.png)
+
+*The managed-vs-unmanaged trade the aging analysis sits inside: ~2.8x usable energy and the harvest
+gain, against the higher (but still multi-decade at desk temp) cell float.*
+
 ### Open items before adoption
 
 - **LED ballast + brightness:** at 4.65 V, 150 Ω gives ~16 mA/LED; resize to ~300 Ω (or cap PWM duty) and

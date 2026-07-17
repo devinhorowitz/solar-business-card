@@ -5,6 +5,12 @@ geometry, and panel survey do not evaporate. This is a *variant* idea (a differe
 modality on the same harvest / supercap / NFC / accel platform), not a v4 feature and not a
 v3.0 change. Nothing here is committed to the board.
 
+![E-ink variant product mockup, both directions to scale](images/eink-card-mockup.png)
+
+*The concept in the card, both directions to scale: the 1.54" e-ink hero (left) vs the 1.02" strip
+beside the amber DRH monogram (right), with real 1-bit artwork + a scannable QR on the panel. Detail
+in section 6.*
+
 ## 1. The idea in one line
 
 Add a **bistable e-paper panel** as a persistent visual layer on the card face -- a name + a
@@ -79,7 +85,22 @@ is ~42 x 27 mm) -- prototype on those, embed the bare panel.
 - **Flexible variants (0.3 mm)** are thinner than the FR4 and will not crack in a wallet -- the
   right pick for a card. Glass is ~0.7-1.05 mm (still thin vs the 1.75 mm supercap cavity).
 
+![Smallest panels vs the PV1-PV2 gap, to scale](images/eink-gap-fit.png)
+
+*Smallest graphic panels against the 31.9 mm gap: 1.02" and 0.97" fit with margin, 1.54" overflows
+if laid vertically.*
+
+![Horizontal orientation fit](images/eink-horizontal-fit.png)
+
+*Laid horizontally (long axis along the width): the 1.54" 31.8 mm side just clears the 31.9 mm gap,
+while the 2.13" overhangs both card edges -- the 50.8 mm width is the wall.*
+
 ## 6. The two variants (both drawn as to-scale mockups this session)
+
+![What each resolution renders, 1-bit, true relative size](images/eink-resolution-workup.png)
+
+*What each resolution actually renders (1-bit, true relative size): 1.54" carries ~4x the pixels of
+1.02" -- a full contact QR + name + firm + live counter, vs a cramped short-URL strip.*
 
 **A. E-ink HERO (1.54", 200 x 200).** The display *is* the card face: contact QR + DRH monogram
 + name + firm + live tap-counter, all legible. It **fills** the 31.9 mm gap edge-to-edge (needs
