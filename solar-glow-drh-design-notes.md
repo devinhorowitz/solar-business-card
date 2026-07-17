@@ -923,6 +923,16 @@ this low-ESR prismatic class.
 longevity war (the 64x thermal margin); the higher float just collects the ~3.5x usable-energy and
 MPPT-harvest prize on top, at a lifetime cost that is theoretical for this indoor-desk use profile.
 
+![Supercap aging: life vs float voltage, desk vs abuse heat](images/supercap-aging.png)
+
+*Modeled SCPC calendar life vs cell float voltage: at desk temperature both floats vastly outlive the
+product; managed's worst case is still ~32 yr.*
+
+![Unmanaged vs managed: what the upgrade buys](images/managed-vs-unmanaged.png)
+
+*The managed-vs-unmanaged trade the aging analysis sits inside: ~2.8x usable energy and the harvest
+gain, against the higher (but still multi-decade at desk temp) cell float.*
+
 ### Open items before adoption
 
 - **LED ballast + brightness:** at 4.65 V, 150 Ω gives ~16 mA/LED; resize to ~300 Ω (or cap PWM duty) and
@@ -939,3 +949,25 @@ MPPT-harvest prize on top, at a lifetime cost that is theoretical for this indoo
   cavity/outline are unchanged by the scaffold). Re-verify against the reworked board only if the rework
   changes the Z-stack (e.g. a tall 10 uH inductor) or the outline; regenerate as a `v4_0-backshell` at that
   point, not before.
+
+## Addendum (2026-07-17) -- variant idea: e-ink display face (full notes in `eink-display-variant-notes.md`)
+
+Not a v4 feature and not a v3.0 change -- a **separate variant** on the same harvest / supercap / NFC /
+accel platform, logged so the reasoning does not evaporate. The pitch: a **bistable e-paper panel** as a
+persistent visual face (name + a scannable QR mirroring the NFC vCard + the live tap-counter), so a flat,
+dark card is still readable and scannable, and only *adds* glow + NFC once it harvests. Bistability is the
+match -- write once, hold forever at zero draw -- and it **power-gates to zero standby** via the same load
+switch the NFC tag uses.
+
+- **Geometry (measured on `v4_0`):** the clear window between PV1 (Y 5.5-28.5) and PV2 (Y 60.4-83.4) is
+  **31.9 mm tall x ~48 mm wide**. Two walls: the 31.9 mm gap height, and the 50.8 mm card width.
+- **Smallest that fit:** **1.02"** (32.57 x 18.6, 128 x 80) drops in easily; the near-square **1.54"**
+  (37.32 x 31.8, 200 x 200) fits **only rotated horizontally** (31.8 into 31.9) and buys ~4x the pixels;
+  the 2.13" strip is **too long** (59.2 mm glass > 50.8 mm card). Below ~1.0" it is segmented/icon-only.
+- **Two directions:** **e-ink HERO (1.54")** -- the display *is* the face, fills the gap, displaces the
+  LED monogram + NFC coil (a genuinely different card); vs **LED hero + e-ink STRIP (1.02")** -- amber
+  monogram stays the star, EPD is a cramped tuck-in footnote.
+- **Costs:** ~tens of mJ/refresh (~1 tap, gate on caps-full, event-driven only); ~6 SPI/control pins (or
+  I2C for a segment part); 0-50 C (holds cold, refreshes warm); prefer a flexible 0.3 mm panel.
+- **Gating question:** refresh-energy vs desk harvest -- which is the **#1 open gate** again, so the
+  `harvest-bench-fixture-handoff.md` measurement comes first.
