@@ -1,5 +1,5 @@
 Row,Description,Part,References,Value,Footprint,Quantity Per PCB,Status,Datasheet,MPN
-1,100 nF X7R decoupling VSENSE filter 100 nF,C1,C1 C2 C3 C5 C6 C7 C8 C12,100nF,C1,8, ,,GRM155R71C104KA88D
+1,100 nF X7R decoupling VSENSE filter 100 nF,C1,C1 C2 C3 C5 C6 C7 C8 C12 C22 C23 C24 FB1 L2 R15 R16 R17 U9,100nF,C1,17, ,,GRM155R71C104KA88D
 2,Accelerometer VREG_OUT decoupling 0.22 uF,C11,C11,220nF,C11,1, ,,GRM155R71C224KA12D
 3,VS bulk 4.7 uF LED-anode bulk 4.7 uF,C4,C4 C13,4.7uF,C4,2, ,,GRM155R61A475MEAAD
 4,Glow LED - reverse-mount amber,D2,D2 D3 D4 D5,LA P47F,D2,4, ,datasheets/D2-D5  LA P47F-V2BB-24-3B5A-30-R18-Z  $0.43.pdf,LA P47F-V2BB-24-3B5A-30-R18-Z
@@ -29,11 +29,11 @@ Project info:
 Schematic:,solar-glow-drh-v4_0
 Variant:,default
 Revision:,
-Date:,2026-07-18_18-50-17
+Date:,2026-07-18_22-25-03
 KiCad Version:,10.0.4-10.0.4~ubuntu25.10.1
 Statistics:
 Component Groups:,24
-Component Count:,44
-Fitted Components:,41
+Component Count:,53
+Fitted Components:,50
 Number of PCBs:,1
-Total Components:,41
+Total Components:,50
