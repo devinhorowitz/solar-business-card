@@ -135,6 +135,17 @@ Nets removed: `CLBASE`, `CLREF`, `REF_TIE`, `VCMP`, `VIN`, `VINB`.
 
 ## 7. board.h additions (apply in lockstep with the schematic)
 
+> **STAGED (2026-07-18):** these edits are captured as **`v4-aem10300-boardh.patch`** (repo root),
+> verified `git apply --check` clean against the current board.h. **board.h itself is left UNCHANGED
+> on purpose** -- applying it before the reworked schematic carries the new nets would fail
+> `check_consistency.py` [1] (board.h would claim PA4 -> EN_STO_CH / PD1 -> STO_SNS while the exported
+> netlist still says PA4 / unconnected). When the reworked `.kicad_pcb` + `.kicad_sch` land, in the
+> **same commit**: run `git apply v4-aem10300-boardh.patch`, and make the schematic put **U1.PA4 on net
+> `EN_STO_CH`** and **U1.PD1 on net `STO_SNS`** (exact strings; PD2/`VSENSE` keeps its net name but now
+> divides `SRC`). Then the pin contract matches and CI passes. The patch is minimal (pin-map + the two
+> `#define` blocks); bumping the board.h header `v3.0 -> v4.0` and swapping residual `VIN` comments to
+> `SRC` are cosmetic follow-ups, not in the patch.
+
 `scripts/check_consistency.py` parses board.h's pin-map table and compares it against the **schematic
 netlist**, so these edits must land in the **same commit as the schematic net rename** (PD1 -> `STO_SNS`,
 PA4 -> `EN_STO_CH`). Do NOT apply them to board.h before the reworked board/schematic is in, or CI will flag
