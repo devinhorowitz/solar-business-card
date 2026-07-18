@@ -130,8 +130,9 @@ Nets removed: `CLBASE`, `CLREF`, `REF_TIE`, `VCMP`, `VIN`, `VINB`.
 
 - ERC/DRC: the vanished nets (VCMP/CLBASE/...) leave no dangling pins; `SRC`/`STO`/`VINT`/`LX_*` are new.
 - `scripts/check_consistency.py`: board.h pin map picks up PD1/PA4 additions; BOM gains U8/U9/L2/... and loses U2/U4/Q1/R7-9/D1/D9-11/C2.
-- Firmware (see the design-notes addendum firmware section): re-point `sense_vdd_mv()` from VDD/10 to the
-  `STO_SNS` AIN, re-scale glow thresholds, add the EN_STO_CH gate on the FD edge.
+- Firmware (staged as `v4-aem10300-firmware.patch`, see section 8): re-points `sense_vdd_mv()` + the four
+  rail gates from VDD/10 to the `STO_SNS` AIN, re-folds the count macros, and adds the EN_STO_CH
+  open-drain gate on the FD edge.
 
 ## 7. board.h additions (apply in lockstep with the schematic)
 
@@ -188,3 +189,33 @@ Bench-tune the values; no new symbols needed.
 
 When the reworked board lands, I apply the two table lines + the #defines to board.h and make the matching
 `STO_SNS` / `EN_STO_CH` net names in the schematic in one commit, and `check_consistency.py` passes.
+
+## 8. Firmware re-point (staged as `v4-aem10300-firmware.patch`)
+
+Companion to the board.h patch above -- the sense/gate code the new rail topology needs. **Staged, not
+applied:** it references the board.h patch's `STO_SNS_AIN` / `STO_DIVIDER` / `ENSTOCH_*` defines, so it only
+compiles once board.h is patched; landing it early would fail the firmware CI build. Apply it in the **same
+commit** as the board.h patch + reworked board/schematic: `git apply v4-aem10300-firmware.patch`.
+
+What it changes:
+- **`sense.c` (7 hunks):** re-points `sense_vdd_mv()` and the four rail gates (`sense_rail_ok`,
+  `sense_caps_full`, `sense_ee_safe`, and `sense_glow_peak` via `sense_vdd_mv`) from the internal **VDD/10**
+  channel to the **STO divider on PD1/AIN1** (`STO_SNS_AIN`), scaling by `STO_DIVIDER` (x3) -- the same
+  divider-pin form `sense_vin_mv()` already uses. The compile-time count macros (`RAIL_COUNT`,
+  `CAPS_FULL_COUNT`, `EE_SAFE_COUNT`) are re-folded for the STO/3 channel (like `SUN_COUNT`), dropping the
+  old VDD/10 10-mV-quantization intermediates.
+- **`main.c` (3 hunks):** PD1 pull-up -> `PORT_ISC_INPUT_DISABLE_gc` (analog input); PA4 spare pull-up ->
+  the **EN_STO_CH open-drain gate** (OUT latch LOW, DIR toggled -- Hi-Z = charge on via R17 -> VINT, driven
+  LOW = charge off; never driven HIGH into the 2.75 V-max pin); and the FD ISR (`PORTA_PORT_vect`) drives it
+  -- LOW on the falling edge (field present, silence the >=10 MHz DCDC for the read), released on the rising
+  edge.
+
+Verified (no AVR toolchain here -- CI does the real cross-compile at apply time): `git apply --check` clean,
+brace/paren balanced, and the re-folded count macros are in-range and monotonic across STO's 0.2-4.65 V span
+(VS_GLOW_FLOOR 2600 -> 1420, EE_WRITE_FLOOR 2700 -> 1475, SWEEP_CAPS_FULL 3300 -> 1803; max STO count ~2540,
+all < 4096, no saturation).
+
+**Bench-tune after wiring:** the threshold *values* (`VS_GLOW_FLOOR_MV`, `VS_GLOW_FULL_MV`,
+`SWEEP_CAPS_FULL_MV`, `EE_WRITE_FLOOR_MV`, `VS_GLOW_DIM_PEAK`) are still the v3 clamped-rail numbers; they now
+act on STO's wider 0.2-4.65 V range and want re-tuning (e.g. caps-full nearer VOVCH 4.65 V, not 3.3 V).
+Cosmetic follow-up not in the patch: a few residual "VDD/10" mentions in `sense.h` and `sense_glow_peak`.
