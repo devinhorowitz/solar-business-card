@@ -1,8 +1,12 @@
-** Drc report for solar-glow-drh-v3_0.kicad_pcb **
-** Created on 2026-07-13T01:12:06 **
+** Drc report for solar-glow-drh-v4_0.kicad_pcb **
+** Created on 2026-07-18T18:22:35 **
 ** Report includes: Errors, Warnings, Exclusions **
 
-** Found 10 DRC violations **
+** Found 11 DRC violations **
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(2.4900 mm, 53.9500 mm): Polygon of U9 on B.Silkscreen
+    @(1.9812 mm, 54.2016 mm): Pad 2 [STO] of FB1 on B.Cu
 [tracks_crossing]: Tracks crossing
     Rule: clearance-hard-floor; error (excluded)
     @(41.0000 mm, 52.4200 mm): Track [LA] on B.Cu, length 14.4200 mm
