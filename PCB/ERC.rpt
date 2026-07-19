@@ -1,15 +1,15 @@
-ERC report (2026-07-19T09:14:20, Encoding UTF8)
+ERC report (2026-07-19T10:11:11, Encoding UTF8)
 Report includes: Errors, Warnings, Exclusions
 
 ***** Sheet /
 [isolated_pin_label]: Label connected to only one pin
-    ; warning
+    ; warning (excluded)
     @(8050 mils, 1900 mils): Global Label 'BTN'
 [isolated_pin_label]: Label connected to only one pin
-    ; warning
+    ; warning (excluded)
     @(8050 mils, 2500 mils): Global Label 'PC0'
 [isolated_pin_label]: Label connected to only one pin
-    ; warning
+    ; warning (excluded)
     @(8050 mils, 2700 mils): Global Label 'PC1'
 
  ** ERC messages: 3  Errors 0  Warnings 3
