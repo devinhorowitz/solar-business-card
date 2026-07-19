@@ -942,7 +942,7 @@ gain, against the higher (but still multi-decade at desk temp) cell float.*
 - **Level-shift the AEM control pins:** EN_STO_CH open-drain to VINT; ST_STO (swings to VSTO) via a divider
   before the 3.6 V-max MCU pin. A TVS on SRC is cheap insurance (panels are under the 5.5 V abs max, and
   EN_STO_FT ties to GND since our source never exceeds 5 V).
-- **Inductor:** Murata DFE252010F-100M (10 µH, 1.76 A, 2.5×2.0×1.0 mm), the AEM10300 datasheet Table 11 part; its 1.0 mm height clears the cavity floor (the caps set 1.75 mm). Land grows past 0603 - PCB rework pending.
+- **Inductor:** Murata DFE252010F-100M (10 µH, 1.76 A, 2.5×2.0×1.0 mm), the AEM10300 datasheet Table 11 part; its 1.0 mm height clears the cavity floor (the caps set 1.75 mm). Footprint set to the KiCad 1008/2520 land (`L_1008_2520Metric`); re-run Update-PCB then route.
 - **The perennial #1 gate:** measure real indoor harvest -- the entire case for an active PMIC is
   MPPT-in-dim-light, and that number is still unmeasured (§2).
 - **Enclosure:** the `v3_0-backshell` files stay frozen and are mechanically valid for `v4_0` as-is (the

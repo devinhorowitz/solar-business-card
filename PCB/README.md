@@ -222,7 +222,7 @@ Summary of the **orderable** lines:
 | U7 | 1 | MB85RC512TY 512kbit I²C FeRAM (0x50, SOIC-8, VNFC-gated) | `MB85RC512TYPNF-GS-BCERE1` |
 | U8 | 1 | AEM10300 buck-boost harvest PMIC (QFN-28 4×4) | `10AEM10300C0000` |
 | U9 | 1 | TPS7A0233 LDO, 3.3 V (SOT-23-5) → VS | `TPS7A0233PDBVR` |
-| L2 | 1 | 10 µH 1.76 A inductor, 2.5×2.0×1.0 mm (AEM DCDC; land grows past 0603) | `Murata DFE252010F-100M` (datasheet Table 11) |
+| L2 | 1 | 10 µH 1.76 A inductor, 2.5×2.0 mm on a 1008/2520 land (AEM DCDC; footprint set to `L_1008_2520Metric`, re-run Update-PCB + route) | `Murata DFE252010F-100M` (datasheet Table 11) |
 | FB1 | 1 | Ferrite bead 0603 (STO island feed) | `Murata BLM18PG221SN1D` |
 | C22 | 1 | 1 µF 0402 (LDO input, STO side) | `GRM155R61A105KE15D` |
 | C23 | 1 | 2.2 µF 10 V 0402 (LDO output, VS rail; stability margin) | `GRM155R61A225KE11D` |
