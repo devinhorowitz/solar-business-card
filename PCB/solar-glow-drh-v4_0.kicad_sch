@@ -22174,7 +22174,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Inductor_SMD:L_0603_1608Metric"
+		(property "Footprint" "Inductor_SMD:L_1008_2520Metric"
 			(at 531.7 387.35 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -22194,7 +22194,7 @@
 				)
 			)
 		)
-		(property "Description" "10uH 1.76A power inductor, AEM10300 LDCDC (aem10300.pdf Table 11 = DFE252010F-100M); 2.5x2.0x1.0mm, land grows past 0603 - PCB rework pending"
+		(property "Description" "10uH 1.76A power inductor, AEM10300 LDCDC (aem10300.pdf Table 11 = DFE252010F-100M); DFE252010 = 2.5x2.0mm on a 1008/2520 land (L_1008_2520Metric) - re-run Update-PCB then route"
 			(at 520.7 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
