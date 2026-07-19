@@ -4597,7 +4597,7 @@
 		(layer "B.Cu")
 		(uuid "5bd0044f-3a37-46a1-8810-f1a287950699")
 		(at 35.8 54.49 90)
-		(property "Reference" "CINT"
+		(property "Reference" "C26"
 			(at -2.55 0 90)
 			(layer "B.SilkS")
 			(hide yes)
@@ -5015,7 +5015,7 @@
 		(layer "B.Cu")
 		(uuid "680665e5-74b1-4460-8239-d4b72d97ef59")
 		(at 25 55 90)
-		(property "Reference" "CSRC"
+		(property "Reference" "C25"
 			(at -2.55 0 90)
 			(layer "B.SilkS")
 			(hide yes)
@@ -7011,7 +7011,7 @@
 		(layer "B.Cu")
 		(uuid "a74df89b-48fd-4366-892a-3037711d147b")
 		(at 6.1468 55.7276 -90)
-		(property "Reference" "CSTO"
+		(property "Reference" "C27"
 			(at -2.55 0 90)
 			(layer "B.SilkS")
 			(hide yes)

@@ -144,8 +144,8 @@ the duty cycle, the feature set, and whether the always-on accelerometer earns i
 solar-business-card/
 ├── README.md                       # this file (canonical current-revision summary)
 ├── PCB/                            # KiCad projects + fabrication BOM
-│   ├── solar-glow-drh-v4_0.kicad_pcb   # the board — v3.0, 2-layer (source of truth)
-│   ├── solar-glow-drh-v4_0.kicad_sch   # schematic (v3.0)
+│   ├── solar-glow-drh-v4_0.kicad_pcb   # the board: v4.0 managed-solar rework (AEM10300), 2-layer (source of truth)
+│   ├── solar-glow-drh-v4_0.kicad_sch   # schematic: synced to the v4.0 board netlist
 │   ├── solar-glow-drh-v4_0-BOM.xlsx    # bill of materials — v3.0 master (U6 + R14; all-0402)
 │   ├── solar-glow-drh-v4_0-BOM-assembly.xlsx  # placed-parts BOM for PCBA (42 parts; xlsx regen pending)
 │   └── README.md                       # order & build guide
