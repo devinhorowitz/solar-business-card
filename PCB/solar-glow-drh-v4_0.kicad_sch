@@ -17127,7 +17127,7 @@
 				)
 			)
 		)
-		(property "Value" "22uF *0805"
+		(property "Value" "22uF"
 			(at 592.66 382.27 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -17137,7 +17137,7 @@
 				)
 			)
 		)
-		(property "Footprint" "solarglow:C1"
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
 			(at 592.66 387.35 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -17480,7 +17480,7 @@
 				)
 			)
 		)
-		(property "Footprint" "solarglow:C1"
+		(property "Footprint" "Capacitor_SMD:C_0402_1005Metric"
 			(at 897.46 387.35 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -22274,7 +22274,7 @@
 				)
 			)
 		)
-		(property "Value" "10uH *IND-land"
+		(property "Value" "10uH"
 			(at 531.7 382.27 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -22284,7 +22284,7 @@
 				)
 			)
 		)
-		(property "Footprint" "solarglow:C1"
+		(property "Footprint" "Inductor_SMD:L_0603_1608Metric"
 			(at 531.7 387.35 0)
 			(show_name no)
 			(do_not_autoplace no)

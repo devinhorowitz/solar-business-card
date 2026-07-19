@@ -5848,7 +5848,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "22uF *0805"
+		(property "Value" "22uF"
 			(at 0 0 90)
 			(layer "F.Fab")
 			(hide yes)
@@ -8727,7 +8727,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "10uH *IND-land"
+		(property "Value" "10uH"
 			(at 0 0 90)
 			(layer "F.Fab")
 			(hide yes)
