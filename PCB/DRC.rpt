@@ -1,8 +1,12 @@
 ** Drc report for solar-glow-drh-v4_0.kicad_pcb **
-** Created on 2026-07-19T02:05:30 **
+** Created on 2026-07-19T09:14:01 **
 ** Report includes: Errors, Warnings, Exclusions **
 
-** Found 12 DRC violations **
+** Found 13 DRC violations **
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(33.0300 mm, 40.6600 mm): Reference field of C28
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
 [silk_over_copper]: Silkscreen clipped by solder mask
     Local override; warning
     @(28.1000 mm, 40.7000 mm): Reference field of U7
@@ -54,9 +58,7 @@
 
 ** Found 0 unconnected pads **
 
-** Found 1 Footprint errors **
-[missing_footprint]: Missing footprint C28 (100nF)
-    Local override; warning
+** Found 0 Footprint errors **
 
 ** Ignored checks **
     - Footprint has no courtyard defined
