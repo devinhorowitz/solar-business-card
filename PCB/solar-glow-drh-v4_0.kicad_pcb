@@ -3749,7 +3749,7 @@
 		)
 		(pad "EP" smd roundrect
 			(at 0 0)
-			(size 2.65 2.65)
+			(size 2.3 2.3)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
 			(net "GND")
@@ -4972,7 +4972,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "10uF *0603"
+		(property "Value" "10uF"
 			(at 0 0 90)
 			(layer "F.Fab")
 			(hide yes)
@@ -7416,7 +7416,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "ferrite *0603"
+		(property "Value" "ferrite"
 			(at 0 0 90)
 			(layer "F.Fab")
 			(hide yes)
@@ -7654,7 +7654,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "100uF *bulk"
+		(property "Value" "10uF"
 			(at 0 0 90)
 			(layer "F.Fab")
 			(hide yes)
