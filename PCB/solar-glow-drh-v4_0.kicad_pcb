@@ -241,6 +241,7 @@
 		(property "Reference" "MP3"
 			(at 0 0 0)
 			(layer "F.SilkS")
+			(hide yes)
 			(uuid "1d3a6f5f-2c8d-4536-b114-d453784c6d36")
 			(effects
 				(font
@@ -470,6 +471,7 @@
 		(property "Reference" "MP4"
 			(at 0 0 0)
 			(layer "F.SilkS")
+			(hide yes)
 			(uuid "117898a0-4476-4e24-9a34-13e4fe080cff")
 			(effects
 				(font
@@ -542,6 +544,7 @@
 		(property "Reference" "MP1"
 			(at 0 0 0)
 			(layer "F.SilkS")
+			(hide yes)
 			(uuid "54cbb153-795b-400f-b886-c956a81bdc6f")
 			(effects
 				(font
@@ -713,6 +716,7 @@
 		(property "Reference" "MP2"
 			(at 0 0 0)
 			(layer "F.SilkS")
+			(hide yes)
 			(uuid "a59a496a-c000-484a-851c-5b9407116074")
 			(effects
 				(font
