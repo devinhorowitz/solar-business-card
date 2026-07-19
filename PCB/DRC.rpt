@@ -1,8 +1,40 @@
 ** Drc report for solar-glow-drh-v4_0.kicad_pcb **
-** Created on 2026-07-18T22:26:16 **
+** Created on 2026-07-18T23:23:50 **
 ** Report includes: Errors, Warnings, Exclusions **
 
-** Found 11 DRC violations **
+** Found 19 DRC violations **
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(3.0000 mm, 60.4000 mm): Reference field of MP3
+    @(3.0000 mm, 60.4000 mm): PTH pad 1 [GND] of MP3
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(3.0000 mm, 60.4000 mm): Reference field of MP3
+    @(1.2500 mm, 85.0500 mm): Segment on F.Mask
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(47.8000 mm, 60.4000 mm): Reference field of MP4
+    @(47.8000 mm, 60.4000 mm): PTH pad 1 [GND] of MP4
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(47.8000 mm, 60.4000 mm): Reference field of MP4
+    @(49.5500 mm, 3.8500 mm): Segment on F.Mask
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(3.0000 mm, 28.5000 mm): Reference field of MP1
+    @(1.2500 mm, 85.0500 mm): Segment on F.Mask
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(3.0000 mm, 28.5000 mm): Reference field of MP1
+    @(3.0000 mm, 28.5000 mm): PTH pad 1 [GND] of MP1
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(47.8000 mm, 28.5000 mm): Reference field of MP2
+    @(47.8000 mm, 28.5000 mm): PTH pad 1 [GND] of MP2
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(47.8000 mm, 28.5000 mm): Reference field of MP2
+    @(49.5500 mm, 3.8500 mm): Segment on F.Mask
 [silk_over_copper]: Silkscreen clipped by solder mask
     Local override; warning
     @(2.4900 mm, 53.9500 mm): Polygon of U9 on B.Silkscreen
@@ -50,38 +82,7 @@
 
 ** Found 0 unconnected pads **
 
-** Found 9 Footprint errors **
-[duplicate_footprints]: Duplicate footprints
-    Local override; warning
-    @(47.8000 mm, 60.4000 mm): Footprint <no reference designator>
-    @(3.0000 mm, 60.4000 mm): Footprint <no reference designator>
-[duplicate_footprints]: Duplicate footprints
-    Local override; warning
-    @(3.0000 mm, 28.5000 mm): Footprint <no reference designator>
-    @(3.0000 mm, 60.4000 mm): Footprint <no reference designator>
-[duplicate_footprints]: Duplicate footprints
-    Local override; warning
-    @(47.8000 mm, 28.5000 mm): Footprint <no reference designator>
-    @(3.0000 mm, 60.4000 mm): Footprint <no reference designator>
-[duplicate_footprints]: Duplicate footprints
-    Local override; warning
-    @(0.0000 mm, 0.0000 mm): Footprint <no reference designator>
-    @(3.0000 mm, 60.4000 mm): Footprint <no reference designator>
-[extra_footprint]: Extra footprint
-    Local override; warning
-    @(3.0000 mm, 60.4000 mm): Footprint <no reference designator>
-[extra_footprint]: Extra footprint
-    Local override; warning
-    @(47.8000 mm, 60.4000 mm): Footprint <no reference designator>
-[extra_footprint]: Extra footprint
-    Local override; warning
-    @(3.0000 mm, 28.5000 mm): Footprint <no reference designator>
-[extra_footprint]: Extra footprint
-    Local override; warning
-    @(47.8000 mm, 28.5000 mm): Footprint <no reference designator>
-[extra_footprint]: Extra footprint
-    Local override; warning
-    @(0.0000 mm, 0.0000 mm): Footprint <no reference designator>
+** Found 0 Footprint errors **
 
 ** Ignored checks **
     - Footprint has no courtyard defined
