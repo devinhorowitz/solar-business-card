@@ -8747,7 +8747,7 @@
 				(pin passive line
 					(at 0 0 0)
 					(length 2.54)
-					(name "OUT"
+					(name "IN"
 						(effects
 							(font
 								(size 1 1)
@@ -8783,7 +8783,7 @@
 				(pin passive line
 					(at 0 -10.16 0)
 					(length 2.54)
-					(name "OUT_S"
+					(name "EN"
 						(effects
 							(font
 								(size 1 1)
@@ -8819,7 +8819,7 @@
 				(pin passive line
 					(at 0 -20.32 0)
 					(length 2.54)
-					(name "IN"
+					(name "OUT"
 						(effects
 							(font
 								(size 1 1)

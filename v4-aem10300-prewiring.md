@@ -26,9 +26,9 @@ them. The AEM splits them:
 | **U8** | AEM10300 | QFN-28 4x4 | harvest PMIC + 2-cell balancer |
 | **U9** | TPS7A0233 (fixed 3.3 V) | SOT-23-5 | MCU + accel LDO (25 nA) |
 | **L2** | 10 uH, ISAT >= 1 A, low-profile | ~2016/2020 | buck-boost inductor |
-| **CSRC** | 22 uF | 0805 | BUFSRC input buffer |
-| **CINT** | 10 uF | 0603 | VINT buffer |
-| **CSTO** | 100 uF (optional) | bulk | STO buffer |
+| **C25** (was CSRC) | 22 uF | 0805 | BUFSRC input buffer |
+| **C26** (was CINT) | 10 uF | 0603 | VINT buffer |
+| **C27** (was CSTO) | 100 uF (optional) | bulk | STO buffer |
 | **C22, C23** | 1 uF | 0402 | LDO in / out caps |
 | **R15, R16** | 2 M, 1 M | 0402 | STO sense divider (÷3) |
 | **C24** | 100 nF | 0402 | STO-sense filter |
@@ -63,7 +63,7 @@ EN_STO_FT = GND):
 
 **U9 TPS7A0233:** 1 IN -> `STO`, 2 GND -> `GND`, 3 EN -> `STO` (always-on), 4 NC, 5 OUT -> `VS`.
 **L2:** 1 -> `LX_LIN`, 2 -> `LX_LOUT`.
-**CSRC:** 1 -> `BUFSRC`, 2 -> `GND`. **CINT:** 1 -> `VINT`, 2 -> `GND`. **CSTO:** 1 -> `STO`, 2 -> `GND`.
+**C25/CSRC:** 1 -> `BUFSRC`, 2 -> `GND`. **C26/CINT:** 1 -> `VINT`, 2 -> `GND`. **C27/CSTO:** 1 -> `STO`, 2 -> `GND`.
 **C22 (LDO in):** 1 -> `STO`, 2 -> `GND`. **C23 (LDO out):** 1 -> `VS`, 2 -> `GND`.
 **R15:** 1 -> `STO`, 2 -> `STO_SNS`. **R16:** 1 -> `STO_SNS`, 2 -> `GND`. **C24:** 1 -> `STO_SNS`, 2 -> `GND`.
 **R17 (EN_STO_CH pull-up):** 1 -> `VINT`, 2 -> `EN_STO_CH`.

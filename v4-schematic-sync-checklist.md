@@ -1,5 +1,11 @@
 # v4 schematic sync checklist -- bring `.kicad_sch` up to the routed PCB
 
+> **DONE (kept as the record of what was applied).** The schematic was synced to the board
+> programmatically and verified against the PCB netlist; KiCad ERC/DRC pass in CI. Note the three
+> AEM bulk caps were renamed to valid KiCad refdes: **CSRC -> C25, CINT -> C26, CSTO -> C27**
+> (KiCad rejects letters-only references). This schematic uses a pin -> 5.08 mm stub wire -> global
+> label per pin (not label-on-pin), so every added pin carries a stub wire to its label.
+
 **The PCB is the source of truth here.** `PCB/solar-glow-drh-v4_0.kicad_pcb` carries the verified,
 fully-routed v4 netlist (0 unconnected pads). The schematic still reflects v3, so DRC-parity reports
 107 footprint errors. This checklist makes the schematic match the PCB; nothing here is a new decision,
