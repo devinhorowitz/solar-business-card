@@ -10065,6 +10065,334 @@
 			)
 			(embedded_fonts no)
 		)
+		(symbol "solarglow:U7"
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "U7"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "MB85RC512TY"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "U7_1_1"
+				(rectangle
+					(start 2.54 2.54)
+					(end 20.32 -38.1)
+					(stroke
+						(width 0.2)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+				(pin passive line
+					(at 0 0 0)
+					(length 2.54)
+					(name "A0"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -5.08 0)
+					(length 2.54)
+					(name "A1"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -10.16 0)
+					(length 2.54)
+					(name "A2"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -15.24 0)
+					(length 2.54)
+					(name "VSS"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+					(number "4"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -20.32 0)
+					(length 2.54)
+					(name "SDA"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+					(number "5"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -25.4 0)
+					(length 2.54)
+					(name "SCL"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+					(number "6"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -30.48 0)
+					(length 2.54)
+					(name "WP"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+					(number "7"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -35.56 0)
+					(length 2.54)
+					(name "VDD"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+					(number "8"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "solarglow:C28"
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "C28"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "100nF"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" "solarglow:C1"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "C28_1_1"
+				(rectangle
+					(start 2.54 2.54)
+					(end 20.32 -7.62)
+					(stroke
+						(width 0.2)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+				(pin passive line
+					(at 0 0 0)
+					(length 2.54)
+					(name "1"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -5.08 0)
+					(length 2.54)
+					(name "2"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
 	)
 	(no_connect
 		(at 410.21 139.7)
@@ -22092,6 +22420,510 @@
 			(project "solar-glow-drh-v4_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "SC4")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "solarglow:U7")
+		(at 855.98 372.11 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "e20520ac-f830-4610-9613-a3eea16cbeaa")
+		(property "Reference" "U7"
+			(at 867.41 372.11 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "MB85RC512TY"
+			(at 867.41 377.19 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Package_SO:SOIC-8_3.9x4.9mm_P1.27mm"
+			(at 867.41 382.27 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" "datasheets/U7  MB85RC512TYPNF-GS-BCERE1  $10.19.pdf"
+			(at 855.98 372.11 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "512kbit I2C FeRAM 0x50, power-gated via VNFC"
+			(at 855.98 372.11 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "MPN" "MB85RC512TYPNF-GS-BCERE1"
+			(at 855.98 372.11 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "251eeaa6-ca3c-43ab-9ee2-13d9d580ba88")
+		)
+		(pin "2"
+			(uuid "02d4fd5e-37a7-4d00-bafe-ce669aaa32f3")
+		)
+		(pin "3"
+			(uuid "d91d7e2f-8e6c-4fb4-a2c6-570dcd39f115")
+		)
+		(pin "4"
+			(uuid "8deb3ed0-fa28-483d-a892-d30ba5cae45a")
+		)
+		(pin "5"
+			(uuid "1150e2a9-9a0b-4c2a-9501-2cee616ce524")
+		)
+		(pin "6"
+			(uuid "6f92a962-b64f-41cb-ba8e-f83681f44f38")
+		)
+		(pin "7"
+			(uuid "4d92688c-1b5f-470f-a0ae-0381928b0765")
+		)
+		(pin "8"
+			(uuid "7df4ab80-28c4-42fe-b749-975943028d21")
+		)
+		(instances
+			(project "solar-glow-drh-v4_0"
+				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
+					(reference "U7")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(global_label "GND"
+		(shape bidirectional)
+		(at 850.9 372.11 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "d7ad4db1-d9ab-4759-9097-c4356e2b71d3")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 850.9 372.11 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
+	(wire
+		(pts
+			(xy 855.98 372.11) (xy 850.9 372.11)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "c7c64ed7-e853-4322-b014-528e3d1495f9")
+	)
+	(global_label "GND"
+		(shape bidirectional)
+		(at 850.9 377.19 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "813aec89-19e9-4791-b730-2dcdb9e263e3")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 850.9 377.19 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
+	(wire
+		(pts
+			(xy 855.98 377.19) (xy 850.9 377.19)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "8c636223-1860-4aaa-b292-096e4a97420e")
+	)
+	(global_label "GND"
+		(shape bidirectional)
+		(at 850.9 382.27 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "5f07f4f6-b6c4-40bb-a000-99b42bbea586")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 850.9 382.27 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
+	(wire
+		(pts
+			(xy 855.98 382.27) (xy 850.9 382.27)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "92c49629-9135-4054-a13a-c392478eb874")
+	)
+	(global_label "GND"
+		(shape bidirectional)
+		(at 850.9 387.35 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "d932052f-7dc0-4d33-b8be-d6cb258f8a82")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 850.9 387.35 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
+	(wire
+		(pts
+			(xy 855.98 387.35) (xy 850.9 387.35)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "8552f36d-3968-40fe-b137-1381bca8ebfc")
+	)
+	(global_label "SDA"
+		(shape bidirectional)
+		(at 850.9 392.43 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "185a9100-7430-492a-a6d6-8ac17e09a1d2")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 850.9 392.43 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
+	(wire
+		(pts
+			(xy 855.98 392.43) (xy 850.9 392.43)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "bc39c33e-2bd6-4ae3-a737-c8ce601e5d25")
+	)
+	(global_label "SCL"
+		(shape bidirectional)
+		(at 850.9 397.51 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "4d94b0a2-f713-48f4-bd6d-b698bfdad35f")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 850.9 397.51 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
+	(wire
+		(pts
+			(xy 855.98 397.51) (xy 850.9 397.51)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "6814e571-dee2-407d-9f29-3b20c9c256c0")
+	)
+	(global_label "GND"
+		(shape bidirectional)
+		(at 850.9 402.59 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "802b5071-96b5-4983-927e-742c8883cd22")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 850.9 402.59 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
+	(wire
+		(pts
+			(xy 855.98 402.59) (xy 850.9 402.59)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "b208f66b-aab6-4127-a544-47b0596e6775")
+	)
+	(global_label "VNFC"
+		(shape bidirectional)
+		(at 850.9 407.67 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "c5366c30-eb0f-42b1-8489-44e987237011")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 850.9 407.67 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
+	(wire
+		(pts
+			(xy 855.98 407.67) (xy 850.9 407.67)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "1b31e274-4355-4f58-a440-8dc468a5ea44")
+	)
+	(global_label "VNFC"
+		(shape bidirectional)
+		(at 881.38 372.11 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "55ef775d-54dc-4a5c-92d6-a73a58b02ac9")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 881.38 372.11 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
+	(wire
+		(pts
+			(xy 886.46 372.11) (xy 881.38 372.11)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "b8d9f2b9-12e3-4854-81cb-929f977132d0")
+	)
+	(global_label "GND"
+		(shape bidirectional)
+		(at 881.38 377.19 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "3c3c5a24-8a28-48eb-923b-6119dd88dd53")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 881.38 377.19 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
+	(wire
+		(pts
+			(xy 886.46 377.19) (xy 881.38 377.19)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "b3d7effe-dc35-419e-bd18-1966bde5a9b9")
+	)
+	(symbol
+		(lib_id "solarglow:C28")
+		(at 886.46 372.11 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "21125a44-8a50-400d-af0d-6b06bb59a8c9")
+		(property "Reference" "C28"
+			(at 897.46 377.19 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "100nF"
+			(at 897.46 382.27 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "solarglow:C1"
+			(at 897.46 387.35 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 886.46 372.11 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "100 nF X7R decoupling"
+			(at 886.46 372.11 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "MPN" "GRM155R71C104KA88D"
+			(at 886.46 372.11 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "2"
+			(uuid "f8833087-bf02-455d-9b96-26ee8876eb6d")
+		)
+		(pin "1"
+			(uuid "9f6ac189-b470-48c6-99a5-a5c461ed7a8f")
+		)
+		(instances
+			(project "solar-glow-drh-v4_0"
+				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
+					(reference "C28")
 					(unit 1)
 				)
 			)
