@@ -75,7 +75,7 @@ labels above, so nothing extra to set.
 | **CINT** | 10 uF | 1 VINT · 2 GND |
 | **C27** | 10 uF | 1 STO · 2 GND |
 | **C22** | 1 uF | 1 STO · 2 GND |
-| **C23** | 1 uF | 1 VS · 2 GND |
+| **C23** | 2.2 uF | 1 VS · 2 GND |
 | **C24** | 100 nF | 1 STO_SNS · 2 GND |
 | **R15** | 2 M | 1 STO · 2 STO_SNS |
 | **R16** | 1 M | 1 STO_SNS · 2 GND |

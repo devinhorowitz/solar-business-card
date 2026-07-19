@@ -45,6 +45,7 @@
 #include "led.h"
 #include "sense.h"
 #include "nfc.h"
+#include "fram.h"
 
 static volatile uint8_t f_tap;     /* PF0 click   */
 static volatile uint8_t f_motion;  /* PF1 activity */
@@ -90,9 +91,9 @@ static void gpio_init(void)
      * POR/config default already pulls FD low on field-present, so no I2C setup is
      * needed. Both edges because we act on each: FALLING (field arrives) -> the LED
      * layer blanks and the core goes quiet for the read; RISING (field leaves) ->
-     * fire the acknowledge glow. FD is open-drain with an external 10k (R13) to VS;
-     * we ALSO enable PA6's internal pull-up as belt-and-suspenders so the pin can't
-     * float, at the cost of a little extra sink only while FD is held low. */
+     * fire the acknowledge glow. FD is open-drain; PA6's internal pull-up is the SOLE
+     * hold (no external FD pull-up in the design) so the pin can't float, at the cost
+     * of a little extra sink only while FD is held low. */
     FD_PORT.PIN6CTRL = PORT_ISC_BOTHEDGES_gc | PORT_PULLUPEN_bm;
     /* PD2 (VSENSE) is analog only: disable its digital input buffer so the
      * Schmitt trigger doesn't toggle (and burn current) on a slow mid-rail
@@ -166,6 +167,43 @@ static void go_to_sleep(void)
     }
 }
 
+/* ---------------- FRAM archival hook (default OFF; see USE_FRAM_LOG) ---------------- */
+
+#if USE_FRAM_LOG
+/* Cold-boot counter in the FRAM "black box" (U7, 64 KB on VNFC). FeRAM has ~1e13
+ * write endurance and commits with no settle delay, so -- unlike the 256 B internal-
+ * EEPROM loggers -- a plain read-modify-write needs no wear or corruption-window
+ * guard. Record layout at addr 0: [0..3] magic 'DRHb', [4..7] big-endian boot count;
+ * an absent magic (virgin / garbage FRAM) re-seeds the record at 1. Gated behind
+ * USE_FRAM_LOG because a write means powering VNFC, whose cost against the harvest
+ * budget is still ungated (README "the open question"). This is the integration
+ * scaffold: richer per-event archival hangs off the same power/present/read/write
+ * cycle once the budget is bench-measured. */
+static void fram_boot_record(void)
+{
+    static const uint8_t MAGIC[4] = { 'D', 'R', 'H', 'b' };
+    uint8_t hdr[8];
+    uint32_t n;
+
+    if (fram_power_on()) { fram_power_off(); return; }   /* absent / EN unwired -> skip */
+    if (fram_read(0x0000, hdr, sizeof hdr) == 0) {
+        if (hdr[0] == MAGIC[0] && hdr[1] == MAGIC[1] &&
+            hdr[2] == MAGIC[2] && hdr[3] == MAGIC[3]) {
+            n = ((uint32_t)hdr[4] << 24) | ((uint32_t)hdr[5] << 16) |
+                ((uint32_t)hdr[6] <<  8) |  (uint32_t)hdr[7];
+            n++;
+        } else {
+            hdr[0] = MAGIC[0]; hdr[1] = MAGIC[1]; hdr[2] = MAGIC[2]; hdr[3] = MAGIC[3];
+            n = 1;
+        }
+        hdr[4] = (uint8_t)(n >> 24); hdr[5] = (uint8_t)(n >> 16);
+        hdr[6] = (uint8_t)(n >>  8); hdr[7] = (uint8_t)(n);
+        (void)fram_write(0x0000, hdr, sizeof hdr);
+    }
+    fram_power_off();
+}
+#endif
+
 /* ---------------- main ---------------- */
 
 int main(void)
@@ -185,6 +223,10 @@ int main(void)
 
     twi_init();           /* 3. I2C up, talk to the accel */
     (void)adxl367_init_tap();      /* full accel config; validates DEVID after its soft reset */
+
+#if USE_FRAM_LOG
+    fram_boot_record();   /* archival black box: bump the FRAM cold-boot counter (self-powers VNFC) */
+#endif
 
     /* 4. NFC tag (shares the bus) is power-gated OFF by default; we do not touch it
      * at boot. FD-wake needs no setup -- it runs on field power and the chip's POR

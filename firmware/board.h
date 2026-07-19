@@ -106,7 +106,7 @@
 #define NFC_EN_PORT     PORTA
 #define NFC_EN_PIN_bm   PIN7_bm
 
-/* FD (field detect, U5 pin4) -> PA6, open-drain; the internal PA6 pull-up holds it (R13, the former external 10k, is now DNP).
+/* FD (field detect, U5 pin4) -> PA6, open-drain; the internal PA6 pull-up holds it (no external FD pull-up fitted).
  * FD-WAKE: a phone's field pulls FD low (FD_ON=00b, field-present = the POR
  * default). Per datasheet 8.4 the FD pin runs on the phone's field power, so it
  * works even with the tag's VCC gated off -- that is why FD-wake survives the
@@ -114,10 +114,20 @@
  * wakes the core to blank the LEDs for the read, and the rising edge (field leaves)
  * fires the acknowledge glow (see NFC_BLANK_ON_FIELD below). No I2C setup is needed
  * -- the field-present default does it. Firmware enables PA6's
- * internal pull-up, now the SOLE FD pull-up (R13 dropped to DNP in the passive
- * consolidation); it only sinks current while FD is held low. */
+ * internal pull-up, the SOLE FD pull-up (no external FD resistor in the design); it
+ * only sinks current while FD is held low. */
 #define FD_PORT         PORTA
 #define FD_PIN_bm       PIN6_bm
+
+/* ---- I2C device: RAMXEED/Fujitsu MB85RC512TY FRAM (U7), 512 kbit = 64 KB (v4) ----
+ * 7-bit address 0x50 (A0/A1/A2 grounded); shares TWI0 with the accel @0x1D and the
+ * NFC tag @0x55, no clash. VDD rides VNFC -- the SAME high-side load switch (NFC_EN /
+ * PA7) that gates the NFC tag -- so the FRAM is alive only while VNFC is up; one
+ * power-on (nfc_power_on / fram_power_on) covers both parts. 64 KB linear space,
+ * 16-bit address; FeRAM commits at the STOP (no settle delay, ~1e13 endurance). The
+ * driver (fram.c / fram.h) is built and ready; runtime use is gated by USE_FRAM_LOG
+ * below (headless by default). */
+#define FRAM_ADDR       0x50
 
 /* NFC read SNR: while a reader's field is present (FD low), hold the LEDs dark so
  * their PWM edges don't inject broadband noise into the 13.56 MHz band the tag
@@ -235,6 +245,15 @@
  * heat, starvation, or overuse?" from one UPDI read. Runs even while face-down dormant. 1 = on. */
 #define USE_HEALTH_LOG     1
 #define VMIN_SAMPLE_POLLS  16   /* polls between rail-min samples (16 s at POLL_PERIOD_S=1) */
+
+/* FRAM archival log (U7 MB85RC512TY, 64 KB on VNFC; driver in fram.c). The internal-
+ * EEPROM loggers above are a 256 B black box; the FRAM is the big-store companion for
+ * richer archival (per-event history, larger diaries). Left HEADLESS (0) by default:
+ * the driver is built and ready, but the WHAT/WHEN of archival is a policy tied to the
+ * unmeasured harvest budget (README "the open question") -- a FRAM write means powering
+ * VNFC, which is not free. Set 1 to compile in the main.c boot-record hook (a cold-boot
+ * counter) as the first archival user; expand from there once the budget is measured. */
+#define USE_FRAM_LOG       0
 
 /* charge floor: skip the glow (stay dark) below this rail voltage, mV.
  * Read via ADC VDD/10. Keeps a brown-out from bricking mid-animation. */
