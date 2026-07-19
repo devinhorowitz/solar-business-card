@@ -1,0 +1,233 @@
+Info: Processing symbol 'C1:solarglow:C1'.
+Info: Processing symbol 'MH1:solarglow:MH1'.
+Info: Processing symbol 'MH4:solarglow:MH4'.
+Info: Processing symbol 'C3:solarglow:C3'.
+Info: Processing symbol 'C23:solarglow:C1'.
+Info: Processing symbol 'D3:solarglow:D3'.
+Info: Processing symbol 'C4:solarglow:C4'.
+Info: Processing symbol 'JP1:solarglow:JP1'.
+Info: Processing symbol 'R3:solarglow:R3'.
+Info: Processing symbol 'C5:solarglow:C5'.
+Info: Processing symbol 'C24:solarglow:C1'.
+Info: Processing symbol 'D4:solarglow:D4'.
+Info: Processing symbol 'C6:solarglow:C6'.
+Info: Processing symbol 'MH2:solarglow:MH2'.
+Info: Processing symbol 'PV2:solarglow:PV2'.
+Info: Processing symbol 'C7:solarglow:C7'.
+Info: Processing symbol 'C25:solarglow:C1'.
+Info: Processing symbol 'D5:solarglow:D5'.
+Info: Processing symbol 'C8:solarglow:C8'.
+Info: Processing symbol 'PV1:solarglow:PV1'.
+Info: Processing symbol 'MH3:solarglow:MH3'.
+Info: Processing symbol 'C9:solarglow:C9'.
+Info: Processing symbol 'C26:solarglow:C1'.
+Info: Processing symbol 'FB1:solarglow:C1'.
+Info: Processing symbol 'C11:solarglow:C11'.
+Info: Processing symbol 'L2:solarglow:C1'.
+Info: Processing symbol 'R1:solarglow:R1'.
+Info: Processing symbol 'C12:solarglow:C12'.
+Info: Processing symbol 'U6:Package_TO_SOT_SMD:SOT-23-6'.
+Info: Processing symbol 'C27:solarglow:C1'.
+Info: Processing symbol 'C13:solarglow:C13'.
+Info: Processing symbol 'R2:solarglow:R2'.
+Info: Processing symbol 'J1:solarglow:J1'.
+Info: Processing symbol 'R16:solarglow:C1'.
+Info: Processing symbol 'C22:solarglow:C1'.
+Info: Processing symbol 'D2:solarglow:D2'.
+Info: Processing symbol 'R4:solarglow:R4'.
+Info: Processing symbol 'R5:solarglow:R5'.
+Info: Processing symbol 'R6:solarglow:R6'.
+Info: Processing symbol 'R10:solarglow:R10'.
+Info: Processing symbol 'R11:solarglow:R11'.
+Info: Processing symbol 'R12:solarglow:R12'.
+Info: Processing symbol 'R14:solarglow:R14'.
+Info: Processing symbol 'R15:solarglow:C1'.
+Info: Processing symbol 'R17:solarglow:C1'.
+Info: Processing symbol 'SB1:solarglow:SB1'.
+Info: Processing symbol 'SB2:solarglow:SB2'.
+Info: Processing symbol 'SB3:solarglow:SB3'.
+Info: Processing symbol 'SB4:solarglow:SB4'.
+Info: Processing symbol 'SC1:solarglow:SC1'.
+Info: Processing symbol 'SC2:solarglow:SC2'.
+Info: Processing symbol 'SC3:solarglow:SC3'.
+Info: Processing symbol 'SC4:solarglow:SC4'.
+Info: Processing symbol 'SJ1:solarglow:SJ1'.
+Info: Processing symbol 'SW2:solarglow:SW2'.
+Info: Processing symbol 'TC1:solarglow:TC1'.
+Info: Processing symbol 'TP1:solarglow:TP1'.
+Info: Processing symbol 'U1:solarglow:U1'.
+Info: Processing symbol 'U3:Package_TO_SOT_SMD:ADXL367 CC-12-4_ADI'.
+Info: Processing symbol 'U5:solarglow:U5'.
+Info: Processing symbol 'U8:solarglow:U1'.
+Info: Processing symbol 'U9:Package_TO_SOT_SMD:SOT-23-6'.
+Update C23 fields.
+Update C23 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Update C24 symbol association from /bbee019c-6eeb-44e5-9cac-89b34a6e8d45 to /68cee063-0a10-47d9-bc41-db96f22a7a9a.
+Update C24 fields.
+Update C24 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Update C25 symbol association from /bbee019c-6eeb-44e5-9cac-89b34a6e8d45 to /044fdc93-e461-421e-837e-def2528ef93e.
+Update C25 fields.
+Update C25 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Update C26 symbol association from /bbee019c-6eeb-44e5-9cac-89b34a6e8d45 to /287e907a-98cb-4a82-bb3e-05b518709250.
+Update C26 fields.
+Update C26 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Update C27 symbol association from /bbee019c-6eeb-44e5-9cac-89b34a6e8d45 to /71753b00-749a-49ff-8804-edb37a393003.
+Update C27 fields.
+Update C27 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Update D2 fields.
+Update D2 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Update D3 fields.
+Update D3 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Update D4 fields.
+Update D4 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Update D5 fields.
+Update D5 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Update FB1 symbol association from /bbee019c-6eeb-44e5-9cac-89b34a6e8d45 to /f616b0c0-9d64-4110-9bf0-115c54f1c627.
+Update FB1 fields.
+Update FB1 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Update J1 fields.
+Update J1 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Remove J1 'exclude from position files' fabrication attribute.
+Update JP1 symbol association from /564d0fe9-c28f-4c4e-8dc1-52c44af5e661 to /d38ea0f0-c076-42d5-88ae-80d520962cbc.
+Update JP1 fields.
+Update JP1 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Remove JP1 'exclude from position files' fabrication attribute.
+Update JP1 unit metadata.
+Update L2 symbol association from /bbee019c-6eeb-44e5-9cac-89b34a6e8d45 to /e5f3be16-07b9-46f0-a35b-7651b5727ee7.
+Update L2 fields.
+Update MH1 fields.
+Update MH1 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Update MH2 fields.
+Update MH2 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Update MH3 fields.
+Update MH3 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Update MH4 fields.
+Update MH4 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Update PV1 fields.
+Update PV1 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Remove PV1 'exclude from position files' fabrication attribute.
+Update PV2 fields.
+Update PV2 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Remove PV2 'exclude from position files' fabrication attribute.
+Update R1 fields.
+Update R1 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Update R2 fields.
+Update R2 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Update C12 fields.
+Update R3 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Update C1 fields.
+Update R4 fields.
+Update R4 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Update C1 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Update R5 fields.
+Update R5 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Update C3 fields.
+Update R6 fields.
+Update R6 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Update C3 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Update R10 fields.
+Update R10 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Update C4 fields.
+Update R11 fields.
+Update R11 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Update C4 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Update R12 fields.
+Update R12 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Update C5 fields.
+Update R14 symbol association from /c3e2a081-27f4-4044-9029-3e1b2a5c48f9 to /34181774-8138-4aaa-b118-4fc47d886399.
+Update R14 fields.
+Update R14 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Update C5 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Update R15 symbol association from /bbee019c-6eeb-44e5-9cac-89b34a6e8d45 to /4cdc8149-a82a-474a-bfe4-063638fc26d9.
+Update R15 fields.
+Update R15 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Update R3 fields.
+Update R16 symbol association from /bbee019c-6eeb-44e5-9cac-89b34a6e8d45 to /5c09dde4-6876-42f0-9795-04d2da1d9b23.
+Update R16 fields.
+Update R16 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Update C6 fields.
+Update R17 symbol association from /bbee019c-6eeb-44e5-9cac-89b34a6e8d45 to /54913c1b-f114-418b-80d6-f84690f2914d.
+Update R17 fields.
+Update R17 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Update C6 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Update SB1 fields.
+Update SB1 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Remove SB1 'exclude from position files' fabrication attribute.
+Update C7 fields.
+Update SB2 fields.
+Update SB2 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Remove SB2 'exclude from position files' fabrication attribute.
+Update C7 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Update SB3 fields.
+Update SB3 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Remove SB3 'exclude from position files' fabrication attribute.
+Update C8 fields.
+Update SB4 fields.
+Update SB4 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Remove SB4 'exclude from position files' fabrication attribute.
+Update C8 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Update C9 fields.
+Update C9 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Update C11 fields.
+Update C11 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Update SJ1 fields.
+Update SJ1 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Update C12 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Update SW2 fields.
+Update SW2 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Remove SW2 'exclude from position files' fabrication attribute.
+Update C13 fields.
+Update TC1 fields.
+Update TC1 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Remove TC1 'exclude from position files' fabrication attribute.
+Update C13 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Update TP1 symbol association from /564d0fe9-c28f-4c4e-8dc1-52c44af5e661 to /6d749414-69c2-48a7-b377-e30159757f25.
+Update TP1 fields.
+Update TP1 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Remove TP1 'exclude from position files' fabrication attribute.
+Update C13 unit metadata.
+Update U1 fields.
+Update U1 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Update C22 symbol association from /bbee019c-6eeb-44e5-9cac-89b34a6e8d45 to /ba378e10-6774-411c-a1b7-ea5d6430f56c.
+Update U3 fields.
+Update U3 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Update U3 unit metadata.
+Update C22 fields.
+Update U5 fields.
+Update U5 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Update L2 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Update U6 fields.
+Update U6 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Update U6 unit metadata.
+Update C22 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Update U8 symbol association from /e6008268-bb63-4d0d-8dad-9fede74b25de to /862f547c-35e5-4ad4-a2b1-c197283c2120.
+Update U8 fields.
+Update U8 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Add net unconnected-(U8-ST_STO-Pad26).
+Connect U8 pin 26 to unconnected-(U8-ST_STO-Pad26).
+Add net unconnected-(U8-ZMPP-Pad1).
+Connect U8 pin 1 to unconnected-(U8-ZMPP-Pad1).
+Add net unconnected-(U8-STO_OVCH-Pad17).
+Connect U8 pin 17 to unconnected-(U8-STO_OVCH-Pad17).
+Add net unconnected-(U8-STO_OVDIS-Pad15).
+Connect U8 pin 15 to unconnected-(U8-STO_OVDIS-Pad15).
+Add net GND_1.
+Reconnect U8 pin 22 from GND to GND_1.
+Add net unconnected-(U8-STO_RDY-Pad16).
+Connect U8 pin 16 to unconnected-(U8-STO_RDY-Pad16).
+Update C23 symbol association from /bbee019c-6eeb-44e5-9cac-89b34a6e8d45 to /0200e369-927e-45ff-8960-a3ed4c5bca6d.
+Update U9 symbol association from /0324146a-7374-4052-9f48-3c6822ca7210 to /dcb23824-55bd-4762-9e2c-e9668dafac57.
+Update U9 fields.
+Update U9 sheetfile to 'solar-glow-drh-v4_0.kicad_sch'.
+Add net unconnected-(U9-NC-Pad6).
+Connect U9 pin 6 to unconnected-(U9-NC-Pad6).
+Add net unconnected-(U9-NC-Pad4).
+Connect U9 pin 4 to unconnected-(U9-NC-Pad4).
+Update U9 unit metadata.
+Error: Cannot add SC4 (footprint 'solarglow:SC4' not found).
+Error: Cannot add SC1 (footprint 'solarglow:SC1' not found).
+Error: Cannot add SC3 (footprint 'solarglow:SC3' not found).
+Error: Cannot add SC2 (footprint 'solarglow:SC2' not found).
+
+
+Info: Total warnings: 0, errors: 4.

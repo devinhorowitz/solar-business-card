@@ -1,5 +1,5 @@
 ** Drc report for solar-glow-drh-v4_0.kicad_pcb **
-** Created on 2026-07-18T19:27:20 **
+** Created on 2026-07-18T22:01:00 **
 ** Report includes: Errors, Warnings, Exclusions **
 
 ** Found 11 DRC violations **
@@ -50,7 +50,7 @@
 
 ** Found 0 unconnected pads **
 
-** Found 107 Footprint errors **
+** Found 21 Footprint errors **
 [duplicate_footprints]: Duplicate footprints
     Local override; warning
     @(47.8000 mm, 60.4000 mm): Footprint <no reference designator>
@@ -67,163 +67,6 @@
     Local override; warning
     @(0.0000 mm, 0.0000 mm): Footprint <no reference designator>
     @(3.0000 mm, 60.4000 mm): Footprint <no reference designator>
-[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
-    Local override; warning
-    @(10.7442 mm, 41.5036 mm): Footprint C1
-[missing_footprint]: Missing footprint C2 (100nF)
-    Local override; warning
-[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
-    Local override; warning
-    @(5.6896 mm, 47.9552 mm): Footprint C3
-[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
-    Local override; warning
-    @(5.3594 mm, 9.5504 mm): Footprint C4
-[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
-    Local override; warning
-    @(45.6184 mm, 24.7500 mm): Footprint C5
-[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
-    Local override; warning
-    @(3.0988 mm, 10.1346 mm): Footprint C6
-[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
-    Local override; warning
-    @(5.3888 mm, 10.7158 mm): Footprint C7
-[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
-    Local override; warning
-    @(30.6000 mm, 32.4000 mm): Footprint C8
-[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
-    Local override; warning
-    @(35.6600 mm, 39.1400 mm): Footprint C9
-[missing_footprint]: Missing footprint C10 (100nF)
-    Local override; warning
-[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
-    Local override; warning
-    @(25.0000 mm, 30.5000 mm): Footprint C11
-[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
-    Local override; warning
-    @(26.0000 mm, 30.5000 mm): Footprint C12
-[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
-    Local override; warning
-    @(25.8588 mm, 48.3960 mm): Footprint C13
-[missing_footprint]: Missing footprint D1 (MMSD301T1G)
-    Local override; warning
-[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
-    Local override; warning
-    @(16.1000 mm, 43.9000 mm): Footprint D2
-[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
-    Local override; warning
-    @(22.4000 mm, 43.9000 mm): Footprint D3
-[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
-    Local override; warning
-    @(28.7000 mm, 43.9000 mm): Footprint D4
-[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
-    Local override; warning
-    @(34.7000 mm, 43.9000 mm): Footprint D5
-[missing_footprint]: Missing footprint D9 (MMSD301T1G)
-    Local override; warning
-[missing_footprint]: Missing footprint D10 (MMSD301T1G)
-    Local override; warning
-[missing_footprint]: Missing footprint D11 (MMSD301T1G)
-    Local override; warning
-[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
-    Local override; warning
-    @(4.7000 mm, 38.4000 mm): Footprint J1
-[net_conflict]: Pad net (STO) doesn't match net given by schematic (VS)
-    Local override; warning
-    @(4.7000 mm, 38.4000 mm): Pad 2 [STO] of J1 on B.Cu
-[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
-    Local override; warning
-    @(48.4000 mm, 14.5400 mm): Footprint JP1
-[net_conflict]: Pad net (STO) doesn't match net given by schematic (VS)
-    Local override; warning
-    @(48.4000 mm, 17.0800 mm): Pad 2 [STO] of JP1 on B.Cu
-[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
-    Local override; warning
-    @(3.0000 mm, 85.9000 mm): Footprint MH1
-[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
-    Local override; warning
-    @(47.8000 mm, 85.9000 mm): Footprint MH2
-[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
-    Local override; warning
-    @(3.0000 mm, 3.0000 mm): Footprint MH3
-[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
-    Local override; warning
-    @(47.8000 mm, 3.0000 mm): Footprint MH4
-[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
-    Local override; warning
-    @(25.4000 mm, 17.0000 mm): Footprint PV1
-[net_conflict]: Pad net (SRC) doesn't match net given by schematic (VIN)
-    Local override; warning
-    @(43.4000 mm, 17.0000 mm): Pad P [SRC] of PV1 on F.Cu
-[net_conflict]: Pad net (SRC) doesn't match net given by schematic (VIN)
-    Local override; warning
-    @(46.5000 mm, 17.0000 mm): Pad Pt [SRC] of PV1 on F.Cu
-[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
-    Local override; warning
-    @(25.4000 mm, 71.9000 mm): Footprint PV2
-[net_conflict]: Pad net (SRC) doesn't match net given by schematic (VINB)
-    Local override; warning
-    @(43.4000 mm, 71.9000 mm): Pad P [SRC] of PV2 on F.Cu
-[net_conflict]: Pad net (SRC) doesn't match net given by schematic (VINB)
-    Local override; warning
-    @(46.5000 mm, 71.9000 mm): Pad Pt [SRC] of PV2 on F.Cu
-[missing_footprint]: Missing footprint Q1 (BCP5316MTWG)
-    Local override; warning
-[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
-    Local override; warning
-    @(5.6896 mm, 49.0474 mm): Footprint R1
-[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
-    Local override; warning
-    @(25.2249 mm, 52.4000 mm): Footprint R2
-[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
-    Local override; warning
-    @(28.8098 mm, 49.6842 mm): Footprint R3
-[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
-    Local override; warning
-    @(34.8200 mm, 48.3000 mm): Footprint R4
-[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
-    Local override; warning
-    @(47.2500 mm, 24.7500 mm): Footprint R5
-[net_conflict]: Pad net (SRC) doesn't match net given by schematic (VIN)
-    Local override; warning
-    @(47.2500 mm, 24.2400 mm): Pad 1 [SRC] of R5 on B.Cu
-[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
-    Local override; warning
-    @(46.4312 mm, 24.7500 mm): Footprint R6
-[missing_footprint]: Missing footprint R7 (6.81M)
-    Local override; warning
-[missing_footprint]: Missing footprint R8 (3.74M)
-    Local override; warning
-[missing_footprint]: Missing footprint R9 (1k)
-    Local override; warning
-[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
-    Local override; warning
-    @(31.4000 mm, 31.3750 mm): Footprint R10
-[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
-    Local override; warning
-    @(27.6000 mm, 34.0000 mm): Footprint R11
-[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
-    Local override; warning
-    @(31.5417 mm, 48.4438 mm): Footprint R12
-[net_conflict]: Pad net (STO) doesn't match net given by schematic (VS)
-    Local override; warning
-    @(32.0517 mm, 48.4438 mm): Pad 2 [STO] of R12 on B.Cu
-[missing_footprint]: Missing footprint R13 (10k)
-    Local override; warning
-[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
-    Local override; warning
-    @(5.3508 mm, 4.9245 mm): Footprint R14
-[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
-    Local override; warning
-    @(5.6388 mm, 50.1650 mm): Footprint SB1
-[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
-    Local override; warning
-    @(26.4000 mm, 52.4000 mm): Footprint SB2
-[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
-    Local override; warning
-    @(30.7409 mm, 49.7548 mm): Footprint SB3
-[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
-    Local override; warning
-    @(34.9800 mm, 49.6000 mm): Footprint SB4
 [footprint_symbol_mismatch]: Downloads:SCHURTER_SCPC_SS17 doesn't match footprint given by symbol (solarglow:SC1)
     Local override; warning
     @(15.5000 mm, 21.2500 mm): Footprint SC1
@@ -233,9 +76,6 @@
 [footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
     Local override; warning
     @(15.5000 mm, 21.2500 mm): Footprint SC1
-[net_conflict]: Pad net (STO) doesn't match net given by schematic (VS)
-    Local override; warning
-    @(15.5000 mm, 5.0000 mm): Pad P [STO] of SC1 on B.Cu
 [footprint_symbol_mismatch]: Downloads:SCHURTER_SCPC_WS17-mod2 doesn't match footprint given by symbol (solarglow:SC2)
     Local override; warning
     @(35.3000 mm, 16.9000 mm): Footprint SC2
@@ -245,9 +85,6 @@
 [footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
     Local override; warning
     @(35.3000 mm, 16.9000 mm): Footprint SC2
-[net_conflict]: Pad net (STO) doesn't match net given by schematic (VS)
-    Local override; warning
-    @(35.3000 mm, 27.9000 mm): Pad P [STO] of SC2 on B.Cu
 [footprint_symbol_mismatch]: Downloads:SCHURTER_SCPC_SS17 doesn't match footprint given by symbol (solarglow:SC3)
     Local override; warning
     @(15.6464 mm, 67.4803 mm): Footprint SC3
@@ -266,49 +103,6 @@
 [footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
     Local override; warning
     @(35.2287 mm, 71.9702 mm): Footprint SC4
-[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
-    Local override; warning
-    @(13.3000 mm, 46.0000 mm): Footprint SJ1
-[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
-    Local override; warning
-    @(26.3508 mm, 50.3682 mm): Footprint SW2
-[net_conflict]: Pad net (STO) doesn't match net given by schematic (VS)
-    Local override; warning
-    @(25.4508 mm, 50.3682 mm): Pad 1 [STO] of SW2 on B.Cu
-[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
-    Local override; warning
-    @(13.3000 mm, 16.9000 mm): Footprint TC1
-[net_conflict]: Pad net (STO) doesn't match net given by schematic (VS)
-    Local override; warning
-    @(13.9350 mm, 15.6300 mm): Pad 2 [STO] of TC1 on B.Cu
-[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
-    Local override; warning
-    @(48.4000 mm, 12.0000 mm): Footprint TP1
-[net_conflict]: Pad net (SRC) doesn't match net given by schematic (VIN)
-    Local override; warning
-    @(48.4000 mm, 12.0000 mm): Pad 1 [SRC] of TP1 on B.Cu
-[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
-    Local override; warning
-    @(8.2296 mm, 44.0690 mm): Footprint U1
-[net_conflict]: Pad net (EN_STO_CH) doesn't match net given by schematic (PA4)
-    Local override; warning
-    @(6.2296 mm, 43.2690 mm): Pad 2 [EN_STO_CH] of U1 on B.Cu
-[net_conflict]: Pad net (STO_SNS) doesn't match net given by schematic (unconnected-(U1-PD1-Pad11))
-    Local override; warning
-    @(8.2296 mm, 46.0690 mm): Pad 11 [STO_SNS] of U1 on B.Cu
-[missing_footprint]: Missing footprint U2 (ALD910025SALI)
-    Local override; warning
-[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
-    Local override; warning
-    @(25.8000 mm, 32.8000 mm): Footprint U3
-[missing_footprint]: Missing footprint U4 (TLV3011BIDBVR)
-    Local override; warning
-[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
-    Local override; warning
-    @(35.0520 mm, 34.0000 mm): Footprint U5
-[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
-    Local override; warning
-    @(3.9112 mm, 7.3147 mm): Footprint U6
 [extra_footprint]: Extra footprint
     Local override; warning
     @(3.0000 mm, 60.4000 mm): Footprint <no reference designator>
@@ -324,45 +118,6 @@
 [extra_footprint]: Extra footprint
     Local override; warning
     @(0.0000 mm, 0.0000 mm): Footprint <no reference designator>
-[extra_footprint]: Extra footprint
-    Local override; warning
-    @(31.2000 mm, 54.0000 mm): Footprint U8
-[extra_footprint]: Extra footprint
-    Local override; warning
-    @(6.4039 mm, 58.7267 mm): Footprint R16
-[extra_footprint]: Extra footprint
-    Local override; warning
-    @(35.8000 mm, 54.4900 mm): Footprint CINT
-[extra_footprint]: Extra footprint
-    Local override; warning
-    @(5.4356 mm, 58.7248 mm): Footprint C24
-[extra_footprint]: Extra footprint
-    Local override; warning
-    @(25.0000 mm, 55.0000 mm): Footprint CSRC
-[extra_footprint]: Extra footprint
-    Local override; warning
-    @(35.8000 mm, 56.4000 mm): Footprint R17
-[extra_footprint]: Extra footprint
-    Local override; warning
-    @(4.0000 mm, 55.4000 mm): Footprint U9
-[extra_footprint]: Extra footprint
-    Local override; warning
-    @(1.9812 mm, 54.7116 mm): Footprint FB1
-[extra_footprint]: Extra footprint
-    Local override; warning
-    @(6.1468 mm, 55.7276 mm): Footprint CSTO
-[extra_footprint]: Extra footprint
-    Local override; warning
-    @(25.0000 mm, 56.9100 mm): Footprint L2
-[extra_footprint]: Extra footprint
-    Local override; warning
-    @(3.0981 mm, 57.7951 mm): Footprint C23
-[extra_footprint]: Extra footprint
-    Local override; warning
-    @(2.7000 mm, 52.0000 mm): Footprint R15
-[extra_footprint]: Extra footprint
-    Local override; warning
-    @(3.5091 mm, 53.1241 mm): Footprint C22
 
 ** Ignored checks **
     - Footprint has no courtyard defined
