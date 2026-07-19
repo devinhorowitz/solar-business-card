@@ -1734,17 +1734,16 @@ AElFTkSuQmCC" alt="Logo" width="370" height="200">
  <td class="cell-info">
    <b>PCB</b>: solar-glow-drh-v4_0<br>
    <b>Revision</b>: <br>
-   <b>Date</b>: 2026-07-19T18:11:04<br>
+   <b>Date</b>: 2026-07-19T18:36:18<br>
    <b>KiCad Version</b>: 10.0.4<br>
  </td>
  <td class="cell-stats">
    <b>Errors</b>: 0 (+10 excluded)<br>
-   <b>Warnings</b>: 0<br>
-   <b>Total</b>: 0 (+10 excluded)<br>
+   <b>Warnings</b>: 2<br>
+   <b>Total</b>: 2 (+10 excluded)<br>
  </td>
 </tr>
 </table>
-<div class="centered-checkmark">&#x2714;</div>
 <p class="subtitle">Violations</p>
 <table class="content-table">
  <thead>
@@ -1804,6 +1803,28 @@ AElFTkSuQmCC" alt="Logo" width="370" height="200">
    <td class="td-excluded">tracks_crossing</td>
    <td>Tracks crossing</td>
    <td>@(41.0 mm, 52.42 mm): Track [LA] on B.Cu, length 14.4200 mm<br>@(41.0 mm, 38.0 mm): Track [LB] on B.Cu, length 1.9000 mm<br></td>
+  </tr>
+ </tbody>
+</table>
+<p class="subtitle">Schematic parity</p>
+<table class="content-table">
+ <thead>
+  <tr>
+   <th>Type</th>
+   <th>Description</th>
+   <th>Details</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr id="10">
+   <td class="td-warning">footprint_symbol_mismatch</td>
+   <td>Inductor_SMD:L_0603_1608Metric doesn't match footprint given by symbol (Inductor_SMD:L_1008_2520Metric)</td>
+   <td>@(28.1375 mm, 56.7 mm): Footprint L2<br></td>
+  </tr>
+  <tr id="11">
+   <td class="td-warning">footprint_symbol_field_mismatch</td>
+   <td>Field 'Description' differs (PCB: '10uH 1.76A power inductor, AEM10300 LDCDC (aem10300.pdf Table 11 = DFE252010F-100M); 2.5x2.0x1.0mm, land grows past 0603 - PCB rework pending', Schematic: '10uH 1.76A power inductor, AEM10300 LDCDC (aem10300.pdf Table 11 = DFE252010F-100M); DFE252010 = 2.5x2.0mm on a 1008/2520 land (L_1008_2520Metric) - re-run Update-PCB then route')</td>
+   <td>@(28.1375 mm, 56.7 mm): Footprint L2<br></td>
   </tr>
  </tbody>
 </table>
