@@ -1,6 +1,6 @@
-# SOLAR-GLOW DRH — firmware (targets the v3.0 card)
+# SOLAR-GLOW DRH - firmware (targets the v4.0 card)
 
-Bare-metal C for the AVR64DD28 on the SOLAR-GLOW DRH v3.0 card. The card
+Bare-metal C for the AVR64DD28 on the SOLAR-GLOW DRH v4.0 card. The card
 harvests light into a supercap tank, sleeps in deep power-down, and lights the
 backlit **DRH** monogram with a breathing glow when you tap it (or when it is
 carried from dark into light). There is **no button** on this card — the
@@ -85,8 +85,8 @@ switchable **3 V / 5 V** supply built in, so there's no resistor to wire and it 
 power the card itself. Its 3-pin JST-SH cable is colour-coded **white = UPDI**,
 **black = GND**, **red = PWR** (same three signals on the 0.1" header).
 
-1. **Set the voltage switch to 3 V.** The VS rail clamps at ~3.5 V (≤3.60 V worst-case), so 3 V power and
-   logic are safe; **never 5 V** — it over-drives the UPDI pin and exceeds the clamp.
+1. **Set the voltage switch to 3 V.** VS is the LDO's regulated 3.3 V rail (U9 TPS7A0233), so 3 V power and
+   logic are safe; **never 5 V** - it over-drives the UPDI pin and exceeds the 3.3 V parts.
 2. Wire by signal to TC1 (or J1): **white/UPDI → UPDI**, **black/GND → GND**, and
    **red/PWR → the connector's Vcc pin** (it sits on VS). Confirm the TC1/J1 pin
    order against the schematic — a 3-contact UPDI Tag-Connect carries UPDI, GND, Vcc.
@@ -143,25 +143,27 @@ AVR64DD28, VQFN-28, on the **back** of the board.
 | 27 | PA1 | LDRV3 | LED D4, TCA0 WO1 |
 | 28 | PA2 | LDRV2 | LED D3, TCA0 WO2 |
 | 1 | PA3 | LDRV1 | LED D2, TCA0 WO3 |
+| 2 | PA4 | EN_STO_CH | AEM10300 charge gate, open-drain, LOW = disable charge during NFC read |
 | 4 | PA6 | FD | NFC field-detect in (`U5`); PORTA pin int, **both edges**; field-powered (works VCC-off); int pull-up on (sole FD pull-up; ext 10k `R13` to VS is DNP) |
 | 5 | PA7 | NFC_EN | Enables the NFC VCC load switch (`U6`, TPS22918), **active-HIGH**; init LOW = NFC off. (`R14`, 1 M, holds `U6` off while PA7 tristates during reset/UPDI/brown-out — **on the v3.0 board** at (4.39, 29.4). Firmware also drives PA7 low-before-output and low-before-sleep, so the window is covered both ends.) |
 | 8 | PC2 | SDA | TWI0 host (PORTMUX **ALT2**), ext 4.7k → VS |
 | 9 | PC3 | SCL | TWI0 host (ALT2), ext 4.7k → VS |
 | 10 | VDDIO2 | VS | tied to VS by SJ1; PORTC at rail, MVIO unused |
+| 11 | PD1 | STO_SNS | supercap sense: STO/3 (R15/R16) into ADC AIN1 |
 | 12 | PD2 | VSENSE | light/rail sense: ADC AIN2 + AC0 AINP0 |
 | 20 | PF0 | INT1 | accel tap in (rising) |
 | 21 | PF1 | INT2 | accel motion in (rising) |
 | 23 | UPDI | UPDI | program |
-| 18,24 | VDD | VS | clamped rail ≤ 3.60 V worst-case (~3.50 typ) |
+| 18,24 | VDD | VS | regulated 3.3 V LDO output (U9 TPS7A0233) |
 | 19,25,EP | GND | GND | |
 
 LEDs are **low-side**: each lights when its PA pin pulls LOW, current set by a
 150 Ω ballast on the clamped rail (~8 mA peak per LED: amber Vf≈2.25 V over
 (3.4−2.25)/150). PWM only trims the
-average below that ballasted ceiling. `D1`/`D9` are Schottkys, not LEDs.
+average below that ballasted ceiling. The only D-parts on the v4 board are the LEDs D2–D5.
 
-Spare/free: PA4, PC0, PC1 (on JP2); PA5 (`BTN`, reserved stub for v3);
-PD1, PD3–PD7, PF6/RST. (PA6 = NFC `FD`, PA7 = `NFC_EN`.) All of these unused pins
+Spare/free: PC0, PC1 (on JP2); PA5 (`BTN`, reserved stub);
+PD3–PD7, PF6/RST. (PA6 = NFC `FD`, PA7 = `NFC_EN`.) All of these unused pins
 get internal pull-ups in `gpio_init` so a floating input can't leak current — see
 *Power notes*.
 
@@ -286,7 +288,7 @@ fallback `text/x-vCard` is a one-line change in the generator.
 
 ## Power notes / wake architecture (these correct the hardware doc's §6)
 
-The rail is tiny (clamped ≤ 3.60 V supercap, sub-mA indoor harvest), so standing
+The rail is tiny (VS is the LDO's regulated 3.3 V, fed from an unclamped ~1 F supercap tank on sub-mA indoor harvest), so standing
 current is the whole game, and the wake architecture has to live within it. Two
 things here diverge from the hardware doc's §6:
 
@@ -346,7 +348,7 @@ sleep-current question the old design flagged is **closed in code**; the bench
 run now just *confirms* it (expect the analog domain to be a rounding error,
 ~1 µA total in power-down) rather than deciding whether there is a bug to gate.
 
-**Unused pins don't float.** Every pin the firmware doesn't drive — PA4, PA5, PC0,
+**Unused pins don't float.** Every pin the firmware doesn't drive - PA5, PC0,
 PC1 and the PORTD spares — is given an internal pull-up in `gpio_init` (PD2, the
 analog sense pin, instead has its digital input buffer disabled). A floating CMOS
 input draws shoot-through current in its input buffer whenever it drifts near
@@ -475,7 +477,7 @@ the sensor.
 The "charging in the sun" tell: on the ~1 s poll, when VIN is past the clamp (strong
 sun) **and** the caps are full, the card plays a left→right loading sweep across
 D2–D5. The caps-full gate is the hard safety — the sweep can never draw the pack down;
-it only spends solar the clamp would otherwise dump as Q1 heat. One VSENSE read yields
+it only spends solar that would otherwise go unharvested once the tank is full. One VSENSE read yields
 both the light and strong-sun predicates (`sense_vin_flags()`, raw-count, no mV math).
 - **`USE_SUN_SWEEP`** (0/1, default 1): master enable. 0 compiles the trigger out of
   the poll path entirely (`led_sweep` stays linked as library code) — the one flag to

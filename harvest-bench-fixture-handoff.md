@@ -167,9 +167,10 @@ optional shunt and filter cap. Nothing else.
 | **Parallel (product)** | A, B, C, D | S | PV1 \|\| PV2 (~4.15 V, ~2x current) |
 | **Series** | A, D, S | B, C | PV1 + PV2 (~8.3 V Voc) |
 
-Parallel is the configuration the product actually uses (both panels diode-OR'd into one
-source); measure it as the primary case, the singles to see panel-to-panel spread and partial
-shading, series only if a boost-input experiment interests you.
+Parallel is the configuration the product actually uses (both panels merged directly into one
+source node, SRC -- the v3 per-panel blocking diodes are gone in v4); measure it as the primary
+case, the singles to see panel-to-panel spread and partial shading, series only if a boost-input
+experiment interests you.
 
 ### 5.4 Measurement-block pads (top side, sized for probe clips)
 

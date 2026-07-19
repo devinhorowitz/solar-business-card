@@ -19,11 +19,11 @@ a supercapacitor bank that holds the charge.
 
 | What | Current | Notes / fallback |
 |---|---|---|
-| **PCB** | **v3.0 — 2-layer** (F / B) | GND = full-board B.Cu pour; VS = routed B mesh. **v2.3 (4-layer: F / In1 GND / In2 VS / B) is the fallback design, in git history.** v2.1 was 6-layer (history). |
+| **PCB** | **v4.0 - 2-layer** (F / B) | GND = full-board B.Cu pour; VS = routed B mesh. **v2.3 (4-layer: F / In1 GND / In2 VS / B) is the fallback design, in git history.** v2.1 was 6-layer (history). |
 | Board | 50.80 × 88.90 mm, r3.0 corners, **0.60 mm** FR4, ENIG, matte-black mask | 0.6 mm — committed in the board stackup (frees the shell floor to 1.0 mm) |
 | Mounting holes | 4× M2, GND, at **(3.0, 3.0) / (47.8, 3.0) / (3.0, 85.9) / (47.8, 85.9)**, pitch **44.80 × 82.90 mm** | concentric with the r3.0 corner fillets |
-| **Enclosure** | **v3.0 Ti back-shell** — 1.00 floor, 1.80 cavity (0.95 local under U2), overall **3.55 mm**; center support via the resin diffuser brace | matches the v3.0 hole pattern; see `enclosure/README.md` |
-| BOM | **v3_0 masters** — U6 + R14 added, JP1/JP2 dropped (JP1 later reused for the bench pad strip), all passives except SJ1 now 0402 | master is `PCB/solar-glow-drh-v4_0-BOM.xlsx`; placed set in `-BOM-assembly.xlsx` |
+| **Enclosure** | **v3.0 Ti back-shell** - 1.00 floor, 1.80 cavity (0.95 local relief; note the v3 U2 balancer that drove it is removed in v4, so this pocket needs revisiting), overall **3.55 mm**; center support via the resin diffuser brace | matches the v3.0 hole pattern; see `enclosure/README.md` |
+| BOM | **v4_0 master** - U6 + R14 added, JP1/JP2 dropped (JP1 later reused for the bench pad strip), all passives except SJ1 now 0402 | master is `PCB/solar-glow-drh-v4_0-BOM.xlsx`; placed set in `-BOM-assembly.xlsx` |
 | Firmware | register-verified C, not yet on hardware | LED pin map re-mapped in v3.0 (see `firmware/README.md`) |
 
 ### Where the truth lives — how these docs stay from drifting
@@ -49,10 +49,12 @@ each); read them for lineage, not for current values.
 
 A business-card-sized PCB — **50.8 × 88.9 mm, 0.6 mm FR4, ENIG, rounded corners** — that:
 
-- **Harvests** indoor light with **two** ANYSOLAR solar cells wired in parallel, each behind
-  its own blocking diode so a half-shadow on one can’t back-feed the other.
+- **Harvests** indoor light with **two** ANYSOLAR solar cells merged into a single solar node (SRC) that feeds the AEM10300 harvester (U8),
+  which runs the MPPT and handles reverse-blocking so neither panel back-feeds the
+  other - the v3 per-panel blocking diodes are removed.
 - **Stores** energy in **four** series-parallel supercapacitors — **1 F at 5.5 V, ≈ 15 J** —
-  kept balanced by a dual SAB-MOSFET, and held to a safe voltage by a shunt clamp.
+  with the AEM10300 harvester (U8) balancing the series midpoint (MID); the safe 3.3 V VS rail
+  is set by the U9 TPS7A0233 LDO, not a shunt clamp.
 - **Glows** by back-lighting a **“DRH” monogram** that’s cut into the front copper: a gold
   ENIG field with the three letters opened to bare FR4. Four reverse-mounted amber LEDs on the
   back fire up through the translucent substrate, so the letters themselves light up — and PWM
@@ -65,7 +67,7 @@ all lives on the back, ready for an optional machined-metal back-shell.
 
 > **A note on lineage:** earlier revisions (REV J and before) were *generated from Python* —
 > geometry and Gerbers emitted by script, no layout tool in the loop. **v2.1 is a full KiCad
-> design** (schematic + board), continued through v3.0. The old generators are kept only as
+> design** (schematic + board), continued through v4.0. The old generators are kept only as
 > history; the KiCad files are the source of truth.
 
 ---
@@ -76,25 +78,25 @@ all lives on the back, ready for an optional machined-metal back-shell.
 |---|---|---|
 | MCU | **AVR64DD28** (28-VQFN) | TCA0 hardware PWM, I²C to the accel, charge/sleep logic; MVIO-capable (unused) |
 | Solar | **2× ANYSOLAR SM141K06TF** | monocrystalline indoor cells (Voc 4.15 V), in parallel — two panels ≈ 2× the harvest |
-| Blocking diodes | **2× onsemi MMSD301T1G** | Schottky, one per panel; isolates the cells *and* the supercaps |
+| Harvest PMIC | **e-peas AEM10300** (U8, QFN-28 4×4) | MPPT buck-boost that merges both panels at SRC and charges the supercap tank (STO) - replaces the v3 per-panel blocking diodes |
 | Storage | **4× SCHURTER 3-153-438** (WS17) | 1 F / 2.75 V each, wired 2P2S → **1 F @ 5.5 V ≈ 15 J** on one balanced node |
-| Balancer | **ALD910025SALI** | dual SAB MOSFET — the low-leakage way to hold the series midpoint |
-| Rail clamp | **TI TLV3011 + onsemi BCP53 PNP** | shunt clamp holds the rail **≤ 3.60 V worst-case (~3.50 V typ)** so the accel stays inside its 3.6 V max |
+| Midpoint balance | **AEM10300 (U8) BAL** | the harvester balances the 2S supercap midpoint (MID net) - replaces the v3 ALD910025 dual SAB MOSFET |
+| Rail regulator | **TI TPS7A0233** (U9, SOT-23-5) | nanopower LDO (~25 nA Iq) regulates STO down to the fixed **3.3 V VS rail** the MCU + accel run on - replaces the v3 TLV3011 + PNP shunt clamp |
 | LEDs | **4× ams OSRAM LA P47F** (amber) | reverse-mount; glow through the FR4 window, **150 Ω** ballast each |
 | LED master switch | **SW2** (solder-bridge) + **R12** | OFF / ON / TINY — TINY routes the LEDs through a 220 Ω ballast for a dim, long-runtime glow |
 | Motion | **ADI ADXL367** | 3-axis accel; tap / double-tap wakes the MCU via interrupts; 0.89 µA (swapped from LIS2DH12 on backorder) |
-| Light sense | **R5 / R6 divider → PD2** | VIN ÷ 2 off the *solar input* (not the rail) — tracks light directly; doubles as wake-on-light |
-| NFC | **NXP NT3H2211** (NTAG I²C plus 2K) | present from v3.0 — a contact **vCard** a phone taps to save; field-detect (FD, PA6) also wakes the glow — I²C `0x55`, shares the accel's bus; VCC **power-gated by `U6`** (`NFC_EN`/PA7, off by default) |
+| Light sense | **R5 / R6 divider → PD2** | SRC ÷ 2 off the *merged solar input* (not the rail) - tracks light directly; doubles as wake-on-light |
+| NFC | **NXP NT3H2211** (NTAG I²C plus 2K) | present from v3.0 - a contact **vCard** a phone taps to save; field-detect (FD, PA6) also wakes the glow - I²C `0x55`, shares the accel's bus; VCC **power-gated by `U6`** (`NFC_EN`/PA7, off by default); the same U6 switch also gates the new **U7 MB85RC512TY FRAM** (I²C 0x50, C28) on the shared VNFC rail |
 
 **Breakouts and features:** a **TC2030** Tag-Connect pad (`TC1`) for hands-free UPDI
 programming, a backup UPDI header (`J1`), a **5-pad bench strip** on the back east edge
-(`TP1` VIN + `JP1` GND/VS/SCL/SDA — bare SMD probe pads for bench power injection and an I²C
+(`TP1` SRC + `JP1` GND/VS/SCL/SDA - bare SMD probe pads for bench power injection and an I²C
 tap; pinout in `solar-glow-drh-v2-hardware.md`), per-LED disable jumpers (`SB1–4`), a VDDIO2
 tie jumper (`SJ1`), and **four grounded M2 mounting holes** at the corners. (The v2-era
 `JP1`/`JP2` 2.54 mm breakout headers are gone; the `JP1` name is reused for the strip.)
 
 Full part numbers, pricing, and per-part datasheet links are in
-**`PCB/solar-glow-drh-v4_0-BOM.xlsx`** — the master BOM (v3.0): **U6 (TPS22918) and R14 (1 M `NFC_EN` pulldown) included**, the stale JP1/JP2 rows dropped (the `JP1` designator is reused in v3.0 for the bench pad strip — bare pads, no BOM part), and every passive except SJ1 converted to **0402** to match the board lands. Converted/added lines have prices blanked pending a fresh quote (U6 quoted: TPS22918DBVR $0.55 @ qty 1, DigiKey 2026-07-02). Lineage: v2.2 added the NFC parts (U5 / C8 / C9 / R13); the `v2 2` and older BOM files stay in the repo as history.
+**`PCB/solar-glow-drh-v4_0-BOM.xlsx`** - the master BOM (v4.0): **U6 (TPS22918) and R14 (1 M `NFC_EN` pulldown) included**, the stale JP1/JP2 rows dropped (the `JP1` designator is reused in v3.0 for the bench pad strip - bare pads, no BOM part), and every passive except SJ1 converted to **0402** to match the board lands. Converted/added lines have prices blanked pending a fresh quote (U6 quoted: TPS22918DBVR $0.55 @ qty 1, DigiKey 2026-07-02). Lineage: v2.2 added the NFC parts (U5 / C8 / C9 / R13); the `v2 2` and older BOM files stay in the repo as history.
 
 ---
 
@@ -111,10 +113,11 @@ Full part numbers, pricing, and per-part datasheet links are in
   *open* over the window on purpose: bare ENIG reflects the LEDs’ light forward instead of
   absorbing it.
 - **Rail discipline.** The supercap stack can sit near 5.5 V, but the accelerometer tops out at
-  3.6 V — so a TLV3011-referenced PNP shunt clamp sits on the **VS rail** (after the blocking
-  diodes) and holds VS ≤ 3.60 V worst-case (~3.50 V typ), directly limiting what the accelerometer sees. Its sense
-  divider draws a standing microamp or two from the rail — small against the other always-on
-  loads, and the trade for regulating VS itself rather than the solar input.
+  3.6 V - so the **U9 TPS7A0233 LDO** regulates the supercap tank (STO) down to the fixed
+  **3.3 V VS rail**, directly bounding what the accelerometer sees. Its ~25 nA quiescent
+  draw is negligible against the other always-on loads, and it regulates VS itself rather
+  than the solar input. (v3's TLV3011 + PNP shunt clamp and the per-panel blocking diodes
+  are gone - the AEM10300 now owns the harvest path.)
 - **Power planes** carry the supercap charge/discharge currents; the four cells eat the better
   part of the back, so the layout is geometry-bound and the planes earn their layers.
 
@@ -127,9 +130,9 @@ full-sun number, and indoor light delivers a small fraction of it, while four br
 average several milliamps. The two-panel harvest and the 15 J tank are sized to **harvest
 slowly and glow in bursts** — but that bet has never been put on a meter.
 
-What changed the math since the early notes: the rail is now **clamped to ~3.50 V (≤ 3.60 V worst-case)** and the
-ballasts are **150 Ω**, so each LED peaks near **~9 mA** at the 3.60 V worst-case clamp (~8 mA
-at the ~3.5 V typical rail, the figure `firmware/README.md` quotes) rather than the old estimate. Four
+What changed the math since the early notes: the rail is now the **regulated 3.3 V VS rail** (the U9 LDO output) and the
+ballasts are **150 Ω**, so each LED peaks near **~7 mA** off the regulated **3.3 V VS rail** ((3.3 V - amber
+Vf ≈ 2.25 V)/150 Ω, the figure `firmware/README.md` quotes) rather than the old estimate. Four
 on at once is a real load against an indoor harvest measured in fractions of a milliamp.
 
 **First move when boards arrive:** put the cells under your actual target lighting and measure
@@ -215,7 +218,7 @@ the board gives it:
   **NFC_EN (PA7)**, held **off by default** and raised only around an I²C access; the vCard read and
   the FD-wake both run on the phone's field power, so they still work with the tag's VCC off. Shares
   the I²C bus with the accel (`0x55` vs `0x1D`). See `firmware/README.md` → *NFC contact card*.
-- **Light sensing** — the divider taps the **solar input** (VIN ÷ 2) into **PD2** (AIN2), so it
+- **Light sensing** - the divider taps the **merged solar node SRC** (SRC ÷ 2) into **PD2** (AIN2), so it
   reads light directly — ~0 V dark, rising under light; firmware adapts the glow to available
   light and can also read **VDD/10** and the internal temp sensor.
 - **Wake-on-light** — the card can also wake when light appears, with no tap. The implemented
@@ -250,7 +253,7 @@ validated — see `enclosure/README.md`.
 
 The decisions that matter once it’s cut: **titanium (Ti-6Al-4V Grade 5)**, **3-axis CNC-milled** by
 PCBWay, **bead-blast** finish; the general cavity is **cap-limited to 1.80 mm** by the four 1.70 mm
-supercaps (U2 at 1.75 mm sits over a small **relief pocket** that drops the local floor 0.05 mm so it
+supercaps (the v3 U2 balancer (removed in v4) sat at 1.75 mm over a small **relief pocket** that drops the local floor 0.05 mm so it
 still clears), the floor runs to **1.00 mm** (no ribs — a resin diffuser brace carries center support), and the overall height
 is **3.55 mm**. The four bosses sit on the **v3.0 hole pattern** (concentric with the r3.0 corner
 fillets), the internal braces are **removed**, and retention is **four corner M2 screws**, not a press

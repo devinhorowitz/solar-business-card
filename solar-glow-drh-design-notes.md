@@ -3,7 +3,7 @@
 Durable engineering rationale, hard-won findings, and future-variant ideas, distilled from the v0/v1 planning docs (since retired).
 
 **Authority order.** For the *current* design, the committed `solar-glow-drh-v4_0.kicad_pcb` /
-`.kicad_sch` (v3.0, 2-layer) plus `README.md`'s current-revision table are ground truth; the 4-layer v2.3
+`.kicad_sch` (v4.0, 2-layer) plus `README.md`'s current-revision table are ground truth; the 4-layer v2.3
 (in git history) is the fallback design. This file is the *reasoning archive* — the
 "why" and the "don't do that again" — with the **v3.0 deltas collected in §12**. Where an as-built
 doc already owns a topic, this points at it rather than duplicating. (The `solar-glow-drh-v2-*` docs
@@ -115,8 +115,8 @@ The glow is **central and rear-facing**, which is exactly where the four big cel
   re-spin and the real cost of four cells: the glow and the energy tank compete for the same rear
   centre.
 - **Layout strategy: mirror the top supercap pair to the bottom** (reuses the proven footprint and
-  its routing). Both pairs join the **same VS / MID / GND nets** (SC3 ∥ SC1, SC4 ∥ SC2) → **1 F @
-  5.5 V on a single MID node**, so **U2 alone does all the balancing — no second balancer**. The MID
+  its routing). Both pairs join the **same STO / MID / GND nets** (SC3 ∥ SC1, SC4 ∥ SC2) → **1 F @
+  5.5 V on a single MID node**, so **the AEM10300 (U8) BAL pin balances the stack - no separate balancer** (v3 used U2 ALD910025, deleted in v4). The MID
   net runs the length of the board (cheap on planes) to tie both midpoints.
 - **Mounting holes at all four corners.** Inboard screws leave the ends of the 89 mm card
   unsupported — bad for a stiff metal back-plate. Keep M2 engagement at the corners.
@@ -215,7 +215,7 @@ re-spin for the enclosure:
   thermistors.**
   - *The single internal sensor suffices.* There is no internal heat source of consequence -- the only
     dissipators are the Q1/TLV3011 shunt clamp (≤~0.2 W, and only under strong direct sun) and the brief
-    LED breaths -- so in the failure mode that actually matters (hot car / sun-soak) the whole 54 x 86 mm
+    LED breaths -- so in the failure mode that actually matters (hot car / sun-soak) the whole 50.8 x 88.9 mm
     card floats to ambient and sits near-isothermal. Across 0.6 mm FR4 with a thermally-coupled Ti shell,
     any MCU-to-cap gradient collapses well within the max-temp logging timescale. The cap centers are
     25-40 mm from U1 (SC1 24.7, SC3 31.7, SC2 35.2, SC4 40.4 mm), but the long cap bodies reach within a
@@ -354,7 +354,7 @@ the LDRV fan moved):
 |---|---|---|
 | v2.2 | 6-layer | intermediate |
 | **v2.3** | **4-layer** — F · In1 GND · In2 VS · B | **fallback** design (git history) |
-| **v3.0** | **2-layer** — F · B | **current** — GND = full-board B.Cu pour, VS = routed B mesh (the 4→2 conversion of v2.3). See §12. |
+| **v3.0** | **2-layer** - F · B | **final unmanaged-solar rev (superseded by v4.0 managed-solar)** - GND = full-board B.Cu pour, VS = routed B mesh (the 4→2 conversion of v2.3). See §12. |
 
 
 ---
@@ -381,10 +381,10 @@ dominant line, and the reason the 4-cell array is a deliberate reroute rather th
 
 ---
 
-## 12. v3.0 — the 2-layer redesign (current)
+## 12. v3.0 - the 2-layer redesign (frozen - final unmanaged-solar revision, superseded by v4.0)
 
 v3.0 re-implements v2.3's 4-layer board on **two layers** (F / B) — same 50.80 × 88.90 card, r3.0
-corners, and the **same BOM**. It is the current board; **v2.3 (4-layer) is the fallback design, in git history.**
+corners, and the **same BOM**. It is now frozen as the final unmanaged-solar revision (superseded by the v4.0 managed-solar redesign - see the 2026-07-15 AEM10300 addendum); **v2.3 (4-layer) is the fallback design, in git history.**
 
 - **GND and VS come off the inner planes.** In1 (GND plane) becomes a **full-board B.Cu pour**
   (`GND_B` zone) plus stitch straps; In2 (VS plane) becomes a **routed mesh on B** (w0.4 trunk).

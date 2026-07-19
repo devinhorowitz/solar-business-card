@@ -1,4 +1,4 @@
-# SOLAR-GLOW · DRH — PCB (v3.0): Order & Build Guide
+# SOLAR-GLOW · DRH - PCB (v4.0): Order & Build Guide
 
 ![Generated/docs/solar-glow-drh-v4_0-bottom.png](https://github.com/devinhorowitz/solar-business-card/blob/main/Generated/docs/solar-glow-drh-v4_0-bottom.png)
 
@@ -15,7 +15,7 @@ PCB/
 ├── solar-glow-drh-v4_0.kicad_prl     # local project state
 ├── solar-glow-drh-v4_0.kicad_dru     # two-tier design rules (PCBWay floor + marginal band)
 ├── solar-glow-drh.kibot.yaml         # CI recipe — regenerates ../Generated/ on every push
-├── solar-glow-drh-v4_0-BOM.xlsx      # bill of materials — v3.0 master (U6 + R14; all-0402)
+├── solar-glow-drh-v4_0-BOM.xlsx      # bill of materials - v4.0 master (adds the AEM10300 harvest chain: U7 FRAM, U8 PMIC, U9 LDO, L2/FB1, C22–C28, R15–R17; all-0402 except SJ1)
 ├── solar-glow-drh-v4_0-BOM-assembly.xlsx  # trimmed PCBA BOM (36 placed parts)
 ├── sw2-anode-selector.png            # how to read/set the SW2 OFF/ON/TINY bridge
 ├── led-orientation-D2-D5.png         # reverse-mount LED rotation reference for PCBA
@@ -25,7 +25,7 @@ PCB/
 
 > **The board is the source of truth.** `solar-glow-drh-v4_0.kicad_pcb` / `.kicad_sch`
 > govern. The design *reasoning* lives one level up:
-> - `../solar-glow-drh-v2-hardware.md` — as-built pin map and net list (the firmware target).
+> - `../firmware/board.h` + `../firmware/README.md` - as-built pin map and net list (the firmware target); `../solar-glow-drh-v2-hardware.md` is frozen v2 lineage only.
 > - `../solar-glow-drh-v2-mechanical.md` — board envelope, heights, mount holes, keepouts.
 > - `../solar-glow-drh-design-notes.md` — why each decision was made; the landmines.
 > - `../README.md` — the project overview and the standing open question (energy budget).
@@ -166,10 +166,10 @@ via), and no controlled-impedance nets to declare.
   copper and no wear surface on the face — do not ship without it.
 - "**The LA/LB track crossing at (41.0, 38.0) is the NFC coil junction — intentional.**"
 - **Bench pad strip (`TP1` + `JP1`, back east edge, x 48.4):** five bare 1.7 mm SMD probe pads
-  (VIN / GND / VS / SCL / SDA at 2.54 pitch) — no component; they are in the mark-as-DNP list
+  (SRC / GND / VS / SCL / SDA at 2.54 pitch) - no component; they are in the mark-as-DNP list
   above. Pinout and the bench-power ritual live in `solar-glow-drh-v2-hardware.md`.
 - **Via-in-pad — 12 vias land inside pads** on this board: 10 in soldered pads (`TC1.1`, `U1.EP`,
-  `U5.1`, `D1.K`, `R13.2`, `SW2.1`, `J1.2`, `PV1.N`, `PV2.N`, `PV2.Nt`) plus 2 in the bench-strip
+  `U5.1`, `SW2.1`, `J1.2`, `PV1.N`, `PV2.N`, `PV2.Nt`)  [D1.K and R13.2 removed - D1 and R13 are not on the v4 board; re-verify the full via-in-pad set against the v4 layout] plus 2 in the bench-strip
   probe pads (`JP1.3`, `JP1.4` — bare pads, hand-solder optional). The clean answer is
   the same as always: **order resin-fill + cap (via-in-pad process) board-wide.** The one
   that *must* be flat and hole-free is **TC1.1** (a Tag-Connect pogo contact); the rest
@@ -190,7 +190,7 @@ hand-tinning. Order it alongside the board.
 ## Step 4 — Order the parts
 
 **BOM state.** The masters are now **`solar-glow-drh-v4_0-BOM.xlsx`** and
-**`solar-glow-drh-v4_0-BOM-assembly.xlsx`**, generated from the v2.2 files with three fixes:
+**`solar-glow-drh-v4_0-BOM-assembly.xlsx`**, reworked for the v4.0 managed-solar redesign - the passive diode/shunt/comparator parts (U2, U4, Q1, D1, D9–D11, R7–R9) are removed and the AEM10300 harvest chain (U7, U8, U9, L2, FB1, C22–C28, R15–R17) is added, on top of the earlier fixes:
 **U6 (TPS22918) and R14 (1 M `NFC_EN` pulldown) added**, the stale **JP1/JP2 rows dropped** (the `JP1` designator is reused for the v3.0 bench pad strip — bare pads, not a BOM part)
 (those headers left the board in v3.0), and **every passive except SJ1 converted to 0402** to match
 the board's placed lands — the v2.2 file still listed 0805 MPNs for most R/C. Converted and added
@@ -202,32 +202,36 @@ Summary of the **orderable** lines:
 | Ref(s) | Qty | Value | MPN |
 |---|---:|---|---|
 | U1 | 1 | AVR64DD28 (VQFN-28) | `AVR64DD28-I/STX` |
-| U2 | 1 | Dual SAB MOSFET (SOIC-8) | `ALD910025SALI` |
 | U3 | 1 | ADXL367 accelerometer (LGA-12) | `ADXL367BCCZ-RL7` |
-| U4 | 1 | TLV3011 comparator + 1.242 V ref (SOT-23-6, open-drain) | `TLV3011BIDBVR` |
 | **U5** | 1 | **NFC tag, NT3H2211 (XQFN8 / SOT902-3)** | `NT3H2211W0FHKH` — matches the placed 0.25×0.4 mm land |
 | **U6** | 1 | **Load switch (SOT-23-6) (in the v3_0 BOM)** | `TPS22918DBVR` |
-| Q1 | 1 | PNP, BCP53 family | `BCP5316MTWG` |
 | PV1, PV2 | 2 | SM141K06TF solar cell | `SM141K06TF` |
-| D1, D9, D10, D11 | 4 | Schottky, SOD-123 (D1/D9 = per-panel blocking · D10/D11 = comparator-supply OR) | `MMSD301T1G` |
 | D2–D5 | 4 | Amber LED, reverse-mount | `LA P47F-V2BB-24-3B5A-30-R18-Z` |
 | **SC1–SC4** | **4** | **1 F / 2.75 V (WS17)** | `3-153-438` |
 | R1–R4 | 4 | **150 Ω 1% 0402 — SIZED** | `RC0402FR-07150RL` |
 | R5, R6 | 2 | 1 MΩ 0402 | `RC0402FR-071ML` |
-| R7 | 1 | 6.81 MΩ 0402 | `RC0402FR-076M81L` (confirm stock) |
-| R8 | 1 | 3.74 MΩ 0402 | `RC0402FR-073M74L` (confirm stock) |
-| R9 | 1 | 1 kΩ 0402 | `RC0402FR-071KL` |
 | R10, R11 | 2 | 4.7 kΩ 0402 (I²C pull-ups) | `RC0402FR-074K7L` |
 | R12 | 1 | 220 Ω 0402 | `RC0402FR-07220RL` |
-| **R13** | (1) | **10 kΩ 0402 — DNP (FD pull-up; the internal PA6 pull-up covers it)** | `RC0402FR-0710KL` |
 | **R14** | 1 | **1 MΩ 0402 (`NFC_EN` pulldown; consolidated onto the R5/R6 reel)** | `RC0402FR-071ML` |
-| C1, C2, C3, **C5**, C6, C7, **C8, C12** | 8 | 100 nF X7R 0402 | `GRM155R71C104KA88D` (Murata) |
+| C1, C3, **C5**, C6, C7, **C8, C12** | 7 | 100 nF X7R 0402 | `GRM155R71C104KA88D` (Murata) |
 | C4 | 1 | 4.7 µF X5R 0402 (consolidated onto the C13 reel) | `GRM155R61A475MEAAD` (Murata) |
-| **C10** | (1) | **100 nF X7R 0402, DNP (reserved VCMP decoupling; VCMP is now populated instead by C2, relocated from the VS rail)** | `GRM155R71C104KA88D` (Murata) |
 | **C11** | 1 | **0.22 µF (220 nF) X7R 0402 — accel VREG_OUT decoupling** | `GRM155R71C224KA12D` (Murata) |
 | **C13** | 1 | **4.7 µF X5R 0402 — LED-anode bulk** | `GRM155R61A475MEAAD` (Murata) |
 | **C9** | (1) | **NP0 0402, DNP — coil trim** | buy an NP0 range ~47–150 pF for the bench |
 | SJ1 | 1 | 0 Ω jumper 0805 | `RC0805JR-070RL` |
+| U7 | 1 | MB85RC512TY 512kbit I²C FeRAM (0x50, SOIC-8, VNFC-gated) | `MB85RC512TYPNF-GS-BCERE1` |
+| U8 | 1 | AEM10300 buck-boost harvest PMIC (QFN-28 4×4) | `10AEM10300C0000` |
+| U9 | 1 | TPS7A0233 LDO, 3.3 V (SOT-23-5) → VS | `TPS7A0233PDBVR` |
+| L2 | 1 | 10 µH inductor 0603 (AEM DCDC) | `Coilcraft XFL2020-103MEB` (verify footprint) |
+| FB1 | 1 | Ferrite bead 0603 (STO island feed) | `Murata BLM18PG221SN1D` |
+| C22, C23 | 2 | 1 µF 0402 (LDO in/out) | `GRM155R61A105KE15D` |
+| C24 | 1 | 100 nF 0402 (STO-sns filter) | `GRM155R71C104KA88D` |
+| C25 | 1 | 22 µF 0603 (AEM BUFSRC buffer) | `GRM188R60J226MEA0D` |
+| C26, C27 | 2 | 10 µF 0402 (AEM VINT / STO local bulk) | `GRM155R60J106ME44D` |
+| C28 | 1 | 100 nF 0402 (FRAM VNFC decoupling) | `GRM155R71C104KA88D` |
+| R15 | 1 | 2 MΩ 0402 1% (STO sense top) | `RC0402FR-072ML` |
+| R16 | 1 | 1 MΩ 0402 1% (STO sense bottom) | `RC0402FR-071ML` |
+| R17 | 1 | 1 MΩ 0402 1% (EN_STO_CH pull-up to VINT) | `RC0402FR-071ML` |
 
 **No ordered part — these are board features, not BOM line items:**
 - **SW2** (LED OFF/ON/TINY) and **SB1–SB4** (per-LED force-on) are **solder bridges** on the PCB.
@@ -255,9 +259,10 @@ them on the **back**; the front stays naked until you fit the cells. You finish 
 types by hand afterward.
 
 **The split**
-- **PCBWay machine-places** (reflow, bottom, **40 parts**): U1–U6, Q1, D1, D9, D10, D11, D2–D5,
-  R1–R12, R14 (R13 is DNP), SJ1, C1–C8, C11–C13 (C10 is DNP). `solar-glow-drh-v4_0-BOM-assembly.xlsx` is that trimmed file —
-  **regenerate it to 40**: D10/D11 are fitted SMD, and R13 + C10 are now DNP (consolidation) so they drop off the placement list.
+- **PCBWay machine-places** (reflow, bottom): U1, U3, U5–U9, D2–D5, R1–R6, R10–R12, R14–R17, L2, FB1,
+  SJ1, C1, C3–C8, C11–C13, C22–C28. (Recompute the placed count from the v4 board; the v3 clamp/comparator
+  parts - U2, U4, Q1, D1, D9–D11, R7–R9, C2, C10 - are gone.) `solar-glow-drh-v4_0-BOM-assembly.xlsx` is
+  that trimmed file - **regenerate it from the v4 board** so it reflects the v4 placed set.
 - **You hand-solder afterward:** SC1–SC4 supercaps and PV1–PV2 solar cells. They are kept
   **off** the PCBA BOM on purpose — the supercaps are manual-solder only (SCHURTER SCPC),
   and the cells are heat-sensitive.
@@ -266,7 +271,7 @@ types by hand afterward.
 
 **Sourcing:** turnkey, with the standing instruction that anything PCBWay can't source they
 flag and you consign from DigiKey — **no substitutes without approval**. The likeliest to
-need consigning are **U1** (AVR64DD28), **U2** (ALD910025SALI), **U5** (NT3H2211 — going
+need consigning are **U1** (AVR64DD28), **U8** (AEM10300 - e-peas harvest PMIC, source early), **U5** (NT3H2211 - going
 end-of-life in places; check stock early), and **D2–D5** (the ams OSRAM amber bin — confirm
 the exact reverse-mount P/N, OSRAM sells top-emit lookalikes).
 
@@ -277,7 +282,7 @@ SC1–SC4 / PV1–PV2 / J1 / C9 / JP1 / TP1 as DNP; **Absolute origin** to match
 
 **Order-form settings that matter:** bottom side, qty 5, ENIG **+ selective hard gold (special request above)** / matte-black / white silk,
 **resin-fill + via-in-pad** (cleans the 10 via-in-pad joints and keeps the TC1 pogo pad
-flat), **moisture-sensitive = U1 / U2 / U3 / U5** (U3 is a MEMS part — observe peak reflow
+flat), **moisture-sensitive = U1 / U3 / U5** (U3 is a MEMS part - observe peak reflow
 temp, no ultrasonic clean), no China substitutes. **Black-FR4 core stays OFF** — the glow
 needs translucent FR4, the black look comes from the soldermask.
 
@@ -323,7 +328,7 @@ and the glow-window mask staying open (Step 3) — a tented window kills the opt
 3. **Flash firmware over UPDI.** Use a **TC2030-MCP** pogo cable on `TC1` (hands-free), or
    solder a 3-pin header on `J1` as the backup. Firmware lives in **`../firmware/`**; its
    knobs and wake model are in `../firmware/README.md`, and the pin map it targets is
-   `../solar-glow-drh-v2-hardware.md`.
+   `../firmware/board.h` (with `../firmware/README.md`) - where the v4 additions PA4=EN_STO_CH and PD1=STO_SNS are recorded.
    > **Programming caution:** `NFC_EN` (PA7) now has a **1 MΩ pulldown (`R14`)** — U6
    > defaults hard-off while PA7 floats during reset / UPDI. Still drive PA7 low early in
    > init as belt-and-suspenders. The **U6 pin-map check is done** — TI SLVSD76C

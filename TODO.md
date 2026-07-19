@@ -12,7 +12,7 @@ shell re-machine. Updated 2026-07-11._
 
 - [x] **VIN-at-clamp / SUN_THRESHOLD** — _PCB → firmware. DONE 2026-07-10._ Derived
   VIN **>= 3.60 V** as the strong-sun trigger (above the held VS ~3.50 V so there is
-  real forward current through D1, below panel Voc 4.15 V; full derivation at
+  the SRC (merged-panel) node lifted well above its indoor level (VSENSE now divides SRC), below panel Voc 4.15 V; full derivation at
   `firmware/board.h` `SWEEP_SUN_VIN_MV`). Firmware is now **wired**: the ~1 s poll
   fires `led_sweep` on strong-sun + caps-full via `sense_vin_flags()` /
   `sense_caps_full()`, behind the `USE_SUN_SWEEP` gate. Feel-tunable on the bench;
@@ -58,7 +58,7 @@ shell re-machine. Updated 2026-07-11._
 
 ## PCB — `PCB/solar-glow-drh-v4_0.kicad_pcb` / `.kicad_sch`
 
-- [ ] **Q1 thermal copper** _(owner: Devin, manual push)._ Solid pad3→pour
+- [ ] ~~Q1 thermal copper~~ - DROP (v4): Q1 (v3 BCP5316 shunt transistor) was deleted in the AEM10300 managed-solar redesign; there is no shunt device to heatsink. Solid pad3→pour
   (`zone_connect 1`→`2`) + a GND thermal-via cluster **adjacent to** pad3 (not
   in-pad, to avoid solder wicking) + a top-side GND flood over Q1 biased east
   into the x46.4–50.3 strip (clear of the PV2 cell), inside 9.7 mm of the coil
@@ -67,9 +67,9 @@ shell re-machine. Updated 2026-07-11._
   zero vias; pad3 is still thermal-relief).
 - [ ] **PCBWay orders** — confirm both replies sent (`W567099ASH69` bare fab,
   `T-H70W567099A` PCBA); get the LED package dimension answer (1.25 vs 1.9 mm)
-  and the merged PCB+PCBA total; decide the U2 spare (8-week lead); ensure the PO
+  and the merged PCB+PCBA total; ensure the PO
   uses the confirmed C11/C13 MPNs.
-- [ ] **BOM completeness — D10/D11/C10 absent from the orderable BOMs** _(audit find,
+- [ ] **BOM completeness - recount the machine-place BOM against the v4 net** - D10/D11 (v3 comparator-supply OR diodes) were removed with the U4 comparator; only LEDs D2-D5 remain as diodes, so the earlier '42' count is stale. Regenerate the counts and the -BOM-assembly.xlsx master against the v4 schematic. _(audit find,
   2026-07-11)._ The board (schematic / CI BOM) carries D10, D11 (MMSD301T1G,
   comparator-supply OR) and C10 (100 nF) as fitted SMD, but `-BOM-assembly.xlsx` lists
   only 39 (missing all three) and the docs said "36". Correct machine-place count =
@@ -80,7 +80,7 @@ shell re-machine. Updated 2026-07-11._
   describe "~61 marginal-band warnings" present in neither committed report (GUI: 5
   violations / 3 excluded; CI: 6 clearance + 62 MPN-parity). Decide whether the two-tier
   `.kicad_dru` rules should be loaded in the run, then align the prose. Minor: the ERC
-  `isolated_pin_label` (PA4/PC0/PC1) + `endpoint_off_grid` (JP1/TP1) aren't catalogued.
+  `isolated_pin_label` (PC0/PC1) + `endpoint_off_grid` (JP1/TP1) aren't catalogued.
 - [ ] _(Cosmetic)_ C13 schematic `lib_id` is still `solarglow:C11` (clone leftover);
   surfaces as Part="C11" in the CI BOM. Same class as the C13 footprint-field fix.
 - [x] KiBot group-by-MPN BOM grouping (`group_fields: ['MPN']` in
@@ -111,7 +111,7 @@ shell re-machine. Updated 2026-07-11._
   intended ~0.05 mm no-rattle contact the brace's fit relies on. Shell is source-of-truth;
   resolve the brace rail coords (or add `edge_fit` to the shell `_cav_inner`), then regen.
   (`…-backshell-…-cad.py` vs `…-diffuser-brace-cad.py`.)
-- [ ] **[geometry] U2 relief pocket is 1.0 mm east of the real U2** _(audit find)._ PCB
+- [ ] **[geometry] Floor relief must be re-keyed to the v4 harvest part (U8)** - U2 (v3 balancer) is gone; the tallest B-side part in that region is now U8 (AEM10300, QFN-28). Re-derive U2_POS/the relief pocket from U8's placed position + height, then regen the STEP/STL and the derived drawing/README note copies. _(audit find)._ PCB
   has U2 at (27.5, 37); `…-backshell-…-cad.py` `U2_POS = (28.5, 37)`. ~0.5 mm of the
   tallest B-side part overhangs the un-relieved floor. PCB is frozen truth → fix `U2_POS`
   + regen the STEP/STL (and the derived drawing/README note-7 copies).

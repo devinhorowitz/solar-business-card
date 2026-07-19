@@ -16883,7 +16883,7 @@
 				)
 			)
 		)
-		(property "Description" "100 nF X7R decoupling"
+		(property "Description" "1uF 0402 LDO output cap (VS rail)"
 			(at 703.58 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -16893,7 +16893,7 @@
 				)
 			)
 		)
-		(property "MPN" "GRM155R71C104KA88D"
+		(property "MPN" "GRM155R61A105KE15D"
 			(at 703.58 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -17157,7 +17157,7 @@
 				)
 			)
 		)
-		(property "Description" "100 nF X7R decoupling"
+		(property "Description" "22uF 0603 AEM BUFSRC buffer cap"
 			(at 581.66 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -17167,7 +17167,7 @@
 				)
 			)
 		)
-		(property "MPN" "GRM155R71C104KA88D"
+		(property "MPN" "GRM188R60J226MEA0D"
 			(at 581.66 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -17586,7 +17586,7 @@
 				)
 			)
 		)
-		(property "Description" "100 nF X7R decoupling"
+		(property "Description" "10uF 0402 AEM VINT buffer cap"
 			(at 612.14 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -17596,7 +17596,7 @@
 				)
 			)
 		)
-		(property "MPN" "GRM155R71C104KA88D"
+		(property "MPN" "GRM155R60J106ME44D"
 			(at 612.14 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -18179,7 +18179,7 @@
 				)
 			)
 		)
-		(property "Description" "I2C pull-up 4.7 kohm"
+		(property "Description" "2M 0402 STO sense divider top (STO->STO_SNS)"
 			(at 764.54 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -18189,7 +18189,7 @@
 				)
 			)
 		)
-		(property "MPN" "RC0402FR-074K7L"
+		(property "MPN" "RC0402FR-072ML"
 			(at 764.54 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -18434,7 +18434,7 @@
 				)
 			)
 		)
-		(property "Description" "I2C pull-up 4.7 kohm"
+		(property "Description" "1M 0402 EN_STO_CH pull-up to VINT"
 			(at 825.5 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -18444,7 +18444,7 @@
 				)
 			)
 		)
-		(property "MPN" "RC0402FR-074K7L"
+		(property "MPN" "RC0402FR-071ML"
 			(at 825.5 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -18762,7 +18762,7 @@
 				)
 			)
 		)
-		(property "Description" "I2C pull-up 4.7 kohm"
+		(property "Description" "1M 0402 STO sense divider bottom (STO_SNS->GND)"
 			(at 795.02 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -18772,7 +18772,7 @@
 				)
 			)
 		)
-		(property "MPN" "RC0402FR-074K7L"
+		(property "MPN" "RC0402FR-071ML"
 			(at 795.02 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -19536,7 +19536,7 @@
 				)
 			)
 		)
-		(property "Description" "100 nF X7R decoupling"
+		(property "Description" "10uF 0402 STO local bulk cap"
 			(at 642.62 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -19546,7 +19546,7 @@
 				)
 			)
 		)
-		(property "MPN" "GRM155R71C104KA88D"
+		(property "MPN" "GRM155R60J106ME44D"
 			(at 642.62 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -20415,7 +20415,7 @@
 				)
 			)
 		)
-		(property "Datasheet" "datasheets/U1  AVR64DD28-I-STX  $1.17.pdf"
+		(property "Datasheet" "datasheets/aem10300.pdf"
 			(at 459.74 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -20425,7 +20425,7 @@
 				)
 			)
 		)
-		(property "Description" "MCU - 8-bit AVR (PWM, I2C, charge/sleep logic)"
+		(property "Description" "AEM10300 buck-boost ambient energy harvester PMIC (MPPT), QFN-28 4x4"
 			(at 459.74 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -20435,7 +20435,7 @@
 				)
 			)
 		)
-		(property "MPN" "AVR64DD28-I/STX"
+		(property "MPN" "10AEM10300C0000"
 			(at 459.74 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -21115,7 +21115,7 @@
 				)
 			)
 		)
-		(property "Description" "100 nF X7R decoupling"
+		(property "Description" "1uF 0402 LDO input cap (STO side)"
 			(at 673.1 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -21125,7 +21125,7 @@
 				)
 			)
 		)
-		(property "MPN" "GRM155R71C104KA88D"
+		(property "MPN" "GRM155R61A105KE15D"
 			(at 673.1 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -21830,7 +21830,7 @@
 				)
 			)
 		)
-		(property "Datasheet" "datasheets/U6  TPS22918DBVR  $0.55.pdf"
+		(property "Datasheet" ""
 			(at 490.22 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -21841,7 +21841,7 @@
 				)
 			)
 		)
-		(property "Description" "NFC VNFC high-side load switch"
+		(property "Description" "TPS7A0233 nanopower LDO, 3.3V fixed, ~25nA Iq (VS rail)"
 			(at 490.22 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -21852,7 +21852,7 @@
 				)
 			)
 		)
-		(property "MPN" "TPS22918DBVR"
+		(property "MPN" "TPS7A0233PDBVR"
 			(at 490.22 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -22304,7 +22304,7 @@
 				)
 			)
 		)
-		(property "Description" "100 nF X7R decoupling"
+		(property "Description" "10uH power inductor for AEM10300 DCDC (board land is 0603 - reconcile part vs land before order)"
 			(at 520.7 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -22314,7 +22314,7 @@
 				)
 			)
 		)
-		(property "MPN" "GRM155R71C104KA88D"
+		(property "MPN" "XFL2020-103MEB"
 			(at 520.7 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -22649,7 +22649,7 @@
 				)
 			)
 		)
-		(property "Description" "100 nF X7R decoupling"
+		(property "Description" "Ferrite bead 0603, STO island feed filter"
 			(at 551.18 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -22659,7 +22659,7 @@
 				)
 			)
 		)
-		(property "MPN" "GRM155R71C104KA88D"
+		(property "MPN" "BLM18PG221SN1D"
 			(at 551.18 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
