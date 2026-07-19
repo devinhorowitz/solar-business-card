@@ -32,10 +32,10 @@ import xml.etree.ElementTree as ET
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SCH = os.path.join(ROOT, "PCB", "solar-glow-drh-v4_0.kicad_sch")
-# v4_0 board is a copy of v3_0 at scaffold time, so the frozen v3_0 BOM still matches the v4_0
-# netlist. kibot regenerates a v4_0 BOM on the next PCB push; bump this to v4_0-bom.csv in lockstep
-# with the managed-solar rework (when the netlist actually diverges). See v4-aem10300-prewiring.md.
-BOM = os.path.join(ROOT, "Generated", "fabdocs", "solar-glow-drh-v3_0-bom.csv")
+# The v4_0 managed-solar rework has now diverged from v3_0 (schematic synced to the AEM10300
+# board: clamp/blocking parts removed, AEM island added), so parity is checked against the
+# CI-regenerated v4_0 BOM. kibot rebuilds it on each PCB push. See v4-aem10300-prewiring.md.
+BOM = os.path.join(ROOT, "Generated", "fabdocs", "solar-glow-drh-v4_0-bom.csv")
 MCU = "U1"
 
 errors, warnings = [], []
