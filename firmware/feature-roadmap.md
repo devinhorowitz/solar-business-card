@@ -1,6 +1,6 @@
 # SOLAR-GLOW · DRH -- firmware feature roadmap
 
-Screened brainstorm of firmware-only features for the **frozen v3.0 hardware**
+Screened brainstorm of firmware-only features for the current **v4.0 hardware**
 (AVR64DD28 + ADXL367 + NT3H2211). Source: an external brainstorm (Google Gemini),
 screened here against the **as-built pin map** (`firmware/board.h`) and the project's
 constraints. Nothing below requires a board re-spin -- see "Trace-change verdict."
@@ -77,12 +77,12 @@ BOM rather than the prose docs:
 
 ## Trace-change verdict: none required
 
-Every enabling signal is already routed on v3.0 (verified against `board.h`):
+Every enabling signal is already routed on v4.0 (verified against `board.h`):
 
 | Signal | Route | Unlocks |
 |---|---|---|
-| `VSENSE` = VIN/2 | PD2 = ADC **AIN2** + AC0 **AINP0** | ambient brightness, find-the-sun, shadow-abort, wake-on-light, cap-touch |
-| Rail **VS** | ADC internal **VDD/10** (`sense_caps_full()`) | voltage-adaptive brightness / brownout stretch |
+| `VSENSE` = SRC/2 | PD2 = ADC **AIN2** + AC0 **AINP0** | ambient brightness, find-the-sun, shadow-abort, wake-on-light, cap-touch |
+| Pack **STO** | PD1 = ADC **AIN1** (STO/3 via R15/R16, `sense_vdd_mv()`) | voltage-adaptive brightness / brownout stretch |
 | NFC **FD / I²C / NFC_EN** | PA6 / PC2-PC3 / PA7 | telemetry NDEF, gesture/contextual NFC, OTA |
 | Accel **INT1/INT2** + I²C | PF0/PF1 + PC2-PC3 | face-down, free-fall, FIFO gestures |
 | **LEDs** | PA0-PA3 / TCA0 | all glow, VLC, CCL heartbeat |
@@ -132,7 +132,7 @@ Each of these *reduces* draw and attacks the open energy question directly.
 - **Shipping / "coma" mode.** Halt RTC/ADC, wake only on a sustained solar spike; protects
   the caps during a dark shipping box. Low effort, real value.
 - **Shadow-abort (AC0 zero-cross).** Use AC0 (VSENSE on AINP0 vs. internal DAC) to halt an
-  in-flight LED animation in µs when a shadow drops VIN, instead of waiting for the 1 s poll.
+  in-flight LED animation in µs when a shadow drops SRC, instead of waiting for the 1 s poll.
 
 ## Tier 3 -- defer / design-note (ambitious or energy-spending)
 
@@ -154,7 +154,7 @@ exfil -- fun, but they spend firmware/energy for novelty and do not move the pro
 
 ## Phase 4 -- original / deep-dive concepts
 
-A deeper round, grounded in the as-built v3.0 (`board.h` pin map + the physical enclosure),
+A deeper round, grounded in the as-built v4.0 (`board.h` pin map + the physical enclosure),
 with feasibility limits called out where the hardware fights the idea. Tier tags use the same
 energy-gate lens as Phases 1-3.
 
@@ -210,10 +210,10 @@ energy-gate lens as Phases 1-3.
 ### Analog identity & physical sensing
 
 - **Analog "fingerprint" PUF** -- Tier 3. Hash a vector of per-card analog tolerances -- the
-  TLV3011 clamp trip (AC0/DAC sweep vs. the held rail), the internal-oscillator frequency
+  internal-oscillator frequency
   error, the supercap self-discharge slope -- into an EEPROM device fingerprint for an
   anti-clone NFC challenge. *Note:* LED Vf isn't ADC-reachable (LED nodes not routed to an ADC
-  pin), so lean on the clamp/oscillator/cap entropy that is.
+  pin), so lean on the oscillator/cap entropy that is.
 - **Thermal-mass "just handled" sense** -- Tier 2. A warm hand raises the Ti shell temp; a
   rising temp gradient vs. logged ambient, ANDed with an accel pickup, gives a genuine
   human-handoff signal (vs. a bag bump). Cheap (temp on the 1 s poll); gates the greeting glow

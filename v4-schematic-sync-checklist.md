@@ -11,7 +11,7 @@ fully-routed v4 netlist (0 unconnected pads). The schematic still reflects v3, s
 107 footprint errors. This checklist makes the schematic match the PCB; nothing here is a new decision,
 it is `v4-aem10300-prewiring.md` sections 2/3/5 expressed as schematic labels.
 
-**The accelerator:** this schematic is **100% global-label style (184 global labels, 0 wires)**. So a
+**The accelerator:** this schematic is **global-label style (184 global labels), each reached by a 5.08 mm stub wire from its pin (not label-on-pin)**. So a
 connection is just a global label placed on a pin -- no wires to draw. Add a part = drop the symbol +
 one global label per pin. Re-net a pin = change the label text on that pin.
 
@@ -73,7 +73,7 @@ labels above, so nothing extra to set.
 | **L2** | 10 uH | 1 LX_LIN · 2 LX_LOUT |
 | **CSRC** | 22 uF | 1 BUFSRC · 2 GND |
 | **CINT** | 10 uF | 1 VINT · 2 GND |
-| **CSTO** | 100 uF | 1 STO · 2 GND |
+| **C27** | 10 uF | 1 STO · 2 GND |
 | **C22** | 1 uF | 1 STO · 2 GND |
 | **C23** | 1 uF | 1 VS · 2 GND |
 | **C24** | 100 nF | 1 STO_SNS · 2 GND |

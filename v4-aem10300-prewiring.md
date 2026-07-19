@@ -25,10 +25,10 @@ them. The AEM splits them:
 |---|---|---|---|
 | **U8** | AEM10300 | QFN-28 4x4 | harvest PMIC + 2-cell balancer |
 | **U9** | TPS7A0233 (fixed 3.3 V) | SOT-23-5 | MCU + accel LDO (25 nA) |
-| **L2** | 10 uH, ISAT >= 1 A, low-profile | ~2016/2020 | buck-boost inductor |
-| **C25** (was CSRC) | 22 uF | 0805 | BUFSRC input buffer |
-| **C26** (was CINT) | 10 uF | 0603 | VINT buffer |
-| **C27** (was CSTO) | 100 uF (optional) | bulk | STO buffer |
+| **L2** | 10 uH, ISAT >= 1 A, low-profile | 0603 | buck-boost inductor |
+| **C25** (was CSRC) | 22 uF | 0603 | BUFSRC input buffer |
+| **C26** (was CINT) | 10 uF | 0402 | VINT buffer |
+| **C27** (was CSTO) | 10 uF | 0402 | STO local bulk |
 | **C22, C23** | 1 uF | 0402 | LDO in / out caps |
 | **R15, R16** | 2 M, 1 M | 0402 | STO sense divider (÷3) |
 | **C24** | 100 nF | 0402 | STO-sense filter |

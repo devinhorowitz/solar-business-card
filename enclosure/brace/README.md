@@ -14,7 +14,7 @@ rounded corners are **relieved** (cut clear — the brace need not fit them). It
 4. **NFC ferrite carrier** — an open channel over the coil holds a ferrite strip that lifts the antenna off the grounded titanium.
 
 > **Source of truth.** `solar-glow-drh-diffuser-brace-cad.py` is authoritative. It reads
-> `PCB/solar-glow-drh-v3_0.kicad_pcb`, subtracts every B-side footprint at its verified height, and
+> `PCB/solar-glow-drh-v4_0.kicad_pcb`, subtracts every B-side footprint at its verified height, and
 > writes the STEP/STL. Re-run it if the board **or the shell cavity** changes; the brace is a reprint.
 
 ## Files
@@ -47,8 +47,8 @@ rounded corners are **relieved** (cut clear — the brace need not fit them). It
 - **Flat bottom = datum.** The board-facing (top) face carries all the pockets; the shell-facing (bottom) face is flat and is the sanding reference.
 - **Ferrite channel** over the NFC coil: an **open-ended** channel — walled on the **12 mm width** (edge-limited by the coil/board east edge), **open at both ends** (length is forgiving), **0.33 mm** deep. Takes a Würth WE-FSFS 364006 ferrite, nominal **12 × 26 mm**, PSA'd in; it may overhang the ends slightly.
 - **Window = LED-hug diffuser backing:** solid white resin fills the monogram-window footprint behind the FR4, minus tight D2–D5 LED pockets. No aperture, no floor tape.
-- **U2 and U6 are through-pockets.** U2 is the tallest B-side part (1.75 mm). U6 (1.45 mm) is forced through because a blind pocket would leave a sub-0.4 mm resin ceiling; through, its body faces the shell floor with 0.35 mm of air. Everything else sits in blind pockets at its verified height.
-- **Thin-wall bridges.** Where two pockets would leave a resin wall thinner than 0.40 mm, the generator merges the pair into one recess. It prints the merged-pair count when run (they cluster in the dense areas); the regenerated STEP/STL reflect the current board (the count shifts as parts move — C10 was removed and the clamp cluster relocated).
+- **U6 is a through-pocket.** U6 (1.45 mm) is forced through because a blind pocket would leave a sub-0.4 mm resin ceiling; through, its body faces the shell floor with 0.35 mm of air. Everything else sits in blind pockets at its verified height.
+- **Thin-wall bridges.** Where two pockets would leave a resin wall thinner than 0.40 mm, the generator merges the pair into one recess. It prints the merged-pair count when run (they cluster in the dense areas); the regenerated STEP/STL reflect the current board (the count shifts as parts move - C10 was removed and the v3 clamp cluster deleted).
 
 ## Removable — keep it that way during bring-up
 

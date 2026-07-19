@@ -1,4 +1,4 @@
-# Firmware → PCB / Hardware — open cross-team items (SOLAR-GLOW DRH v3.0)
+# Firmware → PCB / Hardware - open cross-team items (SOLAR-GLOW DRH v3.0 - SUPERSEDED by the v4.0 managed-solar redesign; the TLV3011B clamp / Q1 shunt / D1 blocking-diode / VIN-at-clamp scheme this memo relies on was removed. Kept for record only.)
 
 **From:** Firmware
 **Date:** 2026-07-10
@@ -19,7 +19,7 @@ build + bench yet; that gap is on us (toolchain / DFP), not you.
 ## 1. Primary ask — VIN at the clamp point (for the in-sun sweep)
 
 > **RESOLVED 2026-07-10 (PCB → firmware).** VIN at the clamp = **≥ 3.60 V**, wired.
-> When the caps top out the TLV3011B holds VS at ~3.50 V and Q1 shunts the excess;
+> When the caps top out [v3 mechanism - REMOVED in v4] in v3 the TLV3011B (U4) held VS at ~3.50 V and Q1 shunted the excess. v4 deletes U4/Q1/D1 and the whole clamp-shunt scheme: the merged panel node SRC feeds the AEM10300 (U8) MPPT buck-boost harvester, the supercap tank STO floats unclamped (0.2–4.65 V), and VS is the regulated 3.3 V output of the TPS7A0233 LDO (U9);
 > VIN then rides one blocking-diode drop above that, self-settling between VS (~3.50 V,
 > as Vf→0) and panel Voc (4.15 V, as current→0) and never above Voc — the naive
 > "VS_trip + Vf(Isc)" over-predicts because MMSD301T1G is a high-Vf *signal* Schottky
@@ -37,11 +37,11 @@ can't drain the pack — it just spends free solar. The **trigger is the only
 missing piece**, and it needs one threshold from you.
 
 **What we need:** the value of **VIN — the solar-node voltage on the panel side
-of blocking diode D1, i.e. the node R5/R6 (1 MΩ each) divide into PD2 —** *when
+of net SRC - there is no blocking diode D1 in v4; the merged panel node SRC is what R5/R6 (1 MΩ each) divide into PD2 as VSENSE -** *when
 the TLV3011B clamp is actively holding VS at its trip point under strong sun.*
 
 - Firmware reads this as `sense_vin_mv()` ( = the PD2 reading × 2 ), in millivolts.
-- You've re-anchored the clamp to the TLV3011B at **VS ≈ 3.5 V nominal /
+- You've [REMOVED in v4 - no clamp, no TLV3011B (U4); VS is the fixed 3.3 V TPS7A0233 LDO (U9) output and the supercap tank STO is sensed separately on STO_SNS/PD1] re-anchored the (removed) clamp to the TLV3011B at **VS ≈ 3.5 V nominal /
   3.60 V worst case.** Assuming that's firm, we want the **corresponding VIN** at
   that operating point. Our rough placeholder is ~3.9 V (VS + a Schottky drop
   across D1) — but we don't want to ship a guess. Please give us the real figure
@@ -51,14 +51,14 @@ the TLV3011B clamp is actively holding VS at its trip point under strong sun.*
   with sensible hysteresis so the sweep doesn't chatter at the boundary.
 
 **Why the exact number is feel-critical, not safety-critical:** the sweep's hard
-safety gate is `sense_vdd_mv() ≥ 3300 mV` (caps full), measured against VS and
+safety gate is `sense_vdd_mv() ≥ 3300 mV` (caps full), measured against the supercap tank STO - in v4 sense_vdd_mv() reads STO via STO_SNS (PD1, ÷3), not VS, which is now the constant 3.3 V LDO rail - and
 **independent of the clamp**. Even if the VIN figure is a little off, the
 animation can never drain the pack — your number only sets *when in the sun* it
 kicks in, i.e. how it feels.
 
 ---
 
-## 2. Please confirm — the Q1 thermal fix is the plan of record
+## 2. Please confirm - [OBSOLETE in v4] the Q1 thermal fix no longer applies - Q1 (the v3 BCP5316 shunt transistor) was deleted in the AEM10300 managed-solar redesign, so there is no Q1 dissipation to manage. (The 150 Ω LED ballast R1–R4 is unchanged, so firmware's ballast assumption still holds.)
 
 Our understanding: Q1's over-temp is being fixed **on the copper** — solid
 pad-3-to-pour, a GND thermal-via cluster, and a top-side GND flood over Q1
@@ -89,7 +89,7 @@ electrical impact — just a stale field to correct while you're in there.
 
 | Path | Formula | Example |
 |------|---------|---------|
-| **VIN** (VSENSE = VIN/2 on PD2) | `counts = VIN_mV × 0.8192` | VIN 3.90 V → 3195 counts (valid to VIN 5.00 V, where pin = 2.5 V = ref) |
+| **SRC** (VSENSE = SRC/2 on PD2) | `counts = VIN_mV × 0.8192` | VIN 3.90 V → 3195 counts (valid to VIN 5.00 V, where pin = 2.5 V = ref) |
 | **VDD / VS** | `counts = VDD_mV × 0.16384` | VS 3.30 V → 541 counts |
 
 So whatever VIN you hand us, we can convert straight to the compare value the
