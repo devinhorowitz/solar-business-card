@@ -153,37 +153,38 @@ uint8_t sense_vin_flags(void)
 
 uint16_t sense_vdd_mv(void)
 {
-    uint32_t res = adc_read_raw(ADC_MUXPOS_VDDDIV10_gc);     /* internal VDD/10 */
+    /* v4: VS is now the regulated LDO rail (constant), so read the supercap top STO
+     * instead -- via the R15/R16 (2M/1M) divider on PD1/AIN1 (pin sees STO/STO_DIVIDER).
+     * Same divider-pin form as sense_vin_mv(): STO_mv = pin_mv * STO_DIVIDER. */
+    uint32_t res = adc_read_raw(STO_SNS_AIN);               /* PD1/AIN1 = STO / STO_DIVIDER */
     uint32_t mv  = (res * ADC_VREF_MV) >> 12;
-    return (uint16_t)(mv * 10UL);                            /* undo /10 */
+    return (uint16_t)(mv * STO_DIVIDER);                    /* undo the divider -> STO mV */
 }
 
-/* Rail-floor threshold as a raw VDD/10-channel count, folded at COMPILE time.
- * sense_vdd_mv() = floor(c*ADC_VREF_MV/4096)*10, so
- *   sense_vdd_mv() >= VS_GLOW_FLOOR_MV
- *     <=> c >= ceil( ceil(VS_GLOW_FLOOR_MV/10) * 4096 / ADC_VREF_MV )
- * -- the inner ceil reproduces the channel's 10 mV quantization exactly, so this
- * is the SAME boolean as the old compare for every floor value, with no mV math. */
-#define RAIL_FLOOR_10MV (((uint32_t)VS_GLOW_FLOOR_MV + 9UL) / 10UL)   /* ceil(mV/10) */
-#define RAIL_COUNT      ((uint16_t)((RAIL_FLOOR_10MV * 4096UL + (ADC_VREF_MV - 1UL)) / ADC_VREF_MV))
+/* Rail-floor threshold as a raw STO-divider count, folded at COMPILE time (same
+ * divider-pin form as SUN_COUNT). STO_mv = c*ADC_VREF_MV/4096 * STO_DIVIDER, so
+ *   sense_vdd_mv() >= VS_GLOW_FLOOR_MV  <=>  c >= ceil(VS_GLOW_FLOOR_MV*4096/(STO_DIVIDER*ADC_VREF_MV)).
+ * Same fail-safe: a stuck ADC reads 0 -> below floor -> no glow. */
+#define RAIL_COUNT ((uint16_t)(((uint32_t)VS_GLOW_FLOOR_MV * 4096UL + (STO_DIVIDER*ADC_VREF_MV - 1UL)) \
+                               / (STO_DIVIDER*ADC_VREF_MV)))
 
 uint8_t sense_rail_ok(void)
 {
     /* raw VDD/10 count vs compile-time floor -- same result as sense_vdd_mv() >= floor,
      * same fail-safe (a stuck ADC reads 0 -> not ok -> no glow). */
-    return (adc_read_raw(ADC_MUXPOS_VDDDIV10_gc) >= RAIL_COUNT) ? 1u : 0u;
+    return (adc_read_raw(STO_SNS_AIN) >= RAIL_COUNT) ? 1u : 0u;
 }
 
-/* Caps-full gate for the in-sun sweep: VS at/above SWEEP_CAPS_FULL_MV. Same VDD/10
- * channel and compile-time fold as RAIL_COUNT, just a higher floor (3300 mV -> 541);
- * same fail-safe (a stuck ADC reads 0 -> not full -> no sweep). Only ever called after
- * the SUN flag is set, so the extra VDD read stays off the common poll path. */
-#define CAPS_FULL_10MV  (((uint32_t)SWEEP_CAPS_FULL_MV + 9UL) / 10UL)   /* ceil(mV/10) */
-#define CAPS_FULL_COUNT ((uint16_t)((CAPS_FULL_10MV * 4096UL + (ADC_VREF_MV - 1UL)) / ADC_VREF_MV))
+/* Caps-full gate for the in-sun sweep: STO at/above SWEEP_CAPS_FULL_MV. Same STO-divider
+ * channel and compile-time fold as RAIL_COUNT, just a higher floor; same fail-safe (a stuck
+ * ADC reads 0 -> not full -> no sweep). Only ever called after the SUN flag is set, so the
+ * extra STO read stays off the common poll path. */
+#define CAPS_FULL_COUNT ((uint16_t)(((uint32_t)SWEEP_CAPS_FULL_MV * 4096UL + (STO_DIVIDER*ADC_VREF_MV - 1UL)) \
+                                    / (STO_DIVIDER*ADC_VREF_MV)))
 
 uint8_t sense_caps_full(void)
 {
-    return (adc_read_raw(ADC_MUXPOS_VDDDIV10_gc) >= CAPS_FULL_COUNT) ? 1u : 0u;
+    return (adc_read_raw(STO_SNS_AIN) >= CAPS_FULL_COUNT) ? 1u : 0u;
 }
 
 /* EEPROM write-safety gate: rail at/above EE_WRITE_FLOOR_MV, so a ~13 ms EEPROM write can start and
@@ -191,12 +192,12 @@ uint8_t sense_caps_full(void)
  * BOD only ABORTS an in-progress write; this is the firmware "don't start near the edge" guard (the
  * VLM's role), so it holds between the sampled BOD's checks. Same VDD/10 channel and compile-time
  * fold as the other rail gates; same fail-safe -- a stuck ADC reads 0 -> not safe -> no write. */
-#define EE_SAFE_10MV  (((uint32_t)EE_WRITE_FLOOR_MV + 9UL) / 10UL)   /* ceil(mV/10) */
-#define EE_SAFE_COUNT ((uint16_t)((EE_SAFE_10MV * 4096UL + (ADC_VREF_MV - 1UL)) / ADC_VREF_MV))
+#define EE_SAFE_COUNT ((uint16_t)(((uint32_t)EE_WRITE_FLOOR_MV * 4096UL + (STO_DIVIDER*ADC_VREF_MV - 1UL)) \
+                                  / (STO_DIVIDER*ADC_VREF_MV)))
 
 static uint8_t sense_ee_safe(void)
 {
-    return (adc_read_raw(ADC_MUXPOS_VDDDIV10_gc) >= EE_SAFE_COUNT) ? 1u : 0u;
+    return (adc_read_raw(STO_SNS_AIN) >= EE_SAFE_COUNT) ? 1u : 0u;
 }
 
 /* ---------- rail-adaptive glow brightness (brownout stretch) ---------- */

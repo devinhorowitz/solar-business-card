@@ -108,12 +108,18 @@ static void gpio_init(void)
      * PF1) and the LED pins (PA0-3, in led_init) are left alone; a pull-up bit on a
      * driven output is ignored anyway. Writes to PORTD pins not bonded on the 28-pin
      * package are harmless. */
-    PORTA.PIN4CTRL = PORT_PULLUPEN_bm;   /* PA4 spare (JP2.1)   */
+    /* EN_STO_CH (PA4): open-drain gate for the AEM10300 charger. OUT latch stays LOW;
+     * DIR toggles -- DIR=1 drives LOW (disable charge, quiet the >=10 MHz DCDC for an NFC
+     * read), DIR=0 = Hi-Z so external R17 pulls to VINT (2.2 V) and charge resumes. Start
+     * Hi-Z (charge on by default). NO internal pull-up: it would pull to the 3.3 V rail
+     * and over-volt the 2.75 V-max EN_STO_CH pin. Toggled in the FD ISR (PORTA_PORT_vect). */
+    ENSTOCH_PORT.OUTCLR = ENSTOCH_PIN_bm;
+    ENSTOCH_PORT.DIRCLR = ENSTOCH_PIN_bm;
     PORTA.PIN5CTRL = PORT_PULLUPEN_bm;   /* PA5 reserved button */
     PORTC.PIN0CTRL = PORT_PULLUPEN_bm;   /* PC0 spare (JP2.2)   */
     PORTC.PIN1CTRL = PORT_PULLUPEN_bm;   /* PC1 spare (JP2.3)   */
-    PORTD.PIN0CTRL = PORT_PULLUPEN_bm;   /* PD0/1/3-7 unused    */
-    PORTD.PIN1CTRL = PORT_PULLUPEN_bm;
+    PORTD.PIN0CTRL = PORT_PULLUPEN_bm;   /* PD0/3-7 unused      */
+    PORTD.PIN1CTRL = PORT_ISC_INPUT_DISABLE_gc;   /* PD1 = AIN1 STO_SNS analog in (R15/R16 divider) */
     PORTD.PIN3CTRL = PORT_PULLUPEN_bm;
     PORTD.PIN4CTRL = PORT_PULLUPEN_bm;
     PORTD.PIN5CTRL = PORT_PULLUPEN_bm;
@@ -398,7 +404,12 @@ ISR(PORTA_PORT_vect)
 {
     uint8_t fl = PORTA.INTFLAGS;
     if (fl & FD_PIN_bm) {
-        if (FD_PORT.IN & FD_PIN_bm) f_nfc = 1;   /* pin high now = rising = field left */
+        if (FD_PORT.IN & FD_PIN_bm) {
+            f_nfc = 1;                              /* pin high now = rising = field left */
+            ENSTOCH_PORT.DIRCLR = ENSTOCH_PIN_bm;   /* release EN_STO_CH -> AEM charge resumes */
+        } else {
+            ENSTOCH_PORT.DIRSET = ENSTOCH_PIN_bm;   /* field present -> drive LOW, quiet the DCDC */
+        }
     }
     PORTA.INTFLAGS = fl;                   /* write-1-to-clear */
 }
