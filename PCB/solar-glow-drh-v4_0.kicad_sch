@@ -16832,7 +16832,7 @@
 				)
 			)
 		)
-		(property "Value" "10uF *0603"
+		(property "Value" "10uF"
 			(at 623.14 382.27 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -18782,7 +18782,7 @@
 				)
 			)
 		)
-		(property "Value" "100uF *bulk"
+		(property "Value" "10uF"
 			(at 653.62 382.27 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -21787,7 +21787,7 @@
 				)
 			)
 		)
-		(property "Value" "ferrite *0603"
+		(property "Value" "ferrite"
 			(at 562.18 382.27 0)
 			(show_name no)
 			(do_not_autoplace no)
