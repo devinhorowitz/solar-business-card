@@ -16743,7 +16743,7 @@
 				)
 			)
 		)
-		(property "Value" "1uF"
+		(property "Value" "2.2uF"
 			(at 714.58 382.27 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -16773,7 +16773,7 @@
 				)
 			)
 		)
-		(property "Description" "1uF 0402 LDO output cap (VS rail)"
+		(property "Description" "2.2uF 10V 0402 X5R, LDO output (VS); TPS7A02 needs >=0.5uF effective, 1uF worst-cased at the floor"
 			(at 703.58 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -16783,7 +16783,7 @@
 				)
 			)
 		)
-		(property "MPN" "GRM155R61A105KE15D"
+		(property "MPN" "GRM155R61A225KE11D"
 			(at 703.58 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -19396,7 +19396,7 @@
 				)
 			)
 		)
-		(property "Value" "10uF"
+		(property "Value" "4.7uF"
 			(at 653.62 382.27 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -19426,7 +19426,7 @@
 				)
 			)
 		)
-		(property "Description" "10uF 0402 STO local bulk cap"
+		(property "Description" "4.7uF 10V 0402 X5R, STO local HF decoupling; 10V for the 4.65V STO node (was 6.3V 10uF)"
 			(at 642.62 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -19436,7 +19436,7 @@
 				)
 			)
 		)
-		(property "MPN" "GRM155R60J106ME44D"
+		(property "MPN" "GRM155R61A475MEAAD"
 			(at 642.62 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -20452,7 +20452,7 @@
 				)
 			)
 		)
-		(property "Value" "4.7uF"
+		(property "Value" "10uF"
 			(at 131.65 175.26 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -20462,7 +20462,7 @@
 				)
 			)
 		)
-		(property "Footprint" "solarglow:C13"
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
 			(at 131.65 180.34 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -20482,7 +20482,7 @@
 				)
 			)
 		)
-		(property "Description" "LED-anode bulk 4.7 uF"
+		(property "Description" "LED-anode bulk 10uF 10V 0603 X5R (was 4.7uF 0402); keeps glow transient off VS, 0603 land"
 			(at 120.65 165.1 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -20492,7 +20492,7 @@
 				)
 			)
 		)
-		(property "MPN" "GRM155R61A475MEAAD"
+		(property "MPN" "GRM188R61A106KE69D"
 			(at 120.65 165.1 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -21435,7 +21435,7 @@
 				)
 			)
 		)
-		(property "Value" "4.7uF"
+		(property "Value" "10uF"
 			(at 421.21 312.42 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -21445,7 +21445,7 @@
 				)
 			)
 		)
-		(property "Footprint" "solarglow:C4"
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
 			(at 421.21 317.5 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -21465,7 +21465,7 @@
 				)
 			)
 		)
-		(property "Description" "VS bulk 4.7 uF"
+		(property "Description" "VS bulk 10uF 10V 0603 X5R (was 4.7uF 0402); more effective VS bulk for transients, 0603 land"
 			(at 410.21 302.26 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -21475,7 +21475,7 @@
 				)
 			)
 		)
-		(property "MPN" "GRM155R61A475MEAAD"
+		(property "MPN" "GRM188R61A106KE69D"
 			(at 410.21 302.26 0)
 			(show_name no)
 			(do_not_autoplace no)

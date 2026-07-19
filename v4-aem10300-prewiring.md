@@ -28,8 +28,9 @@ them. The AEM splits them:
 | **L2** | 10 uH, 1.76 A (Murata DFE252010F-100M) | 2.5x2.0x1.0 mm | buck-boost inductor |
 | **C25** (was CSRC) | 22 uF 10 V | 0603 | BUFSRC input buffer |
 | **C26** (was CINT) | 10 uF | 0402 | VINT buffer |
-| **C27** (was CSTO) | 10 uF | 0402 | STO local bulk |
-| **C22, C23** | 1 uF | 0402 | LDO in / out caps |
+| **C27** (was CSTO) | 4.7 uF 10 V | 0402 | STO local HF decoupling |
+| **C22** | 1 uF | 0402 | LDO input cap |
+| **C23** | 2.2 uF 10 V | 0402 | LDO output cap (stability) |
 | **R15, R16** | 2 M, 1 M | 0402 | STO sense divider (÷3) |
 | **C24** | 100 nF | 0402 | STO-sense filter |
 | **R17** | 1 M | 0402 | EN_STO_CH pull-up to VINT |
