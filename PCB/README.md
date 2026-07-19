@@ -229,7 +229,7 @@ Summary of the **orderable** lines:
 | C24 | 1 | 100 nF 0402 (STO-sns filter) | `GRM155R71C104KA88D` |
 | C25 | 1 | 22 µF 10 V 0603 (AEM CSRC decoupling) | `GRM188R61A226ME15D` |
 | C26 | 1 | 10 µF 6.3 V 0402 (AEM VINT buffer) | `GRM155R60J106ME44D` |
-| C27 | 1 | 4.7 µF 10 V 0402 (STO local HF decoupling) | `GRM155R61A475MEAAD` |
+| C27 | 1 | 10 µF 10 V 0603 (STO local bulk/decoupling; land grows to 0603) | `GRM188R61A106KE69D` |
 | C28 | 1 | 100 nF 0402 (FRAM VNFC decoupling) | `GRM155R71C104KA88D` |
 | R15 | 1 | 2 MΩ 0402 1% (STO sense top) | `RC0402FR-072ML` |
 | R16 | 1 | 1 MΩ 0402 1% (STO sense bottom) | `RC0402FR-071ML` |

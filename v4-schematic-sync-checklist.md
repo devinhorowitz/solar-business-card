@@ -73,7 +73,7 @@ labels above, so nothing extra to set.
 | **L2** | 10 uH | 1 LX_LIN · 2 LX_LOUT |
 | **CSRC** | 22 uF | 1 BUFSRC · 2 GND |
 | **CINT** | 10 uF | 1 VINT · 2 GND |
-| **C27** | 4.7 uF | 1 STO · 2 GND |
+| **C27** | 10 uF | 1 STO · 2 GND |
 | **C22** | 1 uF | 1 STO · 2 GND |
 | **C23** | 2.2 uF | 1 VS · 2 GND |
 | **C24** | 100 nF | 1 STO_SNS · 2 GND |

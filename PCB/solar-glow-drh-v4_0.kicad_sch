@@ -19396,7 +19396,7 @@
 				)
 			)
 		)
-		(property "Value" "4.7uF"
+		(property "Value" "10uF"
 			(at 653.62 382.27 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -19406,7 +19406,7 @@
 				)
 			)
 		)
-		(property "Footprint" "solarglow:C1"
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
 			(at 653.62 387.35 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -19426,7 +19426,7 @@
 				)
 			)
 		)
-		(property "Description" "4.7uF 10V 0402 X5R, STO local HF decoupling; 10V for the 4.65V STO node (was 6.3V 10uF)"
+		(property "Description" "10uF 10V 0603 X5R, STO local bulk/decoupling; 10V rating + 0603 for the 4.65V STO node (was 6.3V 10uF 0402)"
 			(at 642.62 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -19436,7 +19436,7 @@
 				)
 			)
 		)
-		(property "MPN" "GRM155R61A475MEAAD"
+		(property "MPN" "GRM188R61A106KE69D"
 			(at 642.62 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
