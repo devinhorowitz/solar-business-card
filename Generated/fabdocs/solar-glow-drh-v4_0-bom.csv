@@ -1,5 +1,5 @@
 Row,Description,Part,References,Value,Footprint,Quantity Per PCB,Status,Datasheet,MPN
-1,100 nF X7R decoupling VSENSE filter 100 nF,C1,C1 C3 C5 C6 C7 C8 C12 C22 C23 C24 C25 C26 C27 FB1 L2 R15 R16 R17 U9,100nF,C1,19, ,,GRM155R71C104KA88D
+1,100 nF X7R decoupling VSENSE filter 100 nF,C1,C1 C3 C5 C6 C7 C8 C12 C22 C23 C24 C25 C26 C27 FB1 L2,100nF,C1,15, ,,GRM155R71C104KA88D
 2,Accelerometer VREG_OUT decoupling 0.22 uF,C11,C11,220nF,C11,1, ,,GRM155R71C224KA12D
 3,VS bulk 4.7 uF LED-anode bulk 4.7 uF,C4,C4 C13,4.7uF,C4,2, ,,GRM155R61A475MEAAD
 4,Glow LED - reverse-mount amber,D2,D2 D3 D4 D5,LA P47F,D2,4, ,datasheets/D2-D5  LA P47F-V2BB-24-3B5A-30-R18-Z  $0.43.pdf,LA P47F-V2BB-24-3B5A-30-R18-Z
@@ -8,7 +8,7 @@ Row,Description,Part,References,Value,Footprint,Quantity Per PCB,Status,Datashee
 7,I2C pull-up 4.7 kohm,R10,R10 R11 R15 R16 R17,4.7k,R10,5, ,,RC0402FR-074K7L
 8,VSENSE divider 1 Mohm NFC_EN pulldown 1 Mohm,R5,R5 R6 R14,1M,R5,3, ,,RC0402FR-071ML
 9,VDDIO2 tie - 0 ohm jumper,SJ1,SJ1,0R,SJ1,1, ,,RC0805JR-070RL
-10,3-axis accelerometer (tap/double-tap wake),U3,U3,ADXL367,ADXL367 CC-12-4_ADI,1, ,datasheets/adxl367.pdf,ADXL367BCCZ-RL7
+10,3-axis accelerometer (tap/double-tap wake),U3,U3,ADXL367,ADXL367 CC-12-4_ADI,1, ,datasheets/U3  ADXL367BCCZ-RL7  $7.50.pdf,ADXL367BCCZ-RL7
 11,"MCU - 8-bit AVR (PWM, I2C, charge/sleep logic)",U1,U1 U8,AVR64DD28 (VQFN28),U1,2, ,datasheets/U1  AVR64DD28-I-STX  $1.17.pdf,AVR64DD28-I/STX
 12,NFC tag - NTAG I2C plus 2K,U5,U5,NT3H2211,U5,1, ,datasheets/U5  NT3H2211W0FHKH  $1.38.pdf,NT3H2211W0FHKH
 13,NFC VNFC high-side load switch,U6,U6 U9,TPS22918,SOT-23-6,2, ,datasheets/U6  TPS22918DBVR  $0.55.pdf,TPS22918DBVR
@@ -21,11 +21,11 @@ Project info:
 Schematic:,solar-glow-drh-v4_0
 Variant:,default
 Revision:,
-Date:,2026-07-19_01-28-35
+Date:,2026-07-19_02-20-27
 KiCad Version:,10.0.4-10.0.4~ubuntu25.10.1
 Statistics:
 Component Groups:,14
-Component Count:,47
-Fitted Components:,46
+Component Count:,43
+Fitted Components:,42
 Number of PCBs:,1
-Total Components:,46
+Total Components:,42
