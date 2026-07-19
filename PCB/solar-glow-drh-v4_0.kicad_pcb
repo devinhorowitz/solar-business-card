@@ -3186,6 +3186,28 @@
 		)
 		(attr smd)
 		(duplicate_pad_numbers_are_jumpers no)
+		(fp_rect
+			(start -2.650 -2.650)
+			(end 2.650 2.650)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(fill no)
+			(layer "B.CrtYd")
+			(uuid "1bf8a3c9-1141-5668-94ab-1632f3dcef6e")
+		)
+		(fp_circle
+			(center -2.200 -2.200)
+			(end -2.020 -2.200)
+			(stroke
+				(width 0.12)
+				(type solid)
+			)
+			(fill yes)
+			(layer "B.SilkS")
+			(uuid "7dda78ad-d7e0-5878-8400-c4fedf61aacd")
+		)
 		(pad "1" smd roundrect
 			(at -2 -1.2)
 			(size 0.8 0.2)
@@ -3994,6 +4016,27 @@
 		)
 		(attr smd)
 		(duplicate_pad_numbers_are_jumpers no)
+		(fp_rect
+			(start -1.875 -1.000)
+			(end 1.875 1.000)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(fill no)
+			(layer "B.CrtYd")
+			(uuid "ced5eedd-d5b4-5523-940d-d1f7578d2bd3")
+		)
+		(fp_line
+			(start 1.825 -0.800)
+			(end 1.825 0.800)
+			(stroke
+				(width 0.15)
+				(type solid)
+			)
+			(layer "B.SilkS")
+			(uuid "3eee9f71-d812-533a-9a73-05b79e972886")
+		)
 		(pad "A" smd roundrect
 			(at -1.3 0.4)
 			(size 0.65 0.7)
@@ -4114,6 +4157,28 @@
 		)
 		(attr smd)
 		(duplicate_pad_numbers_are_jumpers no)
+		(fp_rect
+			(start -2.650 -2.650)
+			(end 2.650 2.650)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(fill no)
+			(layer "B.CrtYd")
+			(uuid "cec516d3-c86a-5f80-b9db-2f92d97d1de4")
+		)
+		(fp_circle
+			(center -2.200 -2.200)
+			(end -2.020 -2.200)
+			(stroke
+				(width 0.12)
+				(type solid)
+			)
+			(fill yes)
+			(layer "B.SilkS")
+			(uuid "9c0dcd12-7de9-58b7-86eb-98ca786ec122")
+		)
 		(pad "1" smd roundrect
 			(at -2 -1.2)
 			(size 0.8 0.2)
@@ -5192,6 +5257,28 @@
 		)
 		(attr smd exclude_from_bom dnp)
 		(duplicate_pad_numbers_are_jumpers no)
+		(fp_rect
+			(start -1.000 -3.790)
+			(end 1.000 3.790)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(fill no)
+			(layer "B.CrtYd")
+			(uuid "241c3363-a769-5be5-a21f-1a9d823d3091")
+		)
+		(fp_circle
+			(center 0.950 -3.740)
+			(end 1.130 -3.740)
+			(stroke
+				(width 0.12)
+				(type solid)
+			)
+			(fill yes)
+			(layer "B.SilkS")
+			(uuid "48aaf39c-9e74-5290-a349-2fa631e6ed26")
+		)
 		(pad "1" smd roundrect
 			(at 0 -2.54)
 			(size 1.5 2)
@@ -5689,6 +5776,27 @@
 		)
 		(attr smd)
 		(duplicate_pad_numbers_are_jumpers no)
+		(fp_rect
+			(start -1.875 -1.000)
+			(end 1.875 1.000)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(fill no)
+			(layer "B.CrtYd")
+			(uuid "e6996da5-05bc-5d07-a5c5-489ee5ad5e3d")
+		)
+		(fp_line
+			(start 1.825 -0.800)
+			(end 1.825 0.800)
+			(stroke
+				(width 0.15)
+				(type solid)
+			)
+			(layer "B.SilkS")
+			(uuid "f11f369e-eb05-50fa-a13a-b68dd8e20ce1")
+		)
 		(pad "A" smd roundrect
 			(at -1.3 0.4)
 			(size 0.65 0.7)
@@ -6094,6 +6202,28 @@
 		)
 		(attr smd)
 		(duplicate_pad_numbers_are_jumpers no)
+		(fp_rect
+			(start -1.150 -1.150)
+			(end 1.150 1.150)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(fill no)
+			(layer "B.CrtYd")
+			(uuid "bab79ac1-474e-59a6-9124-66ea70e9d885")
+		)
+		(fp_circle
+			(center -0.700 -0.700)
+			(end -0.520 -0.700)
+			(stroke
+				(width 0.12)
+				(type solid)
+			)
+			(fill yes)
+			(layer "B.SilkS")
+			(uuid "8d2b4bb1-7553-5682-8961-896550bfe88c")
+		)
 		(pad "1" smd roundrect
 			(at -0.7 -0.25)
 			(size 0.4 0.25)
@@ -8232,6 +8362,28 @@
 		)
 		(attr smd exclude_from_bom dnp)
 		(duplicate_pad_numbers_are_jumpers no)
+		(fp_rect
+			(start -1.335 -1.970)
+			(end 1.335 1.970)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(fill no)
+			(layer "B.CrtYd")
+			(uuid "e23dcff9-9ae0-57e1-9436-267498a35cd3")
+		)
+		(fp_circle
+			(center -1.285 -1.920)
+			(end -1.105 -1.920)
+			(stroke
+				(width 0.12)
+				(type solid)
+			)
+			(fill yes)
+			(layer "B.SilkS")
+			(uuid "ef21b4c9-e6ad-5b69-8b30-3aa380ce1cfe")
+		)
 		(pad "1" smd circle
 			(at -0.635 -1.27)
 			(size 0.9 0.9)
@@ -8666,6 +8818,27 @@
 		)
 		(attr smd)
 		(duplicate_pad_numbers_are_jumpers no)
+		(fp_rect
+			(start -1.875 -1.000)
+			(end 1.875 1.000)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(fill no)
+			(layer "B.CrtYd")
+			(uuid "23e43ca6-f28d-59e5-a6bb-7cafcbe09ae1")
+		)
+		(fp_line
+			(start 1.825 -0.800)
+			(end 1.825 0.800)
+			(stroke
+				(width 0.15)
+				(type solid)
+			)
+			(layer "B.SilkS")
+			(uuid "c4ced7ec-6687-5677-82d3-e6786a59415f")
+		)
 		(pad "A" smd roundrect
 			(at -1.3 0.4)
 			(size 0.65 0.7)
@@ -8947,6 +9120,27 @@
 		)
 		(attr smd)
 		(duplicate_pad_numbers_are_jumpers no)
+		(fp_rect
+			(start -1.875 -1.000)
+			(end 1.875 1.000)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(fill no)
+			(layer "B.CrtYd")
+			(uuid "d0a73cc7-ea1f-5a64-b597-ab39624719cd")
+		)
+		(fp_line
+			(start 1.825 -0.800)
+			(end 1.825 0.800)
+			(stroke
+				(width 0.15)
+				(type solid)
+			)
+			(layer "B.SilkS")
+			(uuid "892c5125-77b2-53c6-9287-84da5984261d")
+		)
 		(pad "A" smd roundrect
 			(at -1.3 0.4)
 			(size 0.65 0.7)
@@ -9136,6 +9330,28 @@
 				)
 				(justify mirror)
 			)
+		)
+		(fp_rect
+			(start -1.279 -1.355)
+			(end 1.279 1.355)
+			(stroke
+				(width 0.05)
+				(type solid)
+			)
+			(fill no)
+			(layer "B.CrtYd")
+			(uuid "77a8dbc8-d13e-50c3-b3c8-d82eea7cbe91")
+		)
+		(fp_circle
+			(center -1.149 1.225)
+			(end -0.969 1.225)
+			(stroke
+				(width 0.12)
+				(type solid)
+			)
+			(fill yes)
+			(layer "B.SilkS")
+			(uuid "2c8b7f70-9bc6-599e-b261-c10e72df132e")
 		)
 		(pad "1" smd rect
 			(at -0.8636 0.750001 270)
