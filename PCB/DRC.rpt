@@ -1,5 +1,5 @@
 ** Drc report for solar-glow-drh-v4_0.kicad_pcb **
-** Created on 2026-07-18T22:01:00 **
+** Created on 2026-07-18T22:26:16 **
 ** Report includes: Errors, Warnings, Exclusions **
 
 ** Found 11 DRC violations **
@@ -50,7 +50,7 @@
 
 ** Found 0 unconnected pads **
 
-** Found 21 Footprint errors **
+** Found 9 Footprint errors **
 [duplicate_footprints]: Duplicate footprints
     Local override; warning
     @(47.8000 mm, 60.4000 mm): Footprint <no reference designator>
@@ -67,42 +67,6 @@
     Local override; warning
     @(0.0000 mm, 0.0000 mm): Footprint <no reference designator>
     @(3.0000 mm, 60.4000 mm): Footprint <no reference designator>
-[footprint_symbol_mismatch]: Downloads:SCHURTER_SCPC_SS17 doesn't match footprint given by symbol (solarglow:SC1)
-    Local override; warning
-    @(15.5000 mm, 21.2500 mm): Footprint SC1
-[footprint_symbol_mismatch]: Footprint attributes don't match symbol: 'Exclude from bill of materials' settings differ
-    Local override; warning
-    @(15.5000 mm, 21.2500 mm): Footprint SC1
-[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
-    Local override; warning
-    @(15.5000 mm, 21.2500 mm): Footprint SC1
-[footprint_symbol_mismatch]: Downloads:SCHURTER_SCPC_WS17-mod2 doesn't match footprint given by symbol (solarglow:SC2)
-    Local override; warning
-    @(35.3000 mm, 16.9000 mm): Footprint SC2
-[footprint_symbol_mismatch]: Footprint attributes don't match symbol: 'Exclude from bill of materials' settings differ
-    Local override; warning
-    @(35.3000 mm, 16.9000 mm): Footprint SC2
-[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
-    Local override; warning
-    @(35.3000 mm, 16.9000 mm): Footprint SC2
-[footprint_symbol_mismatch]: Downloads:SCHURTER_SCPC_SS17 doesn't match footprint given by symbol (solarglow:SC3)
-    Local override; warning
-    @(15.6464 mm, 67.4803 mm): Footprint SC3
-[footprint_symbol_mismatch]: Footprint attributes don't match symbol: 'Exclude from bill of materials' settings differ
-    Local override; warning
-    @(15.6464 mm, 67.4803 mm): Footprint SC3
-[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
-    Local override; warning
-    @(15.6464 mm, 67.4803 mm): Footprint SC3
-[footprint_symbol_mismatch]: Downloads:SCHURTER_SCPC_WS17-mod2 doesn't match footprint given by symbol (solarglow:SC4)
-    Local override; warning
-    @(35.2287 mm, 71.9702 mm): Footprint SC4
-[footprint_symbol_mismatch]: Footprint attributes don't match symbol: 'Exclude from bill of materials' settings differ
-    Local override; warning
-    @(35.2287 mm, 71.9702 mm): Footprint SC4
-[footprint_symbol_field_mismatch]: Missing symbol field 'MPN' in footprint
-    Local override; warning
-    @(35.2287 mm, 71.9702 mm): Footprint SC4
 [extra_footprint]: Extra footprint
     Local override; warning
     @(3.0000 mm, 60.4000 mm): Footprint <no reference designator>

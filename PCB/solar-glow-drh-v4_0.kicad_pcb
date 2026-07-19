@@ -1257,7 +1257,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Datasheet" "SC1-SC4  SCHURTER 3-153-438  (SCPC family, Case SS17 p.5)"
+		(property "Datasheet" "datasheets/SC1-SC4  SCHURTER 3-153-438  $15.48.pdf"
 			(at 0 0 0)
 			(layer "B.Fab")
 			(hide yes)
@@ -1269,7 +1269,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" "SCHURTER SCPC SS17 1.8 F 2.75 V prismatic supercapacitor"
+		(property "Description" "Supercap 1 F / 2.75 V (WS17)"
 			(at 0 0 0)
 			(layer "B.Fab")
 			(hide yes)
@@ -1281,10 +1281,30 @@
 				(justify mirror)
 			)
 		)
+		(property "MPN" "3-153-438"
+			(at 0 0 180)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "50755f45-afd0-4553-a4bb-69d94cc9da3f")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
 		(path "/97ac916a-975b-49ad-9baf-c73727ded566")
 		(sheetname "/")
-		(sheetfile "solar-glow-drh-v2_2.kicad_sch")
-		(attr smd)
+		(sheetfile "solar-glow-drh-v4_0.kicad_sch")
+		(units
+			(unit
+				(name "A")
+				(pins "N" "P")
+			)
+		)
+		(attr smd exclude_from_bom)
 		(duplicate_pad_numbers_are_jumpers no)
 		(fp_line
 			(start 6 21)
@@ -6762,7 +6782,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Datasheet" "SC1-SC4  SCHURTER 3-153-438  (SCPC family, Case SS17 p.5)"
+		(property "Datasheet" "datasheets/SC1-SC4  SCHURTER 3-153-438  $15.48.pdf"
 			(at 0 0 180)
 			(layer "B.Fab")
 			(hide yes)
@@ -6774,7 +6794,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" "SCHURTER SCPC SS17 1.8 F 2.75 V prismatic supercapacitor"
+		(property "Description" "Supercap 1 F / 2.75 V (WS17)"
 			(at 0 0 180)
 			(layer "B.Fab")
 			(hide yes)
@@ -6786,10 +6806,30 @@
 				(justify mirror)
 			)
 		)
+		(property "MPN" "3-153-438"
+			(at 0 0 0)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "69499387-64cc-4117-8c81-e313259d9ca1")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
 		(path "/72a54bc8-ee0c-4b18-9971-0636972b3dde")
 		(sheetname "/")
-		(sheetfile "solar-glow-drh-v2_2.kicad_sch")
-		(attr smd)
+		(sheetfile "solar-glow-drh-v4_0.kicad_sch")
+		(units
+			(unit
+				(name "A")
+				(pins "N" "P")
+			)
+		)
+		(attr smd exclude_from_bom)
 		(duplicate_pad_numbers_are_jumpers no)
 		(fp_line
 			(start 5.5 20.5)
@@ -9796,7 +9836,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Datasheet" "SC1-SC4  SCHURTER 3-153-438  (SCPC family, Case WS17 p.4)"
+		(property "Datasheet" "datasheets/SC1-SC4  SCHURTER 3-153-438  $15.48.pdf"
 			(at 0 0 0)
 			(layer "B.Fab")
 			(hide yes)
@@ -9808,7 +9848,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" "SCHURTER SCPC WS17 1.0 F 2.75 V prismatic supercapacitor"
+		(property "Description" "Supercap 1 F / 2.75 V (WS17)"
 			(at 0 0 0)
 			(layer "B.Fab")
 			(hide yes)
@@ -9820,10 +9860,30 @@
 				(justify mirror)
 			)
 		)
+		(property "MPN" "3-153-438"
+			(at 0 0 180)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "ca75775c-a92b-42ea-b5af-f22b5711a2ed")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
 		(path "/fca0a3a1-8653-443d-80a0-8ffd6c6dde95")
 		(sheetname "/")
-		(sheetfile "solar-glow-drh-v2_2.kicad_sch")
-		(attr smd)
+		(sheetfile "solar-glow-drh-v4_0.kicad_sch")
+		(units
+			(unit
+				(name "A")
+				(pins "N" "P")
+			)
+		)
+		(attr smd exclude_from_bom)
 		(duplicate_pad_numbers_are_jumpers no)
 		(fp_line
 			(start 6 16)
@@ -10053,7 +10113,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Datasheet" "SC1-SC4  SCHURTER 3-153-438  (SCPC family, Case WS17 p.4)"
+		(property "Datasheet" "datasheets/SC1-SC4  SCHURTER 3-153-438  $15.48.pdf"
 			(at 0 0 180)
 			(layer "B.Fab")
 			(hide yes)
@@ -10065,7 +10125,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" "SCHURTER SCPC WS17 1.0 F 2.75 V prismatic supercapacitor"
+		(property "Description" "Supercap 1 F / 2.75 V (WS17)"
 			(at 0 0 180)
 			(layer "B.Fab")
 			(hide yes)
@@ -10077,10 +10137,30 @@
 				(justify mirror)
 			)
 		)
+		(property "MPN" "3-153-438"
+			(at 0 0 0)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "b23dfc51-fb03-4fba-83dd-4ba3bec83888")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
 		(path "/6b1df43e-f181-468a-9cfc-6c2d3538887d")
 		(sheetname "/")
-		(sheetfile "solar-glow-drh-v2_2.kicad_sch")
-		(attr smd)
+		(sheetfile "solar-glow-drh-v4_0.kicad_sch")
+		(units
+			(unit
+				(name "A")
+				(pins "N" "P")
+			)
+		)
+		(attr smd exclude_from_bom)
 		(duplicate_pad_numbers_are_jumpers no)
 		(fp_line
 			(start 5.5 15.5)
@@ -36825,22 +36905,22 @@
 		)
 		(polygon
 			(pts
-				(xy 45.8062 25.335) (xy 45.878531 25.352955) (xy 45.974281 25.415118) (xy 46.06823 25.479741) (xy 46.192254 25.543772)
-				(xy 46.4322 25.26) (xy 46.192254 24.976228) (xy 46.050161 25.051779) (xy 45.974281 25.104882) (xy 45.88866 25.161915)
-				(xy 45.848179 25.178847) (xy 45.8062 25.185)
+				(xy 47.0562 25.185) (xy 46.983869 25.167045) (xy 46.888119 25.104882) (xy 46.79417 25.040259) (xy 46.670146 24.976228)
+				(xy 46.4302 25.26) (xy 46.670146 25.543772) (xy 46.812239 25.468221) (xy 46.888119 25.415118) (xy 46.97374 25.358085)
+				(xy 47.014221 25.341153) (xy 47.0562 25.335)
 			)
 		)
 		(filled_polygon
 			(layer "B.Cu")
 			(pts
-				(xy 46.198348 24.983435) (xy 46.425812 25.252446) (xy 46.428537 25.260976) (xy 46.425812 25.267554)
-				(xy 46.198272 25.536654) (xy 46.190314 25.540759) (xy 46.183972 25.539496) (xy 46.118825 25.505862)
-				(xy 46.068891 25.480082) (xy 46.067627 25.479326) (xy 46.03624 25.457736) (xy 45.974281 25.415118)
-				(xy 45.974269 25.41511) (xy 45.97426 25.415104) (xy 45.878531 25.352955) (xy 45.878525 25.352952)
-				(xy 45.815081 25.337204) (xy 45.807877 25.331885) (xy 45.8062 25.325849) (xy 45.8062 25.195109)
-				(xy 45.809627 25.186836) (xy 45.816202 25.183533) (xy 45.848179 25.178847) (xy 45.88866 25.161915)
-				(xy 45.974281 25.104882) (xy 46.049574 25.052189) (xy 46.050787 25.051446) (xy 46.183922 24.980657)
-				(xy 46.192835 24.9798)
+				(xy 46.678425 24.980502) (xy 46.793508 25.039917) (xy 46.794771 25.040672) (xy 46.888119 25.104882)
+				(xy 46.983869 25.167045) (xy 46.98387 25.167045) (xy 46.983874 25.167047) (xy 47.024184 25.177052)
+				(xy 47.047319 25.182795) (xy 47.054523 25.188114) (xy 47.0562 25.19415) (xy 47.0562 25.32489) (xy 47.052773 25.333163)
+				(xy 47.046197 25.336466) (xy 47.014223 25.341152) (xy 46.973739 25.358085) (xy 46.973737 25.358085)
+				(xy 46.888136 25.415105) (xy 46.812827 25.467808) (xy 46.811612 25.468553) (xy 46.678478 25.539341)
+				(xy 46.669564 25.540199) (xy 46.664051 25.536564) (xy 46.56135 25.415105) (xy 46.436586 25.267553)
+				(xy 46.433862 25.259024) (xy 46.436587 25.252446) (xy 46.48588 25.19415) (xy 46.664129 24.983343)
+				(xy 46.672085 24.97924)
 			)
 		)
 	)
@@ -36863,22 +36943,22 @@
 		)
 		(polygon
 			(pts
-				(xy 47.0562 25.185) (xy 46.983869 25.167045) (xy 46.888119 25.104882) (xy 46.79417 25.040259) (xy 46.670146 24.976228)
-				(xy 46.4302 25.26) (xy 46.670146 25.543772) (xy 46.812239 25.468221) (xy 46.888119 25.415118) (xy 46.97374 25.358085)
-				(xy 47.014221 25.341153) (xy 47.0562 25.335)
+				(xy 45.8062 25.335) (xy 45.878531 25.352955) (xy 45.974281 25.415118) (xy 46.06823 25.479741) (xy 46.192254 25.543772)
+				(xy 46.4322 25.26) (xy 46.192254 24.976228) (xy 46.050161 25.051779) (xy 45.974281 25.104882) (xy 45.88866 25.161915)
+				(xy 45.848179 25.178847) (xy 45.8062 25.185)
 			)
 		)
 		(filled_polygon
 			(layer "B.Cu")
 			(pts
-				(xy 46.678425 24.980502) (xy 46.793508 25.039917) (xy 46.794771 25.040672) (xy 46.888119 25.104882)
-				(xy 46.983869 25.167045) (xy 46.98387 25.167045) (xy 46.983874 25.167047) (xy 47.024184 25.177052)
-				(xy 47.047319 25.182795) (xy 47.054523 25.188114) (xy 47.0562 25.19415) (xy 47.0562 25.32489) (xy 47.052773 25.333163)
-				(xy 47.046197 25.336466) (xy 47.014223 25.341152) (xy 46.973739 25.358085) (xy 46.973737 25.358085)
-				(xy 46.888136 25.415105) (xy 46.812827 25.467808) (xy 46.811612 25.468553) (xy 46.678478 25.539341)
-				(xy 46.669564 25.540199) (xy 46.664051 25.536564) (xy 46.56135 25.415105) (xy 46.436586 25.267553)
-				(xy 46.433862 25.259024) (xy 46.436587 25.252446) (xy 46.48588 25.19415) (xy 46.664129 24.983343)
-				(xy 46.672085 24.97924)
+				(xy 46.198348 24.983435) (xy 46.425812 25.252446) (xy 46.428537 25.260976) (xy 46.425812 25.267554)
+				(xy 46.198272 25.536654) (xy 46.190314 25.540759) (xy 46.183972 25.539496) (xy 46.118825 25.505862)
+				(xy 46.068891 25.480082) (xy 46.067627 25.479326) (xy 46.03624 25.457736) (xy 45.974281 25.415118)
+				(xy 45.974269 25.41511) (xy 45.97426 25.415104) (xy 45.878531 25.352955) (xy 45.878525 25.352952)
+				(xy 45.815081 25.337204) (xy 45.807877 25.331885) (xy 45.8062 25.325849) (xy 45.8062 25.195109)
+				(xy 45.809627 25.186836) (xy 45.816202 25.183533) (xy 45.848179 25.178847) (xy 45.88866 25.161915)
+				(xy 45.974281 25.104882) (xy 46.049574 25.052189) (xy 46.050787 25.051446) (xy 46.183922 24.980657)
+				(xy 46.192835 24.9798)
 			)
 		)
 	)
