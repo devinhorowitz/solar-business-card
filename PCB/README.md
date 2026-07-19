@@ -222,11 +222,11 @@ Summary of the **orderable** lines:
 | U7 | 1 | MB85RC512TY 512kbit I²C FeRAM (0x50, SOIC-8, VNFC-gated) | `MB85RC512TYPNF-GS-BCERE1` |
 | U8 | 1 | AEM10300 buck-boost harvest PMIC (QFN-28 4×4) | `10AEM10300C0000` |
 | U9 | 1 | TPS7A0233 LDO, 3.3 V (SOT-23-5) → VS | `TPS7A0233PDBVR` |
-| L2 | 1 | 10 µH inductor 0603 (AEM DCDC) | `Coilcraft XFL2020-103MEB` (verify footprint) |
+| L2 | 1 | 10 µH 1.76 A inductor, 2.5×2.0×1.0 mm (AEM DCDC; land grows past 0603) | `Murata DFE252010F-100M` (datasheet Table 11) |
 | FB1 | 1 | Ferrite bead 0603 (STO island feed) | `Murata BLM18PG221SN1D` |
 | C22, C23 | 2 | 1 µF 0402 (LDO in/out) | `GRM155R61A105KE15D` |
 | C24 | 1 | 100 nF 0402 (STO-sns filter) | `GRM155R71C104KA88D` |
-| C25 | 1 | 22 µF 0603 (AEM BUFSRC buffer) | `GRM188R60J226MEA0D` |
+| C25 | 1 | 22 µF 10 V 0603 (AEM CSRC decoupling) | `GRM188R61A226ME15D` |
 | C26, C27 | 2 | 10 µF 0402 (AEM VINT / STO local bulk) | `GRM155R60J106ME44D` |
 | C28 | 1 | 100 nF 0402 (FRAM VNFC decoupling) | `GRM155R71C104KA88D` |
 | R15 | 1 | 2 MΩ 0402 1% (STO sense top) | `RC0402FR-072ML` |
@@ -267,7 +267,7 @@ types by hand afterward.
   **off** the PCBA BOM on purpose — the supercaps are manual-solder only (SCHURTER SCPC),
   and the cells are heat-sensitive.
 - **Not placed:** SW2, SB1–SB4 (solder bridges you set), TC1 (Tag-Connect pad), J1
-  (optional header), MH1–MH4 (mounting holes), C9, R13, C10 (DNP).
+  (optional header), MH1–MH4 (mounting holes), C9, C10 (DNP).
 
 **Sourcing:** turnkey, with the standing instruction that anything PCBWay can't source they
 flag and you consign from DigiKey — **no substitutes without approval**. The likeliest to

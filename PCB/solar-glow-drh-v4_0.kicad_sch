@@ -4889,116 +4889,6 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "solarglow:R13"
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(in_pos_files yes)
-			(duplicate_pin_numbers_are_jumpers no)
-			(property "Reference" "R13"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value" "10k"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Footprint" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Datasheet" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Description" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(symbol "R13_1_1"
-				(rectangle
-					(start 2.54 2.54)
-					(end 20.32 -7.62)
-					(stroke
-						(width 0.2)
-						(type default)
-					)
-					(fill
-						(type background)
-					)
-				)
-				(pin passive line
-					(at 0 0 0)
-					(length 2.54)
-					(name "1"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 0 -5.08 0)
-					(length 2.54)
-					(name "2"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
 		(symbol "solarglow:R14"
 			(exclude_from_sim no)
 			(in_bom yes)
@@ -17157,7 +17047,7 @@
 				)
 			)
 		)
-		(property "Description" "22uF 0603 AEM BUFSRC buffer cap"
+		(property "Description" "22uF 10V 0603 X5R, AEM SRC decoupling (aem10300.pdf Table 11 CSRC)"
 			(at 581.66 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -17167,7 +17057,7 @@
 				)
 			)
 		)
-		(property "MPN" "GRM188R60J226MEA0D"
+		(property "MPN" "GRM188R61A226ME15D"
 			(at 581.66 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -22304,7 +22194,7 @@
 				)
 			)
 		)
-		(property "Description" "10uH power inductor for AEM10300 DCDC (board land is 0603 - reconcile part vs land before order)"
+		(property "Description" "10uH 1.76A power inductor, AEM10300 LDCDC (aem10300.pdf Table 11 = DFE252010F-100M); 2.5x2.0x1.0mm, land grows past 0603 - PCB rework pending"
 			(at 520.7 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -22314,7 +22204,7 @@
 				)
 			)
 		)
-		(property "MPN" "XFL2020-103MEB"
+		(property "MPN" "DFE252010F-100M"
 			(at 520.7 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)

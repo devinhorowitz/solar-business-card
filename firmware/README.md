@@ -23,9 +23,9 @@ card's largest idle load. See **NFC contact card** below.
 > The **NFC** firmware is verified against the NTAG I2C plus datasheet
 > (NT3H2111_2211 Rev 3.6), and the whole front-end is on the committed
 > `solar-glow-drh-v4_0.kicad_pcb`, verified from its copper: tag `U5`, the `U6`
-> (TPS22918) VCC load switch, `R14` and `C8` are placed (`R13` land present, DNP) and wired as this
+> (TPS22918) VCC load switch, `R14` and `C8` are placed and wired as this
 > firmware assumes — FD→PA6, NFC_EN→PA7→`U6` enable, `U6` gating VS→the switched
-> tag rail (`VNFC`), the internal PA6 pull-up holding FD to **VS** (`R13` now DNP), `R14` (1 M) holding NFC_EN low.
+> tag rail (`VNFC`), the internal PA6 pull-up holding FD to **VS**, `R14` (1 M) holding NFC_EN low.
 > What still needs the bench is electrical, not wiring: that FD swings to a valid
 > logic-low on field power with VCC gated off, the phone NDEF read, and the `C9` tune.
 
@@ -37,6 +37,7 @@ card's largest idle load. See **NFC contact card** below.
 | `twi.h` | header-only blocking I2C host (TWI0); shared by the accel and NFC tag. |
 | `adxl367.h/.c` | accelerometer: presence, tap→INT1, activity→INT2, tap/activity clear. |
 | `nfc.h/.c` | NT3H2211 NFC tag (`U5`): NDEF write + VCC power-gate via `NFC_EN`/`U6`. |
+| `fram.h/.c` | MB85RC512TY FRAM (`U7`, 64 KB I2C @ 0x50): power/present + 16-bit linear read/write. Shares `VNFC`/`NFC_EN` with the tag; headless by default (`USE_FRAM_LOG`=0). |
 | `led.h/.c` | TCA0 split-mode PWM on PA0–PA3 + gamma breathing glow + in-sun loading sweep. |
 | `sense.h/.c` | ADC rail/light/temp reads, rail-scaled glow (brownout stretch), EEPROM telemetry: activation counter + sun diary + max-temp log + black box (min-rail, power-cycles). |
 | `main.c` | init (per hardware doc §7), sleep/wake state machine, ISRs. |
@@ -144,7 +145,7 @@ AVR64DD28, VQFN-28, on the **back** of the board.
 | 28 | PA2 | LDRV2 | LED D3, TCA0 WO2 |
 | 1 | PA3 | LDRV1 | LED D2, TCA0 WO3 |
 | 2 | PA4 | EN_STO_CH | AEM10300 charge gate, open-drain, LOW = disable charge during NFC read |
-| 4 | PA6 | FD | NFC field-detect in (`U5`); PORTA pin int, **both edges**; field-powered (works VCC-off); int pull-up on (sole FD pull-up; ext 10k `R13` to VS is DNP) |
+| 4 | PA6 | FD | NFC field-detect in (`U5`); PORTA pin int, **both edges**; field-powered (works VCC-off); int pull-up on (sole FD pull-up; no external FD resistor) |
 | 5 | PA7 | NFC_EN | Enables the NFC VCC load switch (`U6`, TPS22918), **active-HIGH**; init LOW = NFC off. (`R14`, 1 M, holds `U6` off while PA7 tristates during reset/UPDI/brown-out — **on the v3.0 board** at (4.39, 29.4). Firmware also drives PA7 low-before-output and low-before-sleep, so the window is covered both ends.) |
 | 8 | PC2 | SDA | TWI0 host (PORTMUX **ALT2**), ext 4.7k → VS |
 | 9 | PC3 | SCL | TWI0 host (ALT2), ext 4.7k → VS |
@@ -229,7 +230,7 @@ cost is one accel Z read per poll.
 
 `U5` is an NXP **NT3H2211** (NTAG I2C plus, 2 KB) — an NFC Forum Type-2 tag on the
 **same TWI0 bus** as the accel, 7-bit address **0x55** (no clash with the accel's
-0x1D). Its antenna is a PCB coil on `LA`/`LB` tuned to 13.56 MHz by the chip's
+0x1D or the FRAM's 0x50). Its antenna is a PCB coil on `LA`/`LB` tuned to 13.56 MHz by the chip's
 internal 50 pF (`C9` is a do-not-populate trim); the radio is invisible to firmware.
 **Power-gate (`NFC_EN`, PA7).** The chip has no sleep state and draws ~195 µA from
 VCC continuously (datasheet Table 42, 3.3 V idle) — the card's largest idle load. A
@@ -249,9 +250,9 @@ supercap flat. Written once, re-writable.
 when a reader's field appears. Per datasheet §8.4 the FD pin **runs on the reader's field
 power**, so this works with the tag's VCC gated off — that is why it survives the
 power-gate. Field-present (`NC_REG.FD_ON = 00b`) is the chip's POR/config default, so no
-I2C setup is needed. PA6 is a **both-edges** interrupt with an **internal pull-up** that is now
-the **sole** FD pull-up (`R13`, the former external 10k to **VS**, is **DNP** since the passive
-consolidation; the internal pull-up only passes current while FD is held low).
+I2C setup is needed. PA6 is a **both-edges** interrupt with an **internal pull-up** that is
+the **sole** FD pull-up (no external FD resistor in the v4 design; the internal pull-up only
+passes current while FD is held low).
 The two edges do different jobs: on the **falling** edge (field arrives) the LEDs are held
 dark and the core stays asleep for the read — `led.c` reads FD live and aborts any in-flight
 breath — so the card's PWM/switching don't inject broadband noise into the 13.56 MHz band

@@ -491,7 +491,7 @@ corners, and the **same BOM**. It is now frozen as the final unmanaged-solar rev
   foreign non-pour = 0.2197 mm** (via F-ring → SCL) — every new gap ≥ 0.22, so **zero new
   marginal-ledger entries** and the DRC warning count should not move. Counts: 564 → 569 segments,
   87 → 89 vias, 54 → 55 footprints.
-- **Schematic:** R14 cloned in R13's per-ref lib-symbol idiom, placed off-sheet-right at
+- **Schematic:** R14 cloned in the per-ref lib-symbol idiom, placed off-sheet-right at
   (685.8, 69.85) with its own `NFC_EN` / `GND` global labels — reposition freely. If you ever re-run
   update-from-schematic, add R14 to the local `solarglow` footprint lib first (the repo carries no
   `.pretty`; footprints live embedded in the board file).
@@ -942,7 +942,7 @@ gain, against the higher (but still multi-decade at desk temp) cell float.*
 - **Level-shift the AEM control pins:** EN_STO_CH open-drain to VINT; ST_STO (swings to VSTO) via a divider
   before the 3.6 V-max MCU pin. A TVS on SRC is cheap insurance (panels are under the 5.5 V abs max, and
   EN_STO_FT ties to GND since our source never exceeds 5 V).
-- **Inductor:** pick a specific 10 µH / >=1 A part thin enough for the cavity floor (the caps set 1.75 mm).
+- **Inductor:** Murata DFE252010F-100M (10 µH, 1.76 A, 2.5×2.0×1.0 mm), the AEM10300 datasheet Table 11 part; its 1.0 mm height clears the cavity floor (the caps set 1.75 mm). Land grows past 0603 - PCB rework pending.
 - **The perennial #1 gate:** measure real indoor harvest -- the entire case for an active PMIC is
   MPPT-in-dim-light, and that number is still unmeasured (§2).
 - **Enclosure:** the `v3_0-backshell` files stay frozen and are mechanically valid for `v4_0` as-is (the
