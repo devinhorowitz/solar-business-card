@@ -9075,13 +9075,13 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "solarglow:CSRC"
+		(symbol "solarglow:C25"
 			(exclude_from_sim no)
 			(in_bom yes)
 			(on_board yes)
 			(in_pos_files yes)
 			(duplicate_pin_numbers_are_jumpers no)
-			(property "Reference" "CSRC"
+			(property "Reference" "C25"
 				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -9134,7 +9134,7 @@
 					)
 				)
 			)
-			(symbol "CSRC_1_1"
+			(symbol "C25_1_1"
 				(rectangle
 					(start 2.54 2.54)
 					(end 20.32 -7.62)
@@ -9185,13 +9185,13 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "solarglow:CINT"
+		(symbol "solarglow:C26"
 			(exclude_from_sim no)
 			(in_bom yes)
 			(on_board yes)
 			(in_pos_files yes)
 			(duplicate_pin_numbers_are_jumpers no)
-			(property "Reference" "CINT"
+			(property "Reference" "C26"
 				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -9244,7 +9244,7 @@
 					)
 				)
 			)
-			(symbol "CINT_1_1"
+			(symbol "C26_1_1"
 				(rectangle
 					(start 2.54 2.54)
 					(end 20.32 -7.62)
@@ -9295,13 +9295,13 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "solarglow:CSTO"
+		(symbol "solarglow:C27"
 			(exclude_from_sim no)
 			(in_bom yes)
 			(on_board yes)
 			(in_pos_files yes)
 			(duplicate_pin_numbers_are_jumpers no)
-			(property "Reference" "CSTO"
+			(property "Reference" "C27"
 				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -9354,7 +9354,7 @@
 					)
 				)
 			)
-			(symbol "CSTO_1_1"
+			(symbol "C27_1_1"
 				(rectangle
 					(start 2.54 2.54)
 					(end 20.32 -7.62)
@@ -20119,7 +20119,7 @@
 		)
 	)
 	(symbol
-		(lib_id "solarglow:CSRC")
+		(lib_id "solarglow:C25")
 		(at 581.92 372 0)
 		(unit 1)
 		(body_style 1)
@@ -20129,7 +20129,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "044fdc93-e461-421e-837e-def2528ef93e")
-		(property "Reference" "CSRC"
+		(property "Reference" "C25"
 			(at 592.92 377.08 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -20198,14 +20198,14 @@
 		(instances
 			(project "solar-glow-drh-v4_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
-					(reference "CSRC")
+					(reference "C25")
 					(unit 1)
 				)
 			)
 		)
 	)
 	(symbol
-		(lib_id "solarglow:CINT")
+		(lib_id "solarglow:C26")
 		(at 612.4 372 0)
 		(unit 1)
 		(body_style 1)
@@ -20215,7 +20215,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "287e907a-98cb-4a82-bb3e-05b518709250")
-		(property "Reference" "CINT"
+		(property "Reference" "C26"
 			(at 623.4 377.08 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -20284,14 +20284,14 @@
 		(instances
 			(project "solar-glow-drh-v4_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
-					(reference "CINT")
+					(reference "C26")
 					(unit 1)
 				)
 			)
 		)
 	)
 	(symbol
-		(lib_id "solarglow:CSTO")
+		(lib_id "solarglow:C27")
 		(at 642.88 372 0)
 		(unit 1)
 		(body_style 1)
@@ -20301,7 +20301,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "71753b00-749a-49ff-8804-edb37a393003")
-		(property "Reference" "CSTO"
+		(property "Reference" "C27"
 			(at 653.88 377.08 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -20370,7 +20370,7 @@
 		(instances
 			(project "solar-glow-drh-v4_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
-					(reference "CSTO")
+					(reference "C27")
 					(unit 1)
 				)
 			)
