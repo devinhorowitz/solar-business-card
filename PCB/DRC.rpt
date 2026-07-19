@@ -1,40 +1,12 @@
 ** Drc report for solar-glow-drh-v4_0.kicad_pcb **
-** Created on 2026-07-18T23:23:50 **
+** Created on 2026-07-19T02:05:30 **
 ** Report includes: Errors, Warnings, Exclusions **
 
-** Found 19 DRC violations **
+** Found 12 DRC violations **
 [silk_over_copper]: Silkscreen clipped by solder mask
     Local override; warning
-    @(3.0000 mm, 60.4000 mm): Reference field of MP3
-    @(3.0000 mm, 60.4000 mm): PTH pad 1 [GND] of MP3
-[silk_over_copper]: Silkscreen clipped by solder mask
-    Local override; warning
-    @(3.0000 mm, 60.4000 mm): Reference field of MP3
-    @(1.2500 mm, 85.0500 mm): Segment on F.Mask
-[silk_over_copper]: Silkscreen clipped by solder mask
-    Local override; warning
-    @(47.8000 mm, 60.4000 mm): Reference field of MP4
-    @(47.8000 mm, 60.4000 mm): PTH pad 1 [GND] of MP4
-[silk_over_copper]: Silkscreen clipped by solder mask
-    Local override; warning
-    @(47.8000 mm, 60.4000 mm): Reference field of MP4
-    @(49.5500 mm, 3.8500 mm): Segment on F.Mask
-[silk_over_copper]: Silkscreen clipped by solder mask
-    Local override; warning
-    @(3.0000 mm, 28.5000 mm): Reference field of MP1
-    @(1.2500 mm, 85.0500 mm): Segment on F.Mask
-[silk_over_copper]: Silkscreen clipped by solder mask
-    Local override; warning
-    @(3.0000 mm, 28.5000 mm): Reference field of MP1
-    @(3.0000 mm, 28.5000 mm): PTH pad 1 [GND] of MP1
-[silk_over_copper]: Silkscreen clipped by solder mask
-    Local override; warning
-    @(47.8000 mm, 28.5000 mm): Reference field of MP2
-    @(47.8000 mm, 28.5000 mm): PTH pad 1 [GND] of MP2
-[silk_over_copper]: Silkscreen clipped by solder mask
-    Local override; warning
-    @(47.8000 mm, 28.5000 mm): Reference field of MP2
-    @(49.5500 mm, 3.8500 mm): Segment on F.Mask
+    @(28.1000 mm, 40.7000 mm): Reference field of U7
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
 [silk_over_copper]: Silkscreen clipped by solder mask
     Local override; warning
     @(2.4900 mm, 53.9500 mm): Polygon of U9 on B.Silkscreen
@@ -82,7 +54,9 @@
 
 ** Found 0 unconnected pads **
 
-** Found 0 Footprint errors **
+** Found 1 Footprint errors **
+[missing_footprint]: Missing footprint C28 (100nF)
+    Local override; warning
 
 ** Ignored checks **
     - Footprint has no courtyard defined
