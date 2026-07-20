@@ -310,3 +310,7 @@ sunlight -- pinning that gap down is the whole point):
   to measure end-to-end harvested energy into storage, is the natural follow-on once these
   panel-level numbers are in hand. Out of scope here -- this board isolates the panel so the
   harvester's behavior does not confound the measurement.
+  - A simpler, **self-powered go/no-go** cut of that idea -- panels + a reverse-blocking diode +
+    a small cap + a nanopower blink-rate surplus indicator calibrated to the card's draw (no AEM,
+    no instrument) -- is specified in **`harvest-budget-test-board.md`**. Use this fixture for the
+    precise I-V curve; use that board for the glanceable "is it net-positive at my desk?" answer.
