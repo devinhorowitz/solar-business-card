@@ -6,7 +6,7 @@ the bare show-front (two solar cells + the backlit DRH monogram window) stays ex
 the eight screws clamping, not a press fit.
 
 This is the **0.6 mm-board "dumb box"** shell. It reduces to a floor, walls, eight M2 bosses,
-a U2 relief pocket — nothing else. All center support and all
+a U7 (FRAM) relief pocket -- nothing else. All center support and all
 optical/EMI features live in a separate **resin diffuser brace** (see `brace/`), so a PCB layout
 change is a brace reprint, never a shell re-machine. The shell is aligned to
 `PCB/solar-glow-drh-v3_0.kicad_pcb` (bosses on the v3.0 8-hole pattern: four corner bosses concentric
@@ -22,7 +22,7 @@ with the r3.0 board-corner fillets, plus four panel-corner bosses).
 | File | Purpose |
 |---|---|
 | `solar-glow-drh-v3_0-backshell-0p6b-brace-cad.py` | Parametric CadQuery generator. **Source of truth** — regenerates the STEP/STL from the PCB anchors. |
-| `solar-glow-drh-v3_0-backshell-0p6b-brace-Ti-max.step` | **Send this to the fab.** 1.00 floor, 1.80 cavity, 0.60 board recess, U2 relief pocket, no ribs, no locator pillars, 1.0 walls, asymmetric lip (W2.5/N2.0/S2.0/E1.0), 8 M2 bosses, 3.55 overall. |
+| `solar-glow-drh-v3_0-backshell-0p6b-brace-Ti-max.step` | **Send this to the fab.** 1.00 floor, 1.80 cavity, 0.60 board recess, U7 (FRAM) relief pocket, no ribs, no locator pillars, 1.0 walls, asymmetric lip (W2.5/N2.0/S2.0/E1.0), 8 M2 bosses, 3.55 overall. |
 | `solar-glow-drh-v3_0-backshell-0p6b-brace-Ti-max.stl` | Same geometry, for a quick plastic dry-fit print before committing to titanium. |
 | `solar-glow-drh-v3_0-backshell-0p6b-brace-DRAWING.pdf` / `.png` | **Current** 2D dimensioned drawing (plan + Section A-A + Detail B + critical dims + notes + title block). Attach to the CNC quote. |
 | `brace/` | The resin diffuser brace — separate printed part. Has its own README, generator, STEP/STL, and drawing. |
@@ -34,7 +34,7 @@ The mating PCB, the resin brace, and the eight M2 screws are separate parts, not
 
 - **Floor 0.75 → 0.95 → 1.00 (true 1 mm)**, on a **0.60 mm board** (was 0.80). Same 3.55 overall. The final 0.95 → 1.00 step comes from trimming the cavity 1.85 → 1.80 (cap air 0.15 → 0.10): the brace and the solar-cell sandwiches carry the board, and the WS17 datasheet confirms 1.70 mm is the cap **max** height (worst-case gap 0.05 mm). A true 1.00 floor also clears aluminium / copper / stainless, not just Ti.
 - **Ribs and locator pillars removed.** The old cap-gap ribs and window posts are gone, and the locator pillars are retired — the resin H-brace carries center support and registers to the shell by fitment (its four outboard rails + the component pockets + the board press-fit). The cavity floor stays a full 1.00 everywhere.
-- **Support lip widened and made asymmetric.** The old uniform 1.00 lip is now **W 2.5 / N 2.0 / S 2.0** for a stiffer PCB (widths bounded by the nearest B-side part on each edge). **East stays 1.0** through the JP1/TP1 pads, over the NFC coil (a grounded Ti lip would detune it), past the D10 edge (x49.58), and past the relocated clamp cluster (Q1/U4/R7/R9/C7) — all of which overhang a wider lip — **widening to 2.5 only at the y0–10 end** clear of them. The exterior back border is independent of the lip and **uniform 2.0 on all 4 sides**.
+- **Support lip widened and made asymmetric.** The old uniform 1.00 lip is now **W 2.5 / N 2.0 / S 2.0** for a stiffer PCB (widths bounded by the nearest B-side part on each edge). **East stays 1.0** through the JP1/TP1 pads, over the NFC coil (a grounded Ti lip would detune it), and past C7 (x49.55, the one east-edge part left after v4 removed the Q1/U4/R7/R9 clamp cluster and the D9/D10/D11 diodes), which overhangs a wider lip, **widening to 2.5 only at the y0–10 end** clear of them. The exterior back border is independent of the lip and **uniform 2.0 on all 4 sides**.
 - **Reflector frame + floor tape dropped.** The monogram window is now backed by the brace's white LED-hug diffuser face, so the laser-marked reflector frame and the adhesive floor strip are no longer used.
 
 ## The 2D drawing
@@ -69,7 +69,7 @@ Form settings on the CNC quote page (the on-screen selections override the drawi
 Paste into **Other special request**:
 
 ```
-- Cavity floor is a uniform 1.00 mm, with one shallow relief pocket under U2 that
+- Cavity floor is a uniform 1.00 mm, with one shallow relief pocket under U7 that
   takes the local floor to 0.95 mm over a 7.8 x 5.4 mm area only. If you cannot
   reliably hold 1.00 mm titanium over this ~48 x 86 mm pocket, advise the minimum
   floor you can hold and we will re-issue the STEP.
@@ -106,7 +106,7 @@ Expect the instant price to move: the thin floor routes this to manual engineeri
 - Z stack from the back face:
   - back frame and 4 boss annuli: **proud 0.15 mm** (to Z −0.15)
   - recessed rear art field: at Z 0
-  - cavity floor: at **Z +1.00** (0.95 local under the U2 pocket)
+  - cavity floor: at **Z +1.00** (0.95 local under the U7 pocket)
   - boss / lip tops (the PCB rest plane): **Z +2.80**
   - PCB recess: Z +2.80 to +3.40 (receives the 0.60 mm board)
 - Wall 1.00 mm. **Asymmetric perimeter lip: W 2.5 / N 2.0 / S 2.0 / E 1.0 mm (E widens to 2.5 at the N/S ends).** Exterior back border is **uniform 2.0 on all 4 sides** (independent of the lip).** Back-frame step 0.15 mm. **No internal ribs or posts.**
@@ -122,11 +122,11 @@ Default everything to ISO 2768-1 general. Control **only** the items below.
 | C3 | 8× mounting-hole pattern (pitch, linear) | x 44.80 / y rows 3.0·28.5·60.4·85.9 mm | **±0.05** | Must align with the PCB's 8 M2 holes (MH1–4 corners + 4 panel-corner). |
 | C4 | Mounting-hole diameter (tapped) | **M2** (tap-drill Ø1.6, through) | standard | Thread fit for the M2 screws. |
 
-> **Cavity note.** The cavity is **cap-limited**: the four WS17 supercaps set it. The SCHURTER SCPC datasheet (Case WS17) gives height **max 1.7 mm** and body 28.5 +0.5/−0.0 long, so the general cavity is **1.80 mm** (0.10 nominal air; worst-case 1.75 − 1.70 = 0.05, non-contact). U2 (SOIC-8, 1.75 mm) is the single tallest part but sits over the local relief pocket (note 7), which drops the floor 0.05 mm there so U2 keeps a 0.10 mm air gap. The freed 0.05 mm went into the floor (0.95 → 1.00).
+> **Cavity note.** The cavity is **cap-limited**: the four WS17 supercaps set it. The SCHURTER SCPC datasheet (Case WS17) gives height **max 1.7 mm** and body 28.5 +0.5/−0.0 long, so the general cavity is **1.80 mm** (0.10 nominal air; worst-case 1.75 − 1.70 = 0.05, non-contact). U7 (FRAM, SOIC-8, 1.75 mm) is the single tallest part but sits over the local relief pocket (note 7), which drops the floor 0.05 mm there so U7 keeps a 0.10 mm air gap. The freed 0.05 mm went into the floor (0.95 → 1.00).
 
 ### 3. Thin-wall advisory (read before quoting)
 
-The cavity floor is a **uniform 1.00 mm** (0.95 mm over the small U2 relief pocket only). That is
+The cavity floor is a **uniform 1.00 mm** (0.95 mm over the small U7 relief pocket only). That is
 still below the titanium min-wall guidance (~1.0 mm) but a healthy step above the earlier 0.55/0.75.
 The floor no longer has ribs behind it (the resin brace carries center support in service, but is
 not present during machining). Please proceed one of two ways and note which on the quote:
@@ -149,9 +149,9 @@ not present during machining). Please proceed one of two ways and note which on 
 
 - 8× back-face spotface **Ø3.0 mm**, concentric with the mounting holes, depth ~0.2 mm (screw tip seats flush below the proud boss annulus). Modeled.
 
-### 7. U2 relief pocket
+### 7. U7 (FRAM) relief pocket
 
-- **7.8 × 5.4 mm** in the cavity floor, centered at board **(30.10, 37.64)**, **0.05 mm deep** (local floor 0.95), R1.0 corners. U2 (1.75) keeps 0.10 mm air. General floor stays 1.00. Modeled.
+- **7.8 × 5.4 mm** in the cavity floor, centered at board **(28.1, 37.3)**, **0.05 mm deep** (local floor 0.95), R1.0 corners. U7 (1.75) keeps 0.10 mm air. General floor stays 1.00. Modeled.
 
 ### 8. Press fit — do NOT rely on it
 

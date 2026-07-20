@@ -118,7 +118,7 @@ The glow is **central and rear-facing**, which is exactly where the four big cel
   its routing). Both pairs join the **same STO / MID / GND nets** (SC3 ∥ SC1, SC4 ∥ SC2) → **1 F @
   5.5 V on a single MID node**, so **the AEM10300 (U8) BAL pin balances the stack - no separate balancer** (v3 used U2 ALD910025, deleted in v4). The MID
   net runs the length of the board (cheap on planes) to tie both midpoints.
-- **Mounting holes at all four corners.** Inboard screws leave the ends of the 89 mm card
+- **Mounting holes: four corners + four panel-corner (eight M2 total).** Inboard corner screws leave the ends of the 89 mm card
   unsupported — bad for a stiff metal back-plate. Keep M2 engagement at the corners.
 
 **Routing hotspots (where a re-spin will be slow):** (1) the U1 QFN-28 escape — LDRV1–4, UPDI, SDA,
@@ -133,17 +133,25 @@ belongs in KiCad** (push-shove router, real thermal reliefs, exact mask expansio
 
 - **Why this part:** **MVIO** (PORTC can run on a separate VDDIO2 — attractive for a mixed-voltage
   rail), **ADC** (light-sense), flexible **TCA/TCB/TCD** PWM (LED breathing / more LEDs), and
-  **22 I/O** of headroom. *(As-built, the separate-voltage mode is **not** used: the shunt clamp
-  holds the whole VS rail ≤ 3.60 V worst-case and VDDIO2 is tied to VS via SJ1, so the accel is protected by
-  the clamp rather than by MVIO. Set the `SYSCFG1.MVSYSCFG` fuse to SINGLE — see firmware README
+  **22 I/O** of headroom. *(As-built, the separate-voltage mode is **not** used: VS is now a regulated
+  3.3 V rail from the U9 TPS7A0233 LDO (STO->VS) and VDDIO2 is tied to VS via SJ1, so the accel is protected by
+  living on that regulated rail rather than by MVIO. Set the `SYSCFG1.MVSYSCFG` fuse to SINGLE -- see firmware README
   "Fuses".)*
-- **Why VQFN, not SSOP-28:** height is irrelevant (U2 at 1.75 mm sets the cavity floor; the QFN is
+- **LDO input filter (`FB1` / `STO_LDO`):** the AEM10300 charges STO with a >=10 MHz buck-boost
+  DCDC, so STO carries switching ripple. Because the 28-pin part has **no AVDD** (the ADC runs off
+  VDD/VS), analog cleanliness rides on the VS plane -- so a **0603 ferrite `FB1`** series-filters the
+  U9 LDO **input**: `STO --FB1--> STO_LDO`, with `C22` (1 uF) as the filtered input cap on the island.
+  U9's IN and EN both sit on `STO_LDO`; everything else stays on raw STO (the LED string, sense
+  divider, program pads, tank caps). The ferrite passes DC (sub-ohm DCR) so the LDO never starves
+  during LED bursts. *(FB1 originally sat with both pads shorted on STO -- non-functional; the
+  `STO_LDO` split makes it a real series element. Board copper re-route is tracked in `TODO.md`.)*
+- **Why VQFN, not SSOP-28:** height is irrelevant (U7 (FRAM) at 1.75 mm sets the cavity floor; the QFN is
   0.9 mm). The binding constraint is **X/Y footprint** — with the cells eating ~43% of the board, the
   QFN's ~16 mm² land beats SSOP-28's ~50 mm². Cost: hot-air + paste, EP reflowed to GND (same as the
   v0 QFN-20).
 - **Power-down: 0.65 µA typ** (DS40002315 Table 38-5, `VREGCTRL.PMODE = AUTO`, 3 V/25 °C; +0.6 µA
   for a 32 kHz wake source). That is ~6× the old tinyAVR's 0.1 µA, but still sub-µA and swamped by
-  supercap + U2-balancer leakage (µA-class). **Firmware must-do: `PMODE = AUTO` for sleep — FULL
+  supercap leakage (µA-class). **Firmware must-do: `PMODE = AUTO` for sleep -- FULL
   mode is 160 µA (250×) and would dominate the standby budget.**
 - **No AVDD on the 28-pin:** the ADC runs off VDD, so analog cleanliness rides on the VS plane +
   decoupling. θJA ≈ 36.5 °C/W.
@@ -189,24 +197,26 @@ re-spin for the enclosure:
 - **Grounded body → short risk.** In the enclosed variant, **drop the right-edge castellations**;
   land support pillars **only on GND pour**; keep a **die-cut Kapton (~0.05 mm)** blanket isolation
   layer in reserve if a later via audit on the rib lines finds an untented via.
-- **General cavity 1.80 mm (cap-limited), plus a U2 relief pocket** — the four **1.70 mm WS17
-  supercaps** set the general cavity (1.80 = cap + 0.10 mm air, toleranced 1.80 ±0.05). U2 (SOIC-8,
-  1.75 mm) is the single tallest part but sits over a **local 0.05 mm relief pocket** (floor 0.95 mm
-  there vs 1.00 general), so it keeps 0.10 mm air while the general cavity stays 1.80. The
+- **General cavity 1.80 mm (cap-limited), plus a relief pocket** -- the four **1.70 mm WS17
+  supercaps** set the general cavity (1.80 = cap + 0.10 mm air, toleranced 1.80 ±0.05). U7
+  (MB85RC512TY FRAM, SOIC-8_3.9x4.9mm, 1.75 mm, on B.Cu) is now the single tallest populated part
+  (U2/ALD910025 was deleted in v4). The **local 0.05 mm relief pocket** (floor 0.95 mm there vs
+  1.00 general) was located under U2, so **confirm U7's placement actually sits over the pocket**
+  before relying on it; with the pocket it keeps 0.10 mm air while the general cavity stays 1.80. The
   0.9 mm QFN is irrelevant. ("Cells" elsewhere can mean the 1.2 mm **solar** cells on the front — a
   different part; don't conflate the two.)
-- **No tall back-side parts.** The cavity budget assumes the tallest *populated* rear part is U2 at
+- **No tall back-side parts.** The cavity budget assumes the tallest *populated* rear part is U7 (MB85RC512TY FRAM, SOIC-8) at
   1.75 mm. The v2-era 2.54 mm breakout headers (old JP1/JP2) are gone in v3.0; the reused-`JP1`
   bench strip + `TP1` are flat SMD pads (nothing to populate — a soldered header would stop the
   shell closing, same as ever). J1/TC2030 are flat back-side pads.
 - **The button is the accel tap** (cap-touch dies behind a grounded plate; the old "snap-dome"
   actuator is superseded).
 - **Shell, current approach (v3.0):** Ti-6Al-4V Grade 5, **fully 3-axis CNC-milled** (no etching),
-  **bead-blast** finish, with a **1.00 mm floor** (0.95 under the U2 pocket), **no ribs** — center
+  **bead-blast** finish, with a **1.00 mm floor** (0.95 under the U7/FRAM pocket), **no ribs** -- center
   support comes from a separate resin diffuser brace — and the window is backed by the brace's white
   diffuser face (the laser-marked reflector frame is dropped). Overall height
   3.55 mm; the four bosses sit on the **v3.0 hole pattern** (concentric with the r3.0 fillets),
-  retained by four corner M2 screws (~2.2 mm Ti engagement). The earlier 0.3 mm-skin / 7075-fallback /
+  retained by eight M2 screws (four corner + four panel-corner, ~2.2 mm Ti engagement). The earlier 0.3 mm-skin / 7075-fallback /
   photochemical-etch plan is dropped. Full CAD, callouts, and fab notes are in `enclosure/README.md`.
 - **Supercap thermal -- vulnerability, sensing, and why no per-cap thermistors.** The four WS17
   EDLCs are the heat-sensitive parts (a 2.75 V cell derates in both working voltage and life with
@@ -214,7 +224,8 @@ re-spin for the enclosure:
   get, and must we measure them *there*?" is a fair question. Answer: **no dedicated per-cap
   thermistors.**
   - *The single internal sensor suffices.* There is no internal heat source of consequence -- the only
-    dissipators are the Q1/TLV3011 shunt clamp (≤~0.2 W, and only under strong direct sun) and the brief
+    dissipators are the U8 (AEM10300) active-harvest PMIC and the U9 (TPS7A0233) LDO -- both nanopower/low-milliwatt
+    in indoor light, even lower than v3's deleted Q1/TLV3011 shunt clamp -- and the brief
     LED breaths -- so in the failure mode that actually matters (hot car / sun-soak) the whole 50.8 x 88.9 mm
     card floats to ambient and sits near-isothermal. Across 0.6 mm FR4 with a thermally-coupled Ti shell,
     any MCU-to-cap gradient collapses well within the max-temp logging timescale. The cap centers are
@@ -243,7 +254,7 @@ re-spin for the enclosure:
     reserved Kapton blanket. **(Superseded -- see the Resolution below: the WS17 can top bench-tested
     non-conductive, so a conductive TIM on the can top is safe and the best-thermal option is now open.)**
   - *Low compression force + serviceable.* Do not preload the board off its z2.80 rest, and keep it
-    re-applyable -- the shell opens on four M2 screws, so a cured RTV is a teardown hazard where a
+    re-applyable -- the shell opens on eight M2 screws, so a cured RTV is a teardown hazard where a
     re-usable gap pad/putty is not.
   - *What it buys, and what it does not.* Ti-6Al-4V is a poor conductor (~6.7 W/m·K, ~1/20th of aluminium)
     but a real thermal **mass**: the TIM buffers transients (a warm hand, a sun-driven clamp burst) into
@@ -317,10 +328,10 @@ re-spin for the enclosure:
   resin-filled + copper-capped (POFV) board-wide** (§12), so the point is moot.
 - **TC2030 (Tag-Connect) footprint rules:** use the **official KiCad `Tag-Connect_TC2030-IDC-FP`**
   (Connectors.pretty; board-side == TC2030-MCP-FP) — do **not** hand-draw. 6 contact pads
-  Ø0.7874 mm at 1.27 mm pitch (pins 1=UPDI, 2=VS, 3=GND, 4–6 NC), F.Cu+F.Mask, **no paste**; 4
+  Ø0.7874 mm at 1.27 mm pitch (pins 1=UPDI, 2=STO, 3=GND, 4–6 NC), F.Cu+F.Mask, **no paste**; 4
   leg-latch holes Ø2.3749 mm NPTH (the hands-free latch); 3 alignment holes Ø0.9906 mm NPTH. **Contact
   pads must stay SOLID for the spring pins** (no hole > 0.008") → VIPPO TC1.1/2/3, or plate the 3
-  alignment holes and route VS/GND to them to keep the pads hole-free. Keep-out: no tracks/vias in the
+  alignment holes and route STO/GND to them to keep the pads hole-free. Keep-out: no tracks/vias in the
   shaded area, no signal within 0.508 mm of a contact pad. **DNL** in the BOM (pogo connector, never
   soldered).
 - **Production Gerbers come from KiCad's own fabrication-outputs exporter**, not from any preview
@@ -557,7 +568,7 @@ must land in the same commit or update-from-schematic will fight you).
   collided with the enclosure's cap-gap **rib** (x 24.9–25.9, full cavity height): pins/pads
   directly under grounded Ti. Scrapped before commit.
 - **Shipped placement:** five bare **SMD** pads (1.7 mm sq, 2.54 pitch, B side) at **x 48.4** in
-  the SC2-body-to-edge margin — `TP1` VIN (y 12.0), `JP1` 1–4 = GND/VS/SCL/SDA (y 14.54–22.16).
+  the SC2-body-to-edge margin -- `TP1` VIN (y 12.0), `JP1` 1–4 = GND/STO/SCL/SDA (y 14.54–22.16).
   VIN/VS are local B spurs off the VIN trunk and D1.K; SDA taps a new via at (33.4, 30.78), SCL
   T's off its existing via at (34.37, 35.28); both run east on F at y 29.55/29.1 through the
   channel above the coil's north fence (LA's B turns start at y 32.05), landing on the pads

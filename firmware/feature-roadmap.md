@@ -36,7 +36,7 @@ for detail.
   card puts "42 taps / 51 C" on a professional contact and risks the vCard on every rewrite. The only
   safe channel for either is the tag's 64-byte **SRAM mailbox** read by a companion app (leaves the
   offline vCard untouched) -- worth building only if such an app ever exists; until then the counters
-  stay UPDI-readable. Kept as a v-next revival hook, not a v3.0 feature.
+  stay UPDI-readable. Kept as a v-next revival hook, not a v4.0 feature.
 - **Won't do -- a real conflict or physics wall**: the *naive* "suppress ALL glows when dark" coma
   would kill the dark-room tap-glow (VSENSE can't tell a nightstand from a pocket) -- but its clean
   distillation **shipped** as dark-motion mute above (mute only the *motion* breath when dark, always
@@ -165,7 +165,7 @@ energy-gate lens as Phases 1-3.
   through the Event System to fire a TCA0 one-shot envelope with the core in power-down.
   *Limit:* a true cosine needs the CPU updating compares, so the CPU-free path trades the
   breath for a hardware triangle/ramp (TCA0 ramp mode, or CCL off the 32 kHz ULP). The payoff
-  is a budget-bench question -- the ~8 mA LEDs likely dominate the 1 MHz core, so measure first.
+  is a budget-bench question -- the ~16 mA-peak LEDs likely dominate the 1 MHz core, so measure first.
 - **Hardware brownout-reflex (AC0 -> EVSYS -> CCL -> TCA0 compares = 0)** -- Tier 2. AC0
   already has `VSENSE` on AINP0; set the internal DAC as a danger floor and force the LED
   compares to zero in hardware the instant the rail sags (µs, zero CPU). Lets animations run
@@ -229,5 +229,5 @@ NFC**, **PoV air-message**. Sleeper: the **tally counter**.
 
 ---
 
-*Firmware roadmap only; the v3.0 hardware stays frozen. Real duty-cycle / glow numbers are
+*Firmware roadmap only; nothing here requires a v4.0 board re-spin. Real duty-cycle / glow numbers are
 provisional until the energy-budget bench run (README → "The open question").*

@@ -146,7 +146,7 @@ AVR64DD28, VQFN-28, on the **back** of the board.
 | 1 | PA3 | LDRV1 | LED D2, TCA0 WO3 |
 | 2 | PA4 | EN_STO_CH | AEM10300 charge gate, open-drain, LOW = disable charge during NFC read |
 | 4 | PA6 | FD | NFC field-detect in (`U5`); PORTA pin int, **both edges**; field-powered (works VCC-off); int pull-up on (sole FD pull-up; no external FD resistor) |
-| 5 | PA7 | NFC_EN | Enables the NFC VCC load switch (`U6`, TPS22918), **active-HIGH**; init LOW = NFC off. (`R14`, 1 M, holds `U6` off while PA7 tristates during reset/UPDI/brown-out — **on the v3.0 board** at (4.39, 29.4). Firmware also drives PA7 low-before-output and low-before-sleep, so the window is covered both ends.) |
+| 5 | PA7 | NFC_EN | Enables the NFC VCC load switch (`U6`, TPS22918), **active-HIGH**; init LOW = NFC off. (`R14`, 1 M, holds `U6` off while PA7 tristates during reset/UPDI/brown-out -- at (5.35, 4.92) on the board. Firmware also drives PA7 low-before-output and low-before-sleep, so the window is covered both ends.) |
 | 8 | PC2 | SDA | TWI0 host (PORTMUX **ALT2**), ext 4.7k → VS |
 | 9 | PC3 | SCL | TWI0 host (ALT2), ext 4.7k → VS |
 | 10 | VDDIO2 | VS | tied to VS by SJ1; PORTC at rail, MVIO unused |
@@ -159,8 +159,8 @@ AVR64DD28, VQFN-28, on the **back** of the board.
 | 19,25,EP | GND | GND | |
 
 LEDs are **low-side**: each lights when its PA pin pulls LOW, current set by a
-150 Ω ballast on the clamped rail (~8 mA peak per LED: amber Vf≈2.25 V over
-(3.4−2.25)/150). PWM only trims the
+150 Ω cathode ballast off the STO supercap tank (~16 mA peak per LED: amber Vf≈2.25 V over
+(4.65−2.25)/150, STO topping at the AEM10300 VOVCH of 4.65 V). PWM only trims the
 average below that ballasted ceiling. The only D-parts on the v4 board are the LEDs D2–D5.
 
 Spare/free: PC0, PC1 (on JP2); PA5 (`BTN`, reserved stub);
@@ -214,7 +214,7 @@ cost is one accel Z read per poll.
    is dark, check SW2 first.
    *TINY is a low-fidelity mode by design.* SW2 = **TINY** feeds all four anodes
    through one **shared** 220 Ω (`R12`) -- unlike **ON**, which ties the common
-   anode straight to VS and leaves each LED independent on its own 150 Ω cathode
+   anode straight to STO (the supercap tank) and leaves each LED independent on its own 150 Ω cathode
    ballast. Sharing R12 makes per-LED brightness depend on how many channels are
    lit at once (a single lit LED sees ~3× the current of all four lit), so a
    `led_breathe` (all four together) and the tail of a `led_sweep` (one at a time)
@@ -371,7 +371,7 @@ the sensor.
 
 ### LED glow (`board.h`; animation in `led.c`)
 - **`GLOW_PEAK`** (0–255, default 220): peak LED duty for a normal tap. The 150 Ω
-  ballast fixes the *peak current* on the clamped rail; duty only trims the
+  ballast fixes the *peak current* on the STO tank (the LED supply rail); duty only trims the
   average, so this is brightness/energy and can't exceed the ballasted ceiling.
   It is **pre-gamma**: the animation runs `gamma2(v) = v²/256`, so 220 lands at a
   189 actual peak duty (and even 255 maps to 254). Lower it to stretch the budget.
@@ -475,20 +475,21 @@ the sensor.
   (`sense_vmin_get()` / `sense_boot_count_get()`). Both near-free and run even while dormant.
 
 ### In-sun loading sweep (`board.h`; animation in `led.c`)
-The "charging in the sun" tell: on the ~1 s poll, when VIN is past the clamp (strong
-sun) **and** the caps are full, the card plays a left→right loading sweep across
+The "charging in the sun" tell: on the ~1 s poll, when the SRC solar node is under
+strong illumination **and** the caps are full, the card plays a left→right loading sweep across
 D2–D5. The caps-full gate is the hard safety — the sweep can never draw the pack down;
 it only spends solar that would otherwise go unharvested once the tank is full. One VSENSE read yields
 both the light and strong-sun predicates (`sense_vin_flags()`, raw-count, no mV math).
 - **`USE_SUN_SWEEP`** (0/1, default 1): master enable. 0 compiles the trigger out of
   the poll path entirely (`led_sweep` stays linked as library code) — the one flag to
   flip if the tell proves visually busy on the bench.
-- **`SWEEP_SUN_VIN_MV`** (3600): the strong-sun trip, VIN in mV (solar node, panel
-  side of `D1`). Derived to sit above the clamped VS (~3.50 V) so it means real forward
-  current through `D1`, below panel Voc (4.15 V), and far above indoor light. Sets
+- **`SWEEP_SUN_VIN_MV`** (3600): the strong-sun trip, VIN in mV (the SRC solar node,
+  = VSENSE ×2 via R5/R6). Derived to sit above the indoor SRC range (~0.8–2.1 V) so it
+  means the panel is under strong illumination, below panel Voc (4.15 V), and independent
+  of the AEM10300 MPPT and the regulated 3.3 V VS rail. Sets
   *feel*, not safety — bench-tunable. Folded to a raw ADC count at compile time (`sense.c`).
 - **`SWEEP_CAPS_FULL_MV`** (3300): the hard caps-full gate, VS in mV. Independent of
-  the clamp and of `SWEEP_SUN_VIN_MV`, so the animation can never draw the pack down.
+  the harvest control/regulator and of `SWEEP_SUN_VIN_MV`, so the animation can never draw the pack down.
 - **`SWEEP_PASSES` / `SWEEP_PASS_MS` / `SWEEP_PEAK` / `SWEEP_OVERLAP`** (2 / 800 / 235 /
   320): wipes per invocation, ms per wipe, per-LED peak duty, and bump half-width (Q8
   units of LED spacing; 256 = neighbours cross ~50%). Tune the feel with

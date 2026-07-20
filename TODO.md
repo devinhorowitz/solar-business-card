@@ -10,6 +10,14 @@ shell re-machine. Updated 2026-07-11._
 
 ## Cross-domain (link two+ teams — easiest to forget)
 
+- [ ] **[PCB] Route the new `STO_LDO` island (FB1 series filter)** _(2026-07-20)._ FB1 was a
+  dead ferrite (both pads on STO); it is now wired as a series filter on the LDO input. The
+  netlist split landed in the schematic + board (`STO_LDO` = FB1.2, U9.1, U9.3, C22.1; STO keeps
+  FB1.1 + the rest), but the **board copper still carries the old STO traces to those pads**, so
+  DRC flags `STO_LDO` as unrouted / net-mismatched until re-routed: cut the STO trace between
+  FB1.1 and FB1.2, and route `STO_LDO` from FB1.2 to U9.1/U9.3 + C22.1. No zone is involved
+  (STO is trace-routed). Re-run DRC after. Design intent: STO --FB1--> STO_LDO, C22 (1 uF) as
+  the filtered LDO-input cap, isolating U9 from the AEM10300 DCDC switching ripple.
 - [x] **VIN-at-clamp / SUN_THRESHOLD** — _PCB → firmware. DONE 2026-07-10._ Derived
   VIN **>= 3.60 V** as the strong-sun trigger (above the held VS ~3.50 V so there is
   the SRC (merged-panel) node lifted well above its indoor level (VSENSE now divides SRC), below panel Voc 4.15 V; full derivation at
@@ -70,11 +78,10 @@ shell re-machine. Updated 2026-07-11._
   and the merged PCB+PCBA total; ensure the PO
   uses the confirmed C11/C13 MPNs.
 - [ ] **BOM completeness - recount the machine-place BOM against the v4 net** - D10/D11 (v3 comparator-supply OR diodes) were removed with the U4 comparator; only LEDs D2-D5 remain as diodes, so the earlier '42' count is stale. Regenerate the counts and the -BOM-assembly.xlsx master against the v4 schematic. _(audit find,
-  2026-07-11)._ The board (schematic / CI BOM) carries D10, D11 (MMSD301T1G,
-  comparator-supply OR) and C10 (100 nF) as fitted SMD, but `-BOM-assembly.xlsx` lists
-  only 39 (missing all three) and the docs said "36". Correct machine-place count =
-  **42**. `PCB/README.md` order table + counts and root `README.md` are now fixed to 42;
-  **the `-BOM-assembly.xlsx` master still needs regenerating to 42** (binary; owner: Devin).
+  2026-07-11)._ `PCB/README.md` order table + counts and root `README.md` were
+  previously "fixed to 42" off the pre-redesign parts list, so they likely carry the
+  same stale count and must be re-verified against the recomputed v4 count; the
+  `-BOM-assembly.xlsx` master then needs regenerating to match (binary; owner: Devin).
 - [ ] **DRC/ERC prose vs the committed reports** _(audit find)._ The board is DRC/ERC
   **clean** (0 unexcluded errors). But `PCB/README.md` + `solar-glow-drh-design-notes.md`
   describe "~61 marginal-band warnings" present in neither committed report (GUI: 5
@@ -111,10 +118,11 @@ shell re-machine. Updated 2026-07-11._
   intended ~0.05 mm no-rattle contact the brace's fit relies on. Shell is source-of-truth;
   resolve the brace rail coords (or add `edge_fit` to the shell `_cav_inner`), then regen.
   (`…-backshell-…-cad.py` vs `…-diffuser-brace-cad.py`.)
-- [ ] **[geometry] Floor relief must be re-keyed to the v4 harvest part (U8)** - U2 (v3 balancer) is gone; the tallest B-side part in that region is now U8 (AEM10300, QFN-28). Re-derive U2_POS/the relief pocket from U8's placed position + height, then regen the STEP/STL and the derived drawing/README note copies. _(audit find)._ PCB
-  has U2 at (27.5, 37); `…-backshell-…-cad.py` `U2_POS = (28.5, 37)`. ~0.5 mm of the
-  tallest B-side part overhangs the un-relieved floor. PCB is frozen truth → fix `U2_POS`
-  + regen the STEP/STL (and the derived drawing/README note-7 copies).
+- [ ] **[geometry] Floor relief must be re-keyed from U2 to the v4 FRAM (U7)** - U2 (v3 ALD910025 balancer) is gone; the tallest populated B-side part is now U7 (MB85RC512TY FRAM, SOIC-8, 1.75 mm). U7 landed at (28.1, 37.3) on B.Cu -- essentially on the deleted U2's spot, so the relief pocket barely moves. (U8, the AEM10300 QFN-28, is ~0.9 mm and needs no relief.)
+  `…-backshell-…-cad.py` still carries `U2_POS = (30.10, 37.64)` for the deleted part; re-key it to
+  U7's (28.1, 37.3) (rename `U2_POS` -> `U7_POS`), then regen the STEP/STL and the derived
+  drawing/README note-7 copies. PCB is frozen truth. _(audit find)._
+- [ ] **[geometry] Repoint the brace generator to the v4 board + fill `part_height` for the v4 parts** _(audit find)._ `…-diffuser-brace-cad.py` line 54 hardcodes a v3_0 path (`PCB = ".../solar-glow-drh-v3_0.kicad_pcb"`, an absolute path that also does not resolve here), so its pocket map is still v3. `part_height()` has entries only for U2/U6/U1/U3/U5 -- the v4 additions fall through to the 0.60 default, too shallow for the tall ones (U7 FRAM SOIC-8 1.75, U9 LDO SOT-23-6 ~1.45, L2 2520 ~1.0, and the 0603 bulk caps C4/C13/C25/C27 ~0.9). Repoint to the v4 board, drop the U2 entry, add U7/U9/L2 + a 0603-cap height, then regen the brace STEP/STL and confirm no pocket collisions / thin-wall merges broke.
 - [ ] **Fab drawing still renders the retired locator pillars** _(audit find)_ + NOTE 4
   (Ø3.2 recesses), contradicting the pillar-free STEP — and it's the file attached to the
   PCBWay CNC quote. De-pillar `…-backshell-…-DRAWING-gen.py` and regenerate the PDF/PNG.

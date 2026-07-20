@@ -1,5 +1,5 @@
 /*
- * board.h  --  SOLAR-GLOW DRH v3.0  as-built pin/route map.
+ * board.h  --  SOLAR-GLOW DRH v4.0  as-built pin/route map.
  *
  * Single source of truth = the committed solar-glow-drh-v4_0.kicad_pcb
  * (pad -> pinfunction -> net read directly from the board) cross-checked
@@ -25,7 +25,7 @@
  *    10 VDDIO2   VDDIO2   tied to VS by SJ1 -> PORTC at rail, MVIO unused
  *    11 PD1      STO_SNS    supercap-state sense  AIN1 (STO via R15/R16 divide-by-3)
  *    12 PD2      VSENSE   light sense (now SRC) + rail  AIN2 (ADC) + AINP0 (AC0+)
- *    18 VDD      VS       clamped rail <= 3.60V (~3.50 typ)
+ *    18 VDD      VS       regulated 3.3 V LDO output (U9 TPS7A0233, STO->VS)
  *    19 GND      GND
  *    20 PF0      INT1     accel INT1 in  (PORTF pin interrupt)
  *    21 PF1      INT2     accel INT2 in  (PORTF pin interrupt)
@@ -34,9 +34,9 @@
  *    25 GND      GND
  *    EP          GND
  *
- * LED channel map (D1/D9 are Schottkys, NOT LEDs):
+ * LED channel map (D1/D9/D10/D11 Schottkys removed in v4; only D2..D5 remain):
  *   D2->LDRV1->PA3/WO3 ; D3->LDRV2->PA2/WO2 ; D4->LDRV3->PA1/WO1 ; D5->LDRV4->PA0/WO0
- *   each LED: anode->ANODE common->SW2->VS ; cathode->Kn->150R ballast->LDRV net->pin (see map above)
+ *   each LED: anode->ANODE common->SW2->STO (ON) or ->R12(220R)->STO (TINY) ; cathode->Kn->150R ballast->LDRV net->pin (see map above)
  */
 #ifndef BOARD_H
 #define BOARD_H
@@ -157,8 +157,10 @@
  * more even, so the PWM duty (and the hardware TINY mode) want a first-light
  * re-check enclosed. */
 #define GLOW_PEAK       220   /* 0..255 peak duty per LED at full bright.
-                                 Ballast (150R) fixes PEAK current to ~8 mA on
-                                 the clamped rail (amber Vf~2.25V, (3.4-2.25)/150);
+                                 Ballast (150R) sets the PEAK current ceiling;
+                                 the LED anode is fed from the STO supercap tank
+                                 via SW2 (amber Vf~2.25V), so the ceiling tracks
+                                 STO (e.g. ~16 mA at STO~4.65V VOVCH, (4.65-2.25)/150);
                                  PWM only trims the average below that, so this
                                  never exceeds the ballasted ceiling. */
 #define GLOW_BREATH_MS  1600  /* one breathe-in/out cycle, ms */
@@ -193,31 +195,29 @@
  * The one flag to flip if the tell ever proves visually busy on the bench. */
 #define USE_SUN_SWEEP   1
 
-/* SWEEP_SUN_VIN_MV -- the in-sun trigger: VIN (solar node, panel side of blocking
- * diode D1; = VSENSE pin x2) at/above which we call it "strong sun." This is the
+/* SWEEP_SUN_VIN_MV -- the in-sun trigger: VIN (the raw SRC solar node, no blocking
+ * diode in v4; = VSENSE pin x2) at/above which we call it "strong sun." This is the
  * number the PCB side owed firmware; derived here, bench-tunable (it sets feel, not
  * safety -- SWEEP_CAPS_FULL_MV below is the hard gate).
  *
- * Derivation. When the caps top out, the TLV3011B clamp turns Q1 on to hold VS at its
- * trip (VS ~3.50 V nominal, 3.60 V worst case) and shunt the panel's excess. VIN then
- * sits one blocking-diode drop ABOVE that held VS: VIN = VS + Vf(D1). The panel is a
- * current source rolling off toward Voc, so the operating point self-settles between
- * VS (~3.50 V, as Vf->0) and Voc (SM141K06TF Voc 4.15 V, as current->0) and never
- * exceeds Voc -- the naive "VS_trip + Vf(Isc)" over-predicts because MMSD301T1G is a
- * high-Vf SIGNAL Schottky and the panel cannot source full Isc that far up its knee.
- * We pick VIN >= 3.60 V: above the held VS (=> real forward current through D1 =>
- * genuine sun lifting the node, not merely a full cap), yet below Voc and below the
- * realistic hard-clamp VIN => it trips reliably in strong sun. It also sits far above
- * indoor light (VIN ~0.8-2.1 V), and the caps-full co-gate rejects the bright-indoor
- * corner (indoor rarely tops the caps AND lifts VIN this high at once). ADC: VSENSE
- * pin = VIN/2 vs the 2.500 V ref, so 3.60 V -> 2950 counts, which sense.c folds at
- * compile time (SUN_COUNT) so the poll compares raw, no per-poll mV math. */
+ * Derivation. VIN is the raw SRC solar node that the AEM10300 (U8) draws from for
+ * MPPT charging of the STO tank; there is no blocking diode (so no Vf drop) and no
+ * shunt clamp (no TLV3011B, no Q1) in v4. The panel is a current source rolling off
+ * toward Voc, so under load the SRC node self-settles below Voc (SM141K06TF Voc
+ * 4.15 V, as current->0) and never exceeds it. We pick VIN >= 3.60 V: a SRC-node
+ * voltage this high indicates genuine strong sun lifting the node, yet stays below
+ * Voc. It also sits far above indoor light (VIN ~0.8-2.1 V), and the caps-full
+ * co-gate rejects the bright-indoor corner (indoor rarely tops the caps AND lifts
+ * VIN this high at once). ADC: VSENSE pin = VIN/2 vs the 2.500 V ref, so 3.60 V ->
+ * 2950 counts, which sense.c folds at compile time (SUN_COUNT) so the poll compares
+ * raw, no per-poll mV math. */
 #define SWEEP_SUN_VIN_MV   3600
 
 /* SWEEP_CAPS_FULL_MV -- the sweep's HARD safety gate: sweep only when the rail VS is
  * at/above this (caps full). Independent of the clamp and of SWEEP_SUN_VIN_MV, so the
- * animation can never draw the pack down -- it only ever spends solar the clamp would
- * otherwise burn as Q1 heat. Read via the ADC VDD/10 channel (sense_caps_full()). */
+ * animation can never draw the pack down -- it only ever spends harvested charge
+ * already banked in the tank. Read STO via the R15/R16 divider on the ADC STO_SNS
+ * channel (PD1/AIN1), sense_caps_full(). */
 #define SWEEP_CAPS_FULL_MV 3300
 
 /* Sun diary: bank lifetime whole-HOURS of strong sun (the SENSE_SUN_bm tell the poll
@@ -256,7 +256,7 @@
 #define USE_FRAM_LOG       0
 
 /* charge floor: skip the glow (stay dark) below this rail voltage, mV.
- * Read via ADC VDD/10. Keeps a brown-out from bricking mid-animation. */
+ * Read via the STO divider channel (PD1/AIN1). Keeps a brown-out from bricking mid-animation. */
 #define VS_GLOW_FLOOR_MV   2600
 
 /* Brownout stretch: fade the glow as the reserve drains instead of a hard cliff at the

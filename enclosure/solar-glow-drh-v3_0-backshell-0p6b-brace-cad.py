@@ -3,14 +3,14 @@
 solar-glow-drh-v3_0-backshell-0p6b-brace-cad.py  -  0.6 mm-board DUMB-BOX shell for the resin brace.
 
 Back-only titanium shell for the SOLAR-GLOW DRH PCB. It drops over the populated back and is held by
-four corner M2 screws; the bare show-front (two solar cells + the backlit DRH monogram window) stays
-exposed. This is the "dumb box": floor + walls + four corner bosses + a U2 relief pocket + two metal
-locator pillars, nothing else. All center support and the window/EMI features live in a separate
+eight M2 screws (four corner + four panel-corner); the bare show-front (two solar cells + the backlit DRH monogram window) stays
+exposed. This is the "dumb box": floor + walls + eight M2 bosses (four corner + four panel-corner) +
+a U7 (FRAM) relief pocket, no locator pillars, nothing else. All center support and the window/EMI features live in a separate
 dielectric resin brace, so a PCB layout change is a brace reprint, never a shell re-machine.
 
-Z stack (aligned to PCB/solar-glow-drh-v3_0.kicad_pcb, 0.60 mm board):
-  floor 0.95  +  cavity 1.85  +  board recess 0.60  =  3.40 field  (3.55 at the 0.15 back frame).
-The 0.60 board (vs 0.80) frees 0.20 mm into the floor: 0.95 clears stainless/copper and puts aluminum
+Z stack (aligned to PCB/solar-glow-drh-v4_0.kicad_pcb, 0.60 mm board; geometry identical to v3, v4 re-keyed the relief to U7):
+  floor 1.00  +  cavity 1.80  +  board recess 0.60  =  3.40 field  (3.55 at the 0.15 back frame).
+The 0.60 board (vs 0.80) frees 0.20 mm into the floor: 1.00 clears stainless/copper and puts aluminum
 past the old titanium-0.75 stiffness, without growing the assembled part. Overall stays 3.55.
 
 Locator pillars: two Ø3.0 x 0.4 metal pillars stand on the cavity floor at board (13,35) and (33,55)
@@ -18,13 +18,13 @@ Locator pillars: two Ø3.0 x 0.4 metal pillars stand on the cavity floor at boar
 Ø3.2 x 0.8 recesses in the brace bottom: 0.4 engagement, 0.1 radial, ~0.25 axial margin after the
 brace's ~0.15 bottom-sanding. Height is 0.4 (not 0.6): the recess is 0.8 and the brace bottom is
 sanded to fit, so 0.4 preserves the axial margin against sanding variation. The floor stays a full
-0.95 everywhere -- no locating holes, so the back is a uniform engraving surface.
+1.00 everywhere -- no locating holes, so the back is a uniform engraving surface.
 
 No ribs, no support posts: the resin brace carries center support. The rib/brace machinery is retained
 as build() options (ribs=/braces=) for a fallback, but the shipped part uses neither.
 
-U2 (SOIC-8, 1.75 mm, the tallest B-side part) sits over a local 0.05 relief pocket in the cavity floor
-(local floor 0.90) so it keeps its full 0.15 mm air under its through-cutout. Watch U2-region flex at
+U7 (MB85RC512TY FRAM, SOIC-8, 1.75 mm, the tallest B-side part) sits over a local 0.05 relief pocket in the cavity floor
+(local floor 0.95) so it keeps its full 0.10 mm air under its through-cutout. Watch U7-region flex at
 bench bring-up -- no rib props it now; the fallback if it matters is a short local rib stub there.
 
 Bench / board-side items (not resolved in CAD):
@@ -48,18 +48,18 @@ mounts = [(3.0, 3.0), (47.8, 3.0), (3.0, 85.9), (47.8, 85.9),      # 4x corner M
           (3.0, 28.5), (47.8, 28.5), (3.0, 60.4), (47.8, 60.4)]    # +4 panel-corner M2, GND -- match PCB nudge (holes at panel inner corners). 2-col 8-mount pattern. Verified vs committed board: W(3.0,28.5) boss r2.6 clears R14 by 0.34 (R14 y0 31.44, boss top y31.10) and U6 by 0.25 (U6 x0 5.85, boss E x5.60) -- TIGHT; a board-side nudge of U6/R14 (or a local boss trim there) buys margin if a fit check wants it. E bosses at x47.8 merge into the pinched east lip like the corner bosses.
 
 # ===== fixed shell knobs =====
-U2_H       = 1.75                  # U2 (SOIC-8 max, datasheet): the single tallest back part
+U7_H       = 1.75                  # U7 (MB85RC512TY FRAM, SOIC-8 max, datasheet): the single tallest back part
 cap_H      = 1.70                  # WS17 supercaps (locked): the 2nd-tallest parts (x4) -> set the GENERAL cavity
 kapton_th  = 0.00                  # DROPPED (all contacts on bare laminate). set 0.05 to reinstate.
 cav_margin = 0.10                  # air over the cavity-setting parts. general cavity 1.80 = cap_H + air. Reduced 0.15->0.10 now the brace + cell-sandwiches carry the board: cavity 1.80 +-0.05 -> 1.75 worst-case, minus WS17 1.70 MAX (datasheet Case WS17: height max 1.7) = 0.05 non-contact. The freed 0.05 goes into the floor.
-cavity     = round(cap_H + kapton_th + cav_margin, 3)   # 1.85 general (cap-limited); toleranced 1.85 +-0.05 -> 1.80 min
-# U2 alone is 0.05 mm taller than the caps, so a LOCAL relief pocket in the cavity floor under U2 dips
-# the floor 0.05 there (local cavity 1.90) to keep U2's full 0.15 air, while the GENERAL floor runs
-# 0.05 thicker for back-engraving stock. 0.05 = U2_H - cap_H is the ceiling for this trick: beyond it
-# you'd have to pocket the caps (17x28.5 mm each, x4 = a second cavity). Pocket = U2 pad box + margin.
-U2_POCKET    = round(U2_H - cap_H, 3)     # 0.05 mm local floor relief under U2
-U2_POS       = (30.10, 37.64)             # U2 origin, board coords (committed PCB v3.0, re-derived): part shifted +1.60 E / +0.64 S in the passive-consolidation reflow. Pad box 6.75 x 4.41 (unchanged footprint), centered here.
-U2_POCKET_WH = (7.8, 5.4)                 # pocket size: pad box + ~0.5 margin all round. At the new U2_POS the pocket spans y[34.94,40.34] -> N edge 0.46 clear of the glow window (y40.80); E edge x34.0 covers the U2 east pad (x33.48).
+cavity     = round(cap_H + kapton_th + cav_margin, 3)   # 1.80 general (cap-limited); toleranced 1.80 +-0.05 -> 1.75 min
+# U7 alone is 0.05 mm taller than the caps, so a LOCAL relief pocket in the cavity floor under U7 dips
+# the floor 0.05 there (local cavity 1.85) to keep U7's full 0.10 air, while the GENERAL floor runs
+# 0.05 thicker for back-engraving stock. 0.05 = U7_H - cap_H is the ceiling for this trick: beyond it
+# you'd have to pocket the caps (17x28.5 mm each, x4 = a second cavity). Pocket = U7 pad box + margin.
+U7_POCKET    = round(U7_H - cap_H, 3)     # 0.05 mm local floor relief under U7
+U7_POS       = (28.1, 37.3)               # U7 (MB85RC512TY FRAM) origin, board coords (v4 board): re-keyed from the removed U2 balancer, essentially where U2 sat (old (30.10,37.64)). Same SOIC-8_3.9x4.9 package; pad box 6.75 x 4.41 (unchanged footprint), centered here.
+U7_POCKET_WH = (7.8, 5.4)                 # pocket size: pad box + ~0.5 margin all round (same SOIC-8, unchanged). At U7_POS the pocket spans y[34.6,40.0] -> N edge ~0.8 clear of the glow window (y40.80); x[24.2,32.0] covers the U7 east pad (~x31.48).
 
 edge_fit   = -0.05                 # press interference on the FLATS
 corner_clr = 0.15                  # corner relief so the press grips the flats
@@ -75,13 +75,12 @@ lip_E      = 1.0                       # E stays narrow through the JP1/TP1 pads
 lip_E_wide = 2.5                       # E END zones (clear of pads+coil) widen to match the west
 EAST_WIDE_Y = [(0.0, 10.0)]   # board-y bands the E lip widens to 2.5 (else pinched to 1.0, wall x49.8).
 # 2026-07-11: NORTH wide band (72,88.9) REMOVED -> east lip is now pinched (1.0, wall x49.8) over all of
-# y10-88.9. The relocated clamp cluster (owner's board edit: Q1/U4/R7/R9/C7 moved to clear the PV2-corner
-# screw; C10 was DELETED in the passive consolidation) sits in y72-88.9 with east edges C7 @ x49.55, U4 49.16,
-# R7/R9 48.98, Q1 48.51 -- these overhang the old 2.5 wide lip (wall x48.3). Re-verified vs the committed board:
-# the tightest east part overall is D10 @ x49.58 (y64.86, in the mid pinch band, not the clamp cluster); the
-# 1.0 pinch (wall x49.8) clears D10 by 0.22 and C7 by 0.25 -- the SAME tolerance class as the JP1/TP1 pinch at
-# x49.6. The NFC coil (east copper ~x48.4) stays well clear of the x49.8 wall. Edge-support lost under the pinch
-# is picked up by the brace east rail (RAIL_E_N extended to x49.70, in the brace generator).
+# y10-88.9. v4 removed most of the old clamp cluster (Q1/U4/R7/R9 and D9/D10/D11 are GONE); of the parts that
+# drove this pinch only C7 @ x49.55 (y72-88.9) still sits near the east edge, overhanging the old 2.5 wide lip
+# (wall x48.3). Re-verified vs the board: the 1.0 pinch (wall x49.8) clears C7 by 0.25 -- the SAME tolerance
+# class as the JP1/TP1 pinch at x49.6. The NFC coil (east copper ~x48.4) stays well clear of the x49.8 wall.
+# Edge-support lost under the pinch is picked up by the brace east rail (RAIL_E_N extended to x49.70, in the
+# brace generator).
 lip_w      = lip_E                      # legacy min-lip alias (only the dormant tool_relief helper still reads it)
 back_border = 2.0                      # SYMMETRIC proud back-frame border, equal on all 4 sides (decoupled from the asymmetric front lip). Front lip stays asymmetric (it clears B-side parts); this is the cosmetic exterior back border only.
 boss_r     = 2.60                  # M2 boss / back annulus outer radius
@@ -94,7 +93,7 @@ CBORE_D    = 3.0                   # back spotface dia at each hole; depth auto-
 # glow-window reflector registration frame (on the cavity FLOOR): a LASER-MARKED outline showing where
 # the Al reflector strip is placed -- behind the monogram window, facing the reverse-mount LEDs -- so
 # stray back-emission bounces forward through the FR4 letters and lifts the glow. Marked, NOT cut: the
-# floor stays a full 0.75 mm under the frame (the only relief is the 0.05 U2 pocket, well clear of it).
+# floor stays a full 1.00 mm under the frame (the only relief is the 0.05 U7 pocket, well clear of it).
 # GLOW_WIN is the monogram footprint from the committed PCB.
 GLOW_WIN   = (14.95, 40.8, 35.85, 47.0)   # board coords (x0,y0,x1,y1); 20.9 x 6.2 mm, centered (25.4,43.9)
 MARK_W     = 0.25                  # frame outline width (in-plane), hairline -- laser-marked, no material removed
@@ -126,7 +125,7 @@ BACK_TOOL_R = 0.50
 # window braces (disk clears the glow window + every back pad; from the PCB):
 # window braces: E + W flanked the optical-window keepout (between side lip and window edge).
 # NE(35,37) + SW(19.2,50.9) were REDUNDANT once the ribs went in -> removed. Then E+W removed too
-# (braces=False default): U2 + caps are held by the ribs+lip (U2's support is the rib end, unchanged);
+# (braces=False default): U7 + caps are held by the ribs+lip (U7's support is the rib end, unchanged);
 # the braces only propped the window / bare-laminate spans. Removing frees board (13.6,40.1)/(39.5,40.0).
 BRACE = [(39.5,40.0,1.0),(13.6,40.1,1.0)]   # E, W posts -- retained as defs; re-enable via build(braces=True)
 # 4 window-support pillars: RETIRED (the PCB net audit rejected 3 of 4 spots; the resin brace carries
@@ -283,9 +282,9 @@ def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pill
     # at full height (2.80) and fill the corner regions the break outline would otherwise reach.
     if lip_break > 0:
         res = res.cut(_lip_break_cut(bb, lip_break, -45))
-    # bosses (always) + window braces (optional; OFF by default -- ribs+lip already support U2/caps;
+    # bosses (always) + window braces (optional; OFF by default -- ribs+lip already support U7/caps;
     # the braces only propped the window / bare-laminate spans. Removing them frees board (13.6,40.1) &
-    # (39.5,40.0) for future revs. Analysis: U2 floor clearance unchanged (rib end is its support).)
+    # (39.5,40.0) for future revs. Analysis: U7 floor clearance unchanged (rib end is its support).)
     for x, y, rr in [(mx, my, boss_r) for mx, my in mounts] + (list(BRACE) if braces else []) + (list(PILLARS) if pillars else []):
         b = cq.Workplane("XY").workplane(offset=floor).moveTo(wx(x), wy(y)).circle(rr).extrude(cavity)
         if lip_break > 0:                                   # convex top-edge break that FOLLOWS the boss circle;
@@ -377,15 +376,15 @@ def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pill
                     _cut=_cut.cut(cq.Workplane("XY").workplane(offset=-0.10)
                             .polyline([(wx(x),wy(y)) for x,y in list(_r.coords)]).close().extrude(MAKER_DEPTH+0.20))
                 res=res.cut(_cut)
-    # U2 relief pocket: a local 0.05 mm-deeper cavity floor under U2 (30.10,37.64) so U2 keeps a
-    # 0.10 mm air gap (same as the caps) while the GENERAL floor is `floor` mm of back-engraving stock. 0.05 = U2_H-cap_H;
-    # the caps (1.70) are the next-tallest, so the general cavity is cap-limited and only U2 needs relief.
+    # U7 relief pocket: a local 0.05 mm-deeper cavity floor under U7 (28.1,37.3) so U7 keeps a
+    # 0.10 mm air gap (same as the caps) while the GENERAL floor is `floor` mm of back-engraving stock. 0.05 = U7_H-cap_H;
+    # the caps (1.70) are the next-tallest, so the general cavity is cap-limited and only U7 needs relief.
     # Sits in the open cavity, clear of the ribs (y33..56 gap), lip, bosses, and the reflector frame.
-    if U2_POCKET > 0:
-        pw_, ph_ = U2_POCKET_WH
-        res = res.cut(cq.Workplane("XY").workplane(offset=floor - U2_POCKET)
-                        .moveTo(wx(U2_POS[0]), wy(U2_POS[1])).rect(pw_, ph_)
-                        .extrude(U2_POCKET + 0.02).edges("|Z").fillet(TOOL_R))
+    if U7_POCKET > 0:
+        pw_, ph_ = U7_POCKET_WH
+        res = res.cut(cq.Workplane("XY").workplane(offset=floor - U7_POCKET)
+                        .moveTo(wx(U7_POS[0]), wy(U7_POS[1])).rect(pw_, ph_)
+                        .extrude(U7_POCKET + 0.02).edges("|Z").fillet(TOOL_R))
     # Ti deburr edge-break (last): break the exposed END-FACE edges so no corner is knife-sharp.
     #   faces('<Z') = the proud back frame + annuli top (incl. the spotface mouths)
     #   faces('>Z') = the front rim + the board-recess mouth
@@ -405,13 +404,13 @@ OUT = "/mnt/user-data/outputs/"
 B = "solar-glow-drh-v3_0-backshell-0p6b-brace"
 jobs = [
     # name                 floor wall  border ribs  prog   note
-    ("Ti-max",             1.00, 1.00, 0.15, False, False, "0.6mm-board DUMB BOX for the resin brace: TRUE 1.00 floor (cavity 1.80, cap gap 0.10) + U2 relief pocket + 1.0 walls + 8 bosses (4 corner + 4 panel-corner). NO locator pillars (retired: the H-brace registers by fitment). NO ribs (the brace carries center support). Overall 3.55."),
+    ("Ti-max",             1.00, 1.00, 0.15, False, False, "0.6mm-board DUMB BOX for the resin brace: TRUE 1.00 floor (cavity 1.80, cap gap 0.10) + U7 relief pocket + 1.0 walls + 8 bosses (4 corner + 4 panel-corner). NO locator pillars (retired: the H-brace registers by fitment). NO ribs (the brace carries center support). Overall 3.55."),
     ("Ti-max-progwindow",  1.00, 1.00, 0.15, False, True,  "0.6mm-board / ribs-trimmed + TC2030 re-flash window"),
 ]
 # Ti-conservative (0.60 floor / 1.60 wall) struck: if the shop cannot hold the floor we
 # re-issue to whatever minimum they will hold, so a pre-baked 0.60 fallback is dead weight.
-print(f"cavity={cavity} general (cap {cap_H}+air {cav_margin}; kapton {kapton_th}); U2 pocket {U2_POCKET} deep "
-      f"-> 1.85 local (U2 keeps 0.10)  lips W/N/S/E={lip_W}/{lip_N}/{lip_S}/{lip_E} (E ends {lip_E_wide})  "
+print(f"cavity={cavity} general (cap {cap_H}+air {cav_margin}; kapton {kapton_th}); U7 pocket {U7_POCKET} deep "
+      f"-> 1.85 local (U7 keeps 0.10)  lips W/N/S/E={lip_W}/{lip_N}/{lip_S}/{lip_E} (E ends {lip_E_wide})  "
       f"braces=OFF (removed; {len(BRACE)} defs retained) ribs={len(RIBS)}  border=0.15  "
       f"cavity tool R{TOOL_R} (Ø{2*TOOL_R}) / back tool R{BACK_TOOL_R} (Ø{2*BACK_TOOL_R})  "
       f"deburr: outer rim {edge_ease}, ends {EDGE_BREAK}  reflector-frame {GLOW_WIN[2]-GLOW_WIN[0]:.1f}x{GLOW_WIN[3]-GLOW_WIN[1]:.1f} laser-marked (full floor under it)  "

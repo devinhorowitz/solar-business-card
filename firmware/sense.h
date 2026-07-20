@@ -2,7 +2,7 @@
  * sense.h  --  analog housekeeping: rail/light ADC + EEPROM counter.
  *
  * One pin does the light + rail-voltage sensing: PD2 = VSENSE = VIN/2 (R5/R6
- * divider, C5 filter), wired to VIN *before* the blocking Schottky D1, so it
+ * divider, C5 filter), tapped off the SRC (solar) node, so it
  * sits near 0 V in the dark and rises with light. PD2 is ADC AIN2.
  *
  * Light is read by the ADC on the ~1 s PIT poll: a dark->light rise drives the
@@ -13,8 +13,9 @@
  * which omits the AC. Instant interaction-wake is covered by the accelerometer
  * motion interrupt instead. See README.)
  *
- * VDD itself is read via the ADC's internal VDD/10 channel against the 2.500 V
- * reference, giving rail millivolts for the glow floor check.
+ * STO (the supercap tank) is read on PD1/AIN1 through the R15/R16 (2M/1M)
+ * divide-by-3 against the 2.500 V reference and scaled back by STO_DIVIDER,
+ * giving tank millivolts for the glow floor check (VS is now the constant LDO rail).
  */
 #ifndef SENSE_H
 #define SENSE_H
@@ -29,7 +30,7 @@ void     sense_adc_init(void);
 
 /* one-shot reads, in millivolts at the real-world node:
  *   sense_vin_mv() : VIN (already x2 for the divider).
- *   sense_vdd_mv() : the MCU/supercap rail VDD (via VDD/10 channel).
+ *   sense_vdd_mv() : the supercap tank STO (via the R15/R16 divide-by-3 on PD1/AIN1).
  * Both power the ADC + reference up for the conversion and back down after.
  * NOTE the recurring paths deliberately do NOT use these: the poll reads light+sun
  * via sense_vin_flags() and the rail/caps gates via sense_rail_ok()/sense_caps_full(),

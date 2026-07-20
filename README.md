@@ -21,9 +21,9 @@ a supercapacitor bank that holds the charge.
 |---|---|---|
 | **PCB** | **v4.0 - 2-layer** (F / B) | GND = full-board B.Cu pour; VS = routed B mesh. **v2.3 (4-layer: F / In1 GND / In2 VS / B) is the fallback design, in git history.** v2.1 was 6-layer (history). |
 | Board | 50.80 × 88.90 mm, r3.0 corners, **0.60 mm** FR4, ENIG, matte-black mask | 0.6 mm — committed in the board stackup (frees the shell floor to 1.0 mm) |
-| Mounting holes | 4× M2, GND, at **(3.0, 3.0) / (47.8, 3.0) / (3.0, 85.9) / (47.8, 85.9)**, pitch **44.80 × 82.90 mm** | concentric with the r3.0 corner fillets |
-| **Enclosure** | **v3.0 Ti back-shell** - 1.00 floor, 1.80 cavity (0.95 local relief; note the v3 U2 balancer that drove it is removed in v4, so this pocket needs revisiting), overall **3.55 mm**; center support via the resin diffuser brace | matches the v3.0 hole pattern; see `enclosure/README.md` |
-| BOM | **v4_0 master** - U6 + R14 added, JP1/JP2 dropped (JP1 later reused for the bench pad strip), all passives except SJ1 now 0402 | master is `PCB/solar-glow-drh-v4_0-BOM.xlsx`; placed set in `-BOM-assembly.xlsx` |
+| Mounting holes | **8× M2, GND** -- 4 corner (MH1-4) at **(3.0, 3.0) / (47.8, 3.0) / (3.0, 85.9) / (47.8, 85.9)** (pitch **44.80 × 82.90 mm**) + 4 panel-corner (MP1-4) at **(3.0, 28.5) / (47.8, 28.5) / (3.0, 60.4) / (47.8, 60.4)** | corners concentric with the r3.0 fillets; MP1-4 at the E/W mid-edges for the shell clamp |
+| **Enclosure** | **Ti back-shell** - 1.00 floor, 1.80 cavity (0.95 local relief, re-keyed from the removed v3 U2 to U7/FRAM, the tallest B-side part; generators updated, STEP regen pending), overall **3.55 mm**; center support via the resin diffuser brace | 8-hole pattern (4 corner + 4 panel-corner); see `enclosure/README.md` |
+| BOM | **v4_0 master** - U6 + R14 added, JP1/JP2 dropped (JP1 later reused for the bench pad strip), most passives 0402 (SJ1 0R and the bulk caps C4/C13/C25/C27 are 0603) | master is `PCB/solar-glow-drh-v4_0-BOM.xlsx`; placed set in `-BOM-assembly.xlsx` |
 | Firmware | register-verified C, not yet on hardware | LED pin map re-mapped in v3.0 (see `firmware/README.md`) |
 
 ### Where the truth lives — how these docs stay from drifting
@@ -35,7 +35,7 @@ Each fact has exactly one home; everything else points at it rather than restati
 | Board copper / geometry / holes | `PCB/solar-glow-drh-v4_0.kicad_pcb` + `.kicad_sch` |
 | Enclosure geometry | `enclosure/solar-glow-drh-v3_0-backshell-0p6b-brace-cad.py` (prints the Z-stack; regenerates the STEP) |
 | Firmware pin map + knobs | `firmware/board.h` (+ `firmware/README.md`; both match the schematic) |
-| BOM | `PCB/solar-glow-drh-v4_0-BOM.xlsx` (v3.0 master — converted lines have prices blanked pending quote; see `PCB/README.md` Step 4) |
+| BOM | `PCB/solar-glow-drh-v4_0-BOM.xlsx` (v4.0 master -- converted lines have prices blanked pending quote; see `PCB/README.md` Step 4) |
 | Design *reasoning* / lineage | `solar-glow-drh-design-notes.md` |
 | Open work / cross-domain to-dos | `TODO.md` (an index of what's left; each item points back at the files above) |
 
@@ -90,13 +90,13 @@ all lives on the back, ready for an optional machined-metal back-shell.
 
 **Breakouts and features:** a **TC2030** Tag-Connect pad (`TC1`) for hands-free UPDI
 programming, a backup UPDI header (`J1`), a **5-pad bench strip** on the back east edge
-(`TP1` SRC + `JP1` GND/VS/SCL/SDA - bare SMD probe pads for bench power injection and an I²C
+(`TP1` SRC + `JP1` GND/STO/SCL/SDA - bare SMD probe pads for bench power injection and an I²C
 tap; pinout in `solar-glow-drh-v2-hardware.md`), per-LED disable jumpers (`SB1–4`), a VDDIO2
-tie jumper (`SJ1`), and **four grounded M2 mounting holes** at the corners. (The v2-era
+tie jumper (`SJ1`), and **eight grounded M2 mounting holes** (four corners + four panel-corner at the E/W mid-edges). (The v2-era
 `JP1`/`JP2` 2.54 mm breakout headers are gone; the `JP1` name is reused for the strip.)
 
 Full part numbers, pricing, and per-part datasheet links are in
-**`PCB/solar-glow-drh-v4_0-BOM.xlsx`** - the master BOM (v4.0): **U6 (TPS22918) and R14 (1 M `NFC_EN` pulldown) included**, the stale JP1/JP2 rows dropped (the `JP1` designator is reused in v3.0 for the bench pad strip - bare pads, no BOM part), and every passive except SJ1 converted to **0402** to match the board lands. Converted/added lines have prices blanked pending a fresh quote (U6 quoted: TPS22918DBVR $0.55 @ qty 1, DigiKey 2026-07-02). Lineage: v2.2 added the NFC parts (U5 / C8 / C9 / R13); the `v2 2` and older BOM files stay in the repo as history.
+**`PCB/solar-glow-drh-v4_0-BOM.xlsx`** - the master BOM (v4.0): **U6 (TPS22918) and R14 (1 M `NFC_EN` pulldown) included**, the stale JP1/JP2 rows dropped (the `JP1` designator is reused in v3.0 for the bench pad strip - bare pads, no BOM part), and most passives converted to **0402** to match the board lands, except the bulk caps C4/C13/C25/C27 (0603) and SJ1. Converted/added lines have prices blanked pending a fresh quote (U6 quoted: TPS22918DBVR $0.55 @ qty 1, DigiKey 2026-07-02). Lineage: v2.2 added the NFC parts (U5 / C8 / C9 / R13); the `v2 2` and older BOM files stay in the repo as history.
 
 ---
 
@@ -130,10 +130,11 @@ full-sun number, and indoor light delivers a small fraction of it, while four br
 average several milliamps. The two-panel harvest and the 15 J tank are sized to **harvest
 slowly and glow in bursts** — but that bet has never been put on a meter.
 
-What changed the math since the early notes: the rail is now the **regulated 3.3 V VS rail** (the U9 LDO output) and the
-ballasts are **150 Ω**, so each LED peaks near **~7 mA** off the regulated **3.3 V VS rail** ((3.3 V - amber
-Vf ≈ 2.25 V)/150 Ω, the figure `firmware/README.md` quotes) rather than the old estimate. Four
-on at once is a real load against an indoor harvest measured in fractions of a milliamp.
+What changed the math since the early notes: the LED string is fed from the **STO supercap tank** (through the
+SW2 anode switch), which the AEM10300 holds at up to **4.65 V** (VOVCH), and the ballasts are **150 Ω** -- so each
+LED peaks near **~16 mA** at a full tank ((4.65 V - amber Vf ≈ 2.25 V)/150 Ω, the figure `firmware/README.md`
+quotes), sagging toward zero as STO discharges. (VS, the regulated 3.3 V LDO output, powers the MCU and accel,
+not the LEDs.) Four on at once is a real load against an indoor harvest measured in fractions of a milliamp.
 
 **First move when boards arrive:** put the cells under your actual target lighting and measure
 **harvest current against LED draw** before you populate a full stack. That single number sizes
@@ -149,8 +150,8 @@ solar-business-card/
 ├── PCB/                            # KiCad projects + fabrication BOM
 │   ├── solar-glow-drh-v4_0.kicad_pcb   # the board: v4.0 managed-solar rework (AEM10300), 2-layer (source of truth)
 │   ├── solar-glow-drh-v4_0.kicad_sch   # schematic: synced to the v4.0 board netlist
-│   ├── solar-glow-drh-v4_0-BOM.xlsx    # bill of materials — v3.0 master (U6 + R14; all-0402)
-│   ├── solar-glow-drh-v4_0-BOM-assembly.xlsx  # placed-parts BOM for PCBA (42 parts; xlsx regen pending)
+│   ├── solar-glow-drh-v4_0-BOM.xlsx    # bill of materials -- v4.0 master (U6 + R14; mostly 0402, C4/C13/C25/C27 are 0603)
+│   ├── solar-glow-drh-v4_0-BOM-assembly.xlsx  # placed-parts BOM for PCBA (machine-place count pending recount/xlsx regen against the v4 net)
 │   └── README.md                       # order & build guide
 ├── solar-glow-drh-v2-hardware.md   # as-built wiring & pin map (v2-era; v3.0 LED-map delta noted at top)
 ├── solar-glow-drh-v2-mechanical.md # board mechanics, keepouts, access (v2-era; v3.0 hole/enclosure deltas at top)
@@ -256,7 +257,7 @@ PCBWay, **bead-blast** finish; the general cavity is **cap-limited to 1.80 mm** 
 supercaps (the v3 U2 balancer (removed in v4) sat at 1.75 mm over a small **relief pocket** that drops the local floor 0.05 mm so it
 still clears), the floor runs to **1.00 mm** (no ribs — a resin diffuser brace carries center support), and the overall height
 is **3.55 mm**. The four bosses sit on the **v3.0 hole pattern** (concentric with the r3.0 corner
-fillets), the internal braces are **removed**, and retention is **four corner M2 screws**, not a press
+fillets), the internal braces are **removed**, and retention is **eight M2 screws** (four corner + four panel-corner), not a press
 fit. The electrical gotcha — the screws tie the metal body to board GND, so the enclosed variant
 **drops the edge castellations** (or adds a die-cut Kapton layer) so nothing shorts to the grounded
 shell, and the **accelerometer tap is the actuator** (cap-touch dies behind a grounded plate). The
