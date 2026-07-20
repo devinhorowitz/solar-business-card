@@ -16,7 +16,7 @@ GAP = 1.80                                     # brace thickness (fills the 1.80
 FER = (36.9,31.5,48.9,57.5)                    # ferrite 12 wide (x, CRITICAL) x 26 long (y, forgiving)
 FER_CLR = 0.20; FER_DEPTH = 0.33               # channel walls + pocket depth
 GLOW = (14.95,40.8,35.85,47.0)                 # monogram-window footprint (LED-hug backing behind it)
-U2 = (30.10,37.64,7.8,5.4)                      # U2: the one through-hole (tall). Re-derived origin (moved +1.6E/+0.64S in the consolidation).
+U7 = (28.1,37.3,7.8,5.4)                        # U7 (MB85RC512TY FRAM SOIC-8): the one through-hole (tall). Re-keyed from the removed U2 balancer, essentially where U2 sat (old (30.10,37.64)).
 
 INK="#111111"; GRY="#9a9a9a"; HATCH="#ededed"; PUR="#6a4fb0"; AMB="#c79a2e"
 fig=plt.figure(figsize=(420/25.4,297/25.4))
@@ -60,9 +60,9 @@ ax.text(X((FER[0]+FER[2])/2),Y(44.5),"FERRITE\nCHANNEL",ha="center",va="center",
 # window LED-hug diffuser backing (band)
 ax.add_patch(Rectangle((X(GLOW[0]),Y(GLOW[3])),(GLOW[2]-GLOW[0])*S,(GLOW[3]-GLOW[1])*S,fc="#fbf5df",ec=AMB,lw=1.0))
 ax.text(X((GLOW[0]+GLOW[2])/2),Y((GLOW[1]+GLOW[3])/2),"LED-HUG\nBACKING",ha="center",va="center",fontsize=4.4,color="#6b5310",fontweight="bold")
-# U2 through-pocket (band)
-ax.add_patch(Rectangle((X(U2[0]-U2[2]/2),Y(U2[1]+U2[3]/2)),U2[2]*S,U2[3]*S,fc="#f6d6d0",ec="#b23b2a",lw=0.9))
-ax.text(X(U2[0]),Y(U2[1]),"U2\nTHRU",ha="center",va="center",fontsize=4.0,color="#7a1f12")
+# U7 through-pocket (band)
+ax.add_patch(Rectangle((X(U7[0]-U7[2]/2),Y(U7[1]+U7[3]/2)),U7[2]*S,U7[3]*S,fc="#f6d6d0",ec="#b23b2a",lw=0.9))
+ax.text(X(U7[0]),Y(U7[1]),"U7\nTHRU",ha="center",va="center",fontsize=4.0,color="#7a1f12")
 # the 4 panel solder tabs the rails back (red stars)
 for tx,ty in [(4.3,17.0),(46.5,17.0),(4.3,71.9),(46.5,71.9)]:
     ax.plot(X(tx),Y(ty),marker="*",ms=8,color="#d23b2a",zorder=6)
@@ -107,7 +107,7 @@ notes=[
  "6. WINDOW = LED-HUG DIFFUSER BACKING: SOLID WHITE RESIN FILLS THE MONOGRAM-WINDOW FOOTPRINT BEHIND THE FR4, MINUS THE TIGHT D2-D5 LED POCKETS.",
  "    NO APERTURE, NO FLOOR TAPE. THE POCKET CLEARANCE DOUBLES AS A RESERVOIR IF A VISCOUS OPTICAL GEL IS PRE-FILLED AT FINAL ASSEMBLY (OPTIONAL).",
  "7. REMOVABLE / NOT BONDED: THE BRACE MUST LIFT OUT FOR NFC C9 TRIM DURING BENCH BRING-UP. KEEP IT DRY-FIT WHILE ITERATING; ADD ANY GEL ONLY ON THE FINAL CARD.",
- "8. U2 AND U6 ARE THROUGH-POCKETS (U2 TALL AT 1.75; U6 FORCED THROUGH -- ITS BLIND WEB WOULD BE 0.23 < SLA MIN; U6 IS 1.45 IN THE 1.80 CAVITY -> 0.35 AIR TO THE SHELL FLOOR). OTHERS BLIND.",
+ "8. U7 AND U6 ARE THROUGH-POCKETS (U7 TALL AT 1.75; U6 FORCED THROUGH -- ITS BLIND WEB WOULD BE 0.23 < SLA MIN; U6 IS 1.45 IN THE 1.80 CAVITY -> 0.35 AIR TO THE SHELL FLOOR). OTHERS BLIND.",
 ]
 yy=91.5
 for n in notes: ax.text(20,yy,n,fontsize=5.9,color=INK); yy-=3.9

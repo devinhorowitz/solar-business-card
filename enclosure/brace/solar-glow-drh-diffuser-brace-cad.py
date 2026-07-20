@@ -27,7 +27,7 @@ grade (standard SLA is glassy and cracks as a thin-walled part).
 Removable, not bonded (PCB §5): the brace seats and lifts off for the iterative C9 NFC trim; C9's
 cutout must clear tweezers-and-iron. The ferrite travels captive in its pocket.
 
-Registration: pockets key it laterally to the board (nests over U2, U6, U1, U3); PLUS two diagonal
+Registration: pockets key it laterally to the board (nests over U7, U6, U1, U3); PLUS two diagonal
 LOCATOR RECESSES (Ø3.2 x 0.8, INVERTED) in the bottom -- (13,35) round + (33,55) slotted 4.0 along the pin axis --
 receive two Ø3.0 x 0.4 metal pillars standing on
 the shell floor at (13,35) and (33,55). Inverting keeps the shell floor solid (uniform 0.95 back for
@@ -36,7 +36,7 @@ fit (the component pockets live on the TOP, so the top cannot be sanded without 
 compensate: print the bottom features (the recesses) ~0.15 deeper for the sanding allowance.
 
 Print ~0.10-0.15 mm PROUD in height, sand the bottom flat to a zero-air fit. Model is the sanded
-nominal at the true 1.85 gap.
+nominal at the true 1.80 gap.
 
 WINDOW = LED-HUG DIFFUSER BACKING (replaces the earlier open tape bay): the white resin fills the window
 region right up behind the FR4, with only the tight D2-D5 LED pockets cut into it. It reads as an even
@@ -48,10 +48,11 @@ pre-fill the LED pockets with a viscous (non-curing) optical gel at final assemb
 at the die -- removable-ish, but re-apply each time the brace comes off, so dry-fit while iterating C9.
 Resin must be white/translucent near the window (never black at the LED pockets).
 """
+import os
 import re
 import cadquery as cq
 
-PCB = "/home/claude/repo4/sbc/PCB/solar-glow-drh-v3_0.kicad_pcb"
+PCB = os.path.join(os.path.dirname(__file__), "..", "..", "PCB", "solar-glow-drh-v4_0.kicad_pcb")
 OUT = "/mnt/user-data/outputs/"
 BASE = "solar-glow-drh-diffuser-brace"
 
@@ -96,11 +97,15 @@ def wx(bx): return bx - W/2
 def wy(by): return by - H/2
 
 def part_height(ref):
-    if ref == "U2": return 1.75
+    if ref == "U7": return 1.75   # MB85RC512TY FRAM SOIC-8 (v4): re-keyed from the removed U2 balancer; the single tallest B-side part
     if ref == "U6": return 1.45
     if ref == "U1": return 1.00
     if ref == "U3": return 0.87   # ADXL367 CC-12-4 (ADI datasheet Rev.B): 2.2 x 2.3 x 0.87 mm. Was 1.00 (placeholder LIS2DH12); thinner part -> shallower pocket, thicker resin web.
     if ref == "U5": return 0.50
+    if ref == "U8": return 0.90   # AEM10300 QFN-28 4x4 (v4 active-harvest PMIC)
+    if ref == "U9": return 1.45   # TPS7A0233 SOT-23-6 (v4 LDO; same body height as U6)
+    if ref == "L2": return 1.00   # inductor 2520 (v4)
+    if ref in ("C4","C13","C25","C27"): return 0.90   # 0603 bulk caps (v4; taller than the 0402 default). BEFORE the generic R/C prefix rule so they are not undershot to 0.55.
     r = ref.rstrip("0123456789")
     if r == "SC": return None
     if r == "D":  return 0.83
@@ -176,7 +181,7 @@ for ref,x0,x1,y0,y1 in comps:
     if h is None: continue
     if not in_fp(x0,x1,y0,y1): continue                 # only parts under the H (band + rails); SCs/TC1 in the open middle are skipped
     px0,px1,py0,py1=x0-CLR,x1+CLR,y0-CLR,y1+CLR         # full pad box + CLR; the cut is a no-op where there is no brace
-    depth=h+AIR; through=depth>=GAP-0.05 or ref=="U6"   # U6 forced THRU: blind web would be 0.28mm (<SLA min); U6 tops at 1.45 in 1.85 -> 0.40 air to the shell floor when through
+    depth=h+AIR; through=depth>=GAP-0.05 or ref=="U6"   # U6 forced THRU: blind web would be 0.23mm (<SLA min); U6 tops at 1.45 in 1.80 -> 0.35 air to the shell floor when through
     zc=(GAP-depth) if not through else -0.05; dz=(depth+0.05) if not through else GAP+0.10
     brace=brace.cut(cq.Workplane("XY").box(px1-px0,py1-py0,dz,centered=(False,False,False)).translate((wx(px0),wy(py0),zc)))
     cut_log.append((ref,round(depth,2),"THRU" if through else "pkt")); pk.append((ref,px0,px1,py0,py1,round(depth,2),through))
@@ -268,7 +273,7 @@ for _bx0,_by0,_bw,_bh in bridges:                       # thin-wall bridges: whe
     ax.add_patch(Rectangle((_bx0,_by0),_bw,_bh,fc="#00e5ff",ec="#fff",lw=1.0,alpha=0.95,zorder=6))
 for sx,sy in STUBS:
     ax.add_patch(Circle((sx,sy),RECESS_R,fc="#4a86e8",ec="#fff",lw=0.8)); ax.text(sx,sy+1.9,"pillar\nhole",color="#8ab",ha="center",fontsize=4.6)
-leg=[mp.Patch(fc="#e0483a",label="through-hole (U2, tall)"),mp.Patch(fc="#e08a3a",label="deep (U6 1.45, U1/U3 1.0)"),
+leg=[mp.Patch(fc="#e0483a",label="through-hole (U7, tall)"),mp.Patch(fc="#e08a3a",label="deep (U6 1.45, U1/U3 1.0)"),
      mp.Patch(fc="#43a047",label="shallow (0402, LEDs hug window, bridges)"),mp.Patch(fc="#3a2b55",label="ferrite pocket"),mp.Patch(fc="#00e5ff",label=f"thin-wall bridge (merged, {len(bridges)})")]
 ax.legend(handles=leg,loc="upper left",fontsize=5.2,facecolor="#1a1a1f",edgecolor="#444",labelcolor="#ddd",framealpha=0.9)
 ax.set_xlim(-1,52); ax.set_ylim(12,77); ax.set_aspect("equal"); ax.invert_yaxis(); ax.axis("off")

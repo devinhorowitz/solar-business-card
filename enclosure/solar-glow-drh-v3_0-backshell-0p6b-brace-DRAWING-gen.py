@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""2D fab drawing for the Ti back-shell v3.0 0.6mm-board DUMB BOX (0.95 floor, 0.60 board, U2 pocket, NO ribs, NO locator
+"""2D fab drawing for the Ti back-shell v3.0 0.6mm-board DUMB BOX (1.00 floor, 0.60 board, U7 pocket, NO ribs, NO locator
 pillars -- the resin H-brace carries center support + registers by fitment) -> PDF + PNG."""
 import numpy as np, matplotlib
 matplotlib.use("Agg")
@@ -70,13 +70,10 @@ for mx,my in mounts:
     ax.add_patch(plt.Circle((X(mx),Y(my)),pilot_r*S1,fill=False,ec=INK,lw=0.9))
     ax.plot([X(mx)-1.6*S1,X(mx)+1.6*S1],[Y(my),Y(my)],lw=0.4,color=INK)
     ax.plot([X(mx),X(mx)],[Y(my)-1.6*S1,Y(my)+1.6*S1],lw=0.4,color=INK)
-# U2 relief pocket (cavity-floor recess; hidden in back-face view -> dashed)
-u2x,u2y,pw,ph = 30.10,37.64,7.8,5.4
-ax.add_patch(MplPoly(rrect(X(u2x-pw/2),Y(u2y-ph/2),pw*S1,ph*S1,1.0*S1),closed=True,fill=False,ec=GRY,lw=0.6,ls=(0,(4,2))))
-leader(X(u2x-pw/2),Y(u2y-ph/2),100,150,"U2 RELIEF POCKET  (NOTE 7)",ha="left",fs=5.8)
-for lx,ly in [(13.0,35.0),(33.0,55.0)]:
-    ax.add_patch(plt.Circle((X(lx),Y(ly)),1.5*S1,fill=False,ec=GRY,lw=0.7,ls=(0,(4,2))))
-    ax.add_patch(plt.Circle((X(lx),Y(ly)),0.35*S1,fc=GRY,ec="none"))
+# U7 relief pocket (cavity-floor recess; hidden in back-face view -> dashed)
+u7x,u7y,pw,ph = 28.1,37.3,7.8,5.4
+ax.add_patch(MplPoly(rrect(X(u7x-pw/2),Y(u7y-ph/2),pw*S1,ph*S1,1.0*S1),closed=True,fill=False,ec=GRY,lw=0.6,ls=(0,(4,2))))
+leader(X(u7x-pw/2),Y(u7y-ph/2),100,150,"U7 RELIEF POCKET  (NOTE 7)",ha="left",fs=5.8)
 dim((X(oxmin),Y(oymin)),(X(51.75),Y(oymin)),Py-20,"52.70",fs=8,side=-1)
 dim((X(oxmin),Y(3.0)),(X(3.0),Y(3.0)),Py-8,"3.95",fs=6.3,side=-1)
 dim((X(3.0),Y(3.0)),(X(47.8),Y(3.0)),Py-8,"44.80 ±0.05",fs=6.3,side=-1)
@@ -118,7 +115,7 @@ leader(xl(3.36),zl(bb-0.04),xl(5.7),zl(2.05),"0.10\u00d745\u00b0 LIP",ha="left",
 leader(xl(0.05),zl(0.06),xl(-2.6),zl(0.55),"0.10\u00d745\u00b0 RIM (btm)",ha="right",fs=5.0)
 leader(xl(1.08),zl(-0.10),xl(1.35),zl(-border)-9,"0.10\u00d745\u00b0 FRAME (2 PL)",ha="left",fs=5.0)
 leader(xl(3.42),zl(-0.10),xl(1.35),zl(-border)-9,"",ha="left")
-ax.text(xl(0.06),zl(floor)+0.8,"  floor 1.00 TRUE (0.95 local under the U2 pocket, note 7)   •   PCB recess 0.60 (0.60 mm board)",fontsize=5.7,color=GRY,va="bottom")
+ax.text(xl(0.06),zl(floor)+0.8,"  floor 1.00 TRUE (0.95 local under the U7 pocket, note 7)   •   PCB recess 0.60 (0.60 mm board)",fontsize=5.7,color=GRY,va="bottom")
 ax.text(EX+2,EY-11,"SECTION A-A  (edge)   SCALE 13:1",fontsize=8.5,fontweight="bold",color=INK)
 ax.text(EX+2,EY-16.5,"C1 = cavity depth    C2 = PCB-rest-plane flatness    (back face down; PCB drops in from top)",fontsize=6,color=GRY,style="italic")
 
@@ -158,12 +155,11 @@ notes=[
  "2. FINISH: BEAD-BLAST MATTE (UNIFORM ON THE STEPPED BACK FACE). REAR ART LASER-MARKED IN THE RECESSED BACK FIELD.",
  "3. GENERAL TOLERANCE PER ISO 2768-1 (MEDIUM). C1-C4 TOLERANCED AS LISTED; C1 & C3 = ±0.05. DATUMS: A = LEFT EDGE, B = BOTTOM EDGE, C = PCB-REST PLANE.",
  "4. BRACE REGISTRATION: THE RESIN H-BRACE REGISTERS TO THIS SHELL BY FITMENT - ITS 4 OUTBOARD RAILS + THE COMPONENT POCKETS + THE BOARD PRESS-FIT. NO LOCATOR PILLARS; THE CAVITY FLOOR IS A FULL 1.00 EVERYWHERE.",
- "    LOCATE THE RESIN BRACE (SEPARATE PART) VIA MATCHING Ø3.2 RECESSES. FLOOR STAYS A FULL 1.00 (THE (33,55) RECESS IS SLOTTED). MODELED IN THE STEP.",
  "5. EDGE BREAKS - ALL 0.10x45°, FELT NOT SEEN, MODELED.  CALLED OUT ON SEC A-A / DETAIL B:  RIM = outer rim (top & bottom);  MOUTH = recess mouth (around PCB);  LIP = inner (cavity-side) lip edge;  FRAME = proud back-frame bottom edges;  BOSS = boss + spotface bottom edges (Detail B).  BREAK ALL OTHER EXPOSED EDGES 0.10x45°.  CONCAVE JUNCTION CORNERS (BOSS-TO-WALL + EAST-LIP STEPS) LEFT SHARP IN THE MODEL: FINISH WITH A Ø2.0 mm TOOL = R1.0 AS-MILLED. THE RESIN BRACE IS RELIEVED TO CLEAR R1.0 AT THESE CORNERS.",
- "6. FLOOR IS NOW A TRUE 1.00 (0.95 LOCAL UNDER THE U2 POCKET), AT THE ~1.0 Ti MIN-WALL GUIDANCE SO IT ALSO CLEARS ALUMINIUM / COPPER / STAINLESS.",
+ "6. FLOOR IS NOW A TRUE 1.00 (0.95 LOCAL UNDER THE U7 POCKET), AT THE ~1.0 Ti MIN-WALL GUIDANCE SO IT ALSO CLEARS ALUMINIUM / COPPER / STAINLESS.",
  "    CAVITY 1.80 +-0.05 -> 1.75 WORST-CASE, MINUS WS17 1.70 MAX (DATASHEET CASE WS17 HEIGHT) = 0.05 NON-CONTACT; THE BRACE + SOLAR-CELL SANDWICHES CARRY THE BOARD.",
- "7. U2 RELIEF POCKET: 7.8 x 5.4 CENTERED (30.10, 37.64) ON THE CAVITY FLOOR, 0.05 DEEP (LOCAL FLOOR 0.95) - U2 (1.75) KEEPS 0.10 AIR. GENERAL FLOOR 1.00. MODELED IN THE STEP.",
- "8. FRONT SUPPORT LIP IS ASYMMETRIC (SECTION A-A): WEST 2.5 / NORTH 2.0 / SOUTH 2.0 FOR PCB RIGIDITY; EAST 1.0 CLEARING THE JP1/TP1 PADS, THE NFC COIL (A GROUNDED LIP WOULD DETUNE IT), THE D10 EDGE (x49.58), AND THE RELOCATED CLAMP CLUSTER (Q1/U4/R7/R9/C7); WIDENING TO 2.5 ONLY AT THE SOUTH END (y0-10, CLEAR OF ALL). THE EXTERIOR BACK BORDER (PLAN) IS INDEPENDENT AND UNIFORM 2.0 ON ALL 4 SIDES.",
+ "7. U7 RELIEF POCKET: 7.8 x 5.4 CENTERED (28.1, 37.3) ON THE CAVITY FLOOR, 0.05 DEEP (LOCAL FLOOR 0.95) - U7 (1.75) KEEPS 0.10 AIR. GENERAL FLOOR 1.00. MODELED IN THE STEP.",
+ "8. FRONT SUPPORT LIP IS ASYMMETRIC (SECTION A-A): WEST 2.5 / NORTH 2.0 / SOUTH 2.0 FOR PCB RIGIDITY; EAST 1.0 CLEARING THE JP1/TP1 PADS, THE NFC COIL (A GROUNDED LIP WOULD DETUNE IT), AND C7 (x49.55, THE ONE EAST-EDGE PART LEFT AFTER v4 REMOVED THE Q1/U4/R7/R9 CLAMP CLUSTER + D9/D10/D11); WIDENING TO 2.5 ONLY AT THE SOUTH END (y0-10, CLEAR OF ALL). THE EXTERIOR BACK BORDER (PLAN) IS INDEPENDENT AND UNIFORM 2.0 ON ALL 4 SIDES.",
  "9. NO INTERNAL RIBS OR SUPPORT POSTS: THE RESIN BRACE (SEPARATE PART) CARRIES CENTER SUPPORT. A PCB LAYOUT CHANGE = A BRACE REPRINT, NOT A SHELL RE-MACHINE.",
  "10. PCB RECESS = 0.60 DEEP (RECEIVES THE 0.60 mm BOARD; SLIP FIT, NOT A PRESS FIT). 3D STEP GOVERNS ALL GEOMETRY; STL NOT FOR CNC.",
  "11. PART = BACK-SHELL ONLY. PCB, RESIN BRACE, AND 8× M2×3 BRASS SLOTTED-CHEESE SCREWS (HEAD Ø3.8) SUPPLIED SEPARATELY.",
