@@ -119,7 +119,7 @@ CI-built set from `../Generated/gerbers/`, which comes from the same exporter).
 
 **Drill (Excellon):**
 - **File → Fabrication Outputs → Drill Files…** Generate Excellon + a drill map.
-- Plated holes: the 79 vias (uniform 0.30 mm) and the four M2 mount holes (Ø 2.2 mm).
+- Plated holes: the 79 vias (uniform 0.30 mm) and the eight M2 mount holes (Ø 2.2 mm; 4 corner MH1-4 + 4 panel-corner MP1-4).
   Non-plated: the TC2030 latch/alignment holes. Export PTH and NPTH per PCBWay's preference.
 
 **Bundle** the Gerbers + drill into one zip for upload.
@@ -165,7 +165,7 @@ via), and no controlled-impedance nets to declare.
 
   A DFM reviewer will flag copper-to-edge = 0 at the two stubs; that is by design. (Geometry
   re-verified against the committed board 2026-07-02: the gold set is a single connected F.Cu
-  component, both stubs + all four M2 GND pads on it; everything else exposed on F is the solar
+  component, both stubs + all four corner M2 GND pads on it (the 4 panel-corner MP1-4 holes are GND but not on the front gold set); everything else exposed on F is the solar
   lands, which stay ENIG.) Ordering plain ENIG without this request leaves the bus as dead
   copper and no wear surface on the face — do not ship without it.
 - "**The LA/LB track crossing at (41.0, 38.0) is the NFC coil junction — intentional.**"

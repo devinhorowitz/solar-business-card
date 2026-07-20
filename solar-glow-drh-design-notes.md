@@ -118,7 +118,7 @@ The glow is **central and rear-facing**, which is exactly where the four big cel
   its routing). Both pairs join the **same STO / MID / GND nets** (SC3 ∥ SC1, SC4 ∥ SC2) → **1 F @
   5.5 V on a single MID node**, so **the AEM10300 (U8) BAL pin balances the stack - no separate balancer** (v3 used U2 ALD910025, deleted in v4). The MID
   net runs the length of the board (cheap on planes) to tie both midpoints.
-- **Mounting holes at all four corners.** Inboard screws leave the ends of the 89 mm card
+- **Mounting holes: four corners + four panel-corner (eight M2 total).** Inboard corner screws leave the ends of the 89 mm card
   unsupported — bad for a stiff metal back-plate. Keep M2 engagement at the corners.
 
 **Routing hotspots (where a re-spin will be slow):** (1) the U1 QFN-28 escape — LDRV1–4, UPDI, SDA,
@@ -137,6 +137,14 @@ belongs in KiCad** (push-shove router, real thermal reliefs, exact mask expansio
   3.3 V rail from the U9 TPS7A0233 LDO (STO->VS) and VDDIO2 is tied to VS via SJ1, so the accel is protected by
   living on that regulated rail rather than by MVIO. Set the `SYSCFG1.MVSYSCFG` fuse to SINGLE -- see firmware README
   "Fuses".)*
+- **LDO input filter (`FB1` / `STO_LDO`):** the AEM10300 charges STO with a >=10 MHz buck-boost
+  DCDC, so STO carries switching ripple. Because the 28-pin part has **no AVDD** (the ADC runs off
+  VDD/VS), analog cleanliness rides on the VS plane -- so a **0603 ferrite `FB1`** series-filters the
+  U9 LDO **input**: `STO --FB1--> STO_LDO`, with `C22` (1 uF) as the filtered input cap on the island.
+  U9's IN and EN both sit on `STO_LDO`; everything else stays on raw STO (the LED string, sense
+  divider, program pads, tank caps). The ferrite passes DC (sub-ohm DCR) so the LDO never starves
+  during LED bursts. *(FB1 originally sat with both pads shorted on STO -- non-functional; the
+  `STO_LDO` split makes it a real series element. Board copper re-route is tracked in `TODO.md`.)*
 - **Why VQFN, not SSOP-28:** height is irrelevant (U7 (FRAM) at 1.75 mm sets the cavity floor; the QFN is
   0.9 mm). The binding constraint is **X/Y footprint** — with the cells eating ~43% of the board, the
   QFN's ~16 mm² land beats SSOP-28's ~50 mm². Cost: hot-air + paste, EP reflowed to GND (same as the
@@ -208,7 +216,7 @@ re-spin for the enclosure:
   support comes from a separate resin diffuser brace — and the window is backed by the brace's white
   diffuser face (the laser-marked reflector frame is dropped). Overall height
   3.55 mm; the four bosses sit on the **v3.0 hole pattern** (concentric with the r3.0 fillets),
-  retained by four corner M2 screws (~2.2 mm Ti engagement). The earlier 0.3 mm-skin / 7075-fallback /
+  retained by eight M2 screws (four corner + four panel-corner, ~2.2 mm Ti engagement). The earlier 0.3 mm-skin / 7075-fallback /
   photochemical-etch plan is dropped. Full CAD, callouts, and fab notes are in `enclosure/README.md`.
 - **Supercap thermal -- vulnerability, sensing, and why no per-cap thermistors.** The four WS17
   EDLCs are the heat-sensitive parts (a 2.75 V cell derates in both working voltage and life with
@@ -246,7 +254,7 @@ re-spin for the enclosure:
     reserved Kapton blanket. **(Superseded -- see the Resolution below: the WS17 can top bench-tested
     non-conductive, so a conductive TIM on the can top is safe and the best-thermal option is now open.)**
   - *Low compression force + serviceable.* Do not preload the board off its z2.80 rest, and keep it
-    re-applyable -- the shell opens on four M2 screws, so a cured RTV is a teardown hazard where a
+    re-applyable -- the shell opens on eight M2 screws, so a cured RTV is a teardown hazard where a
     re-usable gap pad/putty is not.
   - *What it buys, and what it does not.* Ti-6Al-4V is a poor conductor (~6.7 W/m·K, ~1/20th of aluminium)
     but a real thermal **mass**: the TIM buffers transients (a warm hand, a sun-driven clamp burst) into

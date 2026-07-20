@@ -10,6 +10,14 @@ shell re-machine. Updated 2026-07-11._
 
 ## Cross-domain (link two+ teams — easiest to forget)
 
+- [ ] **[PCB] Route the new `STO_LDO` island (FB1 series filter)** _(2026-07-20)._ FB1 was a
+  dead ferrite (both pads on STO); it is now wired as a series filter on the LDO input. The
+  netlist split landed in the schematic + board (`STO_LDO` = FB1.2, U9.1, U9.3, C22.1; STO keeps
+  FB1.1 + the rest), but the **board copper still carries the old STO traces to those pads**, so
+  DRC flags `STO_LDO` as unrouted / net-mismatched until re-routed: cut the STO trace between
+  FB1.1 and FB1.2, and route `STO_LDO` from FB1.2 to U9.1/U9.3 + C22.1. No zone is involved
+  (STO is trace-routed). Re-run DRC after. Design intent: STO --FB1--> STO_LDO, C22 (1 uF) as
+  the filtered LDO-input cap, isolating U9 from the AEM10300 DCDC switching ripple.
 - [x] **VIN-at-clamp / SUN_THRESHOLD** — _PCB → firmware. DONE 2026-07-10._ Derived
   VIN **>= 3.60 V** as the strong-sun trigger (above the held VS ~3.50 V so there is
   the SRC (merged-panel) node lifted well above its indoor level (VSENSE now divides SRC), below panel Voc 4.15 V; full derivation at

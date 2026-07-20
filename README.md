@@ -21,8 +21,8 @@ a supercapacitor bank that holds the charge.
 |---|---|---|
 | **PCB** | **v4.0 - 2-layer** (F / B) | GND = full-board B.Cu pour; VS = routed B mesh. **v2.3 (4-layer: F / In1 GND / In2 VS / B) is the fallback design, in git history.** v2.1 was 6-layer (history). |
 | Board | 50.80 × 88.90 mm, r3.0 corners, **0.60 mm** FR4, ENIG, matte-black mask | 0.6 mm — committed in the board stackup (frees the shell floor to 1.0 mm) |
-| Mounting holes | 4× M2, GND, at **(3.0, 3.0) / (47.8, 3.0) / (3.0, 85.9) / (47.8, 85.9)**, pitch **44.80 × 82.90 mm** | concentric with the r3.0 corner fillets |
-| **Enclosure** | **v3.0 Ti back-shell** - 1.00 floor, 1.80 cavity (0.95 local relief; note the v3 U2 balancer that drove it is removed in v4, so this pocket needs revisiting), overall **3.55 mm**; center support via the resin diffuser brace | matches the v3.0 hole pattern; see `enclosure/README.md` |
+| Mounting holes | **8× M2, GND** -- 4 corner (MH1-4) at **(3.0, 3.0) / (47.8, 3.0) / (3.0, 85.9) / (47.8, 85.9)** (pitch **44.80 × 82.90 mm**) + 4 panel-corner (MP1-4) at **(3.0, 28.5) / (47.8, 28.5) / (3.0, 60.4) / (47.8, 60.4)** | corners concentric with the r3.0 fillets; MP1-4 at the E/W mid-edges for the shell clamp |
+| **Enclosure** | **Ti back-shell** - 1.00 floor, 1.80 cavity (0.95 local relief, re-keyed from the removed v3 U2 to U7/FRAM, the tallest B-side part; generators updated, STEP regen pending), overall **3.55 mm**; center support via the resin diffuser brace | 8-hole pattern (4 corner + 4 panel-corner); see `enclosure/README.md` |
 | BOM | **v4_0 master** - U6 + R14 added, JP1/JP2 dropped (JP1 later reused for the bench pad strip), most passives 0402 (SJ1 0R and the bulk caps C4/C13/C25/C27 are 0603) | master is `PCB/solar-glow-drh-v4_0-BOM.xlsx`; placed set in `-BOM-assembly.xlsx` |
 | Firmware | register-verified C, not yet on hardware | LED pin map re-mapped in v3.0 (see `firmware/README.md`) |
 
@@ -92,7 +92,7 @@ all lives on the back, ready for an optional machined-metal back-shell.
 programming, a backup UPDI header (`J1`), a **5-pad bench strip** on the back east edge
 (`TP1` SRC + `JP1` GND/STO/SCL/SDA - bare SMD probe pads for bench power injection and an I²C
 tap; pinout in `solar-glow-drh-v2-hardware.md`), per-LED disable jumpers (`SB1–4`), a VDDIO2
-tie jumper (`SJ1`), and **four grounded M2 mounting holes** at the corners. (The v2-era
+tie jumper (`SJ1`), and **eight grounded M2 mounting holes** (four corners + four panel-corner at the E/W mid-edges). (The v2-era
 `JP1`/`JP2` 2.54 mm breakout headers are gone; the `JP1` name is reused for the strip.)
 
 Full part numbers, pricing, and per-part datasheet links are in
@@ -257,7 +257,7 @@ PCBWay, **bead-blast** finish; the general cavity is **cap-limited to 1.80 mm** 
 supercaps (the v3 U2 balancer (removed in v4) sat at 1.75 mm over a small **relief pocket** that drops the local floor 0.05 mm so it
 still clears), the floor runs to **1.00 mm** (no ribs — a resin diffuser brace carries center support), and the overall height
 is **3.55 mm**. The four bosses sit on the **v3.0 hole pattern** (concentric with the r3.0 corner
-fillets), the internal braces are **removed**, and retention is **four corner M2 screws**, not a press
+fillets), the internal braces are **removed**, and retention is **eight M2 screws** (four corner + four panel-corner), not a press
 fit. The electrical gotcha — the screws tie the metal body to board GND, so the enclosed variant
 **drops the edge castellations** (or adds a die-cut Kapton layer) so nothing shorts to the grounded
 shell, and the **accelerometer tap is the actuator** (cap-touch dies behind a grounded plate). The

@@ -103,7 +103,8 @@ L2 / C25 / C26 / C27 / FB1 = whatever you re-landed them to.
 
 Use this to confirm after capture -- every pin listed for a net must carry that net's label:
 
-- **STO** (15): SC1+, SC2+, SW2, R12, J1.2, JP1.2, TC1.2, U8.14, U9.1, U9.3, C27.1, C22.1, R15.1, FB1.1, FB1.2
+- **STO** (11): SC1+, SC2+, SW2, R12, J1.2, JP1.2, TC1.2, U8.14, C27.1, R15.1, FB1.1
+- **STO_LDO** (4): FB1.2, U9.1, U9.3, C22.1 -- FB1 series-filters the LDO island: STO --FB1--> STO_LDO, with C22 (1 uF) as the filtered LDO-input cap and U9 IN/EN on the island. (Board copper still needs the trace cut between FB1.1/FB1.2 + STO_LDO routed to U9/C22.)
 - **SRC** (8): PV1+, PV1+t, PV2+, PV2+t, R5.1, TP1.1, U8.2, U8.28
 - **VINT** (7): U8.8, U8.10, U8.20, U8.23, U8.24, C26.1, R17.1
 - **STO_SNS** (4): U1.11, C24.1, R15.2, R16.1

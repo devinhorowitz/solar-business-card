@@ -13535,7 +13535,7 @@
 			)
 		)
 	)
-	(global_label "STO"
+	(global_label "STO_LDO"
 		(shape input)
 		(at 485.14 382.27 0)
 		(effects
@@ -14196,7 +14196,7 @@
 			)
 		)
 	)
-	(global_label "STO"
+	(global_label "STO_LDO"
 		(shape input)
 		(at 668.02 372.11 0)
 		(effects
@@ -15278,7 +15278,7 @@
 			)
 		)
 	)
-	(global_label "STO"
+	(global_label "STO_LDO"
 		(shape input)
 		(at 485.14 372.11 0)
 		(effects
@@ -16147,7 +16147,7 @@
 			)
 		)
 	)
-	(global_label "STO"
+	(global_label "STO_LDO"
 		(shape input)
 		(at 546.1 377.19 0)
 		(effects
