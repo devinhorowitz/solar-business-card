@@ -982,3 +982,48 @@ switch the NFC tag uses.
   I2C for a segment part); 0-50 C (holds cold, refreshes warm); prefer a flexible 0.3 mm panel.
 - **Gating question:** refresh-energy vs desk harvest -- which is the **#1 open gate** again, so the
   `harvest-bench-fixture-handoff.md` measurement comes first.
+
+## Addendum (2026-07-20) -- Evaluated and rejected: alternative energy-storage chemistries
+
+**Status: supercaps stay. No redesign.** Prompted by "could we get more energy in the same
+thickness by swapping the supercap tank for a lithium-ion capacitor (LIC), a lithium-titanate
+(LTO) cell, or a thin rechargeable Li coin?" Surveyed the three; none is worth a respin.
+
+- **The tank today:** 4x SCHURTER WS17 (1 F / 2.75 V), 2P2S = **1 F @ 5.5 V, ~15 J nameplate**
+  (~10.8 J operational, since the AEM10300 caps STO at V<sub>OVCH</sub> = 4.65 V; ~8 J usable to the
+  LED floor). Height **1.70 mm**. Chosen for cycle life (millions), burst delivery, wide temp,
+  and zero wear -- exactly what a harvest-micro-cycled "forever" card needs.
+
+- **LIC -- no low-profile form exists.** Every lithium-ion capacitor found is cylindrical (Taiyo
+  Yuden smallest ~φ10-18 mm x 30-40 mm) or a large prismatic laminate (JSR ULTIMO 3300 F, LiCAP
+  200-800 F). Nothing in a coin/chip near 2 mm. Dead end for this form factor.
+
+- **LTO -- exists, but as a ~3 mm pin, not a thin coin.** Nichicon SLB is the LTO brand; the
+  smallest is SLB03070 (3 mm dia x 7 mm pin), ~3 mm profile laid flat -- **taller than the 1.70 mm
+  caps** and a rod, not a button. Its virtues (25,000+ cycles, -40 to +85 C, intrinsically safe,
+  fast charge) suit harvest cycling, but the geometry needs a taller cavity and the small ones
+  hold little energy.
+
+- **Thin Li coins fit the envelope, but are the wrong chemistry.** Seiko MS (Mn-Si) / ML (Mn-Li)
+  rechargeable coins do go under 1.7 mm: **MS414/ML414 = 4.8 x 1.4 mm, ~1 mAh (~8-9 J, about the
+  same as today's tank but thinner)**; MS621 = 6.8 x 2.1 mm, 5.5 mAh (~48 J, but 2.1 mm exceeds
+  the budget). The catch is **cycle life -- MS621F is rated >200 cycles at 100% DoD**, orders of
+  magnitude below LTO (25k) or the supercap (millions). A card that micro-cycles on indoor light
+  all day would wear one out; these are backup-coin parts, not harvest-buffer parts.
+
+**Decisive points (why none moves the needle):**
+1. **Thinness is not even set by the tank.** The single tallest B-side part is **U7 (FRAM) at
+   1.75 mm** -- fractionally over the 1.70 mm caps -- so a thinner tank saves ~nothing without
+   also reworking U7, and you would trade energy to get it. The caps sitting just under U7's
+   height is a tidy fit, not a constraint.
+2. **We do not want the enclosure thinner anyway.** A 0.6 mm board on a 1.0 mm Ti floor is near
+   the stiffness floor for a card that lives in a pocket; thinner buys warp for nothing needed.
+3. **Every alternative loses on the axis that matters most here** -- LIC on form factor, LTO on
+   height, thin coins on cycle life. No part is simultaneously thin + high-cycle + higher-energy.
+
+**Conclusion:** the supercap tank is the local optimum on this card's real axes (thinness,
+cycle life, burst, robustness). The open question was never the storage chemistry -- it is
+whether the indoor **harvest keeps up with the LED burn**, which the bench measurement (above,
+and `harvest-bench-fixture-handoff.md`) still gates. (If a thinner tank were ever wanted purely
+to slim the stack, a sub-1 mm prismatic EDLC supercap -- CAP-XX / KYOCERA-AVX / Murata, same
+chemistry -- does that with no cycle-life hit; but per point 1 it would not shrink the card.)
