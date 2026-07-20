@@ -86,9 +86,9 @@ crossing or to flood the region gets declined.
    **Expected result: 0 errors, ~61 warnings, 3 exclusions.** The exclusions are the two
    gold-plating tie stubs crossing the outline and the LA↔LB coil junction — all intentional.
    The bare `solarglow:*` / placeholder footprints (U1, U8, U5, U3, D2-D5, J1, TC1) now carry
-   courtyards + pin-1/cathode markers. That surfaces one accepted courtyard overlap (the TC1
-   Tag-Connect over the SC1 supercap zone; filtered in `kibot.yaml`, and exclude it locally in
-   KiCad too) plus two real proximities to resolve in the layout (U8/L2 ~0.1 mm body-to-body, U1/J1).
+   courtyards + pin-1/cathode markers. The one accepted courtyard overlap (the TC1 Tag-Connect
+   over the SC1 supercap zone) is excluded in the KiCad DRC (`.kicad_pro`); courtyard-overlap is
+   otherwise a hard CI gate. The two proximities this exposed (U8/L2, U1/J1) were resolved in the layout.
    The warnings are the marginal-band ledger (mostly the 0.127 mm parallel corridors of the
    west-side bus) plus fourteen 0.15 mm track-width notes. **Do not "fix" warnings blindly**,
    and do not be alarmed if the warning *count* differs slightly between runs — KiCad's
