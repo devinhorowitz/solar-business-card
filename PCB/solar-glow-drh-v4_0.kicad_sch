@@ -16883,6 +16883,17 @@
 				)
 			)
 		)
+		(property "KiLib_Generator" "package/gullwing"
+			(at 650.24 76.2 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(pin "1"
 			(uuid "b7ad4d3e-f4e7-4866-a0ba-55ab169c8f1a")
 		)
@@ -17059,6 +17070,17 @@
 		)
 		(property "MPN" "GRM188R61A226ME15D"
 			(at 581.66 372.11 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "KiLib_Generator" "SMD_2terminal_chip_molded"
+			(at 581.66 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -17402,6 +17424,17 @@
 		)
 		(property "MPN" "GRM155R71C104KA88D"
 			(at 886.46 372.11 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "KiLib_Generator" "SMD_2terminal_chip_molded"
+			(at 886.46 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -19446,6 +19479,17 @@
 				)
 			)
 		)
+		(property "KiLib_Generator" "SMD_2terminal_chip_molded"
+			(at 642.62 372.11 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(pin "2"
 			(uuid "572dfbfd-7122-4b83-baa1-26374b3e3194")
 		)
@@ -20502,6 +20546,17 @@
 				)
 			)
 		)
+		(property "KiLib_Generator" "SMD_2terminal_chip_molded"
+			(at 120.65 165.1 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(pin "1"
 			(uuid "713b5524-caed-400e-8b4c-24bd3189f1cd")
 		)
@@ -21485,6 +21540,17 @@
 				)
 			)
 		)
+		(property "KiLib_Generator" "SMD_2terminal_chip_molded"
+			(at 410.21 302.26 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(pin "1"
 			(uuid "51a82b99-9297-4062-aaa7-0917701ae28d")
 		)
@@ -21607,7 +21673,7 @@
 				)
 			)
 		)
-		(property "Value" "GND VS SCL SDA"
+		(property "Value" "GND STO SCL SDA"
 			(at 421.21 332.74 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -21637,7 +21703,7 @@
 				)
 			)
 		)
-		(property "Description" "Bench pad strip - GND/VS/SCL/SDA"
+		(property "Description" "Bench pad strip - GND/sto/SCL/SDA"
 			(at 410.21 322.58 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -21743,6 +21809,17 @@
 			)
 		)
 		(property "MPN" "TPS7A0233PDBVR"
+			(at 490.22 372.11 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "KiLib_Generator" "package/gullwing"
 			(at 490.22 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -22110,6 +22187,17 @@
 				)
 			)
 		)
+		(property "KiLib_Generator" "package/gullwing"
+			(at 855.98 372.11 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(pin "1"
 			(uuid "251eeaa6-ca3c-43ab-9ee2-13d9d580ba88")
 		)
@@ -22206,6 +22294,17 @@
 		)
 		(property "MPN" "DFE252010F-100M"
 			(at 520.7 372.11 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "KiLib_Generator" "SMD_2terminal_chip_molded"
+			(at 520.7 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects

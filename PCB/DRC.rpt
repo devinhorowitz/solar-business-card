@@ -1,12 +1,28 @@
 ** Drc report for solar-glow-drh-v4_0.kicad_pcb **
-** Created on 2026-07-19T14:56:05 **
+** Created on 2026-07-19T21:34:47 **
 ** Report includes: Errors, Warnings, Exclusions **
 
-** Found 10 DRC violations **
+** Found 14 DRC violations **
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(17.9250 mm, 43.1000 mm): Segment of D2 on B.Silkscreen
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(30.5250 mm, 43.1000 mm): Segment of D4 on B.Silkscreen
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(24.2250 mm, 43.1000 mm): Segment of D3 on B.Silkscreen
+    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
 [tracks_crossing]: Tracks crossing
     Rule: clearance-hard-floor; error (excluded)
     @(41.0000 mm, 52.4200 mm): Track [LA] on B.Cu, length 14.4200 mm
     @(41.0000 mm, 38.0000 mm): Track [LB] on B.Cu, length 1.9000 mm
+[courtyards_overlap]: Courtyards overlap
+    Rule: board setup constraints courtyard; error (excluded)
+    @(15.5000 mm, 21.2500 mm): Footprint SC1
+    @(13.3000 mm, 16.9000 mm): Footprint TC1
 [npth_inside_courtyard]: NPTH inside courtyard
     Local override; error (excluded)
     @(10.7600 mm, 14.3600 mm): NPTH pad of 
