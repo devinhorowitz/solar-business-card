@@ -114,6 +114,7 @@ shell re-machine. Updated 2026-07-11._
   `…-backshell-…-cad.py` still carries `U2_POS = (30.10, 37.64)` for the deleted part; re-key it to
   U7's (28.1, 37.3) (rename `U2_POS` -> `U7_POS`), then regen the STEP/STL and the derived
   drawing/README note-7 copies. PCB is frozen truth. _(audit find)._
+- [ ] **[geometry] Repoint the brace generator to the v4 board + fill `part_height` for the v4 parts** _(audit find)._ `…-diffuser-brace-cad.py` line 54 hardcodes a v3_0 path (`PCB = ".../solar-glow-drh-v3_0.kicad_pcb"`, an absolute path that also does not resolve here), so its pocket map is still v3. `part_height()` has entries only for U2/U6/U1/U3/U5 -- the v4 additions fall through to the 0.60 default, too shallow for the tall ones (U7 FRAM SOIC-8 1.75, U9 LDO SOT-23-6 ~1.45, L2 2520 ~1.0, and the 0603 bulk caps C4/C13/C25/C27 ~0.9). Repoint to the v4 board, drop the U2 entry, add U7/U9/L2 + a 0603-cap height, then regen the brace STEP/STL and confirm no pocket collisions / thin-wall merges broke.
 - [ ] **Fab drawing still renders the retired locator pillars** _(audit find)_ + NOTE 4
   (Ø3.2 recesses), contradicting the pillar-free STEP — and it's the file attached to the
   PCBWay CNC quote. De-pillar `…-backshell-…-DRAWING-gen.py` and regenerate the PDF/PNG.
