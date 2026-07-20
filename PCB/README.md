@@ -15,7 +15,7 @@ PCB/
 ├── solar-glow-drh-v4_0.kicad_prl     # local project state
 ├── solar-glow-drh-v4_0.kicad_dru     # two-tier design rules (PCBWay floor + marginal band)
 ├── solar-glow-drh.kibot.yaml         # CI recipe — regenerates ../Generated/ on every push
-├── solar-glow-drh-v4_0-BOM.xlsx      # bill of materials - v4.0 master (adds the AEM10300 harvest chain: U7 FRAM, U8 PMIC, U9 LDO, L2/FB1, C22–C28, R15–R17; all-0402 except SJ1)
+├── solar-glow-drh-v4_0-BOM.xlsx      # bill of materials - v4.0 master (adds the AEM10300 harvest chain: U7 FRAM, U8 PMIC, U9 LDO, L2/FB1, C22–C28, R15–R17; mostly 0402, with C4/C13/C25/C27 on 0603 and SJ1 on its own 0R land)
 ├── solar-glow-drh-v4_0-BOM-assembly.xlsx  # trimmed PCBA BOM (36 placed parts)
 ├── sw2-anode-selector.png            # how to read/set the SW2 OFF/ON/TINY bridge
 ├── led-orientation-D2-D5.png         # reverse-mount LED rotation reference for PCBA
@@ -50,7 +50,7 @@ PCB/
 | Surface finish | **ENIG** + **selective hard (electrolytic) gold** on the F.Cu gold set — the plating bus exists to feed it (see the order special request) |
 | Soldermask | **Matte black**, both sides |
 | Silkscreen | White (back-side identifiers / logos); front face is intentionally bare |
-| Components | **48 on the back**; the front carries only the two solar cells (PV1/PV2) |
+| Components | **52 on the back**; the front carries only the two solar cells (PV1/PV2) |
 | Teardrops | **Enabled** — 243 curved teardrop zones (pads, vias, and track-ends); R14 and the reworked U6 area (the pin-map fix deleted 4 zones) have none — run Tools → Add Teardrops before plotting |
 | NFC | NT3H2211 tag (U5) + **PCB-etched 7-turn coil** on B.Cu, power-gated by U6 |
 | Indicative parts cost | **≈ $93/board** at qty 1–10; supercaps + solar cells are most of it |
@@ -145,7 +145,7 @@ Order parameters, from the committed board:
 
 **Run PCBWay's DFM check against these.** The binding features are the **0.127 mm spacing**
 and **0.15 mm tracks** — inside PCBWay's stated 0.1 mm/4 mil 2-layer capability, but worth a
-glance at their sheet. There are no fine vias in v3.0 (the whole board runs the one 0.30/0.60
+glance at their sheet. There are no fine vias on this board (the whole board runs the one 0.30/0.60
 via), and no controlled-impedance nets to declare.
 
 **Add to the order notes / gerber review:**
@@ -170,10 +170,10 @@ via), and no controlled-impedance nets to declare.
   copper and no wear surface on the face — do not ship without it.
 - "**The LA/LB track crossing at (41.0, 38.0) is the NFC coil junction — intentional.**"
 - **Bench pad strip (`TP1` + `JP1`, back east edge, x 48.4):** five bare 1.7 mm SMD probe pads
-  (SRC / GND / VS / SCL / SDA at 2.54 pitch) - no component; they are in the mark-as-DNP list
-  above. Pinout and the bench-power ritual live in `solar-glow-drh-v2-hardware.md`.
-- **Via-in-pad — 12 vias land inside pads** on this board: 10 in soldered pads (`TC1.1`, `U1.EP`,
-  `U5.1`, `SW2.1`, `J1.2`, `PV1.N`, `PV2.N`, `PV2.Nt`)  [D1.K and R13.2 removed - D1 and R13 are not on the v4 board; re-verify the full via-in-pad set against the v4 layout] plus 2 in the bench-strip
+  (SRC / GND / STO / SCL / SDA at 2.54 pitch) - no component; they are in the mark-as-DNP list
+  above. Pinout and the bench-power ritual live in `solar-glow-drh-v2-hardware.md` (note: that frozen doc predates the v3->v4 VS->STO change, so JP1.2 is now the STO tank node, not the VS rail).
+- **Via-in-pad -- several vias land inside pads** on this board: the soldered pads (`TC1.1`, `U1.EP`,
+  `U5.1`, `SW2.1`, `J1.2`, `PV1.N`, `PV2.N`, `PV2.Nt`)  [D1.K and R13.2 removed - D1 and R13 are not on the v4 board; re-verify the full via-in-pad set against the v4 layout, since v4 added U7/U8/U9/L2/FB1] plus 2 in the bench-strip
   probe pads (`JP1.3`, `JP1.4` — bare pads, hand-solder optional). The clean answer is
   the same as always: **order resin-fill + cap (via-in-pad process) board-wide.** The one
   that *must* be flat and hole-free is **TC1.1** (a Tag-Connect pogo contact); the rest
@@ -196,7 +196,7 @@ hand-tinning. Order it alongside the board.
 **BOM state.** The masters are now **`solar-glow-drh-v4_0-BOM.xlsx`** and
 **`solar-glow-drh-v4_0-BOM-assembly.xlsx`**, reworked for the v4.0 managed-solar redesign - the passive diode/shunt/comparator parts (U2, U4, Q1, D1, D9–D11, R7–R9) are removed and the AEM10300 harvest chain (U7, U8, U9, L2, FB1, C22–C28, R15–R17) is added, on top of the earlier fixes:
 **U6 (TPS22918) and R14 (1 M `NFC_EN` pulldown) added**, the stale **JP1/JP2 rows dropped** (the `JP1` designator is reused for the v3.0 bench pad strip — bare pads, not a BOM part)
-(those headers left the board in v3.0), and **every passive except SJ1 converted to 0402** to match
+(those headers left the board in v3.0), and **most passives converted to 0402**, with the four bulk/buffer caps C4, C13, C25, C27 on 0603 lands (C28 is 0402) and SJ1 on its own 0R land, to match
 the board's placed lands — the v2.2 file still listed 0805 MPNs for most R/C. Converted and added
 lines have their **prices blanked pending a fresh quote**; the old 0805 prices don't carry. The
 `v2 2` and older BOM files remain in git history as lineage.
@@ -273,7 +273,7 @@ types by hand afterward.
   **off** the PCBA BOM on purpose — the supercaps are manual-solder only (SCHURTER SCPC),
   and the cells are heat-sensitive.
 - **Not placed:** SW2, SB1–SB4 (solder bridges you set), TC1 (Tag-Connect pad), J1
-  (optional header), MH1–MH4 (mounting holes), C9, C10 (DNP).
+  (optional header), MH1–MH4 (mounting holes), C9 (DNP).
 
 **Sourcing:** turnkey, with the standing instruction that anything PCBWay can't source they
 flag and you consign from DigiKey — **no substitutes without approval**. The likeliest to

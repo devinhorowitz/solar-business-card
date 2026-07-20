@@ -2,8 +2,10 @@
  * led.h  --  DRH monogram LEDs on TCA0 split mode (PA0..PA3 = WO0..WO3).
  *
  * 4 low-side LED channels (D2..D5). The LED lights when its PORTA pin pulls
- * LOW (cathode side, through a 150R ballast). The ballast fixes the PEAK
- * current on the clamped rail (~8 mA); PWM only trims the time-average below
+ * LOW (cathode side, through a 150R ballast). The common anode is fed from the
+ * STO supercap tank through SW2 (not a regulated rail), so the ballast fixes
+ * the PEAK current at roughly (V_STO - Vf)/150 -- e.g. ~16 mA near a full
+ * 4.65 V tank (the AEM10300 VOVCH ceiling), sagging as STO discharges. PWM only trims the time-average below
  * that ceiling, so duty is purely a brightness/energy control and can never
  * push the LED past its ballasted peak.
  *

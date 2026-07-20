@@ -170,7 +170,7 @@ uint16_t sense_vdd_mv(void)
 
 uint8_t sense_rail_ok(void)
 {
-    /* raw VDD/10 count vs compile-time floor -- same result as sense_vdd_mv() >= floor,
+    /* raw STO-divider (PD1/AIN1) count vs compile-time floor -- same result as sense_vdd_mv() >= floor,
      * same fail-safe (a stuck ADC reads 0 -> not ok -> no glow). */
     return (adc_read_raw(STO_SNS_AIN) >= RAIL_COUNT) ? 1u : 0u;
 }
@@ -190,7 +190,7 @@ uint8_t sense_caps_full(void)
 /* EEPROM write-safety gate: rail at/above EE_WRITE_FLOOR_MV, so a ~13 ms EEPROM write can start and
  * finish without the rail collapsing through it (the corruption window, DS40002315 sec 11.3.3). The
  * BOD only ABORTS an in-progress write; this is the firmware "don't start near the edge" guard (the
- * VLM's role), so it holds between the sampled BOD's checks. Same VDD/10 channel and compile-time
+ * VLM's role), so it holds between the sampled BOD's checks. Same STO-divider channel and compile-time
  * fold as the other rail gates; same fail-safe -- a stuck ADC reads 0 -> not safe -> no write. */
 #define EE_SAFE_COUNT ((uint16_t)(((uint32_t)EE_WRITE_FLOOR_MV * 4096UL + (STO_DIVIDER*ADC_VREF_MV - 1UL)) \
                                   / (STO_DIVIDER*ADC_VREF_MV)))
@@ -209,7 +209,7 @@ static uint8_t sense_ee_safe(void)
  * reserve, since a dimmer near-empty breath spends less charge. The dim floor is
  * VS_GLOW_DIM_PEAK on GLOW_PEAK's scale, re-scaled here to whatever base `peak` was asked
  * for, so a half-bright breath (the motion soft breath) dims in proportion too. Costs one
- * VDD/10 read -- the same read sense_rail_ok() did at these sites; with the stretch off it
+ * STO-divider read -- the same read sense_rail_ok() did at these sites; with the stretch off it
  * IS sense_rail_ok() (peak above the floor, 0 below). */
 uint8_t sense_glow_peak(uint8_t peak)
 {

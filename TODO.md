@@ -70,11 +70,10 @@ shell re-machine. Updated 2026-07-11._
   and the merged PCB+PCBA total; ensure the PO
   uses the confirmed C11/C13 MPNs.
 - [ ] **BOM completeness - recount the machine-place BOM against the v4 net** - D10/D11 (v3 comparator-supply OR diodes) were removed with the U4 comparator; only LEDs D2-D5 remain as diodes, so the earlier '42' count is stale. Regenerate the counts and the -BOM-assembly.xlsx master against the v4 schematic. _(audit find,
-  2026-07-11)._ The board (schematic / CI BOM) carries D10, D11 (MMSD301T1G,
-  comparator-supply OR) and C10 (100 nF) as fitted SMD, but `-BOM-assembly.xlsx` lists
-  only 39 (missing all three) and the docs said "36". Correct machine-place count =
-  **42**. `PCB/README.md` order table + counts and root `README.md` are now fixed to 42;
-  **the `-BOM-assembly.xlsx` master still needs regenerating to 42** (binary; owner: Devin).
+  2026-07-11)._ `PCB/README.md` order table + counts and root `README.md` were
+  previously "fixed to 42" off the pre-redesign parts list, so they likely carry the
+  same stale count and must be re-verified against the recomputed v4 count; the
+  `-BOM-assembly.xlsx` master then needs regenerating to match (binary; owner: Devin).
 - [ ] **DRC/ERC prose vs the committed reports** _(audit find)._ The board is DRC/ERC
   **clean** (0 unexcluded errors). But `PCB/README.md` + `solar-glow-drh-design-notes.md`
   describe "~61 marginal-band warnings" present in neither committed report (GUI: 5
@@ -111,10 +110,10 @@ shell re-machine. Updated 2026-07-11._
   intended ~0.05 mm no-rattle contact the brace's fit relies on. Shell is source-of-truth;
   resolve the brace rail coords (or add `edge_fit` to the shell `_cav_inner`), then regen.
   (`…-backshell-…-cad.py` vs `…-diffuser-brace-cad.py`.)
-- [ ] **[geometry] Floor relief must be re-keyed to the v4 harvest part (U8)** - U2 (v3 balancer) is gone; the tallest B-side part in that region is now U8 (AEM10300, QFN-28). Re-derive U2_POS/the relief pocket from U8's placed position + height, then regen the STEP/STL and the derived drawing/README note copies. _(audit find)._ PCB
-  has U2 at (27.5, 37); `…-backshell-…-cad.py` `U2_POS = (28.5, 37)`. ~0.5 mm of the
-  tallest B-side part overhangs the un-relieved floor. PCB is frozen truth → fix `U2_POS`
-  + regen the STEP/STL (and the derived drawing/README note-7 copies).
+- [ ] **[geometry] Floor relief must be re-keyed from U2 to the v4 FRAM (U7)** - U2 (v3 ALD910025 balancer) is gone; the tallest populated B-side part is now U7 (MB85RC512TY FRAM, SOIC-8, 1.75 mm). U7 landed at (28.1, 37.3) on B.Cu -- essentially on the deleted U2's spot, so the relief pocket barely moves. (U8, the AEM10300 QFN-28, is ~0.9 mm and needs no relief.)
+  `…-backshell-…-cad.py` still carries `U2_POS = (30.10, 37.64)` for the deleted part; re-key it to
+  U7's (28.1, 37.3) (rename `U2_POS` -> `U7_POS`), then regen the STEP/STL and the derived
+  drawing/README note-7 copies. PCB is frozen truth. _(audit find)._
 - [ ] **Fab drawing still renders the retired locator pillars** _(audit find)_ + NOTE 4
   (Ø3.2 recesses), contradicting the pillar-free STEP — and it's the file attached to the
   PCBWay CNC quote. De-pillar `…-backshell-…-DRAWING-gen.py` and regenerate the PDF/PNG.

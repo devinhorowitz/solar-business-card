@@ -137,21 +137,19 @@ Nets removed: `CLBASE`, `CLREF`, `REF_TIE`, `VCMP`, `VIN`, `VINB`.
 
 ## 7. board.h additions (apply in lockstep with the schematic)
 
-> **STAGED (2026-07-18):** these edits are captured as **`v4-aem10300-boardh.patch`** (repo root),
-> verified `git apply --check` clean against the current board.h. **board.h itself is left UNCHANGED
-> on purpose** -- applying it before the reworked schematic carries the new nets would fail
-> `check_consistency.py` [1] (board.h would claim PA4 -> EN_STO_CH / PD1 -> STO_SNS while the exported
-> netlist still says PA4 / unconnected). When the reworked `.kicad_pcb` + `.kicad_sch` land, in the
-> **same commit**: run `git apply v4-aem10300-boardh.patch`, and make the schematic put **U1.PA4 on net
-> `EN_STO_CH`** and **U1.PD1 on net `STO_SNS`** (exact strings; PD2/`VSENSE` keeps its net name but now
-> divides `SRC`). Then the pin contract matches and CI passes. The patch is minimal (pin-map + the two
-> `#define` blocks); bumping the board.h header `v3.0 -> v4.0` and swapping residual `VIN` comments to
-> `SRC` are cosmetic follow-ups, not in the patch.
+> **APPLIED (2026-07-18):** these edits, originally captured as **`v4-aem10300-boardh.patch`** (repo root),
+> have been applied. **board.h now carries** the **PA4 -> EN_STO_CH** and **PD1 -> STO_SNS** pin-map lines and
+> the `STO_SNS_AIN` / `STO_DIVIDER` / `ENSTOCH_PORT` / `ENSTOCH_PIN_bm` `#define` blocks described below. The
+> precondition that once blocked the patch is satisfied: the reworked `.kicad_pcb` + `.kicad_sch` are in place
+> and put **U1.PA4 on net `EN_STO_CH`** and **U1.PD1 on net `STO_SNS`** (PD2/`VSENSE` keeps its net name but now
+> divides `SRC`), so the pin contract matches and `check_consistency.py` passes. The patch was minimal (pin-map
+> + the two `#define` blocks); bumping the board.h header `v3.0 -> v4.0` and swapping residual `VIN` comments to
+> `SRC` remain cosmetic follow-ups.
 
 `scripts/check_consistency.py` parses board.h's pin-map table and compares it against the **schematic
-netlist**, so these edits must land in the **same commit as the schematic net rename** (PD1 -> `STO_SNS`,
-PA4 -> `EN_STO_CH`). Do NOT apply them to board.h before the reworked board/schematic is in, or CI will flag
-board.h as ahead of the netlist. Staged here so the apply is mechanical.
+netlist**; these edits landed in the **same commit as the schematic net rename** (PD1 -> `STO_SNS`,
+PA4 -> `EN_STO_CH`), so board.h is not ahead of the netlist and CI passes. Recorded here so the apply history
+is clear.
 
 **Pin-map table** -- change the PA4 line, add a PD1 line (keep the column format the parser reads; net name
 must match the schematic exactly):
@@ -188,15 +186,15 @@ update its role comment; no functional change.
 instead of the old clamped 2.6..3.5 V rail (the sense.c re-point makes `sense_vdd_mv()` return STO).
 Bench-tune the values; no new symbols needed.
 
-When the reworked board lands, I apply the two table lines + the #defines to board.h and make the matching
-`STO_SNS` / `EN_STO_CH` net names in the schematic in one commit, and `check_consistency.py` passes.
+The two table lines + the #defines are in board.h and the matching `STO_SNS` / `EN_STO_CH` net names are in
+the schematic, landed in one commit, and `check_consistency.py` passes.
 
-## 8. Firmware re-point (staged as `v4-aem10300-firmware.patch`)
+## 8. Firmware re-point (applied; was `v4-aem10300-firmware.patch`)
 
-Companion to the board.h patch above -- the sense/gate code the new rail topology needs. **Staged, not
-applied:** it references the board.h patch's `STO_SNS_AIN` / `STO_DIVIDER` / `ENSTOCH_*` defines, so it only
-compiles once board.h is patched; landing it early would fail the firmware CI build. Apply it in the **same
-commit** as the board.h patch + reworked board/schematic: `git apply v4-aem10300-firmware.patch`.
+Companion to the board.h edits above -- the sense/gate code the new rail topology needs. **Applied:** it
+references board.h's `STO_SNS_AIN` / `STO_DIVIDER` / `ENSTOCH_*` defines, which are now in-tree, so it
+compiles; it landed in the **same commit** as the board.h edits + reworked board/schematic. The
+`v4-aem10300-firmware.patch` / `v4-aem10300-boardh.patch` files are historical and can be dropped.
 
 What it changes:
 - **`sense.c` (7 hunks):** re-points `sense_vdd_mv()` and the four rail gates (`sense_rail_ok`,

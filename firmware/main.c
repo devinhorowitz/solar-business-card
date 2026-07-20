@@ -1,5 +1,5 @@
 /*
- * main.c  --  SOLAR-GLOW DRH v3.0 firmware top level.
+ * main.c  --  SOLAR-GLOW DRH v4.0 firmware top level.
  *
  * Behaviour
  * ---------
@@ -29,7 +29,7 @@
  *
  * Two hardware gates are invisible to this code and documented in the README:
  *   - SW2 (master anode switch): OFF -> no LED current, no matter what TCA does.
- *   - the accel itself is the only "button"; there is no GPIO button in v3.0.
+ *   - the accel itself is the only "button"; there is no GPIO button in v4.0.
  *
  * Bring-up order below follows hardware doc section 7 exactly.
  */
@@ -409,10 +409,10 @@ int main(void)
                         led_breathe(GLOW_CYCLES, GLOW_BREATH_MS, peak);  /* dark->light greeting */
                 }
 #if USE_SUN_SWEEP
-                /* Already lit and basking: strong sun (VIN past the clamp) with the caps full ->
+                /* Already lit and basking: strong sun (VIN above the sun threshold) with the caps full ->
                  * play the "loading" sweep. Caps-full (sense_caps_full()) is the hard gate, so it
                  * can never draw the pack down; it re-arms each poll, looping while the sun holds
-                 * and spending the clamp's excess as light instead of Q1 heat. The greeting above
+                 * and spending the surplus harvest as light instead of leaving it unharvested. The greeting above
                  * wins on the entry edge (one breath in), then this runs while the card sits. */
                 else if ((vf & SENSE_SUN_bm) && sense_caps_full())
                     led_sweep(SWEEP_PASSES, SWEEP_PASS_MS, SWEEP_PEAK, SWEEP_OVERLAP);

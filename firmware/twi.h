@@ -1,7 +1,7 @@
 /*
  * twi.h  --  minimal blocking TWI0 host (I2C master) for SOLAR-GLOW DRH.
  *
- * Header-only. One bus (ADXL367 accel @ 0x1D + NT3H tag @ 0x55), low speed, no IRQ,
+ * Header-only. One bus (ADXL367 accel @ 0x1D + NT3H tag @ 0x55 + MB85RC512TY FRAM @ 0x50), low speed, no IRQ,
  * no smart mode. Pins are PC2/SDA + PC3/SCL via PORTMUX.TWIROUTEA = ALT2
  * (set in main, not here). External 4.7k pull-ups to VS are fitted, so the
  * internal pull-ups are left off.
