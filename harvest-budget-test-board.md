@@ -199,5 +199,90 @@ Optional DNP: a 1 uF film across SRC to average 100/120 Hz room-light flicker fo
 - **Config jumpers** -- parallel is the only product-relevant case, so you can hard-wire PV1||PV2
   and keep just the I_SRC series break + the load bank, or keep the fixture board's full A/B/C/D/S
   set if you want singles/series too.
-- **Take it to KiCad:** say the word and I'll draft the schematic (reusing the `solarglow` panel
-  footprint and the retired Schottky land) as a starting point for your layout.
+- **Take it to KiCad:** the capture-ready schematic is **Appendix A** below -- component table,
+  full net list, and the threshold math. Capture it as-is; the two analog thresholds want a
+  quick LTspice/bench tune (A.4), so treat the resistor values as starting points.
+
+---
+
+## Appendix A -- Schematic (capture-ready)
+
+The Tier-2 (calibrated blink-rate) circuit. This is a **passive solar front-end + a nanopower
+voltage-trigger blinker** (the classic "solar-engine" pattern): the panels trickle-charge
+C_store; when it reaches V<sub>hi</sub> the trigger flashes the LED and dumps the cap to
+V<sub>lo</sub>; it recharges; repeat. Blink rate = net surplus power (section 3).
+
+**Delivered as a capture spec, not a raw `.kicad_sch`, on purpose:** there is no `kicad-cli`
+in this environment to ERC-validate a generated file, and the repo's symbol library is
+per-refdes custom (no LED / MOSFET / comparator symbols) -- so a hand-built binary would be a
+liability, not a head start. The net list below captures cleanly in ~20 min and is unambiguous.
+
+### A.1 Signal flow
+
+`PV1||PV2 -> SRC -> [I_SRC break] -> D1 -> VCAP( C_store )` and off VCAP hang three things:
+the **trigger** (U1 divider R1/R2 -> V<sub>REF</sub>, compared to U1's internal 1.182 V), the
+**flash path** (R_led -> LED1 -> Q1 to GND, Q1 gated by the trigger output), and the
+**calibration load bank** (R_idle / R_light / R_active, each jumper-selected to GND).
+
+### A.2 Components
+
+| Ref | Value | KiCad symbol | Footprint | Note |
+|---|---|---|---|---|
+| PV1, PV2 | SM141K06TF | `solarglow:PV1` / `PV2` (reuse) | `solarglow:PV1` / `PV2` | panels ||, = product SRC |
+| D1 | BAT54 (Schottky) | `Device:D_Schottky` | SOT-23 / SOD-323 (or reuse `solarglow:D2` land) | reverse block into cap |
+| C1 | 1000 uF (C_store) | `Device:C_Polarized` | tantalum/elec, or 0.1 F EDLC | blink energy quantum |
+| U1 | MAX931 (nanopower comp + 1.182 V ref + hysteresis) | `Comparator:MAX931` (or LTC1540) | SOIC-8 / uMAX-8 | **confirm pinout at capture** |
+| Q1 | 2N7002 (N-MOSFET) | `Device:Q_NMOS_GSD` | SOT-23 | flash / discharge switch |
+| LED1 | red/amber, high-eff | `Device:LED` | 0805 | the indicator |
+| R1 | 6.8 M | `Device:R` | 0402 | divider top (VCAP->VREF) |
+| R2 | 4.7 M | `Device:R` | 0402 | divider bottom (VREF->GND) |
+| R3 | 10 M | `Device:R` | 0402 | hysteresis (OUT->VREF) |
+| R_led | 220 ohm | `Device:R` | 0402 | flash current limit |
+| R_idle / R_light / R_active | 1.0 M / 82 k / 8.2 k | `Device:R` | 0402 | calibration loads (section 5) |
+| JP1-3 | load select | solder-jumper / 2-pin | -- | one-per-load to GND |
+| J_SRC | series I break | 2-pin header | -- | insert uA DMM; default closed |
+| TP1-6 | SRC / VCAP / VREF / COMP / GND / panel taps | test point | 2.0-2.5 mm pad | probe |
+| PWR1-3 | on SRC, VCAP, GND | `solarglow:PWR_FLAG` (reuse) | -- | ERC (no driven power pin) |
+| H1-4 | mounting | `solarglow:MH*` | M2 | stand at a fixed angle |
+
+### A.3 Net list (net : pins)
+
+```
+SRC     : PV1.+  PV2.+  J_SRC.1  TP1  PWR1
+VIND    : J_SRC.2  D1.A                       (= SRC if J_SRC closed / omitted)
+VCAP    : D1.K  C1.+  U1.V+  R1.1  R_led.1  R_idle.1  R_light.1  R_active.1  TP2  PWR2
+VREF    : U1.IN+  R1.2  R2.1  R3.2  TP3
+UREF    : U1.REF  U1.IN-                       (internal 1.182 V ref tied to IN-)
+COMP    : U1.OUT  R3.1  Q1.G  TP4
+LED_A   : R_led.2  LED1.A
+LED_K   : LED1.K  Q1.D
+GND     : PV1.-  PV2.-  C1.-  U1.V-  U1.GND  R2.2  Q1.S  JP1.2  JP2.2  JP3.2  TP5  PWR3
+(load bank: R_idle.2->JP1.1, R_light.2->JP2.1, R_active.2->JP3.1; close one jumper)
+```
+
+### A.4 Threshold design (the two numbers to tune)
+
+U1 trips when its divider node hits the internal reference: **V<sub>hi</sub> = 1.182 * (1 +
+R1/R2)**. With R1 6.8 M / R2 4.7 M -> **V<sub>hi</sub> ~= 2.9 V** (sits near the indoor MPP and
+above the LED V<sub>f</sub>). Hysteresis from R3 (OUT->VREF): **ΔV ~= V<sub>hi</sub> * (R1||R2) /
+R3**; with R3 10 M -> **ΔV ~= 0.8 V, so V<sub>lo</sub> ~= 2.1 V**. Flash quantum **E =
+1/2*C1*(V<sub>hi</sub>^2 - V<sub>lo</sub>^2) ~= 2.0 mJ** at 1000 uF -> the section-3 rate table.
+
+Tune once: (1) re-center V<sub>hi</sub>/V<sub>lo</sub> on the **real indoor V<sub>mp</sub>** the
+`harvest-bench-fixture` measures; (2) pick C1 for a comfortable blink cadence (bigger = slower).
+Keep the divider in the 5-20 M range so it draws < ~0.5 uA (well under the IDLE load it must not
+swamp).
+
+### A.5 ERC / capture notes
+
+- **Passive board, no driven power net** -> KiCad ERC needs a `PWR_FLAG` on SRC, VCAP, and GND
+  (reuse `solarglow:PWR_FLAG`), else "input power pin not driven" errors.
+- **U1** is the only part whose exact pin numbers I have not pinned to a datasheet here (proxy
+  blocked it) -- capture from the KiCad `MAX931` symbol's named pins (V+, GND, IN+, IN-, REF,
+  HYST, OUT) and confirm against the datasheet; wire IN- to REF for the internal-reference
+  configuration. (If you prefer, `LTC1540` is a drop-in-equivalent nanopower comp+ref.)
+- **Q1** body diode points cap->GND; fine (LED_K is always >= GND). No flyback concern (resistive
+  LED load).
+- No-connects: U1 HYST pin may be left open if you use the external R3 hysteresis shown (or tie
+  per the datasheet if you use the internal HYST resistor instead -- pick one path).
+- Single-sided: all of the above on top; back is copper/vias only (section 8).
