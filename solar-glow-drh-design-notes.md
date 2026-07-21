@@ -1035,3 +1035,59 @@ whether the indoor **harvest keeps up with the LED burn**, which the bench measu
 and `harvest-bench-fixture-handoff.md`) still gates. (If a thinner tank were ever wanted purely
 to slim the stack, a sub-1 mm prismatic EDLC supercap -- CAP-XX / KYOCERA-AVX / Murata, same
 chemistry -- does that with no cycle-life hit; but per point 1 it would not shrink the card.)
+
+---
+
+## Addendum (2026-07-21) -- Full e-peas QFN family walk: AEM10300 confirmed vs all 13 siblings
+
+The 2026-07-15 survey above chose the AEM10300 from a 3-part shortlist found by web search, never a walk
+of e-peas's own QFN line. To close that gap, all 13 QFN-package e-peas AEM datasheets were pulled into
+`datasheets/DS-AEM*.pdf` and read end-to-end (12 fully; AEM30330's read was cut short by a usage limit --
+its balancer is confirmed, the rest is left at the family pattern to be finished later). Result: nothing
+dislodges the AEM10300.
+
+Axes: **Panel?** = can track the SM141K06TF (Voc 4.15 V / MPP ~3.2-3.35 V); **2S bal?** = on-chip dual-cell
+midpoint balancer; **Dark** = quiescent on STO with the boost idle; **Rail?** = integrated regulated 3.3 V
+output that would drop the external U9 LDO.
+
+| Part | Panel? | 2S bal? | Dark Iq | 3.3 V rail? | Telemetry | Note |
+|---|---|---|---|---|---|---|
+| **AEM10300** (current) | yes | yes | **~6 nA** | no (ext LDO) | -- | baseline |
+| AEM30300 | yes | yes | ~6 nA | no (ext LDO) | 1 status | functional twin, nothing added |
+| AEM10330 | yes | yes | 350-875 nA | yes buck-boost 3.3/60 | 4 status | closest upgrade (see below) |
+| AEM00330 | yes | yes | 350-875 nA | yes 3.3/60 | 4 status | dark ~100x |
+| AEM0094x | yes | yes | 400-600 nA | yes 3.3/80 | status | dark ~100x |
+| AEM10941 | yes (coarse) | yes | 400-600 nA | yes 3.3/80 | status | dark ~100x; OVCH cap 4.50 V |
+| AEM30940 | yes | yes | 400-600 nA | yes 3.3/80 | status | dark ~100x; OVCH cap 4.50 V |
+| AEM30330 | yes* | yes* | ~sub-uA* | yes* | * | ~AEM10330 (read incomplete) |
+| AEM13921 | yes | **no** (1S <=4.59 V) | 275-645 nA | yes 3.3/100 | **I2C + APM** | no 2S balancer |
+| AEM13920 | yes | **no** (1S <=4.59 V) | 275-645 nA | no (buck <=2.5) | **I2C + APM** | no 2S balancer |
+| AEM15820 | yes | **no** (1S <=4.59 V) | 275-645 nA | yes 3.3/100 | **I2C + APM** | no balancer; high-power class |
+| AEM0090x | **no** (2.73 V cap) | no | 7.4 nA | no | I2C | input class too low |
+| AEM1090x | **no** (2.73 V cap) | no | 7.4 nA | no | I2C | input class too low |
+| AEM20941 | **no** (Voc over-volts) | yes | 400-600 nA | yes 3.3/80 | status | TEG part; panel over-volts the 3.5 V SRC |
+
+**The structural finding -- no e-peas part gives all three things this card wants:** (1) the 2S supercap
+balancer; (2) nanopower dark (~6 nA, for a card that lives dark in a pocket, the #1 energy gate); (3) an
+integrated 3.3 V rail and/or digital telemetry.
+- **Balancer + nanopower:** only the AEM10300 and its twin AEM30300. This card's exact corner.
+- **Balancer + integrated rail:** the whole regulated-output family (10330 / 00330 / 0094x / 10941 / 30940 /
+  30330), but every one sits at 350-875 nA dark, ~60-150x the 6 nA. Folding in the LDO costs the dark budget
+  every time.
+- **I2C telemetry** (APM energy metering, V_STO / V_SRC readout): only the single-cell managers (13920 /
+  13921 / 15820), and those have **no 2S balancer** (single node, <=4.59 V). In this line, telemetry and the
+  2S balancer are mutually exclusive.
+
+So the AEM10300 sits alone at the (balancer + nanopower) corner, which is exactly what a dark-idle 2S-supercap
+card needs. The accidental web-search pick is the family optimum, now proven by direct read of all 13.
+
+**The one alternative worth remembering (not adopted): AEM10330.** It keeps the balancer, hits the 4.65 V
+overcharge, and replaces the external LDO with an integrated **buck-boost** 3.3 V rail. Buck-boost matters
+beyond dropping a part: it drains the tank toward ~0.2 V instead of an LDO stranding energy at its dropout,
+so it recovers usable tank energy and adds load-status pins. Price: the same ~100x dark (350-875 nA) and a
+QFN40. If the harvest bench ever shows comfortable margin and deeper extraction + no LDO is judged worth it,
+that is the specific part -- but for a dark-idle card the 10300's 6 nA still wins.
+
+Datasheets filed under `datasheets/DS-AEM*.pdf`; sibling specs are from those sheets, the AEM10300 baseline
+from `DS-AEM10300-v1.4` and the survey above. *AEM30330: balancer confirmed; dark / output / package left at
+the family pattern pending a full read (usage limit, resets 2026-07-22).
