@@ -141,8 +141,8 @@ shell re-machine. Updated 2026-07-11._
   spec; do **not** enable `tool_relief` (produces a faceted STEP the fab rejects).
 - East cavity lip pinched to 1.0 mm over y10–72 (NFC detune) — do not widen.
 - NFC tuning at bring-up needs the brace **removable** — don't defeat it.
-- Supercap footprint SCHURTER SCPC 3-153-438 (flat under-body pads, asymmetric
-  widths = polarity key). The old REV-J diagonal-pad land is WRONG — never reuse.
+- Supercap footprints are a **hybrid**: SC1/SC3 = SS17 land (3-153-440, 39 mm), SC2/SC4 = WS17
+  land (3-153-438, 28.5 mm); flat under-body pads, asymmetric widths = polarity key. The old REV-J diagonal-pad land is WRONG -- never reuse.
 - Ti-6Al-4V (Grade 5); grounded M2 bosses tie the body to GND.
 - **NFC contact is offline-first.** The full vCard is **embedded** in the tag (`text/vcard`
   NDEF, `nfc.c`), read RF-powered by the phone with the card's supercap flat and **no

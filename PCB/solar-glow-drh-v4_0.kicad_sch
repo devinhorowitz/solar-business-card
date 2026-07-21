@@ -6665,7 +6665,7 @@
 					)
 				)
 			)
-			(property "Value" "WS17 1F 2.75V"
+			(property "Value" "SS17 1.8F 2.75V"
 				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -6885,7 +6885,7 @@
 					)
 				)
 			)
-			(property "Value" "WS17 1F 2.75V"
+			(property "Value" "SS17 1.8F 2.75V"
 				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -19609,7 +19609,7 @@
 				)
 			)
 		)
-		(property "Value" "WS17 1F 2.75V"
+		(property "Value" "SS17 1.8F 2.75V"
 			(at 91.01 88.9 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -19639,7 +19639,7 @@
 				)
 			)
 		)
-		(property "Description" "Supercap 1 F / 2.75 V (WS17)"
+		(property "Description" "Supercap 1.8 F / 2.75 V (SS17)"
 			(at 80.01 78.74 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -19649,7 +19649,7 @@
 				)
 			)
 		)
-		(property "MPN" "3-153-438"
+		(property "MPN" "3-153-440"
 			(at 80.01 78.74 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -20772,7 +20772,7 @@
 				)
 			)
 		)
-		(property "Value" "WS17 1F 2.75V"
+		(property "Value" "SS17 1.8F 2.75V"
 			(at 91.01 48.26 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -20802,7 +20802,7 @@
 				)
 			)
 		)
-		(property "Description" "Supercap 1 F / 2.75 V (WS17)"
+		(property "Description" "Supercap 1.8 F / 2.75 V (SS17)"
 			(at 80.01 38.1 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -20812,7 +20812,7 @@
 				)
 			)
 		)
-		(property "MPN" "3-153-438"
+		(property "MPN" "3-153-440"
 			(at 80.01 38.1 0)
 			(show_name no)
 			(do_not_autoplace no)

@@ -52,8 +52,9 @@ A business-card-sized PCB — **50.8 × 88.9 mm, 0.6 mm FR4, ENIG, rounded corne
 - **Harvests** indoor light with **two** ANYSOLAR solar cells merged into a single solar node (SRC) that feeds the AEM10300 harvester (U8),
   which runs the MPPT and handles reverse-blocking so neither panel back-feeds the
   other - the v3 per-panel blocking diodes are removed.
-- **Stores** energy in **four** series-parallel supercapacitors — **1 F at 5.5 V, ≈ 15 J** —
-  with the AEM10300 harvester (U8) balancing the series midpoint (MID); the safe 3.3 V VS rail
+- **Stores** energy in **four** series-parallel supercapacitors -- a **hybrid tank** (two larger
+  SS17 cells + two WS17), **~1.3 F at 5.5 V, ≈ 21 J** -- with the AEM10300 harvester (U8) balancing
+  the series midpoint (MID), which is what lets the two cell sizes share the series stack safely; the safe 3.3 V VS rail
   is set by the U9 TPS7A0233 LDO, not a shunt clamp.
 - **Glows** by back-lighting a **“DRH” monogram** that’s cut into the front copper: a gold
   ENIG field with the three letters opened to bare FR4. Four reverse-mounted amber LEDs on the
@@ -79,7 +80,7 @@ all lives on the back, ready for an optional machined-metal back-shell.
 | MCU | **AVR64DD28** (28-VQFN) | TCA0 hardware PWM, I²C to the accel, charge/sleep logic; MVIO-capable (unused) |
 | Solar | **2× ANYSOLAR SM141K06TF** | monocrystalline indoor cells (Voc 4.15 V), in parallel — two panels ≈ 2× the harvest |
 | Harvest PMIC | **e-peas AEM10300** (U8, QFN-28 4×4) | MPPT buck-boost that merges both panels at SRC and charges the supercap tank (STO) - replaces the v3 per-panel blocking diodes |
-| Storage | **4× SCHURTER 3-153-438** (WS17) | 1 F / 2.75 V each, wired 2P2S → **1 F @ 5.5 V ≈ 15 J** on one balanced node |
+| Storage | **2× SCHURTER 3-153-440** (SS17, 1.8 F) + **2× 3-153-438** (WS17, 1.0 F) | hybrid tank, 2.75 V/cell, wired 2S2P → **~1.3 F @ 5.5 V ≈ 21 J** on one balanced node (AEM holds MID so the smaller WS pair can't over-volt) |
 | Midpoint balance | **AEM10300 (U8) BAL** | the harvester balances the 2S supercap midpoint (MID net) - replaces the v3 ALD910025 dual SAB MOSFET |
 | Rail regulator | **TI TPS7A0233** (U9, SOT-23-5) | nanopower LDO (~25 nA Iq) regulates STO down to the fixed **3.3 V VS rail** the MCU + accel run on - replaces the v3 TLV3011 + PNP shunt clamp |
 | LEDs | **4× ams OSRAM LA P47F** (amber) | reverse-mount; glow through the FR4 window, **150 Ω** ballast each |
@@ -127,7 +128,7 @@ Full part numbers, pricing, and per-part datasheet links are in
 
 The board is well-verified; the **energy budget is not.** A solar cell’s headline rating is a
 full-sun number, and indoor light delivers a small fraction of it, while four breathing LEDs
-average several milliamps. The two-panel harvest and the 15 J tank are sized to **harvest
+average several milliamps. The two-panel harvest and the ~21 J tank are sized to **harvest
 slowly and glow in bursts** — but that bet has never been put on a meter.
 
 What changed the math since the early notes: the LED string is fed from the **STO supercap tank** (through the
