@@ -1038,31 +1038,38 @@ chemistry -- does that with no cycle-life hit; but per point 1 it would not shri
 
 ---
 
-## Addendum (2026-07-21) -- Full e-peas QFN family walk: AEM10300 confirmed vs all 13 siblings
+## Addendum (2026-07-21) -- Full e-peas QFN family walk: AEM10300 confirmed vs all 16 siblings
 
 The 2026-07-15 survey above chose the AEM10300 from a 3-part shortlist found by web search, never a walk
-of e-peas's own QFN line. To close that gap, all 13 QFN-package e-peas AEM datasheets were pulled into
-`datasheets/DS-AEM*.pdf` and read end-to-end (12 fully; AEM30330's read was cut short by a usage limit --
-its balancer is confirmed, the rest is left at the family pattern to be finished later). Result: nothing
-dislodges the AEM10300.
+of e-peas's own QFN line. To close that gap, the whole QFN e-peas AEM line -- **16 datasheets** -- was
+pulled into `datasheets/DS-AEM*.pdf` and read: the 13 QFN28/40 parts in full (AEM30330's exact quiescent
+excepted, inferred from its AEM10330-identical architecture), plus 3 compact **QFN24** parts (AEM00920 /
+AEM10920 / AEM11900) by feature page -- all three lack the 2S balancer and are ruled out on that alone.
+Result: nothing dislodges the AEM10300.
 
 Axes: **Panel?** = can track the SM141K06TF (Voc 4.15 V / MPP ~3.2-3.35 V); **2S bal?** = on-chip dual-cell
 midpoint balancer; **Dark** = quiescent on STO with the boost idle; **Rail?** = integrated regulated 3.3 V
-output that would drop the external U9 LDO.
+output that would drop the external U9 LDO. **Telemetry** = *quantitative* digital readout (I2C registers /
+power metering), distinct from the go/no-go **status pins** (STO_RDY / STO_OVDIS / STO_OVCH / ST_STO) that
+even the AEM10300 exposes -- our board leaves all four NC because the STO ADC read gives a continuous,
+tunable value the flags cannot.
 
 | Part | Panel? | 2S bal? | Dark Iq | 3.3 V rail? | Telemetry | Note |
 |---|---|---|---|---|---|---|
-| **AEM10300** (current) | yes | yes | **~6 nA** | no (ext LDO) | -- | baseline |
-| AEM30300 | yes | yes | ~6 nA | no (ext LDO) | 1 status | functional twin, nothing added |
+| **AEM10300** (current) | yes | yes | **~6 nA** | no (ext LDO) | 4 status pins (NC) | baseline |
+| AEM30300 | yes | yes | ~6 nA | no (ext LDO) | same status pins | functional twin, no telemetry the 10300 lacks |
 | AEM10330 | yes | yes | 350-875 nA | yes buck-boost 3.3/60 | 4 status | closest upgrade (see below) |
 | AEM00330 | yes | yes | 350-875 nA | yes 3.3/60 | 4 status | dark ~100x |
 | AEM0094x | yes | yes | 400-600 nA | yes 3.3/80 | status | dark ~100x |
 | AEM10941 | yes (coarse) | yes | 400-600 nA | yes 3.3/80 | status | dark ~100x; OVCH cap 4.50 V |
 | AEM30940 | yes | yes | 400-600 nA | yes 3.3/80 | status | dark ~100x; OVCH cap 4.50 V |
-| AEM30330 | yes* | yes* | ~sub-uA* | yes* | * | ~AEM10330 (read incomplete) |
+| AEM30330 | yes 80%->3.32 | yes | 350-875 nA* | yes buck-boost 3.3/60 | 4 status | multi-source AEM10330 twin; 1 inductor, QFN40 |
 | AEM13921 | yes | **no** (1S <=4.59 V) | 275-645 nA | yes 3.3/100 | **I2C + APM** | no 2S balancer |
 | AEM13920 | yes | **no** (1S <=4.59 V) | 275-645 nA | no (buck <=2.5) | **I2C + APM** | no 2S balancer |
 | AEM15820 | yes | **no** (1S <=4.59 V) | 275-645 nA | yes 3.3/100 | **I2C + APM** | no balancer; high-power class |
+| AEM10920 | yes ratio | **no** (1S) | n/r | buck <=2.8 V | GPIO status | QFN24 compact; no 2S balancer |
+| AEM00920 | yes const-V | **no** (1S) | n/r | buck <=2.8 V | GPIO status | QFN24 compact; no 2S balancer |
+| AEM11900 | yes | **no** (1S) | n/r | no (charger-only) | GPIO status | QFN24 compact; no 2S balancer |
 | AEM0090x | **no** (2.73 V cap) | no | 7.4 nA | no | I2C | input class too low |
 | AEM1090x | **no** (2.73 V cap) | no | 7.4 nA | no | I2C | input class too low |
 | AEM20941 | **no** (Voc over-volts) | yes | 400-600 nA | yes 3.3/80 | status | TEG part; panel over-volts the 3.5 V SRC |
@@ -1074,12 +1081,13 @@ integrated 3.3 V rail and/or digital telemetry.
 - **Balancer + integrated rail:** the whole regulated-output family (10330 / 00330 / 0094x / 10941 / 30940 /
   30330), but every one sits at 350-875 nA dark, ~60-150x the 6 nA. Folding in the LDO costs the dark budget
   every time.
-- **I2C telemetry** (APM energy metering, V_STO / V_SRC readout): only the single-cell managers (13920 /
-  13921 / 15820), and those have **no 2S balancer** (single node, <=4.59 V). In this line, telemetry and the
-  2S balancer are mutually exclusive.
+- **Quantitative telemetry** (I2C APM energy metering, V_STO / V_SRC readout -- as opposed to the go/no-go
+  status pins every part including the 10300 already has): only the single-cell managers (13920 / 13921 /
+  15820), and those have **no 2S balancer** (single node, <=4.59 V). Quantitative telemetry and the 2S
+  balancer are mutually exclusive in this line.
 
 So the AEM10300 sits alone at the (balancer + nanopower) corner, which is exactly what a dark-idle 2S-supercap
-card needs. The accidental web-search pick is the family optimum, now proven by direct read of all 13.
+card needs. The accidental web-search pick is the family optimum, now proven by direct read of all 16.
 
 **The one alternative worth remembering (not adopted): AEM10330.** It keeps the balancer, hits the 4.65 V
 overcharge, and replaces the external LDO with an integrated **buck-boost** 3.3 V rail. Buck-boost matters
@@ -1089,5 +1097,7 @@ QFN40. If the harvest bench ever shows comfortable margin and deeper extraction 
 that is the specific part -- but for a dark-idle card the 10300's 6 nA still wins.
 
 Datasheets filed under `datasheets/DS-AEM*.pdf`; sibling specs are from those sheets, the AEM10300 baseline
-from `DS-AEM10300-v1.4` and the survey above. *AEM30330: balancer confirmed; dark / output / package left at
-the family pattern pending a full read (usage limit, resets 2026-07-22).
+from `DS-AEM10300-v1.4` + the prewiring pin map (STO_RDY / STO_OVDIS / STO_OVCH / ST_STO are the 10300's four
+status pins, all NC on our board). *AEM30330 quiescent is inferred from its AEM10330-identical architecture
+(balancer + buck-boost 3.3 V rail + 1 inductor + QFN40, all confirmed on the feature page). n/r = not read;
+the 3 QFN24 parts are ruled out on the missing balancer, so their quiescent is moot.
