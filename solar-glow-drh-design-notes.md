@@ -1042,8 +1042,7 @@ chemistry -- does that with no cycle-life hit; but per point 1 it would not shri
 
 The 2026-07-15 survey above chose the AEM10300 from a 3-part shortlist found by web search, never a walk
 of e-peas's own QFN line. To close that gap, the whole QFN e-peas AEM line -- **16 datasheets** -- was
-pulled into `datasheets/DS-AEM*.pdf` and read: the 13 QFN28/40 parts in full (AEM30330's exact quiescent
-excepted, inferred from its AEM10330-identical architecture), plus 3 compact **QFN24** parts (AEM00920 /
+pulled into `datasheets/DS-AEM*.pdf` and read: the 13 QFN28/40 parts in full, plus 3 compact **QFN24** parts (AEM00920 /
 AEM10920 / AEM11900) by feature page -- all three lack the 2S balancer and are ruled out on that alone.
 Result: nothing dislodges the AEM10300.
 
@@ -1063,7 +1062,7 @@ tunable value the flags cannot.
 | AEM0094x | yes | yes | 400-600 nA | yes 3.3/80 | status | dark ~100x |
 | AEM10941 | yes (coarse) | yes | 400-600 nA | yes 3.3/80 | status | dark ~100x; OVCH cap 4.50 V |
 | AEM30940 | yes | yes | 400-600 nA | yes 3.3/80 | status | dark ~100x; OVCH cap 4.50 V |
-| AEM30330 | yes 80%->3.32 | yes | 350-875 nA* | yes buck-boost 3.3/60 | 4 status | multi-source AEM10330 twin; 1 inductor, QFN40 |
+| AEM30330 | yes 80%->3.32 | yes | 875 nA typ | yes buck-boost 3.3/60 | 4 status | multi-source AEM10330 twin; 1 inductor, QFN40 |
 | AEM13921 | yes | **no** (1S <=4.59 V) | 275-645 nA | yes 3.3/100 | **I2C + APM** | no 2S balancer |
 | AEM13920 | yes | **no** (1S <=4.59 V) | 275-645 nA | no (buck <=2.5) | **I2C + APM** | no 2S balancer |
 | AEM15820 | yes | **no** (1S <=4.59 V) | 275-645 nA | yes 3.3/100 | **I2C + APM** | no balancer; high-power class |
@@ -1098,6 +1097,6 @@ that is the specific part -- but for a dark-idle card the 10300's 6 nA still win
 
 Datasheets filed under `datasheets/DS-AEM*.pdf`; sibling specs are from those sheets, the AEM10300 baseline
 from `DS-AEM10300-v1.4` + the prewiring pin map (STO_RDY / STO_OVDIS / STO_OVCH / ST_STO are the 10300's four
-status pins, all NC on our board). *AEM30330 quiescent is inferred from its AEM10330-identical architecture
-(balancer + buck-boost 3.3 V rail + 1 inductor + QFN40, all confirmed on the feature page). n/r = not read;
+status pins, all NC on our board). *AEM30330 quiescent now confirmed at **875 nA typ** (V_STO 3.7 V, Table 6
+of DS-AEM30330-v1.5) -- exactly the AEM10330 / AEM00330 figure, as its identical architecture predicted. n/r = not read;
 the 3 QFN24 parts are ruled out on the missing balancer, so their quiescent is moot.
