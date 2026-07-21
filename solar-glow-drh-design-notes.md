@@ -30,7 +30,11 @@ land.
 - Protruding end tabs are finish-coated locators only — **not** solder pads.
 - Placement rotations as built: SC1/SC4 → 90°, SC2/SC3 → 270°.
 
-Part: **SCHURTER SCPC 3-153-438** (WS17 housing, 1 F, 2.75 V, ESR 40 mΩ, 1.7 mm thick). The
+Part: a **hybrid tank** -- **SC1/SC3 = SCHURTER SCPC 3-153-440** (SS17 housing, 1.8 F, 2.75 V, ESR 30 mΩ,
+1.7 mm, 39 mm land) and **SC2/SC4 = 3-153-438** (WS17 housing, 1.0 F, 2.75 V, ESR 40 mΩ, 1.7 mm, 28.5 mm
+land). The larger SS17 cans go where the board has room, the WS17 where it is tight -- maximizing farads
+in the irregular free area; both are the same 1.7 mm height, so the cavity budget is unaffected. The
+unequal series stages (SC1/SC3 pair > SC2/SC4 pair) rely on the AEM10300 BAL pin holding MID at V/2. The
 diagonal end-tab land **must never be reintroduced**.
 
 ---
@@ -42,9 +46,9 @@ The honest energy model, and the reason a bench bring-up gates any feature decis
 - **Continuous sustainable average draw ≤ harvest.** This — not the cap size — sets the brightness
   you can hold *forever*. Indoor harvest is roughly **0.1–0.5 mA at the rail** (the SM141K06x panel
   is ~185 mW at 1 sun; ordinary office light is 100–500× less).
-- **The reserve buys excursions, not steady-state.** The ~15 J tank is how long/bright you can
+- **The reserve buys excursions, not steady-state.** The ~21 J tank is how long/bright you can
   *exceed* harvest before it drains, and how long the glow rides through darkness. Recharge scales
-  with it: ~15 J / ~1.6 mW ≈ **hours** to refill from empty on office light. A bigger tank = longer
+  with it: ~21 J / ~1.6 mW ≈ **hours** to refill from empty on office light. A bigger tank = longer
   dark glow **and** longer cold-start. This is the "diminishing returns" point: a 2× bucket buffers
   dark ~2× longer but cold-starts ~2× slower — it **buffers a deficit, it does not cure** the
   harvest-vs-draw ratio.
@@ -52,7 +56,7 @@ The honest energy model, and the reason a bench bring-up gates any feature decis
 | reserve | sustained draw it supports |
 |---|---|
 | v0: 2× WS10, ~150 mF, ~2.3 J | ≤ harvest; ~40–60 s breathing / ~10–15 min refill |
-| v2.1: 4× WS17, 1 F @ 5.5 V, ~15 J | ≤ harvest; minutes of breathing per charge; refill ~hours |
+| v2.1-on: 2× SS17 + 2× WS17 (hybrid), ~1.3 F @ 5.5 V, ~21 J | ≤ harvest; minutes of breathing per charge; refill ~hours |
 
 **Draw line items** (budget against harvest): accel ≈ **0.89 µA** (an ADI ADXL367, always-on at
 100 Hz for this figure — the LIS2DH12 it replaced drew ~10 µA click-armed); light-sense divider
@@ -197,8 +201,8 @@ re-spin for the enclosure:
 - **Grounded body → short risk.** In the enclosed variant, **drop the right-edge castellations**;
   land support pillars **only on GND pour**; keep a **die-cut Kapton (~0.05 mm)** blanket isolation
   layer in reserve if a later via audit on the rib lines finds an untented via.
-- **General cavity 1.80 mm (cap-limited), plus a relief pocket** -- the four **1.70 mm WS17
-  supercaps** set the general cavity (1.80 = cap + 0.10 mm air, toleranced 1.80 ±0.05). U7
+- **General cavity 1.80 mm (cap-limited), plus a relief pocket** -- the four **1.70 mm
+  supercaps** (SS17 + WS17, both 1.70 mm) set the general cavity (1.80 = cap + 0.10 mm air, toleranced 1.80 ±0.05). U7
   (MB85RC512TY FRAM, SOIC-8_3.9x4.9mm, 1.75 mm, on B.Cu) is now the single tallest populated part
   (U2/ALD910025 was deleted in v4). The **local 0.05 mm relief pocket** (floor 0.95 mm there vs
   1.00 general) was located under U2, so **confirm U7's placement actually sits over the pocket**
@@ -218,8 +222,8 @@ re-spin for the enclosure:
   3.55 mm; the four bosses sit on the **v3.0 hole pattern** (concentric with the r3.0 fillets),
   retained by eight M2 screws (four corner + four panel-corner, ~2.2 mm Ti engagement). The earlier 0.3 mm-skin / 7075-fallback /
   photochemical-etch plan is dropped. Full CAD, callouts, and fab notes are in `enclosure/README.md`.
-- **Supercap thermal -- vulnerability, sensing, and why no per-cap thermistors.** The four WS17
-  EDLCs are the heat-sensitive parts (a 2.75 V cell derates in both working voltage and life with
+- **Supercap thermal -- vulnerability, sensing, and why no per-cap thermistors.** The four
+  EDLCs (SS17 + WS17) are the heat-sensitive parts (a 2.75 V cell derates in both working voltage and life with
   temperature; EDLC life roughly halves per ~10 °C, Arrhenius rule of thumb), so "how hot do the caps
   get, and must we measure them *there*?" is a fair question. Answer: **no dedicated per-cap
   thermistors.**
@@ -347,7 +351,7 @@ Recorded so the history is legible and the dead branches stay dead:
 | topic | v0 (REV J) | v1 plan | **v2.1 as-built** |
 |---|---|---|---|
 | Stackup | 2-layer, 0.8 mm | 4-layer, 0.4 mm | **6-layer, 0.8 mm** (L1 sig · L2 GND · L3–4 sig · L5 VS · L6 sig) |
-| Storage | 2× WS10, ~2.3 J | 4× WS17 2P2S, ~15 J | **4× WS17 2P2S, 1 F @ 5.5 V, ~15 J** |
+| Storage | 2× WS10, ~2.3 J | 4× WS17 2P2S, ~15 J | **2× SS17 + 2× WS17 hybrid, 2S2P, ~1.3 F @ 5.5 V, ~21 J** |
 | Accel rail handling | n/a | planned LDO (TPS7A02) for the 3.6 V-max accel | **TLV3011 comparator+ref shunt clamp holds VS ≤ 3.60 V worst-case** (no LDO); supersedes the TLV431 divider (Iref over-voltage) |
 | Accelerometer | none | BMA400 / LIS2DW12 (candidates) | **ADXL367, I²C addr 0x1D** (swapped from LIS2DH12 on backorder; 0.89 µA vs ~10 µA) |
 | Button | snap-dome / cap-touch | dome (cap-touch expendable) | **accel tap-wake** |
@@ -372,10 +376,12 @@ the LDRV fan moved):
 
 ## 10. Two corrections worth keeping explicit
 
-- **The "4 farad" energy myth.** Four 1 F cells read as 4 F *only* all-parallel at 2.75 V. The 5.5 V
-  rail needs two-in-series, so the array is 1 F *effective* at 5.5 V. What is fixed is **energy**:
-  4 × ½ · 1 F · 2.75² ≈ **15 J**. Farads at 2.75 V vs 5.5 V are not comparable joules — quote the
-  energy, not the farads.
+- **The "farad" energy myth (and the hybrid).** Quote energy, not farads. The tank is a **hybrid**:
+  SC1/SC3 are 1.8 F (SS17), SC2/SC4 are 1.0 F (WS17), all 2.75 V, wired 2S2P. All-parallel at 2.75 V they
+  would read 5.6 F, but the 5.5 V rail needs two-in-series, so the pack is **~1.3 F *effective* at 5.5 V**.
+  What is fixed is **energy** = the sum of the cells: `2 × ½·1.8·2.75² + 2 × ½·1.0·2.75² ≈` **21 J** (each
+  cell held at 2.75 V by the AEM midpoint balancer -- without it the smaller WS pair would take more than
+  half the rail and over-volt). Farads at 2.75 V vs 5.5 V are not comparable joules.
 - **Pin authority — one source only.** Earlier drafts of this design carried two *different* pin
   assignments (VSENSE on PA5 with BTN on PA7; and the LEDs on PA4–PA7 / TCD0 with VSENSE on PC3)
   — **neither matches the board.** The committed `solar-glow-drh-v4_0.kicad_sch` and
@@ -386,9 +392,10 @@ the LDRV fan moved):
 
 ## 11. Cost reality
 
-The supercaps dominate the BOM. SCHURTER 3-153-438 (WS17, 1 F) runs ~€6.77 in volume / ~$8–15 per
-cell; four of them push the supercaps to **two-thirds or more** of the per-board cost — the single
-dominant line, and the reason the 4-cell array is a deliberate reroute rather than a casual upgrade.
+The supercaps dominate the BOM. The WS17 (3-153-438, 1 F) runs ~€6.77 in volume / ~$8-15 per cell; the
+two SS17 (3-153-440, 1.8 F) cells are the pricier pair (confirm live price). The four cells push the
+supercaps to **two-thirds or more** of the per-board cost -- the single dominant line, and the reason
+the hybrid 4-cell array is a deliberate reroute rather than a casual upgrade.
 
 ---
 
@@ -732,8 +739,8 @@ logger). Reviewing the BOM for automotive (AEC-Q) grade with that in mind lands 
 prioritization rather than a blanket "everything AEC-Q100" sweep.
 
 - **The supercap is the binding thermal ceiling, and it cannot be raised.** SC1-SC4 (SCHURTER SCPC
-  3-153-438) are rated to **85 °C**, and no better part exists in the 1 F / 2.75 V / ~1.7 mm-thin
-  envelope this card needs -- searched, none found. A system is only as thermally robust as its
+  3-153-440 SS17 and 3-153-438 WS17) are both rated to **85 °C**, and no better part exists in the
+  2.75 V / ~1.7 mm-thin envelope this card needs -- searched, none found. A system is only as thermally robust as its
   weakest part, so the whole card is **85 °C-limited** regardless of what grade the silicon is. This is
   exactly why the answer to "it gets too hot" is **thermal abatement, not a hotter part**: since the
   cap can't be upgraded, the mitigation is to spread and sink heat away from it -- the thermal-interface
@@ -903,7 +910,7 @@ architectural blocker.**
 
 The depth-vs-longevity worry -- does floating the cells higher (2.32 V vs today's 1.75 V) shorten a card
 meant to live on a desk for years? -- resolves in favor of committing. The SCHURTER SCPC catalog sheet
-(`SC1-SC4 ... 3-153-438`) gives only two aging-relevant hard numbers: **2.75 V/cell rating** and **85 °C
+(`SC1-SC4`: 3-153-440 SS17 + 3-153-438 WS17) give only two aging-relevant hard numbers per cell: **2.75 V/cell rating** and **85 °C
 max** -- no endurance hours, no voltage- or temperature-derating curve (those live in SCHURTER's separate
 approvals doc, not the catalog page). So the trade is *modeled* with the standard EDLC calendar-life law,
 anchored to those two facts: life roughly halves per **+10 °C** and per **+0.1-0.2 V** of cell voltage; the
@@ -989,9 +996,10 @@ switch the NFC tag uses.
 thickness by swapping the supercap tank for a lithium-ion capacitor (LIC), a lithium-titanate
 (LTO) cell, or a thin rechargeable Li coin?" Surveyed the three; none is worth a respin.
 
-- **The tank today:** 4x SCHURTER WS17 (1 F / 2.75 V), 2P2S = **1 F @ 5.5 V, ~15 J nameplate**
-  (~10.8 J operational, since the AEM10300 caps STO at V<sub>OVCH</sub> = 4.65 V; ~8 J usable to the
-  LED floor). Height **1.70 mm**. Chosen for cycle life (millions), burst delivery, wide temp,
+- **The tank today:** a **hybrid** -- 2× SCHURTER SS17 (3-153-440, 1.8 F) + 2× WS17 (3-153-438, 1.0 F),
+  all 2.75 V, 2S2P = **~1.3 F @ 5.5 V, ~21 J nameplate** (~15 J operational, since the AEM10300 caps STO
+  at V<sub>OVCH</sub> = 4.65 V; ~11 J usable to the LED floor). Height **1.70 mm** (both cans). Chosen for
+  cycle life (millions), burst delivery, wide temp,
   and zero wear -- exactly what a harvest-micro-cycled "forever" card needs.
 
 - **LIC -- no low-profile form exists.** Every lithium-ion capacitor found is cylindrical (Taiyo
@@ -1027,3 +1035,68 @@ whether the indoor **harvest keeps up with the LED burn**, which the bench measu
 and `harvest-bench-fixture-handoff.md`) still gates. (If a thinner tank were ever wanted purely
 to slim the stack, a sub-1 mm prismatic EDLC supercap -- CAP-XX / KYOCERA-AVX / Murata, same
 chemistry -- does that with no cycle-life hit; but per point 1 it would not shrink the card.)
+
+---
+
+## Addendum (2026-07-21) -- Full e-peas QFN family walk: AEM10300 confirmed vs all 16 siblings
+
+The 2026-07-15 survey above chose the AEM10300 from a 3-part shortlist found by web search, never a walk
+of e-peas's own QFN line. To close that gap, the whole QFN e-peas AEM line -- **16 datasheets** -- was
+pulled into `datasheets/DS-AEM*.pdf` and read: the 13 QFN28/40 parts in full, plus 3 compact **QFN24** parts (AEM00920 /
+AEM10920 / AEM11900) by feature page -- all three lack the 2S balancer and are ruled out on that alone.
+Result: nothing dislodges the AEM10300.
+
+Axes: **Panel?** = can track the SM141K06TF (Voc 4.15 V / MPP ~3.2-3.35 V); **2S bal?** = on-chip dual-cell
+midpoint balancer; **Dark** = quiescent on STO with the boost idle; **Rail?** = integrated regulated 3.3 V
+output that would drop the external U9 LDO. **Telemetry** = *quantitative* digital readout (I2C registers /
+power metering), distinct from the go/no-go **status pins** (STO_RDY / STO_OVDIS / STO_OVCH / ST_STO) that
+even the AEM10300 exposes -- our board leaves all four NC because the STO ADC read gives a continuous,
+tunable value the flags cannot.
+
+| Part | Panel? | 2S bal? | Dark Iq | 3.3 V rail? | Telemetry | Note |
+|---|---|---|---|---|---|---|
+| **AEM10300** (current) | yes | yes | **~6 nA** | no (ext LDO) | 4 status pins (NC) | baseline |
+| AEM30300 | yes | yes | ~6 nA | no (ext LDO) | same status pins | functional twin, no telemetry the 10300 lacks |
+| AEM10330 | yes | yes | 350-875 nA | yes buck-boost 3.3/60 | 4 status | closest upgrade (see below) |
+| AEM00330 | yes | yes | 350-875 nA | yes 3.3/60 | 4 status | dark ~100x |
+| AEM0094x | yes | yes | 400-600 nA | yes 3.3/80 | status | dark ~100x |
+| AEM10941 | yes (coarse) | yes | 400-600 nA | yes 3.3/80 | status | dark ~100x; OVCH cap 4.50 V |
+| AEM30940 | yes | yes | 400-600 nA | yes 3.3/80 | status | dark ~100x; OVCH cap 4.50 V |
+| AEM30330 | yes 80%->3.32 | yes | 875 nA typ | yes buck-boost 3.3/60 | 4 status | multi-source AEM10330 twin; 1 inductor, QFN40 |
+| AEM13921 | yes | **no** (1S <=4.59 V) | 275-645 nA | yes 3.3/100 | **I2C + APM** | no 2S balancer |
+| AEM13920 | yes | **no** (1S <=4.59 V) | 275-645 nA | no (buck <=2.5) | **I2C + APM** | no 2S balancer |
+| AEM15820 | yes | **no** (1S <=4.59 V) | 275-645 nA | yes 3.3/100 | **I2C + APM** | no balancer; high-power class |
+| AEM10920 | yes ratio | **no** (1S) | n/r | buck <=2.8 V | GPIO status | QFN24 compact; no 2S balancer |
+| AEM00920 | yes const-V | **no** (1S) | n/r | buck <=2.8 V | GPIO status | QFN24 compact; no 2S balancer |
+| AEM11900 | yes | **no** (1S) | n/r | no (charger-only) | GPIO status | QFN24 compact; no 2S balancer |
+| AEM0090x | **no** (2.73 V cap) | no | 7.4 nA | no | I2C | input class too low |
+| AEM1090x | **no** (2.73 V cap) | no | 7.4 nA | no | I2C | input class too low |
+| AEM20941 | **no** (Voc over-volts) | yes | 400-600 nA | yes 3.3/80 | status | TEG part; panel over-volts the 3.5 V SRC |
+
+**The structural finding -- no e-peas part gives all three things this card wants:** (1) the 2S supercap
+balancer; (2) nanopower dark (~6 nA, for a card that lives dark in a pocket, the #1 energy gate); (3) an
+integrated 3.3 V rail and/or digital telemetry.
+- **Balancer + nanopower:** only the AEM10300 and its twin AEM30300. This card's exact corner.
+- **Balancer + integrated rail:** the whole regulated-output family (10330 / 00330 / 0094x / 10941 / 30940 /
+  30330), but every one sits at 350-875 nA dark, ~60-150x the 6 nA. Folding in the LDO costs the dark budget
+  every time.
+- **Quantitative telemetry** (I2C APM energy metering, V_STO / V_SRC readout -- as opposed to the go/no-go
+  status pins every part including the 10300 already has): only the single-cell managers (13920 / 13921 /
+  15820), and those have **no 2S balancer** (single node, <=4.59 V). Quantitative telemetry and the 2S
+  balancer are mutually exclusive in this line.
+
+So the AEM10300 sits alone at the (balancer + nanopower) corner, which is exactly what a dark-idle 2S-supercap
+card needs. The accidental web-search pick is the family optimum, now proven by direct read of all 16.
+
+**The one alternative worth remembering (not adopted): AEM10330.** It keeps the balancer, hits the 4.65 V
+overcharge, and replaces the external LDO with an integrated **buck-boost** 3.3 V rail. Buck-boost matters
+beyond dropping a part: it drains the tank toward ~0.2 V instead of an LDO stranding energy at its dropout,
+so it recovers usable tank energy and adds load-status pins. Price: the same ~100x dark (350-875 nA) and a
+QFN40. If the harvest bench ever shows comfortable margin and deeper extraction + no LDO is judged worth it,
+that is the specific part -- but for a dark-idle card the 10300's 6 nA still wins.
+
+Datasheets filed under `datasheets/DS-AEM*.pdf`; sibling specs are from those sheets, the AEM10300 baseline
+from `DS-AEM10300-v1.4` + the prewiring pin map (STO_RDY / STO_OVDIS / STO_OVCH / ST_STO are the 10300's four
+status pins, all NC on our board). *AEM30330 quiescent now confirmed at **875 nA typ** (V_STO 3.7 V, Table 6
+of DS-AEM30330-v1.5) -- exactly the AEM10330 / AEM00330 figure, as its identical architecture predicted. n/r = not read;
+the 3 QFN24 parts are ruled out on the missing balancer, so their quiescent is moot.

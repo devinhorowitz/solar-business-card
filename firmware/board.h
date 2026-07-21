@@ -310,7 +310,7 @@
 /* Face-down dormant ("dead-man") mode: if the card lies FACE-DOWN (accel Z clearly
  * negative) continuously for FACEDOWN_DORMANT_S seconds, go dormant -- suppress every glow
  * (tap / motion / NFC-ack / greeting / sweep) until it is turned face-up again, so a stowed
- * card (face-down in a drawer, under papers) can't bleed the ~15 J reserve on false-trigger
+ * card (face-down in a drawer, under papers) can't bleed the ~21 J reserve on false-trigger
  * glows. Flipping it face-up resumes at once (the flip is motion, and the poll re-checks
  * orientation as a backstop). Net ENERGY WIN -- the only overhead is one accel Z read per
  * poll, dwarfed by the glows it suppresses; the passive RF vCard read is untouched (it is

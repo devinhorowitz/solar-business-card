@@ -10,14 +10,18 @@ shell re-machine. Updated 2026-07-11._
 
 ## Cross-domain (link two+ teams — easiest to forget)
 
-- [ ] **[PCB] Route the new `STO_LDO` island (FB1 series filter)** _(2026-07-20)._ FB1 was a
-  dead ferrite (both pads on STO); it is now wired as a series filter on the LDO input. The
-  netlist split landed in the schematic + board (`STO_LDO` = FB1.2, U9.1, U9.3, C22.1; STO keeps
-  FB1.1 + the rest), but the **board copper still carries the old STO traces to those pads**, so
-  DRC flags `STO_LDO` as unrouted / net-mismatched until re-routed: cut the STO trace between
-  FB1.1 and FB1.2, and route `STO_LDO` from FB1.2 to U9.1/U9.3 + C22.1. No zone is involved
-  (STO is trace-routed). Re-run DRC after. Design intent: STO --FB1--> STO_LDO, C22 (1 uF) as
-  the filtered LDO-input cap, isolating U9 from the AEM10300 DCDC switching ripple.
+- [x] **[PCB] Route the new `STO_LDO` island (FB1 series filter)** _-- DONE 2026-07-21 (routed in
+  KiCad, uploaded to `main` at 0b7cb13)._ FB1 is now a live series element: the board copper carries
+  `STO_LDO` from FB1.2 to U9.1/U9.3 + C22.1, with FB1.1 left on raw STO. Verified against the uploaded
+  board: `STO_LDO` = {C22.1, FB1.2, U9.1, U9.3} (exactly 4 pads), STO keeps FB1.1 + the rest, MID
+  intact; the CI DRC reports **0 unconnected pads** with no new errors and clean schematic parity.
+  Design intent realized: STO --FB1--> STO_LDO, C22 (1 uF) as the filtered LDO-input cap, isolating
+  U9 from the AEM10300 DCDC switching ripple.
+- [ ] **[PCB] Silk legend height on the STO_LDO upload** _(2026-07-21)._ The same upload added two
+  B.Silk legends (`TINY MODE` @ (31.75, 50.95), `ENABLE` @ (27.5, 49.63)) at 0.5 mm, which trip the
+  0.8 mm min-silk-text DRC rule (2 new `text_height` warnings, not errors). Decide: bump both to
+  >=0.8 mm if they fit the switch cluster, else add to the README / kibot intentional-exceptions list
+  so the next DRC review does not read them as a new find.
 - [x] **VIN-at-clamp / SUN_THRESHOLD** — _PCB → firmware. DONE 2026-07-10._ Derived
   VIN **>= 3.60 V** as the strong-sun trigger (above the held VS ~3.50 V so there is
   the SRC (merged-panel) node lifted well above its indoor level (VSENSE now divides SRC), below panel Voc 4.15 V; full derivation at
@@ -137,8 +141,8 @@ shell re-machine. Updated 2026-07-11._
   spec; do **not** enable `tool_relief` (produces a faceted STEP the fab rejects).
 - East cavity lip pinched to 1.0 mm over y10–72 (NFC detune) — do not widen.
 - NFC tuning at bring-up needs the brace **removable** — don't defeat it.
-- Supercap footprint SCHURTER SCPC 3-153-438 (flat under-body pads, asymmetric
-  widths = polarity key). The old REV-J diagonal-pad land is WRONG — never reuse.
+- Supercap footprints are a **hybrid**: SC1/SC3 = SS17 land (3-153-440, 39 mm), SC2/SC4 = WS17
+  land (3-153-438, 28.5 mm); flat under-body pads, asymmetric widths = polarity key. The old REV-J diagonal-pad land is WRONG -- never reuse.
 - Ti-6Al-4V (Grade 5); grounded M2 bosses tie the body to GND.
 - **NFC contact is offline-first.** The full vCard is **embedded** in the tag (`text/vcard`
   NDEF, `nfc.c`), read RF-powered by the phone with the card's supercap flat and **no

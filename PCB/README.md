@@ -211,7 +211,8 @@ Summary of the **orderable** lines:
 | **U6** | 1 | **Load switch (SOT-23-6) (in the v3_0 BOM)** | `TPS22918DBVR` |
 | PV1, PV2 | 2 | SM141K06TF solar cell | `SM141K06TF` |
 | D2–D5 | 4 | Amber LED, reverse-mount | `LA P47F-V2BB-24-3B5A-30-R18-Z` |
-| **SC1–SC4** | **4** | **1 F / 2.75 V (WS17)** | `3-153-438` |
+| **SC1, SC3** | **2** | **1.8 F / 2.75 V (SS17)** | `3-153-440` |
+| **SC2, SC4** | **2** | **1.0 F / 2.75 V (WS17)** | `3-153-438` |
 | R1–R4 | 4 | **150 Ω 1% 0402 — SIZED** | `RC0402FR-07150RL` |
 | R5, R6 | 2 | 1 MΩ 0402 | `RC0402FR-071ML` |
 | R10, R11 | 2 | 4.7 kΩ 0402 (I²C pull-ups) | `RC0402FR-074K7L` |
