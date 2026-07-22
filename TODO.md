@@ -31,9 +31,25 @@ shell re-machine. Updated 2026-07-11._
   (egress to `api.digikey.com`/`api.mouser.com`, and the three API creds) came up green in a fresh
   container. DigiKey OAuth + Product Information V4 returned live data: **SS17 `3-153-440` = $17.16 @ 1**
   (DK `486-3-153-440-ND`, 200 in stock) and **WS17 `3-153-438` = $16.69 @ 1** (DK `486-3-153-438-ND`,
-  up from $15.48). Written into `PCB/solar-glow-drh-v4_0-BOM.xlsx` (SC1/SC3 filled, SC2/SC4 refreshed,
-  subtotal recomputed → $130.00 / 30 priced cells). Data pulled directly through the proxy CA; no MCP
-  wrapper required. See `mcp-setup.md` → Status.
+  up from $15.48). Written into `PCB/solar-glow-drh-v4_0-BOM.xlsx` (SC1/SC3 filled, SC2/SC4 refreshed;
+  subtotal later superseded by the full-BOM sourcing pass below). Data pulled directly through the
+  proxy CA; no MCP wrapper required. See `mcp-setup.md` → Status.
+- [ ] **[BOM] Bless / re-source three v4-new caps flagged by the live DigiKey pass** _(2026-07-22)._
+  The whole master BOM was re-verified live against DigiKey: format-derived DK P/Ns replaced with the
+  real ones (e.g. R1–R4 150 Ω is `311-150LRCT-ND`, **not** `RC0402FR-07150RL-ND`), prices refreshed
+  (PV1/PV2 $6.98→$7.61, U3 $7.50→$7.80, U5 $1.38→$1.56, SJ1 $0.05→$0.10), and the C5 DK P/N corrected
+  off the stale 10 nF part onto the 100 nF `490-3261-1-ND`. Three v4 caps are **not orderable at
+  DigiKey as specified** (rows carry them as `RE-SOURCE`):
+  - **C22** (`GRM155R61A105KE15D`, 1 µF, U9 LDO input on the STO island ~5.5 V): **obsolete**, and the
+    whole Murata GRM155 1 µF 10 V 0402 X5R family is EOL. Needs an **active 1 µF 0402 X5R rated ≥10 V**
+    from another series/vendor — no same-family drop-in, so a real pick is required.
+  - **C23** (`GRM155R61A225KE11D`, 2.2 µF, LDO output on VS 3.3 V): **no DK results**. Same-spec active
+    drop-in = **`GRM155R61A225KE01J`** (2.2 µF 10 V X5R 0402, `490-GRM155R61A225KE01JCT-ND`, $0.10).
+  - **C26** (`GRM155R60J106ME44D`, 10 µF, VINT buffer 6.3 V): **discontinued**. Drop-in =
+    **`GRM155R60J106ME05D`** (10 µF 6.3 V X5R 0402, `490-GRM155R60J106ME05DCT-ND`, $0.10).
+  **Bless the C23/C26 MPN swaps and pick a C22 part** before ordering, and push the chosen MPN into the
+  schematic. Also: **C4/C13/C27** (`GRM188R61A106KE69D`, 10 µF 0603) are Active but DigiKey returned no
+  qty-1 standard price (non-stock/order item) — confirm at cart.
 - [ ] **[BOM] Fill the U8 `10AEM10300C0000` (AEM10300) price — blocked on the Mouser Search key**
   _(2026-07-22)._ U8 is Mouser-only (DigiKey returns 0 results for it, re-confirmed 2026-07-22). The
   `MOUSER_PART_API_KEY` in the environment is rejected by the Search API as an **"Invalid unique
