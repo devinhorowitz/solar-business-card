@@ -5,16 +5,30 @@ pricing / stock / specs into the BOM work -- e.g. the SS17 `3-153-440` unit pric
 **TBC** in `PCB/solar-glow-drh-v4_0-BOM.xlsx`. This doc exists so a fresh session can finish the
 job cold, without cross-chat.
 
-## Status (2026-07-22)
+## Status
 
-- **Both servers were cloned, `uv sync`'d, and smoke-tested in a prior session** -- they install,
-  load, and expose the search/pricing tools. The only thing missing is a network-enabled container.
-- **Blocked solely by the environment network policy.** That session's container could not reach
-  `api.digikey.com` / `api.mouser.com` -- the egress gateway returned `403` to the CONNECT.
-  Network-policy changes take effect in a **new** container, not a live one, so this must resume in
-  a fresh session.
-- **Credentials are in hand:** a DigiKey Production App (Client ID/Secret) and a Mouser Search API
-  key. Supply them as environment variables (below); never commit them.
+**2026-07-22 (re-verified in a fresh container) -- STILL BLOCKED on environment config.**
+A new session re-checked both gates; neither is satisfied yet:
+- **Network policy still denies both hosts.** From a fresh container, `curl` to `api.digikey.com`
+  and `api.mouser.com` both returned `403 CONNECT tunnel failed` at the egress gateway (proxy
+  `recentRelayFailures` = `connect_rejected` for both). The allowlist currently reaches GitHub +
+  PyPI only; *all* general internet (even `www.digikey.com`, `example.com`) is 403'd. So the
+  "network enabled 2026-07-22" change **has not taken effect** -- the environment's network policy
+  must be edited to permit `api.digikey.com` and `api.mouser.com`, and (like all policy/env changes)
+  it only applies in a **new** session, not a live one.
+- **Credentials are not set.** `DIGIKEY_CLIENT_ID`, `DIGIKEY_CLIENT_SECRET`, `MOUSER_PART_API_KEY`
+  are all unset in the container. Add them in the environment settings (never in chat/repo); they too
+  take effect only in a new session.
+- **Setup is otherwise ready and source-verified.** Both servers were cloned in this session and
+  every command below was checked against the actual server code (entry points, env-var names, and
+  the DigiKey `USE_SANDBOX` inversion all confirmed -- see per-server notes). The whole flow is now
+  captured as a one-command, idempotent script: **`scripts/setup-distributor-mcp.sh`**. Once the two
+  gates above are green in a fresh session, run that script (or the manual steps below) and the
+  `digikey` / `mouser` tools load.
+
+_Prior status (2026-07-22, earlier session): both servers cloned, `uv sync`'d, and smoke-tested;
+blocked solely by the network policy (egress `403`). That remains the sole substantive blocker,
+now joined by the still-unset credentials in the current container._
 
 ## Prerequisites
 
@@ -30,6 +44,10 @@ job cold, without cross-chat.
      needed). The Search key requires an access-request form with approval lag, so request it early.
 
 ## Per-container setup (put this in the environment setup script)
+
+**Shortcut:** `scripts/setup-distributor-mcp.sh` runs everything below in one idempotent step
+(preflight-checks the creds + host reachability, clones/`uv sync`s both, writes each `.env`, and
+registers both servers). The manual steps are equivalent and kept here for reference.
 
 Clones live outside any repo (e.g. `/home/user`) so nothing here touches the board repo:
 

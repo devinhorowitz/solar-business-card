@@ -29,8 +29,11 @@ shell re-machine. Updated 2026-07-11._
   only -- nets and copper are unaffected.
 - [ ] **[BOM] Fill the SS17 `3-153-440` price (TBC) via distributor MCP** _(2026-07-22)._ The BOM
   splits the supercaps into an SS17 pair (price TBC, pricier) and a WS17 pair ($15.48). Pull live
-  pricing/stock once the DigiKey + Mouser MCP servers are live -- setup + current status in
-  `mcp-setup.md` (blocked only on a network-enabled session).
+  pricing/stock once the DigiKey + Mouser MCP servers are live. **Still blocked (re-verified
+  2026-07-22 in a fresh container):** the environment must (1) allow egress to `api.digikey.com` +
+  `api.mouser.com` -- currently both `403` at the gateway -- and (2) set `DIGIKEY_CLIENT_ID` /
+  `DIGIKEY_CLIENT_SECRET` / `MOUSER_PART_API_KEY` -- currently unset. Both apply only in a **new**
+  session. Then run `scripts/setup-distributor-mcp.sh` (one command). Full detail in `mcp-setup.md`.
 - [x] **VIN-at-clamp / SUN_THRESHOLD** — _PCB → firmware. DONE 2026-07-10._ Derived
   VIN **>= 3.60 V** as the strong-sun trigger (above the held VS ~3.50 V so there is
   the SRC (merged-panel) node lifted well above its indoor level (VSENSE now divides SRC), below panel Voc 4.15 V; full derivation at
