@@ -108,3 +108,8 @@ outputs:
       # deliberate: identical parts still merge even if a footprint *field* drifts,
       # whereas the default Value+Footprint grouping would split them on that drift.
       group_fields: ['MPN']
+      # Per-part distributor sourcing lives on each schematic symbol as
+      # `Supplier` / `Supplier P/N` fields; kibot auto-includes user fields as BOM
+      # columns (as it already does for MPN / Status), so the fab BOM now carries
+      # the orderable distributor P/N per line. Supplier is DigiKey unless noted
+      # (only U8 / AEM10300 is Mouser). Constant per MPN, so grouping is unaffected.

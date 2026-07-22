@@ -7,9 +7,10 @@ job cold, without cross-chat.
 
 ## Status
 
-**2026-07-22 (later session) -- BOTH GATES NOW GREEN; DigiKey LIVE and used; Mouser key REJECTED.**
-A fresh container re-checked both gates and went straight to live API calls (no MCP wrapper needed to
-prove connectivity):
+**2026-07-22 (latest) -- BOTH DISTRIBUTOR APIs NOW LIVE; the BOM is fully priced.** DigiKey and
+Mouser both return live data; every ordered on-board line has a price. (Earlier in the day the Mouser
+key was still rejected -- see the Mouser bullet -- but it has since come live.) Went straight to live
+API calls (no MCP wrapper needed to prove connectivity):
 - **Network policy now permits both hosts.** `https://api.digikey.com` -> `404` and
   `https://api.mouser.com` -> `302` (real HTTP responses, not the old `000` / `CONNECT tunnel failed`).
   General web is partly open too (`example.com` -> `200`; `www.digikey.com` still `403`). The two API
@@ -22,13 +23,13 @@ prove connectivity):
   - **WS17 `3-153-438`** (DK `486-3-153-438-ND`): **$16.69 @ 1**, 195 in stock (was $15.48 @ 2026-07-02).
   Both written into `PCB/solar-glow-drh-v4_0-BOM.xlsx` (SC1/SC3 row filled; SC2/SC4 refreshed;
   subtotal recomputed to $130.00 / 30 priced cells).
-- **Mouser: network OK, key REJECTED.** `search/partnumber` returns HTTP 200 but the body is
-  `{Code: "Invalid", Message: "Invalid unique identifier", PropertyName: "API Key"}` for every query.
-  The key is the right shape (36-ch GUID) but is **not an activated Search API key** -- consistent with
-  the prerequisite note below (the Search key needs an access-request approval). **This is the one
-  remaining blocker**, and it only blocks **U8 (AEM10300 / `10AEM10300C0000`)**, which is Mouser-only
-  (DigiKey returns 0 results for it -- re-confirmed 2026-07-22). Fix: obtain/activate a Mouser **Search
-  API** key (mouser.com/api-hub) and set `MOUSER_PART_API_KEY` to it in the environment settings.
+- **Mouser: WORKING (now).** Earlier in the day `search/partnumber` returned HTTP 200 with
+  `{Code: "Invalid", Message: "Invalid unique identifier", PropertyName: "API Key"}` -- the key was not
+  yet an activated Search key. It has since come live: `search/partnumber` for `10AEM10300C0000` returns
+  the real listing and closed the last BOM line:
+  - **U8 (AEM10300)** -> Mouser `120-AEM10300-QFN` (e-peas), **$3.77 @ 1**, 553 in stock, 16-day lead
+    (breaks 10@$2.81, 100@$2.31, 1000@$1.85). Written into `PCB/solar-glow-drh-v4_0-BOM.xlsx` (`R35`).
+  U8 is the only Mouser-only line (DigiKey returns 0 results for it); everything else is DigiKey-sourced.
 - **MCP registration is optional now.** DigiKey's data was pulled directly (curl/`requests` through the
   proxy CA), so the BOM job is done without the MCP servers. To make `digikey` / `mouser` tools available
   to future *interactive* sessions, put `scripts/setup-distributor-mcp.sh` in the **environment setup
@@ -36,8 +37,8 @@ prove connectivity):
   hot-load into an already-running session). The script stays valid; only the Mouser key needs fixing.
 
 _Prior status (2026-07-22, earlier sessions): servers cloned + `uv sync`'d + smoke-tested, then blocked
-first by the egress `403` and then by unset credentials. Both are now resolved; the sole open item is
-the invalid Mouser Search key._
+first by the egress `403`, then by unset credentials, then by an unactivated Mouser Search key. All
+three are now resolved -- both APIs are live and the BOM is fully priced._
 
 ## Prerequisites
 
@@ -105,9 +106,8 @@ clone / `uv sync` / `.env` / `claude mcp add` steps by hand.
 - **DigiKey -- DONE 2026-07-22.** `keyword` search for `3-153-440` (SS17) and `3-153-438` (WS17) both
   returned live pricing/stock; the SS17 TBC is filled and the WS17 refreshed in
   `PCB/solar-glow-drh-v4_0-BOM.xlsx` (see Status).
-- **Mouser -- PENDING a valid Search key.** `search_by_part_number` for the AEM10300 (U8) still owes the
-  U8 price. Blocked only by the rejected key (see Status); once a valid Search key is set, query
-  `10AEM10300C0000` and fill the U8 (`R35`) price/stock, then flip the last supercap-tank BOM row group.
+- **Mouser -- DONE 2026-07-22.** `search_by_part_number` for `10AEM10300C0000` returned the live listing
+  (`120-AEM10300-QFN`, $3.77 @ 1, 553 in stock); the U8 (`R35`) price/stock is filled in the BOM (see Status).
 
 ## Security
 
