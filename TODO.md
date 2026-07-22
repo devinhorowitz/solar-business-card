@@ -27,13 +27,19 @@ shell re-machine. Updated 2026-07-11._
   `3-153-438` 1.0 F), but the board `.kicad_pcb` SC1/SC3 footprint Value/MPN still read WS17. In KiCad,
   update SC1/SC3 (or pull the schematic), then **Update PCB from Schematic** and re-upload. Metadata
   only -- nets and copper are unaffected.
-- [ ] **[BOM] Fill the SS17 `3-153-440` price (TBC) via distributor MCP** _(2026-07-22)._ The BOM
-  splits the supercaps into an SS17 pair (price TBC, pricier) and a WS17 pair ($15.48). Pull live
-  pricing/stock once the DigiKey + Mouser MCP servers are live. **Still blocked (re-verified
-  2026-07-22 in a fresh container):** the environment must (1) allow egress to `api.digikey.com` +
-  `api.mouser.com` -- currently both `403` at the gateway -- and (2) set `DIGIKEY_CLIENT_ID` /
-  `DIGIKEY_CLIENT_SECRET` / `MOUSER_PART_API_KEY` -- currently unset. Both apply only in a **new**
-  session. Then run `scripts/setup-distributor-mcp.sh` (one command). Full detail in `mcp-setup.md`.
+- [x] **[BOM] Fill the SS17 `3-153-440` price (TBC) via DigiKey** — _DONE 2026-07-22._ Both gates
+  (egress to `api.digikey.com`/`api.mouser.com`, and the three API creds) came up green in a fresh
+  container. DigiKey OAuth + Product Information V4 returned live data: **SS17 `3-153-440` = $17.16 @ 1**
+  (DK `486-3-153-440-ND`, 200 in stock) and **WS17 `3-153-438` = $16.69 @ 1** (DK `486-3-153-438-ND`,
+  up from $15.48). Written into `PCB/solar-glow-drh-v4_0-BOM.xlsx` (SC1/SC3 filled, SC2/SC4 refreshed,
+  subtotal recomputed → $130.00 / 30 priced cells). Data pulled directly through the proxy CA; no MCP
+  wrapper required. See `mcp-setup.md` → Status.
+- [ ] **[BOM] Fill the U8 `10AEM10300C0000` (AEM10300) price — blocked on the Mouser Search key**
+  _(2026-07-22)._ U8 is Mouser-only (DigiKey returns 0 results for it, re-confirmed 2026-07-22). The
+  `MOUSER_PART_API_KEY` in the environment is rejected by the Search API as an **"Invalid unique
+  identifier"** — it is not an activated Search key. Fix: request/activate a Mouser **Search API** key
+  (mouser.com/api-hub) and set it in the environment settings (new session), then query
+  `10AEM10300C0000` and fill the U8 (`R35`) price/stock. Detail in `mcp-setup.md`.
 - [x] **VIN-at-clamp / SUN_THRESHOLD** — _PCB → firmware. DONE 2026-07-10._ Derived
   VIN **>= 3.60 V** as the strong-sun trigger (above the held VS ~3.50 V so there is
   the SRC (merged-panel) node lifted well above its indoor level (VSENSE now divides SRC), below panel Voc 4.15 V; full derivation at
