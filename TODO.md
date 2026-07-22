@@ -48,9 +48,11 @@ shell re-machine. Updated 2026-07-11._
     **`GRM155R61A225KE01J`** (2.2 µF 10 V X5R 0402, `490-GRM155R61A225KE01JCT-ND`, $0.10).
   - **C26** (VINT buffer 6.3 V): `GRM155R60J106ME44D` (discontinued) →
     **`GRM155R60J106ME05D`** (10 µF 6.3 V X5R 0402, `490-GRM155R60J106ME05DCT-ND`, $0.10).
-  Open follow-up: **C4/C13/C27** (`GRM188R61A106KE69D`, 10 µF 0603) are Active but DigiKey returned no
-  qty-1 standard price (non-stock/order item) — confirm at cart. And kibot CI will regenerate
-  `Generated/fabdocs/solar-glow-drh-v4_0-bom.csv` from the updated schematic.
+  Also re-sourced **C4/C13/C27** (`GRM188R61A106KE69D`, 10 µF 10 V 0603): Active but DigiKey stocks/prices
+  no variation (order-only) → **`GRM188R61A106ME69D`** (same 10 µF/10 V/X5R/0603, tol K→M, DK
+  `490-10475-1-ND`, $0.12, 578k in stock). kibot CI regenerates
+  `Generated/fabdocs/solar-glow-drh-v4_0-bom.csv` from the updated schematic. Only ordered line still
+  unpriced: **U8/AEM10300** (Mouser-pending).
 - [ ] **[BOM] Fill the U8 `10AEM10300C0000` (AEM10300) price — blocked on the Mouser Search key**
   _(2026-07-22)._ U8 is Mouser-only (DigiKey returns 0 results for it, re-confirmed 2026-07-22). The
   `MOUSER_PART_API_KEY` in the environment is rejected by the Search API as an **"Invalid unique
