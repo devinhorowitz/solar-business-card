@@ -53,12 +53,11 @@ shell re-machine. Updated 2026-07-11._
   `490-10475-1-ND`, $0.12, 578k in stock). kibot CI regenerates
   `Generated/fabdocs/solar-glow-drh-v4_0-bom.csv` from the updated schematic. Only ordered line still
   unpriced: **U8/AEM10300** (Mouser-pending).
-- [ ] **[BOM] Fill the U8 `10AEM10300C0000` (AEM10300) price — blocked on the Mouser Search key**
-  _(2026-07-22)._ U8 is Mouser-only (DigiKey returns 0 results for it, re-confirmed 2026-07-22). The
-  `MOUSER_PART_API_KEY` in the environment is rejected by the Search API as an **"Invalid unique
-  identifier"** — it is not an activated Search key. Fix: request/activate a Mouser **Search API** key
-  (mouser.com/api-hub) and set it in the environment settings (new session), then query
-  `10AEM10300C0000` and fill the U8 (`R35`) price/stock. Detail in `mcp-setup.md`.
+- [x] **[BOM] Fill the U8 `10AEM10300C0000` (AEM10300) price via Mouser** — _DONE 2026-07-22._ U8 is
+  Mouser-only (DigiKey returns 0 results). The Mouser Search API key came live; queried the part and
+  filled U8 (`R35`): Mouser **`120-AEM10300-QFN`**, **553 in stock**, 16-day lead, **$3.77 @ 1**
+  (breaks 10@$2.81, 100@$2.31, 1000@$1.85). With this, **every ordered on-board line is priced**
+  (indicative subtotal → $138.67). Detail in `mcp-setup.md`.
 - [x] **VIN-at-clamp / SUN_THRESHOLD** — _PCB → firmware. DONE 2026-07-10._ Derived
   VIN **>= 3.60 V** as the strong-sun trigger (above the held VS ~3.50 V so there is
   the SRC (merged-panel) node lifted well above its indoor level (VSENSE now divides SRC), below panel Voc 4.15 V; full derivation at

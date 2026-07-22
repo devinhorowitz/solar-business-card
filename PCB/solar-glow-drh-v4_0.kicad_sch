@@ -20379,6 +20379,28 @@
 				)
 			)
 		)
+		(property "Supplier" "Mouser"
+			(at 459.74 372.11 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(hide yes)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Supplier P/N" "120-AEM10300-QFN"
+			(at 459.74 372.11 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(hide yes)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(pin "8"
 			(uuid "943043c1-762d-43ab-a9b8-6c7f4a73ec1b")
 		)
