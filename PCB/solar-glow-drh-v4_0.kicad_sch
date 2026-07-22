@@ -16783,7 +16783,7 @@
 				)
 			)
 		)
-		(property "MPN" "GRM155R61A225KE11D"
+		(property "MPN" "GRM155R61A225KE01J"
 			(at 703.58 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -17519,7 +17519,7 @@
 				)
 			)
 		)
-		(property "MPN" "GRM155R60J106ME44D"
+		(property "MPN" "GRM155R60J106ME05D"
 			(at 612.14 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -21070,7 +21070,7 @@
 				)
 			)
 		)
-		(property "MPN" "GRM155R61A105KE15D"
+		(property "MPN" "GRM155R61E105MA12D"
 			(at 673.1 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)

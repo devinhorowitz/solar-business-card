@@ -7,28 +7,37 @@ job cold, without cross-chat.
 
 ## Status
 
-**2026-07-22 (re-verified in a fresh container) -- STILL BLOCKED on environment config.**
-A new session re-checked both gates; neither is satisfied yet:
-- **Network policy still denies both hosts.** From a fresh container, `curl` to `api.digikey.com`
-  and `api.mouser.com` both returned `403 CONNECT tunnel failed` at the egress gateway (proxy
-  `recentRelayFailures` = `connect_rejected` for both). The allowlist currently reaches GitHub +
-  PyPI only; *all* general internet (even `www.digikey.com`, `example.com`) is 403'd. So the
-  "network enabled 2026-07-22" change **has not taken effect** -- the environment's network policy
-  must be edited to permit `api.digikey.com` and `api.mouser.com`, and (like all policy/env changes)
-  it only applies in a **new** session, not a live one.
-- **Credentials are not set.** `DIGIKEY_CLIENT_ID`, `DIGIKEY_CLIENT_SECRET`, `MOUSER_PART_API_KEY`
-  are all unset in the container. Add them in the environment settings (never in chat/repo); they too
-  take effect only in a new session.
-- **Setup is otherwise ready and source-verified.** Both servers were cloned in this session and
-  every command below was checked against the actual server code (entry points, env-var names, and
-  the DigiKey `USE_SANDBOX` inversion all confirmed -- see per-server notes). The whole flow is now
-  captured as a one-command, idempotent script: **`scripts/setup-distributor-mcp.sh`**. Once the two
-  gates above are green in a fresh session, run that script (or the manual steps below) and the
-  `digikey` / `mouser` tools load.
+**2026-07-22 (later session) -- BOTH GATES NOW GREEN; DigiKey LIVE and used; Mouser key REJECTED.**
+A fresh container re-checked both gates and went straight to live API calls (no MCP wrapper needed to
+prove connectivity):
+- **Network policy now permits both hosts.** `https://api.digikey.com` -> `404` and
+  `https://api.mouser.com` -> `302` (real HTTP responses, not the old `000` / `CONNECT tunnel failed`).
+  General web is partly open too (`example.com` -> `200`; `www.digikey.com` still `403`). The two API
+  hosts we need are reachable.
+- **Credentials are now set.** `DIGIKEY_CLIENT_ID` (48 ch), `DIGIKEY_CLIENT_SECRET` (64 ch),
+  `MOUSER_PART_API_KEY` (36-ch GUID) are all present in the container.
+- **DigiKey: WORKING.** OAuth2 client_credentials returned a bearer token (HTTP 200), and a
+  Product Information V4 `keyword` search returned live data. Results used to close the BOM TBC:
+  - **SS17 `3-153-440`** (DK `486-3-153-440-ND`): **$17.16 @ 1**, 200 in stock (10@$13.48, 100@$11.55).
+  - **WS17 `3-153-438`** (DK `486-3-153-438-ND`): **$16.69 @ 1**, 195 in stock (was $15.48 @ 2026-07-02).
+  Both written into `PCB/solar-glow-drh-v4_0-BOM.xlsx` (SC1/SC3 row filled; SC2/SC4 refreshed;
+  subtotal recomputed to $130.00 / 30 priced cells).
+- **Mouser: network OK, key REJECTED.** `search/partnumber` returns HTTP 200 but the body is
+  `{Code: "Invalid", Message: "Invalid unique identifier", PropertyName: "API Key"}` for every query.
+  The key is the right shape (36-ch GUID) but is **not an activated Search API key** -- consistent with
+  the prerequisite note below (the Search key needs an access-request approval). **This is the one
+  remaining blocker**, and it only blocks **U8 (AEM10300 / `10AEM10300C0000`)**, which is Mouser-only
+  (DigiKey returns 0 results for it -- re-confirmed 2026-07-22). Fix: obtain/activate a Mouser **Search
+  API** key (mouser.com/api-hub) and set `MOUSER_PART_API_KEY` to it in the environment settings.
+- **MCP registration is optional now.** DigiKey's data was pulled directly (curl/`requests` through the
+  proxy CA), so the BOM job is done without the MCP servers. To make `digikey` / `mouser` tools available
+  to future *interactive* sessions, put `scripts/setup-distributor-mcp.sh` in the **environment setup
+  script** (a mid-session `claude mcp add` only affects the current ephemeral container and does not
+  hot-load into an already-running session). The script stays valid; only the Mouser key needs fixing.
 
-_Prior status (2026-07-22, earlier session): both servers cloned, `uv sync`'d, and smoke-tested;
-blocked solely by the network policy (egress `403`). That remains the sole substantive blocker,
-now joined by the still-unset credentials in the current container._
+_Prior status (2026-07-22, earlier sessions): servers cloned + `uv sync`'d + smoke-tested, then blocked
+first by the egress `403` and then by unset credentials. Both are now resolved; the sole open item is
+the invalid Mouser Search key._
 
 ## Prerequisites
 
@@ -93,9 +102,12 @@ clone / `uv sync` / `.env` / `claude mcp add` steps by hand.
 
 ## First queries once live
 
-- **DigiKey:** `get_product_pricing` / `keyword_search` for `3-153-440` (SS17) -> fill the TBC price in
-  `PCB/solar-glow-drh-v4_0-BOM.xlsx`, and cross-check the WS17 `3-153-438`.
-- **Mouser:** `search_by_part_number` for the AEM10300 (U8) and the two SCHURTER supercaps.
+- **DigiKey -- DONE 2026-07-22.** `keyword` search for `3-153-440` (SS17) and `3-153-438` (WS17) both
+  returned live pricing/stock; the SS17 TBC is filled and the WS17 refreshed in
+  `PCB/solar-glow-drh-v4_0-BOM.xlsx` (see Status).
+- **Mouser -- PENDING a valid Search key.** `search_by_part_number` for the AEM10300 (U8) still owes the
+  U8 price. Blocked only by the rejected key (see Status); once a valid Search key is set, query
+  `10AEM10300C0000` and fill the U8 (`R35`) price/stock, then flip the last supercap-tank BOM row group.
 
 ## Security
 
