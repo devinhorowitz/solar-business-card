@@ -22,6 +22,15 @@ shell re-machine. Updated 2026-07-11._
   0.8 mm min-silk-text DRC rule (2 new `text_height` warnings, not errors). Decide: bump both to
   >=0.8 mm if they fit the switch cluster, else add to the README / kibot intentional-exceptions list
   so the next DRC review does not read them as a new find.
+- [ ] **[PCB->KiCad] Sync SC1/SC3 footprint metadata to SS17** _(2026-07-22)._ PR #52 corrected the
+  hybrid tank in the schematic + BOM + docs (SC1/SC3 = SS17 `3-153-440` 1.8 F, SC2/SC4 = WS17
+  `3-153-438` 1.0 F), but the board `.kicad_pcb` SC1/SC3 footprint Value/MPN still read WS17. In KiCad,
+  update SC1/SC3 (or pull the schematic), then **Update PCB from Schematic** and re-upload. Metadata
+  only -- nets and copper are unaffected.
+- [ ] **[BOM] Fill the SS17 `3-153-440` price (TBC) via distributor MCP** _(2026-07-22)._ The BOM
+  splits the supercaps into an SS17 pair (price TBC, pricier) and a WS17 pair ($15.48). Pull live
+  pricing/stock once the DigiKey + Mouser MCP servers are live -- setup + current status in
+  `mcp-setup.md` (blocked only on a network-enabled session).
 - [x] **VIN-at-clamp / SUN_THRESHOLD** — _PCB → firmware. DONE 2026-07-10._ Derived
   VIN **>= 3.60 V** as the strong-sun trigger (above the held VS ~3.50 V so there is
   the SRC (merged-panel) node lifted well above its indoor level (VSENSE now divides SRC), below panel Voc 4.15 V; full derivation at
