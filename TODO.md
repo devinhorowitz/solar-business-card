@@ -20,9 +20,15 @@ shell re-machine. Updated 2026-07-11._
   STO-sense divider (R15/R16) stays AEC-Q200 grade only.~~ _Superseded 2026-07-23: R15+R16 moved to 0603
   precision — see the rework item below._ Schematic MPNs + BOM + `Supplier P/N` fields all updated;
   schematic↔BOM cross-check clean.
-- [ ] **[SCH→PCB] Place + route the second upsize set: C22/C23 → 0603, C26/C27 → 0805, R5/R6 → 0603**
-  _(2026-07-23; schematic + BOM DONE, board pending — owner routes via Update PCB from Schematic; any
-  ref that can't fit gets reverted individually)._ Stability upsizing, all CT/MOQ-1 parts, live-verified:
+- [x] **[SCH→PCB] Place + route the second upsize set: C22/C23 → 0603, C26/C27 → 0805, R5/R6 → 0603**
+  — _DONE + VERIFIED 2026-07-23. All five refs fit — nothing reverted._ Board upload verified: C22/C23
+  on stock `C_0603_1608Metric` (0.90×0.95 @ 1.55), C26/C27 on `C_0805_2012Metric` (1.00×1.45 @ 1.90),
+  R5/R6 on `R_0603_1608Metric` (0.80×0.95 @ 1.65). Nets exact: **VSENSE** = {C5.1, R5.2, R6.1, U1.12}
+  with R5.1→SRC, R6.2→GND; **STO_LDO** = {C22.1, FB1.2, U9.1, U9.3} (the FB1-island intent held through
+  the land swap); **VINT** = {C26.1, R17.1, U8.8/10/20/23/24}; C23.1→VS, C27.1→STO; **STO_SNS**
+  unchanged from the R15/R16 verification. DRC + ERC re-run post-route: 0 unconnected pads, and both
+  reports byte-identical to pre-rework except timestamps — no new violations, schematic parity clean.
+  _(Original scope note:_ Stability upsizing, all CT/MOQ-1 parts, live-verified:
   **C22** → `GRT188R71E105KE13D` (1 µF 25 V **X7R** 0603, stays GRT/AEC, `490-GRT188R71E105KE13DCT-ND`);
   **C23** → `GRM188Z71E225ME43D` (2.2 µF 25 V **X7R** 0603 — LDO-loop stability; the GRT 0603 2.2 µF is
   X5R-only, so dielectric won over grade); **C26 + C27** merge onto one 0805 line →
@@ -30,7 +36,7 @@ shell re-machine. Updated 2026-07-11._
   `GMT21X7R106K16NT3`) is **reel-only MOQ 3000**, rejected for a one-of-one; **R5/R6** →
   `RT0603BRD071ML` (0.1%/**25 ppm** thin film, same MPN as R16 — three refs share one line). Heights:
   0603 ≈ 0.8 mm, 0805 ≈ 1.25 mm max — still under the 1.7 mm supercaps, but eyeball the brace/ferrite
-  clearance over C26/C27 before committing the 0805s.
+  clearance over C26/C27 before committing the 0805s.)
 - [x] **[SCH→PCB] Place + route the R15/R16 0603 lands (STO-sense divider precision rework)** —
   _DONE + VERIFIED 2026-07-23._ Board upload verified: both on stock `R_0603_1608Metric` (0.80×0.95
   pads @ 1.65 pitch); nets exact — `STO_SNS` = {C24.1, R15.2, R16.1, U1.11} and nothing else, R15.1 →
