@@ -138,17 +138,17 @@ static inline uint8_t reader_field_active(void) { return 0; }
  * caller can bail out of the animation and let the core go quiet for the read. */
 static uint8_t idle_nap_ms(uint16_t ms)
 {
-    set_sleep_mode(SLEEP_MODE_IDLE);
+    slp_set_mode(SLEEP_MODE_IDLE);
     while (ms--) {
         tcb_tick = 0;
         for (;;) {
             if (reader_field_active()) { led_off(); return 1; }   /* reader up: blank + bail */
             cli();
             if (tcb_tick) { sei(); break; }
-            sleep_enable();
+            slp_enable();
             sei();                   /* SEI + SLEEP is atomic: no missed tick */
             sleep_cpu();
-            sleep_disable();
+            slp_disable();
         }
 #if USE_WDT
         wdt_reset();                 /* pet across the whole glow, ~1 ms cadence */

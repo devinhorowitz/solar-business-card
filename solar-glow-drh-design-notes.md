@@ -1115,3 +1115,58 @@ from `DS-AEM10300-v1.4` + the prewiring pin map (STO_RDY / STO_OVDIS / STO_OVCH 
 status pins, all NC on our board). *AEM30330 quiescent now confirmed at **875 nA typ** (V_STO 3.7 V, Table 6
 of DS-AEM30330-v1.5) -- exactly the AEM10330 / AEM00330 figure, as its identical architecture predicted. n/r = not read;
 the 3 QFN24 parts are ruled out on the missing balancer, so their quiescent is moot.
+
+
+## Addendum (2026-07-23) -- End-to-end review: two silicon finds (FRAM bus back-power; EA errata)
+
+An end-to-end review pass (firmware disassembly, board pad->net re-derivation, datasheet abs-max
+sweep, and the first read of the EA errata sheet) closed most hypotheses clean -- the Atmel-patched
+avr-libc EEPROM path was disassembled and confirmed to drive the EA's NVMCTRL correctly (busy-poll
+STATUS.EEBUSY, mapped-write at 0x1400, CCP unlock, EEPERW 0x15), sleep-during-EEPROM-write is safe by
+hardware (DS40002443 11.3.5: the NVM block and system clock stay up until the write finishes, all
+sleep modes), and the Ti-behind-coil NFC question was already handled by FER1. Two real items came
+out of it:
+
+**1. FRAM I2C back-power -- OPEN, first-power-up bench gate.** The TWI bus pull-ups (4.7 k) hang on
+the always-on VS rail, but U7 (MB85RC512TY) sits on the gated VNFC rail, which is off ~always. So the
+FRAM's SDA/SCL pins see 3.3 V while its VDD is 0 -- and its ABSOLUTE MAXIMUM input rating is
+**VDD + 0.5 V** (DS501-00087 abs-max table; leakage is only spec'd for VIN inside 0..VDD). This risk
+is **new in v4**: the NT3H2211 tag has no input-voltage row in its limiting values at all (it is
+*designed* to sit VCC-off on a powered bus -- that is its passive mode), so the v2/v3 tag-only VNFC
+gate was safe; the FRAM joining that rail is what created the question. Severity forks on the FRAM's
+input structure, which the datasheet doesn't disclose:
+- **If the inputs have a VDD-referenced clamp diode**: with U6's QOD holding VNFC near ground when
+  off, each high bus line leaks continuously through the clamp into the QOD resistor -- worst case
+  ~(3.3 - 0.7)/4.7k per pin, i.e. **~1.1 mA standing drain from VS** with the bus idle-high. That is
+  ~300x the card's whole standby budget and would be fatal -- and immediately visible on a meter.
+- **If the inputs are clamp-free** (common for I2C-targeted memories, since the I2C spec expects
+  unpowered devices not to load the bus): no current flows and the exposure is a paper abs-max
+  deviation only, continuously present but electrically inert.
+**Bench protocol (mandatory before trusting standby numbers):** with the card idle (VNFC off, bus
+idle-high), meter VS standing current, then compare with SDA/SCL manually held low; also scope VNFC
+for a diode-lifted level (QOD should pin it at mV). **Mitigation options if the clamp is real:**
+(a) firmware bus-park -- drive PC2/PC3 low between transactions (the bus is only *used* for the
+~ms-per-poll accel reads and rare gated FRAM/tag access, so the FRAM would see only brief pulses,
+duty-cycled ~1000:1); (b) a proper I2C isolator/level segment for the VNFC branch (one more part);
+(c) accept-and-document if measurement shows clamp-free inputs. Tracked in TODO (bench section).
+
+**2. AVR64EA28 silicon errata (DS80001048C, now in `datasheets/`) -- read against our usage.** The
+peripherals this design leans on hardest (ADC, RTC/PIT, BOD, TWI, TCA/TCB, WDT, SLPCTRL behavior in
+sleep) have **no errata** -- the sheet's issues cluster in NVM and USART. Dispositions:
+- **2.2.3 (Rev. B1): a store to any address >= 64 immediately followed by a write to SLPCTRL.CTRLA
+  loses the SLPCTRL write.** Directly load-bearing here: a silently dropped sleep_enable()/mode
+  select could leave the card IDLE-parked instead of in Power-Down -- an invisible standby-current
+  regression. **Fixed in firmware 2026-07-23**: all nine SLPCTRL.CTRLA writes now go through
+  NOP-guarded wrappers (`slp_set_mode`/`slp_enable`/`slp_disable` in `board.h`), verified in the
+  disassembly. One cycle of cost on fixed B2 silicon.
+- **2.2.1 (B1): NVM erase/write below 2.7 V may fail.** Already covered by `EE_WRITE_FLOOR_MV`
+  (2.85 V) -- but note the floor is now a *functional requirement* on B1, not just corruption margin
+  (comment updated in `board.h`). UPDI programming: keep the UPDI Friend at its 3 V setting (already
+  the documented procedure).
+- **2.2.2 (B1): flash endurance reduced to 1k cycles at VDD < 4.30 V** -- always true at our 3.3 V;
+  immaterial for a card reflashed tens of times, and EEPROM is not affected.
+- **2.4.1 (B1+B2): flash multi-page erase non-functional from UPDI** -- standard avrdude/pymcuprog
+  chip-erase flows don't use it; noted in case a future tool does.
+- 2.2.4 (CRC-gated fuse limitation), 2.3.1 (CRCSCAN partial), 2.5.1 (USART): peripherals unused.
+**Bench note:** read the silicon revision (SYSCFG.REVID, e.g. `pymcuprog -d avr64ea28 ... read`) at
+first connect and log it -- B1 vs B2 decides whether 2.2.1-2.2.3 even apply to the physical part.

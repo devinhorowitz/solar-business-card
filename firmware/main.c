@@ -135,6 +135,7 @@ static void gpio_init(void)
     PORTD.PIN5CTRL = PORT_PULLUPEN_bm;
     PORTD.PIN6CTRL = PORT_PULLUPEN_bm;
     PORTD.PIN7CTRL = PORT_PULLUPEN_bm;
+    PORTF.PIN6CTRL = PORT_PULLUPEN_bm;   /* PF6/RST: input-only GPIO (RSTPINCFG=0), no external net -- hold it */
 }
 
 static void rtc_pit_init(void)
@@ -164,13 +165,13 @@ static void go_to_sleep(void)
     /* Power-Down is the baseline: lowest current. It still wakes on the accel pin
      * interrupts and the RTC PIT -- and on FD (PA6), which the phone's field drives
      * even though we just cut the tag's VCC (FD is field-powered, datasheet 8.4). */
-    set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+    slp_set_mode(SLEEP_MODE_PWR_DOWN);
     cli();
     if (!f_tap && !f_motion && !f_tick && !f_nfc) {
-        sleep_enable();
+        slp_enable();
         sei();              /* SEI + SLEEP is atomic: a pending IRQ runs after SLEEP, no missed wake */
         sleep_cpu();
-        sleep_disable();
+        slp_disable();
     } else {
         sei();
     }
