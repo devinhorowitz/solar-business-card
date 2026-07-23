@@ -5,11 +5,11 @@
  * (SDA=PC2, SCL=PC3, TWIROUTEA=ALT2, ext 4.7k pull-ups to VS). 7-bit address
  * 0x50 (A0/A1/A2 grounded); no clash with the accel (0x1D) or NT3H tag (0x55).
  *
- * Power: VDD is on VNFC -- the SAME U6 high-side load switch that gates the NFC
- * tag (enable = NFC_EN / PA7, active-HIGH; see board.h). So the FRAM is only
- * alive while VNFC is up. fram_power_on() raises NFC_EN and ACK-polls the FRAM;
- * fram_power_off() drops it. If the NFC tag is used in the same window, one
- * power-on covers both parts.
+ * Power (option A, 2026-07-23 back-power fix): VDD is on the ALWAYS-ON VS rail
+ * (VNFC now gates the tag alone), parked in the part's own I2C SLEEP mode
+ * (IZZ 0.20 uA typ). fram_wake() brings it to standby (~450 us regulator
+ * recovery, ACK-polled, bounded); fram_sleep() parks it again -- NACK-tolerant,
+ * so calling it on an already-sleeping or absent part is harmless.
  *
  * Memory model: linear 16-bit byte address 0x0000..0xFFFF (64 KB). Unlike the
  * NFC EEPROM, FeRAM writes commit at the STOP -- there is NO post-write settle
@@ -26,27 +26,29 @@
 #define FRAM_H
 
 #include <stdint.h>
-#include "board.h"          /* FRAM_ADDR, NFC_EN_PORT / NFC_EN_PIN_bm */
+#include "board.h"          /* FRAM_ADDR */
 
 #define FRAM_SIZE   65536u   /* 512 kbit = 64 KB, 16-bit address space */
 
 /* ---- API ----  0 = OK, non-zero = fault (bus/NACK), same as twi.h / nfc.h ---- */
 
-/* power-gate control (shares VNFC / NFC_EN with the NFC tag; see board.h).
- * fram_power_on(): raise NFC_EN, then bounded ACK-poll of FRAM_ADDR after the
- *   load-switch soft-start. Returns 0 when the FRAM answers, non-zero on timeout
- *   (absent / EN not wired / VNFC dead). Idempotent with nfc_power_on(): if the
- *   tag was already powered, the FRAM is up too and this just re-confirms.
- * fram_power_off(): drive NFC_EN LOW (VNFC off). Only call when neither the FRAM
- *   nor the NFC tag is needed. */
-uint8_t fram_power_on(void);
-void    fram_power_off(void);
+/* Sleep-mode control (the part rides always-on VS; see board.h).
+ * fram_wake():  bounded ACK-poll through the ~450 us Sleep-exit recovery the
+ *   addressing START triggers. Returns 0 when the FRAM answers (standby),
+ *   non-zero if absent. Safe on a part that was never asleep (first-try ACK).
+ * fram_sleep(): datasheet entry sequence (S+F8h, addr word, Sr+86h). Best-effort
+ *   and NACK-tolerant with one tREC retry; harmless on a sleeping/absent part.
+ *   Call after every use -- and each poll tick re-parks defensively (main.c,
+ *   FRAM_RESLEEP_EVERY_POLL) since the wake's address-selectivity is unspec'd. */
+uint8_t fram_wake(void);
+void    fram_sleep(void);
 
-/* presence: 1 if the FRAM ACKs its address, else 0. VNFC must already be up. */
+/* presence: 1 if the FRAM ACKs its address, else 0. A SLEEPING part reads
+ * absent (and starts waking) -- use fram_wake() for the settled answer. */
 uint8_t fram_present(void);
 
 /* read/write `len` bytes at 16-bit `addr`. Both reject addr+len > FRAM_SIZE.
- * VNFC must be up (call fram_power_on() first). */
+ * Part must be awake (call fram_wake() first if it may be sleeping). */
 uint8_t fram_read (uint16_t addr, uint8_t *dst, uint16_t len);
 uint8_t fram_write(uint16_t addr, const uint8_t *src, uint16_t len);
 

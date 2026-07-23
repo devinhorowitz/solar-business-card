@@ -197,8 +197,15 @@ shell re-machine. Updated 2026-07-11._
 
 ## Firmware — `firmware/`, `firmware/README.md`
 
-- [ ] **[DESIGN DECISION + SCH/PCB/FW] FRAM back-power: adopt the VS-rail + Sleep-mode fix** _(2026-07-23
-  deep-dive; verdict + full trade study in the design-notes deep-dive addendum)._ Research flipped the
+- [ ] **[SCH+FW DONE -> PCB] FRAM back-power fix (option A) ADOPTED -- U7 re-railed to VS + Sleep-parked;
+  board copper re-net pending** _(2026-07-23 deep-dive + same-day execution. SCH: the two VNFC global
+  labels at U7.VDD and C28.1 renamed to VS (tag side untouched). FW: fram.c rebuilt on a wake/sleep
+  model (fram_wake / fram_sleep, NACK-tolerant + bounded), main.c parks U7 unconditionally at boot --
+  power-critical, it cold-boots into 10 uA standby -- and defensively re-parks each poll tick
+  (`FRAM_RESLEEP_EVERY_POLL`, flip to 0 if the bench proves address-selective wake). Build clean at
+  4,154 B. REMAINING: (1) user re-routes U7 pad 8 + C28.1 copper from VNFC to VS ("Update PCB from
+  Schematic" will flag the two pads), re-DRC; (2) bench: verify IZZ, wake selectivity, VS idle current.
+  Original analysis follows.)_ Research flipped the
   working assumption to **"the VDD clamp is real until proven otherwise"** (MB85RC lacks the fail-safe
   SCL/SDA exemption its Ramtron-lineage competitors print; industry consensus + a 0.88 mA field
   measurement of the same architecture). The current netlist (U7 on gated VNFC, R10/R11 on VS) likely

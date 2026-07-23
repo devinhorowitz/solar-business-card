@@ -87,7 +87,7 @@ all lives on the back, ready for an optional machined-metal back-shell.
 | LED master switch | **SW2** (solder-bridge) + **R12** | OFF / ON / TINY — TINY routes the LEDs through a 220 Ω ballast for a dim, long-runtime glow |
 | Motion | **ADI ADXL367** | 3-axis accel; tap / double-tap wakes the MCU via interrupts; 0.89 µA (swapped from LIS2DH12 on backorder) |
 | Light sense | **R5 / R6 divider → PD2** | SRC ÷ 2 off the *merged solar input* (not the rail) - tracks light directly; doubles as wake-on-light |
-| NFC | **NXP NT3H2211** (NTAG I²C plus 2K) | present from v3.0 - a contact **vCard** a phone taps to save; field-detect (FD, PA6) also wakes the glow - I²C `0x55`, shares the accel's bus; VCC **power-gated by `U6`** (`NFC_EN`/PA7, off by default); the same U6 switch also gates the new **U7 MB85RC512TY FRAM** (I²C 0x50, C28) on the shared VNFC rail |
+| NFC | **NXP NT3H2211** (NTAG I²C plus 2K) | present from v3.0 - a contact **vCard** a phone taps to save; field-detect (FD, PA6) also wakes the glow - I²C `0x55`, shares the accel's bus; VCC **power-gated by `U6`** (`NFC_EN`/PA7, off by default); the **U7 MB85RC512TY FRAM** (I²C 0x50, C28) rides always-on VS parked in its 0.2 µA I²C Sleep mode (the 2026-07-23 back-power fix - see design notes) |
 
 **Breakouts and features:** a **TC2030** Tag-Connect pad (`TC1`) for hands-free UPDI
 programming, a backup UPDI header (`J1`), a **5-pad bench strip** on the back east edge

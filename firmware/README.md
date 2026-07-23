@@ -39,7 +39,7 @@ card's largest idle load. See **NFC contact card** below.
 | `twi.h` | header-only blocking I2C host (TWI0); shared by the accel and NFC tag. |
 | `adxl367.h/.c` | accelerometer: presence, tap→INT1, activity→INT2, tap/activity clear. |
 | `nfc.h/.c` | NT3H2211 NFC tag (`U5`): NDEF write + VCC power-gate via `NFC_EN`/`U6`. |
-| `fram.h/.c` | MB85RC512TY FRAM (`U7`, 64 KB I2C @ 0x50): power/present + 16-bit linear read/write. Shares `VNFC`/`NFC_EN` with the tag; headless by default (`USE_FRAM_LOG`=0). |
+| `fram.h/.c` | MB85RC512TY FRAM (`U7`, 64 KB I2C @ 0x50): wake/sleep + 16-bit linear read/write. Rides always-on VS, parked in the part's 0.2 uA I2C Sleep mode (the back-power fix -- see design notes); headless by default (`USE_FRAM_LOG`=0). |
 | `led.h/.c` | TCA0 split-mode PWM on PA0–PA3 + gamma breathing glow + in-sun loading sweep. |
 | `sense.h/.c` | ADC rail/light/temp reads, rail-scaled glow (brownout stretch), EEPROM telemetry: activation counter + sun diary + max-temp log + black box (min-rail, power-cycles). |
 | `main.c` | init (per hardware doc §7), sleep/wake state machine, ISRs. |
