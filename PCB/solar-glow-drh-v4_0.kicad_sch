@@ -16851,7 +16851,7 @@
 				)
 			)
 		)
-		(property "Value" "TPS22918"
+		(property "Value" "TPS22917"
 			(at 661.67 81.28 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -16872,7 +16872,7 @@
 				)
 			)
 		)
-		(property "Datasheet" "datasheets/U6  TPS22918DBVR  $0.55.pdf"
+		(property "Datasheet" "datasheets/U6  TPS22917DBVT  $1.14.pdf"
 			(at 650.24 76.2 0)
 			(hide yes)
 			(show_name no)
@@ -16883,7 +16883,7 @@
 				)
 			)
 		)
-		(property "Description" "NFC VNFC high-side load switch"
+		(property "Description" "NFC VNFC high-side load switch - TPS22917 ultra-low leakage (ISD 10nA typ vs 918's 0.5uA/3.5uA max); pin-identical to TPS22918, CT float + QOD->VOUT sanctioned; active-HIGH ON (NOT the 917L)"
 			(at 650.24 76.2 0)
 			(hide yes)
 			(show_name no)
@@ -16894,7 +16894,7 @@
 				)
 			)
 		)
-		(property "MPN" "TPS22918TDBVRQ1"
+		(property "MPN" "TPS22917DBVT"
 			(at 650.24 76.2 0)
 			(hide yes)
 			(show_name no)
@@ -16916,7 +16916,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "296-44632-1-ND"
+		(property "Supplier P/N" "296-48370-1-ND"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
