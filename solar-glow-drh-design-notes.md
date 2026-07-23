@@ -1144,11 +1144,10 @@ input structure, which the datasheet doesn't disclose:
   deviation only, continuously present but electrically inert.
 **Bench protocol (mandatory before trusting standby numbers):** with the card idle (VNFC off, bus
 idle-high), meter VS standing current, then compare with SDA/SCL manually held low; also scope VNFC
-for a diode-lifted level (QOD should pin it at mV). **Mitigation options if the clamp is real:**
-(a) firmware bus-park -- drive PC2/PC3 low between transactions (the bus is only *used* for the
-~ms-per-poll accel reads and rare gated FRAM/tag access, so the FRAM would see only brief pulses,
-duty-cycled ~1000:1); (b) a proper I2C isolator/level segment for the VNFC branch (one more part);
-(c) accept-and-document if measurement shows clamp-free inputs. Tracked in TODO (bench section).
+for a diode-lifted level (QOD should pin it at mV). _(The mitigation list that stood here is
+**superseded same-day** -- its option (a), driving the bus low between transactions, was wrong: with
+R10/R11 still on VS, a driven-low bus burns ~1.4 mA through the pull-ups continuously, worse than
+the fault. See the deep-dive addendum below for the corrected verdict and fix plan.)_
 
 **2. AVR64EA28 silicon errata (DS80001048C, now in `datasheets/`) -- read against our usage.** The
 peripherals this design leans on hardest (ADC, RTC/PIT, BOD, TWI, TCA/TCB, WDT, SLPCTRL behavior in
@@ -1170,3 +1169,73 @@ sleep) have **no errata** -- the sheet's issues cluster in NVM and USART. Dispos
 - 2.2.4 (CRC-gated fuse limitation), 2.3.1 (CRCSCAN partial), 2.5.1 (USART): peripherals unused.
 **Bench note:** read the silicon revision (SYSCFG.REVID, e.g. `pymcuprog -d avr64ea28 ... read`) at
 first connect and log it -- B1 vs B2 decides whether 2.2.1-2.2.3 even apply to the physical part.
+
+
+## Addendum (2026-07-23, deep-dive) -- FRAM back-power: verdict flipped to "assume clamp", fix plan
+
+Follow-up research pass on the back-power find (primary datasheets re-read + RAMXEED/Fujitsu official
+sources + the I2C spec and vendor app notes + a fail-safe-parts survey). Three outcomes: a
+**retraction**, a **verdict upgrade**, and a **recommended fix** that dissolves the problem instead of
+mitigating it.
+
+**Retraction.** The earlier addendum's mitigation (a) -- "firmware bus-park, drive PC2/PC3 low
+between transactions" -- is withdrawn. With R10/R11 (4.7 k) on VS, a *driven-low* bus dissipates
+3.3 V across both pull-ups continuously: ~0.7 mA/line, ~1.4 mA total -- worse than the fault it
+addressed. (The workable cousin -- re-home R10/R11's high side to a spare GPIO so the idle bus
+*settles* low at zero standing current -- survives as ranked option B below.)
+
+**Verdict: treat the clamp as real until a bench measurement proves otherwise.** The question was
+whether the MB85RC512TY's SDA/SCL have a VDD-referenced clamp diode (fatal: bus back-powers the die,
+~0.5-1.1 mA standing) or fail-safe inputs (paper deviation only). Nothing settles it *explicitly*,
+but the evidence stacks one way:
+- **Industry default is the clamp.** UM10204 (I2C spec, Sec. 5.1) requires *Fast-mode* devices'
+  pins to float when their supply is off precisely because standard CMOS inputs don't; TI SSZTAP0
+  documents the ESD-clamp back-power mechanism; TI SCEA035 says overvoltage-tolerant parts are the
+  ones whose abs-max V_IN is *independent of VCC*; NXP AN10441's level-shifter exists to "isolate a
+  powered-down bus section"; ADI support explicitly forbids removing VCC from an I2C part on an
+  active bus (ESD-diode loading).
+- **The MB85RC family reads as the clamp class.** Its abs-max is VDD-referenced (VIN <= VDD+0.5,
+  <= 4.0 V), its V_IH tops out at exactly VDD, and -- decisive by contrast -- the Ramtron-lineage
+  Infineon FM24 F-RAMs carry an explicit fail-safe exemption ("Exception: the 'VIN < VDD + 1.0 V'
+  restriction does not apply to the SCL and SDA inputs") that RAMXEED conspicuously does not print.
+  Vendors that design fail-safe bus pins say so.
+- **Field data.** An analogous rig (power-gated I2C slaves, pull-ups left on the live rail) measured
+  0.88 mA of phantom draw -- the same order as our worst-case estimate.
+- **The one official straw the other way:** every MB85RC datasheet's POWER ON/OFF SEQUENCE diagram
+  marks SDA/SCL "**Don't care**" across the whole VDD = 0 region (the "< VDD+0.5 V" footnote anchors
+  only to the ramp-adjacent hold windows), and frames sequence violations as *data-integrity*, not
+  damage. Officially ambiguous -- and RAMXEED's FAQ is silent (confirmed by exhaustive enumeration).
+  Not enough to bet the standby budget on.
+
+**Recommended fix (option A): move U7 to VS and keep it in its own Sleep mode.** The deep-read found
+the TY has an I2C-commanded **Sleep mode: IZZ 0.20 uA typ / 10 uA max** (vs. 10 uA/150 uA standby) --
+entered by the reserved-address sequence (START F8h -> device-address byte -> repeated START 86h),
+exited by a START + device-address frame with ~450 us tREC. Powering U7 from always-on VS and
+parking it in Sleep dissolves the abs-max question *by construction* (its inputs never exceed its
+rail) at ~0.2 uA typ standing cost (~+7% of the dark budget; the 10 uA max is the 125 degC corner).
+Bonus compliance: with the pull-ups and the FRAM on the same rail, SDA/SCL inherently track VDD
+through power ramps, satisfying the tpu/tpd hold windows; tr/tf are spec'd as *minimum* ms/V (bounds
+on how fast the rail may move), so the solar-slow VS ramp is legal. Changes: **board** -- U7 pad 8 +
+C28.1 re-net VNFC -> VS (VS pours sit nearby on B.Cu; the tag's C8 stays on VNFC -- the tag keeps its
+proven v2/v3 gate, and NFC_EN reverts to tag-only); **firmware** -- fram.c drops the NFC_EN power
+coupling, issues the sleep sequence at boot and re-issues it after every bus use (~2 short frames;
+the datasheet's wake-on-START wording doesn't say "matching address only", so defensive re-sleep
+covers accel traffic either way -- bench confirms selectivity). The first-power-up bench item then
+*verifies* (IZZ, wake behavior) rather than gates.
+
+**Ranked alternatives if A is declined:** **(B)** re-home R10/R11 to a spare GPIO, raised only around
+bus use -- zero standing current, but the FRAM still sees 3.3 V transients during every accel poll
+with VDD = 0 (residual abs-max breach) and the archival die gets repeatedly half-powered through the
+clamp: uncomfortable for the memory whose job is to survive. **(C)** a hot-swap bus buffer
+(TCA4311A-class, powered-off-Hi-Z pins, EN = NFC_EN) in front of the FRAM -- works, costs a part +
+layout in the tag corner. **(D)** part swap -- surveyed and thin: the fail-safe FM24 I2C line is
+SOIC-8-only (~1.75 mm, breaks the 0.90 mm height win; 85 degC) except a 64-Kbit 0.8 mm DFN (too
+small); the documented non-FRAM fallback is ST's **M24M01-A125** I2C EEPROM (fixed abs-max
+V_IO -0.5..6.5 V independent of VCC, AEC-Q100 grade 1 / 125 degC, TSSOP8 1.2 mm or UFDFPN 0.6 mm,
+~2-3 uA standby, huge stock) at the cost of FRAM's endurance and instant writes. **(E)** do-nothing
+is withdrawn as an option -- the evidence says the current netlist likely stands a mA-class drain.
+
+Sources: UM10204 Rev 7 Sec 5.1 + Table 10 note 9 (nxp.com); TI SSZTAP0, SCEA035A; NXP AN10441;
+Infineon FM24V05/FM24V10/FM24CL64B/CY15B256J datasheets (the SCL/SDA exception); RAMXEED
+MB85RC512TY-DS1v1-E / MB85RC1MT-DS5v2-E / MB85RC256V (abs-max + power-sequence diagrams); ST
+M24M01-A125 datasheet; ADI EZ Q&A 599909; Arduino forum 515790 (measured 0.88 mA phantom draw).

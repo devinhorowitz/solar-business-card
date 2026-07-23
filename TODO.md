@@ -197,14 +197,21 @@ shell re-machine. Updated 2026-07-11._
 
 ## Firmware — `firmware/`, `firmware/README.md`
 
-- [ ] **[BENCH-GATE, first power-up] FRAM I2C back-power measurement** _(2026-07-23 review find; full
-  analysis in the design-notes 2026-07-23 addendum)._ U7's SDA/SCL sit at 3.3 V (VS pull-ups) while
-  its VDD (gated VNFC) is 0 -- past the FRAM's abs-max **VIN <= VDD + 0.5 V** (DS501-00087). If the
-  FRAM inputs have a VDD clamp diode this leaks **up to ~1.1 mA continuously** through U6's QOD
-  pulldown (~300x the standby budget) and needs a fix (firmware bus-park low between transactions, or
-  an I2C isolator); if clamp-free it is a paper deviation only. **Meter VS idle current with the bus
-  idle-high vs held-low, and scope VNFC, before trusting any standby numbers.** The NT3H2211 is NOT
-  exposed (no input-voltage limit -- VCC-off bus operation is its design mode); this is v4/FRAM-only.
+- [ ] **[DESIGN DECISION + SCH/PCB/FW] FRAM back-power: adopt the VS-rail + Sleep-mode fix** _(2026-07-23
+  deep-dive; verdict + full trade study in the design-notes deep-dive addendum)._ Research flipped the
+  working assumption to **"the VDD clamp is real until proven otherwise"** (MB85RC lacks the fail-safe
+  SCL/SDA exemption its Ramtron-lineage competitors print; industry consensus + a 0.88 mA field
+  measurement of the same architecture). The current netlist (U7 on gated VNFC, R10/R11 on VS) likely
+  stands **~0.5-1.1 mA** -- treat as a design defect, not a curiosity. **Recommended fix (option A):
+  re-net U7 pad 8 + C28.1 from VNFC to VS and park the FRAM in its I2C Sleep mode (IZZ 0.20 uA typ /
+  10 uA max at 125 degC; enter S+F8h, addr, S+86h; ~450 us wake)** -- kills the abs-max exposure by
+  construction, is power-ramp-compliant (same-rail pull-ups track VDD; tr/tf are minimums), and keeps
+  the tag's proven gate untouched. Firmware half: fram.c drops NFC_EN coupling, sleeps U7 at boot +
+  re-sleeps after every bus use (wake-address selectivity is ambiguous in the datasheet -- defensive
+  re-sleep covers it). Alternatives ranked in the addendum (switched-pullup GPIO / TCA4311A isolator /
+  ST M24M01-A125 fallback part). _The earlier "bus-park low" idea is retracted -- driving the bus low
+  against VS pull-ups burns ~1.4 mA._ Bench then **verifies** (IZZ, wake behavior, VS idle current)
+  instead of gating. The NT3H2211 remains unexposed (no input-voltage limit; VCC-off is its design mode).
 - [ ] **[BENCH] Read + log the EA silicon revision (B1 vs B2)** _(2026-07-23)._ Errata 2.2.1-2.2.3
   (DS80001048C, now in `datasheets/`) are Rev. B1-only; the firmware carries the 2.2.3 SLPCTRL
   NOP-guard workaround either way (one cycle on B2) and `EE_WRITE_FLOOR_MV` covers 2.2.1. Read
