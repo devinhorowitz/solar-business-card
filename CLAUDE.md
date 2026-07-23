@@ -3,12 +3,12 @@
 Orientation for Claude Code (and any contributor) working in this repo.
 
 ## What this is
-A business-card-sized PCB that runs on harvested indoor light: an **AVR64DD28**
+A business-card-sized PCB that runs on harvested indoor light: an **AVR64EA28**
 breathes four amber LEDs through a "DRH" monogram cut into the front copper
 (backlit through bare FR4), while two indoor solar cells trickle-charge a
 **1 F / 5.5 V supercap tank**. Tap-to-wake via accelerometer (no button); an NFC
 tag serves a contact vCard. Current revision: **v4.0 -- the managed-solar redesign
-(AVR64DD28 + AEM10300 active harvest), in progress; the working files are `v4_0`.**
+(AVR64EA28 + AEM10300 active harvest), in progress; the working files are `v4_0`.**
 v3.0 (2-layer, fully routed, passive diode feed + shunt clamp) is frozen as the
 **final unmanaged-solar revision**. The v4 rework is specified in the v4 addendum of
 `solar-glow-drh-design-notes.md` and the net/pin plan `v4-aem10300-prewiring.md`; the

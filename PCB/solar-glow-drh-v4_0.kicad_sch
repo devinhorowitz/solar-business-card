@@ -7837,7 +7837,7 @@
 				(pin passive line
 					(at 0 -45.72 0)
 					(length 2.54)
-					(name "VDDIO2"
+					(name "PD0"
 						(effects
 							(font
 								(size 1 1)

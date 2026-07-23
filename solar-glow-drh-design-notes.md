@@ -214,13 +214,15 @@ re-spin for the enclosure:
 - **General cavity 1.80 mm (cap-limited), plus a relief pocket** -- the four **1.70 mm
   supercaps** (SS17 + WS17, both 1.70 mm) set the general cavity (1.80 = cap + 0.10 mm air, toleranced 1.80 ±0.05). U7
   (MB85RC512TY FRAM, SOIC-8_3.9x4.9mm, 1.75 mm, on B.Cu) is now the single tallest populated part
-  (U2/ALD910025 was deleted in v4). The **local 0.05 mm relief pocket** (floor 0.95 mm there vs
+  (U2/ALD910025 was deleted in v4). _(2026-07-23: superseded — U7 repackaged to the **0.90 mm DFN**
+  LCC-8P-M05, so the 1.75 mm premise and the U7 relief pocket are stale; see the TODO geometry items.)_ The **local 0.05 mm relief pocket** (floor 0.95 mm there vs
   1.00 general) was located under U2, so **confirm U7's placement actually sits over the pocket**
   before relying on it; with the pocket it keeps 0.10 mm air while the general cavity stays 1.80. The
   0.9 mm QFN is irrelevant. ("Cells" elsewhere can mean the 1.2 mm **solar** cells on the front — a
   different part; don't conflate the two.)
 - **No tall back-side parts.** The cavity budget assumes the tallest *populated* rear part is U7 (MB85RC512TY FRAM, SOIC-8) at
-  1.75 mm. The v2-era 2.54 mm breakout headers (old JP1/JP2) are gone in v3.0; the reused-`JP1`
+  1.75 mm. _(2026-07-23: stale — U7 is now the 0.90 mm DFN; recompute, the driver likely becomes
+  U9 / the 0805 caps.)_ The v2-era 2.54 mm breakout headers (old JP1/JP2) are gone in v3.0; the reused-`JP1`
   bench strip + `TP1` are flat SMD pads (nothing to populate — a soldered header would stop the
   shell closing, same as ever). J1/TC2030 are flat back-side pads.
 - **The button is the accel tap** (cap-touch dies behind a grounded plate; the old "snap-dome"
@@ -767,7 +769,10 @@ prioritization rather than a blanket "everything AEC-Q100" sweep.
     independent of the ceiling (the archive should survive heat even after the cap has degraded).
   - **Load switch U6: `TPS22918` -> `TPS22918-Q1`** (AEC-Q100; orderable `TPS22918QDBVRQ1`, same
     SOT-23-6 / DBV footprint -- the base datasheet cross-references the -Q1 directly). It only gates the
-    NFC/FRAM VCC, so thermal stress is low, but it is a zero-cost drop-in, so taken.
+    NFC/FRAM VCC, so thermal stress is low, but it is a zero-cost drop-in, so taken. _(Superseded
+    2026-07-23: executed instead as **`TPS22917DBVT`** — the ultra-low-leakage sibling, 10 nA I_SD,
+    ~50× lower off-state drain; no AEC variant exists, and dark current beat grade for this
+    always-energized, ~always-off switch. See the TODO 6-pin audit + BOM.)_
 
 - **Evaluated and rejected -- automotive accelerometer (full survey + FXLS8961 head-to-head).**
   Surveyed all 34 in-stock AEC-Q accelerometers against the ADXL367's role. 28 are airbag/crash sensors

@@ -195,7 +195,7 @@ hand-tinning. Order it alongside the board.
 
 **BOM state.** The masters are now **`solar-glow-drh-v4_0-BOM.xlsx`** and
 **`solar-glow-drh-v4_0-BOM-assembly.xlsx`**, reworked for the v4.0 managed-solar redesign - the passive diode/shunt/comparator parts (U2, U4, Q1, D1, D9–D11, R7–R9) are removed and the AEM10300 harvest chain (U7, U8, U9, L2, FB1, C22–C28, R15–R17) is added, on top of the earlier fixes:
-**U6 (TPS22918) and R14 (1 M `NFC_EN` pulldown) added**, the stale **JP1/JP2 rows dropped** (the `JP1` designator is reused for the v3.0 bench pad strip — bare pads, not a BOM part)
+**U6 (TPS22917DBVT since the 2026-07-23 dark-current swap) and R14 (1 M `NFC_EN` pulldown) added**, the stale **JP1/JP2 rows dropped** (the `JP1` designator is reused for the v3.0 bench pad strip — bare pads, not a BOM part)
 (those headers left the board in v3.0), and **most passives converted to 0402**, with the four bulk/buffer caps C4, C13, C25, C27 on 0603 lands (C28 is 0402) and SJ1 on its own 0R land, to match
 the board's placed lands — the v2.2 file still listed 0805 MPNs for most R/C. Converted and added
 lines have their **prices blanked pending a fresh quote**; the old 0805 prices don't carry. The

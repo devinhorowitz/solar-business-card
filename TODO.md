@@ -16,7 +16,8 @@ shell re-machine. Updated 2026-07-11._
   voltage/tol bumps where free (100 nF 16→50 V; C4/C13/C27 10→16 V; C23 10→25 V; C26 6.3→10 V; C22/C25
   grade). **Resistors Yageo RC→AC (AEC-Q200)**; the **VSENSE divider R5/R6 → precision Yageo RE
   0.1%/50 ppm** (`RE0402BRE071ML`). **U6 → AEC-Q100 `TPS22918TDBVRQ1`** (pin-identical drop-in — fixes
-  the zero-stock DBVR and upgrades grade). ~~Note: R15 (2 M) has no 0.1%/50 ppm option in 0402, so the
+  the zero-stock DBVR and upgrades grade). _(U6 later re-swapped 2026-07-23 to `TPS22917DBVT` — see
+  the 6-pin dark-current audit item below.)_ ~~Note: R15 (2 M) has no 0.1%/50 ppm option in 0402, so the
   STO-sense divider (R15/R16) stays AEC-Q200 grade only.~~ _Superseded 2026-07-23: R15+R16 moved to 0603
   precision — see the rework item below._ Schematic MPNs + BOM + `Supplier P/N` fields all updated;
   schematic↔BOM cross-check clean.
@@ -53,8 +54,11 @@ shell re-machine. Updated 2026-07-11._
   from Schematic**, place the two 0603s, re-route, re-DRC. Height ~0.55 mm vs 0.5 mm — enclosure-benign.
   Beware the metric-name trap when picking any footprint by hand: imperial 0603 = `R_0603_1608Metric`;
   anything named `*_0603Metric` is an 0201.
-- [ ] **[SCH→PCB+ENCL] U7 FRAM repackage: SOP-8 → DFN (0.90 mm) — draw the land, route, recheck the
-  shell pocket** _(2026-07-23; schematic + BOM DONE, board + enclosure pending)._ U7 swapped to
+- [ ] **[SCH→PCB+ENCL] U7 FRAM repackage: SOP-8 → DFN (0.90 mm) — land ROUTED + VERIFIED; footprint
+  identity swap + shell-pocket recheck remain** _(2026-07-23; schematic + BOM + board copper DONE —
+  pads/nets/stubs electrically verified, 0 unconnected. Remaining: Change Footprint U7 →
+  `solarglow:U7_DFN8` (`PCB/fp-lib-table` now registers the lib; reopen project first), optionally
+  re-snap the 3 signal stub ends to the new pad centers, re-DRC; then the enclosure recheck.)_ U7 swapped to
   **`MB85RC512TYPN-GS-AWEWE1`** — the same MB85RC512TY die in the **DFN LCC-8P-M05** (5.0×6.0 mm,
   **0.90 mm MAX** vs 1.75 mm SOP-8; identical electricals/price, DK `865-MB85RC512TYPN-GS-AWEWE1CT-ND`,
   1500 stock). Board: the footprint is now **in the repo:
@@ -62,10 +66,9 @@ shell re-machine. Updated 2026-07-11._
   numerically verified (100% terminal coverage at nominal AND both tolerance extremes; 0.35–0.45 mm
   hand-solder toe outside the body; no EP — the package has none; stock KiCad DFN numbering, pin 1
   top-left). No professional footprint exists for LCC-8P-M05: official KiCad lib + DigiKey KiCad lib
-  searched (absent), SnapEDA/SamacSys unreachable, RAMXEED publishes no CAD. **Copy the file into your
-  local `solarglow` library** (or add `PCB/solarglow.pretty` as the `solarglow` lib in KiCad's footprint
-  table), replace U7's board footprint via Update-PCB, re-drag the 8 stubs (old pads were at ±2.9,
-  new at ±2.1), re-DRC. Reflow/hot-air is the intended process; the long toe is the iron fallback. Enclosure:
+  searched (absent), SnapEDA/SamacSys unreachable, RAMXEED publishes no CAD. `PCB/fp-lib-table` (committed 2026-07-23) registers `solarglow` for the project — reopen the
+  project, Change Footprint on U7, re-DRC. (Stubs already re-dragged; the hand-made pad array sits
+  +0.15 mm off the anchor, so the library pads land 0.15 mm over — all stub ends stay on-pad.) Reflow/hot-air is the intended process; the long toe is the iron fallback. Enclosure:
   U7 was the tallest rear part and drove the backshell's dedicated 0.95 mm floor pocket — at 0.90 mm
   the cavity driver likely becomes the 0805s (~1.25 mm), so **the U7 pocket may be deletable**; recheck
   `enclosure/*cad.py` after the board lands. (Correction from the p.21 drawing: the terminals are
@@ -284,11 +287,11 @@ shell re-machine. Updated 2026-07-11._
   intended ~0.05 mm no-rattle contact the brace's fit relies on. Shell is source-of-truth;
   resolve the brace rail coords (or add `edge_fit` to the shell `_cav_inner`), then regen.
   (`…-backshell-…-cad.py` vs `…-diffuser-brace-cad.py`.)
-- [ ] **[geometry] Floor relief must be re-keyed from U2 to the v4 FRAM (U7)** - U2 (v3 ALD910025 balancer) is gone; the tallest populated B-side part is now U7 (MB85RC512TY FRAM, SOIC-8, 1.75 mm). U7 landed at (28.1, 37.3) on B.Cu -- essentially on the deleted U2's spot, so the relief pocket barely moves. (U8, the AEM10300 QFN-28, is ~0.9 mm and needs no relief.)
+- [ ] **[geometry] Floor relief re-key — now likely a relief DELETE (U7 went DFN)** - U2 (v3 ALD910025 balancer) is gone, and U7 (MB85RC512TY FRAM, at (28.1, 37.3) B.Cu) is the **0.90 mm DFN** since the 2026-07-23 repackage, not the 1.75 mm SOIC-8 the pocket was sized for — at 0.90 mm it needs no relief, same as the ~0.9 mm U8 QFN. Re-derive the tallest rear part (U9 SOT-23 / the 0805 caps) and most likely delete the pocket.
   `…-backshell-…-cad.py` still carries `U2_POS = (30.10, 37.64)` for the deleted part; re-key it to
   U7's (28.1, 37.3) (rename `U2_POS` -> `U7_POS`), then regen the STEP/STL and the derived
   drawing/README note-7 copies. PCB is frozen truth. _(audit find)._
-- [ ] **[geometry] Repoint the brace generator to the v4 board + fill `part_height` for the v4 parts** _(audit find)._ `…-diffuser-brace-cad.py` line 54 hardcodes a v3_0 path (`PCB = ".../solar-glow-drh-v3_0.kicad_pcb"`, an absolute path that also does not resolve here), so its pocket map is still v3. `part_height()` has entries only for U2/U6/U1/U3/U5 -- the v4 additions fall through to the 0.60 default, too shallow for the tall ones (U7 FRAM SOIC-8 1.75, U9 LDO SOT-23-6 ~1.45, L2 2520 ~1.0, and the 0603 bulk caps C4/C13/C25/C27 ~0.9). Repoint to the v4 board, drop the U2 entry, add U7/U9/L2 + a 0603-cap height, then regen the brace STEP/STL and confirm no pocket collisions / thin-wall merges broke.
+- [ ] **[geometry] Repoint the brace generator to the v4 board + fill `part_height` for the v4 parts** _(audit find)._ `…-diffuser-brace-cad.py` line 54 hardcodes a v3_0 path (`PCB = ".../solar-glow-drh-v3_0.kicad_pcb"`, an absolute path that also does not resolve here), so its pocket map is still v3. `part_height()` has entries only for U2/U6/U1/U3/U5 -- the v4 additions fall through to the 0.60 default, too shallow for the tall ones (U9 LDO SOT-23 ~1.45, L2 2520 ~1.0, the 0805 caps C26/C27 ~1.25, and the 0603 bulk caps C4/C13/C25 ~0.9; U7 is the 0.90 mm DFN since 2026-07-23 — no longer tall). Repoint to the v4 board, drop the U2 entry, add U7/U9/L2 + a 0603-cap height, then regen the brace STEP/STL and confirm no pocket collisions / thin-wall merges broke.
 - [ ] **Fab drawing still renders the retired locator pillars** _(audit find)_ + NOTE 4
   (Ø3.2 recesses), contradicting the pillar-free STEP — and it's the file attached to the
   PCBWay CNC quote. De-pillar `…-backshell-…-DRAWING-gen.py` and regenerate the PDF/PNG.

@@ -25,7 +25,7 @@ card's largest idle load. See **NFC contact card** below.
 > The **NFC** firmware is verified against the NTAG I2C plus datasheet
 > (NT3H2111_2211 Rev 3.6), and the whole front-end is on the committed
 > `solar-glow-drh-v4_0.kicad_pcb`, verified from its copper: tag `U5`, the `U6`
-> (TPS22918) VCC load switch, `R14` and `C8` are placed and wired as this
+> (TPS22917) VCC load switch, `R14` and `C8` are placed and wired as this
 > firmware assumes — FD→PA6, NFC_EN→PA7→`U6` enable, `U6` gating VS→the switched
 > tag rail (`VNFC`), the internal PA6 pull-up holding FD to **VS**, `R14` (1 M) holding NFC_EN low.
 > What still needs the bench is electrical, not wiring: that FD swings to a valid
@@ -148,7 +148,7 @@ AVR64EA28, VQFN-28, on the **back** of the board.
 | 1 | PA3 | LDRV1 | LED D2, TCA0 WO3 |
 | 2 | PA4 | EN_STO_CH | AEM10300 charge gate, open-drain, LOW = disable charge during NFC read |
 | 4 | PA6 | FD | NFC field-detect in (`U5`); PORTA pin int, **both edges**; field-powered (works VCC-off); int pull-up on (sole FD pull-up; no external FD resistor) |
-| 5 | PA7 | NFC_EN | Enables the NFC VCC load switch (`U6`, TPS22918), **active-HIGH**; init LOW = NFC off. (`R14`, 1 M, holds `U6` off while PA7 tristates during reset/UPDI/brown-out -- at (5.35, 4.92) on the board. Firmware also drives PA7 low-before-output and low-before-sleep, so the window is covered both ends.) |
+| 5 | PA7 | NFC_EN | Enables the NFC VCC load switch (`U6`, TPS22917), **active-HIGH**; init LOW = NFC off. (`R14`, 1 M, holds `U6` off while PA7 tristates during reset/UPDI/brown-out -- at (5.35, 4.92) on the board. Firmware also drives PA7 low-before-output and low-before-sleep, so the window is covered both ends.) |
 | 8 | PC2 | SDA | TWI0 host (PORTMUX **ALT2**), ext 4.7k → VS |
 | 9 | PC3 | SCL | TWI0 host (ALT2), ext 4.7k → VS |
 | 10 | PD0 | n/c | plain EA GPIO on the DD's old VDDIO2 pad; `SJ1` = DNP, so the pin floats — held by an internal pull-up in `gpio_init` |

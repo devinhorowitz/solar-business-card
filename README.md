@@ -77,7 +77,7 @@ all lives on the back, ready for an optional machined-metal back-shell.
 
 | Block | Part | Notes |
 |---|---|---|
-| MCU | **AVR64DD28** (28-VQFN) | TCA0 hardware PWM, I²C to the accel, charge/sleep logic; MVIO-capable (unused) |
+| MCU | **AVR64EA28** (28-VQFN) | TCA0 hardware PWM, I²C to the accel, charge/sleep logic; 2026-07 family swap from the AVR64DD28 (12-bit diff ADC + PGA; no MVIO on the EA, so SJ1 is DNP) |
 | Solar | **2× ANYSOLAR SM141K06TF** | monocrystalline indoor cells (Voc 4.15 V), in parallel — two panels ≈ 2× the harvest |
 | Harvest PMIC | **e-peas AEM10300** (U8, QFN-28 4×4) | MPPT buck-boost that merges both panels at SRC and charges the supercap tank (STO) - replaces the v3 per-panel blocking diodes |
 | Storage | **2× SCHURTER 3-153-440** (SS17, 1.8 F) + **2× 3-153-438** (WS17, 1.0 F) | hybrid tank, 2.75 V/cell, wired 2S2P → **~1.3 F @ 5.5 V ≈ 21 J** on one balanced node (AEM holds MID so the smaller WS pair can't over-volt) |
@@ -92,12 +92,19 @@ all lives on the back, ready for an optional machined-metal back-shell.
 **Breakouts and features:** a **TC2030** Tag-Connect pad (`TC1`) for hands-free UPDI
 programming, a backup UPDI header (`J1`), a **5-pad bench strip** on the back east edge
 (`TP1` SRC + `JP1` GND/STO/SCL/SDA - bare SMD probe pads for bench power injection and an I²C
-tap; pinout in `solar-glow-drh-v2-hardware.md`), per-LED disable jumpers (`SB1–4`), a VDDIO2
-tie jumper (`SJ1`), and **eight grounded M2 mounting holes** (four corners + four panel-corner at the E/W mid-edges). (The v2-era
+tap; pinout in `solar-glow-drh-v2-hardware.md`), per-LED disable jumpers (`SB1–4`), the retired VDDIO2
+tie jumper (`SJ1`, DNP since the AVR-EA swap), and **eight grounded M2 mounting holes** (four corners + four panel-corner at the E/W mid-edges). (The v2-era
 `JP1`/`JP2` 2.54 mm breakout headers are gone; the `JP1` name is reused for the strip.)
 
 Full part numbers, pricing, and per-part datasheet links are in
-**`PCB/solar-glow-drh-v4_0-BOM.xlsx`** - the master BOM (v4.0): **U6 (TPS22918) and R14 (1 M `NFC_EN` pulldown) included**, the stale JP1/JP2 rows dropped (the `JP1` designator is reused in v3.0 for the bench pad strip - bare pads, no BOM part), and most passives converted to **0402** to match the board lands, except the bulk caps C4/C13/C25/C27 (0603) and SJ1. Converted/added lines have prices blanked pending a fresh quote (U6 quoted: TPS22918DBVR $0.55 @ qty 1, DigiKey 2026-07-02). Lineage: v2.2 added the NFC parts (U5 / C8 / C9 / R13); the `v2 2` and older BOM files stay in the repo as history.
+**`PCB/solar-glow-drh-v4_0-BOM.xlsx`** - the master BOM (v4.0): every orderable line now carries a
+live-verified distributor P/N and price (2026-07-23 sweep, subtotal ≈ $139.76). **U6 is the
+TPS22917DBVT** (ultra-low-leakage dark-current swap) with **R14 (1 M `NFC_EN` pulldown)**; the stale
+JP1/JP2 rows are dropped (the `JP1` designator is reused in v3.0 for the bench pad strip - bare pads,
+no BOM part). Passives are X7R / AEC-Q200 / precision grade: most on **0402** lands, with the
+stability upsizes on 0603 (C22/C23, R5/R6, R15/R16, plus the bulk caps C4/C13/C25) and 0805
+(C26/C27); SJ1 is DNP. Lineage: v2.2 added the NFC parts (U5 / C8 / C9 / R13); the `v2 2` and older
+BOM files stay in the repo as history.
 
 ---
 
@@ -157,7 +164,7 @@ solar-business-card/
 ├── solar-glow-drh-v2-hardware.md   # as-built wiring & pin map (v2-era; v3.0 LED-map delta noted at top)
 ├── solar-glow-drh-v2-mechanical.md # board mechanics, keepouts, access (v2-era; v3.0 hole/enclosure deltas at top)
 ├── solar-glow-drh-design-notes.md  # design rationale, energy model, lineage (incl. the v3.0 chapter)
-├── firmware/                       # bare-metal C (AVR64DD28); register-verified, see firmware/README.md
+├── firmware/                       # bare-metal C (AVR64EA28); compile-verified, see firmware/README.md
 ├── datasheets/                     # every component's datasheet
 ├── docs/                           # renders and figures
 ├── enclosure/                      # machined-titanium back-shell: CAD / STEP / STL / README (v3.0 + v2.1 kept)
@@ -201,8 +208,8 @@ The board is a KiCad project — open it, run DRC, and export the fab set:
 ## Firmware
 
 A first implementation now lives in **`firmware/`** — bare-metal C, **verified at the register
-level** against the AVR64DD28 and ADXL367 datasheets but **not yet compiled against a real
-toolchain or run on hardware**. Its knobs, wake model, and power notes are in
+level** against the AVR64EA28 and ADXL367 datasheets and **compile-verified in CI** (warning-free
+against the AVR-Ex DFP; not yet run on hardware). Its knobs, wake model, and power notes are in
 **`firmware/README.md`** (authoritative); the wiring it targets is in
 **`solar-glow-drh-v2-hardware.md`** (complete pin map, PORTMUX, the accel at I²C `0x1D`). Final
 duty-cycle and feature tuning stay **gated on the energy-budget measurement** below. In short,
