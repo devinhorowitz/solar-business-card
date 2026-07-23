@@ -23111,7 +23111,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Package_SO:SOIC-8_3.9x4.9mm_P1.27mm"
+		(property "Footprint" "solarglow:U7_DFN8"
 			(at 867.41 382.27 0)
 			(hide yes)
 			(show_name no)
@@ -23133,7 +23133,7 @@
 				)
 			)
 		)
-		(property "Description" "512kbit I2C FeRAM 0x50, power-gated via VNFC"
+		(property "Description" "512kbit I2C FeRAM 0x50, power-gated via VNFC; DFN LCC-8P-M05 5.0x6.0mm, 0.90mm MAX (was SOP-8 1.75mm)"
 			(at 855.98 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -23144,7 +23144,7 @@
 				)
 			)
 		)
-		(property "MPN" "MB85RC512TYPNF-GS-BCERE1"
+		(property "MPN" "MB85RC512TYPN-GS-AWEWE1"
 			(at 855.98 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -23166,7 +23166,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "865-MB85RC512TYPNF-GS-BCERE1CT-ND"
+		(property "Supplier P/N" "865-MB85RC512TYPN-GS-AWEWE1CT-ND"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
