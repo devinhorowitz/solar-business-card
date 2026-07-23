@@ -19,7 +19,7 @@ Row,Description,Part,References,Value,Footprint,Quantity Per PCB,Status,Datashee
 18,3-axis accelerometer (tap/double-tap wake),U3,U3,ADXL367,ADXL367 CC-12-4_ADI,1, ,datasheets/U3  ADXL367BCCZ-RL7  $7.50.pdf,ADXL367BCCZ-RL7,DigiKey,505-ADXL367BCCZ-RL7CT-ND,
 19,"AEM10300 buck-boost ambient energy harvester PMIC (MPPT), QFN-28 4x4",U8,U8,AEM10300,U1,1, ,datasheets/aem10300.pdf,10AEM10300C0000,Mouser,120-AEM10300-QFN,
 20,"MCU - 8-bit AVR (PWM, I2C, charge/sleep logic)",U1,U1,AVR64DD28 (VQFN28),U1,1, ,datasheets/U1  AVR64DD28-I-STX  $1.17.pdf,AVR64DD28-I/STX,DigiKey,150-AVR64DD28-I/STX-ND,
-21,"512kbit I2C FeRAM 0x50, power-gated via VNFC",U7,U7,MB85RC512TY,U7_DFN8,1, ,datasheets/U7  MB85RC512TYPNF-GS-BCERE1  $10.19.pdf,MB85RC512TYPNF-GS-BCERE1,DigiKey,865-MB85RC512TYPNF-GS-BCERE1CT-ND,package/gullwing
+21,"512kbit I2C FeRAM 0x50, power-gated via VNFC; DFN LCC-8P-M05 5.0x6.0mm, 0.90mm MAX (was SOP-8 1.75mm)",U7,U7,MB85RC512TY,U7_DFN8,1, ,datasheets/U7  MB85RC512TYPNF-GS-BCERE1  $10.19.pdf,MB85RC512TYPNF-GS-BCERE1,DigiKey,865-MB85RC512TYPNF-GS-BCERE1CT-ND,package/gullwing
 22,NFC tag - NTAG I2C plus 2K,U5,U5,NT3H2211,U5,1, ,datasheets/U5  NT3H2211W0FHKH  $1.38.pdf,NT3H2211W0FHKH,DigiKey,568-12901-1-ND,
 23,NFC VNFC high-side load switch,U6,U6,TPS22918,SOT-23-6,1, ,datasheets/U6  TPS22918DBVR  $0.55.pdf,TPS22918TDBVRQ1,DigiKey,296-44632-1-ND,package/gullwing
 24,"TPS7A0233 nanopower LDO, 3.3V fixed, ~25nA Iq (VS rail)",U9,U9,TPS7A0233 (SOT23-5*),SOT-23-6,1, ,,TPS7A0233PDBVR,DigiKey,296-TPS7A0233PDBVRCT-ND,package/gullwing
@@ -32,7 +32,7 @@ Project info:
 Schematic:,solar-glow-drh-v4_0
 Variant:,default
 Revision:,
-Date:,2026-07-23_04-15-18
+Date:,2026-07-23_05-19-09
 KiCad Version:,10.0.4-10.0.4~ubuntu25.10.1
 Statistics:
 Component Groups:,25
