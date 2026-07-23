@@ -23188,6 +23188,17 @@
 				)
 			)
 		)
+		(property "Sim.Library" ".\\"
+			(at 855.98 372.11 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(pin "1"
 			(uuid "251eeaa6-ca3c-43ab-9ee2-13d9d580ba88")
 		)
