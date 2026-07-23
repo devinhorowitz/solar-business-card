@@ -1,5 +1,5 @@
 ** Drc report for solar-glow-drh-v4_0.kicad_pcb **
-** Created on 2026-07-22T23:44:38 **
+** Created on 2026-07-23T01:16:20 **
 ** Report includes: Errors, Warnings, Exclusions **
 
 ** Found 17 DRC violations **
@@ -8,20 +8,20 @@
     @(31.7500 mm, 50.9500 mm): PCB text 'TINY MODE' on B.Silkscreen
 [silk_over_copper]: Silkscreen clipped by solder mask
     Local override; warning
-    @(22.9750 mm, 48.5750 mm): Segment on B.Silkscreen
-    @(26.7750 mm, 48.0500 mm): Pad 1 [ANODE] of C13 on B.Cu
-[silk_over_copper]: Silkscreen clipped by solder mask
-    Local override; warning
-    @(22.9750 mm, 48.5750 mm): Segment on B.Silkscreen
-    @(25.2250 mm, 48.0500 mm): Pad 2 [GND] of C13 on B.Cu
-[silk_over_copper]: Silkscreen clipped by solder mask
-    Local override; warning
     @(30.5250 mm, 43.1000 mm): Segment of D4 on B.Silkscreen
     @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
 [silk_over_copper]: Silkscreen clipped by solder mask
     Local override; warning
     @(24.2250 mm, 43.1000 mm): Segment of D3 on B.Silkscreen
     @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(22.9750 mm, 48.5750 mm): Segment on B.Silkscreen
+    @(25.2250 mm, 48.0500 mm): Pad 2 [GND] of C13 on B.Cu
+[silk_over_copper]: Silkscreen clipped by solder mask
+    Local override; warning
+    @(22.9750 mm, 48.5750 mm): Segment on B.Silkscreen
+    @(26.7750 mm, 48.0500 mm): Pad 1 [ANODE] of C13 on B.Cu
 [silk_over_copper]: Silkscreen clipped by solder mask
     Local override; warning
     @(17.9250 mm, 43.1000 mm): Segment of D2 on B.Silkscreen
@@ -73,7 +73,13 @@
 
 ** Found 0 unconnected pads **
 
-** Found 0 Footprint errors **
+** Found 2 Footprint errors **
+[footprint_symbol_mismatch]: Package_DFN_QFN:DFN-8-1EP_6x5mm_P1.27mm_EP4x4mm doesn't match footprint given by symbol (solarglow:U7_DFN8)
+    Local override; warning
+    @(28.1000 mm, 37.3000 mm): Footprint U7
+[footprint_symbol_field_mismatch]: Field 'MPN' differs (PCB: 'MB85RC512TYPNF-GS-BCERE1', Schematic: 'MB85RC512TYPN-GS-AWEWE1')
+    Local override; warning
+    @(28.1000 mm, 37.3000 mm): Footprint U7
 
 ** Ignored checks **
     - Footprint has no courtyard defined
