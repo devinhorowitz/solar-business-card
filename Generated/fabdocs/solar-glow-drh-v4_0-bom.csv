@@ -1,10 +1,10 @@
 Row,Description,Part,References,Value,Footprint,Quantity Per PCB,Status,Datasheet,MPN,Supplier,Supplier P/N,KiLib_Generator
 1,100 nF X7R decoupling VSENSE filter 100 nF,C1,C1 C3 C5 C6 C7 C8 C12 C24 C28,100nF,C1,9, ,,GRT155R71H104KE01D,DigiKey,490-GRT155R71H104KE01DCT-ND,SMD_2terminal_chip_molded
 2,Accelerometer VREG_OUT decoupling 0.22 uF,C11,C11,220nF,C11,1, ,,GRT155R71C224KE01D,DigiKey,490-GRT155R71C224KE01DCT-ND,
-3,1uF 0402 LDO input cap (STO side),C22,C22,1uF,C1,1, ,,GRT155R61E105KE01J,DigiKey,490-GRT155R61E105KE01JCT-ND,
-4,"2.2uF 25V 0402 X5R, LDO output (VS); TPS7A02 needs >=0.5uF effective, 1uF worst-cased at the floor",C23,C23,2.2uF,C1,1, ,,GRT155R61E225KE13D,DigiKey,490-12267-1-ND,
+3,1uF 0402 LDO input cap (STO side),C22,C22,1uF,C_0603_1608Metric,1, ,,GRT155R61E105KE01J,DigiKey,490-GRT155R61E105KE01JCT-ND,
+4,"2.2uF 25V 0402 X5R, LDO output (VS); TPS7A02 needs >=0.5uF effective, 1uF worst-cased at the floor",C23,C23,2.2uF,C_0603_1608Metric,1, ,,GRT155R61E225KE13D,DigiKey,490-12267-1-ND,
 5,"VS bulk 10uF 16V 0603 X5R (was 4.7uF 0402); more effective VS bulk for transients, 0603 land LED-anode bulk 10uF 16V 0603 X5R (was 4.7uF 0402); keeps glow transient off VS, 0603 land 10uF 16V 0603 X5R, STO local bulk/decoupling; 16V rating + 0603 for the 4.65V STO node (was 6.3V 10uF 0402)",C4,C4 C13 C27,10uF,C_0603_1608Metric,3, ,,GRT188R61C106KE13D,DigiKey,490-12317-1-ND,SMD_2terminal_chip_molded
-6,10uF 0402 AEM VINT buffer cap,C26,C26,10uF,C1,1, ,,GRT155R61A106ME13J,DigiKey,490-GRT155R61A106ME13JCT-ND,
+6,10uF 0402 AEM VINT buffer cap,C26,C26,10uF,C_0805_2012Metric,1, ,,GRT155R61A106ME13J,DigiKey,490-GRT155R61A106ME13JCT-ND,
 7,"22uF 10V 0603 X5R, AEM SRC decoupling (aem10300.pdf Table 11 CSRC)",C25,C25,22uF,C_0603_1608Metric,1, ,,GRT188R61A226ME13D,DigiKey,490-GRT188R61A226ME13DCT-ND,SMD_2terminal_chip_molded
 8,Glow LED - reverse-mount amber,D2,D2 D3 D4 D5,LA P47F,D2,4, ,datasheets/D2-D5  LA P47F-V2BB-24-3B5A-30-R18-Z  $0.43.pdf,LA P47F-V2BB-24-3B5A-30-R18-Z,DigiKey,475-LAP47F-V2BB-24-3B5A-30-R18-ZCT-ND,
 9,"Ferrite bead 0603, STO island feed filter",FB1,FB1,ferrite,C1,1, ,,BLM18PG221SN1D,DigiKey,490-5221-1-ND,
@@ -14,7 +14,7 @@ Row,Description,Part,References,Value,Footprint,Quantity Per PCB,Status,Datashee
 13,I2C pull-up 4.7 kohm,R10,R10 R11,4.7k,R10,2, ,,AC0402FR-074K7L,DigiKey,YAG3497CT-ND,
 14,NFC_EN pulldown 1 Mohm 1M 0402 EN_STO_CH pull-up to VINT,R14,R14 R17,1M,R14,2, ,,AC0402FR-071ML,DigiKey,YAG3450CT-ND,
 15,"1M 0603 thin film 0.1% 25ppm, STO sense divider bottom (STO_SNS->GND)",R16,R16,1M,R_0603_1608Metric,1, ,,RT0603BRD071ML,DigiKey,YAG4498CT-ND,SMD_2terminal_chip_molded
-16,VSENSE divider 1 Mohm,R5,R5 R6,1M,R5,2, ,,RE0402BRE071ML,DigiKey,13-RE0402BRE071MLCT-ND,
+16,VSENSE divider 1 Mohm,R5,R5 R6,1M,R_0603_1608Metric,2, ,,RE0402BRE071ML,DigiKey,13-RE0402BRE071MLCT-ND,
 17,"2M 0603 thin film 0.1% 25ppm, STO sense divider top (STO->STO_SNS)",R15,R15,2M,R_0603_1608Metric,1, ,,MCT0603MD2004BP500,DigiKey,541-MCT0603MD2004BP500CT-ND,SMD_2terminal_chip_molded
 18,VDDIO2 tie - 0 ohm jumper,SJ1,SJ1,0R,SJ1,1, ,,RC0805JR-070RL,DigiKey,311-0.0ARCT-ND,
 19,3-axis accelerometer (tap/double-tap wake),U3,U3,ADXL367,ADXL367 CC-12-4_ADI,1, ,datasheets/U3  ADXL367BCCZ-RL7  $7.50.pdf,ADXL367BCCZ-RL7,DigiKey,505-ADXL367BCCZ-RL7CT-ND,
@@ -33,7 +33,7 @@ Project info:
 Schematic:,solar-glow-drh-v4_0
 Variant:,default
 Revision:,
-Date:,2026-07-23_01-03-31
+Date:,2026-07-23_02-06-57
 KiCad Version:,10.0.4-10.0.4~ubuntu25.10.1
 Statistics:
 Component Groups:,26
