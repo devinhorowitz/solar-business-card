@@ -123,12 +123,14 @@
 
 /* ---- I2C device: RAMXEED/Fujitsu MB85RC512TY FRAM (U7), 512 kbit = 64 KB (v4) ----
  * 7-bit address 0x50 (A0/A1/A2 grounded); shares TWI0 with the accel @0x1D and the
- * NFC tag @0x55, no clash. VDD rides VNFC -- the SAME high-side load switch (NFC_EN /
- * PA7) that gates the NFC tag -- so the FRAM is alive only while VNFC is up; one
- * power-on (nfc_power_on / fram_power_on) covers both parts. 64 KB linear space,
- * 16-bit address; FeRAM commits at the STOP (no settle delay, ~1e13 endurance). The
- * driver (fram.c / fram.h) is built and ready; runtime use is gated by USE_FRAM_LOG
- * below (headless by default). */
+ * NFC tag @0x55, no clash. VDD rides the ALWAYS-ON VS rail (2026-07-23 back-power
+ * fix: on the gated VNFC its inputs sat above its rail past abs-max whenever the
+ * bus idled high -- see the design-notes deep-dive addendum; VNFC now gates the
+ * tag alone). Standing cost parked at the part's own I2C SLEEP mode, IZZ 0.20 uA
+ * typ / 10 uA max hot (fram_sleep / fram_wake in fram.c; wake costs ~450 us).
+ * 64 KB linear space, 16-bit address; FeRAM commits at the STOP (no settle delay,
+ * ~1e13 endurance). Runtime archival use stays gated by USE_FRAM_LOG below
+ * (headless by default -- but boot ALWAYS parks it; see main.c). */
 #define FRAM_ADDR       0x50
 
 /* NFC read SNR: while a reader's field is present (FD low), hold the LEDs dark so
@@ -248,14 +250,23 @@
 #define USE_HEALTH_LOG     1
 #define VMIN_SAMPLE_POLLS  16   /* polls between rail-min samples (16 s at POLL_PERIOD_S=1) */
 
-/* FRAM archival log (U7 MB85RC512TY, 64 KB on VNFC; driver in fram.c). The internal-
- * EEPROM loggers above are a 256 B black box; the FRAM is the big-store companion for
- * richer archival (per-event history, larger diaries). Left HEADLESS (0) by default:
- * the driver is built and ready, but the WHAT/WHEN of archival is a policy tied to the
- * unmeasured harvest budget (README "the open question") -- a FRAM write means powering
- * VNFC, which is not free. Set 1 to compile in the main.c boot-record hook (a cold-boot
- * counter) as the first archival user; expand from there once the budget is measured. */
+/* FRAM archival log (U7 MB85RC512TY, 64 KB on always-on VS, sleep-parked; driver in
+ * fram.c). The internal-EEPROM loggers above are a 256 B black box; the FRAM is the
+ * big-store companion for richer archival (per-event history, larger diaries). Left
+ * HEADLESS (0) by default: the driver is built and ready, but the WHAT/WHEN of archival
+ * is a policy tied to the unmeasured harvest budget (README "the open question") -- a
+ * FRAM access now costs just a ~450 us wake + bus time. Set 1 to compile in the main.c
+ * boot-record hook (a cold-boot counter) as the first archival user; expand from there
+ * once the budget is measured. */
 #define USE_FRAM_LOG       0
+
+/* Defensive re-park of the VS-railed FRAM at the end of every poll tick. The
+ * datasheet's Sleep-exit wording ("START + device address word") does not promise
+ * ADDRESS-SELECTIVE wake, so each poll's accel traffic might drag U7 back to 10 uA
+ * standby; re-issuing the 2-frame sleep sequence (~300 us, NACK-tolerant no-op if it
+ * never woke) bounds the exposure to one poll. BENCH: if wake proves address-
+ * selective, set 0 and rely on the sleeps already issued after each fram_* use. */
+#define FRAM_RESLEEP_EVERY_POLL  1
 
 /* charge floor: skip the glow (stay dark) below this rail voltage, mV.
  * Read via the STO divider channel (PD1/AIN1). Keeps a brown-out from bricking mid-animation.

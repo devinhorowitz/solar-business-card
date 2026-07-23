@@ -8,24 +8,28 @@
  * -- FeRAM commits at the STOP (datasheet: "does not need a polling sequence
  * after writing"), so fram_write returns as soon as the STOP is on the wire.
  *
- * Power: VDD rides VNFC, the SAME high-side load switch (NFC_EN / PA7) that
- * gates the NFC tag. fram_power_on() raises NFC_EN and ACK-polls; the poll is
- * bounded so an absent part / unwired EN returns a fault instead of hanging.
- * fram_power_off() drops it -- only call when neither the FRAM nor the NFC tag
- * is needed (they share the gate). See board.h / fram.h.
+ * Power (option A, 2026-07-23 back-power fix): VDD rides the ALWAYS-ON VS rail
+ * -- not the gated VNFC -- so the bus pull-ups (also on VS) can never sit above
+ * the part's own rail (abs-max VIN <= VDD+0.5; design-notes deep-dive addendum).
+ * Standing cost is held at IZZ (0.20 uA typ / 10 uA max hot) by parking the part
+ * in its I2C SLEEP mode: fram_sleep() issues the datasheet entry sequence
+ * (S + F8h, device-address word, Sr + 86h), fram_wake() ACK-polls through the
+ * ~450 us regulator recovery that a START at its address triggers. Both are
+ * bounded and NACK-tolerant -- an absent part faults instead of hanging.
  */
-#include "board.h"          /* FRAM_ADDR, NFC_EN_PORT / NFC_EN_PIN_bm, F_CPU */
+#include "board.h"          /* FRAM_ADDR, F_CPU */
 #include "fram.h"
 #include "twi.h"
 #include <util/delay.h>
 
-/* ---- power-gate timing (shared VNFC switch; mirrors nfc.c's soft-start) ---- */
-#define FRAM_SOFTSTART_US     200   /* switch turn-on + FeRAM POR before first poll */
-#define FRAM_BOOT_POLL_US     250   /* spacing between ACK-poll attempts            */
-#define FRAM_BOOT_POLL_TRIES  20    /* ~5 ms budget for the part to answer its addr */
+/* ---- Sleep-mode timing (datasheet SLEEP section) ---- */
+#define FRAM_TREC_US        600   /* regulator recovery after a wake (tREC 450 us + margin) */
+#define FRAM_WAKE_TRIES     8     /* bounded ACK-poll budget (absent part -> fault, no hang) */
 
 /* presence: 1 if the FRAM ACKs its address, else 0. Address-only ping
- * (START, SA+W, [N]ACK, STOP) -- no data written. VNFC must already be up. */
+ * (START, SA+W, [N]ACK, STOP) -- no data written. NOTE a SLEEPING part NACKs
+ * (reads absent) while the START itself begins its recovery -- use fram_wake()
+ * for the settled answer. */
 uint8_t fram_present(void)
 {
     uint8_t up = (twi_start(FRAM_ADDR, 0) == 0);
@@ -33,23 +37,39 @@ uint8_t fram_present(void)
     return up ? 1u : 0u;
 }
 
-void fram_power_off(void)
+void fram_sleep(void)
 {
-    NFC_EN_PORT.OUTCLR = NFC_EN_PIN_bm;   /* VNFC off -> FRAM (and tag) VCC off */
+    /* Datasheet sleep entry: S + F8h, ACK; device-address word, ACK; Sr + 86h,
+     * ACK -> sleep. Best-effort BY DESIGN: an already-sleeping part (if its wake
+     * is address-selective) NACKs the F8h frame and simply stays asleep, while a
+     * part our own F8h frame just woke (if wake is address-indiscriminate) NACKs
+     * until its regulator recovers -- so one retry after tREC puts it back down.
+     * Every path leaves a STOP on the wire; nothing here can hang. (F8h/86h are
+     * reserved-address frames: 0x7C<<1|W and 0x43<<1|W -- no clash with the
+     * accel @0x1D or tag @0x55, which simply don't ACK them.) */
+    for (uint8_t t = 0; t < 2; t++) {
+        if (twi_start(0x7C, 0) == 0 &&                      /* F8h frame        */
+            twi_write((uint8_t)(FRAM_ADDR << 1)) == 0 &&    /* device addr word */
+            twi_start(0x43, 0) == 0) {                      /* Sr + 86h frame   */
+            twi_stop();
+            return;                       /* all three ACKed -> part is asleep */
+        }
+        twi_stop();
+        _delay_us(FRAM_TREC_US);          /* maybe mid-recovery: retry once */
+    }
 }
 
-uint8_t fram_power_on(void)
+uint8_t fram_wake(void)
 {
-    /* Same gate as nfc_power_on(): if the tag is already powered, VNFC is up and
-     * this just re-confirms the FRAM answers. Bounded ACK-poll so an absent part
-     * or an unwired EN returns a fault rather than hanging the core. */
-    NFC_EN_PORT.OUTSET = NFC_EN_PIN_bm;
-    _delay_us(FRAM_SOFTSTART_US);
-    for (uint8_t t = 0; t < FRAM_BOOT_POLL_TRIES; t++) {
-        if (fram_present()) return 0;      /* address ACKed -> FRAM is up */
-        _delay_us(FRAM_BOOT_POLL_US);
+    /* A sleeping part NACKs until its regulator recovers, and the very START
+     * that addresses it begins that recovery (datasheet: exit on START +
+     * device-address word, standby after tREC). Bounded poll: an awake part
+     * ACKs on the first try, an absent part returns a fault, never a hang. */
+    for (uint8_t t = 0; t < FRAM_WAKE_TRIES; t++) {
+        if (fram_present()) return 0;     /* address ACKed -> awake in standby */
+        _delay_us(FRAM_TREC_US);
     }
-    return 1;                               /* timed out: absent / EN not wired */
+    return 1;                             /* absent / dead bus */
 }
 
 /* Open the address phase and leave it running: SA+W then the 16-bit pointer.

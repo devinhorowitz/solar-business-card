@@ -185,17 +185,18 @@ static void go_to_sleep(void)
  * EEPROM loggers -- a plain read-modify-write needs no wear or corruption-window
  * guard. Record layout at addr 0: [0..3] magic 'DRHb', [4..7] big-endian boot count;
  * an absent magic (virgin / garbage FRAM) re-seeds the record at 1. Gated behind
- * USE_FRAM_LOG because a write means powering VNFC, whose cost against the harvest
- * budget is still ungated (README "the open question"). This is the integration
- * scaffold: richer per-event archival hangs off the same power/present/read/write
- * cycle once the budget is bench-measured. */
+ * USE_FRAM_LOG because archival policy still waits on the unmeasured harvest
+ * budget (README "the open question") -- though the cost is now just a wake
+ * (~450 us) + bus time, the part riding always-on VS since the back-power fix.
+ * This is the integration scaffold: richer per-event archival hangs off the same
+ * wake/read/write/sleep cycle once the budget is bench-measured. */
 static void fram_boot_record(void)
 {
     static const uint8_t MAGIC[4] = { 'D', 'R', 'H', 'b' };
     uint8_t hdr[8];
     uint32_t n;
 
-    if (fram_power_on()) { fram_power_off(); return; }   /* absent / EN unwired -> skip */
+    if (fram_wake()) { fram_sleep(); return; }   /* absent -> best-effort park + skip */
     if (fram_read(0x0000, hdr, sizeof hdr) == 0) {
         if (hdr[0] == MAGIC[0] && hdr[1] == MAGIC[1] &&
             hdr[2] == MAGIC[2] && hdr[3] == MAGIC[3]) {
@@ -210,7 +211,7 @@ static void fram_boot_record(void)
         hdr[6] = (uint8_t)(n >>  8); hdr[7] = (uint8_t)(n);
         (void)fram_write(0x0000, hdr, sizeof hdr);
     }
-    fram_power_off();
+    fram_sleep();                 /* re-park: standing cost back to IZZ (0.20 uA typ) */
 }
 #endif
 
@@ -235,7 +236,11 @@ int main(void)
     (void)adxl367_init_tap();      /* full accel config; validates DEVID after its soft reset */
 
 #if USE_FRAM_LOG
-    fram_boot_record();   /* archival black box: bump the FRAM cold-boot counter (self-powers VNFC) */
+    fram_boot_record();   /* archival black box: bump the cold-boot counter (wakes + re-parks U7) */
+#else
+    fram_sleep();         /* POWER-CRITICAL even headless: U7 rides always-on VS and cold-boots
+                           * into STANDBY (10 uA typ / 150 uA MAX) -- park it in SLEEP (0.20 uA
+                           * typ) or it silently out-draws the whole standby budget. */
 #endif
 
     /* 4. NFC tag (shares the bus) is power-gated OFF by default; we do not touch it
@@ -429,6 +434,13 @@ int main(void)
 #endif
                 prev_light = light;
             }
+#if FRAM_RESLEEP_EVERY_POLL
+            /* Defensive re-park: the accel traffic this tick may have woken the
+             * VS-railed FRAM to 10 uA standby (its Sleep-exit wording doesn't
+             * promise address-selective wake). Two short frames, NACK-tolerant
+             * if it never woke; bench may prove selectivity and flip the knob. */
+            fram_sleep();
+#endif
         }
 
         go_to_sleep();
