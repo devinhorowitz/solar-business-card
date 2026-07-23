@@ -81,6 +81,18 @@ shell re-machine. Updated 2026-07-11._
   sanctioned (SLVSDW8B Table 6-1, saved to `datasheets/`). Trades away AEC-Q100 (no -Q1 exists) per
   the dark-current-over-grade call. **Never substitute `TPS22917L`** (active-LOW ON). DK
   `296-48370-1-ND` $1.14 (7.2k stock); Mouser `595-TPS22917DBVT` (13k).
+- [x] **[BOM] U5 NFC chip audit — NT3H2211 confirmed best-fit, KEPT** — _DONE 2026-07-23 (no change)._
+  Live compare vs the modern field: **NXP NTAG 5 link** (`NTP53321G0JHKZ`, $1.79, 1.3k DK) and
+  **ST ST25DV04KC/64KC** ($0.60–1.01, thin/zero DK stock; the older `ST25DV04K` is flagged **NRND at
+  Mouser**). Both are ISO 15693 / **Type 5** — swapping would (1) reduce tap universality vs Type 2
+  (ISO 14443A), which older phones background-read far more reliably — the core dead-battery vCard tap
+  is THE requirement; (2) force an antenna retune: the etched coil + FER1 system is designed around the
+  NT3H2211's ~50 pF internal cap (C9's own description), and the Type-5 parts sit near ~24–29 pF
+  (flagged: from vendor datasheets not re-verified today) → C9 would need populating + bench re-verify
+  of range/Q; (3) add features the card never uses (AES, bigger EH, I²C master). **NT3H2111** (1 KB,
+  $1.37) rejected: the design notes already earmark the 2211's ~1.7 KB spare. NT3H2211W0FHKH: Active,
+  DK 15.1k / Mouser 15.8k, $1.50–1.56 — deeply stocked. **Watch item:** NXP steers new designs to
+  NTAG 5, so NTAG I²C plus carries EOL risk on a years horizon — buy a spare or two with the order.
 - [ ] **[BOM] Buy the low-stock / long-lead parts early** _(2026-07-23)._ Not zero, but thin at audit:
   **supercaps** SC1–4 (~195–200), **FER1** ferrite (41), **U3** accel (731), **U1** MCU (608), **PV**
   cells (423). The supercaps + ferrite are the historical long-lead items — order with the first cut.
