@@ -20881,7 +20881,7 @@
 				)
 			)
 		)
-		(property "Value" "0R"
+		(property "Value" "DNP (was 0R VDDIO2 tie)"
 			(at 421.21 170.18 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -20911,7 +20911,7 @@
 				)
 			)
 		)
-		(property "Description" "VDDIO2 tie - 0 ohm jumper"
+		(property "Description" "DNP for the AVR-EA U1: pin 10 is PD0 (GPIO), not VDDIO2 - leave unbridged so PD0 floats (firmware inits it input-disabled). Was the 0R MVIO tie for the DD28."
 			(at 410.21 160.02 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -20921,7 +20921,7 @@
 				)
 			)
 		)
-		(property "MPN" "RC0805JR-070RL"
+		(property "MPN" "(DNP - not ordered)"
 			(at 410.21 160.02 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -20942,7 +20942,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "311-0.0ARCT-ND"
+		(property "Supplier P/N" ""
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -23361,7 +23361,7 @@
 				)
 			)
 		)
-		(property "Value" "AVR64DD28 (VQFN28)"
+		(property "Value" "AVR64EA28 (VQFN28)"
 			(at 220.55 48.26 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -23381,7 +23381,7 @@
 				)
 			)
 		)
-		(property "Datasheet" "datasheets/U1  AVR64DD28-I-STX  $1.17.pdf"
+		(property "Datasheet" "datasheets/U1  AVR64EA28-E-STX  $1.23.pdf"
 			(at 209.55 38.1 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -23391,7 +23391,7 @@
 				)
 			)
 		)
-		(property "Description" "MCU - 8-bit AVR (PWM, I2C, charge/sleep logic); EXTENDED grade -40..125C (E/STX, same die+footprint as I/STX)"
+		(property "Description" "MCU - 8-bit AVR-EA (PWM, I2C, charge/sleep logic); EXTENDED -40..125C. Diff 12-bit ADC+PGA, 512B EEPROM, 80nA base sleep. Pin-compatible with the DD28 copper except pin 10 (VDDIO2->PD0: SJ1 now DNP). FIRMWARE PORT REQUIRED - see TODO."
 			(at 209.55 38.1 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -23401,7 +23401,7 @@
 				)
 			)
 		)
-		(property "MPN" "AVR64DD28-E/STX"
+		(property "MPN" "AVR64EA28-E/STX"
 			(at 209.55 38.1 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -23422,7 +23422,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "150-AVR64DD28-E/STX-ND"
+		(property "Supplier P/N" "150-AVR64EA28-E/STX-ND"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)

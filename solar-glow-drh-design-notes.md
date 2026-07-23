@@ -135,6 +135,16 @@ belongs in KiCad** (push-shove router, real thermal reliefs, exact mask expansio
 
 ## 5. MCU selection — AVR64DD28 in 28-VQFN (the rationale)
 
+> **2026-07-23 — superseded by the AVR-EA family swap (v4):** U1 is now **`AVR64EA28-E/STX`**. The
+> DD-era rationale below stands as history (MVIO was the draw and was never used — SJ1 tied VDDIO2 to
+> VS). The EA drops MVIO (pin 10 becomes PD0; SJ1 goes DNP, copper unchanged — 27/28 pads identical
+> per Microchip's atdf pin maps) and adds what this board actually exploits now: differential 12-bit
+> ADC + PGA + accumulation behind the 0.1%/25 ppm dividers, VREF ±2% (vs ±4%), 0.08 µA base
+> power-down (vs 0.65 µA), 512 B EEPROM (vs 256 B). BOD ladder differs: no 2.45 V level → 2.60 V
+> (BODLEVEL2). Firmware port scope + verification detail in `TODO.md`; datasheet in `datasheets/`.
+
+
+
 - **Why this part:** **MVIO** (PORTC can run on a separate VDDIO2 — attractive for a mixed-voltage
   rail), **ADC** (light-sense), flexible **TCA/TCB/TCD** PWM (LED breathing / more LEDs), and
   **22 I/O** of headroom. *(As-built, the separate-voltage mode is **not** used: VS is now a regulated
