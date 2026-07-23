@@ -16795,9 +16795,9 @@
 		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16806,9 +16806,9 @@
 		)
 		(property "Supplier P/N" "490-GRM155R61A225KE01JCT-ND"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16907,9 +16907,9 @@
 		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16918,9 +16918,9 @@
 		)
 		(property "Supplier P/N" "296-46278-1-ND"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -17038,9 +17038,9 @@
 		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -17049,9 +17049,9 @@
 		)
 		(property "Supplier P/N" "490-3261-1-ND"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -17146,9 +17146,9 @@
 		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -17157,9 +17157,9 @@
 		)
 		(property "Supplier P/N" "490-10476-1-ND"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -17265,9 +17265,9 @@
 		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -17276,9 +17276,9 @@
 		)
 		(property "Supplier P/N" "311-4.7KLRCT-ND"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -17544,9 +17544,9 @@
 		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -17555,9 +17555,9 @@
 		)
 		(property "Supplier P/N" "490-3261-1-ND"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -17663,9 +17663,9 @@
 		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -17674,9 +17674,9 @@
 		)
 		(property "Supplier P/N" "490-GRM155R60J106ME05DCT-ND"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -17771,9 +17771,9 @@
 		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -17782,9 +17782,9 @@
 		)
 		(property "Supplier P/N" "475-LAP47F-V2BB-24-3B5A-30-R18-ZCT-ND"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -17883,9 +17883,9 @@
 		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -17894,9 +17894,9 @@
 		)
 		(property "Supplier P/N" "311-1.00MLRCT-ND"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -17991,9 +17991,9 @@
 		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -18002,9 +18002,9 @@
 		)
 		(property "Supplier P/N" "490-5418-1-ND"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -18099,9 +18099,9 @@
 		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -18110,9 +18110,9 @@
 		)
 		(property "Supplier P/N" "475-LAP47F-V2BB-24-3B5A-30-R18-ZCT-ND"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -18280,9 +18280,9 @@
 		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -18291,9 +18291,9 @@
 		)
 		(property "Supplier P/N" "490-3261-1-ND"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -18388,9 +18388,9 @@
 		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -18399,9 +18399,9 @@
 		)
 		(property "Supplier P/N" "13-RC0402FR-072MLCT-ND"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -18665,9 +18665,9 @@
 		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -18676,9 +18676,9 @@
 		)
 		(property "Supplier P/N" "311-1.00MLRCT-ND"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -18856,9 +18856,9 @@
 		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -18867,9 +18867,9 @@
 		)
 		(property "Supplier P/N" "490-3261-1-ND"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -19037,9 +19037,9 @@
 		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -19048,9 +19048,9 @@
 		)
 		(property "Supplier P/N" "311-1.00MLRCT-ND"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -19145,9 +19145,9 @@
 		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -19156,9 +19156,9 @@
 		)
 		(property "Supplier P/N" "311-150LRCT-ND"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -19253,9 +19253,9 @@
 		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -19264,9 +19264,9 @@
 		)
 		(property "Supplier P/N" "490-3261-1-ND"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -19361,9 +19361,9 @@
 		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -19372,9 +19372,9 @@
 		)
 		(property "Supplier P/N" "311-4.7KLRCT-ND"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -19469,9 +19469,9 @@
 		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -19480,9 +19480,9 @@
 		)
 		(property "Supplier P/N" "490-3261-1-ND"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -19577,9 +19577,9 @@
 		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -19588,9 +19588,9 @@
 		)
 		(property "Supplier P/N" "486-3-153-438-ND"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -19774,9 +19774,9 @@
 		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -19785,9 +19785,9 @@
 		)
 		(property "Supplier P/N" "311-150LRCT-ND"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -19965,9 +19965,9 @@
 		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -19976,9 +19976,9 @@
 		)
 		(property "Supplier P/N" "490-10475-1-ND"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -20167,9 +20167,9 @@
 		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -20178,9 +20178,9 @@
 		)
 		(property "Supplier P/N" "486-3-153-440-ND"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -20365,9 +20365,9 @@
 		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -20376,9 +20376,9 @@
 		)
 		(property "Supplier P/N" "490-3261-1-ND"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -20477,9 +20477,9 @@
 		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -20488,9 +20488,9 @@
 		)
 		(property "Supplier P/N" "568-12901-1-ND"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -20603,9 +20603,9 @@
 		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -20614,9 +20614,9 @@
 		)
 		(property "Supplier P/N" "311-1.00MLRCT-ND"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -20711,9 +20711,9 @@
 		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -20722,9 +20722,9 @@
 		)
 		(property "Supplier P/N" "311-220LRCT-ND"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -20819,9 +20819,9 @@
 		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -20830,9 +20830,9 @@
 		)
 		(property "Supplier P/N" "2994-SM141K06TF-ND"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -20933,9 +20933,9 @@
 		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -20944,9 +20944,9 @@
 		)
 		(property "Supplier P/N" "311-0.0ARCT-ND"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -21041,9 +21041,9 @@
 		)
 		(property "Supplier" "Mouser"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -21052,9 +21052,9 @@
 		)
 		(property "Supplier P/N" "120-AEM10300-QFN"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -21230,9 +21230,9 @@
 		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -21241,9 +21241,9 @@
 		)
 		(property "Supplier P/N" "490-10475-1-ND"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -21528,9 +21528,9 @@
 		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -21539,9 +21539,9 @@
 		)
 		(property "Supplier P/N" "486-3-153-440-ND"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -21636,9 +21636,9 @@
 		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -21647,9 +21647,9 @@
 		)
 		(property "Supplier P/N" "311-150LRCT-ND"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -21744,9 +21744,9 @@
 		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -21755,9 +21755,9 @@
 		)
 		(property "Supplier P/N" "311-150LRCT-ND"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -21852,9 +21852,9 @@
 		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -21863,9 +21863,9 @@
 		)
 		(property "Supplier P/N" "490-10018-1-ND"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -21960,9 +21960,9 @@
 		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -21971,9 +21971,9 @@
 		)
 		(property "Supplier P/N" "490-3261-1-ND"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -22068,9 +22068,9 @@
 		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -22079,9 +22079,9 @@
 		)
 		(property "Supplier P/N" "505-ADXL367BCCZ-RL7CT-ND"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -22206,9 +22206,9 @@
 		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -22217,9 +22217,9 @@
 		)
 		(property "Supplier P/N" "475-LAP47F-V2BB-24-3B5A-30-R18-ZCT-ND"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -22314,9 +22314,9 @@
 		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -22325,9 +22325,9 @@
 		)
 		(property "Supplier P/N" "490-3261-1-ND"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -22422,9 +22422,9 @@
 		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -22433,9 +22433,9 @@
 		)
 		(property "Supplier P/N" "490-10475-1-ND"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -22723,9 +22723,9 @@
 		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -22734,9 +22734,9 @@
 		)
 		(property "Supplier P/N" "296-TPS7A0233PDBVRCT-ND"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -22854,9 +22854,9 @@
 		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -22865,9 +22865,9 @@
 		)
 		(property "Supplier P/N" "475-LAP47F-V2BB-24-3B5A-30-R18-ZCT-ND"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -23045,9 +23045,9 @@
 		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -23056,9 +23056,9 @@
 		)
 		(property "Supplier P/N" "311-1.00MLRCT-ND"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -23157,9 +23157,9 @@
 		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -23168,9 +23168,9 @@
 		)
 		(property "Supplier P/N" "865-MB85RC512TYPNF-GS-BCERE1CT-ND"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -23294,9 +23294,9 @@
 		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -23305,9 +23305,9 @@
 		)
 		(property "Supplier P/N" "490-13039-1-ND"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -23413,9 +23413,9 @@
 		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -23424,9 +23424,9 @@
 		)
 		(property "Supplier P/N" "150-AVR64DD28-I/STX-ND"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -23602,9 +23602,9 @@
 		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -23613,9 +23613,9 @@
 		)
 		(property "Supplier P/N" "2994-SM141K06TF-ND"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -23716,9 +23716,9 @@
 		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -23727,9 +23727,9 @@
 		)
 		(property "Supplier P/N" "490-5221-1-ND"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -23983,9 +23983,9 @@
 		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -23994,9 +23994,9 @@
 		)
 		(property "Supplier P/N" "486-3-153-438-ND"
 			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
-			(hide yes)
 			(effects
 				(font
 					(size 1.27 1.27)
