@@ -1,11 +1,12 @@
-# .github/workflows/firmware.yml — compile the AVR64DD28 firmware on every change.
-# Turns the "register-verified but never compile-tested" firmware into a checked
-# build: fetch Microchip's AVR-Dx toolchain + device pack, run `make`, upload the hex.
+# .github/workflows/firmware.yml — compile the AVR64EA28 firmware on every change.
+# Turns the register-verified firmware into a checked build: fetch Microchip's
+# AVR toolchain + the AVR-Ex device pack (the EA lives in AVR-Ex_DFP, not
+# AVR-Dx_DFP), run `make`, upload the hex.
 #
 # NOTE: the toolchain download is Microchip's WAF-protected server; the Referer
 # header below is what gets past its 403. If that ever breaks, the documented
-# fallback is `apt-get install gcc-avr avr-libc` (Atmel-patched builds recognize
-# avr64dd28 with the DFP specs) — see firmware/README.md "Install the toolchain".
+# fallback is `apt-get install gcc-avr avr-libc` (Atmel-patched builds handle
+# avr64ea28 via the DFP's device-specs) — see firmware/README.md "Install the toolchain".
 name: Firmware build
 
 on:
@@ -24,7 +25,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Fetch AVR-Dx toolchain + device pack
+      - name: Fetch AVR toolchain + AVR-Ex device pack
         run: |
           set -euo pipefail
           UA='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36'
@@ -34,15 +35,15 @@ jobs:
             'https://ww1.microchip.com/downloads/aemDocuments/documents/DEV/ProductDocuments/SoftwareTools/avr8-gnu-toolchain-3.7.0.1796-linux.any.x86_64.tar.gz'
           tar xzf tc.tar.gz
           curl -fsSL --retry 3 --retry-delay 5 -o dfp.atpack \
-            'https://packs.download.microchip.com/Microchip.AVR-Dx_DFP.2.8.343.atpack'
-          mkdir -p AVR-Dx_DFP && (cd AVR-Dx_DFP && unzip -oq ../dfp.atpack)
+            'https://packs.download.microchip.com/Microchip.AVR-Ex_DFP.2.12.239.atpack'
+          mkdir -p AVR-Ex_DFP && (cd AVR-Ex_DFP && unzip -oq ../dfp.atpack)
           echo "$HOME/avr/$(ls -d avr8-gnu-toolchain-*/ | head -1)bin" >> "$GITHUB_PATH"
 
       - name: Build
         run: |
           set -euo pipefail
           avr-gcc --version | head -1
-          make -C firmware DFP="$HOME/avr/AVR-Dx_DFP"
+          make -C firmware DFP="$HOME/avr/AVR-Ex_DFP"
           echo "----- size -----"
           avr-size firmware/solar-glow.elf
 
