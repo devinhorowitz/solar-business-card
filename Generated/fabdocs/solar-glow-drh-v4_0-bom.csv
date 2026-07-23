@@ -1,28 +1,28 @@
-Row,Description,Part,References,Value,Footprint,Quantity Per PCB,Status,Datasheet,MPN,Supplier,Supplier P/N,KiLib_Generator
-1,100 nF X7R decoupling VSENSE filter 100 nF,C1,C1 C3 C5 C6 C7 C8 C12 C24 C28,100nF,C1,9, ,,GRT155R71H104KE01D,DigiKey,490-GRT155R71H104KE01DCT-ND,SMD_2terminal_chip_molded
-2,Accelerometer VREG_OUT decoupling 0.22 uF,C11,C11,220nF,C11,1, ,,GRT155R71C224KE01D,DigiKey,490-GRT155R71C224KE01DCT-ND,
-3,"1uF 25V 0603 X7R (GRT automotive), LDO input cap (STO_LDO island)",C22,C22,1uF,C_0603_1608Metric,1, ,,GRT188R71E105KE13D,DigiKey,490-GRT188R71E105KE13DCT-ND,SMD_2terminal_chip_molded
-4,"2.2uF 25V 0603 X7R, LDO output (VS); TPS7A02 needs >=0.5uF effective - X7R holds it over temp/bias",C23,C23,2.2uF,C_0603_1608Metric,1, ,,GRM188Z71E225ME43D,DigiKey,490-GRM188Z71E225ME43DCT-ND,SMD_2terminal_chip_molded
-5,"VS bulk 10uF 16V 0603 X5R (was 4.7uF 0402); more effective VS bulk for transients, 0603 land LED-anode bulk 10uF 16V 0603 X5R (was 4.7uF 0402); keeps glow transient off VS, 0603 land",C4,C4 C13,10uF,C_0603_1608Metric,2, ,,GRT188R61C106KE13D,DigiKey,490-12317-1-ND,SMD_2terminal_chip_molded
-6,"10uF 10V 0805 X7R, AEM VINT buffer 10uF 10V 0805 X7R, STO local bulk/decoupling",C26,C26 C27,10uF,C_0805_2012Metric,2, ,,GRM21BR71A106KA73L,DigiKey,490-10516-1-ND,SMD_2terminal_chip_molded
-7,"22uF 10V 0603 X5R, AEM SRC decoupling (aem10300.pdf Table 11 CSRC)",C25,C25,22uF,C_0603_1608Metric,1, ,,GRT188R61A226ME13D,DigiKey,490-GRT188R61A226ME13DCT-ND,SMD_2terminal_chip_molded
-8,Glow LED - reverse-mount amber,D2,D2 D3 D4 D5,LA P47F,D2,4, ,datasheets/D2-D5  LA P47F-V2BB-24-3B5A-30-R18-Z  $0.43.pdf,LA P47F-V2BB-24-3B5A-30-R18-Z,DigiKey,475-LAP47F-V2BB-24-3B5A-30-R18-ZCT-ND,
-9,"Ferrite bead 0603, STO island feed filter",FB1,FB1,ferrite,C1,1, ,,BLM18PG221SN1D,DigiKey,490-5221-1-ND,
-10,"10uH 1.76A power inductor, AEM10300 LDCDC (aem10300.pdf Table 11 = DFE252010F-100M); DFE252010 = 2.5x2.0mm on a 1008/2520 land (L_1008_2520Metric) - re-run Update-PCB then route",L2,L2,10uH,L_1008_2520Metric,1, ,,DFE252010F-100M,DigiKey,490-13039-1-ND,SMD_2terminal_chip_molded
-11,LED ballast 150 ohm,R1,R1 R2 R3 R4,150R,R1,4, ,,AC0402FR-07150RL,DigiKey,YAG3443CT-ND,
-12,TINY-mode ballast 220 ohm,R12,R12,220R,R12,1, ,,AC0402FR-07220RL,DigiKey,YAG3456CT-ND,
-13,I2C pull-up 4.7 kohm,R10,R10 R11,4.7k,R10,2, ,,AC0402FR-074K7L,DigiKey,YAG3497CT-ND,
-14,NFC_EN pulldown 1 Mohm 1M 0402 EN_STO_CH pull-up to VINT,R14,R14 R17,1M,R14,2, ,,AC0402FR-071ML,DigiKey,YAG3450CT-ND,
-15,"VSENSE divider 1 Mohm - 0603 thin film 0.1% 25ppm (matched with R6) VSENSE divider 1 Mohm - 0603 thin film 0.1% 25ppm (matched with R5) 1M 0603 thin film 0.1% 25ppm, STO sense divider bottom (STO_SNS->GND)",R5,R5 R6 R16,1M,R_0603_1608Metric,3, ,,RT0603BRD071ML,DigiKey,YAG4498CT-ND,SMD_2terminal_chip_molded
-16,"2M 0603 thin film 0.1% 25ppm, STO sense divider top (STO->STO_SNS)",R15,R15,2M,R_0603_1608Metric,1, ,,MCT0603MD2004BP500,DigiKey,541-MCT0603MD2004BP500CT-ND,SMD_2terminal_chip_molded
-17,VDDIO2 tie - 0 ohm jumper,SJ1,SJ1,0R,SJ1,1, ,,RC0805JR-070RL,DigiKey,311-0.0ARCT-ND,
-18,3-axis accelerometer (tap/double-tap wake),U3,U3,ADXL367,ADXL367 CC-12-4_ADI,1, ,datasheets/U3  ADXL367BCCZ-RL7  $7.50.pdf,ADXL367BCCZ-RL7,DigiKey,505-ADXL367BCCZ-RL7CT-ND,
-19,"AEM10300 buck-boost ambient energy harvester PMIC (MPPT), QFN-28 4x4",U8,U8,AEM10300,U1,1, ,datasheets/aem10300.pdf,10AEM10300C0000,Mouser,120-AEM10300-QFN,
-20,"MCU - 8-bit AVR (PWM, I2C, charge/sleep logic)",U1,U1,AVR64EA28 (VQFN28),U1,1, ,datasheets/U1  AVR64DD28-I-STX  $1.17.pdf,AVR64DD28-I/STX,DigiKey,150-AVR64DD28-I/STX-ND,
-21,"512kbit I2C FeRAM 0x50, power-gated via VNFC; DFN LCC-8P-M05 5.0x6.0mm, 0.90mm MAX (was SOP-8 1.75mm)",U7,U7,MB85RC512TY,U7_DFN8,1, ,datasheets/U7  MB85RC512TYPNF-GS-BCERE1  $10.19.pdf,MB85RC512TYPNF-GS-BCERE1,DigiKey,865-MB85RC512TYPNF-GS-BCERE1CT-ND,package/gullwing
-22,NFC tag - NTAG I2C plus 2K,U5,U5,NT3H2211,U5,1, ,datasheets/U5  NT3H2211W0FHKH  $1.38.pdf,NT3H2211W0FHKH,DigiKey,568-12901-1-ND,
-23,NFC VNFC high-side load switch,U6,U6,TPS22917,SOT-23-6,1, ,datasheets/U6  TPS22918DBVR  $0.55.pdf,TPS22918TDBVRQ1,DigiKey,296-44632-1-ND,package/gullwing
-24,"TPS7A0233 nanopower LDO, 3.3V fixed, ~25nA Iq (VS rail)",U9,U9,TPS7A0233 (SOT23-5*),SOT-23-6,1, ,,TPS7A0233PDBVR,DigiKey,296-TPS7A0233PDBVRCT-ND,package/gullwing
+Row,Description,Part,References,Value,Footprint,Quantity Per PCB,Status,Datasheet,MPN,Supplier,Supplier P/N,KiLib_Generator,Sim.Library
+1,100 nF X7R decoupling VSENSE filter 100 nF,C1,C1 C3 C5 C6 C7 C8 C12 C24 C28,100nF,C1,9, ,,GRT155R71H104KE01D,DigiKey,490-GRT155R71H104KE01DCT-ND,SMD_2terminal_chip_molded,
+2,Accelerometer VREG_OUT decoupling 0.22 uF,C11,C11,220nF,C11,1, ,,GRT155R71C224KE01D,DigiKey,490-GRT155R71C224KE01DCT-ND,,
+3,"1uF 25V 0603 X7R (GRT automotive), LDO input cap (STO_LDO island)",C22,C22,1uF,C_0603_1608Metric,1, ,,GRT188R71E105KE13D,DigiKey,490-GRT188R71E105KE13DCT-ND,SMD_2terminal_chip_molded,
+4,"2.2uF 25V 0603 X7R, LDO output (VS); TPS7A02 needs >=0.5uF effective - X7R holds it over temp/bias",C23,C23,2.2uF,C_0603_1608Metric,1, ,,GRM188Z71E225ME43D,DigiKey,490-GRM188Z71E225ME43DCT-ND,SMD_2terminal_chip_molded,
+5,"VS bulk 10uF 16V 0603 X5R (was 4.7uF 0402); more effective VS bulk for transients, 0603 land LED-anode bulk 10uF 16V 0603 X5R (was 4.7uF 0402); keeps glow transient off VS, 0603 land",C4,C4 C13,10uF,C_0603_1608Metric,2, ,,GRT188R61C106KE13D,DigiKey,490-12317-1-ND,SMD_2terminal_chip_molded,
+6,"10uF 10V 0805 X7R, AEM VINT buffer 10uF 10V 0805 X7R, STO local bulk/decoupling",C26,C26 C27,10uF,C_0805_2012Metric,2, ,,GRM21BR71A106KA73L,DigiKey,490-10516-1-ND,SMD_2terminal_chip_molded,
+7,"22uF 10V 0603 X5R, AEM SRC decoupling (aem10300.pdf Table 11 CSRC)",C25,C25,22uF,C_0603_1608Metric,1, ,,GRT188R61A226ME13D,DigiKey,490-GRT188R61A226ME13DCT-ND,SMD_2terminal_chip_molded,
+8,Glow LED - reverse-mount amber,D2,D2 D3 D4 D5,LA P47F,D2,4, ,datasheets/D2-D5  LA P47F-V2BB-24-3B5A-30-R18-Z  $0.43.pdf,LA P47F-V2BB-24-3B5A-30-R18-Z,DigiKey,475-LAP47F-V2BB-24-3B5A-30-R18-ZCT-ND,,
+9,"Ferrite bead 0603, STO island feed filter",FB1,FB1,ferrite,C1,1, ,,BLM18PG221SN1D,DigiKey,490-5221-1-ND,,
+10,"10uH 1.76A power inductor, AEM10300 LDCDC (aem10300.pdf Table 11 = DFE252010F-100M); DFE252010 = 2.5x2.0mm on a 1008/2520 land (L_1008_2520Metric) - re-run Update-PCB then route",L2,L2,10uH,L_1008_2520Metric,1, ,,DFE252010F-100M,DigiKey,490-13039-1-ND,SMD_2terminal_chip_molded,
+11,LED ballast 150 ohm,R1,R1 R2 R3 R4,150R,R1,4, ,,AC0402FR-07150RL,DigiKey,YAG3443CT-ND,,
+12,TINY-mode ballast 220 ohm,R12,R12,220R,R12,1, ,,AC0402FR-07220RL,DigiKey,YAG3456CT-ND,,
+13,I2C pull-up 4.7 kohm,R10,R10 R11,4.7k,R10,2, ,,AC0402FR-074K7L,DigiKey,YAG3497CT-ND,,
+14,NFC_EN pulldown 1 Mohm 1M 0402 EN_STO_CH pull-up to VINT,R14,R14 R17,1M,R14,2, ,,AC0402FR-071ML,DigiKey,YAG3450CT-ND,,
+15,"VSENSE divider 1 Mohm - 0603 thin film 0.1% 25ppm (matched with R6) VSENSE divider 1 Mohm - 0603 thin film 0.1% 25ppm (matched with R5) 1M 0603 thin film 0.1% 25ppm, STO sense divider bottom (STO_SNS->GND)",R5,R5 R6 R16,1M,R_0603_1608Metric,3, ,,RT0603BRD071ML,DigiKey,YAG4498CT-ND,SMD_2terminal_chip_molded,
+16,"2M 0603 thin film 0.1% 25ppm, STO sense divider top (STO->STO_SNS)",R15,R15,2M,R_0603_1608Metric,1, ,,MCT0603MD2004BP500,DigiKey,541-MCT0603MD2004BP500CT-ND,SMD_2terminal_chip_molded,
+17,"DNP for the AVR-EA U1: pin 10 is PD0 (GPIO), not VDDIO2 - leave unbridged so PD0 floats (firmware inits it input-disabled). Was the 0R MVIO tie for the DD28.",SJ1,SJ1,DNP (was 0R VDDIO2 tie),SJ1,1, ,,(DNP - not ordered),DigiKey,,,
+18,3-axis accelerometer (tap/double-tap wake),U3,U3,ADXL367,ADXL367 CC-12-4_ADI,1, ,datasheets/U3  ADXL367BCCZ-RL7  $7.50.pdf,ADXL367BCCZ-RL7,DigiKey,505-ADXL367BCCZ-RL7CT-ND,,
+19,"AEM10300 buck-boost ambient energy harvester PMIC (MPPT), QFN-28 4x4",U8,U8,AEM10300,U1,1, ,datasheets/aem10300.pdf,10AEM10300C0000,Mouser,120-AEM10300-QFN,,
+20,"MCU - 8-bit AVR-EA (PWM, I2C, charge/sleep logic); EXTENDED -40..125C. Diff 12-bit ADC+PGA, 512B EEPROM, 80nA base sleep. Pin-compatible with the DD28 copper except pin 10 (VDDIO2->PD0: SJ1 now DNP). FIRMWARE PORT REQUIRED - see TODO.",U1,U1,AVR64EA28 (VQFN28),U1,1, ,datasheets/U1  AVR64EA28-E-STX  $1.23.pdf,AVR64EA28-E/STX,DigiKey,150-AVR64EA28-E/STX-ND,,
+21,"512kbit I2C FeRAM 0x50, power-gated via VNFC; DFN LCC-8P-M05 5.0x6.0mm, 0.90mm MAX (was SOP-8 1.75mm)",U7,U7,MB85RC512TY,U7_DFN8,1, ,datasheets/U7  MB85RC512TYPNF-GS-BCERE1  $10.19.pdf,MB85RC512TYPNF-GS-BCERE1,DigiKey,865-MB85RC512TYPNF-GS-BCERE1CT-ND,package/gullwing,.\
+22,NFC tag - NTAG I2C plus 2K,U5,U5,NT3H2211,U5,1, ,datasheets/U5  NT3H2211W0FHKH  $1.38.pdf,NT3H2211W0FHKH,DigiKey,568-12901-1-ND,,
+23,"NFC VNFC high-side load switch - TPS22917 ultra-low leakage (ISD 10nA typ vs 918's 0.5uA/3.5uA max); pin-identical to TPS22918, CT float + QOD->VOUT sanctioned; active-HIGH ON (NOT the 917L)",U6,U6,TPS22917,SOT-23-6,1, ,datasheets/U6  TPS22917DBVT  $1.14.pdf,TPS22917DBVT,DigiKey,296-48370-1-ND,package/gullwing,
+24,"TPS7A0233 nanopower LDO, 3.3V fixed, ~25nA Iq (VS rail)",U9,U9,TPS7A0233 (SOT23-5*),SOT-23-6,1, ,,TPS7A0233PDBVR,DigiKey,296-TPS7A0233PDBVRCT-ND,package/gullwing,
 
 
 
@@ -32,7 +32,7 @@ Project info:
 Schematic:,solar-glow-drh-v4_0
 Variant:,default
 Revision:,
-Date:,2026-07-23_15-21-50
+Date:,2026-07-23_15-23-53
 KiCad Version:,10.0.4-10.0.4~ubuntu25.10.1
 Statistics:
 Component Groups:,25
