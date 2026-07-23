@@ -16,9 +16,22 @@ shell re-machine. Updated 2026-07-11._
   voltage/tol bumps where free (100 nF 16→50 V; C4/C13/C27 10→16 V; C23 10→25 V; C26 6.3→10 V; C22/C25
   grade). **Resistors Yageo RC→AC (AEC-Q200)**; the **VSENSE divider R5/R6 → precision Yageo RE
   0.1%/50 ppm** (`RE0402BRE071ML`). **U6 → AEC-Q100 `TPS22918TDBVRQ1`** (pin-identical drop-in — fixes
-  the zero-stock DBVR and upgrades grade). Note: **R15 (2 M) has no 0.1%/50 ppm option in 0402**, so the
-  STO-sense divider (R15/R16) stays AEC-Q200 grade only. Schematic MPNs + BOM + `Supplier P/N` fields
-  all updated; schematic↔BOM cross-check clean.
+  the zero-stock DBVR and upgrades grade). ~~Note: R15 (2 M) has no 0.1%/50 ppm option in 0402, so the
+  STO-sense divider (R15/R16) stays AEC-Q200 grade only.~~ _Superseded 2026-07-23: R15+R16 moved to 0603
+  precision — see the rework item below._ Schematic MPNs + BOM + `Supplier P/N` fields all updated;
+  schematic↔BOM cross-check clean.
+- [ ] **[SCH→PCB] Place + route the R15/R16 0603 lands (STO-sense divider precision rework)**
+  _(2026-07-23; schematic + BOM DONE, board pending)._ R15 and R16 moved to
+  `Resistor_SMD:R_0603_1608Metric` in the schematic with matched 0603 thin-film 0.1% / 25 ppm parts:
+  **R15 = Vishay `MCT0603MD2004BP500`** (2 M, DK `541-MCT0603MD2004BP500CT-ND`, $0.22) and
+  **R16 = Yageo `RT0603BRD071ML`** (1 M, DK `YAG4498CT-ND`, $0.10) — takes the STO_SNS divider ratio
+  from ~1%/100 ppm to ~0.1%/25 ppm with matched tempco (STO gates the charge/sleep logic). R17 split to
+  its own BOM line (stays 0402 `AC0402FR-071ML` — non-critical pull-up). Land audit 2026-07-23 confirmed
+  the old `solarglow:C1` lands are true 0402-class (0.59×0.66 pads @ 1.02 pitch, ~6% over stock — the
+  hand-solder upsizing never went a size class), so this IS a real land change: in KiCad, **Update PCB
+  from Schematic**, place the two 0603s, re-route, re-DRC. Height ~0.55 mm vs 0.5 mm — enclosure-benign.
+  Beware the metric-name trap when picking any footprint by hand: imperial 0603 = `R_0603_1608Metric`;
+  anything named `*_0603Metric` is an 0201.
 - [ ] **[BOM] Buy the low-stock / long-lead parts early** _(2026-07-23)._ Not zero, but thin at audit:
   **supercaps** SC1–4 (~195–200), **FER1** ferrite (41), **U3** accel (731), **U1** MCU (608), **PV**
   cells (423). The supercaps + ferrite are the historical long-lead items — order with the first cut.
