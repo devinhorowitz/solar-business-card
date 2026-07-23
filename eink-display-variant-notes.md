@@ -23,7 +23,7 @@ and dark, and lights up (glow + NFC) only when it has harvested enough.
   LEDs breathe only while the caps hold charge, the NFC tag answers only when a phone energizes
   it. E-paper is the opposite -- spend energy **once** to write an image, then it holds forever
   at zero draw. "Harvest a little, write once, display free" is exactly this card's premise.
-- **Zero idle draw, for free.** The board already power-gates the NFC tag with a TPS22918 load
+- **Zero idle draw, for free.** The board already power-gates the NFC tag with a TPS22917 load
   switch. The same pattern hard-powers the EPD off between updates and loses nothing -- the image
   persists with the panel fully unpowered. Not low standby; **zero**.
 - **Reflective, no backlight.** E-paper is read by ambient light, which suits an indoor/desk
@@ -148,7 +148,7 @@ Localized and reuses existing patterns:
 - **When to refresh:** on NFC provisioning (new contact), on a tap milestone, and/or a daily tick
   -- always gated on `sense_caps_full`, so a refresh never browns out the MCU. Reuses the same
   cap-state gates the LED glow already respects.
-- **Power-gate:** own load switch on a spare GPIO (the same TPS22918 load-switch power-gating the board already uses for the NFC tag and the now-committed v4 FRAM on the shared VNFC rail), EPD fully off between
+- **Power-gate:** own load switch on a spare GPIO (the same TPS22917 load-switch power-gating the board already uses for the NFC tag and the now-committed v4 FRAM on the shared VNFC rail), EPD fully off between
   updates -> zero standby.
 - **Counter tie-in:** the EEPROM "times-activated" count (telemetry backlog) becomes the
   displayed `▲ N taps` -- the card visibly records its own life.
