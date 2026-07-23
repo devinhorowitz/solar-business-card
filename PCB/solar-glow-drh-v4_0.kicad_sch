@@ -23391,7 +23391,7 @@
 				)
 			)
 		)
-		(property "Description" "MCU - 8-bit AVR (PWM, I2C, charge/sleep logic)"
+		(property "Description" "MCU - 8-bit AVR (PWM, I2C, charge/sleep logic); EXTENDED grade -40..125C (E/STX, same die+footprint as I/STX)"
 			(at 209.55 38.1 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -23401,7 +23401,7 @@
 				)
 			)
 		)
-		(property "MPN" "AVR64DD28-I/STX"
+		(property "MPN" "AVR64DD28-E/STX"
 			(at 209.55 38.1 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -23422,7 +23422,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "150-AVR64DD28-I/STX-ND"
+		(property "Supplier P/N" "150-AVR64DD28-E/STX-ND"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)

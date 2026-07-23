@@ -93,6 +93,16 @@ shell re-machine. Updated 2026-07-11._
   $1.37) rejected: the design notes already earmark the 2211's ~1.7 KB spare. NT3H2211W0FHKH: Active,
   DK 15.1k / Mouser 15.8k, $1.50–1.56 — deeply stocked. **Watch item:** NXP steers new designs to
   NTAG 5, so NTAG I²C plus carries EOL risk on a years horizon — buy a spare or two with the order.
+- [x] **[BOM] U1 MCU audit — grade bump executed: `AVR64DD28-I/STX` → `AVR64DD28-E/STX`** — _DONE
+  2026-07-23 (sch+BOM; same die/land/firmware)._ Family sweep confirmed the AVR-DD28 is still the right
+  part (design-notes §5 rationale stands: only superset for the mixed-voltage I²C; the newer EA
+  (12-bit ADC+PGA) and DU (USB) siblings are zero-stock at DK and would be real firmware ports for
+  features the card doesn't need; 64 KB is the family max, ~2.4 KB used; /STX VQFN kept per the height
+  rationale). The finding was **doc↔BOM drift**: the design-notes thermal audit ("Bumped to
+  automotive/higher temp… taken") already committed to the **-E extended grade (−40…+125 °C)** alongside
+  the FRAM-TY bump, but the BOM/schematic still carried -I (85 °C). Executed: **$1.24 (+$0.07)**, DK
+  `150-AVR64DD28-E/STX-ND` (319, tube) / deep-stock tape alt `AVR64DD28T-E/STX` (DK 3.3k, Mouser 3.1k,
+  same price). MCU no longer the first thing to give out at the supercap's 85 °C ceiling.
 - [ ] **[BOM] Buy the low-stock / long-lead parts early** _(2026-07-23)._ Not zero, but thin at audit:
   **supercaps** SC1–4 (~195–200), **FER1** ferrite (41), **U3** accel (731), **U1** MCU (608), **PV**
   cells (423). The supercaps + ferrite are the historical long-lead items — order with the first cut.
