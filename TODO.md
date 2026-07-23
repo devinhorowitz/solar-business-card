@@ -57,12 +57,19 @@ shell re-machine. Updated 2026-07-11._
   shell pocket** _(2026-07-23; schematic + BOM DONE, board + enclosure pending)._ U7 swapped to
   **`MB85RC512TYPN-GS-AWEWE1`** — the same MB85RC512TY die in the **DFN LCC-8P-M05** (5.0×6.0 mm,
   **0.90 mm MAX** vs 1.75 mm SOP-8; identical electricals/price, DK `865-MB85RC512TYPN-GS-AWEWE1CT-ND`,
-  1500 stock). Board: **draw `solarglow:U7_DFN8`** from the package drawing in the repo datasheet
-  (5.00×6.00 body, 8 leads, 1.27 BSC pitch, 0.40±0.10 lead width, 4.10 span; no stock KiCad footprint,
-  no recommended land pattern published — footprint-wizard it), then Update-PCB + route. Enclosure:
+  1500 stock). Board: the footprint is now **in the repo:
+  `PCB/solarglow.pretty/U7_DFN8.kicad_mod`** — generated from the datasheet drawing (p.21) and
+  numerically verified (100% terminal coverage at nominal AND both tolerance extremes; 0.35–0.45 mm
+  hand-solder toe outside the body; no EP — the package has none; stock KiCad DFN numbering, pin 1
+  top-left). No professional footprint exists for LCC-8P-M05: official KiCad lib + DigiKey KiCad lib
+  searched (absent), SnapEDA/SamacSys unreachable, RAMXEED publishes no CAD. **Copy the file into your
+  local `solarglow` library** (or add `PCB/solarglow.pretty` as the `solarglow` lib in KiCad's footprint
+  table), replace U7's board footprint via Update-PCB, re-drag the 8 stubs (old pads were at ±2.9,
+  new at ±2.1), re-DRC. Reflow/hot-air is the intended process; the long toe is the iron fallback. Enclosure:
   U7 was the tallest rear part and drove the backshell's dedicated 0.95 mm floor pocket — at 0.90 mm
   the cavity driver likely becomes the 0805s (~1.25 mm), so **the U7 pocket may be deletable**; recheck
-  `enclosure/*cad.py` after the board lands. Hand-solder: side-wettable flanks @ 1.27 mm pitch.
+  `enclosure/*cad.py` after the board lands. (Correction from the p.21 drawing: the terminals are
+  recessed bottom contacts, NOT side-wettable — hence the extended-toe land.)
 - [ ] **[BOM] Buy the low-stock / long-lead parts early** _(2026-07-23)._ Not zero, but thin at audit:
   **supercaps** SC1–4 (~195–200), **FER1** ferrite (41), **U3** accel (731), **U1** MCU (608), **PV**
   cells (423). The supercaps + ferrite are the historical long-lead items — order with the first cut.
