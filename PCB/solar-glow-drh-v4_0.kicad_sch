@@ -16773,7 +16773,7 @@
 				)
 			)
 		)
-		(property "Description" "2.2uF 10V 0402 X5R, LDO output (VS); TPS7A02 needs >=0.5uF effective, 1uF worst-cased at the floor"
+		(property "Description" "2.2uF 25V 0402 X5R, LDO output (VS); TPS7A02 needs >=0.5uF effective, 1uF worst-cased at the floor"
 			(at 703.58 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -16783,7 +16783,7 @@
 				)
 			)
 		)
-		(property "MPN" "GRM155R61A225KE01J"
+		(property "MPN" "GRT155R61E225KE13D"
 			(at 703.58 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -16804,7 +16804,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "490-GRM155R61A225KE01JCT-ND"
+		(property "Supplier P/N" "490-12267-1-ND"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -16894,7 +16894,7 @@
 				)
 			)
 		)
-		(property "MPN" "TPS22918DBVR"
+		(property "MPN" "TPS22918TDBVRQ1"
 			(at 650.24 76.2 0)
 			(hide yes)
 			(show_name no)
@@ -16916,7 +16916,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "296-46278-1-ND"
+		(property "Supplier P/N" "296-44632-1-ND"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -17026,7 +17026,7 @@
 				)
 			)
 		)
-		(property "MPN" "GRM155R71C104KA88D"
+		(property "MPN" "GRT155R71H104KE01D"
 			(at 410.21 281.94 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -17047,7 +17047,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "490-3261-1-ND"
+		(property "Supplier P/N" "490-GRT155R71H104KE01DCT-ND"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -17134,7 +17134,7 @@
 				)
 			)
 		)
-		(property "MPN" "GRM188R61A226ME15D"
+		(property "MPN" "GRT188R61A226ME13D"
 			(at 581.66 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -17155,7 +17155,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "490-10476-1-ND"
+		(property "Supplier P/N" "490-GRT188R61A226ME13DCT-ND"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -17253,7 +17253,7 @@
 				)
 			)
 		)
-		(property "MPN" "RC0402FR-074K7L"
+		(property "MPN" "AC0402FR-074K7L"
 			(at 350.52 129.54 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -17274,7 +17274,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "311-4.7KLRCT-ND"
+		(property "Supplier P/N" "YAG3497CT-ND"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -17532,7 +17532,7 @@
 				)
 			)
 		)
-		(property "MPN" "GRM155R71C104KA88D"
+		(property "MPN" "GRT155R71H104KE01D"
 			(at 886.46 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -17553,7 +17553,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "490-3261-1-ND"
+		(property "Supplier P/N" "490-GRT155R71H104KE01DCT-ND"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -17651,7 +17651,7 @@
 				)
 			)
 		)
-		(property "MPN" "GRM155R60J106ME05D"
+		(property "MPN" "GRT155R61A106ME13J"
 			(at 612.14 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -17672,7 +17672,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "490-GRM155R60J106ME05DCT-ND"
+		(property "Supplier P/N" "490-GRT155R61A106ME13JCT-ND"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -17870,7 +17870,7 @@
 				)
 			)
 		)
-		(property "MPN" "RC0402FR-071ML"
+		(property "MPN" "AC0402FR-071ML"
 			(at 685.8 69.85 0)
 			(hide yes)
 			(show_name no)
@@ -17892,7 +17892,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "311-1.00MLRCT-ND"
+		(property "Supplier P/N" "YAG3450CT-ND"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -17979,7 +17979,7 @@
 				)
 			)
 		)
-		(property "MPN" "GRM155R71C224KA12D"
+		(property "MPN" "GRT155R71C224KE01D"
 			(at 120.65 119.38 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -18000,7 +18000,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "490-5418-1-ND"
+		(property "Supplier P/N" "490-GRT155R71C224KE01DCT-ND"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -18268,7 +18268,7 @@
 				)
 			)
 		)
-		(property "MPN" "GRM155R71C104KA88D"
+		(property "MPN" "GRT155R71H104KE01D"
 			(at 350.52 109.22 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -18289,7 +18289,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "490-3261-1-ND"
+		(property "Supplier P/N" "490-GRT155R71H104KE01DCT-ND"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -18376,7 +18376,7 @@
 				)
 			)
 		)
-		(property "MPN" "RC0402FR-072ML"
+		(property "MPN" "AC0402FR-072ML"
 			(at 764.54 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -18397,7 +18397,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "13-RC0402FR-072MLCT-ND"
+		(property "Supplier P/N" "13-AC0402FR-072MLCT-ND"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -18653,7 +18653,7 @@
 				)
 			)
 		)
-		(property "MPN" "RC0402FR-071ML"
+		(property "MPN" "AC0402FR-071ML"
 			(at 825.5 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -18674,7 +18674,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "311-1.00MLRCT-ND"
+		(property "Supplier P/N" "YAG3450CT-ND"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -18844,7 +18844,7 @@
 				)
 			)
 		)
-		(property "MPN" "GRM155R71C104KA88D"
+		(property "MPN" "GRT155R71H104KE01D"
 			(at 199.39 119.38 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -18865,7 +18865,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "490-3261-1-ND"
+		(property "Supplier P/N" "490-GRT155R71H104KE01DCT-ND"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -19025,7 +19025,7 @@
 				)
 			)
 		)
-		(property "MPN" "RC0402FR-071ML"
+		(property "MPN" "AC0402FR-071ML"
 			(at 795.02 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -19046,7 +19046,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "311-1.00MLRCT-ND"
+		(property "Supplier P/N" "YAG3450CT-ND"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -19133,7 +19133,7 @@
 				)
 			)
 		)
-		(property "MPN" "RC0402FR-07150RL"
+		(property "MPN" "AC0402FR-07150RL"
 			(at 279.4 241.3 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -19154,7 +19154,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "311-150LRCT-ND"
+		(property "Supplier P/N" "YAG3443CT-ND"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -19241,7 +19241,7 @@
 				)
 			)
 		)
-		(property "MPN" "GRM155R71C104KA88D"
+		(property "MPN" "GRT155R71H104KE01D"
 			(at 139.7 149.86 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -19262,7 +19262,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "490-3261-1-ND"
+		(property "Supplier P/N" "490-GRT155R71H104KE01DCT-ND"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -19349,7 +19349,7 @@
 				)
 			)
 		)
-		(property "MPN" "RC0402FR-074K7L"
+		(property "MPN" "AC0402FR-074K7L"
 			(at 350.52 149.86 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -19370,7 +19370,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "311-4.7KLRCT-ND"
+		(property "Supplier P/N" "YAG3497CT-ND"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -19457,7 +19457,7 @@
 				)
 			)
 		)
-		(property "MPN" "GRM155R71C104KA88D"
+		(property "MPN" "GRT155R71H104KE01D"
 			(at 734.06 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -19478,7 +19478,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "490-3261-1-ND"
+		(property "Supplier P/N" "490-GRT155R71H104KE01DCT-ND"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -19762,7 +19762,7 @@
 				)
 			)
 		)
-		(property "MPN" "RC0402FR-07150RL"
+		(property "MPN" "AC0402FR-07150RL"
 			(at 279.4 119.38 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -19783,7 +19783,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "311-150LRCT-ND"
+		(property "Supplier P/N" "YAG3443CT-ND"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -19943,7 +19943,7 @@
 				)
 			)
 		)
-		(property "Description" "10uF 10V 0603 X5R, STO local bulk/decoupling; 10V rating + 0603 for the 4.65V STO node (was 6.3V 10uF 0402)"
+		(property "Description" "10uF 16V 0603 X5R, STO local bulk/decoupling; 16V rating + 0603 for the 4.65V STO node (was 6.3V 10uF 0402)"
 			(at 642.62 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -19953,7 +19953,7 @@
 				)
 			)
 		)
-		(property "MPN" "GRM188R61A106ME69D"
+		(property "MPN" "GRT188R61C106KE13D"
 			(at 642.62 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -19974,7 +19974,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "490-10475-1-ND"
+		(property "Supplier P/N" "490-12317-1-ND"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -20352,7 +20352,7 @@
 				)
 			)
 		)
-		(property "MPN" "GRM155R71C104KA88D"
+		(property "MPN" "GRT155R71H104KE01D"
 			(at 560.07 95.25 0)
 			(hide yes)
 			(show_name no)
@@ -20374,7 +20374,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "490-3261-1-ND"
+		(property "Supplier P/N" "490-GRT155R71H104KE01DCT-ND"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -20591,7 +20591,7 @@
 				)
 			)
 		)
-		(property "MPN" "RC0402FR-071ML"
+		(property "MPN" "RE0402BRE071ML"
 			(at 410.21 180.34 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -20612,7 +20612,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "311-1.00MLRCT-ND"
+		(property "Supplier P/N" "13-RE0402BRE071MLCT-ND"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -20699,7 +20699,7 @@
 				)
 			)
 		)
-		(property "MPN" "RC0402FR-07220RL"
+		(property "MPN" "AC0402FR-07220RL"
 			(at 279.4 307.34 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -20720,7 +20720,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "311-220LRCT-ND"
+		(property "Supplier P/N" "YAG3456CT-ND"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -21208,7 +21208,7 @@
 				)
 			)
 		)
-		(property "Description" "LED-anode bulk 10uF 10V 0603 X5R (was 4.7uF 0402); keeps glow transient off VS, 0603 land"
+		(property "Description" "LED-anode bulk 10uF 16V 0603 X5R (was 4.7uF 0402); keeps glow transient off VS, 0603 land"
 			(at 120.65 165.1 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -21218,7 +21218,7 @@
 				)
 			)
 		)
-		(property "MPN" "GRM188R61A106ME69D"
+		(property "MPN" "GRT188R61C106KE13D"
 			(at 120.65 165.1 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -21239,7 +21239,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "490-10475-1-ND"
+		(property "Supplier P/N" "490-12317-1-ND"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -21624,7 +21624,7 @@
 				)
 			)
 		)
-		(property "MPN" "RC0402FR-07150RL"
+		(property "MPN" "AC0402FR-07150RL"
 			(at 279.4 180.34 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -21645,7 +21645,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "311-150LRCT-ND"
+		(property "Supplier P/N" "YAG3443CT-ND"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -21732,7 +21732,7 @@
 				)
 			)
 		)
-		(property "MPN" "RC0402FR-07150RL"
+		(property "MPN" "AC0402FR-07150RL"
 			(at 279.4 58.42 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -21753,7 +21753,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "311-150LRCT-ND"
+		(property "Supplier P/N" "YAG3443CT-ND"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -21840,7 +21840,7 @@
 				)
 			)
 		)
-		(property "MPN" "GRM155R61E105MA12D"
+		(property "MPN" "GRT155R61E105KE01J"
 			(at 673.1 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -21861,7 +21861,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "490-10018-1-ND"
+		(property "Supplier P/N" "490-GRT155R61E105KE01JCT-ND"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -21948,7 +21948,7 @@
 				)
 			)
 		)
-		(property "MPN" "GRM155R71C104KA88D"
+		(property "MPN" "GRT155R71H104KE01D"
 			(at 410.21 241.3 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -21969,7 +21969,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "490-3261-1-ND"
+		(property "Supplier P/N" "490-GRT155R71H104KE01DCT-ND"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -22302,7 +22302,7 @@
 				)
 			)
 		)
-		(property "MPN" "GRM155R71C104KA88D"
+		(property "MPN" "GRT155R71H104KE01D"
 			(at 410.21 220.98 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -22323,7 +22323,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "490-3261-1-ND"
+		(property "Supplier P/N" "490-GRT155R71H104KE01DCT-ND"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -22400,7 +22400,7 @@
 				)
 			)
 		)
-		(property "Description" "VS bulk 10uF 10V 0603 X5R (was 4.7uF 0402); more effective VS bulk for transients, 0603 land"
+		(property "Description" "VS bulk 10uF 16V 0603 X5R (was 4.7uF 0402); more effective VS bulk for transients, 0603 land"
 			(at 410.21 302.26 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -22410,7 +22410,7 @@
 				)
 			)
 		)
-		(property "MPN" "GRM188R61A106ME69D"
+		(property "MPN" "GRT188R61C106KE13D"
 			(at 410.21 302.26 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -22431,7 +22431,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "490-10475-1-ND"
+		(property "Supplier P/N" "490-12317-1-ND"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -23033,7 +23033,7 @@
 				)
 			)
 		)
-		(property "MPN" "RC0402FR-071ML"
+		(property "MPN" "RE0402BRE071ML"
 			(at 410.21 200.66 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -23054,7 +23054,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "311-1.00MLRCT-ND"
+		(property "Supplier P/N" "13-RE0402BRE071MLCT-ND"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)

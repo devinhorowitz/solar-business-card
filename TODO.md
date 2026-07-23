@@ -10,6 +10,18 @@ shell re-machine. Updated 2026-07-11._
 
 ## Cross-domain (link two+ teams — easiest to forget)
 
+- [x] **[BOM] Longevity/stability parts pass** — _DONE 2026-07-23._ Full live audit vs DigiKey/Mouser:
+  all parts Active; the two zero-stock lines were resolved and the ceramic/resistor set upgraded (same
+  footprints + values, so no layout change). **Ceramics GRM→GRT (Murata AEC-Q200 automotive)** with
+  voltage/tol bumps where free (100 nF 16→50 V; C4/C13/C27 10→16 V; C23 10→25 V; C26 6.3→10 V; C22/C25
+  grade). **Resistors Yageo RC→AC (AEC-Q200)**; the **VSENSE divider R5/R6 → precision Yageo RE
+  0.1%/50 ppm** (`RE0402BRE071ML`). **U6 → AEC-Q100 `TPS22918TDBVRQ1`** (pin-identical drop-in — fixes
+  the zero-stock DBVR and upgrades grade). Note: **R15 (2 M) has no 0.1%/50 ppm option in 0402**, so the
+  STO-sense divider (R15/R16) stays AEC-Q200 grade only. Schematic MPNs + BOM + `Supplier P/N` fields
+  all updated; schematic↔BOM cross-check clean.
+- [ ] **[BOM] Buy the low-stock / long-lead parts early** _(2026-07-23)._ Not zero, but thin at audit:
+  **supercaps** SC1–4 (~195–200), **FER1** ferrite (41), **U3** accel (731), **U1** MCU (608), **PV**
+  cells (423). The supercaps + ferrite are the historical long-lead items — order with the first cut.
 - [x] **[PCB] Route the new `STO_LDO` island (FB1 series filter)** _-- DONE 2026-07-21 (routed in
   KiCad, uploaded to `main` at 0b7cb13)._ FB1 is now a live series element: the board copper carries
   `STO_LDO` from FB1.2 to U9.1/U9.3 + C22.1, with FB1.1 left on raw STO. Verified against the uploaded
