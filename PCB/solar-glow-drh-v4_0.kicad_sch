@@ -18346,7 +18346,7 @@
 				)
 			)
 		)
-		(property "Footprint" "solarglow:C1"
+		(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
 			(at 775.54 387.35 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -18366,7 +18366,7 @@
 				)
 			)
 		)
-		(property "Description" "2M 0402 STO sense divider top (STO->STO_SNS)"
+		(property "Description" "2M 0603 thin film 0.1% 25ppm, STO sense divider top (STO->STO_SNS)"
 			(at 764.54 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -18376,7 +18376,7 @@
 				)
 			)
 		)
-		(property "MPN" "AC0402FR-072ML"
+		(property "MPN" "MCT0603MD2004BP500"
 			(at 764.54 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -18397,7 +18397,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "13-AC0402FR-072MLCT-ND"
+		(property "Supplier P/N" "541-MCT0603MD2004BP500CT-ND"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -18995,7 +18995,7 @@
 				)
 			)
 		)
-		(property "Footprint" "solarglow:C1"
+		(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
 			(at 806.02 387.35 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -19015,7 +19015,7 @@
 				)
 			)
 		)
-		(property "Description" "1M 0402 STO sense divider bottom (STO_SNS->GND)"
+		(property "Description" "1M 0603 thin film 0.1% 25ppm, STO sense divider bottom (STO_SNS->GND)"
 			(at 795.02 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -19025,7 +19025,7 @@
 				)
 			)
 		)
-		(property "MPN" "AC0402FR-071ML"
+		(property "MPN" "RT0603BRD071ML"
 			(at 795.02 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -19046,7 +19046,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "YAG3450CT-ND"
+		(property "Supplier P/N" "YAG4498CT-ND"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
