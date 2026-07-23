@@ -1,18 +1,24 @@
 /*
- * sense.c  --  ADC rail/light reads + EEPROM activation counter.
+ * sense.c  --  ADC rail/light reads + EEPROM activation counter.  (AVR-EA ADC)
  *
  * Power policy: the ADC and its 2.5 V reference are powered only for the
  * length of a conversion and shut off immediately after (see adc_read_raw).
- * Between the ~1 s polls the ADC ENABLE bit is 0, which the datasheet
- * guarantees draws no ADC current, and with VREF_ALWAYSON cleared the
- * reference is released as well. The analog domain therefore contributes
- * essentially nothing to sleep current, independent of how Power-Down would
- * have treated an always-on reference.
+ * Between the ~1 s polls the ADC ENABLE bit is 0, which draws no ADC current,
+ * and the internal reference is released with it. The analog domain therefore
+ * contributes essentially nothing to sleep current.
  *
- * The cost of that policy is that the reference is cold-started on every read,
- * so the one conversion after each ENABLE must wait out the reference
- * start-up. That wait is inserted automatically by the ADC Initialization
- * Delay (INITDLY) field in CTRLD; see ADC_INITDLY below for the sizing.
+ * The cost of that policy is that the reference is cold-started on every read.
+ * On the EA this wait is sequenced by HARDWARE: with LOWLAT = 0 the analog
+ * blocks power up per conversion and the ADC inserts the required start-up /
+ * settle time itself, timed off CLKCTRL.MCLKTIMEBASE (set in clocks_init; see
+ * DS40002443 12.3.6 and the ADC chapter) -- the DD-era INITDLY sizing is gone.
+ *
+ * Port note (DD -> EA): same 12-bit result semantics and the same MUXPOS
+ * channel numbers (PD1 = AIN1, PD2 = AIN2), so every compile-time COUNT fold
+ * below carries over unchanged. The EA's PGA / differential / accumulation
+ * modes are deliberately NOT used yet -- these are large ground-referenced
+ * divider signals and the poll wants the cheapest possible read; burst
+ * accumulation is a bench-era upgrade (see TODO).
  */
 #include <avr/io.h>
 #include <avr/eeprom.h>
@@ -25,40 +31,31 @@
  * integer microvolts-ish by scaling: mv = res * 2500 / 4096. */
 #define ADC_VREF_MV   2500UL
 
-/* Reference start-up delay before the first sample. INITDLY counts CLK_ADC
- * cycles and must be >= tVREF_ST x fCLK_ADC, where tVREF_ST is the datasheet
- * "VREF start-up time". On this board the main clock is OSCHF (high frequency),
- * for which tVREF_ST is ~10 us; the 200 us figure in the same table is the
- * 32.768 kHz main-clock case and does not apply here. At CLK_ADC = 500 kHz one
- * cycle is 2 us, so even the worst tabled 200 us needs only 100 cycles. DLY128
- * (= 256 us) covers that with margin. The extra delay is almost free: at
- * IDD_ADC = 1.1 uA, polled about once per second, the difference between this
- * and a tight DLY32 is a fraction of a nanoamp of average current, so there is
- * no reason to trim it closer. */
-#define ADC_INITDLY   ADC_INITDLY_DLY128_gc
-
-/* ---------- ADC ---------- */
+/* ---------- ADC (AVR-EA model: PRESC in CTRLB, REFSEL in CTRLC, SAMPDUR in
+ * CTRLE, mode+start in COMMAND; reference settle is hardware-sequenced) ---------- */
 
 void sense_adc_init(void)
 {
-    /* Reference: 2.500 V, NOT always-on. It powers up when the ADC is enabled
-     * and is released when the ADC is disabled (see adc_read_raw). */
-    VREF.ADC0REF = VREF_REFSEL_2V500_gc;
+    ADC0.CTRLB   = ADC_PRESC_DIV2_gc;          /* 1 MHz / 2 = 500 kHz CLK_ADC
+                                                * (2 us period, in spec). DIV4
+                                                * also legal, needlessly slow. */
 
-    ADC0.CTRLC   = ADC_PRESC_DIV2_gc;          /* 1 MHz / 2 = 500 kHz CLK_ADC
-                                                * (2 us period; spec is 0.5-8 us).
-                                                * DIV4 would also be in spec but
-                                                * needlessly slow at this clock. */
-    ADC0.CTRLD   = ADC_INITDLY;                /* reference settling before sample */
+    /* Reference: internal 2.500 V, selected in the ADC itself on the EA. It
+     * powers up with the ADC per conversion and is released when the ADC is
+     * disabled (LOWLAT stays 0 = no standing analog current). */
+    ADC0.CTRLC   = ADC_REFSEL_2V500_gc;
 
     /* long sample time: the VSENSE divider is 1M//1M ~ 500k source impedance,
      * far above the SAR's comfort zone, so stretch acquisition. C5 holds the
-     * charge between the ~1 s polls; this just covers the sample window. */
-    ADC0.SAMPCTRL = 31;
+     * charge between the ~1 s polls; this covers the sample window. 31 CLK_ADC
+     * cycles = 62 us -- also satisfies the temp sensor's >= 32 us SAMPDUR rule
+     * (DS40002443 31.3.3.7). */
+    ADC0.CTRLE   = 31;                         /* SAMPDUR */
 
-    /* Configure resolution but leave the ADC DISABLED: each read enables it,
-     * converts, and disables it again so the reference is off between polls. */
-    ADC0.CTRLA   = ADC_RESSEL_12BIT_gc;        /* single-ended, 12-bit, ENABLE = 0 */
+    /* Leave the ADC DISABLED between reads: each read enables it, converts,
+     * and disables it again. Resolution is per-conversion on the EA (the
+     * COMMAND MODE field in adc_read_raw), not a CTRLA setting. */
+    ADC0.CTRLA   = 0;                          /* ENABLE = 0, LOWLAT = 0 */
 }
 
 /* Result-ready wakes the core out of the IDLE nap in adc_read_raw. The ISR only
@@ -76,18 +73,21 @@ static uint16_t adc_read_raw(uint8_t muxpos)
 {
     uint16_t res = 0;
 
-    ADC0.CTRLA   |= ADC_ENABLE_bm;     /* power up ADC; reference begins start-up */
-    ADC0.MUXPOS   = muxpos;
+    ADC0.CTRLA   |= ADC_ENABLE_bm;     /* power up ADC (analog start-up is
+                                        * hardware-sequenced off MCLKTIMEBASE) */
+    ADC0.MUXPOS   = muxpos;            /* single-ended: MUXNEG ignored, DIFF=0 */
     ADC0.INTFLAGS = ADC_RESRDY_bm;     /* clear any stale result-ready flag */
     adc_done      = 0;
     ADC0.INTCTRL  = ADC_RESRDY_bm;     /* wake on result-ready */
-    ADC0.COMMAND  = ADC_STCONV_bm;     /* INITDLY warm-up is inserted before the sample */
+    /* one 12-bit single-ended conversion, started now; hardware inserts the
+     * cold-start settle before sampling (LOWLAT = 0 path). */
+    ADC0.COMMAND  = ADC_MODE_SINGLE_12BIT_gc | ADC_START_IMMEDIATE_gc;
 
-    /* The conversion is INITDLY + (2 + SAMPLEN + 13.5) CLK_ADC cycles, ~350 us here.
+    /* Conversion = start-up + SAMPDUR + ~13.5 CLK_ADC, a few hundred us here.
      * IDLE-sleep through it rather than spinning the core in active mode: the ADC
      * keeps converting in IDLE and RESRDY wakes us (same race-free SEI+SLEEP idiom
      * as the glow). RESRDY is the first wake in the healthy case; the loop is bounded
-     * so a stuck ADC (RESRDY never arrives) bails after a few wakes with RES = 0 --
+     * so a stuck ADC (RESRDY never arrives) bails after a few wakes with RESULT 0 --
      * reads as low rail / dark, fail-safe no glow, and well under the watchdog -- and
      * a stray PIT/accel wake just re-checks the flag and sleeps again. */
     set_sleep_mode(SLEEP_MODE_IDLE);
@@ -101,7 +101,8 @@ static uint16_t adc_read_raw(uint8_t muxpos)
     }
     ADC0.INTCTRL = 0;                  /* stop the ADC interrupt */
     if (adc_done)
-        res = ADC0.RES;                /* reading RES also clears RESRDY */
+        res = (uint16_t)ADC0.RESULT;   /* 12-bit single fits the low half; reading
+                                        * RESULT also clears RESRDY */
 
     ADC0.CTRLA   &= ~ADC_ENABLE_bm;    /* power down ADC; reference released */
     return res;
@@ -188,7 +189,7 @@ uint8_t sense_caps_full(void)
 }
 
 /* EEPROM write-safety gate: rail at/above EE_WRITE_FLOOR_MV, so a ~13 ms EEPROM write can start and
- * finish without the rail collapsing through it (the corruption window, DS40002315 sec 11.3.3). The
+ * finish without the rail collapsing through it (the corruption window, DS40002443 sec 8.3.4 (EA; same corruption window as the DD's 11.3.3)). The
  * BOD only ABORTS an in-progress write; this is the firmware "don't start near the edge" guard (the
  * VLM's role), so it holds between the sampled BOD's checks. Same STO-divider channel and compile-time
  * fold as the other rail gates; same fail-safe -- a stuck ADC reads 0 -> not safe -> no write. */
@@ -288,23 +289,24 @@ void sense_sun_tick(void)
 
 /* ---------- MCU internal die temperature + lifetime-max log ---------- */
 
-/* One-shot die temperature in degrees C via the on-chip sensor, per DS40002315 sec 33.3.3.8.
- * The sensor is specified against the internal 2.048 V reference (not our usual 2.500 V), so
- * bracket the read with a VREF switch and restore it after; the ADC's existing INITDLY
- * (DLY128, >= 25 us) and SAMPLEN (31 cyc = 62 us, >= 28 us) already satisfy the sensor's
- * timing, so only VREF and MUXPOS change. The per-part factory calibration (slope/offset for
- * the 2.048 V ref) lives in SIGROW.TEMPSENSE0/1; the arithmetic is the datasheet's, widened to
- * int32 so the 16-bit intermediate cannot wrap. Pulsed like every other read -> no standing
- * current (unlike the accel's TEMP_EN). Returns INT16_MIN on a stuck ADC (RES stayed 0). */
+/* One-shot die temperature in degrees C via the on-chip sensor, per DS40002443 sec 31.3.3.7
+ * (AVR-EA). The EA specifies the sensor against the internal 1.024 V reference (the DD used
+ * 2.048 V), so bracket the read with a CTRLC reference switch and restore it after; SAMPDUR
+ * is already 31 cyc = 62 us, satisfying the sensor's >= 32 us rule, so only the reference and
+ * MUXPOS change. The per-part factory calibration lives in SIGROW.TEMPSENSE0/1 -- both SIGNED
+ * on the EA -- and the datasheet arithmetic is (raw + offset) * slope / 4096 -> Kelvin (note:
+ * the DD formula was (offset - raw); they are NOT interchangeable). Widened to int32 so the
+ * intermediate cannot wrap. Pulsed like every other read -> no standing current (unlike the
+ * accel's TEMP_EN). Returns INT16_MIN on a stuck ADC (RESULT stayed 0). */
 int16_t sense_temp_c(void)
 {
-    VREF.ADC0REF = VREF_REFSEL_2V048_gc;                    /* temp-sensor reference */
+    ADC0.CTRLC = ADC_REFSEL_1V024_gc;                       /* temp-sensor reference (EA: 1.024 V) */
     uint16_t raw = adc_read_raw(ADC_MUXPOS_TEMPSENSE_gc);   /* 12-bit, right-adjusted */
-    VREF.ADC0REF = VREF_REFSEL_2V500_gc;                    /* restore for rail/light reads */
+    ADC0.CTRLC = ADC_REFSEL_2V500_gc;                       /* restore for rail/light reads */
     if (raw == 0) return INT16_MIN;                         /* stuck ADC -> sentinel (max logger ignores) */
-    int32_t offset = (int32_t)SIGROW.TEMPSENSE1;            /* calibration offset (unsigned in SIGROW) */
-    int32_t slope  = (int32_t)SIGROW.TEMPSENSE0;            /* calibration slope  */
-    int32_t k = ((offset - (int32_t)raw) * slope + 2048) / 4096;   /* -> Kelvin (SCALING_FACTOR = 4096) */
+    int32_t offset = (int16_t)SIGROW.TEMPSENSE1;            /* signed offset correction */
+    int32_t slope  = (int16_t)SIGROW.TEMPSENSE0;            /* signed gain/slope correction */
+    int32_t k = (((int32_t)raw + offset) * slope + 2048) / 4096;   /* -> Kelvin (SCALING_FACTOR 4096) */
     return (int16_t)(k - 273);                              /* Kelvin -> Celsius */
 }
 
@@ -325,8 +327,8 @@ void sense_temp_log(void)
     if (c > 127) c = 127;                          /* clamp into the signed-byte store */
     if ((int16_t)c > tmax_ram) tmax_ram = (int8_t)c;   /* track the true max in RAM -- wear-free, rail-safe */
     /* commit a new lifetime max only from a healthy rail: a heat spell can coincide with a draining
-     * rail (a dark hot car), and an EEPROM write on a collapsing rail can corrupt (DS40002315 sec
-     * 11.3.3). The RAM max means a peak-while-low is still written once the rail recovers, not lost. */
+     * rail (a dark hot car), and an EEPROM write on a collapsing rail can corrupt (DS40002443 sec
+     * 8.3.4). The RAM max means a peak-while-low is still written once the rail recovers, not lost. */
     int8_t stored = (int8_t)eeprom_read_byte(EE_TMAX_ADDR);
     if ((int16_t)stored < tmax_ram && sense_ee_safe())
         eeprom_update_byte(EE_TMAX_ADDR, (uint8_t)tmax_ram);
@@ -342,7 +344,7 @@ int8_t sense_temp_max_get(void)
 /* Lowest rail (VS, mV) ever seen -- the starvation half of the field black box (max-temp is the
  * heat half). Sampled sparsely (every VMIN_SAMPLE_POLLS; the supercap sags over minutes). The catch
  * is that a "new low" is by definition the WORST moment to write EEPROM -- a ~13 ms write on a
- * collapsing rail can corrupt (DS40002315 sec 11.3.3). So the running low is tracked in RAM (vmin_ram,
+ * collapsing rail can corrupt (DS40002443 sec 8.3.4 (EA; same corruption window as the DD's 11.3.3)). So the running low is tracked in RAM (vmin_ram,
  * wear-free and safe at any rail) and only COMMITTED to EEPROM from a healthy rail (>= EE_WRITE_FLOOR_MV).
  * A recoverable sag is thus captured and written once the rail climbs back; only a terminal drain
  * below the floor goes unrecorded, which is unavoidable. Erased EEPROM reads 0xFFFF, a perfect "no low

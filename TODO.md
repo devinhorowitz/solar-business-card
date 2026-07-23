@@ -103,8 +103,14 @@ shell re-machine. Updated 2026-07-11._
   the FRAM-TY bump, but the BOM/schematic still carried -I (85 °C). Executed: **$1.24 (+$0.07)**, DK
   `150-AVR64DD28-E/STX-ND` (319, tube) / deep-stock tape alt `AVR64DD28T-E/STX` (DK 3.3k, Mouser 3.1k,
   same price). MCU no longer the first thing to give out at the supercap's 85 °C ceiling.
-- [ ] **[SCH+FW] U1 family swap `AVR64DD28` → `AVR64EA28-E/STX` — FIRMWARE PORT PENDING** _(2026-07-23;
-  sch+BOM DONE, board copper UNCHANGED, firmware is the open half)._ Datasheet-verified decision
+- [x] **[SCH+FW] U1 family swap `AVR64DD28` → `AVR64EA28-E/STX` — DONE (sch+BOM and firmware)**
+  _(2026-07-23; board copper UNCHANGED by design — 27/28 pads identical, SJ1 → DNP.
+  Firmware port landed: `-mmcu=avr64ea28` + AVR-Ex DFP, EA ADC model in `sense.c`
+  (single-ended 12-bit; the diff+PGA+accumulation upgrade deliberately deferred to the
+  bench era — tracked under Firmware below), EA temp-sensor math (1.024 V ref, `(raw+offset)×slope/4096`),
+  `clocks_init` → `PDIV=DIV16` + `MCLKTIMEBASE`, floors re-derived for the 2.60 V BOD
+  (`VS_GLOW_FLOOR_MV` 2750, `EE_WRITE_FLOOR_MV` 2850), fuses 0x4A/0x08/0xD1, README ported.
+  Compile-verified warning-free: 3,960 B text / 23 B RAM.)_ Datasheet-verified decision
   (DS40002443A in `datasheets/`, note PRELIMINARY rev; pin diff from Microchip's own atdf files):
   **verified wins** — diff 12-bit ADC + PGA + 1024-sample accumulation (pairs with the 0.1%/25 ppm
   dividers), VREF ±2% vs DD ±4% (1.024/2.048 V, ≤85 °C), base power-down **0.08 µA vs 0.65 µA**,
@@ -188,21 +194,31 @@ shell re-machine. Updated 2026-07-11._
 
 ## Firmware — `firmware/`, `firmware/README.md`
 
-- [ ] **Program fuses on hardware** (values now computed from DS40002315C -- verify before burning):
-  **`bodcfg 0x2A`** = 2.45 V sampled BOD. **NOT `0x0A`** -- that is `LVL=0x0` = BODLEVEL0, which is
-  chip-erase-only, so `0x0A` ships the card with the BOD *off* (DS40002315C p.207). **`syscfg0 0xD1`**
-  = factory `0xD0` + EESAVE (keeps the black box across a reflash; UPDI stays enabled). **`syscfg1
-  0x10`** = MVSYSCFG=SINGLE. Fuses are not in the flash image; `make fuses` prints the commands. The
-  2.45 V BOD is also the cold-start guard (below) and the hardware backstop to the software
-  EEPROM-write floor (`EE_WRITE_FLOOR_MV`).
+- [ ] **Program fuses on hardware** (EA values, computed from DS40002443A -- verify before burning):
+  **`bodcfg 0x4A`** = 2.60 V sampled BOD (BODLEVEL2; the EA has no 2.45 V level). **NOT `0x0A`** --
+  that is `LVL=0x0` = BODLEVEL0 = 1.75 V, chip-erase-only, so `0x0A` ships the card with the BOD
+  *off*. **`osccfg 0x08`** = OSCHF base 16 MHz, so `clocks_init`'s ÷16 lands on exactly 1 MHz
+  (pre-fuse it runs a harmless 1.25 MHz). **`syscfg0 0xD1`** = factory `0xD0` + EESAVE (keeps the
+  black box across a reflash; UPDI stays enabled). **`syscfg1`: leave at factory default** (the EA
+  has no MVSYSCFG). Fuses are not in the flash image; `make fuses` prints the commands. The 2.60 V
+  BOD is also the cold-start guard (below) and the hardware backstop to the software EEPROM-write
+  floor (`EE_WRITE_FLOOR_MV`, 2.85 V).
 - [ ] **Bench-verify a dead-battery cold-start.** From supercaps at 0 V under *dim*
-  indoor light (worst harvest), confirm the rail climbs cleanly past the 2.45 V BOD
+  indoor light (worst harvest), confirm the rail climbs cleanly past the 2.60 V BOD
   release without stalling -- i.e. the AVR's reset-state draw on a very slow (mV/s)
   ramp stays below the harvest current so it never sticks at an intermediate voltage.
   (Raised by Gemini as "cold-start latch-up"; it's a brown-out *stall*, not latch-up.
   Program the BOD fuse first -- it's the guard.)
 - [ ] **Bench validation** (bare-card starting points, re-tune enclosed): tap
   axis (Z), tap/activity thresholds, INT edge/polarity, LED `INVEN` polarity.
+- [ ] **[EA upgrade, bench-era] Use the EA ADC's differential mode + PGA + burst
+  accumulation for the rail/light reads** _(2026-07-23, deferred from the EA port)._
+  The port keeps the DD-shaped single-ended 12-bit reads so behaviour is 1:1 and every
+  constant carries over; the EA silicon can do better (diff mode against GND kills
+  common-mode offset on the ~500 kΩ dividers, PGA relaxes the source-impedance math,
+  ×N accumulation averages divider noise for free — it pairs with the 0.1 %/25 ppm
+  thin-film dividers already on the board). Do it after the energy-budget measurement,
+  with the meter attached: each knob changes conversion time and therefore poll energy.
 - [ ] **Energy-budget bench measurement** — the project's #1 gate; sets the real
   achievable glow duty.
 - [x] **Wire `led_sweep`** — DONE: fires on strong sun (VIN >= `SWEEP_SUN_VIN_MV`)

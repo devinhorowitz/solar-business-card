@@ -1,0 +1,4 @@
+(fp_lib_table
+  (version 7)
+  (lib (name "solarglow")(type "KiCad")(uri "${KIPRJMOD}/solarglow.pretty")(options "")(descr "SOLAR-GLOW DRH project footprints (U7 DFN-8 land generated+verified from RAMXEED DS501-00087-1v0-E p.21)"))
+)

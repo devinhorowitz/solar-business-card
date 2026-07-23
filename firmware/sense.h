@@ -22,10 +22,11 @@
 
 #include <stdint.h>
 
-/* Configure the ADC: 12-bit, DIV2 presc, 2.500 V reference, long sample (1M
- * source Z), reference-settling INITDLY. Leaves the ADC disabled; each read
- * powers it (and the reference) up for the conversion and back down after, so
- * the analog domain draws nothing between polls. */
+/* Configure the ADC: 12-bit, DIV2 presc, 2.500 V reference, long SAMPDUR (1M
+ * source Z); reference settling is hardware-sequenced into each conversion on
+ * the EA. Leaves the ADC disabled; each read powers it (and the reference) up
+ * for the conversion and back down after, so the analog domain draws nothing
+ * between polls. */
 void     sense_adc_init(void);
 
 /* one-shot reads, in millivolts at the real-world node:
@@ -86,7 +87,7 @@ void     sense_sun_tick(void);
 
 /* MCU internal die temperature + EEPROM lifetime-max log (USE_TEMP_LOG).
  *   sense_temp_c()       : one-shot die temperature in degrees C (pulsed ADC read against
- *                          the internal 2.048 V ref + SIGROW cal, per DS40002315 sec 33.3.3.8).
+ *                          the internal 1.024 V ref + SIGROW cal, per DS40002443 sec 31.3.3.7).
  *                          Returns INT16_MIN on a stuck ADC.
  *   sense_temp_log()     : call every poll; samples sparsely (every TEMP_SAMPLE_POLLS) and
  *                          writes EEPROM only when a new lifetime max is seen.
@@ -98,7 +99,7 @@ int8_t   sense_temp_max_get(void);
 
 /* EEPROM "black box" (USE_HEALTH_LOG): lowest rail ever + power-cycle count. Both defer their EEPROM
  * write to a healthy rail (>= EE_WRITE_FLOOR_MV) so a write never lands on a collapsing rail (the
- * corruption window, DS40002315 sec 11.3.3): the min-rail is tracked in RAM and committed on recovery,
+ * corruption window, DS40002443 sec 8.3.4): the min-rail is tracked in RAM and committed on recovery,
  * and the power-cycle count is flagged at boot and committed once the rail has charged.
  *   sense_vmin_tick()      : call every poll; samples VS every VMIN_SAMPLE_POLLS, keeps the RAM min, commits when safe.
  *   sense_vmin_get()       : lowest rail mV ever seen (0xFFFF = never sampled).
