@@ -20,7 +20,22 @@ shell re-machine. Updated 2026-07-11._
   STO-sense divider (R15/R16) stays AEC-Q200 grade only.~~ _Superseded 2026-07-23: R15+R16 moved to 0603
   precision — see the rework item below._ Schematic MPNs + BOM + `Supplier P/N` fields all updated;
   schematic↔BOM cross-check clean.
-- [ ] **[SCH→PCB] Place + route the R15/R16 0603 lands (STO-sense divider precision rework)**
+- [ ] **[SCH→PCB] Place + route the second upsize set: C22/C23 → 0603, C26/C27 → 0805, R5/R6 → 0603**
+  _(2026-07-23; schematic + BOM DONE, board pending — owner routes via Update PCB from Schematic; any
+  ref that can't fit gets reverted individually)._ Stability upsizing, all CT/MOQ-1 parts, live-verified:
+  **C22** → `GRT188R71E105KE13D` (1 µF 25 V **X7R** 0603, stays GRT/AEC, `490-GRT188R71E105KE13DCT-ND`);
+  **C23** → `GRM188Z71E225ME43D` (2.2 µF 25 V **X7R** 0603 — LDO-loop stability; the GRT 0603 2.2 µF is
+  X5R-only, so dielectric won over grade); **C26 + C27** merge onto one 0805 line →
+  `GRM21BR71A106KA73L` (10 µF 10 V **X7R** 0805, `490-10516-1-ND`) — note the AEC 0805 option (Cal-Chip
+  `GMT21X7R106K16NT3`) is **reel-only MOQ 3000**, rejected for a one-of-one; **R5/R6** →
+  `RT0603BRD071ML` (0.1%/**25 ppm** thin film, same MPN as R16 — three refs share one line). Heights:
+  0603 ≈ 0.8 mm, 0805 ≈ 1.25 mm max — still under the 1.7 mm supercaps, but eyeball the brace/ferrite
+  clearance over C26/C27 before committing the 0805s.
+- [x] **[SCH→PCB] Place + route the R15/R16 0603 lands (STO-sense divider precision rework)** —
+  _DONE + VERIFIED 2026-07-23._ Board upload verified: both on stock `R_0603_1608Metric` (0.80×0.95
+  pads @ 1.65 pitch); nets exact — `STO_SNS` = {C24.1, R15.2, R16.1, U1.11} and nothing else, R15.1 →
+  STO, R16.2 → GND, 12 routed segments; DRC re-run clean (0 unconnected, no new violations vs
+  pre-rework). Divider is now 0.1%/25 ppm end-to-end.
   _(2026-07-23; schematic + BOM DONE, board pending)._ R15 and R16 moved to
   `Resistor_SMD:R_0603_1608Metric` in the schematic with matched 0603 thin-film 0.1% / 25 ppm parts:
   **R15 = Vishay `MCT0603MD2004BP500`** (2 M, DK `541-MCT0603MD2004BP500CT-ND`, $0.22) and
