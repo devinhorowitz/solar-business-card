@@ -70,6 +70,17 @@ shell re-machine. Updated 2026-07-11._
   the cavity driver likely becomes the 0805s (~1.25 mm), so **the U7 pocket may be deletable**; recheck
   `enclosure/*cad.py` after the board lands. (Correction from the p.21 drawing: the terminals are
   recessed bottom contacts, NOT side-wettable — hence the extended-toe land.)
+- [x] **[BOM] U6 → TPS22917DBVT (ultra-low-leakage drop-in) — the 6-pin silicon dark-current audit**
+  — _DONE 2026-07-23 (sch+BOM; same land, no board change)._ Audit of the two SOT-23-6 parts: **U9
+  (TPS7A0233, 25 nA) is already the class floor** (nearest stocked alternative is 25× worse) — kept;
+  X2SON 1×1 miniaturization exists but adds hand-assembly pain for zero mechanical gain. **U6 was the
+  board's largest standing silicon drain**: TPS22918 OFF-state I_SD = 0.5 µA typ / 3.5 µA MAX @3.3 V
+  (repo datasheet §6.5), energized on VS 24/7 and off ~always. Swapped to **`TPS22917DBVT`** — TI's
+  pin-identical ultra-low-leakage sibling, **I_SD 10 nA typ (~50×)**, ON-state 0.5 vs 8.3 µA, 125 °C,
+  always-on reverse-current blocking; board config (CT float, QOD→VOUT, active-high ON) explicitly
+  sanctioned (SLVSDW8B Table 6-1, saved to `datasheets/`). Trades away AEC-Q100 (no -Q1 exists) per
+  the dark-current-over-grade call. **Never substitute `TPS22917L`** (active-LOW ON). DK
+  `296-48370-1-ND` $1.14 (7.2k stock); Mouser `595-TPS22917DBVT` (13k).
 - [ ] **[BOM] Buy the low-stock / long-lead parts early** _(2026-07-23)._ Not zero, but thin at audit:
   **supercaps** SC1–4 (~195–200), **FER1** ferrite (41), **U3** accel (731), **U1** MCU (608), **PV**
   cells (423). The supercaps + ferrite are the historical long-lead items — order with the first cut.
