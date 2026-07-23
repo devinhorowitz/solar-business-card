@@ -284,6 +284,9 @@
  * write near the edge" guard -- the job the datasheet assigns to the VLM, done here so it holds
  * between the sampled BOD's checks (and even if the BOD is off). Set comfortably above the BOD level
  * (EA: 2.60 V at BODCFG=0x4A, BODLEVEL2 -- the ladder has no 2.45 V step) so a started ~13 ms write completes above it; the write's MCU-only load
+ * -- and on Rev. B1 silicon this floor is also the erratum guard: DS80001048C 2.2.1 says NVM
+ * erase/write below 2.7 V may simply FAIL, so 2.85 V is a functional requirement there, not
+ * just corruption margin --
  * barely moves the 1 F rail, so the margin is ample. The lifetime-extreme loggers track their value
  * in RAM and only COMMIT here, so a recoverable sag/heat spell is still captured -- only a terminal
  * drain below this floor goes unrecorded, which is unavoidable (you cannot safely write EEPROM as the
@@ -355,5 +358,21 @@
 #define USE_NFC_ACK_COOLDOWN   1
 #define NFC_ACK_COOLDOWN_S     3
 #define NFC_ACK_COOLDOWN_POLLS (NFC_ACK_COOLDOWN_S / POLL_PERIOD_S)   /* derived: polls, not seconds */
+
+/* ---- AVR64EA Rev. B1 erratum 2.2.3 guard (DS80001048C, datasheets/) ----
+ * On Rev. B1 silicon, an ST/STD/STS to any address >= 64 immediately followed
+ * by a write to SLPCTRL.CTRLA LOSES the SLPCTRL write. A silently-dropped
+ * sleep_enable()/mode select is exactly the failure this card can't afford:
+ * a glow nap could leave the core parked in IDLE instead of Power-Down and
+ * quietly burn the standby budget. Workaround per the errata sheet: one NOP
+ * between the stores. Every SLPCTRL.CTRLA write in this tree goes through
+ * these wrappers (use them, never the bare avr/sleep.h calls). The "memory"
+ * clobber pins the NOP between the surrounding stores; on fixed Rev. B2 the
+ * cost is one cycle. sleep_cpu() itself (the SLEEP opcode) doesn't write
+ * SLPCTRL and needs no guard. */
+#define EA_B1_NOP()      __asm__ __volatile__("nop" ::: "memory")
+#define slp_set_mode(m)  do { EA_B1_NOP(); set_sleep_mode(m); } while (0)
+#define slp_enable()     do { EA_B1_NOP(); sleep_enable();    } while (0)
+#define slp_disable()    do { EA_B1_NOP(); sleep_disable();   } while (0)
 
 #endif /* BOARD_H */

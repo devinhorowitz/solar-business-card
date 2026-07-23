@@ -197,6 +197,19 @@ shell re-machine. Updated 2026-07-11._
 
 ## Firmware — `firmware/`, `firmware/README.md`
 
+- [ ] **[BENCH-GATE, first power-up] FRAM I2C back-power measurement** _(2026-07-23 review find; full
+  analysis in the design-notes 2026-07-23 addendum)._ U7's SDA/SCL sit at 3.3 V (VS pull-ups) while
+  its VDD (gated VNFC) is 0 -- past the FRAM's abs-max **VIN <= VDD + 0.5 V** (DS501-00087). If the
+  FRAM inputs have a VDD clamp diode this leaks **up to ~1.1 mA continuously** through U6's QOD
+  pulldown (~300x the standby budget) and needs a fix (firmware bus-park low between transactions, or
+  an I2C isolator); if clamp-free it is a paper deviation only. **Meter VS idle current with the bus
+  idle-high vs held-low, and scope VNFC, before trusting any standby numbers.** The NT3H2211 is NOT
+  exposed (no input-voltage limit -- VCC-off bus operation is its design mode); this is v4/FRAM-only.
+- [ ] **[BENCH] Read + log the EA silicon revision (B1 vs B2)** _(2026-07-23)._ Errata 2.2.1-2.2.3
+  (DS80001048C, now in `datasheets/`) are Rev. B1-only; the firmware carries the 2.2.3 SLPCTRL
+  NOP-guard workaround either way (one cycle on B2) and `EE_WRITE_FLOOR_MV` covers 2.2.1. Read
+  SYSCFG.REVID over UPDI at first connect so we know which part we actually got.
+
 - [ ] **Program fuses on hardware** (EA values, computed from DS40002443A -- verify before burning):
   **`bodcfg 0x4A`** = 2.60 V sampled BOD (BODLEVEL2; the EA has no 2.45 V level). **NOT `0x0A`** --
   that is `LVL=0x0` = BODLEVEL0 = 1.75 V, chip-erase-only, so `0x0A` ships the card with the BOD

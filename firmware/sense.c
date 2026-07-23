@@ -90,14 +90,14 @@ static uint16_t adc_read_raw(uint8_t muxpos)
      * so a stuck ADC (RESRDY never arrives) bails after a few wakes with RESULT 0 --
      * reads as low rail / dark, fail-safe no glow, and well under the watchdog -- and
      * a stray PIT/accel wake just re-checks the flag and sleeps again. */
-    set_sleep_mode(SLEEP_MODE_IDLE);
+    slp_set_mode(SLEEP_MODE_IDLE);
     for (uint8_t guard = 0; guard < 3 && !adc_done; guard++) {
         cli();
         if (adc_done) { sei(); break; }
-        sleep_enable();
+        slp_enable();
         sei();                         /* SEI + SLEEP is atomic: no missed RESRDY */
         sleep_cpu();
-        sleep_disable();
+        slp_disable();
     }
     ADC0.INTCTRL = 0;                  /* stop the ADC interrupt */
     if (adc_done)
