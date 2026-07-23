@@ -13,7 +13,7 @@ Row,Description,Part,References,Value,Footprint,Quantity Per PCB,Status,Datashee
 12,TINY-mode ballast 220 ohm,R12,R12,220R,R12,1, ,,RC0402FR-07220RL,DigiKey,311-220LRCT-ND,
 13,I2C pull-up 4.7 kohm,R10,R10 R11,4.7k,R10,2, ,,RC0402FR-074K7L,DigiKey,311-4.7KLRCT-ND,
 14,VSENSE divider 1 Mohm NFC_EN pulldown 1 Mohm 1M 0402 STO sense divider bottom (STO_SNS->GND) 1M 0402 EN_STO_CH pull-up to VINT,R5,R5 R6 R14 R16 R17,1M,R5,5, ,,RC0402FR-071ML,DigiKey,311-1.00MLRCT-ND,
-15,2M 0402 STO sense divider top (STO->STO_SNS),R15,R15,2M,C1,1, ,,RC0402FR-072ML,DigiKey,13-RC0402FR-072MLCT-ND,
+15,2M 0402 STO sense divider top (STO->STO_SNS),R15,R15,2M,R_0603_1608Metric,1, ,,RC0402FR-072ML,DigiKey,13-RC0402FR-072MLCT-ND,
 16,VDDIO2 tie - 0 ohm jumper,SJ1,SJ1,0R,SJ1,1, ,,RC0805JR-070RL,DigiKey,311-0.0ARCT-ND,
 17,3-axis accelerometer (tap/double-tap wake),U3,U3,ADXL367,ADXL367 CC-12-4_ADI,1, ,datasheets/U3  ADXL367BCCZ-RL7  $7.50.pdf,ADXL367BCCZ-RL7,DigiKey,505-ADXL367BCCZ-RL7CT-ND,
 18,"AEM10300 buck-boost ambient energy harvester PMIC (MPPT), QFN-28 4x4",U8,U8,AEM10300,U1,1, ,datasheets/aem10300.pdf,10AEM10300C0000,Mouser,120-AEM10300-QFN,
@@ -31,7 +31,7 @@ Project info:
 Schematic:,solar-glow-drh-v4_0
 Variant:,default
 Revision:,
-Date:,2026-07-23_00-41-49
+Date:,2026-07-23_00-54-51
 KiCad Version:,10.0.4-10.0.4~ubuntu25.10.1
 Statistics:
 Component Groups:,24
