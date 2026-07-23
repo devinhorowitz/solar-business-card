@@ -1,6 +1,6 @@
 # SOLAR-GLOW DRH - firmware (targets the v4.0 card)
 
-Bare-metal C for the AVR64DD28 on the SOLAR-GLOW DRH v4.0 card. The card
+Bare-metal C for the AVR64EA28 on the SOLAR-GLOW DRH v4.0 card. The card
 harvests light into a supercap tank, sleeps in deep power-down, and lights the
 backlit **DRH** monogram with a breathing glow when you tap it (or when it is
 carried from dark into light). There is **no button** on this card — the
@@ -12,13 +12,15 @@ The tag's VCC is **power-gated** by a load switch on `NFC_EN` (PA7) and held off
 by default — the chip has no sleep state and would otherwise draw ~195 µA, the
 card's largest idle load. See **NFC contact card** below.
 
-> Status: verified at the **register level** against the AVR64DD32/28 datasheet
-> (DS40002315) and the ADXL367 datasheet; the pin map is read
-> directly from the committed `.kicad_pcb`; and every `_gc`/`_bm` macro, SFR
-> field, struct member, and ISR vector used here was checked against the actual
-> Microchip `ioavr64dd28.h` from the current AVR-Dx pack. It was **not
-> compile-tested** in the authoring environment (no toolchain+DFP there), so
-> build against a real DFP as below before trusting it on hardware.
+> Status: ported to the **AVR64EA28** (the v4 family swap from the AVR64DD28 —
+> 27/28 pads identical; see design notes §5) and verified at the **register
+> level** against the AVR64EA28/32/48 datasheet (DS40002443) and the ADXL367
+> datasheet; the pin map is read directly from the committed `.kicad_pcb`; and
+> every `_gc`/`_bm` macro, SFR field, struct member, and ISR vector used here
+> was checked against the actual Microchip `ioavr64ea28.h` from the current
+> AVR-Ex pack. It is **compile-verified**: builds warning-free
+> (`-Wall -Wextra -Wundef`) with Ubuntu's `gcc-avr` 7.3.0+Atmel against the
+> AVR-Ex DFP. Not yet run on hardware.
 >
 > The **NFC** firmware is verified against the NTAG I2C plus datasheet
 > (NT3H2111_2211 Rev 3.6), and the whole front-end is on the committed
@@ -46,35 +48,35 @@ card's largest idle load. See **NFC contact card** below.
 ## Build & flash
 
 ### 1. Install the toolchain
-- **avr-gcc with AVR-Dx/DD support**, plus **avr-binutils** / **avr-libc**. The test
-  is DD support, not a version number: Microchip's AVR-GCC toolchain is the safe
-  cross-platform pick, and a distro `gcc-avr` that is Atmel/Microchip-patched also
-  recognizes the DD parts (Ubuntu's `gcc-avr` 7.3.0+Atmel does — verified). A
-  *mainline* (unpatched) avr-gcc needs >= 12. It finds the device through the DFP's
-  specs either way.
-  - Debian/Ubuntu: `sudo apt install gcc-avr binutils-avr avr-libc avrdude` — the
-    packaged `gcc-avr` already knows `avr64dd28`; add the DFP (below) for specs/headers.
+- **avr-gcc**, plus **avr-binutils** / **avr-libc**. The EA device is found through
+  the **AVR-Ex DFP's device-specs** (the Makefile passes `-B <DFP>/gcc/dev/avr64ea28`),
+  so the compiler itself only needs the AVR core support any modern avr-gcc has —
+  Ubuntu's packaged `gcc-avr` 7.3.0+Atmel builds this firmware warning-free against
+  the AVR-Ex DFP (verified in this port); Microchip's AVR-GCC toolchain works the
+  same way and is the safe cross-platform pick.
+  - Debian/Ubuntu: `sudo apt install gcc-avr binutils-avr avr-libc avrdude`; add
+    the DFP (below) for the `avr64ea28` specs/headers.
   - macOS: `brew tap osx-cross/avr && brew install avr-gcc avrdude`.
   - Windows: Microchip's AVR-GCC toolchain, or MSYS2.
-  - If `make` reports an *unknown MCU* (rather than just a missing `specs-avr64dd28`
-    file, which the DFP supplies), that avr-gcc lacks DD support — use Microchip's.
-- A flasher: **avrdude >= 7.1** (its `avrdude.conf` ships the AVR-DD parts and the
-  `serialupdi` programmer — verified; stock Ubuntu 7.1 works) *or* **pymcuprog**
+  - If `make` fails on a missing `specs-avr64ea28`, the `DFP=` path is wrong — it
+    must point at an unzipped **AVR-Ex** (not AVR-Dx) pack.
+- A flasher: **avrdude >= 7.1** (its `avrdude.conf` ships the AVR-EA parts and the
+  `serialupdi` programmer — verified against stock Ubuntu 7.1's conf) *or* **pymcuprog**
   (`pip install pymcuprog`, Microchip's UPDI tool). This guide drives the
   **Adafruit UPDI Friend** (step 3); its CH340E enumerates as a USB serial port
   (built into modern Linux; macOS/Windows may want WCH's CH340 driver).
-- The **AVR-Dx DFP** (device family pack): download the `.atpack` (a zip) from
+- The **AVR-Ex DFP** (device family pack): download the `.atpack` (a zip) from
   Microchip's pack server (`packs.download.microchip.com`), or copy it out of an
-  MPLAB X install; unzip it and note the path. It supplies the `avr64dd28` device
-  header, startup, and linker spec that stock avr-libc may lack.
+  MPLAB X install; unzip it and note the path. It supplies the `avr64ea28` device
+  header, startup, and linker spec that stock avr-libc lacks.
 
 ### 2. Build
 ```sh
 cd firmware
-make DFP=/path/to/Microchip/AVR-Dx_DFP/<version>
+make DFP=/path/to/Microchip/AVR-Ex_DFP/<version>
 ```
 Produces `solar-glow.hex`; the `avr-size` line reports usage (the part has 64 KB
-flash / 8 KB RAM, so this firmware leaves room to spare).
+flash / 6 KB RAM, so this firmware — ~4 KB flash, ~23 B RAM — leaves room to spare).
 
 ### 3. Wire UPDI and power the board
 UPDI is a single wire on **pin 23**, broken out to the **TC2030 pad (TC1)** (a
@@ -118,14 +120,14 @@ documented speed; override with `BAUD=57600` if a long cable is flaky), and avrd
 verifies after the write. On Linux, a *Permission denied* on the port means you need
 serial access: add yourself to the `dialout` group (`sudo usermod -aG dialout $USER`,
 then log out/in) or run the command with `sudo`. (pymcuprog equivalent, verified flags:
-`pymcuprog -d avr64dd28 -t uart -u <port> -c 230400 write -f solar-glow.hex --erase
+`pymcuprog -d avr64ea28 -t uart -u <port> -c 230400 write -f solar-glow.hex --erase
 --verify`.)
 
 ### 5. Set the fuses (once)
 Flashing does not touch fuses. Set them deliberately per the **Fuses** section
-below — sampled `BODCFG`, `SYSCFG1.MVSYSCFG = SINGLE`, and optionally
-`SYSCFG0.EESAVE` to keep the tap counter across reflashes. `make fuses` prints the
-avrdude pattern; fill in the bytes from the datasheet fuse tables.
+below — sampled `BODCFG` (2.60 V), `OSCCFG` = 16 MHz base (so the ÷16 prescale
+lands on exactly 1 MHz), and `SYSCFG0.EESAVE` to keep the tap counter across
+reflashes. `make fuses` prints the exact avrdude commands with the derived bytes.
 
 > **v3.0 LED pin map — the one firmware-facing change.** v3.0 permuted the LDRV nets at U1 (the fan
 > untangle) so the schematic matches the as-routed copper: **pin 1/PA3/WO3 = LDRV1 → D2; pin 28/PA2/WO2
@@ -136,7 +138,7 @@ avrdude pattern; fill in the bytes from the datasheet fuse tables.
 
 ## Pin map (read from `solar-glow-drh-v4_0.kicad_pcb`)
 
-AVR64DD28, VQFN-28, on the **back** of the board.
+AVR64EA28, VQFN-28, on the **back** of the board.
 
 | pin | func | net | role |
 |----:|------|-----|------|
@@ -149,7 +151,7 @@ AVR64DD28, VQFN-28, on the **back** of the board.
 | 5 | PA7 | NFC_EN | Enables the NFC VCC load switch (`U6`, TPS22918), **active-HIGH**; init LOW = NFC off. (`R14`, 1 M, holds `U6` off while PA7 tristates during reset/UPDI/brown-out -- at (5.35, 4.92) on the board. Firmware also drives PA7 low-before-output and low-before-sleep, so the window is covered both ends.) |
 | 8 | PC2 | SDA | TWI0 host (PORTMUX **ALT2**), ext 4.7k → VS |
 | 9 | PC3 | SCL | TWI0 host (ALT2), ext 4.7k → VS |
-| 10 | VDDIO2 | VS | tied to VS by SJ1; PORTC at rail, MVIO unused |
+| 10 | PD0 | n/c | plain EA GPIO on the DD's old VDDIO2 pad; `SJ1` = DNP, so the pin floats — held by an internal pull-up in `gpio_init` |
 | 11 | PD1 | STO_SNS | supercap sense: STO/3 (R15/R16) into ADC AIN1 |
 | 12 | PD2 | VSENSE | light/rail sense: ADC AIN2 + AC0 AINP0 |
 | 20 | PF0 | INT1 | accel tap in (rising) |
@@ -297,7 +299,8 @@ things here diverge from the hardware doc's §6:
   **ADXL367** (the LIS2DH12 went to backorder). In always-measurement at 100 Hz it
   draws **0.89 µA** (datasheet), against **~10 µA** for a click-armed LIS2DH12 at the
   same rate. That one swap drops dark standby from ~11.8 µA to **~2.7 µA**, and now
-  *no single part dominates*: the accel (0.89 µA), the MCU power-down (~1 µA), and the
+  *no single part dominates*: the accel (0.89 µA), the MCU power-down (sub-µA — the
+  EA's base power-down is spec'd at 0.08 µA before the WDT/PIT/sampled-BOD adders), and the
   rest of the board leakage are all the same order. Because the ADXL367's floor is
   already this low, we run it **always-on in measurement** — there is no ODR-drop /
   sleep-to-wake trade to make, so the LIS2DH12's "a still card can't time a cold tap"
@@ -308,14 +311,15 @@ things here diverge from the hardware doc's §6:
   *Fuses*) is now the single largest *avoidable* draw on the board, so keeping it
   sampled/off matters more than it did. Tap is single-axis (Z) and the single-vs-double
   decision is made in the ADXL367's own hardware window; see *What to tune → Tap*.
-- **There is no AC0 "instant" wake-on-light** (the hardware doc's option A).
-  On this part the analog comparator keeps running in Standby with `RUNSTDBY`,
-  but its **interrupt and status flags do not update while `CLK_PER` is stopped**
-  (datasheet AC `CTRLA.RUNSTDBY` bit description), so an AC interrupt cannot wake
-  the core from Standby — and Table 13-4 omits the AC from the Standby/Power-Down
-  wake sources entirely. (The AC "Sleep Mode Operation" prose claims otherwise;
-  it contradicts the bit description and the wake table, and is not relied on.)
-  The original option A would have silently never fired. It is removed.
+- **There is no AC0 "instant" wake-on-light from Power-Down** (the hardware doc's
+  option A). This firmware's baseline sleep is Power-Down, and the EA's wake table
+  (DS40002443 Table 13-3) lists only the PORT pins, TWI address match, BOD VLM,
+  async-path CCL, and the RTC PIT as Power-Down wake sources — an AC interrupt
+  cannot wake it, so option A stays removed. (EA note: unlike the DD, the EA *does*
+  list the AC as a **Standby** wake source with `RUNSTDBY` — so a v-next
+  instant-light trigger on this part would be plain AC-in-Standby, no CCL detour —
+  but that trades the Power-Down floor for Standby plus the AC's standing current,
+  which the ~1 s PIT poll beats.)
 
 So wake-on-light is done by the **ADC on the ~1 s PIT poll** (a dark→light rise
 drives a glow): deepest Power-Down sleep, dark-tolerant, ~1–2 s latency. Instant
@@ -323,31 +327,30 @@ response is not lost — the **accelerometer motion/tap interrupt** wakes the co
 immediately from Power-Down (a real, async PORT-pin interrupt, confirmed a
 Power-Down wake source), and picking the card up to bring it into the light is
 exactly that motion. If a true zero-latency *light* trigger is ever wanted, the
-supported path on this silicon is AC0 → Event System → CCL (asynchronous LUT,
-`FILTSEL=0`/`EDGEDET=0`) → CCL interrupt, which Table 13-4 does list as a
-Standby wake source. That is a v-next exercise, not built here.
+supported path on this silicon is AC0 with `RUNSTDBY` in **Standby** sleep
+(a listed Standby wake source in DS40002443 Table 13-3, unlike on the DD).
+That is a v-next exercise, not built here.
 
 **The energy-budget bench measurement is still the project's #1 gate.** It sets
 the indoor harvest number and therefore the achievable LED duty; treat the
 tunables below as starting points until that measurement lands.
 
-The ADC reference is now run **on demand** so it cannot add standing current:
-`sense_adc_init` selects the internal 2.500 V reference **without** `ALWAYSON`
-and leaves the ADC **disabled**, and every read enables the ADC, converts, then
-disables it again. The datasheet guarantees no ADC current with `ENABLE = 0`,
-and the reference is released with it. Because the reference cold-starts on each
-read, an initialization delay (`ADC0.CTRLD` `INITDLY = DLY128`, 256 µs at
-CLK_ADC = 500 kHz) precedes the sample to cover VREF start-up; that is sized
-conservatively — start-up is ~10 µs on this board's high-frequency clock, and the
-200 µs datasheet figure is the 32 kHz-clock case, which does not apply — and the
-delay costs a fraction of a nanoamp averaged over the 1 s poll. The conversion
+The ADC reference is still run **on demand** so it cannot add standing current:
+`sense_adc_init` selects the internal 2.500 V reference and leaves the ADC
+**disabled**, and every read enables the ADC, converts, then disables it again —
+no ADC current with `ENABLE = 0`, and the reference is released with it. On the
+EA's newer ADC the reference/analog start-up is **hardware-sequenced** into each
+conversion — there is no `INITDLY` to size; the ADC times its own start-up off
+`CLKCTRL.MCLKTIMEBASE` (the µs timebase `clocks_init` programs for the 1 MHz
+clock) — and the long acquisition the ~500 kΩ divider source needs is
+`ADC0.CTRLE` (`SAMPDUR` = 31, 62 µs at CLK_ADC = 500 kHz). The conversion
 itself is waited out in **IDLE sleep** rather than a busy-poll — the ADC keeps
-converting with the core clock gated and its result-ready interrupt wakes the core,
-so the ~350 µs poll costs the idle tier, not active-mode current (the wait is bounded
-and falls back to a fail-safe 0 if a conversion never completes). So the
+converting with the core clock gated and its result-ready interrupt wakes the
+core, so the poll costs the idle tier, not active-mode current (the wait is
+bounded and falls back to a fail-safe 0 if a conversion never completes). So the
 sleep-current question the old design flagged is **closed in code**; the bench
-run now just *confirms* it (expect the analog domain to be a rounding error,
-~1 µA total in power-down) rather than deciding whether there is a bug to gate.
+run now just *confirms* it (expect the analog domain to be a rounding error in
+power-down) rather than deciding whether there is a bug to gate.
 
 **Unused pins don't float.** Every pin the firmware doesn't drive - PA5, PC0,
 PC1 and the PORTD spares — is given an internal pull-up in `gpio_init` (PD2, the
@@ -438,8 +441,9 @@ the sensor.
   motion / tap / nfc paths); leave it unacked and INT2 stays high and stops re-firing.
 
 ### Light & rail sensing (`board.h`; ADC in `sense.c`)
-- **`VS_GLOW_FLOOR_MV`** (2600): rail floor below which a glow is refused, so an
-  animation can't brown the part out mid-breath. With `USE_BROWNOUT_STRETCH` (LED glow
+- **`VS_GLOW_FLOOR_MV`** (2750): rail floor below which a glow is refused, so an
+  animation can't brown the part out mid-breath. (Raised from the DD-era 2600 to
+  hold +150 mV of glow-sag margin over the EA's 2.60 V BOD level — see *Fuses*.) With `USE_BROWNOUT_STRETCH` (LED glow
   section) the breath fades down to this floor rather than cutting off at it.
 - **`WINK_FLOOR_MV`** (3000, set ≥ floor): the power-on wink only fires with this
   much headroom, so a marginal just-charged card can't wink itself back under the
@@ -447,12 +451,13 @@ the sensor.
 - **`LIGHT_THRESH_MV`** (400): dark→light trip at the VSENSE pin (≈ VIN/2).
 - **`POLL_PERIOD_S`** (1 or 2; other values are a compile `#error`): RTC PIT poll
   period. 2 s halves the poll's standby cost for slower dark→light response.
-- **ADC internals** (`sense.c`): the reference runs **on demand** (no `ALWAYSON`,
-  ADC disabled between polls), with **`INITDLY = DLY128`** (256 µs) covering VREF
-  start-up and **`SAMPCTRL = 31`** giving a long sample window for the ~500 kΩ
-  divider source impedance. Do **not** re-enable `ALWAYSON` (standing current in
-  sleep). If you change CLK_ADC, re-check `INITDLY ≥ tVREF_ST` and keep the long
-  sample length.
+- **ADC internals** (`sense.c`): the reference runs **on demand** (ADC disabled
+  between polls; reference/analog start-up is hardware-sequenced into each
+  conversion on the EA), with **`SAMPDUR = 31`** (`ADC0.CTRLE`, 62 µs at
+  CLK_ADC = 500 kHz) giving a long sample window for the ~500 kΩ divider source
+  impedance. If you change CLK_ADC, keep the long sample length — and keep
+  `CLKCTRL.MCLKTIMEBASE` matched to CLK_PER (`clocks_init` owns it), since the
+  ADC times its analog start-up from that µs timebase.
 - **EEPROM counter** (`sense.c`) rewrites the same 4-byte cell (offset 0) every tap;
   only a concern past ~100 k lifetime taps, where you'd rotate the cell address.
 - **`USE_SUN_DIARY`** (0/1, default 1): bank lifetime whole-hours of strong sun to a
@@ -462,8 +467,8 @@ the sensor.
   current sub-hour. Free — the poll already reads the strong-sun tell.
 - **`USE_TEMP_LOG`** (0/1, default 1) **/ `TEMP_SAMPLE_POLLS`** (64): keep the lifetime **max
   die temperature** in a 1-byte EEPROM cell (offset 6) — the hot-car supercap-degradation tell.
-  Uses the MCU's own sensor via a **pulsed** ADC read (2.048 V ref + `SIGROW` cal per
-  DS40002315 §33.3.3.8 — no standing current, unlike the accel's `TEMP_EN`), sampled every
+  Uses the MCU's own sensor via a **pulsed** ADC read (1.024 V ref + `SIGROW` cal per
+  DS40002443 §31.3.3.7 — no standing current, unlike the accel's `TEMP_EN`), sampled every
   `TEMP_SAMPLE_POLLS` polls (abuse temps move over minutes) and written only on a new max, so
   it essentially never writes after the first warm spell. Runs even while face-down dormant.
   Read it back with `sense_temp_max_get()` over UPDI.
@@ -519,8 +524,9 @@ both the light and strong-sun predicates (`sense_vin_flags()`, raw-count, no mV 
   hardware and untouched). The rail floor already stops a brownout; this stops the wasteful bleed
   *to* the floor. Near-free (one main-local byte, aged one count per poll tick).
 - **Core clock** is 1 MHz OSCHF (`clocks_init`, see Robustness for the why and the
-  knock-ons). Note VREF start-up time — and therefore the `INITDLY` sizing above —
-  depends on this being the high-frequency clock, not a 32 kHz main clock.
+  knock-ons). Note the ADC's hardware-sequenced start-up counts µs off
+  `CLKCTRL.MCLKTIMEBASE`, which `clocks_init` sizes for this clock (with margin to
+  cover the pre-fuse 1.25 MHz case) — if you change CLK_PER, re-derive it.
 
 ## Robustness / hardening
 
@@ -568,36 +574,37 @@ Fuses are configuration bytes the **programmer** writes during flashing; the
 running firmware can read them but can't change them. Set these deliberately —
 the `fuses` target prints the exact `avrdude` commands (all three values derived below):
 
-- **`BODCFG` -- brown-out, corrected.** `sense_rail_ok()` / `sense_glow_peak()` are only a
+- **`BODCFG` -- brown-out, corrected for the EA.** `sense_rail_ok()` / `sense_glow_peak()` are only a
   *software* floor checked before each glow; for a hardware guard against the rail collapsing
-  mid-operation the BOD runs as a **sampled** brown-out. **Value: `BODCFG = 0x2A`** = `LVL = 0x1`
-  (**2.45 V**), `SAMPFREQ = 0` (**128 Hz**), `ACTIVE = SAMPLE`, `SLEEP = SAMPLE`.
-  **Do NOT use `0x0A`.** That is `LVL = 0x0` = BODLEVEL0 = 1.9 V, which the datasheet
-  (DS40002315C p.207) enables **only during chip erase** -- in normal operation writing `LVL = 0x0`
-  is **the same as disabling the BOD**. A card burned with `0x0A` ships with *no* brown-out detection
-  and *no* VLM, not a 1.9 V guard. The lowest real normal-op level is `LVL = 0x1` = **2.45 V**.
-  2.45 V is the right pick: it sits **below** the 2.6 V glow floor (`VS_GLOW_FLOOR_MV`), so a
-  glow-load sag never trips a spurious reset (glows already stop at 2.6 V), and **above** the 1.8 V
-  core minimum, so it resets before the CPU can misexecute. It also **holds the core in low-current
-  reset until 2.45 V**, which is the mitigation for the slow-ramp cold-start stall (a dead-battery
-  card can't release the CPU into an active draw the µA harvest can't sustain). Continuous BOD
-  (`ENABLE`) is ~17 µA, far too heavy for this rail; sampled costs a small fraction. `SAMPFREQ = 1`
-  (32 Hz → `0x3A`) shaves a little more standby at ~31 ms detection latency. Do **not** use
-  2.70/2.85 V -- above the glow floor, they would reset the card before it could glow.
-- **EEPROM-write safety (a software VLM).** Even a correct 2.45 V BOD does not fully protect a write:
-  the BOD only *aborts* a write already in progress (DS40002315C sec 11.3.3), and the sampled BOD checks
+  mid-operation the BOD runs as a **sampled** brown-out. **Value: `BODCFG = 0x4A`** = `LVL = 0x2`
+  (**BODLEVEL2, 2.60 V**), `SAMPFREQ = 0` (**128 Hz**), `ACTIVE = SAMPLE`, `SLEEP = SAMPLE`.
+  **Do NOT use `0x0A`.** That is `LVL = 0x0` = BODLEVEL0 = 1.75 V, which the datasheet
+  (DS40002443 `FUSE.BODCFG`) enables **only during chip erase** -- in normal operation writing
+  `LVL = 0x0` is **the same as disabling the BOD**. A card burned with `0x0A` ships with *no*
+  brown-out detection and *no* VLM, not a 1.75 V guard. The EA's normal-op ladder is
+  **1.90 / 2.60 / 4.30 V** — there is no 2.45 V level on this part (that was the DD).
+  2.60 V is the right pick: it sits **below** the 2.75 V glow floor (`VS_GLOW_FLOOR_MV`, raised
+  from the DD-era 2.6 V precisely to preserve this sag margin), so a glow-load sag never trips a
+  spurious reset (glows already stop at 2.75 V), and it **holds the core in low-current reset until
+  2.60 V** -- the mitigation for the slow-ramp cold-start stall (a dead-battery card can't release
+  the CPU into an active draw the µA harvest can't sustain). 1.90 V (`0x2A`) would guard against
+  misexecution but releases the core far below the working rail, reopening that cold-start trap;
+  4.30 V is above the operating rail entirely -- use neither. Continuous BOD (`ENABLE`) is tens of
+  µA, far too heavy for this rail; sampled costs a small fraction. `SAMPFREQ = 1`
+  (32 Hz → `0x5A`) shaves a little more standby at ~31 ms detection latency.
+- **EEPROM-write safety (a software VLM).** Even a correct 2.60 V BOD does not fully protect a write:
+  the BOD only *aborts* a write already in progress (DS40002443 sec 8.3.4), and the sampled BOD checks
   at just 128 Hz. So firmware refuses to **start** a telemetry write unless the rail is above
-  **`EE_WRITE_FLOOR_MV`** (2.7 V) -- the job the datasheet assigns to the VLM, done in software so it holds
+  **`EE_WRITE_FLOOR_MV`** (2.85 V) -- the job the datasheet assigns to the VLM, done in software so it holds
   between BOD samples and even if the BOD is off. The two lifetime-extreme loggers (min-rail, max-temp)
   track their value in RAM and only *commit* above the floor, so a recoverable sag or heat spell is still
   captured; the power-cycle count is flagged at boot and committed once the rail has charged (a cold boot
   lands right at the reset-release voltage). Only a terminal drain below the floor goes unrecorded --
   unavoidable, since you cannot safely write EEPROM as the rail collapses.
-- **`SYSCFG1.MVSYSCFG` -- MVIO. Value: `SYSCFG1 = 0x10`** (`MVSYSCFG = SINGLE`, `SUT = 0`; factory
-  default is `0x08` = DUAL). The board ties VDDIO2 to VS, so PORTC runs off the main rail with no
-  separate I/O voltage, which is what SINGLE means. (DUAL also works here since VDDIO2 sits at a
-  valid voltage, but SINGLE is the correct intent. Note: PORTC ADC/AC inputs would *require* SINGLE --
-  this design doesn't use them, VSENSE is on PD2.)
+- **`SYSCFG1` -- leave at factory default (`0x07`).** The EA has **no MVIO** and no `MVSYSCFG`
+  field -- the DD's SINGLE/DUAL dance is gone with the VDDIO2 pin itself (pin 10 is plain PD0
+  on this part; `SJ1` is DNP). What remains in SYSCFG1 is only `SUT`, the start-up delay; the
+  64 ms factory default is harmless-to-helpful on a slow solar ramp, so it stays.
 - **`SYSCFG0.EESAVE` -- keep the black box across reflashes. Value: `SYSCFG0 = 0xD1`** = factory
   default `0xD0` **+ EESAVE** (bit 0). A UPDI chip-erase (every reflash) wipes EEPROM unless `EESAVE`
   is set, which skips EEPROM on erase -- without it a reflash wipes the tap counter, sun diary,
@@ -606,5 +613,12 @@ the `fuses` target prints the exact `avrdude` commands (all three values derived
   (A *locked* device erases EEPROM regardless; this board isn't locked.)
 - **`SYSCFG0.UPDIPINCFG` — leave UPDI alone.** UPDI on pin 23 (TC2030 pad / J1) is
   the only program path; do not repurpose that pin or you lose programming access.
-- **`OSCCFG`** can stay at default — the firmware selects the 1 MHz OSCHF clock in
-  software (`clocks_init`), so no clock fuse change is needed.
+- **`OSCCFG` -- set the 16 MHz base. Value: `OSCCFG = 0x08`** (`OSCHFFRQ = 1` = 16 MHz).
+  Unlike the DD, whose OSCHF frequency was a software `FRQSEL` field, the EA's
+  high-frequency oscillator base is a **fuse** — 20 MHz (factory default) or 16 MHz —
+  and software only prescales it: `clocks_init` sets `PDIV = DIV16`, and
+  16 MHz ÷ 16 = the exact **1 MHz** CLK_PER this firmware is timed for. Until this
+  fuse is burned the part runs at 20 MHz ÷ 16 = **1.25 MHz**: nothing is unsafe
+  (I²C runs at 125 kHz, within every bus device's Fast-mode rating; delays and PWM
+  just run 1.25× fast, and `MCLKTIMEBASE` is sized to cover both clocks), but burn
+  it with the others so the timing math is exact.

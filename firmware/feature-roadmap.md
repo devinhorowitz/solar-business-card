@@ -1,7 +1,7 @@
 # SOLAR-GLOW · DRH -- firmware feature roadmap
 
 Screened brainstorm of firmware-only features for the current **v4.0 hardware**
-(AVR64DD28 + ADXL367 + NT3H2211). Source: an external brainstorm (Google Gemini),
+(AVR64EA28 + ADXL367 + NT3H2211). Source: an external brainstorm (Google Gemini),
 screened here against the **as-built pin map** (`firmware/board.h`) and the project's
 constraints. Nothing below requires a board re-spin -- see "Trace-change verdict."
 
@@ -126,7 +126,7 @@ Each of these *reduces* draw and attacks the open energy question directly.
 - **"Find the sun" alignment mode.** A gesture turns the 4 LEDs into a `VSENSE` harvest
   bar-graph so a user can find a charging spot -- directly addresses the harvest problem.
 - **Thermal-abuse logging.** *(**implemented** -- `USE_TEMP_LOG`, `sense_temp_log()`.)* MCU
-  internal temp (pulsed ADC, 2.048 V ref + SIGROW cal per DS40002315 sec 33.3.3.8) → EEPROM
+  internal temp (pulsed ADC, 1.024 V ref + SIGROW cal per DS40002443 sec 31.3.3.7) → EEPROM
   lifetime max; matches the CLAUDE.md hot-car warning about supercap degradation. Sampled
   sparsely and written only on a new max, so near-zero energy; runs even while face-down dormant.
 - **Shipping / "coma" mode.** Halt RTC/ADC, wake only on a sustained solar spike; protects

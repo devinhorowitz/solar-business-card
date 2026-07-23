@@ -64,15 +64,23 @@ static uint16_t facedown_polls;
 
 static void clocks_init(void)
 {
-    /* internal OSCHF at 1 MHz, no prescaler -> F_CPU = 1 MHz. Chosen over 4 MHz
-     * to trim active current: the core only runs in brief bursts (it sleeps
-     * through the glow), so a slower clock costs nothing noticeable here while
-     * lowering the per-burst draw. Running OSCHF itself at 1 MHz draws less than
-     * 4 MHz-plus-prescaler, so set the oscillator low rather than dividing. */
-    _PROTECTED_WRITE(CLKCTRL.OSCHFCTRLA, CLKCTRL_FRQSEL_1M_gc);
-    _PROTECTED_WRITE(CLKCTRL.MCLKCTRLB, 0);          /* prescaler off (PEN = 0) */
-    /* voltage regulator: power-saving in deep sleep (doc section 7 step 1) */
-    _PROTECTED_WRITE(SLPCTRL.VREGCTRL, SLPCTRL_PMODE_AUTO_gc);
+    /* F_CPU = 1 MHz for low per-burst active draw (the core only runs in brief
+     * bursts and sleeps through the glow). AVR-EA: OSCHF has NO runtime FRQSEL
+     * (unlike the DD) -- the base frequency comes from the OSCCFG fuse
+     * (OSCHFFRQ: 20 MHz default, 16 MHz fused) and CLK_PER is set by the main
+     * prescaler. The fuse plan sets OSCHFFRQ = 16 MHz (see Makefile `fuses`),
+     * so 16 MHz / 16 = exactly 1 MHz here. UNTIL that fuse is burned the base
+     * is 20 MHz -> CLK_PER = 1.25 MHz: nothing breaks (TWI runs ~125 kHz, still
+     * in every device's spec; delays run ~20% short), but burn the fuse before
+     * trusting any timing-derived bench number. */
+    _PROTECTED_WRITE(CLKCTRL.MCLKCTRLB, CLKCTRL_PDIV_DIV16_gc | CLKCTRL_PEN_bm);
+    /* Timebase: CLK_PER cycles amounting to >= 1 us, used by the ADC's internal
+     * start-up/settle sequencing (DS40002443 12.3.6). 2 covers both the fused
+     * 1 MHz (2 us) and the pre-fuse 1.25 MHz (1.6 us); a too-large value only
+     * lengthens the ADC start-up by microseconds. */
+    _PROTECTED_WRITE(CLKCTRL.MCLKTIMEBASE, 2);
+    /* (DD-era SLPCTRL.VREGCTRL PMODE tuning removed: the EA has no VREGCTRL --
+     * its regulator manages sleep modes automatically.) */
 }
 
 static void gpio_init(void)
@@ -107,8 +115,9 @@ static void gpio_init(void)
      * current (and for PA5, the reserved button to GND, and the JP2 breakouts, that
      * is also the useful resting state). The pins configured above (PA6/PA7/PD2/PF0/
      * PF1) and the LED pins (PA0-3, in led_init) are left alone; a pull-up bit on a
-     * driven output is ignored anyway. Writes to PORTD pins not bonded on the 28-pin
-     * package are harmless. */
+     * driven output is ignored anyway. On the AVR-EA, PD0 IS bonded (pin 10 -- the
+     * pad that was VDDIO2 on the DD28) and floats because SJ1 is DNP: the pull-up
+     * below is its required hold. PD3..PD7 exist on the 28-pin EA and are unused. */
     /* EN_STO_CH (PA4): open-drain gate for the AEM10300 charger. OUT latch stays LOW;
      * DIR toggles -- DIR=1 drives LOW (disable charge, quiet the >=10 MHz DCDC for an NFC
      * read), DIR=0 = Hi-Z so external R17 pulls to VINT (2.2 V) and charge resumes. Start
@@ -373,7 +382,7 @@ int main(void)
             /* black box: lowest rail ever (RAM-tracked, committed to EEPROM only from a healthy rail)
              * plus the deferred power-cycle count. Before the dormancy gate, so a quietly-starving
              * stowed card is still tracked. Both defer their EEPROM write off a low/collapsing rail so
-             * it can't corrupt (DS40002315 sec 11.3.3). */
+             * it can't corrupt (DS40002443 sec 8.3.4 (EA; same corruption window as the DD's 11.3.3)). */
             sense_vmin_tick();
             sense_boot_commit();   /* write a boot-flagged power cycle once the rail has charged past the write floor */
 #endif

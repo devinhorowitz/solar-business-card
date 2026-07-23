@@ -3,11 +3,13 @@
  *
  * Single source of truth = the committed solar-glow-drh-v4_0.kicad_pcb
  * (pad -> pinfunction -> net read directly from the board) cross-checked
- * against solar-glow-drh-v2-hardware.md and the AVR64DD32-28 datasheet
- * (DS40002315). Every PORTMUX/peripheral value below is the value the
+ * against solar-glow-drh-v2-hardware.md and the AVR64EA28 datasheet
+ * (DS40002443). Every PORTMUX/peripheral value below is the value the
  * physical routing requires, not a default.
  *
- * MCU: AVR64DD28, 28-pin VQFN, on the BACK of the board.
+ * MCU: AVR64EA28, 28-pin VQFN, on the BACK of the board. (v4 family swap from
+ * the AVR64DD28: 27/28 pads identical; TWI ALT2, TCA0-on-PORTA, and the
+ * PD1/PD2 analog inputs all carry over -- see design-notes 5 addendum.)
  *
  *   pad pinfunc  net      role
  *    26 PA0      LDRV4    LED D5 low-side drive    TCA0 WO0
@@ -22,7 +24,7 @@
  *     7 PC1      PC1      spare GPIO  (JP2.3)
  *     8 PC2      SDA      TWI0 host SDA  (TWIROUTEA=ALT2)  ext 4.7k to VS
  *     9 PC3      SCL      TWI0 host SCL  (TWIROUTEA=ALT2)  ext 4.7k to VS
- *    10 VDDIO2   VDDIO2   tied to VS by SJ1 -> PORTC at rail, MVIO unused
+ *    10 PD0      (n/c)    EA GPIO on the old VDDIO2 pad; SJ1 = DNP so it floats -> held by internal pull-up (gpio_init)
  *    11 PD1      STO_SNS    supercap-state sense  AIN1 (STO via R15/R16 divide-by-3)
  *    12 PD2      VSENSE   light sense (now SRC) + rail  AIN2 (ADC) + AINP0 (AC0+)
  *    18 VDD      VS       regulated 3.3 V LDO output (U9 TPS7A0233, STO->VS)
@@ -256,8 +258,11 @@
 #define USE_FRAM_LOG       0
 
 /* charge floor: skip the glow (stay dark) below this rail voltage, mV.
- * Read via the STO divider channel (PD1/AIN1). Keeps a brown-out from bricking mid-animation. */
-#define VS_GLOW_FLOOR_MV   2600
+ * Read via the STO divider channel (PD1/AIN1). Keeps a brown-out from bricking mid-animation.
+ * EA re-derivation: the EA's BOD ladder has no 2.45 V level, so the fuse plan uses
+ * BODLEVEL2 = 2.60 V typ falling (DS40002443 35.11); the floor keeps the DD design's
+ * ~150 mV of glow-sag margin ABOVE the BOD trip -> 2600 + 150 = 2750. */
+#define VS_GLOW_FLOOR_MV   2750
 
 /* Brownout stretch: fade the glow as the reserve drains instead of a hard cliff at the
  * floor. Full brightness at/above VS_GLOW_FULL_MV, ramped down to VS_GLOW_DIM_PEAK as the
@@ -274,17 +279,17 @@
 
 /* EEPROM write-safety floor, mV: the rail must be at/above this for firmware to START an EEPROM
  * write (the telemetry loggers -- min-rail, max-temp, power-cycle count). A Flash/EEPROM write on a
- * collapsing rail can corrupt (DS40002315 sec 11.3.3 "Preventing Flash/EEPROM Corruption"); the
+ * collapsing rail can corrupt (DS40002443 sec 8.3.4 (EA; same corruption window as the DD's 11.3.3) "Preventing Flash/EEPROM Corruption"); the
  * hardware BOD only *aborts* a write already in progress, so this is the software "don't start a
  * write near the edge" guard -- the job the datasheet assigns to the VLM, done here so it holds
  * between the sampled BOD's checks (and even if the BOD is off). Set comfortably above the BOD level
- * (2.45 V at BODCFG=0x2A) so a started ~13 ms write completes above it; the write's MCU-only load
+ * (EA: 2.60 V at BODCFG=0x4A, BODLEVEL2 -- the ladder has no 2.45 V step) so a started ~13 ms write completes above it; the write's MCU-only load
  * barely moves the 1 F rail, so the margin is ample. The lifetime-extreme loggers track their value
  * in RAM and only COMMIT here, so a recoverable sag/heat spell is still captured -- only a terminal
  * drain below this floor goes unrecorded, which is unavoidable (you cannot safely write EEPROM as the
- * rail collapses). Sits just above the 2.6 V glow floor, so if the card is healthy enough to have
+ * rail collapses). Sits just above the 2.75 V glow floor, so if the card is healthy enough to have
  * been glowing, it is healthy enough to commit a log entry. */
-#define EE_WRITE_FLOOR_MV  2700
+#define EE_WRITE_FLOOR_MV  2850
 
 /* wake-on-light threshold on VSENSE (= VIN/2), mV at the pin.
  * ~0 in dark, ~1.2-2.1 V in light. ~0.4 V sits comfortably above dark. */
