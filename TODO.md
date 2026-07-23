@@ -93,6 +93,30 @@ shell re-machine. Updated 2026-07-11._
   $1.37) rejected: the design notes already earmark the 2211's ~1.7 KB spare. NT3H2211W0FHKH: Active,
   DK 15.1k / Mouser 15.8k, $1.50–1.56 — deeply stocked. **Watch item:** NXP steers new designs to
   NTAG 5, so NTAG I²C plus carries EOL risk on a years horizon — buy a spare or two with the order.
+- [x] **[BOM] U1 MCU audit — grade bump executed: `AVR64DD28-I/STX` → `AVR64DD28-E/STX`** _(superseded same-day by the AVR-EA family swap below)_ — _DONE
+  2026-07-23 (sch+BOM; same die/land/firmware)._ Family sweep confirmed the AVR-DD28 is still the right
+  part (design-notes §5 rationale stands: only superset for the mixed-voltage I²C; the newer EA
+  (12-bit ADC+PGA) and DU (USB) siblings are zero-stock at DK and would be real firmware ports for
+  features the card doesn't need; 64 KB is the family max, ~2.4 KB used; /STX VQFN kept per the height
+  rationale). The finding was **doc↔BOM drift**: the design-notes thermal audit ("Bumped to
+  automotive/higher temp… taken") already committed to the **-E extended grade (−40…+125 °C)** alongside
+  the FRAM-TY bump, but the BOM/schematic still carried -I (85 °C). Executed: **$1.24 (+$0.07)**, DK
+  `150-AVR64DD28-E/STX-ND` (319, tube) / deep-stock tape alt `AVR64DD28T-E/STX` (DK 3.3k, Mouser 3.1k,
+  same price). MCU no longer the first thing to give out at the supercap's 85 °C ceiling.
+- [ ] **[SCH+FW] U1 family swap `AVR64DD28` → `AVR64EA28-E/STX` — FIRMWARE PORT PENDING** _(2026-07-23;
+  sch+BOM DONE, board copper UNCHANGED, firmware is the open half)._ Datasheet-verified decision
+  (DS40002443A in `datasheets/`, note PRELIMINARY rev; pin diff from Microchip's own atdf files):
+  **verified wins** — diff 12-bit ADC + PGA + 1024-sample accumulation (pairs with the 0.1%/25 ppm
+  dividers), VREF ±2% vs DD ±4% (1.024/2.048 V, ≤85 °C), base power-down **0.08 µA vs 0.65 µA**,
+  EEPROM **512 B vs 256 B**, cheaper + deeper stocked (DK `150-AVR64EA28-E/STX-ND` $1.23, 1.4k; tape
+  6.6k more). **Copper-compatible**: 27/28 pads identical; pin 10 VDDIO2→PD0 → **SJ1 now DNP** (0R
+  stays a spare if the DD is reinstated). TWI `ALT2` (PC2/PC3), TCA0 PORTA (WO0–3 = PA0–3), PD1/PD2
+  AINP/AINN all confirmed. **Firmware-port scope:** `Makefile` `-mmcu=avr64ea28` + AVR-Ex DFP;
+  `sense.c` rewrite for the EA ADC (different register model — use diff mode + accumulation);
+  **fuses recomputed: the EA has NO 2.45 V BOD level — ladder is 1.90/2.60/4.30, use BODLEVEL2 =
+  2.60 V** and re-derive the EEPROM-floor constants; drop `MVSYSCFG` (no MVIO); `board.h` pin-10
+  comment + init PD0 input-disabled; re-verify AC0 mux index for PD2/AINP0; sleep numbers are
+  typ-only in the preliminary DS — re-measure at bench. Bench re-verify all tunables after port.
 - [ ] **[BOM] Buy the low-stock / long-lead parts early** _(2026-07-23)._ Not zero, but thin at audit:
   **supercaps** SC1–4 (~195–200), **FER1** ferrite (41), **U3** accel (731), **U1** MCU (608), **PV**
   cells (423). The supercaps + ferrite are the historical long-lead items — order with the first cut.
