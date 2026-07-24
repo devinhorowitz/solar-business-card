@@ -197,6 +197,32 @@ shell re-machine. Updated 2026-07-11._
 
 ## Firmware — `firmware/`, `firmware/README.md`
 
+- [ ] **[DESIGN DECISION: SCH+PCB+FW] EN_STO_CH cold-start deadlock (FATAL) — pick sever vs NFET**
+  _(2026-07-23 second-sift audit; full analysis in the design-notes second-sift addendum)._ A fully
+  dead card's PA4 clamp pins the AEM10300's charge-enable at ~0.6 V (the TPS7A0233P's active
+  discharge holds VS at GND below UVLO, so there is no float-up escape); if that decodes LOW the card
+  is an unrecoverable no-charge brick after its first deep discharge — and deep discharge is a normal
+  state. Invisible on a UPDI-powered bench. **Option (i) RECOMMENDED: sever PA4 from the net** (EN
+  floats on internal pull-up + R17 = always-enabled; PA4 becomes a pulled-up spare; loses only the
+  speculative NFC-read charge-quieting). Option (ii): 2N7002-class low-side buffer (gate from PA4 +
+  1M pull-DOWN, HIGH = disable) — keeps the feature with the correct dead-MCU-safe polarity, +2
+  parts. Firmware follows the choice (drop or invert the FD-ISR EN_STO_CH toggling + gpio_init).
+- [ ] **[FW+DOC, cheap] LED sub-emission idle bias — take the free mitigations** _(2026-07-23
+  second-sift; significant)._ OSRAM forbids continuous sub-emission forward bias (migration risk);
+  idle card holds 4 LEDs at up to 1.35 V (STO 4.65 vs pads parked 3.3). (a) firmware: Hi-Z the LED
+  pads between animations (DIR-gate around glows; INVEN stays for active PWM) — cuts bias to
+  clamp-limited ~1.0 V, zero below STO≈3.6; (b) docs: SW2 OFF is the stow-the-card discipline (TINY
+  does not help); (c) bench: measure real idle LED current; (d) only if energy budget allows,
+  consider a VOVCH re-strap one step down (E ~ V², costly). Anode-switch topology rejected (dead-MCU
+  gate fail-state inverts).
+- [ ] **[BENCH RULES] Cross-domain bench-procedure set** _(2026-07-23 second-sift)._ (1) JP1 SCL/SDA:
+  external I2C adapters only with the card powered and the adapter referenced to VS — the ADXL367
+  (and now the FRAM) digital abs-max is zero-headroom "-0.3 to VDDIO". (2) STO injection: SW2 OFF
+  first (lit injection >≈2.5 V forward-drives the LEDs into the dead MCU's clamps, ~16 mA/pin).
+  (3) Dark bench-charging of STO: pre-balance the 2S midpoint or charge under light (BAL active).
+  (4) UPDI into a flat card: power the card via the programmer (README rule; ~0.5 mA PF7 clamp
+  current if ignored — bounded but pointless).
+
 - [ ] **[SCH+FW DONE -> PCB] FRAM back-power fix (option A) ADOPTED -- U7 re-railed to VS + Sleep-parked;
   board copper re-net pending** _(2026-07-23 deep-dive + same-day execution. SCH: the two VNFC global
   labels at U7.VDD and C28.1 renamed to VS (tag side untouched). FW: fram.c rebuilt on a wake/sleep
