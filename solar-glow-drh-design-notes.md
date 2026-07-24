@@ -1239,3 +1239,93 @@ Sources: UM10204 Rev 7 Sec 5.1 + Table 10 note 9 (nxp.com); TI SSZTAP0, SCEA035A
 Infineon FM24V05/FM24V10/FM24CL64B/CY15B256J datasheets (the SCL/SDA exception); RAMXEED
 MB85RC512TY-DS1v1-E / MB85RC1MT-DS5v2-E / MB85RC256V (abs-max + power-sequence diagrams); ST
 M24M01-A125 datasheet; ADI EZ Q&A 599909; Arduino forum 515790 (measured 0.88 mA phantom draw).
+
+
+## Addendum (2026-07-23, second sift) -- Cross-domain audit round 2: EN_STO_CH cold-start deadlock (FATAL), LED sub-emission bias, bench rules
+
+Systematic sweep for more issues of the FRAM back-power class (a rail-referenced spec violated
+while a domain is absent/slow): three lanes -- the full cross-domain pin matrix, slow-ramp /
+power-sequencing specs vs. the mV/s solar rail, and unpowered-part states -- 13 candidates raised,
+each adversarially verified against primary sources; 30 checks affirmatively CLEARED with datasheet
+quotes. Two findings survived at severity; both need a design decision (tracked in TODO).
+
+**FINDING 1 (FATAL): EN_STO_CH cold-start deadlock -- the dead MCU vetoes its own recharge.**
+The AEM10300 charges STO only while EN_STO_CH is high/floating ("must be pulled up to VINT or left
+floating (pin is pulled up internally)"; pulled to GND, STO charging is disabled while "VINT can
+still be supplied from SRC" -- DS-AEM10300 sec 9.4), and NO charge path bypasses the pin (state
+machine sec 8.3; EN_STO_FT is strapped off, prewiring line 45). Our PA4 drives the pin open-drain
+with R17 1M to VINT. With the card FULLY DEAD (STO ~ 0), the EA's pin clamp (abs-max VDD+0.3,
+IK +/-20 mA -- confirmed in DS40002443) pins the node at one diode drop above a rail that the
+TPS7A0233**P**'s own active discharge holds AT GROUND through the whole sub-UVLO window (SBVS277C
+sec 7.3.2) -- so EN_STO_CH sits deterministically at ~0.6 V on a 2.2 V-referenced input whose only
+documented levels are LOW=GND / HIGH=VINT. If that decodes LOW (more likely than not), charging is
+disabled at ANY light level, STO stays at 0, VS stays in UVLO, the clamp never releases: an
+unrecoverable no-charge brick whose only exit is bench-charging STO via JP1. Even the benign decode
+costs 1.6+ uA from VINT (~58% of the 6 uW cold-start minimum) during the exact bootstrap window.
+The trap is invisible on the bench: a UPDI-powered card has VDD up, no clamp, and charges perfectly
+-- it only bricks in the field after the first deep discharge, which is a NORMAL state for this
+product (VOVDIS 0.2 V; drawers, envelopes). Same class as the FRAM find, mirrored: there a dead
+part was the victim of a live bus; here the dead MCU is the aggressor on a live control line.
+**Fix options (decision pending, TODO):**
+- (i) **SEVER -- recommended.** Disconnect PA4 from the net; EN_STO_CH floats on its internal
+  pull-up + R17 = always-enabled, cold start is clean by construction. Cost: the charge-quieting-
+  during-NFC-read nicety (speculative RF hygiene; LED blanking already handles the dominant noise
+  source). Zero new parts; PA4 becomes a pulled-up spare. Re-add control later via (ii) if the
+  bench shows real DCDC interference with tag reads.
+- (ii) **NFET buffer -- keeps the feature with the CORRECT fail-safe polarity.** 2N7002-class:
+  gate from PA4 (push-pull; HIGH = disable) with a 1M gate pull-DOWN, drain to EN_STO_CH, source to
+  GND. Dead/resetting MCU -> gate held low -> FET off -> pin floats HIGH -> charging enabled. Also
+  retires the pin's 2.75 V abs-max concern entirely. Cost: 2 parts + copper.
+- A high-side PFET variant was examined and REJECTED: the same dead-MCU clamp drives its gate low
+  and turns it ON when the card is dead -- the fail-state inverts again.
+
+**FINDING 2 (significant): LEDs sit in vendor-forbidden sub-emission forward bias in the default
+idle state.** ams-OSRAM LA P47F datasheet, note 2 "Reverse Operation" (verified verbatim):
+"Applying any continuous reverse bias or forward bias below the voltage range of light emission
+shall be avoided because it may cause migration which can change the electro-optical
+characteristics or damage the LED." With SW2 ON and the tank full (VOVCH 4.65 V), the idle card
+holds all four LEDs at up to 1.35 V continuous forward bias 24/7 (anodes at STO; cathodes parked
+driven-HIGH at 3.3 V by the INVEN idle state, held through power-down by the port latches) --
+squarely sub-emission (VF min 1.95 V @ 30 mA). This is a slow, humidity-dependent parametric-drift
+risk on the card's marquee feature, not a fast failure. NO zero-cost complete fix exists:
+- Firmware Hi-Z idle park (tristate PA0-3 between animations) REDUCES the bias to the clamp-limited
+  ~1.0 V and the current to LED-leakage-at-lower-bias, but cannot zero it; below STO ~ 3.6 V it
+  does go to zero. Free, worth taking either way.
+- VOVCH re-strap one step down trades stored energy (E ~ V^2) for bias margin -- run against the
+  energy-budget bench numbers before spending capacity on it.
+- SW2 OFF for storage/shipping removes the bias entirely (anodes float) -- document as the
+  stow-the-card discipline; TINY mode does NOT help (same DC endpoint through R12).
+- An anode-rail switch was examined and REJECTED (same dead-MCU-gate fail-state as above).
+**Recommended disposition:** take the free Hi-Z idle park + the SW2-OFF stow note now, bench-measure
+the real idle LED current (it should be nA-class), and revisit VOVCH only with energy data in hand.
+
+**Bench-procedure rules the audit produced** (now in TODO): never drive JP1's SCL/SDA from an
+externally-powered adapter unless the card is powered and the adapter is referenced to VS (the
+ADXL367's digital abs-max is a zero-headroom "-0.3 V to VDDIO", and with the FRAM now on VS the
+same applies to it); bench-inject STO only with SW2 OFF (a lit injection above ~2.5 V forward-drives
+the LED chain into the dead MCU's clamps at up to ~16 mA/pin); when bench-charging STO in the dark,
+mind the 2S midpoint (pre-balance or charge under light so the AEM's BAL is active); the
+UPDI-into-a-flat-card caution stands (~0.5 mA into the PF7 clamp -- bounded, but power the card via
+the programmer as the README already instructs).
+
+**Cleared (30 checks, quotes in the audit record):** FD field-powered wake and the tag's whole
+VCC-off surface (fixed 4.6 V input ratings, not VDD-referenced); VSENSE/STO_SNS dividers in every
+rail state (uA-class clamp injection, IK +/-20 mA); LED pins at full drive (~18 mA, in-rating);
+U6 ON/VIN in all orderings (ground-referenced ratings, no UVLO, no ramp-rate spec); U9 EN=IN is the
+datasheet-recommended config, zero minimum load, UVLO+active-discharge handle arbitrary ramps -- and
+its discharge feature is EXACTLY the ADXL367 datasheet's own recommended brown-out mitigation, so
+the accel's discharge-before-reapply requirement is met by design; ADXL367 rise-time spec is a
+minimum (slow ramps legal) and its INT pins share the VS rail; AEM10300 cold start from 275 mV /
+6 uW is in-spec charging a 0 V bank, BAL-on-MID is the required 2S config, and a charged STO with
+dark SRC is a supported state; supercaps carry no ramp/current minimums; FRAM slow-ramp POR clean
+(tr is a minimum -- re-checked post re-rail); no OTHER part sits on a collapsible domain.
+
+_Adopted 2026-07-23 (same day): Finding 1 -> option (ii), the NFET buffer — **Q2 = BSS138LT1G**
+(2N7002LT1G/WT1G were zero-stock at DK; the BSS138's 0.5-1.5 V threshold is fully enhanced at 3.3 V
+and its nA-class off-leakage does not load the 1M node) + **R18** 1 M gate pulldown. Firmware
+inverted for the buffer (PA4 push-pull, HIGH = disable; gate LOW at init = the same charging-enabled
+state R18 gives a dead MCU, so init is glitch-free), BOM updated (+$0.44). Placement guidance: FET at
+the old PA4/net junction near U8/R17 so the high-impedance drain net stays short; the driven gate
+line may run long. Finding 2 -> Hi-Z park landed in led.c (pads park as inputs with buffers off
+between animations, unpark/park bracketing every animation path); SW2-OFF stow note + bench current
+measurement remain. Build after both: warning-free, 4,234 B._

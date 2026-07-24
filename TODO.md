@@ -197,6 +197,43 @@ shell re-machine. Updated 2026-07-11._
 
 ## Firmware — `firmware/`, `firmware/README.md`
 
+- [ ] **[FW+BOM DONE -> SCH+PCB] EN_STO_CH cold-start deadlock fix: NFET buffer CHOSEN (Q2 BSS138LT1G
+  + R18 1M gate pulldown) — user draws the sch symbols + copper** _(decision 2026-07-23: option (ii).
+  FW inverted for the buffer (PA4 push-pull, HIGH = disable; init + FD ISR reworked, build clean
+  4,234 B); BOM carries Q2 (BSS138LT1G — 2N7002 was zero-stock — DK BSS138LT1GOSCT-ND \$0.34, 204.9k)
+  and R18 on the shared 1M line. SCH hookup: gate <- PA4 (rename that segment e.g. `CHG_DIS_G`),
+  drain -> EN_STO_CH (keep the label on the U8/R17 side), source -> GND, R18 gate-to-GND. PLACEMENT:
+  at the old PA4/net junction near U8/R17 — the 1M-class drain net stays short, the driven gate line
+  may run long; SOT-23 joins the back-side brace height map (~1.1 mm, same class as U9).)_ ORIGINAL:
+  _(2026-07-23 second-sift audit; full analysis in the design-notes second-sift addendum)._ A fully
+  dead card's PA4 clamp pins the AEM10300's charge-enable at ~0.6 V (the TPS7A0233P's active
+  discharge holds VS at GND below UVLO, so there is no float-up escape); if that decodes LOW the card
+  is an unrecoverable no-charge brick after its first deep discharge — and deep discharge is a normal
+  state. Invisible on a UPDI-powered bench. **Option (i) RECOMMENDED: sever PA4 from the net** (EN
+  floats on internal pull-up + R17 = always-enabled; PA4 becomes a pulled-up spare; loses only the
+  speculative NFC-read charge-quieting). Option (ii): 2N7002-class low-side buffer (gate from PA4 +
+  1M pull-DOWN, HIGH = disable) — keeps the feature with the correct dead-MCU-safe polarity, +2
+  parts. Firmware follows the choice (drop or invert the FD-ISR EN_STO_CH toggling + gpio_init).
+- [ ] **[FW DONE -> DOC+BENCH] LED sub-emission idle bias — Hi-Z park LANDED, stow-rule + bench remain**
+  _(2026-07-23; fw executed same day: LED pads now park as inputs (input buffers off, INVEN kept)
+  between animations — led_park/led_unpark bracket led_breathe/led_sweep on every path incl. the NFC
+  aborts; bias drops to clamp-limited ~1 V worst-case, zero below STO~3.6 V. Remaining: (b) doc the
+  SW2-OFF stow discipline where SW2 is described; (c) bench-measure real idle LED current; (d) VOVCH
+  re-strap only with energy data.)_ ORIGINAL: OSRAM forbids continuous sub-emission forward bias (migration risk);
+  idle card holds 4 LEDs at up to 1.35 V (STO 4.65 vs pads parked 3.3). (a) firmware: Hi-Z the LED
+  pads between animations (DIR-gate around glows; INVEN stays for active PWM) — cuts bias to
+  clamp-limited ~1.0 V, zero below STO≈3.6; (b) docs: SW2 OFF is the stow-the-card discipline (TINY
+  does not help); (c) bench: measure real idle LED current; (d) only if energy budget allows,
+  consider a VOVCH re-strap one step down (E ~ V², costly). Anode-switch topology rejected (dead-MCU
+  gate fail-state inverts).
+- [ ] **[BENCH RULES] Cross-domain bench-procedure set** _(2026-07-23 second-sift)._ (1) JP1 SCL/SDA:
+  external I2C adapters only with the card powered and the adapter referenced to VS — the ADXL367
+  (and now the FRAM) digital abs-max is zero-headroom "-0.3 to VDDIO". (2) STO injection: SW2 OFF
+  first (lit injection >≈2.5 V forward-drives the LEDs into the dead MCU's clamps, ~16 mA/pin).
+  (3) Dark bench-charging of STO: pre-balance the 2S midpoint or charge under light (BAL active).
+  (4) UPDI into a flat card: power the card via the programmer (README rule; ~0.5 mA PF7 clamp
+  current if ignored — bounded but pointless).
+
 - [ ] **[SCH+FW DONE -> PCB] FRAM back-power fix (option A) ADOPTED -- U7 re-railed to VS + Sleep-parked;
   board copper re-net pending** _(2026-07-23 deep-dive + same-day execution. SCH: the two VNFC global
   labels at U7.VDD and C28.1 renamed to VS (tag side untouched). FW: fram.c rebuilt on a wake/sleep

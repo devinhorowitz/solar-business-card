@@ -31,15 +31,26 @@ static inline uint8_t gamma2(uint8_t v)
 
 void led_init(void)
 {
-    /* Drive the four LED pins; invert at the pad (INVEN) so bigger duty = brighter
-     * AND compare 0 parks the pad HIGH = LED dark at idle. INVEN is LOAD-BEARING
-     * for that dark-off state: do NOT drop it to "fix" a backwards brightness (that
-     * lights every LED at duty 0) -- write 255 - duty instead. See led.h. */
-    LED_PORT.DIRSET = LED_ALL_bm;
-    PORTA.PIN0CTRL |= PORT_INVEN_bm;
-    PORTA.PIN1CTRL |= PORT_INVEN_bm;
-    PORTA.PIN2CTRL |= PORT_INVEN_bm;
-    PORTA.PIN3CTRL |= PORT_INVEN_bm;
+    /* Pad config, set once: INVEN so bigger duty = brighter AND compare 0 parks the
+     * pad HIGH = LED dark during an animation's gaps. INVEN is LOAD-BEARING for that
+     * dark-off state: do NOT drop it to "fix" a backwards brightness (that lights
+     * every LED at duty 0) -- write 255 - duty instead. See led.h. The input buffer
+     * is disabled permanently: these pads are output-or-parked, never read, and a
+     * parked pad floats wherever the LED network puts it -- a live buffer would
+     * draw shoot-through at mid-rail levels.
+     *
+     * DIR is NOT set here: between animations the pads are PARKED as inputs
+     * (led_park), the 2026-07-23 sub-emission-bias mitigation. Driven-high idle
+     * held all four LEDs at up to 1.35 V continuous forward bias (STO at VOVCH
+     * 4.65 V vs pads at 3.3 V) -- a bias OSRAM's datasheet explicitly forbids
+     * (note 2: migration risk). Tristated, the cathode floats up and the bias
+     * drops to the clamp-limited ~1 V worst-case, and to ZERO once STO is below
+     * ~VDD+0.3+margin (~3.6 V) -- most of the card's life. WO output needs DIR=1
+     * on this part, so animations bracket themselves with led_unpark/led_park. */
+    PORTA.PIN0CTRL = PORT_INVEN_bm | PORT_ISC_INPUT_DISABLE_gc;
+    PORTA.PIN1CTRL = PORT_INVEN_bm | PORT_ISC_INPUT_DISABLE_gc;
+    PORTA.PIN2CTRL = PORT_INVEN_bm | PORT_ISC_INPUT_DISABLE_gc;
+    PORTA.PIN3CTRL = PORT_INVEN_bm | PORT_ISC_INPUT_DISABLE_gc;
 
     PORTMUX.TCAROUTEA = PORTMUX_TCA0_PORTA_gc;   /* WO0..WO3 -> PA0..PA3 (default, explicit) */
 
@@ -55,6 +66,12 @@ void led_init(void)
     TCA0.SPLIT.HCMP0 = 0;
     TCA0.SPLIT.CTRLA = TCA_SPLIT_CLKSEL_DIV1_gc | TCA_SPLIT_ENABLE_bm;
 }
+
+/* park/unpark: the sub-emission-bias mitigation (see led_init). Park = pads to
+ * inputs (LED path open, nA clamp leakage at worst); unpark = pads driven again
+ * (compare values already parked at 0 = INVEN-high = dark, so no flash). */
+static void led_park(void)   { LED_PORT.DIRCLR = LED_ALL_bm; }
+static void led_unpark(void) { LED_PORT.DIRSET = LED_ALL_bm; }
 
 void led_set(uint8_t ch, uint8_t duty)
 {
@@ -164,23 +181,25 @@ void led_breathe(uint8_t cycles, uint16_t breath_ms, uint8_t peak)
     if (step_ms == 0) step_ms = 1;
 
     /* if a reader field is already up, stay dark -- the read owns the RF band. */
-    if (reader_field_active()) { led_off(); return; }
+    if (reader_field_active()) { led_off(); return; }   /* still parked -- nothing lit */
 
+    led_unpark();
     tcb_start_1ms();                           /* 1 ms timebase for the idle naps */
     for (uint8_t c = 0; c < cycles; c++) {
         for (uint8_t i = 0; i <= steps; i++) {              /* in  */
             uint8_t lin = (uint8_t)(((uint16_t)peak * i) / steps);
             led_set_all(gamma2(lin));
-            if (idle_nap_ms(step_ms)) { tcb_stop(); led_off(); return; }   /* field: blanked, bail */
+            if (idle_nap_ms(step_ms)) { tcb_stop(); led_off(); led_park(); return; }   /* field: blanked, bail */
         }
         for (uint8_t i = steps; i > 0; i--) {               /* out */
             uint8_t lin = (uint8_t)(((uint16_t)peak * (i - 1)) / steps);
             led_set_all(gamma2(lin));
-            if (idle_nap_ms(step_ms)) { tcb_stop(); led_off(); return; }   /* field: blanked, bail */
+            if (idle_nap_ms(step_ms)) { tcb_stop(); led_off(); led_park(); return; }   /* field: blanked, bail */
         }
     }
     tcb_stop();
     led_off();
+    led_park();
 }
 
 /* Sequential "loading" chase for the in-sun tell.
@@ -218,6 +237,7 @@ void led_sweep(uint8_t passes, uint16_t pass_ms, uint8_t peak, uint16_t overlap)
     const int16_t p_hi = (int16_t)(3 * 256 + (int16_t)overlap);
     const int32_t span = (int32_t)p_hi - (int32_t)p_lo;
 
+    led_unpark();
     tcb_start_1ms();
     for (uint8_t c = 0; c < passes; c++) {
         for (uint8_t s = 0; s <= steps; s++) {
@@ -231,9 +251,10 @@ void led_sweep(uint8_t passes, uint16_t pass_ms, uint8_t peak, uint16_t overlap)
                 uint8_t lin = (uint8_t)(((uint16_t)b * peak) / 255u);
                 led_set(phys_ch[i], gamma2(lin));
             }
-            if (idle_nap_ms(step_ms)) { tcb_stop(); led_off(); return; }   /* field: blanked, bail */
+            if (idle_nap_ms(step_ms)) { tcb_stop(); led_off(); led_park(); return; }   /* field: blanked, bail */
         }
     }
     tcb_stop();
     led_off();
+    led_park();
 }

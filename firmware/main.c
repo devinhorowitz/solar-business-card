@@ -118,13 +118,12 @@ static void gpio_init(void)
      * driven output is ignored anyway. On the AVR-EA, PD0 IS bonded (pin 10 -- the
      * pad that was VDDIO2 on the DD28) and floats because SJ1 is DNP: the pull-up
      * below is its required hold. PD3..PD7 exist on the 28-pin EA and are unused. */
-    /* EN_STO_CH (PA4): open-drain gate for the AEM10300 charger. OUT latch stays LOW;
-     * DIR toggles -- DIR=1 drives LOW (disable charge, quiet the >=10 MHz DCDC for an NFC
-     * read), DIR=0 = Hi-Z so external R17 pulls to VINT (2.2 V) and charge resumes. Start
-     * Hi-Z (charge on by default). NO internal pull-up: it would pull to the 3.3 V rail
-     * and over-volt the 2.75 V-max EN_STO_CH pin. Toggled in the FD ISR (PORTA_PORT_vect). */
-    ENSTOCH_PORT.OUTCLR = ENSTOCH_PIN_bm;
-    ENSTOCH_PORT.DIRCLR = ENSTOCH_PIN_bm;
+    /* EN_STO_CH gate (PA4): push-pull drive of Q2, the low-side charge-disable buffer
+     * (cold-start-deadlock fix -- board.h has the full story). Gate LOW at init = Q2 off =
+     * AEM charging ENABLED (also the R18-pulled dead-MCU state, so init changes nothing
+     * observable). The FD ISR raises it to quiet the DCDC during an NFC read. */
+    ENSTOCH_PORT.OUTCLR = ENSTOCH_PIN_bm;    /* gate low = charging enabled */
+    ENSTOCH_PORT.DIRSET = ENSTOCH_PIN_bm;    /* push-pull from here on */
     PORTA.PIN5CTRL = PORT_PULLUPEN_bm;   /* PA5 reserved button */
     PORTC.PIN0CTRL = PORT_PULLUPEN_bm;   /* PC0 spare (JP2.2)   */
     PORTC.PIN1CTRL = PORT_PULLUPEN_bm;   /* PC1 spare (JP2.3)   */
@@ -470,9 +469,9 @@ ISR(PORTA_PORT_vect)
     if (fl & FD_PIN_bm) {
         if (FD_PORT.IN & FD_PIN_bm) {
             f_nfc = 1;                              /* pin high now = rising = field left */
-            ENSTOCH_PORT.DIRCLR = ENSTOCH_PIN_bm;   /* release EN_STO_CH -> AEM charge resumes */
+            ENSTOCH_PORT.OUTCLR = ENSTOCH_PIN_bm;   /* gate low -> Q2 off -> AEM charge resumes */
         } else {
-            ENSTOCH_PORT.DIRSET = ENSTOCH_PIN_bm;   /* field present -> drive LOW, quiet the DCDC */
+            ENSTOCH_PORT.OUTSET = ENSTOCH_PIN_bm;   /* field present -> Q2 on -> quiet the DCDC */
         }
     }
     PORTA.INTFLAGS = fl;                   /* write-1-to-clear */
