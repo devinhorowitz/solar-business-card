@@ -197,7 +197,14 @@ shell re-machine. Updated 2026-07-11._
 
 ## Firmware — `firmware/`, `firmware/README.md`
 
-- [ ] **[DESIGN DECISION: SCH+PCB+FW] EN_STO_CH cold-start deadlock (FATAL) — pick sever vs NFET**
+- [ ] **[FW+BOM DONE -> SCH+PCB] EN_STO_CH cold-start deadlock fix: NFET buffer CHOSEN (Q2 BSS138LT1G
+  + R18 1M gate pulldown) — user draws the sch symbols + copper** _(decision 2026-07-23: option (ii).
+  FW inverted for the buffer (PA4 push-pull, HIGH = disable; init + FD ISR reworked, build clean
+  4,234 B); BOM carries Q2 (BSS138LT1G — 2N7002 was zero-stock — DK BSS138LT1GOSCT-ND \$0.34, 204.9k)
+  and R18 on the shared 1M line. SCH hookup: gate <- PA4 (rename that segment e.g. `CHG_DIS_G`),
+  drain -> EN_STO_CH (keep the label on the U8/R17 side), source -> GND, R18 gate-to-GND. PLACEMENT:
+  at the old PA4/net junction near U8/R17 — the 1M-class drain net stays short, the driven gate line
+  may run long; SOT-23 joins the back-side brace height map (~1.1 mm, same class as U9).)_ ORIGINAL:
   _(2026-07-23 second-sift audit; full analysis in the design-notes second-sift addendum)._ A fully
   dead card's PA4 clamp pins the AEM10300's charge-enable at ~0.6 V (the TPS7A0233P's active
   discharge holds VS at GND below UVLO, so there is no float-up escape); if that decodes LOW the card
@@ -207,8 +214,12 @@ shell re-machine. Updated 2026-07-11._
   speculative NFC-read charge-quieting). Option (ii): 2N7002-class low-side buffer (gate from PA4 +
   1M pull-DOWN, HIGH = disable) — keeps the feature with the correct dead-MCU-safe polarity, +2
   parts. Firmware follows the choice (drop or invert the FD-ISR EN_STO_CH toggling + gpio_init).
-- [ ] **[FW+DOC, cheap] LED sub-emission idle bias — take the free mitigations** _(2026-07-23
-  second-sift; significant)._ OSRAM forbids continuous sub-emission forward bias (migration risk);
+- [ ] **[FW DONE -> DOC+BENCH] LED sub-emission idle bias — Hi-Z park LANDED, stow-rule + bench remain**
+  _(2026-07-23; fw executed same day: LED pads now park as inputs (input buffers off, INVEN kept)
+  between animations — led_park/led_unpark bracket led_breathe/led_sweep on every path incl. the NFC
+  aborts; bias drops to clamp-limited ~1 V worst-case, zero below STO~3.6 V. Remaining: (b) doc the
+  SW2-OFF stow discipline where SW2 is described; (c) bench-measure real idle LED current; (d) VOVCH
+  re-strap only with energy data.)_ ORIGINAL: OSRAM forbids continuous sub-emission forward bias (migration risk);
   idle card holds 4 LEDs at up to 1.35 V (STO 4.65 vs pads parked 3.3). (a) firmware: Hi-Z the LED
   pads between animations (DIR-gate around glows; INVEN stays for active PWM) — cuts bias to
   clamp-limited ~1.0 V, zero below STO≈3.6; (b) docs: SW2 OFF is the stow-the-card discipline (TINY

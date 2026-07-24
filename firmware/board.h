@@ -77,10 +77,14 @@
 #define STO_DIVIDER     3                       /* R15 / R16 = 2 M / 1 M */
 
 /* ---- AEM10300 charge gate on PA4 (EN_STO_CH), ACTIVE-LOW, emulated open-drain ----
- * Drive OUTPUT-LOW to disable AEM charging -> the >=10 MHz DCDC goes quiet for an NFC read;
- * RELEASE (set INPUT / Hi-Z) to re-enable (R17 pulls it to VINT). Driven from the FD both-edge
- * handler in main.c (FD falling -> low, FD rising -> release). Open-drain because EN_STO_CH is
- * 2.75 V-max while the MCU rail is 3.3 V. */
+ * Since the 2026-07-23 cold-start-deadlock fix, PA4 drives the GATE of Q2 (2N7002 low-side
+ * buffer) -- not the AEM pin directly. Gate HIGH = Q2 on = EN_STO_CH pulled to GND = charging
+ * DISABLED (quiets the >=10 MHz DCDC for an NFC read); gate LOW = Q2 off = EN_STO_CH floats to
+ * its internal pull-up + R17/VINT = charging ENABLED. R18 (1 M gate pulldown) holds Q2 off --
+ * charging ON -- whenever the MCU is dead/resetting/UPDI-parked, so a fully discharged card
+ * always recharges (the old direct open-drain drive let the dead MCU's pin clamp hold the AEM's
+ * enable low forever; see the design-notes second-sift addendum). PA4 is push-pull now and never
+ * touches the 2.75 V-max AEM pin. Toggled in the FD both-edge handler in main.c. */
 #define ENSTOCH_PORT    PORTA
 #define ENSTOCH_PIN_bm  PIN4_bm
 

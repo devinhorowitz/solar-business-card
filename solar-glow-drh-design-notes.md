@@ -1319,3 +1319,13 @@ minimum (slow ramps legal) and its INT pins share the VS rail; AEM10300 cold sta
 6 uW is in-spec charging a 0 V bank, BAL-on-MID is the required 2S config, and a charged STO with
 dark SRC is a supported state; supercaps carry no ramp/current minimums; FRAM slow-ramp POR clean
 (tr is a minimum -- re-checked post re-rail); no OTHER part sits on a collapsible domain.
+
+_Adopted 2026-07-23 (same day): Finding 1 -> option (ii), the NFET buffer — **Q2 = BSS138LT1G**
+(2N7002LT1G/WT1G were zero-stock at DK; the BSS138's 0.5-1.5 V threshold is fully enhanced at 3.3 V
+and its nA-class off-leakage does not load the 1M node) + **R18** 1 M gate pulldown. Firmware
+inverted for the buffer (PA4 push-pull, HIGH = disable; gate LOW at init = the same charging-enabled
+state R18 gives a dead MCU, so init is glitch-free), BOM updated (+$0.44). Placement guidance: FET at
+the old PA4/net junction near U8/R17 so the high-impedance drain net stays short; the driven gate
+line may run long. Finding 2 -> Hi-Z park landed in led.c (pads park as inputs with buffers off
+between animations, unpark/park bracketing every animation path); SW2-OFF stow note + bench current
+measurement remain. Build after both: warning-free, 4,234 B._
