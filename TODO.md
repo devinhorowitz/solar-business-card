@@ -5,8 +5,10 @@ handoffs. This is an **index of what is left**, not a spec — canonical values
 live in the source files it points to (see the "Where the truth lives" table in
 `README.md`). Check items off in the GitHub UI as they land.
 
-_Board is electrically frozen: a PCB layout change means a brace reprint, not a
-shell re-machine. Updated 2026-07-11._
+_Board freeze status (updated 2026-07-25): the 2026-07 audit round reopened the netlist —
+pending copper: Q2/R18 placement + routing (cold-start-deadlock buffer) and the U7
+footprint-identity swap. A PCB layout change still means a brace reprint, not a shell
+re-machine._
 
 ## Cross-domain (link two+ teams — easiest to forget)
 
