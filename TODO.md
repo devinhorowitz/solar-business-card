@@ -159,6 +159,13 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   rules load in the run, then align the prose. Minor: the ERC `isolated_pin_label` (PC0/PC1) +
   `endpoint_off_grid` (JP1/TP1) aren't catalogued.
 
+- [ ] _(Low)_ **`PCB/README.md`'s parts table is a hand-maintained duplicate of the BOM master** and has
+  now drifted twice (it was still listing `AVR64DD28-I/STX`, `TPS22918DBVR`, the SOIC-8 FRAM and
+  pre-longevity-pass passives when caught on 2026-07-25). It was regenerated from the xlsx and marked
+  as a dated derived snapshot, but the structural fix is to **generate it in CI** from the master
+  (kibot already regenerates `Generated/fabdocs/…-bom.csv`) or to cut it down to a pointer plus the
+  order-time hazards. Until then, re-check it whenever the BOM changes.
+
 - [ ] _(Cosmetic)_ **C13 schematic `lib_id` is still `solarglow:C11`** (clone leftover); surfaces as
   Part="C11" in the CI BOM. Fixing means repointing the instance to a `C13` lib symbol — mind the
   MPN-grouped BOM when doing it.
@@ -209,6 +216,12 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   De-pillar `…-backshell-…-DRAWING-gen.py` and regenerate the PDF/PNG. (Also low: several generator
   docstrings still cite the pre-redesign floor 0.95 / cavity 1.85 / two locator pillars, and "four" vs
   "two" outboard rails.)
+
+- [ ] **`PCB/PCB-side-notes-brace-direction.md` still calls U7 the tall pole at "SOIC-8 / 1.75 mm"**
+  _(repo audit 2026-07-25)._ U7 has been the 0.90 mm DFN since the repackage, so that doc's height
+  table and any brace-thickness reasoning derived from it are stale. Left untouched on purpose —
+  it folds into the enclosure pass with the other geometry items (floor-relief re-key, brace
+  `part_height` map), which all need re-deriving from one recomputed tallest-part list.
 
 - [ ] _(Cosmetic)_ brace drawing silhouettes still show the pre-DFM-clip outline.
 

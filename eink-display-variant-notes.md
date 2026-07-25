@@ -123,7 +123,7 @@ both reuse the harvest/supercap/NFC/accel platform untouched and only change the
   **event** (provisioning, a tap, a daily tick), gated on caps-full -- never continuously. The
   bistable hold and the load-switch gate make the *idle* cost zero.
 - **Pins.** A COG panel needs SPI (SCK/MOSI/CS) + DC + RST + BUSY = **~6 GPIO**. Real pressure on
-  the AVR64DD28 mid-v4-rework (competes with the LED bank / accel lines). The 1.9" **segment**
+  the AVR64EA28 mid-v4-rework (competes with the LED bank / accel lines). The 1.9" **segment**
   part is I2C (2 pins, shares the existing bus) but segment-only.
 - **RAM.** A 200 x 200 mono framebuffer is **5 KB** on an 8 KB-SRAM part -- workable but notable;
   128 x 80 is 1.25 KB, comfortable. Streaming a statically-composed image to the panel's own RAM

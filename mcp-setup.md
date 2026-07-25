@@ -1,9 +1,13 @@
 # MCP setup handoff -- distributor part APIs (DigiKey + Mouser)
 
-**Purpose.** Stand up the DigiKey and Mouser MCP servers so a session can pull live part
-pricing / stock / specs into the BOM work -- e.g. the SS17 `3-153-440` unit price still marked
-**TBC** in `PCB/solar-glow-drh-v4_0-BOM.xlsx`. This doc exists so a fresh session can finish the
-job cold, without cross-chat.
+> **DONE / reference only (2026-07-25).** The job this handoff describes is finished: both APIs are
+> live and **every ordered BOM line is priced** — no `TBC` cells remain. Keep this as the setup
+> recipe + credential/proxy reference for future sourcing work; nothing here is outstanding.
+
+**Purpose.** Stand up the DigiKey and Mouser part APIs so a session can pull live part
+pricing / stock / specs into the BOM work -- originally to close the SS17 `3-153-440` unit price
+then marked **TBC** in `PCB/solar-glow-drh-v4_0-BOM.xlsx`. This doc exists so a fresh session can
+work the distributor APIs cold, without cross-chat.
 
 ## Status
 

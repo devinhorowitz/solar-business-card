@@ -22,9 +22,9 @@ a supercapacitor bank that holds the charge.
 | **PCB** | **v4.0 - 2-layer** (F / B) | GND = full-board B.Cu pour; VS = routed B mesh. **v2.3 (4-layer: F / In1 GND / In2 VS / B) is the fallback design, in git history.** v2.1 was 6-layer (history). |
 | Board | 50.80 × 88.90 mm, r3.0 corners, **0.60 mm** FR4, ENIG, matte-black mask | 0.6 mm — committed in the board stackup (frees the shell floor to 1.0 mm) |
 | Mounting holes | **8× M2, GND** -- 4 corner (MH1-4) at **(3.0, 3.0) / (47.8, 3.0) / (3.0, 85.9) / (47.8, 85.9)** (pitch **44.80 × 82.90 mm**) + 4 panel-corner (MP1-4) at **(3.0, 28.5) / (47.8, 28.5) / (3.0, 60.4) / (47.8, 60.4)** | corners concentric with the r3.0 fillets; MP1-4 at the E/W mid-edges for the shell clamp |
-| **Enclosure** | **Ti back-shell** - 1.00 floor, 1.80 cavity (0.95 local relief, re-keyed from the removed v3 U2 to U7/FRAM, the tallest B-side part; generators updated, STEP regen pending), overall **3.55 mm**; center support via the resin diffuser brace | 8-hole pattern (4 corner + 4 panel-corner); see `enclosure/README.md` |
-| BOM | **v4_0 master** - U6 + R14 added, JP1/JP2 dropped (JP1 later reused for the bench pad strip), most passives 0402 (SJ1 0R and the bulk caps C4/C13/C25/C27 are 0603) | master is `PCB/solar-glow-drh-v4_0-BOM.xlsx`; placed set in `-BOM-assembly.xlsx` |
-| Firmware | register-verified C, not yet on hardware | LED pin map re-mapped in v3.0 (see `firmware/README.md`) |
+| **Enclosure** | **Ti back-shell** - 1.00 floor, 1.80 cavity, overall **3.55 mm**; center support via the resin diffuser brace. _(The 0.95 mm local relief pocket is under review: it was sized for a 1.75 mm U7, but U7 is the 0.90 mm DFN since 2026-07-23, so the pocket is likely deletable — the generator also still carries the deleted v3 `U2_POS`. Tracked under Enclosure in `TODO.md`; the enclosure pass runs after the PCB/firmware lock.)_ | 8-hole pattern (4 corner + 4 panel-corner); see `enclosure/README.md` |
+| BOM | **v4_0 master** - fully live-priced (2026-07-23 sourcing pass, ≈ $140); most passives 0402 with the precision/bulk set on **0603** (C4/C13/C25/C22/C23/R5/R6/R15/R16) and **0805** (C26/C27); **SJ1 is DNP**; Q2 + R18 added by the cold-start-deadlock fix | master is `PCB/solar-glow-drh-v4_0-BOM.xlsx`; placed set in `-BOM-assembly.xlsx` |
+| Firmware | AVR64EA28 C, register-verified **and compile-verified in CI**; not yet on hardware | LED pin map re-mapped in v3.0 (see `firmware/README.md`) |
 
 ### Where the truth lives — how these docs stay from drifting
 
@@ -35,7 +35,7 @@ Each fact has exactly one home; everything else points at it rather than restati
 | Board copper / geometry / holes | `PCB/solar-glow-drh-v4_0.kicad_pcb` + `.kicad_sch` |
 | Enclosure geometry | `enclosure/solar-glow-drh-v3_0-backshell-0p6b-brace-cad.py` (prints the Z-stack; regenerates the STEP) |
 | Firmware pin map + knobs | `firmware/board.h` (+ `firmware/README.md`; both match the schematic) |
-| BOM | `PCB/solar-glow-drh-v4_0-BOM.xlsx` (v4.0 master -- converted lines have prices blanked pending quote; see `PCB/README.md` Step 4) |
+| BOM | `PCB/solar-glow-drh-v4_0-BOM.xlsx` (v4.0 master -- every ordered line live-priced, 2026-07-23 sourcing pass; see `PCB/README.md` Step 4) |
 | Design *reasoning* / lineage | `solar-glow-drh-design-notes.md` |
 | Open work / cross-domain to-dos | `TODO.md` (an index of what's left; each item points back at the files above) |
 

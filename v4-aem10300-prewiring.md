@@ -103,11 +103,16 @@ C12.1 (decoupling); SJ1.1 (-> VDDIO2); U6.1 (NFC/FRAM load-switch input). Add **
 | MCU pin | Pad | Net | Direction | Role |
 |---|---|---|---|---|
 | PD1 (AIN1) | 11 | `STO_SNS` | ADC in | supercap-state sense (÷3 divider) |
-| PA4 | 2 | `EN_STO_CH` | GPIO out, open-drain | gate AEM charging low during NFC read |
+| PA4 | 2 | `CHG_DIS_G` | GPIO out, push-pull | gate of Q2, the low-side charge-disable buffer (HIGH = disable AEM charging during an NFC read) |
 | PC0 | 6 | *(reserved)* | -- | optional ST_STO if ever populated |
 
-PD1 is currently `unconnected-(U1-PD1-Pad11)`; PA4 is the JP2.1 spare. EN_STO_CH is 2.75 V-max -> the MCU
-drives it open-drain (low = disable) and R17 pulls it to VINT (2.2 V) when released.
+PD1 is currently `unconnected-(U1-PD1-Pad11)`; PA4 is the JP2.1 spare. EN_STO_CH is 2.75 V-max.
+_(Superseded 2026-07-23 — the cold-start-deadlock fix.)_ PA4 no longer drives EN_STO_CH directly:
+a dead MCU's pin clamp held that node low and **permanently disabled charging** on a fully drained
+card. PA4 now drives the **gate of Q2** (BSS138, low-side) on net `CHG_DIS_G`, push-pull, HIGH =
+FET on = EN_STO_CH pulled low = charging disabled; **R18** (1 M gate pulldown) holds the FET off —
+charging **enabled** — whenever the MCU is dead, resetting, or being programmed. R17 still pulls
+EN_STO_CH up to VINT. See the design-notes second-sift addendum.
 
 ## 5. Delete these (with the nets they take with them)
 
@@ -194,7 +199,7 @@ the schematic, landed in one commit, and `check_consistency.py` passes.
 Companion to the board.h edits above -- the sense/gate code the new rail topology needs. **Applied:** it
 references board.h's `STO_SNS_AIN` / `STO_DIVIDER` / `ENSTOCH_*` defines, which are now in-tree, so it
 compiles; it landed in the **same commit** as the board.h edits + reworked board/schematic. The
-`v4-aem10300-firmware.patch` / `v4-aem10300-boardh.patch` files are historical and can be dropped.
+`v4-aem10300-firmware.patch` / `v4-aem10300-boardh.patch` files were historical and **were deleted 2026-07-25** (they were applied long ago, and their content had since been superseded twice — PA4 is now the Q2 gate). They remain in git history if ever needed.
 
 What it changes:
 - **`sense.c` (7 hunks):** re-points `sense_vdd_mv()` and the four rail gates (`sense_rail_ok`,
