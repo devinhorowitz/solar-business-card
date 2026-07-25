@@ -1,26 +1,18 @@
 ** Drc report for solar-glow-drh-v4_0.kicad_pcb **
-** Created on 2026-07-23T11:17:56 **
+** Created on 2026-07-24T23:16:23 **
 ** Report includes: Errors, Warnings, Exclusions **
 
-** Found 18 DRC violations **
+** Found 16 DRC violations **
 [text_height]: Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.5000 mm)
     Rule: board setup constraints silk text height; warning
     @(31.7500 mm, 50.9500 mm): PCB text 'TINY MODE' on B.Silkscreen
 [silk_over_copper]: Silkscreen clipped by solder mask
     Local override; warning
-    @(22.9750 mm, 48.5750 mm): Segment on B.Silkscreen
-    @(25.2250 mm, 48.0500 mm): Pad 2 [GND] of C13 on B.Cu
-[silk_over_copper]: Silkscreen clipped by solder mask
-    Local override; warning
-    @(22.9750 mm, 48.5750 mm): Segment on B.Silkscreen
-    @(26.7750 mm, 48.0500 mm): Pad 1 [ANODE] of C13 on B.Cu
-[silk_over_copper]: Silkscreen clipped by solder mask
-    Local override; warning
-    @(25.6594 mm, 40.5100 mm): Segment of U7 on B.Silkscreen
+    @(30.5250 mm, 43.1000 mm): Segment of D4 on B.Silkscreen
     @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
 [silk_over_copper]: Silkscreen clipped by solder mask
     Local override; warning
-    @(30.5250 mm, 43.1000 mm): Segment of D4 on B.Silkscreen
+    @(25.6594 mm, 40.5100 mm): Segment of U7 on B.Silkscreen
     @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
 [silk_over_copper]: Silkscreen clipped by solder mask
     Local override; warning
