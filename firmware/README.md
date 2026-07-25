@@ -146,7 +146,7 @@ AVR64EA28, VQFN-28, on the **back** of the board.
 | 27 | PA1 | LDRV3 | LED D4, TCA0 WO1 |
 | 28 | PA2 | LDRV2 | LED D3, TCA0 WO2 |
 | 1 | PA3 | LDRV1 | LED D2, TCA0 WO3 |
-| 2 | PA4 | EN_STO_CH | AEM10300 charge gate, open-drain, LOW = disable charge during NFC read |
+| 2 | PA4 | CHG_DIS_G | gate of Q2, the low-side charge-disable buffer (push-pull; HIGH = disable AEM charging during an NFC read; R18 1 M pulldown holds charging ENABLED while the MCU is dead — the cold-start-deadlock fix) |
 | 4 | PA6 | FD | NFC field-detect in (`U5`); PORTA pin int, **both edges**; field-powered (works VCC-off); int pull-up on (sole FD pull-up; no external FD resistor) |
 | 5 | PA7 | NFC_EN | Enables the NFC VCC load switch (`U6`, TPS22917), **active-HIGH**; init LOW = NFC off. (`R14`, 1 M, holds `U6` off while PA7 tristates during reset/UPDI/brown-out -- at (5.35, 4.92) on the board. Firmware also drives PA7 low-before-output and low-before-sleep, so the window is covered both ends.) |
 | 8 | PC2 | SDA | TWI0 host (PORTMUX **ALT2**), ext 4.7k → VS |

@@ -16,7 +16,7 @@
  *    27 PA1      LDRV3    LED D4                   TCA0 WO1
  *    28 PA2      LDRV2    LED D3                   TCA0 WO2
  *     1 PA3      LDRV1    LED D2                   TCA0 WO3
- *     2 PA4      EN_STO_CH  AEM10300 charge gate (open-drain, LOW = disable during NFC read)
+ *     2 PA4      CHG_DIS_G  Q2 gate: low-side charge-disable buffer (push-pull, HIGH = disable; R18 holds charge ON when MCU dead)
  *     3 PA5      BTN      reserved button (stub only; v3 hook)
  *     4 PA6      FD       NFC field-detect in (NT3H2211)  FD-wake, both edges; field-powered (works VCC-off)
  *     5 PA7      NFC_EN   NFC VCC load-switch enable (active-HIGH)  output, LOW = NFC off
@@ -76,7 +76,7 @@
 #define STO_SNS_AIN     ADC_MUXPOS_AIN1_gc     /* PD1 = AIN1 */
 #define STO_DIVIDER     3                       /* R15 / R16 = 2 M / 1 M */
 
-/* ---- AEM10300 charge gate on PA4 (EN_STO_CH), ACTIVE-LOW, emulated open-drain ----
+/* ---- AEM10300 charge-disable via Q2 buffer, gate on PA4 (net CHG_DIS_G), ACTIVE-HIGH ----
  * Since the 2026-07-23 cold-start-deadlock fix, PA4 drives the GATE of Q2 (2N7002 low-side
  * buffer) -- not the AEM pin directly. Gate HIGH = Q2 on = EN_STO_CH pulled to GND = charging
  * DISABLED (quiets the >=10 MHz DCDC for an NFC read); gate LOW = Q2 off = EN_STO_CH floats to
