@@ -198,10 +198,10 @@ shell re-machine. Updated 2026-07-11._
 ## Firmware — `firmware/`, `firmware/README.md`
 
 - [ ] **[FW+BOM DONE -> SCH+PCB] EN_STO_CH cold-start deadlock fix: NFET buffer CHOSEN (Q2 BSS138LT1G
-  + R18 1M gate pulldown) — user draws the sch symbols + copper** _(decision 2026-07-23: option (ii).
+  + R18 1M gate pulldown) — symbols NOW IN THE SCH (direct edit, CI-validated); wiring + copper remain** _(decision 2026-07-23: option (ii).
   FW inverted for the buffer (PA4 push-pull, HIGH = disable; init + FD ISR reworked, build clean
   4,234 B); BOM carries Q2 (BSS138LT1G — 2N7002 was zero-stock — DK BSS138LT1GOSCT-ND \$0.34, 204.9k)
-  and R18 on the shared 1M line. SCH hookup: gate <- PA4 (rename that segment e.g. `CHG_DIS_G`),
+  and R18 on the shared 1M line. SCH: Q2 + R18 symbols injected 2026-07-23 (parked in free space at (934.7, 372.1)/(934.7, 391.2), right of the EN_STO_CH area -- drag into place while wiring). When wiring, ALSO remove the TEMP ERC filter block in `PCB/solar-glow-drh.kibot.yaml` (Q2/R18 pin_not_connected — added so CI passes while they sit unwired). Hookup: gate <- PA4 (rename that segment e.g. `CHG_DIS_G`),
   drain -> EN_STO_CH (keep the label on the U8/R17 side), source -> GND, R18 gate-to-GND. PLACEMENT:
   at the old PA4/net junction near U8/R17 — the 1M-class drain net stays short, the driven gate line
   may run long; SOT-23 joins the back-side brace height map (~1.1 mm, same class as U9).)_ ORIGINAL:
