@@ -70,10 +70,13 @@ BOM rather than the prose docs:
    answers it.
 5. **Cold-start slow-ramp stall** -- *legit bench item; captured.* Not "latch-up" but a brown-out
    stall: the MCU released by POR (~1.4 V) can draw more than a dim-light uA harvest supplies and
-   stall below the operating point. The mitigation is the sampled BOD at **2.45 V** (`BODCFG=0x2A`;
-   holds the core in low-current reset until 2.45 V) -- **program the fuse** (`../TODO.md`) and
-   bench-verify a 0 V cold-start under dim light. *(The earlier `0x0A`/1.9 V figure was wrong: LVL=0x0
-   is chip-erase-only, so `0x0A` = BOD off. See the design-notes BOD addendum.)*
+   stall below the operating point. The mitigation is the sampled BOD at **2.60 V** (`BODCFG=0x4A`;
+   holds the core in low-current reset until 2.60 V) -- **program the fuse** (`../TODO.md`) and
+   bench-verify a 0 V cold-start under dim light. *(Updated 2026-07-23 for the AVR-EA swap: the EA
+   ladder has no 2.45 V step, so BODLEVEL2 = 2.60 V replaces the DD-era `0x2A`. `0x0A` remains wrong
+   on both parts: LVL=0x0 is chip-erase-only, i.e. BOD off. See the design-notes BOD addendum.)*
+   **Q2 (2026-07-23) also keeps AEM charging enabled while the MCU is in reset** — the
+   cold-start-deadlock fix; without it a fully drained card could never restart charging at all.
 
 ## Trace-change verdict: none required
 

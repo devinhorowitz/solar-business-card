@@ -196,49 +196,73 @@ hand-tinning. Order it alongside the board.
 **BOM state.** The masters are now **`solar-glow-drh-v4_0-BOM.xlsx`** and
 **`solar-glow-drh-v4_0-BOM-assembly.xlsx`**, reworked for the v4.0 managed-solar redesign - the passive diode/shunt/comparator parts (U2, U4, Q1, D1, D9–D11, R7–R9) are removed and the AEM10300 harvest chain (U7, U8, U9, L2, FB1, C22–C28, R15–R17) is added, on top of the earlier fixes:
 **U6 (TPS22917DBVT since the 2026-07-23 dark-current swap) and R14 (1 M `NFC_EN` pulldown) added**, the stale **JP1/JP2 rows dropped** (the `JP1` designator is reused for the v3.0 bench pad strip — bare pads, not a BOM part)
-(those headers left the board in v3.0), and **most passives converted to 0402**, with the four bulk/buffer caps C4, C13, C25, C27 on 0603 lands (C28 is 0402) and SJ1 on its own 0R land, to match
-the board's placed lands — the v2.2 file still listed 0805 MPNs for most R/C. Converted and added
-lines have their **prices blanked pending a fresh quote**; the old 0805 prices don't carry. The
-`v2 2` and older BOM files remain in git history as lineage.
+(those headers left the board in v3.0), and **most passives converted to 0402** to match the board's placed lands — the v2.2 file still
+listed 0805 MPNs for most R/C. _(Updated 2026-07-25: the 2026-07-23 longevity/precision passes moved
+several off 0402 — **0603**: C4, C13, C25, C22, C23, R5, R6, R15, R16; **0805**: C26, C27. SJ1's 0R
+land is now **DNP**. New parts since: **Q2** (SOT-23) + **R18** (0402). The table below is the
+current truth.)_ Converted and added
+lines had their prices blanked at the time; **that is no longer true — every ordered line is now
+live-priced** (full DigiKey/Mouser sourcing pass, 2026-07-23, subtotal ≈ $140). The `v2 2` and older
+BOM files remain in git history as lineage.
 
 Summary of the **orderable** lines:
 
-| Ref(s) | Qty | Value | MPN |
-|---|---:|---|---|
-| U1 | 1 | AVR64DD28 (VQFN-28) | `AVR64DD28-I/STX` |
-| U3 | 1 | ADXL367 accelerometer (LGA-12) | `ADXL367BCCZ-RL7` |
-| **U5** | 1 | **NFC tag, NT3H2211 (XQFN8 / SOT902-3)** | `NT3H2211W0FHKH` — matches the placed 0.25×0.4 mm land |
-| **U6** | 1 | **Load switch (SOT-23-6) (in the v3_0 BOM)** | `TPS22918DBVR` |
-| PV1, PV2 | 2 | SM141K06TF solar cell | `SM141K06TF` |
-| D2–D5 | 4 | Amber LED, reverse-mount | `LA P47F-V2BB-24-3B5A-30-R18-Z` |
-| **SC1, SC3** | **2** | **1.8 F / 2.75 V (SS17)** | `3-153-440` |
-| **SC2, SC4** | **2** | **1.0 F / 2.75 V (WS17)** | `3-153-438` |
-| R1–R4 | 4 | **150 Ω 1% 0402 — SIZED** | `RC0402FR-07150RL` |
-| R5, R6 | 2 | 1 MΩ 0402 | `RC0402FR-071ML` |
-| R10, R11 | 2 | 4.7 kΩ 0402 (I²C pull-ups) | `RC0402FR-074K7L` |
-| R12 | 1 | 220 Ω 0402 | `RC0402FR-07220RL` |
-| **R14** | 1 | **1 MΩ 0402 (`NFC_EN` pulldown; consolidated onto the R5/R6 reel)** | `RC0402FR-071ML` |
-| C1, C3, **C5**, C6, C7, **C8, C12** | 7 | 100 nF X7R 0402 | `GRM155R71C104KA88D` (Murata) |
-| C4 | 1 | 10 µF X5R 0603 10 V - VS bulk (shares the C13 reel; land grows to 0603) | `GRM188R61A106KE69D` (Murata) |
-| **C11** | 1 | **0.22 µF (220 nF) X7R 0402 — accel VREG_OUT decoupling** | `GRM155R71C224KA12D` (Murata) |
-| **C13** | 1 | **10 µF X5R 0603 10 V - LED-anode bulk** (land grows to 0603) | `GRM188R61A106KE69D` (Murata) |
-| **C9** | (1) | **NP0 0402, DNP — coil trim** | buy an NP0 range ~47–150 pF for the bench |
-| SJ1 | 1 | 0 Ω jumper 0805 | `RC0805JR-070RL` |
-| U7 | 1 | MB85RC512TY 512kbit I²C FeRAM (0x50, SOIC-8, VNFC-gated) | `MB85RC512TYPNF-GS-BCERE1` |
-| U8 | 1 | AEM10300 buck-boost harvest PMIC (QFN-28 4×4) | `10AEM10300C0000` |
-| U9 | 1 | TPS7A0233 LDO, 3.3 V (SOT-23-5) → VS | `TPS7A0233PDBVR` |
-| L2 | 1 | 10 µH 1.76 A inductor, 2.5×2.0 mm on a 1008/2520 land (AEM DCDC; footprint set to `L_1008_2520Metric`, re-run Update-PCB + route) | `Murata DFE252010F-100M` (datasheet Table 11) |
-| FB1 | 1 | Ferrite bead 0603 (STO island feed) | `Murata BLM18PG221SN1D` |
-| C22 | 1 | 1 µF 0402 (LDO input, STO side) | `GRM155R61A105KE15D` |
-| C23 | 1 | 2.2 µF 10 V 0402 (LDO output, VS rail; stability margin) | `GRM155R61A225KE11D` |
-| C24 | 1 | 100 nF 0402 (STO-sns filter) | `GRM155R71C104KA88D` |
-| C25 | 1 | 22 µF 10 V 0603 (AEM CSRC decoupling) | `GRM188R61A226ME15D` |
-| C26 | 1 | 10 µF 6.3 V 0402 (AEM VINT buffer) | `GRM155R60J106ME44D` |
-| C27 | 1 | 10 µF 10 V 0603 (STO local bulk/decoupling; land grows to 0603) | `GRM188R61A106KE69D` |
-| C28 | 1 | 100 nF 0402 (FRAM VNFC decoupling) | `GRM155R71C104KA88D` |
-| R15 | 1 | 2 MΩ 0402 1% (STO sense top) | `RC0402FR-072ML` |
-| R16 | 1 | 1 MΩ 0402 1% (STO sense bottom) | `RC0402FR-071ML` |
-| R17 | 1 | 1 MΩ 0402 1% (EN_STO_CH pull-up to VINT) | `RC0402FR-071ML` |
+> **Derived snapshot, regenerated from the BOM master 2026-07-25.** The master is
+> `solar-glow-drh-v4_0-BOM.xlsx` (with `-BOM-assembly.xlsx` for the machine-place set) — order
+> from those, not from this table. This copy had drifted badly (it still listed the pre-swap
+> `AVR64DD28-I/STX`, `TPS22918DBVR`, the SOIC-8 FRAM and the pre-longevity-pass passives), so
+> treat any disagreement as this table being wrong.
+
+| Ref(s) | Qty | Value | Package | MPN |
+|---|---:|---|---|---|
+| U1 | 1 | AVR64EA28, 64 KB, 20 MHz | VQFN-28 (4×4×1.0 mm, w/ EP) | `AVR64EA28-E/STX` |
+| PV1, PV2 | 2 | Voc 4.15 V, 184 mW, mono, 1.2 mm thick | 42×23×1.2 mm, custom land | `SM141K06TF` |
+| SC1, SC3 | 2 | 1.8 F, 2.75 V (SS17) | SS17 (under-body P/N pads, 39 mm) | `3-153-440` |
+| SC2, SC4 | 2 | 1.0 F, 2.75 V (WS17) | WS17 (under-body P/N pads, 28.5 mm) | `3-153-438` |
+| D2–D5 | 4 | Amber 617 nm, Vf≈2.25 V | SMD, 3.4x1.9 mm | `LA P47F-V2BB-24-3B5A-30-R18-Z` |
+| R1–R4 | 4 | 150 Ω, ±1% | 0402 | `AC0402FR-07150RL` |
+| R12 | 1 | 220 Ω, ±1% | 0402 | `AC0402FR-07220RL` |
+| R5, R6 | 2 | 1 MΩ, ±0.1%, 25 ppm, 0603 | 0603 (R_0603_1608Metric) | `RT0603BRD071ML` |
+| C5 | 1 | 100 nF, X7R, 50 V | 0402 | `GRT155R71H104KE01D` |
+| U3 | 1 | I²C 0x1D, ±2–8 g | LGA-12 CC-12-4 (2.2×2.3×0.87 mm) | `ADXL367BCCZ-RL7` |
+| R10, R11 | 2 | 4.7 kΩ, ±1% | 0402 | `AC0402FR-074K7L` |
+| C1 | 1 | 100 nF, X7R, 50 V | 0402 | `GRT155R71H104KE01D` |
+| C3 | 1 | 100 nF, X7R, 50 V | 0402 | `GRT155R71H104KE01D` |
+| C4 | 1 | 10 µF, X5R, 16 V | 0603 | `GRT188R61C106KE13D` |
+| C6 | 1 | 100 nF, X7R, 50 V | 0402 | `GRT155R71H104KE01D` |
+| C11 | 1 | 0.22 µF (220 nF), X7R, 16 V | 0402 | `GRT155R71C224KE01D` |
+| C12 | 1 | 100 nF, X7R, 50 V | 0402 | `GRT155R71H104KE01D` |
+| C7 | 1 | 100 nF, X7R, 50 V | 0402 | `GRT155R71H104KE01D` |
+| SJ1 | 1 | DNP (was 0 Ω jumper) | 0805 | **(DNP - not ordered)** |
+| SW2 | 1 | 3-pad bridge | solder-bridge | **(none — PCB bridge)** |
+| SB1–SB4 | 4 | solder-bridge | solder-bridge | **(none — PCB bridge)** |
+| TC1 | 1 | TC2030-MCP-FP | TC2030 legged land | **(no part — pogo interface)** |
+| J1 | 1 | 1×3, 0.1″ | 0.1″ THT pads | **(unpopulated / 0.1″ header)** |
+| JP1 | 1 | 4× bare SMD pads | 1.7 mm sq, 2.54 mm pitch, B side | **(bare pads — no component)** |
+| TP1 | 1 | 1× bare SMD pad | 1.7 mm sq, B side | **(bare pad — no component)** |
+| MH1–MH4 | 4 | M2 | 2.2 mm plated | **(no part — drill)** |
+| U5 | 1 | NTAG I²C plus, 2 KB, I²C 0x55 | XQFN8 (SOT902-3, 1.6×1.6×0.5 mm) | `NT3H2211W0FHKH` |
+| C8 | 1 | 100 nF, X7R, 50 V | 0402 | `GRT155R71H104KE01D` |
+| C9 | 1 | DNP (NP0/C0G land) | 0402 (NP0/C0G land) | **(DNP — not ordered)** |
+| C13 | 1 | 10 µF, X5R, 16 V | 0603 | `GRT188R61C106KE13D` |
+| L1 | 1 | 2.76 µH design value | PCB copper — no package | **(no part — PCB feature)** |
+| U6 | 1 | Ultra-low-leakage load switch | SOT-23-6 (DBV) | `TPS22917DBVT` |
+| R14 | 1 | 1 MΩ, ±1% | 0402 | `AC0402FR-071ML` |
+| U8 | 1 | AEM10300 | QFN-28 (4x4 mm, EP land 2.30) | `10AEM10300C0000` |
+| U9 | 1 | TPS7A0233, 3.3 V, ~25 nA Iq | SOT-23-5 | `TPS7A0233PDBVR` |
+| U7 | 1 | MB85RC512TY | DFN-8 LCC-8P-M05 (5.0×6.0×0.90 mm MAX, 1.27 mm pitch) | `MB85RC512TYPN-GS-AWEWE1` |
+| L2 | 1 | 10 uH | 1008/2520 (L_1008_2520Metric), 2.5x2.0 mm | `DFE252010F-100M` |
+| FB1 | 1 | 0603 bead | 0603 | `BLM18PG221SN1D` |
+| C22 | 1 | 1 uF, 25 V, 0603, X7R | 0603 (C_0603_1608Metric) | `GRT188R71E105KE13D` |
+| C23 | 1 | 2.2 µF, 25 V, 0603, X7R | 0603 (C_0603_1608Metric) | `GRM188Z71E225ME43D` |
+| C24 | 1 | 100 nF, 0402, X7R | 0402 | `GRT155R71H104KE01D` |
+| C25 | 1 | 22 uF, 10 V, 0603, X5R | 0603 | `GRT188R61A226ME13D` |
+| C26, C27 | 2 | 10 µF, 10 V, 0805, X7R | 0805 (C_0805_2012Metric) | `GRM21BR71A106KA73L` |
+| C28 | 1 | 100 nF, 0402, X7R | 0402 | `GRT155R71H104KE01D` |
+| R15 | 1 | 2 M, 0603, ±0.1%, 25 ppm | 0603 (R_0603_1608Metric) | `MCT0603MD2004BP500` |
+| R16 | 1 | 1 M, 0603, ±0.1%, 25 ppm | 0603 (R_0603_1608Metric) | `RT0603BRD071ML` |
+| R17, R18 | 2 | 1 M, 0402, ±1% | 0402 | `AC0402FR-071ML` |
+| Q2 | 1 | N-ch MOSFET, 60 V, logic-level | SOT-23 | `BSS138LT1G` |
 
 **No ordered part — these are board features, not BOM line items:**
 - **SW2** (LED OFF/ON/TINY) and **SB1–SB4** (per-LED force-on) are **solder bridges** on the PCB.
@@ -278,7 +302,7 @@ types by hand afterward.
 
 **Sourcing:** turnkey, with the standing instruction that anything PCBWay can't source they
 flag and you consign from DigiKey — **no substitutes without approval**. The likeliest to
-need consigning are **U1** (AVR64DD28), **U8** (AEM10300 - e-peas harvest PMIC, source early), **U5** (NT3H2211 - going
+need consigning are **U1** (AVR64EA28-E/STX), **U8** (AEM10300 - e-peas harvest PMIC, source early), **U5** (NT3H2211 - going
 end-of-life in places; check stock early), and **D2–D5** (the ams OSRAM amber bin — confirm
 the exact reverse-mount P/N, OSRAM sells top-emit lookalikes).
 
@@ -315,8 +339,11 @@ Work outside-in by heat sensitivity:
 4. **SB1–SB4: leave open.** Each is a per-LED *force-on* bridge that shorts that LED's drive
    node (LDRVn) to GND. Open is the normal state (the MCU drives the LED); bridge one only to
    force that LED hard-on without firmware.
-5. **Confirm SJ1** (VDDIO2 → VS tie) is present — PCBWay places it, but without it PORTC
-   (the I²C port) has no I/O supply.
+5. **SJ1 must be LEFT OPEN (DNP).** ⚠️ This reversed in the 2026-07 AVR-EA swap: SJ1 was the
+   VDDIO2→VS tie for the AVR64DD28, but on the **AVR64EA28 pin 10 is plain `PD0`**, not VDDIO2 —
+   there is no MVIO and no I/O-supply pin to feed. Bridging SJ1 would tie a GPIO to VS. The land
+   stays on the board as a spare only if the DD is ever reinstated. (PORTC needs no separate
+   supply on the EA; it runs off the main rail.)
 
 **Critical, do-not-get-wrong** (full rationale in `../solar-glow-drh-design-notes.md`): the
 supercap under-body land and its asymmetric-width polarity key; reverse-mount LED orientation;
@@ -339,7 +366,8 @@ and the glow-window mask staying open (Step 3) — a tented window kills the opt
    > **Programming caution:** `NFC_EN` (PA7) now has a **1 MΩ pulldown (`R14`)** — U6
    > defaults hard-off while PA7 floats during reset / UPDI. Still drive PA7 low early in
    > init as belt-and-suspenders. The **U6 pin-map check is done** — TI SLVSD76C
-   > (`../datasheets/U6  TPS22918DBVR  $0.55.pdf`; the -Q1 twin matches identically) showed the symbol had **VIN/VOUT and GND/QOD
+   > (`../datasheets/U6  TPS22918DBVR  $0.55.pdf` — the *then*-fitted part; U6 is now the
+   > pin-identical `TPS22917DBVT`, see `../datasheets/U6  TPS22917DBVT  $1.14.pdf`) showed the symbol had **VIN/VOUT and GND/QOD
    > transposed**; the board was **fixed 2026-07-02** (pads renetted to TI truth, schematic
    > pin numbers corrected, local copper reworked). Details in
    > `../solar-glow-drh-design-notes.md`, U6 pin-map addendum.

@@ -149,8 +149,9 @@ belongs in KiCad** (push-shove router, real thermal reliefs, exact mask expansio
   rail), **ADC** (light-sense), flexible **TCA/TCB/TCD** PWM (LED breathing / more LEDs), and
   **22 I/O** of headroom. *(As-built, the separate-voltage mode is **not** used: VS is now a regulated
   3.3 V rail from the U9 TPS7A0233 LDO (STO->VS) and VDDIO2 is tied to VS via SJ1, so the accel is protected by
-  living on that regulated rail rather than by MVIO. Set the `SYSCFG1.MVSYSCFG` fuse to SINGLE -- see firmware README
-  "Fuses".)*
+  living on that regulated rail rather than by MVIO. ~~Set the `SYSCFG1.MVSYSCFG` fuse to SINGLE~~ --
+  **superseded 2026-07-23: the AVR-EA has no MVIO and no `MVSYSCFG` field; leave `SYSCFG1` at its
+  factory default, and leave SJ1 unfitted.** See firmware README "Fuses".)*
 - **LDO input filter (`FB1` / `STO_LDO`):** the AEM10300 charges STO with a >=10 MHz buck-boost
   DCDC, so STO carries switching ripple. Because the 28-pin part has **no AVDD** (the ADC runs off
   VDD/VS), analog cleanliness rides on the VS plane -- so a **0603 ferrite `FB1`** series-filters the
@@ -159,8 +160,9 @@ belongs in KiCad** (push-shove router, real thermal reliefs, exact mask expansio
   divider, program pads, tank caps). The ferrite passes DC (sub-ohm DCR) so the LDO never starves
   during LED bursts. *(FB1 originally sat with both pads shorted on STO -- non-functional; the
   `STO_LDO` split makes it a real series element. Board copper re-route is tracked in `TODO.md`.)*
-- **Why VQFN, not SSOP-28:** height is irrelevant (U7 (FRAM) at 1.75 mm sets the cavity floor; the QFN is
-  0.9 mm). The binding constraint is **X/Y footprint** — with the cells eating ~43% of the board, the
+- **Why VQFN, not SSOP-28:** height is irrelevant (U7 (FRAM) then set the cavity floor at 1.75 mm; the QFN is
+  0.9 mm). _(2026-07-23: U7 is now the 0.90 mm DFN, so the FRAM no longer sets the floor — the
+  argument stands, only the example part changed.)_ The binding constraint is **X/Y footprint** — with the cells eating ~43% of the board, the
   QFN's ~16 mm² land beats SSOP-28's ~50 mm². Cost: hot-air + paste, EP reflowed to GND (same as the
   v0 QFN-20).
 - **Power-down: 0.65 µA typ** (DS40002315 Table 38-5, `VREGCTRL.PMODE = AUTO`, 3 V/25 °C; +0.6 µA
