@@ -10,15 +10,18 @@ addenda.
 _Board freeze status (updated 2026-07-25): the 2026-07 audit round reopened the
 netlist and it is now closing again — Q2/R18 (the cold-start-deadlock buffer) and
 the FRAM VS re-rail are placed, routed, and verified on the board; the only
-pending copper is the U7 footprint-identity swap. A PCB layout change still means
+pending board edit is the U7 footprint-identity swap (+ DNP-flag clear). A PCB layout change still means
 a brace reprint, not a shell re-machine._
 
 _Completed & culled 2026-07-25 (see git history + design-notes addenda for the
-full reasoning): the AVR64DD28→AVR64EA28 family swap + firmware port; the U5 NFC /
-U6 load-switch (→TPS22917) / U7 FRAM (→DFN land, →VS-rail back-power fix) silicon
-audits; the Q2/R18 cold-start-deadlock buffer (schematic + firmware + board); the
+full reasoning): the AVR64DD28→AVR64EA28 family swap + firmware port; the U5 NFC
+and U6 load-switch (→TPS22917) silicon audits; the U7 FRAM DFN-repackage and the
+VS-rail back-power fix (schematic + firmware + board all landed — the U7
+footprint-identity swap and the FRAM bench-verify are still open, see the items
+above); the Q2/R18 cold-start-deadlock buffer (schematic + firmware + board); the
 passive longevity/precision upgrades (X7R / AEC-Q200, 0603 & 0805 upsizes,
-thin-film dividers); the full live DigiKey/Mouser BOM sourcing pass; and the
+thin-film dividers); the full live DigiKey/Mouser BOM sourcing pass; the
+SUN-threshold derivation and the solar-cell-thickness resolution; and the
 STO_LDO island / led_sweep / MPN-grouped-BOM work._
 
 ## Cross-domain (link two+ teams — easiest to forget)
@@ -40,7 +43,7 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   SC1–4 (~195–200), **FER1** ferrite (41), **U3** accel (731), **U1** MCU (608), **PV** cells (423).
   Supercaps + ferrite are the historical long-lead items — order with the first cut. Also grab a
   **spare NT3H2211 or two**: NXP steers new designs to NTAG 5, so NTAG I²C plus carries EOL risk on a
-  years horizon (the U5 audit kept it as best-fit, but flagged this).
+  years horizon (the U5 NFC audit (now in git history / design-notes) kept it as best-fit, but flagged this).
 
 - [ ] **[PCB] Silk legend height on the STO_LDO upload** _(2026-07-21)._ Two B.Silk legends
   (`TINY MODE` @ (31.75, 50.95), `ENABLE` @ (27.5, 49.63)) sit at 0.5 mm and trip the 0.8 mm
@@ -84,7 +87,9 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
 - [ ] **[BENCH] Read + log the EA silicon revision (B1 vs B2)** _(2026-07-23)._ Errata 2.2.1–2.2.3
   (DS80001048C, in `datasheets/`) are Rev. B1-only; the firmware carries the 2.2.3 SLPCTRL NOP-guard
   either way and `EE_WRITE_FLOOR_MV` covers 2.2.1. Read `SYSCFG.REVID` over UPDI at first connect so we
-  know which part we actually got.
+  know which part we actually got. Also **re-measure the EA sleep/power figures against real
+  silicon** — DS40002443A was PRELIMINARY, so its numbers are typ-only — and re-confirm the
+  port-derived floors (`VS_GLOW_FLOOR_MV` 2750 / `EE_WRITE_FLOOR_MV` 2850) still hold.
 
 - [ ] **Program fuses on hardware** (EA values, from DS40002443A — verify before burning):
   **`bodcfg 0x4A`** = 2.60 V sampled BOD (BODLEVEL2; the EA has no 2.45 V level). **NOT `0x0A`** =
@@ -166,7 +171,8 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   DFN** since the repackage — not the 1.75 mm SOIC-8 the pocket was sized for — so at 0.90 mm it needs
   no relief, like the ~0.9 mm U8 QFN. Re-derive the tallest rear part (U9 SOT-23 / the 0805 caps) and
   most likely delete the pocket. `…-backshell-…-cad.py` still carries `U2_POS = (30.10, 37.64)` for the
-  deleted part; re-key/rename or remove. PCB is frozen truth.
+  deleted part; re-key/rename or remove, then regen the STEP/STL and update the derived drawing / README
+  NOTE-7 pocket-description copies. PCB is frozen truth.
 
 - [ ] **[geometry] Repoint the brace generator to the v4 board + fill `part_height`** _(audit find)._
   `…-diffuser-brace-cad.py` line 54 hardcodes a v3_0 PCB path (an absolute path that also doesn't
@@ -200,3 +206,6 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   reception** (the dead-signal courtroom case). A URL / App Clip is only ever an OPTIONAL
   rich-content extra -- **never** a dependency for the contact import. Do not swap the embedded
   vCard for a URL-only record.
+- **Intentional / do-not-fix (so a future BOM/DRC pass doesn't re-flag them):** the R5/R6
+  "VSENSE div" (and similar) value fields are deliberate house-style labels, not errors; the
+  origin `NPTH_mech` footprint carries real non-plated mounting holes by design.
