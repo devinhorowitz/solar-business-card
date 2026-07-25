@@ -10596,6 +10596,56 @@
 	)
 	(wire
 		(pts
+			(xy 934.72 372.11) (xy 929.64 372.11)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "450d9f08-7c3f-4260-a1b2-c11aa6e0d91d")
+	)
+	(wire
+		(pts
+			(xy 934.72 377.19) (xy 929.64 377.19)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "28a5e377-e230-4550-a2f6-50b18565a59c")
+	)
+	(wire
+		(pts
+			(xy 934.72 382.27) (xy 929.64 382.27)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "ae898689-e6eb-4130-8c90-c5593682f988")
+	)
+	(wire
+		(pts
+			(xy 934.72 391.16) (xy 929.64 391.16)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "8dcb3d82-3409-411c-a9c9-00b210add317")
+	)
+	(wire
+		(pts
+			(xy 934.72 396.24) (xy 929.64 396.24)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "ccfc110f-033c-4c48-bd4a-22b3fd4a0485")
+	)
+	(wire
+		(pts
 			(xy 25.4 43.18) (xy 20.32 43.18)
 		)
 		(stroke
@@ -12603,6 +12653,111 @@
 			(type default)
 		)
 		(uuid "fd64e1fc-2131-4d68-a4d0-dfe76a789806")
+	)
+	(global_label "CHG_DIS_G"
+		(shape bidirectional)
+		(at 929.64 372.11 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "41160b05-6af8-40e8-a8e4-6afe59a19f34")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 929.64 372.11 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
+	(global_label "GND"
+		(shape bidirectional)
+		(at 929.64 377.19 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "171ff145-13d3-4edf-b6a6-8dbe804c1523")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 929.64 377.19 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
+	(global_label "EN_STO_CH"
+		(shape bidirectional)
+		(at 929.64 382.27 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "0489e422-c952-4904-8e6d-8ff5e75b3fbb")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 929.64 382.27 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
+	(global_label "CHG_DIS_G"
+		(shape bidirectional)
+		(at 929.64 391.16 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "ad1cef61-8346-42a9-8afe-8e009a3437f2")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 929.64 391.16 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
+	(global_label "GND"
+		(shape bidirectional)
+		(at 929.64 396.24 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "81764a45-5f03-4a23-94ff-03d7c6b36c3d")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 929.64 396.24 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 	)
 	(global_label "INT2"
 		(shape bidirectional)
@@ -16875,7 +17030,7 @@
 			)
 		)
 	)
-	(global_label "EN_STO_CH"
+	(global_label "CHG_DIS_G"
 		(shape bidirectional)
 		(at 204.47 43.18 0)
 		(effects
