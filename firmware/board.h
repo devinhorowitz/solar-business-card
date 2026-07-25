@@ -17,7 +17,7 @@
  *    28 PA2      LDRV2    LED D3                   TCA0 WO2
  *     1 PA3      LDRV1    LED D2                   TCA0 WO3
  *     2 PA4      CHG_DIS_G  Q2 gate: low-side charge-disable buffer (push-pull, HIGH = disable; R18 holds charge ON when MCU dead)
- *     3 PA5      BTN      reserved button (stub only; v3 hook)
+ *     3 PA5      BTN      button pin -- deliberately NO-FIT; a future button = PA5->switch->GND (active-low)
  *     4 PA6      FD       NFC field-detect in (NT3H2211)  FD-wake, both edges; field-powered (works VCC-off)
  *     5 PA7      NFC_EN   NFC VCC load-switch enable (active-HIGH)  output, LOW = NFC off
  *     6 PC0      PC0      spare GPIO  (JP2.2)
