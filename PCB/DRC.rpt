@@ -1,5 +1,5 @@
 ** Drc report for solar-glow-drh-v4_0.kicad_pcb **
-** Created on 2026-07-24T23:16:23 **
+** Created on 2026-07-25T07:56:56 **
 ** Report includes: Errors, Warnings, Exclusions **
 
 ** Found 16 DRC violations **
@@ -69,11 +69,14 @@
 
 ** Found 0 unconnected pads **
 
-** Found 2 Footprint errors **
+** Found 3 Footprint errors **
+[footprint_symbol_field_mismatch]: Field 'Description' differs (PCB: '', Schematic: '1M 0402 Q2 gate pulldown -- holds charge ENABLED while the MCU is dead/resetting (cold-start-deadlock fix)')
+    Local override; warning
+    @(46.1000 mm, 66.1750 mm): Footprint R18
 [footprint_symbol_mismatch]: Package_DFN_QFN:DFN-8-1EP_6x5mm_P1.27mm_EP4x4mm doesn't match footprint given by symbol (solarglow:U7_DFN8)
     Local override; warning
     @(28.0594 mm, 37.4000 mm): Footprint U7
-[footprint_symbol_field_mismatch]: Field 'MPN' differs (PCB: 'MB85RC512TYPNF-GS-BCERE1', Schematic: 'MB85RC512TYPN-GS-AWEWE1')
+[footprint_symbol_mismatch]: Footprint attributes don't match symbol: 'Do not populate' settings differ
     Local override; warning
     @(28.0594 mm, 37.4000 mm): Footprint U7
 
