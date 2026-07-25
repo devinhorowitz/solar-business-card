@@ -112,9 +112,35 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   meter attached: each knob changes conversion time and therefore poll energy.
 
 - [ ] **Energy-budget bench measurement** — the project's **#1 gate**; sets the real achievable glow
-  duty. Every firmware duty-cycle / glow constant is provisional until it lands.
+  duty. Every firmware duty-cycle / glow constant is provisional until it lands. **Size it to the LED
+  brightness FLOOR:** D2–D5 ship unbinned (`V2BB` is a min-to-max span), so output varies ~3× part-to-part
+  — V2 = 900 mcd / 3030 mlm (~49 lm/W) up to BB = 2800 mcd / 7560 mlm (~123 lm/W) at 30 mA. Design against
+  V2; a kind reel just looks better. (LED-audit addendum, 2026-07-25.)
 
 ## PCB — `PCB/solar-glow-drh-v4_0.kicad_pcb` / `.kicad_sch`
+
+- [ ] **[PCB, PRE-FAB] LED land pattern D2–D5: pads sit 0.25 mm too far inward** _(2026-07-25 LED audit;
+  full derivation in the design-notes LED-audit addendum)._ The `solarglow:D2..D5` pads are at
+  **C-C 2.60 mm** (centers ±1.30) and **0.65 mm wide**; the ams-OSRAM reverse-mount recommended land
+  (E062 3010 19B-01, datasheet p.13) is **C-C 3.10 mm** (centers ±1.55) and **0.50 mm wide**. Root cause:
+  the drawing's `2.6` is the **inner-edge-to-inner-edge** span, not a pitch — confirmed by the outer span
+  `3.6` ((3.6−2.6)/2 = 0.50 pad) and decisively by the stencil view (`2.65`/`0.65` = a 0.025 mm per-side
+  reduction off 2.6/0.7, which only parses if 2.6 is an inner span). Consequence vs the real terminal
+  (spans r 1.25→1.70 per p.12): our pad covers **83 %** of the terminal with a **−0.075 mm toe deficit**
+  (the terminal overhangs the pad's outer edge) and protrudes 0.075 mm into the Ø2.1 optical aperture;
+  the correct land covers 89 % with a +0.10 mm toe. **Not fatal — it would still solder** — but it is a
+  real land deviation on the card's marquee feature, and the board is not fabbed yet, so fix it now.
+  **Fix:** move each pad to **X = ±1.55** (keep Y = ∓0.375–0.40 — the diagonal stagger is CORRECT and
+  matches the package's diagonal terminals), optionally narrow to 0.50 mm; then re-route the 8 stubs
+  (ANODE + K2/K3/K4/K5) and re-DRC. _(Stagger was audited and is right — do not "fix" it.)_
+
+- [ ] **[PCB, PRE-FAB] D2's ANODE trace crosses D2's own light window** _(2026-07-25 LED audit)._ On
+  B.Cu — the emitting face — the ANODE segments `(14.8, 44.3)→(16.176, 42.924)` and
+  `(16.176, 42.924)→(17.727924, 42.924)` pass **0.636 mm** from D2's emitter center (16.1, 43.9),
+  i.e. *inside* the Ø2.1 aperture (r = 1.05), partially shadowing the brightest part of D2's cone.
+  **D3/D4/D5 are clear** — they route their pads straight out of the window, which is the documented
+  rule (design-notes: LED anodes trace out of the window). Re-route D2's anode to exit the window the
+  way its siblings do. Verified numerically against the committed board.
 
 - [ ] **PCBWay orders** — confirm both replies sent (`W567099ASH69` bare fab, `T-H70W567099A` PCBA);
   get the LED package dimension answer (1.25 vs 1.9 mm) and the merged PCB+PCBA total; ensure the PO

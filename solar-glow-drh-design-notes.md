@@ -1329,3 +1329,51 @@ the old PA4/net junction near U8/R17 so the high-impedance drain net stays short
 line may run long. Finding 2 -> Hi-Z park landed in led.c (pads park as inputs with buffers off
 between animations, unpark/park bracketing every animation path); SW2-OFF stow note + bench current
 measurement remain. Build after both: warning-free, 4,234 B._
+
+
+## Addendum (2026-07-25) -- LED audit: land-pattern error, D2 window obstruction, part-choice confirmed
+
+Hard sanity check of the LEDs across BOM / schematic / board / datasheet (ams-OSRAM LA P47F v1.5,
+2025-02-26), plus a fresh optimality survey. Three outcomes.
+
+**1. CONFIRMED CORRECT -- the identity chain and the diagonal pad stagger.** BOM, schematic and board
+agree on `LA P47F-V2BB-24-3B5A-30-R18-Z` (DK `475-LAP47F-V2BB-24-3B5A-30-R18-ZCT-ND`), and the BOM's
+"SMD, 3.4x1.9 mm" package field is right: the p.12 dimensional drawing gives a 3.4 x 1.9 mm outline
+around a **Ø2.5 round body** (the marketing "2 mm PointLED" is the emitter, not the outline). The
+footprint's **diagonally staggered pads (±0.4 mm in Y) are CORRECT** -- an early suspicion that they
+should be collinear was wrong. The reverse-mount recommended land is itself staggered (±0.375 mm),
+because the package's terminals are diagonally arranged (p.12 bottom view: offset anode keyhole +
+cathode oblong). **Do not "straighten" the stagger.**
+
+**2. REAL ERROR (pre-fab, fixable) -- the pads are 0.25 mm too far inward.** Our land is C-C
+**2.60 mm** (centers ±1.30), pads 0.65 x 0.70; the datasheet reverse-mount land (E062 3010 19B-01) is
+C-C **3.10 mm** (centers ±1.55), pads 0.50 x 0.70. The `2.6` on the drawing is the **inner-edge span**,
+not a pitch. Three independent confirmations: (a) the outer span `3.6` gives pad width
+(3.6-2.6)/2 = 0.50; (b) the top-mount sibling drawing uses the same convention (`4`/`2.6` -> 0.70 pads);
+(c) decisively, the stencil view's `2.65`/`0.65` is exactly a 0.025 mm per-side reduction off 2.6/0.70 --
+arithmetic that only parses if 2.6 is an inner span (a C-C reading would put stencil apertures *wider
+apart* than the pads, which is nonsense). Physical consequence against the real terminal (radius
+1.25 -> 1.70, i.e. 0.45 long x 0.5 wide, from p.12): our pad covers **0.375 of 0.45 (83 %)** of the
+terminal and stops **0.075 mm short of its outer edge** (no toe fillet), while intruding 0.075 mm into
+the Ø2.1 optical aperture; the correct land covers 0.400 (89 %) with a +0.10 mm toe. It would still
+solder -- this is a deviation, not a break -- but it is uninspectable (reverse-mount), on the card's
+marquee feature, and free to fix before fab. Tracked in TODO.
+
+**3. REAL ERROR (pre-fab) -- D2's own anode trace crosses D2's light window.** On B.Cu (the emitting
+face) the ANODE run passes 0.636 mm from D2's emitter center, inside the Ø2.1 aperture. D3/D4/D5
+follow the "anodes trace out of the window" rule; only D2 violates it. Verified numerically against
+the committed board; tracked in TODO.
+
+**4. OPTIMALITY -- KEEP the part; but budget to the brightness FLOOR.** The LA P47F is the newest and
+**only in-stock/Active** amber in this reverse-mount PointLED land (the older same-land LA P47B /
+LA P476 are ~5-8x dimmer and out of stock; the one brighter-floor variant, `-AABA-`, is obsolete with
+zero stock). Non-OSRAM "brighter" ambers are a mirage: parts like the 18000 mcd Vishay VLDK1235R are
+11-20 deg pencil beams on different footprints -- for backlighting a diffuse FR4 window, the LA P47F's
+**120 deg near-Lambertian** emission and total flux are the right optimization, and mcd is not
+comparable across beam angles. **The actionable caveat:** the order code is **unbinned** --
+`V2BB` / `24` / `3B5A` are min-group-to-max-group *spans*, not tight bins (p.3 ordering table + p.6
+binning tables). Brightness may land anywhere from **V2 (900 mcd / 3030 mlm, ~49 lm/W)** to
+**BB (2800 mcd / 7560 mlm, ~123 lm/W)** at 30 mA -- a **~3x spread**, and DigiKey's "1850 mcd" is a
+mid-span nominal, not a guarantee. **The energy-budget measurement and the glow-duty constants must be
+sized against the V2 floor**, not the nominal; a lucky reel could be 3x brighter than the worst case,
+so the design must work at the floor and simply look better if the bin is kind.
