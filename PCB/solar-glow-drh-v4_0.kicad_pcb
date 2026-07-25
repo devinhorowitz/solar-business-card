@@ -10815,7 +10815,7 @@
 				)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "1M 0402 Q2 gate pulldown -- holds charge ENABLED while the MCU is dead/resetting (cold-start-deadlock fix)"
 			(at 0 0 90)
 			(layer "F.Fab")
 			(hide yes)
