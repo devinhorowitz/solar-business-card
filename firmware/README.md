@@ -165,7 +165,7 @@ LEDs are **low-side**: each lights when its PA pin pulls LOW, current set by a
 (4.65−2.25)/150, STO topping at the AEM10300 VOVCH of 4.65 V). PWM only trims the
 average below that ballasted ceiling. The only D-parts on the v4 board are the LEDs D2–D5.
 
-Spare/free: PC0, PC1 (on JP2); PA5 (`BTN`, reserved stub);
+Spare/free: PC0, PC1 (on JP2); PA5 (`BTN`, no-fit button pin — see *Behaviour*);
 PD3–PD7, PF6/RST. (PA6 = NFC `FD`, PA7 = `NFC_EN`.) All of these unused pins
 get internal pull-ups in `gpio_init` so a floating input can't leak current — see
 *Power notes*.
@@ -213,7 +213,14 @@ cost is one accel Z read per poll.
 1. **SW2**, the master anode switch, is pure hardware. With SW2 **OFF** the LED
    anodes are disconnected and nothing lights regardless of what the firmware
    does. There is no GPIO sense for it; the code just drives PWM. If the board
-   is dark, check SW2 first.
+   is dark, check SW2 first. **Stow discipline: switch SW2 OFF for storage/shipping.**
+   With SW2 ON and the tank full, the idle card holds all four LEDs at up to ~1.35 V
+   continuous forward bias (anodes at STO ≈ VOVCH 4.65 V, cathode pads parked at VS
+   3.3 V) — below emission but a bias ams-OSRAM's datasheet says to avoid (slow
+   migration risk). Firmware mitigates it (the Hi-Z idle park below) but can't zero
+   it while the rail is high; SW2 **OFF** floats the anodes and removes the bias
+   entirely, so a card in a drawer for months isn't held under bias. (TINY does **not**
+   help — same DC endpoint through R12.)
    *TINY is a low-fidelity mode by design.* SW2 = **TINY** feeds all four anodes
    through one **shared** 220 Ω (`R12`) -- unlike **ON**, which ties the common
    anode straight to STO (the supercap tank) and leaves each LED independent on its own 150 Ω cathode
@@ -225,8 +232,12 @@ cost is one accel Z read per poll.
    (where no correction is wanted). TINY is the dim/long-runtime hack; treat animation
    fidelity as an ON-mode property. *(v4: move the ballast to the individual cathodes
    so TINY is linear -- see design notes.)*
-2. The **accelerometer is the only actuator** on this card. `PA5/BTN` is a routed
-   stub for a future revision, not populated.
+2. The **accelerometer is the only actuator** on this card. A physical button is
+   **deliberately not fitted**. To add one in a future revision, wire **pin 3 (PA5)**
+   to a momentary switch to **GND** — `gpio_init` already enables PA5's internal
+   pull-up, so firmware reads it **active-low** (LOW = pressed). The schematic keeps a
+   `BTN` label on PA5 as the on-board record of that pin (its lone-label ERC note is
+   intentional, not a defect).
 
 ## NFC contact card (`NT3H2211`, `U5`)
 
@@ -394,6 +405,14 @@ the sensor.
   INVEN to "fix" an apparent inversion; that lights every LED at rest. If
   brightness ever runs backwards, write `255 - duty` in `led_set`/`led_set_all`
   instead, which keeps idle dark.
+- **LED Hi-Z idle park** (`led_park`/`led_unpark` in `led.c`): between animations the
+  four LED pads are driven **inputs** (buffers disabled, INVEN kept), not held HIGH.
+  Reason: a driven-HIGH idle sat the LEDs at ~1.35 V continuous forward bias against
+  STO (a vendor-flagged migration risk — see *Two hardware gates → SW2*). Tristated,
+  the cathode floats and the bias drops to a clamp-limited ~1 V worst case, and to
+  **zero** once STO falls below ~3.6 V (most of the card's life). `led_breathe` /
+  `led_sweep` call `led_unpark` on entry and `led_park` on every exit (including the
+  NFC-field abort); the compare registers stay parked at 0, so unpark never flashes.
 
 ### Tap (`adxl367.h`)
 - **`ADXL_CFG_TAP_THRESH`** (`0x30`, 8-bit): tap sensitivity, lower = more

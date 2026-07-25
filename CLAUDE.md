@@ -61,7 +61,7 @@ every `.kicad_*` file referenced in the docs exists.
   light has never been measured. Treat firmware duty-cycle / glow constants as
   provisional until it is. See README → "The open question."
 - **SW2** (LED master switch) is pure hardware; firmware can't sense it. Board dark? Check SW2 first.
-- The **accelerometer is the only actuator** (no button; `PA5/BTN` is a reserved stub).
+- The **accelerometer is the only actuator** (no button by design; to add one later: pin 3 / PA5 -> momentary switch -> GND, active-low).
 - LED PWM **`INVEN` polarity in `led.c` is load-bearing** for the dark idle state — don't
   remove it to "fix" an apparent inversion (write `255 - duty` instead).
 - Don't commit firmware build artifacts (`firmware/*.o|*.elf|*.hex` — gitignored).

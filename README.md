@@ -182,7 +182,8 @@ The board is a KiCad project — open it, run DRC, and export the fab set:
    `PCB/README.md` and `solar-glow-drh-design-notes.md` (the NFC coil `LA`↔`LB` short, the four
    GND-tie mounting-hole/gold-frame contacts, the two plating-bus stubs crossing Edge.Cuts at
    x=25.4, the illumination copper inside the glow window, and the benign `lib_footprint_issues`
-   plus the reserved `BTN` `track_dangling`). Fill zones (press **B**) before checking.
+   plus the **intentional** `BTN` global label on PA5 — the documented future-button pin
+   (a deliberate no-fit; recipe in `firmware/README.md`), not a loose end). Fill zones (press **B**) before checking.
 3. **Plot Gerbers + drill** from KiCad's own Fabrication Outputs and order from **PCBWay**
    (**2-layer**, 0.6 mm; selective hard gold + plating bus + resin-fill/cap per `PCB/README.md`).
 

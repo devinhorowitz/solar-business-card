@@ -57,18 +57,13 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   update SC1/SC3 (or pull the schematic) → **Update PCB from Schematic** → re-upload. Metadata only —
   nets and copper unaffected.
 
-- [ ] **Physical button (BTN / PA5)** — _all three domains._ Reserved net only, unpopulated. If ever
-  fitted: PCB placement (a "v2.2 surgery"), the firmware `PA5` stub becomes real, and the enclosure
-  needs a pocket/hole plus front-fence clearance.
-
 ## Firmware — `firmware/`, `firmware/README.md`
 
-- [ ] **[DOC+BENCH] LED sub-emission idle-bias — Hi-Z park LANDED, stow-rule + bench remain**
-  _(2026-07-23; fw done — LED pads park as inputs between animations, bias drops to a clamp-limited
-  ~1 V worst case and to zero below STO ≈ 3.6 V.)_ Remaining: (a) document the **SW2-OFF stow
-  discipline** where SW2 is described (TINY does not help — same DC endpoint through R12); (b)
-  bench-measure the real idle LED current; (c) only if the energy budget allows, consider a VOVCH
-  re-strap one step down (E ∝ V², costly).
+- [ ] **[BENCH] LED sub-emission idle-bias — Hi-Z park + docs LANDED, bench measurement remains**
+  _(2026-07-23 fw / 2026-07-25 docs; the pads park as inputs between animations (bias → clamp-limited
+  ~1 V worst case, zero below STO ≈ 3.6 V), and both the Hi-Z park and the SW2-OFF stow discipline are
+  now documented in `firmware/README.md`.)_ Remaining: (a) bench-measure the real idle LED current;
+  (b) only if the energy budget allows, consider a VOVCH re-strap one step down (E ∝ V², costly).
 
 - [ ] **[BENCH] FRAM back-power fix — verify the VS-rail + Sleep-park** _(2026-07-23; sch + fw + board
   all done & verified.)_ Bench-confirm: IZZ standing current (~0.20 µA typ), VS idle current, and
@@ -206,6 +201,11 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   reception** (the dead-signal courtroom case). A URL / App Clip is only ever an OPTIONAL
   rich-content extra -- **never** a dependency for the contact import. Do not swap the embedded
   vCard for a URL-only record.
+- **Physical button — deliberately NOT fitted** (the accelerometer tap is the only actuator). This is
+  a design decision, not a loose end. To add a hardware button in a future revision: route **pin 3
+  (PA5)** to a momentary switch to **GND**; firmware reads it **active-low** (LOW = pressed) — `gpio_init`
+  already enables PA5's internal pull-up. The schematic keeps a `BTN` label on PA5 as the on-board
+  record of that pin; its lone-label ERC note is intentional. No power/analog net is affected.
 - **Intentional / do-not-fix (so a future BOM/DRC pass doesn't re-flag them):** the R5/R6
   "VSENSE div" (and similar) value fields are deliberate house-style labels, not errors; the
   origin `NPTH_mech` footprint carries real non-plated mounting holes by design.
