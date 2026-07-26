@@ -212,14 +212,13 @@ def check_board_sch_parity(comps, sch_fps):
         if brd_fp and brd_fp != sch_fp:
             bad.append(f"{ref}: sch={sch_fp} board={brd_fp}")
     if bad:
-        # WARNING, not an error, ONLY because U7 is a known-open decision (see
-        # TODO: the board land was verified against the RAMXEED drawing, the
-        # library land disagrees, and picking one moves pads under a fitted
-        # part). Promote this to err() the moment U7 is settled -- a silent
+        # A hard error since 2026-07-26: U7 was the last known-open disagreement
+        # and it is settled (board and library land turned out to be the SAME
+        # land -- see TODO), so every remaining mismatch is a real find. A silent
         # footprint swap is exactly the failure this check exists to catch.
-        warn("footprint assignment differs between schematic and board (a sync "
-             "with footprint replacement enabled will MOVE these pads): "
-             + "; ".join(bad))
+        err("footprint assignment differs between schematic and board (a sync "
+            "with footprint replacement enabled will MOVE these pads): "
+            + "; ".join(bad))
     else:
         ok("schematic and board agree on every footprint assignment")
 

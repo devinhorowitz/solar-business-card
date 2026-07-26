@@ -109,6 +109,10 @@ Assign each new symbol the footprint the PCB already uses (so "Update PCB from S
 footprint change): U8 = the QFN-28 land on the board, U9 = its SOT-23, passives = their 0402 lands,
 L2 / C25 / C26 / C27 / FB1 = whatever you re-landed them to.
 
+> As of 2026-07-26 the schematic and the board agree on **all 67** footprint assignments (U7 was the
+> last holdout — see TODO), and `scripts/check_consistency.py` now **fails** on any disagreement, so
+> a footprint drift is caught in CI rather than discovered as moved pads after a sync.
+
 ## D. Verify
 
 1. **ERC** -- should be clean of net errors (the `PA4`/spare isolated-label warnings resolve once PA4

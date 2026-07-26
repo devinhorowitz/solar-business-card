@@ -9,16 +9,15 @@ addenda.
 
 _Board freeze status (updated 2026-07-25): the 2026-07 audit round reopened the
 netlist and it is now closing again — Q2/R18 (the cold-start-deadlock buffer) and
-the FRAM VS re-rail are placed, routed, and verified on the board; the only
-pending board edit is the U7 footprint-identity swap (+ DNP-flag clear). A PCB layout change still means
+the FRAM VS re-rail are placed, routed, and verified on the board; the U7
+footprint-identity swap and DNP clear have since landed too (2026-07-26). A PCB layout change still means
 a brace reprint, not a shell re-machine._
 
 _Completed & culled 2026-07-25 (see git history + design-notes addenda for the
 full reasoning): the AVR64DD28→AVR64EA28 family swap + firmware port; the U5 NFC
 and U6 load-switch (→TPS22917) silicon audits; the U7 FRAM DFN-repackage and the
-VS-rail back-power fix (schematic + firmware + board all landed — the U7
-footprint-identity swap and the FRAM bench-verify are still open, see the items
-above); the Q2/R18 cold-start-deadlock buffer (schematic + firmware + board); the
+VS-rail back-power fix (schematic + firmware + board all landed — the FRAM
+bench-verify is still open, see the items above); the Q2/R18 cold-start-deadlock buffer (schematic + firmware + board); the
 passive longevity/precision upgrades (X7R / AEC-Q200, 0603 & 0805 upsizes,
 thin-film dividers); the full live DigiKey/Mouser BOM sourcing pass; the
 SUN-threshold derivation and the solar-cell-thickness resolution; and the
@@ -31,19 +30,12 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   flag twice, C29 absent from the schematic, the U7 land mismatch). The checker now compares
   board refdes against schematic refdes and fails on anything present only on the board — a
   sync would DELETE those — and compares footprint assignments, since a mismatch MOVES pads.
-  The footprint check is a **warning for now** solely because U7 is an open decision; promote
-  it to an error once U7 is settled (noted in the code).
+  The footprint check was a warning while U7 was open; **since 2026-07-26 it is a hard error**
+  (U7 is settled — see the PCB section).
 
-- [ ] **[SCH→PCB+ENCL] U7 FRAM footprint-identity swap + DNP clear + shell-pocket recheck**
-  _(sch + BOM + board land all DONE & verified — the DFN land is placed, routed, 0 unconnected;
-  what remains is the footprint identity, a stray flag, and the enclosure.)_ In KiCad: **Change
-  Footprint U7 → `solarglow:U7_DFN8`** (`PCB/fp-lib-table` registers the lib; reopen the project
-  first) — the board still carries the old `Package_DFN_QFN:DFN-8-1EP_6x5mm_P1.27mm_EP4x4mm` identity,
-  which the swap resolves. The **same step clears U7's stray DNP flag**: the #73 upload left U7
-  `(attr smd dnp)` — accidentally Do-Not-Populate — while the schematic says populate, so
-  Change-Footprint / Update-PCB re-syncs `dnp=no` (or untick it manually). Re-snap the 3 signal stub
-  ends to the new pad centers if needed, re-DRC (confirm both the "Do not populate settings differ"
-  and the footprint-mismatch warnings clear). **Enclosure knock-on:** U7 is now the 0.90 mm DFN (was
+- [ ] **[ENCL] U7 shell-pocket recheck — the last piece of the FRAM repackage**
+  _(sch + BOM + board land + footprint identity + DNP flag are all DONE & verified; the DFN land is
+  placed, routed, 0 unconnected.)_ **Enclosure knock-on only:** U7 is now the 0.90 mm DFN (was the
   1.75 mm SOIC), so the backshell's dedicated 0.95 mm floor pocket is likely deletable — see the
   geometry items under Enclosure.
 
@@ -273,23 +265,35 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
 
 ## PCB — `PCB/solar-glow-drh-v4_0.kicad_pcb` / `.kicad_sch`
 
-- [ ] **[SCH/PCB — ⚠ ARMED TRAP, decide before any sync] U7 footprint identity is INCONSISTENT**
-  _(2026-07-26; investigated, deliberately NOT "fixed" — a blind swap would wreck the FRAM routing.)_
-  The schematic's `Footprint` property for U7 already reads **`solarglow:U7_DFN8`**, but the board
-  still carries **`Package_DFN_QFN:DFN-8-1EP_6x5mm_P1.27mm_EP4x4mm`**, and the two geometries are NOT
-  the same:
-  - board pads sit at X **−1.95 / +2.25** (asymmetric); the library land is at **±2.1** (symmetric)
-  - the Y order is **reversed** — board pad 1 at +1.905, library pad 1 at −1.905
-  Part of that Y difference may simply be back-side mirroring (U7 is on B.Cu; the `.kicad_mod`
-  declares `F.Cu`), but the asymmetric X offset is not explained by mirroring.
-  **This is already armed:** because the schematic points at the library land, any sync run with
-  "replace footprints" enabled will move U7's pads and possibly flip the pin order, breaking the
-  routing on a part the firmware depends on. Decide deliberately, one of:
-  (a) correct `U7_DFN8.kicad_mod` to match the routed geometry (mirrors the U9 approach — keeps copper
-      untouched, and is probably right since the board land was the one verified against the RAMXEED
-      drawing); (b) point the schematic property back at the `Package_DFN_QFN` land; or (c) accept the
-      library land and re-place + re-route U7. **Do not run Update-from-Schematic with footprint
-      replacement on until this is settled.**
+- [x] **[SCH/PCB] U7 footprint identity — DISARMED; the two lands were the same land**
+  _(2026-07-26; DONE.)_ The trap was real but the geometries were not actually in conflict. Comparing
+  every stored coordinate, the board footprint was **exactly the library footprint, Y-mirrored (U7 is
+  on B.Cu, the `.kicad_mod` declares `F.Cu`) and translated +0.15 mm in X** — pads *and* silk *and*
+  courtyard *and* fab, uniformly. The apparent "asymmetric X" (−1.95 / +2.25) was that same +0.15
+  offset on a symmetric ±2.1 land, and the "reversed Y order" was just the back-side flip. So the
+  RAMXEED-verified land and the library land never disagreed; only the footprint's local origin did.
+  Resolved by adopting the library frame with an origin compensation, so **no copper moved**:
+  every local X −0.15, footprint origin 28.059412 → **28.209412** (which is the true package centre),
+  `lib_id` → `solarglow:U7_DFN8`. Verified by recomputing the absolute position of all 26 pad and
+  graphic vertices against the pre-change file: **zero changed**. The board footprint is now
+  bit-identical to a fresh library placement at that origin, so Update-from-Library is a no-op and
+  Update-from-Schematic-with-footprint-replacement is safe for U7. Schematic and board now agree on
+  all 67 footprint assignments, and `check_consistency.py`'s footprint check is an **error**, not a
+  warning, as of this change.
+
+- [ ] **[PCB — housekeeping, low priority] 46 `solarglow:<refdes>` lib_ids have no backing
+  `.kicad_mod`** _(noticed 2026-07-26 while settling U7.)_ The board (and the matching schematic
+  `Footprint` properties) name footprints like `solarglow:C1`, `solarglow:R10`, `solarglow:U1` —
+  one per refdes — but `PCB/solarglow.pretty/` contains only four files
+  (`U7_DFN8`, `U9_SOT23_5`, and the two SCHURTER cells). Nothing is broken today: a `.kicad_pcb`
+  stores each footprint's full geometry inline, so the lib_id is only consulted by
+  *Update Footprints from Library* / footprint replacement — which simply finds nothing and leaves
+  those parts alone. Two consequences worth knowing: (1) the sync trap this repo has been burned by
+  is **narrower than it looks** — footprint replacement can only actually move the parts whose
+  lib_id resolves, i.e. U7, U9, and the stock-library parts; (2) if anyone ever creates a file at
+  one of those 46 names, it silently becomes authoritative for that refdes. Cheap fix if it ever
+  matters: repoint them at the real stock-library lands (`Capacitor_SMD:C_0402_1005Metric`, etc.) in
+  the schematic and re-sync. Not urgent — flagged so it is a known state, not a surprise.
 
 
 - [x] **[SCH] C29 added to the schematic — board and netlist now agree** _(2026-07-26; DONE.)_
@@ -452,6 +456,19 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   most likely delete the pocket. `…-backshell-…-cad.py` still carries `U2_POS = (30.10, 37.64)` for the
   deleted part; re-key/rename or remove, then regen the STEP/STL and update the derived drawing / README
   NOTE-7 pocket-description copies. PCB is frozen truth.
+
+- [ ] **[geometry] U7's 3D model is the wrong package and is rotated 90°** _(noticed 2026-07-26 during
+  the footprint-identity fix — anything that reads part height from the board STEP is reading this.)_
+  The board footprint still points at
+  `${KICAD10_3DMODEL_DIR}/Package_DFN_QFN.3dshapes/DFN-8-1EP_6x5mm_Pitch1.27mm.step`, left over from
+  the old `Package_DFN_QFN` identity. Two problems: it is a **6 mm(X) × 5 mm(Y)** body while the land is
+  **5 mm(X) × 6 mm(Y)** (so it renders rotated 90°, overhanging ~0.5 mm one way and under-filling the
+  other), and it models an **exposed pad** the LCC-8P-M05 does not have. `solarglow:U7_DFN8` declares
+  no model at all, so an Update-from-Library would strip U7 from the 3D/STEP export entirely — which
+  is worse, since a missing part reads as "no collision". Fix properly before the enclosure pass:
+  either add a correct model to `U7_DFN8.kicad_mod` or substitute a generic 5×6×0.9 mm block. The
+  reference is deliberately left in place until then. Height impact is small (the KiCad DFN model is
+  ~0.9 mm, which happens to match), so this is a footprint/outline error, not a height error.
 
 - [ ] **[geometry] Repoint the brace generator to the v4 board + fill `part_height`** _(audit find)._
   `…-diffuser-brace-cad.py` line 54 hardcodes a v3_0 PCB path (an absolute path that also doesn't
