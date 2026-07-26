@@ -71,7 +71,18 @@ labels above, so nothing extra to set.
 
 | Part | Value | Pin -> net |
 |---|---|---|
-| **U9** | TPS7A0233 (SOT-23-6 land, 5-pin die) | 1 STO · 2 GND · 3 STO · 4 NC · 5 VS · 6 NC |
+| **U9** | TPS7A0233 (SOT-23-6 land, 5-pin die) | 1 STO · 2 GND · 3 STO · 4 NC · **5 NC** · **6 VS** |
+
+> **⚠ U9 pin-map trap — corrected 2026-07-26.** This row previously read `5 VS · 6 NC`, which
+> put the 3.3 V rail on a pad the physical part does not touch, leaving VS with no source.
+> A 5-pin SOT-23 has three leads on one side and **two on the other, level with pins 1 and 3** —
+> the middle position opposite pin 2 is **vacant** (TPS7A02 datasheet §5: `IN 1 ↔ 5 OUT`,
+> `GND 2` with nothing opposite, `EN 3 ↔ 4 NC`). On the SOT-23-**6** land the pads run
+> 1/2/3 down one side and 4/5/6 down the other, so pad 5 is that vacant middle and the OUT
+> lead lands on **pad 6**. Die pin 5 (OUT) therefore maps to LAND pad 6, not pad 5.
+> DRC cannot catch this: the NC pads are `passive+no_connect`, so it reports zero unconnected
+> pads. It is also orientation-independent — IN and EN are both on STO_LDO, so a 180°-rotated
+> part still satisfies the three-lead side and lands OUT on pad 4, also an NC net.
 | **L2** | 10 uH | 1 LX_LIN · 2 LX_LOUT |
 | **C25** | 22 uF | 1 BUFSRC · 2 GND |
 | **C26** | 10 uF | 1 VINT · 2 GND |
