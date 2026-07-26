@@ -71,9 +71,12 @@ labels above, so nothing extra to set.
 
 | Part | Value | Pin -> net |
 |---|---|---|
-| **U9** | TPS7A0233 (SOT-23-6 land, 5-pin die) | 1 STO · 2 GND · 3 STO · 4 NC · **5 NC** · **6 VS** |
+| **U9** | TPS7A0233 (`solarglow:U9_SOT23_5`, 5-pin land) | 1 STO · 2 GND · 3 STO · 4 NC · **5 VS** |
 
-> **⚠ U9 pin-map trap — corrected 2026-07-26.** This row previously read `5 VS · 6 NC`, which
+> **⚠ U9 pin-map trap — root-caused and eliminated 2026-07-26.** U9 now sits on a genuine 5-pin
+> land (`solarglow:U9_SOT23_5`) with standard numbering, so pad 5 is opposite pad 1 exactly where
+> the OUT lead falls and the mismatch below cannot recur. Kept as history: the row previously read
+> `5 VS · 6 NC` on a SOT-23-**6** land, which
 > put the 3.3 V rail on a pad the physical part does not touch, leaving VS with no source.
 > A 5-pin SOT-23 has three leads on one side and **two on the other, level with pins 1 and 3** —
 > the middle position opposite pin 2 is **vacant** (TPS7A02 datasheet §5: `IN 1 ↔ 5 OUT`,

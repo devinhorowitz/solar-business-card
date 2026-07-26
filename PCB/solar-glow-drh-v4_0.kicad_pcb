@@ -9236,11 +9236,11 @@
 		)
 		(embedded_fonts no)
 	)
-	(footprint "Package_TO_SOT_SMD:SOT-23-6"
+	(footprint "solarglow:U9_SOT23_5"
 		(layer "B.Cu")
 		(uuid "a32191c1-85d9-4c25-a2f4-a77560ed512e")
 		(at 3.9 55.4 -90)
-		(descr "SOT, 6 Pin (JEDEC MO-178 Var AB https://www.jedec.org/document_search?search_api_views_fulltext=MO-178)")
+		(descr "SOT-23-5 (JEDEC MO-178 Var AA), 1.6x2.9mm body, 0.95mm pitch -- project-local land derived from the routed SOT-23-6 geometry so pad positions are unchanged")
 		(tags "SOT TO_SOT_SMD")
 		(property "Reference" "U9"
 			(at 0 2.4 90)
@@ -9464,22 +9464,12 @@
 			(uuid "9ec56041-15df-4413-897e-40bcf8633cc4")
 		)
 		(pad "5" smd roundrect
-			(at 1.1375 0 270)
-			(size 1.325 0.6)
-			(layers "B.Cu" "B.Mask")
-			(roundrect_rratio 0.25)
-			(net "unconnected-(U9-NC-Pad5)")
-			(pinfunction "NC_5")
-			(pintype "passive+no_connect")
-			(uuid "8e3c228a-d1f6-4c91-bf5b-a7ed9f51e47e")
-		)
-		(pad "6" smd roundrect
 			(at 1.1375 0.95 270)
 			(size 1.325 0.6)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
 			(net "VS")
-			(pinfunction "OUT_6")
+			(pinfunction "OUT_5")
 			(pintype "passive")
 			(uuid "6a4eb269-37c1-45fc-8183-e5d0a0c54ca7")
 		)

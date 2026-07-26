@@ -10492,24 +10492,6 @@
 							)
 						)
 					)
-					(number "6"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 0 -25.4 0)
-					(length 2.54)
-					(name "NC"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
 					(number "5"
 						(effects
 							(font
@@ -23380,9 +23362,6 @@
 		)
 		(pin "5"
 			(uuid "26a62436-4284-4d0d-b56c-c25dcbdc1f8f")
-		)
-		(pin "6"
-			(uuid "be817216-5d94-4df8-b043-9be00e34c2cd")
 		)
 		(instances
 			(project "solar-glow-drh-v4_0"
