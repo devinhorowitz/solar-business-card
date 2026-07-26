@@ -32504,7 +32504,7 @@
 	(segment
 		(start 32.244648 51.399)
 		(end 32 51.643648)
-		(width 0.2)
+		(width 0.15)
 		(layer "B.Cu")
 		(net "VINT")
 		(uuid "006d9b35-43e4-4354-bfe1-e3836171f739")
@@ -32512,7 +32512,7 @@
 	(segment
 		(start 34.77001 55.246986)
 		(end 34.77001 53.729444)
-		(width 0.2)
+		(width 0.15)
 		(layer "B.Cu")
 		(net "VINT")
 		(uuid "08308799-7ef3-4137-add4-cf42203cbdca")
@@ -32536,7 +32536,7 @@
 	(segment
 		(start 30 56.356352)
 		(end 30.331589 56.687941)
-		(width 0.2)
+		(width 0.15)
 		(layer "B.Cu")
 		(net "VINT")
 		(uuid "30408965-346e-476b-b806-488451f9b27a")
@@ -32552,7 +32552,7 @@
 	(segment
 		(start 35.292694 57.616612)
 		(end 35.954578 57.616612)
-		(width 0.2)
+		(width 0.15)
 		(layer "B.Cu")
 		(net "VINT")
 		(uuid "337c7040-126f-4858-80e6-eae97c54e3a8")
@@ -32624,7 +32624,7 @@
 	(segment
 		(start 36.154636 57.416554)
 		(end 36.154636 56.82467)
-		(width 0.2)
+		(width 0.15)
 		(layer "B.Cu")
 		(net "VINT")
 		(uuid "974bfdd7-bc95-4a90-a9cb-aed7d74dc615")
@@ -32680,7 +32680,7 @@
 	(segment
 		(start 36.154636 56.82467)
 		(end 35.623636 56.29367)
-		(width 0.2)
+		(width 0.15)
 		(layer "B.Cu")
 		(net "VINT")
 		(uuid "ca824699-bbba-49d3-a4ad-2048375ee2dc")
@@ -32688,7 +32688,7 @@
 	(segment
 		(start 33.477176 51.399)
 		(end 32.244648 51.399)
-		(width 0.2)
+		(width 0.15)
 		(layer "B.Cu")
 		(net "VINT")
 		(uuid "d0c74928-460d-462f-a7e4-ca3508556a79")
@@ -32704,7 +32704,7 @@
 	(segment
 		(start 35.954578 57.616612)
 		(end 36.154636 57.416554)
-		(width 0.2)
+		(width 0.15)
 		(layer "B.Cu")
 		(net "VINT")
 		(uuid "ecbd52cb-04ed-4557-b3c6-417c16502e13")
@@ -32800,7 +32800,7 @@
 	(segment
 		(start 32.255835 57.25)
 		(end 31.6 56.594165)
-		(width 0.2)
+		(width 0.15)
 		(layer "B.Cu")
 		(net "EN_STO_CH")
 		(uuid "789c436e-97e9-49b2-9416-d46e4e3cc8c5")

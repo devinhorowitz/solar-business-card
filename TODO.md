@@ -389,6 +389,18 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   footprints. **No re-routing was needed**: the old trace endpoints sat at the former pad
   centres, 0.25 mm away, which still falls inside the 0.65 mm-wide pads at their new
   positions — verified all 8 pads retain a trace endpoint within their bounds.
+
+- [ ] **[PCB — needs KiCad, 2 min] Refill the GND_B zone after the LED land move** _(2026-07-26.)_
+  The pad move was made at file level, so the zone fill polygons stored in the `.kicad_pcb` still
+  describe the *old* pad positions. Exactly two of the eight moved pads — **D2 pad A** (moved outward
+  to 14.550, 44.300) and **D5 pad K** (outward to 36.250, 43.500), the two ends of the LED row — now
+  land inside the stored `GND_B` B.Cu pour, ~0.091 mm² each; the other six stayed clear (checked all
+  eight against the stored fill polygon). CI reports them as two `clearance ... actual 0.0000 mm`
+  errors against `Zone 'GND_B'`. A refill carves the clearance void and both clear. **This also
+  matters beyond DRC:** KiBot plots the gerbers from the stored fill, so the fab copper is stale until
+  the refill is saved. Open the board → Edit → Fill All Zones → save. (Same visit as the D2 anode
+  reroute below.)
+
 - [ ] **[PCB, PRE-FAB] D2's ANODE trace crosses D2's own light window** _(2026-07-25 LED audit)._ On
   B.Cu — the emitting face — the ANODE segments `(14.8, 44.3)→(16.176, 42.924)` and
   `(16.176, 42.924)→(17.727924, 42.924)` pass **0.636 mm** from D2's emitter center (16.1, 43.9),
@@ -396,6 +408,21 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   **D3/D4/D5 are clear** — they route their pads straight out of the window, which is the documented
   rule (design-notes: LED anodes trace out of the window). Re-route D2's anode to exit the window the
   way its siblings do. Verified numerically against the committed board.
+  **Now also a hard DRC error, not just an optical one:** with D2's K pad moved out to X = +1.55 the
+  ANODE run and pad K [K2] overlap — CI reports it as `shorting_items (nets K2 and ANODE)`, both
+  directions. The reroute fixes the short and the shadowing in one move.
+
+- [x] **[COPPER] VINT / EN_STO_CH necked back to 0.15 mm through the U8 pocket** _(2026-07-26; DONE.)_
+  The 2026-07-26 board upload widened 39 segments from 0.15 to 0.20 mm — VINT ×24, EN_STO_CH ×12, plus
+  one each on VS / STO_SNS / LX_LOUT. That broke `clearance-hard-floor` (0.126 mm) in **11 places**
+  around U8 / R17 / C26, and it turned PCB CI red for three commits before anyone noticed. The cause
+  is arithmetic, not routing: +0.05 mm of width is +0.025 mm per side, and every violation came back
+  at 0.101–0.104 mm — i.e. exactly 0.022–0.025 mm short of the floor. The neighbouring copper had been
+  placed for the board's documented uniform 0.15 mm trace/space (see the `.kicad_dru` header), so
+  0.20 mm does not fit there. 0.101 mm is also right *at* PCBWay's stated 0.1 mm floor with zero
+  process margin. Fixed by necking **only the 9 congested segments** (8 VINT + 1 EN_STO_CH, matched
+  one-to-one against the CI violation list) back to 0.15 mm — standard practice for a run passing
+  between pads — and leaving the widening on the other 30 segments, where it is legal and harmless.
 
 - [ ] **PCBWay orders** — confirm both replies sent (`W567099ASH69` bare fab, `T-H70W567099A` PCBA);
   get the LED package dimension answer (1.25 vs 1.9 mm) and the merged PCB+PCBA total; ensure the PO
