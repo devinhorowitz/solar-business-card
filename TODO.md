@@ -265,34 +265,12 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
 
 ## PCB — `PCB/solar-glow-drh-v4_0.kicad_pcb` / `.kicad_sch`
 
-- [ ] **[SCH — MINE, DO FIRST] C29 exists on the board but NOT in the schematic**
-  _(2026-07-26, after Devin's board upload.)_ C29 (100 nF, `solarglow:C1` land) is placed and routed —
-  pad 1 VS at (11.57, 44.12), pad 2 GND at (11.57, 45.13), giving a ~3.3 mm loop to VDD18/GND19
-  against C1's 5.95 mm, and 3.59 mm to pad 24, so it correctly serves pair 18/19 while C1 keeps
-  24/25. **But the schematic has no C29**, which means: the netlist and board disagree, schematic-parity
-  DRC will flag it, and — the real hazard — **the next "Update PCB from Schematic" will DELETE it**,
-  exactly like the U9 footprint revert. Needs a schematic symbol instance wired VS/GND (stub + global
-  label, the convention here), plus a BOM row and a line in `v4-schematic-sync-checklist.md`.
-  ⚠ Do not run Update-from-Schematic on the board until this lands.
-
-
-- [x] **[COPPER] NFC coil shorted-turn claim — CHECKED AND REFUTED**
-  _(2026-07-26; verified with shapely against the actual zone fills.)_ The copper audit's headline RF
-  finding — "GND forms a galvanically closed shorted turn encircling the NFC coil (F.Cu certain, 3-D
-  cage with B.Cu)" — **does not hold**. A shorted turn requires a *galvanically closed* loop, i.e. one
-  connected conductor forming a ring, so the rigorous test is whether the coil sits inside an interior
-  hole of a single connected GND component. Extracted all GND `filled_polygon` fills (F.Cu 2646.6 mm²
-  across 8 connected components, B.Cu 2878.1 mm² across 10) and tested every one: **`hole_contains_coil
-  = False` for all 18.** No closed ring on either layer. (My earlier parser missed these because zones
-  in this file carry `(net "GND")`, a name string, not `(net_name …)`.)
-  A straight-ray test is *not* a valid substitute and initially looked alarming — 0 of 720 rays escape
-  on B.Cu — but straight rays hitting scattered GND blobs says nothing about a closed loop, and the
-  hole test settles it. On F.Cu, 231 of 720 rays escape outright.
-  **What is real, and minor:** small GND intrusions into the winding aperture — F.Cu 10.6 mm² (3.2 %
-  of the aperture; a strip at y46.8–58.0 and a thin one along the north edge at y31.1–31.6) and B.Cu
-  6.2 mm² (1.9 %), most of the B.Cu figure being an artifact of the B.Cu keepout starting at x36.8
-  while the F.Cu one starts at x36.5. Worth an eyeball at fab time, not a redesign — and nothing like
-  a shorted turn. The coil aperture keepouts themselves are correct.
+- [x] **[SCH] C29 added to the schematic — board and netlist now agree** _(2026-07-26; DONE.)_
+  `solarglow:C29` lib symbol + instance at (410.21, 261.62), Reference C29, Value 100nF, Footprint
+  `solarglow:C1` to match the board, wired VS/GND with the project's stub-and-global-label pattern.
+  Verified paren-balanced, 24,909 CRLF, zero bare LF. **Remaining small task: add C29 to the BOM
+  master** (`solar-glow-drh-v4_0-BOM.xlsx`) — it should join the existing 100 nF 0402 line, same
+  part as C1, not a new row.
 - [ ] **[COPPER] U1 has one decoupling cap for two VDD/GND pin pairs**
   _(2026-07-26 copper audit; moderate effort.)_ Contrary to an explicit datasheet requirement, and it
   bears on the ADC noise floor — which now matters more than it used to, since the glow floor, the

@@ -91,6 +91,13 @@ labels above, so nothing extra to set.
 | **C26** | 10 uF | 1 VINT · 2 GND |
 | **C27** | 10 uF | 1 STO · 2 GND |
 | **C22** | 1 uF | 1 STO · 2 GND |
+| **C29** | 100 nF | 1 VS · 2 GND |  ← U1 pin-18/19 decoupling, added 2026-07-26
+
+> **⚠ Board-side additions need a schematic instance BEFORE the next sync.** C29 was placed and
+> routed on the board first, which left the schematic without it — and the schematic is upstream,
+> so the next *Update PCB from Schematic* would have DELETED it. Same trap as U9's `Footprint`
+> property and U7's DNP flag: three separate losses at this boundary. If a part is added in the
+> board editor, add the symbol instance before syncing.
 | **C23** | 2.2 uF | 1 VS · 2 GND |
 | **C24** | 100 nF | 1 STO_SNS · 2 GND |
 | **R15** | 2 M | 1 STO · 2 STO_SNS |
