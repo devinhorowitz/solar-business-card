@@ -91,6 +91,13 @@ labels above, so nothing extra to set.
 | **C26** | 10 uF | 1 VINT · 2 GND |
 | **C27** | 10 uF | 1 STO · 2 GND |
 | **C22** | 1 uF | 1 STO · 2 GND |
+| **C29** | 100 nF | 1 VS · 2 GND |  ← U1 pin-18/19 decoupling, added 2026-07-26
+
+> **⚠ Board-side additions need a schematic instance BEFORE the next sync.** C29 was placed and
+> routed on the board first, which left the schematic without it — and the schematic is upstream,
+> so the next *Update PCB from Schematic* would have DELETED it. Same trap as U9's `Footprint`
+> property and U7's DNP flag: three separate losses at this boundary. If a part is added in the
+> board editor, add the symbol instance before syncing.
 | **C23** | 2.2 uF | 1 VS · 2 GND |
 | **C24** | 100 nF | 1 STO_SNS · 2 GND |
 | **R15** | 2 M | 1 STO · 2 STO_SNS |
@@ -101,6 +108,10 @@ labels above, so nothing extra to set.
 Assign each new symbol the footprint the PCB already uses (so "Update PCB from Schematic" reports no
 footprint change): U8 = the QFN-28 land on the board, U9 = its SOT-23, passives = their 0402 lands,
 L2 / C25 / C26 / C27 / FB1 = whatever you re-landed them to.
+
+> As of 2026-07-26 the schematic and the board agree on **all 67** footprint assignments (U7 was the
+> last holdout — see TODO), and `scripts/check_consistency.py` now **fails** on any disagreement, so
+> a footprint drift is caught in CI rather than discovered as moved pads after a sync.
 
 ## D. Verify
 

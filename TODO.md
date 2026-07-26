@@ -9,16 +9,15 @@ addenda.
 
 _Board freeze status (updated 2026-07-25): the 2026-07 audit round reopened the
 netlist and it is now closing again — Q2/R18 (the cold-start-deadlock buffer) and
-the FRAM VS re-rail are placed, routed, and verified on the board; the only
-pending board edit is the U7 footprint-identity swap (+ DNP-flag clear). A PCB layout change still means
+the FRAM VS re-rail are placed, routed, and verified on the board; the U7
+footprint-identity swap and DNP clear have since landed too (2026-07-26). A PCB layout change still means
 a brace reprint, not a shell re-machine._
 
 _Completed & culled 2026-07-25 (see git history + design-notes addenda for the
 full reasoning): the AVR64DD28→AVR64EA28 family swap + firmware port; the U5 NFC
 and U6 load-switch (→TPS22917) silicon audits; the U7 FRAM DFN-repackage and the
-VS-rail back-power fix (schematic + firmware + board all landed — the U7
-footprint-identity swap and the FRAM bench-verify are still open, see the items
-above); the Q2/R18 cold-start-deadlock buffer (schematic + firmware + board); the
+VS-rail back-power fix (schematic + firmware + board all landed — the FRAM
+bench-verify is still open, see the items above); the Q2/R18 cold-start-deadlock buffer (schematic + firmware + board); the
 passive longevity/precision upgrades (X7R / AEC-Q200, 0603 & 0805 upsizes,
 thin-film dividers); the full live DigiKey/Mouser BOM sourcing pass; the
 SUN-threshold derivation and the solar-cell-thickness resolution; and the
@@ -26,16 +25,17 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
 
 ## Cross-domain (link two+ teams — easiest to forget)
 
-- [ ] **[SCH→PCB+ENCL] U7 FRAM footprint-identity swap + DNP clear + shell-pocket recheck**
-  _(sch + BOM + board land all DONE & verified — the DFN land is placed, routed, 0 unconnected;
-  what remains is the footprint identity, a stray flag, and the enclosure.)_ In KiCad: **Change
-  Footprint U7 → `solarglow:U7_DFN8`** (`PCB/fp-lib-table` registers the lib; reopen the project
-  first) — the board still carries the old `Package_DFN_QFN:DFN-8-1EP_6x5mm_P1.27mm_EP4x4mm` identity,
-  which the swap resolves. The **same step clears U7's stray DNP flag**: the #73 upload left U7
-  `(attr smd dnp)` — accidentally Do-Not-Populate — while the schematic says populate, so
-  Change-Footprint / Update-PCB re-syncs `dnp=no` (or untick it manually). Re-snap the 3 signal stub
-  ends to the new pad centers if needed, re-DRC (confirm both the "Do not populate settings differ"
-  and the footprint-mismatch warnings clear). **Enclosure knock-on:** U7 is now the 0.90 mm DFN (was
+- [x] **[TOOLING] `check_consistency.py` now guards the schematic↔board boundary**
+  _(2026-07-26; DONE.)_ Four losses happened at this seam (U9's Footprint property, U7's DNP
+  flag twice, C29 absent from the schematic, the U7 land mismatch). The checker now compares
+  board refdes against schematic refdes and fails on anything present only on the board — a
+  sync would DELETE those — and compares footprint assignments, since a mismatch MOVES pads.
+  The footprint check was a warning while U7 was open; **since 2026-07-26 it is a hard error**
+  (U7 is settled — see the PCB section).
+
+- [ ] **[ENCL] U7 shell-pocket recheck — the last piece of the FRAM repackage**
+  _(sch + BOM + board land + footprint identity + DNP flag are all DONE & verified; the DFN land is
+  placed, routed, 0 unconnected.)_ **Enclosure knock-on only:** U7 is now the 0.90 mm DFN (was the
   1.75 mm SOIC), so the backshell's dedicated 0.95 mm floor pocket is likely deletable — see the
   geometry items under Enclosure.
 
@@ -265,23 +265,43 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
 
 ## PCB — `PCB/solar-glow-drh-v4_0.kicad_pcb` / `.kicad_sch`
 
-- [x] **[COPPER] NFC coil shorted-turn claim — CHECKED AND REFUTED**
-  _(2026-07-26; verified with shapely against the actual zone fills.)_ The copper audit's headline RF
-  finding — "GND forms a galvanically closed shorted turn encircling the NFC coil (F.Cu certain, 3-D
-  cage with B.Cu)" — **does not hold**. A shorted turn requires a *galvanically closed* loop, i.e. one
-  connected conductor forming a ring, so the rigorous test is whether the coil sits inside an interior
-  hole of a single connected GND component. Extracted all GND `filled_polygon` fills (F.Cu 2646.6 mm²
-  across 8 connected components, B.Cu 2878.1 mm² across 10) and tested every one: **`hole_contains_coil
-  = False` for all 18.** No closed ring on either layer. (My earlier parser missed these because zones
-  in this file carry `(net "GND")`, a name string, not `(net_name …)`.)
-  A straight-ray test is *not* a valid substitute and initially looked alarming — 0 of 720 rays escape
-  on B.Cu — but straight rays hitting scattered GND blobs says nothing about a closed loop, and the
-  hole test settles it. On F.Cu, 231 of 720 rays escape outright.
-  **What is real, and minor:** small GND intrusions into the winding aperture — F.Cu 10.6 mm² (3.2 %
-  of the aperture; a strip at y46.8–58.0 and a thin one along the north edge at y31.1–31.6) and B.Cu
-  6.2 mm² (1.9 %), most of the B.Cu figure being an artifact of the B.Cu keepout starting at x36.8
-  while the F.Cu one starts at x36.5. Worth an eyeball at fab time, not a redesign — and nothing like
-  a shorted turn. The coil aperture keepouts themselves are correct.
+- [x] **[SCH/PCB] U7 footprint identity — DISARMED; the two lands were the same land**
+  _(2026-07-26; DONE.)_ The trap was real but the geometries were not actually in conflict. Comparing
+  every stored coordinate, the board footprint was **exactly the library footprint, Y-mirrored (U7 is
+  on B.Cu, the `.kicad_mod` declares `F.Cu`) and translated +0.15 mm in X** — pads *and* silk *and*
+  courtyard *and* fab, uniformly. The apparent "asymmetric X" (−1.95 / +2.25) was that same +0.15
+  offset on a symmetric ±2.1 land, and the "reversed Y order" was just the back-side flip. So the
+  RAMXEED-verified land and the library land never disagreed; only the footprint's local origin did.
+  Resolved by adopting the library frame with an origin compensation, so **no copper moved**:
+  every local X −0.15, footprint origin 28.059412 → **28.209412** (which is the true package centre),
+  `lib_id` → `solarglow:U7_DFN8`. Verified by recomputing the absolute position of all 26 pad and
+  graphic vertices against the pre-change file: **zero changed**. The board footprint is now
+  bit-identical to a fresh library placement at that origin, so Update-from-Library is a no-op and
+  Update-from-Schematic-with-footprint-replacement is safe for U7. Schematic and board now agree on
+  all 67 footprint assignments, and `check_consistency.py`'s footprint check is an **error**, not a
+  warning, as of this change.
+
+- [ ] **[PCB — housekeeping, low priority] 46 `solarglow:<refdes>` lib_ids have no backing
+  `.kicad_mod`** _(noticed 2026-07-26 while settling U7.)_ The board (and the matching schematic
+  `Footprint` properties) name footprints like `solarglow:C1`, `solarglow:R10`, `solarglow:U1` —
+  one per refdes — but `PCB/solarglow.pretty/` contains only four files
+  (`U7_DFN8`, `U9_SOT23_5`, and the two SCHURTER cells). Nothing is broken today: a `.kicad_pcb`
+  stores each footprint's full geometry inline, so the lib_id is only consulted by
+  *Update Footprints from Library* / footprint replacement — which simply finds nothing and leaves
+  those parts alone. Two consequences worth knowing: (1) the sync trap this repo has been burned by
+  is **narrower than it looks** — footprint replacement can only actually move the parts whose
+  lib_id resolves, i.e. U7, U9, and the stock-library parts; (2) if anyone ever creates a file at
+  one of those 46 names, it silently becomes authoritative for that refdes. Cheap fix if it ever
+  matters: repoint them at the real stock-library lands (`Capacitor_SMD:C_0402_1005Metric`, etc.) in
+  the schematic and re-sync. Not urgent — flagged so it is a known state, not a surprise.
+
+
+- [x] **[SCH] C29 added to the schematic — board and netlist now agree** _(2026-07-26; DONE.)_
+  `solarglow:C29` lib symbol + instance at (410.21, 261.62), Reference C29, Value 100nF, Footprint
+  `solarglow:C1` to match the board, wired VS/GND with the project's stub-and-global-label pattern.
+  Verified paren-balanced, 24,909 CRLF, zero bare LF. **Remaining small task: add C29 to the BOM
+  master** (`solar-glow-drh-v4_0-BOM.xlsx`) — it should join the existing 100 nF 0402 line, same
+  part as C1, not a new row.
 - [ ] **[COPPER] U1 has one decoupling cap for two VDD/GND pin pairs**
   _(2026-07-26 copper audit; moderate effort.)_ Contrary to an explicit datasheet requirement, and it
   bears on the ADC noise floor — which now matters more than it used to, since the glow floor, the
@@ -363,20 +383,23 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   BOM row survives. Every part's sch and pcb flags now agree. Schematic edited byte-safe: 24,650 CRLF
   line endings preserved, zero bare LF. PCB/README's machine-place list corrected to match (SJ1 removed,
   Q2/R18 added).
-- [ ] **[PCB, PRE-FAB] LED land pattern D2–D5: pads sit 0.25 mm too far inward** _(2026-07-25 LED audit;
-  full derivation in the design-notes LED-audit addendum)._ The `solarglow:D2..D5` pads are at
-  **C-C 2.60 mm** (centers ±1.30) and **0.65 mm wide**; the ams-OSRAM reverse-mount recommended land
-  (E062 3010 19B-01, datasheet p.13) is **C-C 3.10 mm** (centers ±1.55) and **0.50 mm wide**. Root cause:
-  the drawing's `2.6` is the **inner-edge-to-inner-edge** span, not a pitch — confirmed by the outer span
-  `3.6` ((3.6−2.6)/2 = 0.50 pad) and decisively by the stencil view (`2.65`/`0.65` = a 0.025 mm per-side
-  reduction off 2.6/0.7, which only parses if 2.6 is an inner span). Consequence vs the real terminal
-  (spans r 1.25→1.70 per p.12): our pad covers **83 %** of the terminal with a **−0.075 mm toe deficit**
-  (the terminal overhangs the pad's outer edge) and protrudes 0.075 mm into the Ø2.1 optical aperture;
-  the correct land covers 89 % with a +0.10 mm toe. **Not fatal — it would still solder** — but it is a
-  real land deviation on the card's marquee feature, and the board is not fabbed yet, so fix it now.
-  **Fix:** move each pad to **X = ±1.55** (keep Y = ∓0.375–0.40 — the diagonal stagger is CORRECT and
-  matches the package's diagonal terminals), optionally narrow to 0.50 mm; then re-route the 8 stubs
-  (ANODE + K2/K3/K4/K5) and re-DRC. _(Stagger was audited and is right — do not "fix" it.)_
+- [x] **[PCB] LED land pattern D2–D5 corrected — pads to X = ±1.55** _(2026-07-26; DONE.)_
+  A and K moved from ±1.300 to ±1.550 local (C-C 2.60 → 3.10 mm), ±0.4 stagger kept — the
+  stagger was always correct, the terminals are diagonal. Applied identically to all four
+  footprints. **No re-routing was needed**: the old trace endpoints sat at the former pad
+  centres, 0.25 mm away, which still falls inside the 0.65 mm-wide pads at their new
+  positions — verified all 8 pads retain a trace endpoint within their bounds.
+
+- [ ] **[PCB — needs KiCad, 2 min] Refill the GND_B zone after the LED land move** _(2026-07-26.)_
+  The pad move was made at file level, so the zone fill polygons stored in the `.kicad_pcb` still
+  describe the *old* pad positions. Exactly two of the eight moved pads — **D2 pad A** (moved outward
+  to 14.550, 44.300) and **D5 pad K** (outward to 36.250, 43.500), the two ends of the LED row — now
+  land inside the stored `GND_B` B.Cu pour, ~0.091 mm² each; the other six stayed clear (checked all
+  eight against the stored fill polygon). CI reports them as two `clearance ... actual 0.0000 mm`
+  errors against `Zone 'GND_B'`. A refill carves the clearance void and both clear. **This also
+  matters beyond DRC:** KiBot plots the gerbers from the stored fill, so the fab copper is stale until
+  the refill is saved. Open the board → Edit → Fill All Zones → save. (Same visit as the D2 anode
+  reroute below.)
 
 - [ ] **[PCB, PRE-FAB] D2's ANODE trace crosses D2's own light window** _(2026-07-25 LED audit)._ On
   B.Cu — the emitting face — the ANODE segments `(14.8, 44.3)→(16.176, 42.924)` and
@@ -385,6 +408,25 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   **D3/D4/D5 are clear** — they route their pads straight out of the window, which is the documented
   rule (design-notes: LED anodes trace out of the window). Re-route D2's anode to exit the window the
   way its siblings do. Verified numerically against the committed board.
+  **Now also a hard DRC error, not just an optical one:** with D2's K pad moved out to X = +1.55 the
+  ANODE run and pad K [K2] overlap — CI reports it as `shorting_items (nets K2 and ANODE)`, both
+  directions. The reroute fixes the short and the shadowing in one move.
+
+- [x] **[COPPER] VINT / EN_STO_CH necked back to 0.15 mm through the U8 pocket** _(2026-07-26; DONE.)_
+  The 2026-07-26 board upload widened 39 segments from 0.15 to 0.20 mm — VINT ×24, EN_STO_CH ×12, plus
+  one each on VS / STO_SNS / LX_LOUT. That broke `clearance-hard-floor` (0.126 mm) in **11 places**
+  around U8 / R17 / C26, and it turned PCB CI red for three commits before anyone noticed. The cause
+  is arithmetic, not routing: +0.05 mm of width is +0.025 mm per side, and every violation came back
+  at 0.101–0.104 mm — i.e. exactly 0.022–0.025 mm short of the floor. The neighbouring copper had been
+  placed for the board's documented uniform 0.15 mm trace/space (see the `.kicad_dru` header), so
+  0.20 mm does not fit there. 0.101 mm is also right *at* PCBWay's stated 0.1 mm floor with zero
+  process margin. Fixed by necking **only the 9 congested segments** (8 VINT + 1 EN_STO_CH, matched
+  one-to-one against the CI violation list) back to 0.15 mm — standard practice for a run passing
+  between pads — and leaving the widening on the other 30 segments, where it is legal and harmless.
+  **Confirmed by CI at `b674f68`: DRC errors 15 → 4.** All 11 cleared. The 4 that remain are exactly
+  the two KiCad-requiring items above — 2× `shorting_items` for D2's anode/K2 short, and 2×
+  `clearance 0.0000` for D2.A / D5.K against the stale `GND_B` fill. **PCB CI stays red until both
+  are done**, and the D2 reroute forces a refill anyway, so they are one sitting.
 
 - [ ] **PCBWay orders** — confirm both replies sent (`W567099ASH69` bare fab, `T-H70W567099A` PCBA);
   get the LED package dimension answer (1.25 vs 1.9 mm) and the merged PCB+PCBA total; ensure the PO
@@ -445,6 +487,19 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   most likely delete the pocket. `…-backshell-…-cad.py` still carries `U2_POS = (30.10, 37.64)` for the
   deleted part; re-key/rename or remove, then regen the STEP/STL and update the derived drawing / README
   NOTE-7 pocket-description copies. PCB is frozen truth.
+
+- [ ] **[geometry] U7's 3D model is the wrong package and is rotated 90°** _(noticed 2026-07-26 during
+  the footprint-identity fix — anything that reads part height from the board STEP is reading this.)_
+  The board footprint still points at
+  `${KICAD10_3DMODEL_DIR}/Package_DFN_QFN.3dshapes/DFN-8-1EP_6x5mm_Pitch1.27mm.step`, left over from
+  the old `Package_DFN_QFN` identity. Two problems: it is a **6 mm(X) × 5 mm(Y)** body while the land is
+  **5 mm(X) × 6 mm(Y)** (so it renders rotated 90°, overhanging ~0.5 mm one way and under-filling the
+  other), and it models an **exposed pad** the LCC-8P-M05 does not have. `solarglow:U7_DFN8` declares
+  no model at all, so an Update-from-Library would strip U7 from the 3D/STEP export entirely — which
+  is worse, since a missing part reads as "no collision". Fix properly before the enclosure pass:
+  either add a correct model to `U7_DFN8.kicad_mod` or substitute a generic 5×6×0.9 mm block. The
+  reference is deliberately left in place until then. Height impact is small (the KiCad DFN model is
+  ~0.9 mm, which happens to match), so this is a footprint/outline error, not a height error.
 
 - [ ] **[geometry] Repoint the brace generator to the v4 board + fill `part_height`** _(audit find)._
   `…-diffuser-brace-cad.py` line 54 hardcodes a v3_0 PCB path (an absolute path that also doesn't
