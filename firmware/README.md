@@ -347,7 +347,7 @@ the indoor harvest number and therefore the achievable LED duty; treat the
 tunables below as starting points until that measurement lands.
 
 The ADC reference is still run **on demand** so it cannot add standing current:
-`sense_adc_init` selects the internal 2.500 V reference and leaves the ADC
+`sense_adc_init` selects the internal 2.048 V reference and leaves the ADC
 **disabled**, and every read enables the ADC, converts, then disables it again —
 no ADC current with `ENABLE = 0`, and the reference is released with it. On the
 EA's newer ADC the reference/analog start-up is **hardware-sequenced** into each

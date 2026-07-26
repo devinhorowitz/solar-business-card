@@ -216,17 +216,31 @@
  * voltage this high indicates genuine strong sun lifting the node, yet stays below
  * Voc. It also sits far above indoor light (VIN ~0.8-2.1 V), and the caps-full
  * co-gate rejects the bright-indoor corner (indoor rarely tops the caps AND lifts
- * VIN this high at once). ADC: VSENSE pin = VIN/2 vs the 2.500 V ref, so 3.60 V ->
- * 2950 counts, which sense.c folds at compile time (SUN_COUNT) so the poll compares
- * raw, no per-poll mV math. */
+ * VIN this high at once). ADC: VSENSE pin = VIN/2 vs the 2.048 V ref, so 3.60 V ->
+ * 3600 counts, which sense.c folds at compile time (SUN_COUNT) so the poll compares
+ * raw, no per-poll mV math. (Ref changed from 2.500 V in the 2026-07-26 audit -- see
+ * the ADC_VREF_MV block in sense.c; the fold tracks the constant automatically.) */
 #define SWEEP_SUN_VIN_MV   3600
 
-/* SWEEP_CAPS_FULL_MV -- the sweep's HARD safety gate: sweep only when the rail VS is
- * at/above this (caps full). Independent of the clamp and of SWEEP_SUN_VIN_MV, so the
- * animation can never draw the pack down -- it only ever spends harvested charge
- * already banked in the tank. Read STO via the R15/R16 divider on the ADC STO_SNS
- * channel (PD1/AIN1), sense_caps_full(). */
-#define SWEEP_CAPS_FULL_MV 3300
+/* SWEEP_CAPS_FULL_MV -- the sweep's HARD safety gate: sweep only when the TANK (STO)
+ * is at/above this. Read via the R15/R16 divide-by-3 on PD1/AIN1, sense_caps_full().
+ *
+ * RE-DERIVED 2026-07-26 (audit): was 3300, which was a STALE v3 VALUE and no longer a
+ * fullness criterion at all. In v3 the sensed rail WAS the supercap node, held by the
+ * (now deleted) TLV3011B clamp at ~3.5 V, so 3300 mV was ~94% of full -- a real "caps
+ * full" test. v4 re-pointed this channel to STO, whose ceiling is the AEM10300's
+ * VOVCH = 4.65 V (Table 8, STO_CFG[3:0] = L,L,H,H "Dual-cell supercapacitor", matching
+ * the board straps). The other three floors were re-derived for the STO range during
+ * that rework; this one was carried over unchanged. At 3300 mV the tank is only 71% of
+ * VOVCH and, since energy goes as V^2, just 50% of stored charge-energy -- so the gate
+ * that documented itself as ensuring the animation "can never draw the pack down" in
+ * fact permitted it to spend down to half the tank, repeatedly (main.c re-arms the
+ * sweep every poll while the light holds).
+ * 4400 mV = 94.6% of VOVCH: the band where the AEM has essentially finished charging
+ * and the surplus really is free, which is what the comment always claimed. Keep it
+ * BELOW VOVCH itself -- charging tapers as STO approaches 4.65 V, and a gate at the
+ * ceiling would rarely arm. */
+#define SWEEP_CAPS_FULL_MV 4400
 
 /* Sun diary: bank lifetime whole-HOURS of strong sun (the SENSE_SUN_bm tell the poll
  * already reads) into EEPROM, so a card that lives on harvested light also records how

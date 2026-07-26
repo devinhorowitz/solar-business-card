@@ -59,6 +59,55 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
 
 ## Firmware — `firmware/`, `firmware/README.md`
 
+- [ ] **[BENCH] ADC reference moved 2.500 V -> 2.048 V — re-verify every gate on silicon**
+  _(2026-07-26 deep audit; fix LANDED.)_ The 2.500 V reference is spec'd only for VDD >= 3.0 V
+  and `VVREF` max is VDD-0.4, so below ~2.9 V it sagged and every rail gate read HIGH — the
+  2750 mV glow floor actually tripped at ~2582 mV, **below the 2.60 V BOD**. Now on 2.048 V
+  (valid to VDD 2.55 V, ±2%). Bench: (a) confirm measured STO/VIN mV against a meter across
+  2.6–4.65 V; (b) confirm the glow floor now genuinely stops the glow above the BOD;
+  (c) confirm `sense_vin_mv()` saturation above VIN 4.096 V is acceptable in practice.
+
+- [ ] **[BENCH] SWEEP_CAPS_FULL_MV 3300 -> 4400 — confirm the sweep still arms**
+  _(2026-07-26 deep audit; fix LANDED.)_ 3300 was a stale v3 value (when the sensed rail was the
+  clamped ~3.5 V supercap node); against STO's VOVCH 4.65 V ceiling it was only 71% of full /
+  50% of energy, so the "hard safety gate" allowed spending half the tank, re-armed every poll.
+  Bench: confirm a real card in strong sun actually reaches 4400 mV STO and plays the sweep —
+  if the AEM's charge taper makes 4400 unreachable in practice, tune down toward ~4300, but do
+  NOT return to a value that is not a fullness criterion.
+
+- [ ] **[SOURCING] Retire the unsourced numbers in comments** _(2026-07-26 deep audit.)_ Each is
+  documentation-only but each is quoted as fact: (a) the **"~13 ms EEPROM write"** in six places
+  (board.h x2, sense.c x3, main.c) — the DS says 2 ms write + 2 ms erase; (b) `adxl367.h`'s
+  **0.89 µA** is spec'd at a **2.0 V supply**, not our 3.3 V; (c) **"256 B"** EEPROM — the part
+  has **512 B**; (d) **"~21 J reserve"** is 5.5 V nameplate (VOVCH-capped ~15 J stored, ~9.6 J
+  spendable above the glow floor); (e) `board.h:49`'s F_CPU rationale cites an IDD at 1 MHz that
+  the datasheet does not publish (lowest row is 5 MHz). Fix the comments to cite or drop.
+
+- [ ] **[BENCH/DESIGN] Sun diary counts POLLS, not TIME — and is least accurate while measuring**
+  _(2026-07-26 deep audit.)_ `SUN_POLLS_PER_HOUR` assumes one poll == POLL_PERIOD_S exactly, but
+  (a) OSC32K total error is <1% only at 25 °C/3.0 V and **<10% over the full range** (Table 35-10),
+  and (b) the in-sun sweep fires on the same condition the diary counts and stretches the loop
+  period, so a banked "hour" is long by the sweep duty in exactly the state being logged. Decide:
+  either re-label the diary as approximate in the docs/NDEF, or count elapsed PIT ticks
+  independently of loop servicing. Do not present it as a measurement until one of those is done.
+
+- [ ] **[BENCH] The MCU energy budget cannot be given a worst case from current sources**
+  _(2026-07-26 deep audit.)_ DS40002443**A** is a *Preliminary* datasheet: its power tables state
+  "not tested and are for design guidance only", every sleep-current Max column is **empty**, and
+  there is no 1 MHz IDD row (lowest is 5 MHz). So the standing-current figure is a typ-only
+  extrapolation. This must be **measured**, not derived, before the energy budget is called
+  closed — and re-checked against a non-preliminary datasheet revision if one ships.
+
+- [ ] **[EFFICIENCY] Quantified idle-draw levers, if the bench budget comes in tight**
+  _(2026-07-26 deep audit; all measured-on-paper, none applied.)_ Ranked: `POLL_PERIOD_S` 1 -> 2
+  halves the ~1 Hz housekeeping cost; `FRAM_RESLEEP_EVERY_POLL` -> 0 removes the defensive re-park
+  (already ~halved by dropping its trailing busy-delay); `adxl367_read_z()` runs every poll though
+  dormancy only needs 180 s of evidence; the TWI/`_delay_us` waits busy-spin in ACTIVE where they
+  could IDLE-sleep. Also **hardware, not firmware**: the R15/R16 STO divider is 3 MΩ across the
+  tank = **1.1–1.55 µA continuously**, comparable to the whole MCU standing budget and larger
+  than the accelerometer — worth revisiting if the budget is tight.
+
+
 - [ ] **[BENCH] NFC Capability Container write — confirm the tag survives at 0x55**
   _(2026-07-26 firmware audit; fix LANDED in `nfc_write_cc()`.)_ The tag ships with CC = all-00h
   (datasheet 8.3.10), so provisioning now writes `E1 10 6D 00` into I2C block 0 — the block whose

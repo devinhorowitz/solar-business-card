@@ -1498,3 +1498,106 @@ build — caught live when a twi.h change didn't rebuild.
 every one of these fixes is reasoning from datasheets, not from a scope trace. The new bench items
 this audit created — confirm the tag still ACKs at 0x55 after the CC write, and confirm the bus-clear
 path on a deliberately-wedged bus — are in TODO.
+
+---
+
+## Addendum — deep firmware audit: efficiency, stability, provenance (2026-07-26)
+
+Round 1 asked "is it correct?". This round asked "is it *efficient*, is it *stable over
+years*, and can every constant and compromise **name its source**?" Four lanes (quantified
+energy budget / efficiency / long-run stability / source provenance), adversarial verifiers
+on every major, then hand re-derivation of each survivor against the primary source before
+any edit. 54 raised, 44 survived verification, 10 refuted. Four fixed in code here; the
+rest are documentation and bench items, filed in TODO.
+
+### The one that mattered: the brownout guard was inverted
+
+`sense.c` measured every rail gate against the internal **2.500 V** reference. DS40002443A
+Table 35-17 constrains it two ways: it is specified only for *"3.0V <= VDD <= 5.5V"* (±3 %,
+−40..+85 °C), and separately `VVREF` carries **Max = "VDD-0.4" V**.
+
+This card is *designed* to run below 3.0 V — the glow floor is STO 2.75 V and the BOD does
+not trip until 2.60 V. At VDD = 2.75 V the second constraint caps the reference at 2.35 V,
+so a 2.500 V selection **cannot be delivered**. And the error direction is the dangerous
+one: counts scale as `Vin/VREF`, so a sagging reference makes a **low rail read high**.
+Worked through with the actual fold (`RAIL_COUNT` = 1502): at a sagged 2.347 V reference,
+STO 2750 mV produces 1600 counts, and the floor does not actually trip until **STO ≈ 2582
+mV — below the 2.60 V BOD typ falling**. The 150 mV guard band was not merely eroded, it was
+inverted: a glow could drive the part into a brownout reset mid-animation, which is the
+precise failure `VS_GLOW_FLOOR_MV` exists to prevent.
+
+Fixed by moving to the **2.048 V** reference, which is strictly better here on every axis:
+specified for *"2.55V <= VDD <= 5.5V"* — valid across this card's whole range, including
+below the BOD trip — at a **tighter ±2 %**, and it still clears both dividers (STO 4.65 V/3
+= 1.55 V; VIN/2 = 2.048 V). Every threshold is folded from `ADC_VREF_MV` at compile time, so
+the constant change re-derived all five gates coherently; verified in the disassembly
+(`sense_caps_full` compares against 0x0B76 = 2934, matching the hand calculation exactly).
+The one accepted cost is documented in place: `sense_vin_mv()` now saturates above VIN
+4.096 V, 54 mV under the panel's 4.15 V Voc — it affects only a human-readable readout of an
+open-circuit node, never a gate.
+
+### A stale constant that made a "hard safety gate" not one
+
+`SWEEP_CAPS_FULL_MV = 3300` documented itself as the gate that guarantees the sun sweep
+"can never draw the pack down." It was a **v3 value**: back then the sensed rail *was* the
+supercap node, clamped at ~3.5 V, so 3300 mV really was ~94 % of full. v4 re-pointed the
+channel to STO, whose ceiling is the AEM10300's VOVCH = 4.65 V (Table 8, `STO_CFG[3:0]` =
+L,L,H,H "Dual-cell supercapacitor" — which I confirmed against the actual board straps, not
+the docs). The other three floors were re-derived during that rework; this one was carried
+over. At 3300 mV the tank is 71 % of VOVCH and, since energy goes as V², only **50 % of
+stored energy** — and `main.c` re-arms the sweep every poll, so the gate permitted spending
+down to half the tank, repeatedly. Raised to **4400 mV** (94.6 % of VOVCH), deliberately
+below VOVCH itself so it still arms as charging tapers.
+
+### Two smaller ones, both quantified before touching
+
+- `fram_sleep()` ran its 600 µs `_delay_us` after the *final* attempt as well as between
+  attempts. The common case on this card is the per-poll defensive re-park of an already-
+  sleeping part, which NACKs both tries — so that trailing delay was **600 µs of active-mode
+  busy-spin every poll, forever, for nothing**. Removed; the retry keeps its full tREC.
+- A reader field that never leaves never produces the field-leave edge, so the FD handler's
+  charge-disable stayed latched: a phone left on the card, or an always-on reader in a
+  drawer, left the card **unable to harvest indefinitely** while lying in the very light it
+  needed. The poll now releases the latch if the field is still held a full tick later — a
+  read is milliseconds; a field still present a second later is furniture.
+
+### Provenance: what the sources will and will not support
+
+The blunt finding is that **the MCU half of the energy budget cannot be given a worst case
+from the available sources at all.** DS40002443**A** is stamped *"Preliminary Data Sheet"*,
+its power tables carry *"These parameters are not tested and are for design guidance only"*,
+every Max column for sleep current is empty, and there is no 1 MHz row — the lowest published
+`IDD` is 5 MHz, so the card's own operating point is an extrapolation. Any budget built here
+is provisional by the source's own admission. That belongs in the bench plan, not in a
+comment asserting microamps.
+
+Specific claims that do not survive contact with their sources, now filed:
+- `adxl367.h`'s 0.89 µA is specified *"at 100 Hz ODR, **2.0 V supply**"*; the part runs at
+  3.3 V and the figure is quoted with no condition attached.
+- The **"~13 ms EEPROM write"** that anchors `EE_WRITE_FLOOR_MV` and every logger's
+  corruption-window argument appears in six places and matches nothing in the datasheet,
+  which specifies 2 ms byte write + 2 ms byte erase.
+- `board.h`'s **"~21 J reserve"** is the 5.5 V cell nameplate. VOVCH caps STO at 4.65 V, so
+  stored energy is ~15 J and the part actually spendable above the glow floor is ~9.6 J —
+  the comment overstates what a stray glow costs by roughly 2×.
+- The internal EEPROM is described as **"a 256 B black box"**; the AVR64EA28 has **512 B**.
+- `sense.h` still described the gates as reading a **"VDD/10" channel** that v4 deleted.
+- OSC32K total error is *"<1 %"* only at 25 °C/3.0 V and **"<10 %" over the full range** —
+  it clocks both the poll and the watchdog, so the sun diary's "hours" carry ±10 % in
+  exactly the hot-car and draining-rail conditions the design notes worry about. Worse, the
+  diary counts **polls serviced, not elapsed time**, and the sweep it co-triggers with
+  stretches the loop period — so the error is largest precisely while it is measuring.
+
+### Verified clean, with the derivation, so it need not be re-litigated
+
+The LDO margin holds: `VDO` is specified at **200 mA** (270 mV max) and this card's LDO load
+is microamps-to-milliamps, so dropout is single-digit mV and STO ≈ VS below 3.3 V. The AEM
+straps read L,L,H,H from the board file → VOVDIS 0.20 / VCHRDY 1.00 / VOVCH 4.65, confirming
+`board.h`'s "STO (0.2..4.65 V)"; `EN_HP` tied to GND correctly selects low-power mode for
+indoor harvesting. And the Q2 buffer is now provably *necessary* rather than merely prudent:
+abs-max on `EN_STO_CH` is **−0.3 V to 2.75 V**, so a 3.3 V push-pull pin could never have
+driven it directly.
+
+One note of discipline: the tap path converts STO twice (`sense_glow_peak`, then the tally's
+rail gate). It is ~5 orders of magnitude below the glow it precedes, so it was measured and
+**deliberately left alone** — removing it would buy nothing and cost plumbing.

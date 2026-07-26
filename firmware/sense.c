@@ -27,9 +27,35 @@
 #include "board.h"
 #include "sense.h"
 
-/* 2.500 V ADC reference -> mV per LSb at 12-bit = 2500/4096. We compute in
- * integer microvolts-ish by scaling: mv = res * 2500 / 4096. */
-#define ADC_VREF_MV   2500UL
+/* ADC reference -> mV per LSb at 12-bit = ADC_VREF_MV/4096. Every threshold in
+ * this file is folded from this constant at compile time, so the reference and
+ * the thresholds can never drift apart.
+ *
+ * WHY 2.048 V AND NOT 2.500 V (2026-07-26 audit -- this was a SAFETY defect).
+ * DS40002443A Table 35-17 constrains the internal references two ways:
+ *   - the 2.500 V reference is specified only for "3.0V <= VDD <= 5.5V" (+/-3%,
+ *     -40..+85 C; +/-5% to +125 C), and
+ *   - VVREF "Internal voltage reference" carries Max = "VDD-0.4" V.
+ * This card is DESIGNED to operate below 3.0 V: the glow floor is STO 2.75 V and
+ * the BOD does not trip until 2.60 V typ. At VDD = 2.75 V the second constraint
+ * caps the reference at 2.35 V, so a 2.500 V selection cannot be delivered -- it
+ * sags. A sagging reference inflates every count (count = Vin/VREF * 4096), which
+ * makes a LOW rail read HIGH: the exact wrong direction. Worked through, the
+ * 2750 mV glow floor actually tripped at ~2582 mV of STO -- BELOW the 2.60 V BOD
+ * -- so the brownout guard was inverted and a glow could drive the part into a
+ * reset mid-animation, precisely the failure VS_GLOW_FLOOR_MV exists to prevent.
+ * The 2.048 V reference is specified for "2.55V <= VDD <= 5.5V" at a TIGHTER
+ * +/-2%, i.e. valid across this card's entire operating range (it stays in spec
+ * below the BOD trip), and it still clears every divider's full swing:
+ *   STO  4.65 V (VOVCH) / 3 = 1.55 V  <  2.048 V   -- no clipping
+ *   VIN  4.096 V         / 2 = 2.048 V             -- see the caveat below
+ * CAVEAT: VSENSE (VIN/2) now saturates above VIN = 4.096 V, just under the
+ * SM141K06TF's 4.15 V Voc. Nothing that matters is affected -- the sun gate is
+ * SWEEP_SUN_VIN_MV 3600 (pin 1800 mV) and LIGHT_THRESH_MV 400 -- only the
+ * human-readable sense_vin_mv() readout flattens in the last 54 mV below Voc,
+ * a node that is only ever near Voc at open circuit. Do NOT "fix" that by going
+ * back to 2.500 V: the rail gates matter and the Voc readout does not. */
+#define ADC_VREF_MV   2048UL
 
 /* ---------- ADC (AVR-EA model: PRESC in CTRLB, REFSEL in CTRLC, SAMPDUR in
  * CTRLE, mode+start in COMMAND; reference settle is hardware-sequenced) ---------- */
@@ -40,10 +66,12 @@ void sense_adc_init(void)
                                                 * (2 us period, in spec). DIV4
                                                 * also legal, needlessly slow. */
 
-    /* Reference: internal 2.500 V, selected in the ADC itself on the EA. It
-     * powers up with the ADC per conversion and is released when the ADC is
-     * disabled (LOWLAT stays 0 = no standing analog current). */
-    ADC0.CTRLC   = ADC_REFSEL_2V500_gc;
+    /* Reference: internal 2.048 V (NOT 2.500 V -- see ADC_VREF_MV above; the
+     * 2.500 V option is out of spec below VDD 3.0 V and this card runs to 2.6 V).
+     * Selected in the ADC itself on the EA. It powers up with the ADC per
+     * conversion and is released when the ADC is disabled (LOWLAT stays 0 = no
+     * standing analog current). */
+    ADC0.CTRLC   = ADC_REFSEL_2V048_gc;
 
     /* long sample time: the VSENSE divider is 1M//1M ~ 500k source impedance,
      * far above the SAR's comfort zone, so stretch acquisition. C5 holds the
@@ -329,7 +357,7 @@ int16_t sense_temp_c(void)
 {
     ADC0.CTRLC = ADC_REFSEL_1V024_gc;                       /* temp-sensor reference (EA: 1.024 V) */
     uint16_t raw = adc_read_raw(ADC_MUXPOS_TEMPSENSE_gc);   /* 12-bit, right-adjusted */
-    ADC0.CTRLC = ADC_REFSEL_2V500_gc;                       /* restore for rail/light reads */
+    ADC0.CTRLC = ADC_REFSEL_2V048_gc;                       /* restore for rail/light reads (see ADC_VREF_MV) */
     if (raw == 0) return INT16_MIN;                         /* stuck ADC -> sentinel (max logger ignores) */
     int32_t offset = (int16_t)SIGROW.TEMPSENSE1;            /* signed offset correction */
     int32_t slope  = (int16_t)SIGROW.TEMPSENSE0;            /* signed gain/slope correction */
