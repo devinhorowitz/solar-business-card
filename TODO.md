@@ -59,6 +59,22 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
 
 ## Firmware — `firmware/`, `firmware/README.md`
 
+- [ ] **[BENCH/DESIGN] SWEEP_SUN_VIN_MV measures the wrong thing — retune or retire it**
+  _(2026-07-26 PCB audit; board.h comment already corrected in full, constant deliberately left
+  at 3600 pending this decision.)_ The AEM10300 does not let SRC float to a light-dependent
+  voltage: while charging it **regulates SRC to 0.80 × Voc** (R_MPP[2:0] = H,L,L → 80%, Table 9,
+  read off the board straps). Reaching 3600 mV would need Voc ≥ 4500 mV, above the SM141K06TF's
+  4.15 V — so the SUN flag is unreachable while charging in ANY light. It sets only when the tank
+  is full (DCDC off, SRC high-Z → Voc, which also saturates the 2.048 V ref) or during the 70.8 ms
+  MPP-evaluation window every 4.5 s (T_MPP = H,L, Table 10) — a 1.6% duty artifact.
+  Consequences: (a) the sweep's two co-gates are really one condition, so the sweep still behaves
+  correctly but for the wrong stated reason; (b) **the sun diary does not bank sun-hours** — it
+  banks caps-full time plus that 1.6% artifact, which is a second independent error on top of the
+  poll-counting one already filed. Decide at the bench: set the threshold below 0.8 × Voc
+  (~3000–3200 mV) so it genuinely discriminates bright from dim while charging, or drop the
+  co-gate and re-scope the diary to what it actually measures.
+
+
 - [ ] **[BENCH/CALIBRATION] VS_GLOW_FLOOR_MV vs the STO-channel accuracy stack-up**
   _(2026-07-26 pass 4; the highest-value open firmware item.)_ Pass 3 removed the *systematic*
   error (the 2.500 V reference sagged below its 3.0 V spec floor and inverted the guard). What
@@ -218,6 +234,28 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   V2; a kind reel just looks better. (LED-audit addendum, 2026-07-25.)
 
 ## PCB — `PCB/solar-glow-drh-v4_0.kicad_pcb` / `.kicad_sch`
+
+- [ ] **[BOARD — FAB CORRECTNESS] U7 is flagged DNP but is a fitted, firmware-required part**
+  _(2026-07-26 PCB audit; still open from the earlier sift.)_ `U7` (MB85RC512TY FRAM) carries
+  `(attr smd dnp)` in the .kicad_pcb. It is **not** `exclude_from_bom`, so it sits in the BOM but
+  is marked do-not-populate — kibot's placement/assembly output will tell the assembler to skip
+  it. That contradicts the whole 2026-07-23 back-power fix (U7 re-railed to always-on VS) and the
+  firmware, which calls `fram_sleep()` unconditionally at boot and documents it as
+  "POWER-CRITICAL even headless". Failure mode is quiet: the driver is NACK-tolerant by design,
+  so a missing part logs nothing and the card just silently has no FRAM. **Clear the DNP attr on
+  U7.** (Contrast `C9`, which is correctly `smd dnp` — the antenna trim cap is genuinely no-fit
+  until the coil is tuned.)
+
+- [ ] **[BOARD — FAB CORRECTNESS] SJ1 is meant to be DNP but has no DNP attribute**
+  _(2026-07-26 PCB audit.)_ `SJ1` has `(attr smd)` and encodes its intent only in the Value text:
+  `"DNP (was 0R VDDIO2 tie)"`. Automated BOM/placement output reads the attribute, not the value
+  string, so SJ1 reads as a part to place — with a nonsense value. It bridges **VS ↔ VDDIO2**
+  (MCU pin 10 / PD0), and `board.h` states "SJ1 = DNP so it floats -> held by internal pull-up".
+  If it were ever populated, PD0 would be tied to VS: electrically benign (the firmware's pull-up
+  and VS are both high, no conflict, no current), but board.h's stated premise would be false.
+  **Set the DNP attr** (and `exclude_from_bom`, matching SB1–SB4 / JP1 / TC1) so intent and
+  attribute agree.
+
 
 - [ ] **[PCB, PRE-FAB] LED land pattern D2–D5: pads sit 0.25 mm too far inward** _(2026-07-25 LED audit;
   full derivation in the design-notes LED-audit addendum)._ The `solarglow:D2..D5` pads are at

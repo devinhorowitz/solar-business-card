@@ -273,9 +273,15 @@ Summary of the **orderable** lines:
 - **MH1–MH4** are plated drills — supply your own **M2 screws** if enclosing.
 
 **Flags to clear before you buy:**
-- **R1–R4 value (150 Ω) is `SIZED`, not locked.** It sets per-LED peak current (~9 mA on the
-  clamped rail) and is **bench-pending** — the energy-budget test may re-tune it. Buy a small
-  0402 range (e.g. 100 / 150 / 220 / 330 Ω) so you can swap after the measurement.
+- **R1–R4 value (150 Ω) is `SIZED`, not locked.** It sets per-LED peak current and is
+  **bench-pending** — the energy-budget test may re-tune it. Buy a small 0402 range
+  (e.g. 100 / 150 / 220 / 330 Ω) so you can swap after the measurement.
+  *(Corrected 2026-07-26 PCB audit: this used to read "~9 mA on the clamped rail", a stale
+  v3 figure — v3 fed the LED anodes from a rail the TLV3011B held near 3.5 V, giving
+  (3.5−2.25)/150 ≈ 8.3 mA. v4 deleted that clamp: SW2 now feeds ANODE straight from STO, so
+  the peak is (STO−Vf)/150 ≈ **14–18 mA** near the 4.65 V VOVCH ceiling — the LA P47F's Vf
+  is itself unbinned across the 3B–5A groups, 1.95–2.55 V at 30 mA. The firmware
+  (board.h/led.h) already assumes the v4 number; this line did not.)*
 - **C9 stays DNP** until the coil is trimmed on the bench (resonance target 13.56 MHz with
   the NT3H2211's internal capacitance; the Ti shell behind the coil moves it — measure with
   the shell fitted).

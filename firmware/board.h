@@ -208,18 +208,48 @@
  * number the PCB side owed firmware; derived here, bench-tunable (it sets feel, not
  * safety -- SWEEP_CAPS_FULL_MV below is the hard gate).
  *
- * Derivation. VIN is the raw SRC solar node that the AEM10300 (U8) draws from for
- * MPPT charging of the STO tank; there is no blocking diode (so no Vf drop) and no
- * shunt clamp (no TLV3011B, no Q1) in v4. The panel is a current source rolling off
- * toward Voc, so under load the SRC node self-settles below Voc (SM141K06TF Voc
- * 4.15 V, as current->0) and never exceeds it. We pick VIN >= 3.60 V: a SRC-node
- * voltage this high indicates genuine strong sun lifting the node, yet stays below
- * Voc. It also sits far above indoor light (VIN ~0.8-2.1 V), and the caps-full
- * co-gate rejects the bright-indoor corner (indoor rarely tops the caps AND lifts
- * VIN this high at once). ADC: VSENSE pin = VIN/2 vs the 2.048 V ref, so 3.60 V ->
- * 3600 counts, which sense.c folds at compile time (SUN_COUNT) so the poll compares
- * raw, no per-poll mV math. (Ref changed from 2.500 V in the 2026-07-26 audit -- see
- * the ADC_VREF_MV block in sense.c; the fold tracks the constant automatically.) */
+ * WHAT THIS ACTUALLY MEASURES (corrected 2026-07-26 PCB audit -- the old derivation
+ * below was wrong and the consequence is real, so it is written out in full).
+ *
+ * The OLD reasoning was: "the panel is a current source rolling off toward Voc, so
+ * under load the SRC node self-settles below Voc; VIN >= 3.60 V therefore means
+ * strong sun." That models SRC as a PASSIVE node. It is not. While the AEM10300 is
+ * harvesting it ACTIVELY REGULATES SRC to a fixed fraction of the panel's open-
+ * circuit voltage: "the voltage on SRC is regulated by an internal Maximum Power
+ * Point Tracking (MPPT) module ... as a given fraction of the open-circuit voltage"
+ * (AEM10300 sec 8.4), the fraction being R_ZMPP = V_MPP/V_OC, set by the R_MPP[2:0]
+ * straps. This board straps R_MPP[2:0] = H,L,L (read off the .kicad_pcb: R_MPP2 ->
+ * VINT, R_MPP1 -> GND, R_MPP0 -> GND) = 80% (Table 9).
+ *
+ * So while CHARGING, SRC = 0.80 x Voc. Reaching 3600 mV would need Voc >= 4500 mV,
+ * above the SM141K06TF's 4.15 V Voc -- so in ordinary charging this threshold is
+ * UNREACHABLE in any light, however bright. It trips in only two situations:
+ *   1. Caps full. At VOVCH the DCDC stops and "the SRC pin is set to high impedance"
+ *      (sec 8.3.2), so the unloaded panel rises to Voc (4.15 V in sun) -> pin 2.075 V,
+ *      which also SATURATES the 2.048 V reference -> 4095 counts, far above SUN_COUNT.
+ *   2. Briefly, during an MPP evaluation, when the AEM disconnects the source to
+ *      measure Voc. T_MPP[1:0] straps H,L on this board = 70.8 ms every 4.5 s
+ *      (Table 10) = a 1.6% duty window in which SRC reads Voc even while charging.
+ *
+ * CONSEQUENCE, and why it is left as-is for now: SENSE_SUN_bm is therefore NOT a
+ * "strong sun" tell -- it is very nearly a "the harvester has stopped charging" tell,
+ * i.e. the same condition SWEEP_CAPS_FULL_MV already gates on. The two sweep co-gates
+ * are not independent as the comment below once claimed. The SWEEP still behaves
+ * correctly (it fires when the tank is full and the panel is unloaded, which is
+ * exactly when surplus light is free), so this is a wrong RATIONALE rather than a
+ * broken feature -- but SWEEP_SUN_VIN_MV is close to meaningless as a tunable: any
+ * value from ~3.4 V to 4.096 V behaves identically. To make it mean "strong sun"
+ * again it must sit BELOW 0.8 x Voc, i.e. nearer 3000-3200 mV, which would let it
+ * discriminate bright from dim while charging (Voc does rise with illumination).
+ * That is a feel-and-energy retune, so it waits for the bench (see TODO) rather than
+ * being changed blind. The SAME correction applies to USE_SUN_DIARY: it counts polls
+ * where this flag is set, so it is banking "caps-full time" plus a ~1.6% sampling
+ * artifact, NOT hours of sun.
+ *
+ * ADC: VSENSE pin = VIN/2 vs the 2.048 V ref, so 3.60 V -> 3600 counts, which sense.c
+ * folds at compile time (SUN_COUNT) so the poll compares raw, no per-poll mV math.
+ * (Ref changed from 2.500 V in the 2026-07-26 audit -- see the ADC_VREF_MV block in
+ * sense.c; the fold tracks the constant automatically.) */
 #define SWEEP_SUN_VIN_MV   3600
 
 /* SWEEP_CAPS_FULL_MV -- the sweep's HARD safety gate: sweep only when the TANK (STO)
