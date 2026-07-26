@@ -59,6 +59,35 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
 
 ## Firmware — `firmware/`, `firmware/README.md`
 
+- [ ] **[BENCH/CALIBRATION] VS_GLOW_FLOOR_MV vs the STO-channel accuracy stack-up**
+  _(2026-07-26 pass 4; the highest-value open firmware item.)_ Pass 3 removed the *systematic*
+  error (the 2.500 V reference sagged below its 3.0 V spec floor and inverted the guard). What
+  remains is ordinary tolerance: reference ±2% (−40..+85 °C, ±5% to 125 °C) + ADC offset/gain/INL
+  + divider, which at the extended-temperature corner still lets `VS_GLOW_FLOOR_MV = 2750` permit
+  a glow at a true STO **below the 2.60 V BOD**. Restoring the intended 150 mV of sag margin at
+  the worst corner implies a floor near **2900 mV**, at the cost of usable range. **Measure it**:
+  read `sense_vdd_mv()` against a meter across 2.6–4.65 V and over temperature, then set the floor
+  from data. Do not fold in a datasheet corner blind — it trades real runtime for paper margin.
+  Same stack-up applies to `EE_WRITE_FLOOR_MV` (2850 vs erratum 2.2.1's 2.7 V) and
+  `SWEEP_CAPS_FULL_MV` (4400 vs VOVCH 4.65 V, whose datasheet row has no min/max).
+
+- [ ] **[BENCH] Confirm the reordered NFC provisioning end to end** _(2026-07-26 pass 4.)_
+  Provisioning now writes the NDEF first and the CC **last**, so a partial write leaves a tag
+  readers ignore rather than one advertising garbage. Verify on a real tag: (a) the phone offers
+  the vCard after a clean run; (b) `nfc_present()` still ACKs at 0x55 after the block-0 write
+  (datasheet sec 8.3.8 warns the address byte and static lock bytes live in that block); (c) an
+  interrupted run leaves the tag inert rather than half-published.
+
+- [ ] **[FIRMWARE] Residual efficiency items, each already quantified** _(2026-07-26 pass 4;
+  none applied — they need the energy budget measured first to know if they are worth it.)_
+  `adxl367_clear_activity()` fires unconditionally in the tap and NFC-ack branches (~367 µs of
+  ACTIVE I2C each) even when INT2 never asserted; `adxl367_read_z()` runs every poll though
+  dormancy integrates over 180 s; the TCB ticks at 1 ms while the animation only updates duty
+  every 12 ms (11 of 12 wakes do nothing); `gamma2()` floors inputs ≤ 15 to zero so ~7.8% of every
+  breath is a black hold; TWI waits and the fram_sleep retry busy-spin in ACTIVE where they could
+  IDLE-sleep.
+
+
 - [ ] **[BENCH] ADC reference moved 2.500 V -> 2.048 V — re-verify every gate on silicon**
   _(2026-07-26 deep audit; fix LANDED.)_ The 2.500 V reference is spec'd only for VDD >= 3.0 V
   and `VVREF` max is VDD-0.4, so below ~2.9 V it sagged and every rail gate read HIGH — the

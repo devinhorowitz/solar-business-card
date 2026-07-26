@@ -512,8 +512,14 @@ both the light and strong-sun predicates (`sense_vin_flags()`, raw-count, no mV 
   means the panel is under strong illumination, below panel Voc (4.15 V), and independent
   of the AEM10300 MPPT and the regulated 3.3 V VS rail. Sets
   *feel*, not safety — bench-tunable. Folded to a raw ADC count at compile time (`sense.c`).
-- **`SWEEP_CAPS_FULL_MV`** (3300): the hard caps-full gate, VS in mV. Independent of
-  the harvest control/regulator and of `SWEEP_SUN_VIN_MV`, so the animation can never draw the pack down.
+- **`SWEEP_CAPS_FULL_MV`** (4400): the hard caps-full gate, **STO** (the tank) in mV --
+  read via the R15/R16 divide-by-3 on PD1/AIN1, not the VS rail. 4400 is 94.6% of the
+  AEM10300's configured VOVCH 4.65 V, i.e. the band where the harvester has hard-cut
+  (DCDC disabled, SRC high-Z) and the surplus really is free. It was 3300 until the
+  2026-07-26 audit -- a stale v3 value from when the sensed node was the clamped ~3.5 V
+  supercap rail, which on the STO range is only 71% of the ceiling / 50% of the energy,
+  so the "can never draw the pack down" guarantee did not hold. See board.h for the
+  full derivation and the bench item.
 - **`SWEEP_PASSES` / `SWEEP_PASS_MS` / `SWEEP_PEAK` / `SWEEP_OVERLAP`** (2 / 800 / 235 /
   320): wipes per invocation, ms per wipe, per-LED peak duty, and bump half-width (Q8
   units of LED spacing; 256 = neighbours cross ~50%). Tune the feel with

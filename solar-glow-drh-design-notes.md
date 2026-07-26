@@ -1601,3 +1601,76 @@ driven it directly.
 One note of discipline: the tap path converts STO twice (`sense_glow_peak`, then the tally's
 rail gate). It is ~5 orders of magnitude below the glow it precedes, so it was measured and
 **deliberately left alone** — removing it would buy nothing and cost plumbing.
+
+---
+
+## Addendum — pass 4: reviewing the audit's own changes (2026-07-26)
+
+Three passes had rewritten a lot of this tree, each verified in isolation and none
+reviewed as a whole. This pass turned the same machinery on **my own changes**, plus a
+definitive check of the NFC capability container (pass 2 started *writing* it, so a wrong
+value was no longer just a doc error), an ADC re-verification after the reference change,
+and a disposition of the 44 findings pass 3 left open. 46 raised, 42 survived, 4 refuted.
+
+**The self-review earned its keep: it found real regressions I had introduced.**
+
+- **The sun diary lost every hour after the first.** Pass 3 gated its EEPROM write on
+  `EE_WRITE_FLOOR_MV` and, to stop the poll counter wrapping, saturated it at the rollover
+  point — which meant that while the rail sat below the floor, every *subsequent* hour was
+  discarded instead of banked. The realistic case is the worst one: strong sun on a deeply
+  drained tank, where VIN is high while STO is still under 2850 mV, so the longest sun
+  spells were exactly the ones least likely to be counted. The tap tally, changed in the
+  same pass, had been given correct multi-unit banking; the diary had not. It now banks a
+  count of completed hours and flushes them together, and only spends an ADC conversion
+  when there is something to flush.
+- **The capability container was published before the payload it describes.** `nfc_write_cc()`
+  ran first, so a fault partway through the 19-block NDEF write — including the failure mode
+  that function's own comment warns about, the tag having moved to another I2C address so
+  every following block NACKs — left a tag advertising itself as NDEF-capable over pages the
+  datasheet says are *undefined at delivery*. A phone would parse that and show garbage.
+  Reordered: NDEF first, CC last, and the CC is skipped entirely if the payload did not land.
+  It costs nothing (the NDEF is invisible until the CC exists either way) and turns the
+  failure mode into a tag readers simply ignore, which re-running provisioning fixes.
+- **My justification for the new sweep gate was wrong.** I wrote that 4400 mV sits below
+  VOVCH because "charging tapers as STO approaches 4.65 V". The AEM10300 does not taper, it
+  hard-cuts: *"If STO is fully charged, the DCDC converter is disabled ... and the SRC pin is
+  set to high impedance"* (sec 8.3.2). The 250 mV of headroom is really measurement margin,
+  and against a ±2 % reference the worst-case arm point is ~4.49 V — against a VOVCH row that
+  carries **no min/max at all**. Comment corrected to the real mechanism, with 4300 mV named
+  as the fallback if the bench shows 4400 marginal.
+- **The README still documented the old 3300 mV gate**, and against the wrong node. Fixed.
+
+**I was wrong about the ADC reference settling, and the verifier caught it.** I had flagged
+that the ADC inserts 60 µs against a `tVREF_ST` of 130 µs typ / 180 µs max. Two things kill
+it. First, `MCLKTIMEBASE = 2` at CLK_PER 1 MHz makes one hardware "µs" equal two real µs, so
+the inserted settle is **120 µs**, not 60. Second and decisively, the ADC chapter states the
+requirement for this exact operation as 60 µs **normatively in three places** (Table 31-5,
+§31.5.3 REFSEL, Figure 31-3), and Table 31-5 note 2 — *"If the LOWLAT bit is '1' then the
+settling time is reduced to 2 µs when switching between internal references"* — is flatly
+incompatible with 130–180 µs being the operative quantity in the ADC's reference path.
+`tVREF_ST` characterises the VREF peripheral for the DAC/AC, not this. So the firmware
+delivers 2× its governing spec, and the `MCLKTIMEBASE = 2` that board.h describes as harmless
+slack is quietly load-bearing. Worth recording precisely because the finding was *mine*.
+
+**The NFC capability container value is correct.** Table 8 states `E1 10 6D 00` generically
+for "NTAG I2C plus", not the 1K part, and it declares sector 0's full area — which is all a
+Type-2 CC can address, since sector 1 on the 2K part needs SECTOR SELECT. Our vCard is 304 B
+against 872 B declared. The block-0 read-modify-write is also safe: the static lock bytes at
+bytes 10–11 are set-only, so writing back exactly what was read cannot latch anything new —
+though the datasheet's own WARNING at sec 8.3.8 (*"the I2C address may be changed or the tag
+may be locked unintentionally, when changing CC"*) is worth quoting in the code, and the
+bench item stands.
+
+**Still open, with numbers, for the bench rather than for a guess.** The accuracy stack-up on
+the STO channel is the one that matters: with the reference's ±2 % (−40..+85 °C) plus ADC and
+divider error, `VS_GLOW_FLOOR_MV = 2750` still permits a glow at a true STO below the 2.60 V
+BOD at the extended-temperature corner. Pass 3's reference change removed the *systematic*
+inversion; what remains is ordinary tolerance, and closing it means raising the floor (~2900 mV
+would restore the intended 150 mV of sag margin at the worst corner) at the cost of usable
+range. That is a calibration decision the bench should make with a meter, not one to fold in
+from a datasheet corner — filed in TODO with the derivation.
+
+Also confirmed against sources this pass: **CLK_ADC minimum is 300 kHz** (Table 35-24,
+300–2000 kHz with an internal reference), so DIV2 = 500 kHz is the *only* legal prescaler at
+1 MHz — the long-standing comment claiming "DIV4 also legal" would have been 250 kHz, out of
+spec, and is corrected.

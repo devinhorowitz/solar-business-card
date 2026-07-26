@@ -237,9 +237,16 @@
  * fact permitted it to spend down to half the tank, repeatedly (main.c re-arms the
  * sweep every poll while the light holds).
  * 4400 mV = 94.6% of VOVCH: the band where the AEM has essentially finished charging
- * and the surplus really is free, which is what the comment always claimed. Keep it
- * BELOW VOVCH itself -- charging tapers as STO approaches 4.65 V, and a gate at the
- * ceiling would rarely arm. */
+ * and the surplus really is free, which is what the comment always claimed. It is kept
+ * BELOW VOVCH for MEASUREMENT margin, not because charging tapers -- the AEM does not
+ * taper, it hard-cuts: "If STO is fully charged, the DCDC converter is disabled to
+ * prevent over-charging the storage element, and the SRC pin is set to high impedance"
+ * (AEM10300 sec 8.3.2). The 250 mV of headroom is thinner than it looks: the reference
+ * is +/-2% (-40..+85 C), so the worst-case arm point is ~4.49 V against a VOVCH whose
+ * datasheet row carries NO min/max at all. BENCH (see TODO): confirm a real card in
+ * strong sun actually reaches this. If it proves marginal, 4300 mV is still 92.5% of
+ * VOVCH and buys back roughly double the tolerance headroom -- but do NOT drop back
+ * toward 3300, which is not a fullness criterion at all. */
 #define SWEEP_CAPS_FULL_MV 4400
 
 /* Sun diary: bank lifetime whole-HOURS of strong sun (the SENSE_SUN_bm tell the poll

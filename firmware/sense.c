@@ -1,7 +1,7 @@
 /*
  * sense.c  --  ADC rail/light reads + EEPROM activation counter.  (AVR-EA ADC)
  *
- * Power policy: the ADC and its 2.5 V reference are powered only for the
+ * Power policy: the ADC and its 2.048 V reference are powered only for the
  * length of a conversion and shut off immediately after (see adc_read_raw).
  * Between the ~1 s polls the ADC ENABLE bit is 0, which draws no ADC current,
  * and the internal reference is released with it. The analog domain therefore
@@ -62,9 +62,15 @@
 
 void sense_adc_init(void)
 {
-    ADC0.CTRLB   = ADC_PRESC_DIV2_gc;          /* 1 MHz / 2 = 500 kHz CLK_ADC
-                                                * (2 us period, in spec). DIV4
-                                                * also legal, needlessly slow. */
+    ADC0.CTRLB   = ADC_PRESC_DIV2_gc;          /* 1 MHz / 2 = 500 kHz CLK_ADC.
+                                                * DIV2 is the ONLY legal prescaler at
+                                                * CLK_PER 1 MHz: Table 35-24 specifies
+                                                * CLK_ADC as 300..2000 kHz with an
+                                                * internal reference, so DIV4 (250 kHz)
+                                                * is BELOW the minimum -- an earlier
+                                                * comment here called it "also legal",
+                                                * which was wrong. DIV1 (1 MHz) is in
+                                                * range too but buys nothing. */
 
     /* Reference: internal 2.048 V (NOT 2.500 V -- see ADC_VREF_MV above; the
      * 2.500 V option is out of spec below VDD 3.0 V and this card runs to 2.6 V).
@@ -316,6 +322,7 @@ void sense_count_inc(void)
 #define SUN_POLLS_PER_HOUR ((uint16_t)(3600UL / POLL_PERIOD_S))   /* strong-sun polls that make one banked hour */
 
 static uint16_t sun_polls;                   /* strong-sun polls counted in the current partial hour */
+static uint8_t  hours_pending;               /* whole hours completed but not yet committed (rail below the EE floor) */
 
 /* Banked whole-hours of strong sun. Erased EEPROM reads all-ones -> report 0. Uncalled
  * on-chip BY DESIGN (UPDI/NDEF readout), like sense_count_get; kept as API. */
@@ -327,19 +334,28 @@ uint16_t sense_sun_hours_get(void)
 
 void sense_sun_tick(void)
 {
-    if (sun_polls < SUN_POLLS_PER_HOUR) sun_polls++;   /* saturate: a waiting hour can't wrap the counter */
-    if (sun_polls < SUN_POLLS_PER_HOUR)
+    /* Bank COMPLETED HOURS, not just one. The rollover must always reset sun_polls
+     * and credit an hour; only the EEPROM COMMIT waits for a safe rail. Getting this
+     * wrong (saturating sun_polls at the rollover and returning) silently discarded
+     * every hour after the first for as long as the rail stayed low -- exactly the
+     * cold-start case of strong sun on a deeply drained tank, where VIN is high while
+     * STO is still under the floor, i.e. the longest sun spells were the ones least
+     * likely to be counted. Same shape as the tap tally above, for the same reason. */
+    if (++sun_polls < SUN_POLLS_PER_HOUR)
         return;                              /* still inside the current hour */
-    /* Rail gate, same as every other writer (board.h EE_WRITE_FLOOR_MV). Hold the
-     * banked hour in RAM rather than dropping it: an hour completed at a low rail is
-     * credited on the next safe tick instead of being lost or written unsafely.
-     * Strong sun implies the harvester is running, so this rarely waits at all. */
-    if (!sense_ee_safe())
-        return;                              /* hour stays banked -- retry next poll */
     sun_polls = 0;
+    if (hours_pending < 0xFFu) hours_pending++;   /* saturate: 255 unflushed hours is already pathological */
+    /* Rail gate, same as every other writer (board.h EE_WRITE_FLOOR_MV). Checked only
+     * when there is something to flush, so a low rail costs no ADC conversion here. */
+    if (!sense_ee_safe())
+        return;                              /* hours stay banked -- retry next rollover */
     uint16_t h = sense_sun_hours_get();
-    if (h < 0xFFFEu)                         /* saturate near the top (and never store 0xFFFF, which reads as 0) */
-        eeprom_update_word(EE_SUN_HOURS_ADDR, (uint16_t)(h + 1u));
+    uint16_t add = hours_pending;
+    if (h + add > 0xFFFEu) add = (uint16_t)(0xFFFEu - h);   /* saturate; never store 0xFFFF (reads as 0) */
+    if (add) {
+        eeprom_update_word(EE_SUN_HOURS_ADDR, (uint16_t)(h + add));
+        hours_pending = 0;
+    }
 }
 
 /* ---------- MCU internal die temperature + lifetime-max log ---------- */
