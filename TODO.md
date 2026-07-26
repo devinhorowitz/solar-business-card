@@ -120,14 +120,22 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   if the AEM's charge taper makes 4400 unreachable in practice, tune down toward ~4300, but do
   NOT return to a value that is not a fullness criterion.
 
-- [ ] **[SOURCING] Retire the unsourced numbers in comments** _(2026-07-26 deep audit.)_ Each is
-  documentation-only but each is quoted as fact: (a) the **"~13 ms EEPROM write"** in six places
-  (board.h x2, sense.c x3, main.c) — the DS says 2 ms write + 2 ms erase; (b) `adxl367.h`'s
-  **0.89 µA** is spec'd at a **2.0 V supply**, not our 3.3 V; (c) **"256 B"** EEPROM — the part
-  has **512 B**; (d) **"~21 J reserve"** is 5.5 V nameplate (VOVCH-capped ~15 J stored, ~9.6 J
-  spendable above the glow floor); (e) `board.h:49`'s F_CPU rationale cites an IDD at 1 MHz that
-  the datasheet does not publish (lowest row is 5 MHz). Fix the comments to cite or drop.
-
+- [x] **[SOURCING] Unsourced numbers in comments — retired** _(2026-07-26; DONE.)_ Every claim
+  below was checked against its primary source and corrected in place: the **"~13 ms EEPROM write"**
+  (6 sites) → ~4 ms, since DS Table 35-8 gives tD_BPW 2 ms + tD_BPE 2 ms; **"256 B"** EEPROM → 512 B;
+  **"~21 J reserve"** → dropped (nameplate, not the ~9.6 J actually spendable above the glow floor);
+  **"8.192 s"** watchdog → 8.0 s (WDT.CTRLA PERIOD 0xB); **0.89 µA** for the ADXL367 now carries its
+  test condition (2.0 V supply, while this board runs the part at 3.3 V); the **SUN_COUNT** comment's
+  2.500 V-era arithmetic (2950 / ×0.8192) → the fold now collapses to count == VIN in mV exactly;
+  **`sense_caps_full`** doc said "VS ≥" → STO; the **SAMPDUR** rationale blamed divider impedance when
+  both nodes carry a 100 nF reservoir (C5 / C24) that dominates by orders of magnitude — real reason
+  is the temp sensor's ≥32 µs rule; **`nfc.h`'s block map** (write "MUST stop below 0x3A" → the first
+  non-user block is 0x38; "raw ceiling 0x7A" → 0x7F; "NO sector-select" was never the reason — the I2C
+  side addresses 0x00–0x7F linearly); **`firmware/README`** still claimed the tag ships with a valid CC
+  and that firmware "never touches block 0", both false since the pass-2 CC fix; the **`LIGHT_THRESH_MV`
+  light-range** and the SWEEP_SUN range contradicted each other ~3× for the same node — both now flagged
+  as unsourced bench items rather than asserted; and the **tap tally's RAM bank** now states that
+  `pending` lives in .bss and does not survive a reset.
 - [ ] **[BENCH/DESIGN] Sun diary counts POLLS, not TIME — and is least accurate while measuring**
   _(2026-07-26 deep audit.)_ `SUN_POLLS_PER_HOUR` assumes one poll == POLL_PERIOD_S exactly, but
   (a) OSC32K total error is <1% only at 25 °C/3.0 V and **<10% over the full range** (Table 35-10),

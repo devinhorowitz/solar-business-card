@@ -22,11 +22,12 @@
 
 #include <stdint.h>
 
-/* Configure the ADC: 12-bit, DIV2 presc, 2.048 V reference (NOT 2.500 V -- that
- * option is out of spec below VDD 3.0 V and this card runs to 2.6 V; see the
- * ADC_VREF_MV block in sense.c), long SAMPDUR (1M
- * source Z); reference settling is hardware-sequenced into each conversion on
- * the EA. Leaves the ADC disabled; each read powers it (and the reference) up
+/* Configure the ADC: 12-bit, DIV2 presc (the only legal prescaler at CLK_PER 1 MHz --
+ * CLK_ADC must be 300..2000 kHz), 2.048 V reference (NOT 2.500 V -- that option is out
+ * of spec below VDD 3.0 V and this card runs to 2.6 V; see the ADC_VREF_MV block in
+ * sense.c), and a long SAMPDUR (62 us) sized by the temp sensor's >= 32 us rule rather
+ * than by divider impedance -- both analog nodes carry a 100 nF reservoir. Reference
+ * settling is hardware-sequenced into each conversion on the EA. Leaves the ADC disabled; each read powers it (and the reference) up
  * for the conversion and back down after, so the analog domain draws nothing
  * between polls. */
 void     sense_adc_init(void);
@@ -67,7 +68,8 @@ uint8_t  sense_rail_ok(void);
  * is exactly that gate: `peak` above the floor, 0 below. */
 uint8_t  sense_glow_peak(uint8_t peak);
 
-/* true if the caps are full (VS >= SWEEP_CAPS_FULL_MV): the in-sun sweep's hard gate,
+/* true if the caps are full (STO >= SWEEP_CAPS_FULL_MV -- the TANK, not the VS rail):
+ * the in-sun sweep's hard gate,
  * so the animation can never draw the pack down. Raw-count, same STO/3 channel as
  * sense_rail_ok(). */
 uint8_t  sense_caps_full(void);

@@ -57,13 +57,18 @@
 #define NFC_BLK_USER0     0x01   /* first user block = NDEF start (NFC page 04h) */
 #define NFC_BLK_CONFIG    0x3A   /* configuration registers (EEPROM) -- untouched */
 #define NFC_BLK_SESSION   0xFE   /* session registers (via sec 9.8 register op)  */
-/* Last block the linear NDEF write may occupy. This tag's CC declares 872 B of NDEF
- * area in sector 0 (E1 10 6D 00), which from block 0x01 fills through block 0x37; the
- * config-register block (NFC_BLK_CONFIG) sits just above at 0x3A. This driver writes
- * linearly from 0x01 with NO sector-select, so the write MUST stop below 0x3A or it
- * runs straight through the config registers -- hence the sector-0 NDEF top 0x37, NOT
- * the 2K part's raw block ceiling (0x7A, which is above the config block and so could
- * not guard it). nfc_write_ndef rejects any NDEF that would overrun this. */
+/* Last block the linear NDEF write may occupy. The CC we write declares 872 B of NDEF
+ * area in sector 0 (E1 10 6D 00), which from block 0x01 fills through block 0x37.
+ * 0x37 is the correct stop for a reason stronger than the config block: per the I2C
+ * memory map, user memory runs blocks 0x01..0x37 PLUS ONLY THE FIRST 8 BYTES of block
+ * 0x38 -- so 0x38 is the first block a full 16-byte write would overrun, two blocks
+ * below the config registers at NFC_BLK_CONFIG 0x3A. (An earlier note here said the
+ * write "MUST stop below 0x3A", which understates the real ceiling by two blocks, and
+ * gave the 2K part's raw block ceiling as 0x7A -- it is 0x7F: sector 1 is blocks
+ * 0x40..0x7F from the I2C side. It also blamed "NO sector-select"; that is not the
+ * reason either -- the I2C interface addresses all 0x00..0x7F linearly and has no
+ * sector-select at all, unlike the NFC side. The reason is simply that block 0x38 and
+ * up stop being user memory.) nfc_write_ndef rejects any NDEF that would overrun. */
 #define NFC_BLK_NDEF_TOP  0x37
 #define NFC_BLOCK_SZ      16
 
@@ -89,7 +94,8 @@
 #define NFC_NS_EEPROM_WR_BUSY_bm   0x02
 #define NFC_NS_RF_FIELD_PRESENT_bm 0x01
 
-/* factory CC (block 0 bytes 12..15) for an NDEF-capable tag (sec 8.3.8/8.3.10) */
+/* The CC we WRITE into block 0 bytes 12..15 to make the tag NDEF-capable (Table 8).
+ * NOT a factory value -- sec 8.3.10 ships it as all 00h; see nfc_write_cc(). */
 #define NFC_CC0  0xE1
 #define NFC_CC1  0x10
 #define NFC_CC2  0x6D

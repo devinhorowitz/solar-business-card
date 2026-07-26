@@ -79,11 +79,15 @@ void sense_adc_init(void)
      * standing analog current). */
     ADC0.CTRLC   = ADC_REFSEL_2V048_gc;
 
-    /* long sample time: the VSENSE divider is 1M//1M ~ 500k source impedance,
-     * far above the SAR's comfort zone, so stretch acquisition. C5 holds the
-     * charge between the ~1 s polls; this covers the sample window. 31 CLK_ADC
-     * cycles = 62 us -- also satisfies the temp sensor's >= 32 us SAMPDUR rule
-     * (DS40002443 31.3.3.7). */
+    /* Long sample time. NOTE the often-quoted reason -- "the 1M//1M divider is
+     * ~500k source impedance" -- is NOT what governs here: BOTH analog nodes carry a
+     * 100 nF reservoir (C5 on VSENSE, C24 on STO_SNS, verified against the board), and
+     * 100 nF utterly dominates the few-pF sample capacitor, so charge sharing settles
+     * in well under a microsecond regardless of the divider. The real reasons to keep
+     * SAMPDUR = 31 (62 us) are that it costs nothing at a 1 Hz poll and that the temp
+     * sensor REQUIRES >= 32 us (DS40002443 31.3.3.7). The higher-impedance channel is
+     * in fact STO_SNS (2M||1M = 667k), which three of the four rail gates read -- also
+     * covered, for the same reason. */
     ADC0.CTRLE   = 31;                         /* SAMPDUR */
 
     /* Leave the ADC DISABLED between reads: each read enables it, converts,
@@ -173,7 +177,9 @@ uint8_t sense_light(void)
  * One wrinkle: LIGHT_THRESH_MV is already a pin voltage, but SWEEP_SUN_VIN_MV is stated
  * at the VIN node, so this also divides by VSENSE_DIVIDER (pin_mv = VIN_mv/VSENSE_DIVIDER).
  * A count c means pin_mv = c*ADC_VREF_MV/4096, so c >= SUN_COUNT is exactly
- * VIN >= SWEEP_SUN_VIN_MV. (3600 mV -> 2950, matching the VIN_mV*0.8192 rule.) */
+ * VIN >= SWEEP_SUN_VIN_MV. With ADC_VREF_MV = 2048 and VSENSE_DIVIDER = 2 the fold
+ * collapses to count == VIN in mV exactly (3600 mV -> 3600), since (VIN/2)/2048*4096 = VIN.
+ * (Was 2950 / the VIN_mV*0.8192 rule under the old 2.500 V reference.) */
 #define SUN_COUNT \
     ((uint16_t)(((uint32_t)SWEEP_SUN_VIN_MV * 4096UL + (VSENSE_DIVIDER * ADC_VREF_MV - 1UL)) \
                 / (VSENSE_DIVIDER * ADC_VREF_MV)))
@@ -227,7 +233,7 @@ uint8_t sense_caps_full(void)
     return (adc_read_raw(STO_SNS_AIN) >= CAPS_FULL_COUNT) ? 1u : 0u;
 }
 
-/* EEPROM write-safety gate: rail at/above EE_WRITE_FLOOR_MV, so a ~13 ms EEPROM write can start and
+/* EEPROM write-safety gate: rail at/above EE_WRITE_FLOOR_MV, so a ~4 ms EEPROM write can start and
  * finish without the rail collapsing through it (the corruption window, DS40002443 sec 11.3.3,
  * "Preventing Flash/EEPROM Corruption"; the DD documents the same window). The
  * BOD only ABORTS an in-progress write; this is the firmware "don't start near the edge" guard (the
@@ -295,6 +301,10 @@ void sense_count_inc(void)
      * board.h's stated invariant either way. So: bank the tap in RAM and flush
      * the batch on a later tap from a healthy rail. Only a card whose last-ever
      * taps all landed in that 100 mV band loses counts -- a keepsake-grade loss.
+     * NOTE `pending` is a plain static in .bss, so it does NOT survive a reset: a
+     * brown-out or watchdog reset between banking and flushing drops up to 255 taps.
+     * Deliberate -- the alternative (an EEPROM write per tap) is the wear the RAM
+     * bank exists to avoid, and the counter is a keepsake, not an odometer.
      * Costs one extra STO read per tap, trivial next to the glow it precedes. */
     static uint8_t pending;                /* taps banked below the EE write floor */
     if (pending < 0xFFu) pending++;        /* saturate: 255 unflushed taps is already pathological */
@@ -414,7 +424,7 @@ int8_t sense_temp_max_get(void)
 
 /* Lowest rail (VS, mV) ever seen -- the starvation half of the field black box (max-temp is the
  * heat half). Sampled sparsely (every VMIN_SAMPLE_POLLS; the supercap sags over minutes). The catch
- * is that a "new low" is by definition the WORST moment to write EEPROM -- a ~13 ms write on a
+ * is that a "new low" is by definition the WORST moment to write EEPROM -- a ~4 ms write on a
  * collapsing rail can corrupt (DS40002443 sec 11.3.3; the DD documents the same window). So the running low is tracked in RAM (vmin_ram,
  * wear-free and safe at any rail) and only COMMITTED to EEPROM from a healthy rail (>= EE_WRITE_FLOOR_MV).
  * A recoverable sag is thus captured and written once the rail climbs back; only a terminal drain
@@ -449,7 +459,7 @@ uint16_t sense_vmin_get(void)
  * cold-boots the MCU (power-on reset); watchdog / UPDI / brown-out-recovery resets do NOT count.
  * sense_boot_log() reads and clears RSTCTRL.RSTFR at boot so only a genuine POR is flagged, but it
  * DEFERS the EEPROM write: a cold boot happens right at the reset-release voltage (a poor moment for
- * a ~13 ms write), so sense_boot_commit() does the write once the rail has charged past the write
+ * a ~4 ms write), so sense_boot_commit() does the write once the rail has charged past the write
  * floor. One write per drain, and drains are rare, so endurance is a non-issue. */
 #define EE_BOOT_ADDR  ((uint16_t *)9)   /* 2-byte power-cycle count at EEPROM offset 9 */
 

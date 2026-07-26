@@ -180,7 +180,7 @@ static void go_to_sleep(void)
 
 #if USE_FRAM_LOG
 /* Cold-boot counter in the FRAM "black box" (U7, 64 KB on VNFC). FeRAM has ~1e13
- * write endurance and commits with no settle delay, so -- unlike the 256 B internal-
+ * write endurance and commits with no settle delay, so -- unlike the 512 B internal-
  * EEPROM loggers -- a plain read-modify-write needs no wear or corruption-window
  * guard. Record layout at addr 0: [0..3] magic 'DRHb', [4..7] big-endian boot count;
  * an absent magic (virgin / garbage FRAM) re-seeds the record at 1. Gated behind
@@ -313,7 +313,7 @@ int main(void)
             if (peak) {
                 /* tally BEFORE the glow: the EEPROM write then happens at the
                  * higher pre-glow rail, not after the glow has sagged it. The
-                 * ~13 ms write is imperceptible ahead of the animation. peak is the
+                 * ~4 ms write is imperceptible ahead of the animation. peak is the
                  * rail-scaled brightness (brownout stretch), 0 below the floor.
                  * (sense_count_inc also honors EE_WRITE_FLOOR_MV: with the rail in
                  * the [glow floor, EE floor) band it banks the tap in RAM and
