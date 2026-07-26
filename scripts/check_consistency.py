@@ -150,11 +150,25 @@ def check_doc_file_refs():
 
 
 def board_footprints():
-    """Return {refdes: lib_id} for every footprint in the .kicad_pcb.
+    """Return {refdes: (lib_id, is_board_only)} for every footprint in the .kicad_pcb.
 
     Hand-rolled paren-balanced scan rather than a real parser: we only need the
-    Reference property and the lib_id of each (footprint ...) block, and adding a
-    dependency for that is not worth it in CI."""
+    Reference property, the lib_id, and the attr flags of each (footprint ...)
+    block, and adding a dependency for that is not worth it in CI.
+
+    Two things this has to get right, both learned the hard way on 2026-07-26:
+
+    * The lib_id can be the EMPTY string. MP1-MP4 (the corner mounting pads) are
+      stored as `(footprint ""`. An earlier `"([^"]+)"` here silently dropped
+      them, so the board map held 67 of the board's 71 refdes and nothing said so
+      -- a checker that quietly ignores four parts is worse than no checker.
+    * `attr ... board_only` is KiCad's own marker for "this footprint exists only
+      on the board; a schematic sync must not delete it." Those parts are
+      SUPPOSED to be absent from the schematic, so they must not trip the
+      board-only error below. MP1-MP4 carry it, which is why nothing was ever
+      lost there. (The NPTH_mech hole set is board_only too but has no Reference
+      property at all, so it falls out here for want of a refdes to key on --
+      there is nothing a refdes-based parity check can say about it.)"""
     with open(PCB, encoding="utf-8", errors="replace") as fh:
         s = fh.read()
     out = {}
@@ -177,9 +191,11 @@ def board_footprints():
             i += 1
         blk = s[m.start():i + 1]
         ref = re.search(r'\(property "Reference" "([^"]+)"', blk)
-        lib = re.search(r'\(footprint "([^"]+)"', blk)
+        lib = re.match(r'\(footprint "([^"]*)"', blk)
         if ref and lib:
-            out[ref.group(1)] = lib.group(1)
+            attr = re.search(r"\(attr ([^)]*)\)", blk)
+            board_only = bool(attr) and "board_only" in attr.group(1)
+            out[ref.group(1)] = (lib.group(1), board_only)
     return out
 
 
@@ -193,13 +209,20 @@ def check_board_sch_parity(comps, sch_fps):
     U7's DNP flag twice, C29 missing from the schematic, and the U7 land
     mismatch), which is why this check exists."""
     board = board_footprints()
-    # refs that exist only on the board: a sync deletes them
-    board_only = sorted(r for r in board if r not in comps)
+    # refs that exist only on the board: a sync deletes them -- UNLESS KiCad has
+    # been told they are board-only, which is the whole point of that attribute.
+    # Report the exempted ones so the exemption stays visible rather than silent:
+    # if one ever loses its board_only flag, the count here changes and the
+    # missing part shows up in the error above.
+    exempt = sorted(r for r, (_, bo) in board.items() if bo and r not in comps)
+    board_only = sorted(r for r, (_, bo) in board.items()
+                        if not bo and r not in comps)
     if board_only:
         err("on the BOARD but not in the schematic (a sync will DELETE these): "
             + " ".join(board_only))
     else:
-        ok("every board refdes exists in the schematic")
+        ok("every board refdes is in the schematic or flagged board_only "
+           f"({len(exempt)} board_only: {' '.join(exempt) or 'none'})")
     # refs only in the schematic: unplaced parts
     sch_only = sorted(r for r in comps if r not in board
                       and not r.startswith(("#", "TP", "MH", "MP")))
@@ -208,9 +231,9 @@ def check_board_sch_parity(comps, sch_fps):
     # footprint assignment disagreements: a sync moves pads
     bad = []
     for ref, sch_fp in sorted(sch_fps.items()):
-        brd_fp = board.get(ref)
-        if brd_fp and brd_fp != sch_fp:
-            bad.append(f"{ref}: sch={sch_fp} board={brd_fp}")
+        entry = board.get(ref)
+        if entry and entry[0] != sch_fp:
+            bad.append(f"{ref}: sch={sch_fp} board={entry[0]}")
     if bad:
         # A hard error since 2026-07-26: U7 was the last known-open disagreement
         # and it is settled (board and library land turned out to be the SAME
