@@ -265,6 +265,17 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
 
 ## PCB — `PCB/solar-glow-drh-v4_0.kicad_pcb` / `.kicad_sch`
 
+- [ ] **[SCH — MINE, DO FIRST] C29 exists on the board but NOT in the schematic**
+  _(2026-07-26, after Devin's board upload.)_ C29 (100 nF, `solarglow:C1` land) is placed and routed —
+  pad 1 VS at (11.57, 44.12), pad 2 GND at (11.57, 45.13), giving a ~3.3 mm loop to VDD18/GND19
+  against C1's 5.95 mm, and 3.59 mm to pad 24, so it correctly serves pair 18/19 while C1 keeps
+  24/25. **But the schematic has no C29**, which means: the netlist and board disagree, schematic-parity
+  DRC will flag it, and — the real hazard — **the next "Update PCB from Schematic" will DELETE it**,
+  exactly like the U9 footprint revert. Needs a schematic symbol instance wired VS/GND (stub + global
+  label, the convention here), plus a BOM row and a line in `v4-schematic-sync-checklist.md`.
+  ⚠ Do not run Update-from-Schematic on the board until this lands.
+
+
 - [x] **[COPPER] NFC coil shorted-turn claim — CHECKED AND REFUTED**
   _(2026-07-26; verified with shapely against the actual zone fills.)_ The copper audit's headline RF
   finding — "GND forms a galvanically closed shorted turn encircling the NFC coil (F.Cu certain, 3-D
