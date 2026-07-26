@@ -1,7 +1,7 @@
 /*
  * sense.c  --  ADC rail/light reads + EEPROM activation counter.  (AVR-EA ADC)
  *
- * Power policy: the ADC and its 2.5 V reference are powered only for the
+ * Power policy: the ADC and its 2.048 V reference are powered only for the
  * length of a conversion and shut off immediately after (see adc_read_raw).
  * Between the ~1 s polls the ADC ENABLE bit is 0, which draws no ADC current,
  * and the internal reference is released with it. The analog domain therefore
@@ -27,23 +27,57 @@
 #include "board.h"
 #include "sense.h"
 
-/* 2.500 V ADC reference -> mV per LSb at 12-bit = 2500/4096. We compute in
- * integer microvolts-ish by scaling: mv = res * 2500 / 4096. */
-#define ADC_VREF_MV   2500UL
+/* ADC reference -> mV per LSb at 12-bit = ADC_VREF_MV/4096. Every threshold in
+ * this file is folded from this constant at compile time, so the reference and
+ * the thresholds can never drift apart.
+ *
+ * WHY 2.048 V AND NOT 2.500 V (2026-07-26 audit -- this was a SAFETY defect).
+ * DS40002443A Table 35-17 constrains the internal references two ways:
+ *   - the 2.500 V reference is specified only for "3.0V <= VDD <= 5.5V" (+/-3%,
+ *     -40..+85 C; +/-5% to +125 C), and
+ *   - VVREF "Internal voltage reference" carries Max = "VDD-0.4" V.
+ * This card is DESIGNED to operate below 3.0 V: the glow floor is STO 2.75 V and
+ * the BOD does not trip until 2.60 V typ. At VDD = 2.75 V the second constraint
+ * caps the reference at 2.35 V, so a 2.500 V selection cannot be delivered -- it
+ * sags. A sagging reference inflates every count (count = Vin/VREF * 4096), which
+ * makes a LOW rail read HIGH: the exact wrong direction. Worked through, the
+ * 2750 mV glow floor actually tripped at ~2582 mV of STO -- BELOW the 2.60 V BOD
+ * -- so the brownout guard was inverted and a glow could drive the part into a
+ * reset mid-animation, precisely the failure VS_GLOW_FLOOR_MV exists to prevent.
+ * The 2.048 V reference is specified for "2.55V <= VDD <= 5.5V" at a TIGHTER
+ * +/-2%, i.e. valid across this card's entire operating range (it stays in spec
+ * below the BOD trip), and it still clears every divider's full swing:
+ *   STO  4.65 V (VOVCH) / 3 = 1.55 V  <  2.048 V   -- no clipping
+ *   VIN  4.096 V         / 2 = 2.048 V             -- see the caveat below
+ * CAVEAT: VSENSE (VIN/2) now saturates above VIN = 4.096 V, just under the
+ * SM141K06TF's 4.15 V Voc. Nothing that matters is affected -- the sun gate is
+ * SWEEP_SUN_VIN_MV 3600 (pin 1800 mV) and LIGHT_THRESH_MV 400 -- only the
+ * human-readable sense_vin_mv() readout flattens in the last 54 mV below Voc,
+ * a node that is only ever near Voc at open circuit. Do NOT "fix" that by going
+ * back to 2.500 V: the rail gates matter and the Voc readout does not. */
+#define ADC_VREF_MV   2048UL
 
 /* ---------- ADC (AVR-EA model: PRESC in CTRLB, REFSEL in CTRLC, SAMPDUR in
  * CTRLE, mode+start in COMMAND; reference settle is hardware-sequenced) ---------- */
 
 void sense_adc_init(void)
 {
-    ADC0.CTRLB   = ADC_PRESC_DIV2_gc;          /* 1 MHz / 2 = 500 kHz CLK_ADC
-                                                * (2 us period, in spec). DIV4
-                                                * also legal, needlessly slow. */
+    ADC0.CTRLB   = ADC_PRESC_DIV2_gc;          /* 1 MHz / 2 = 500 kHz CLK_ADC.
+                                                * DIV2 is the ONLY legal prescaler at
+                                                * CLK_PER 1 MHz: Table 35-24 specifies
+                                                * CLK_ADC as 300..2000 kHz with an
+                                                * internal reference, so DIV4 (250 kHz)
+                                                * is BELOW the minimum -- an earlier
+                                                * comment here called it "also legal",
+                                                * which was wrong. DIV1 (1 MHz) is in
+                                                * range too but buys nothing. */
 
-    /* Reference: internal 2.500 V, selected in the ADC itself on the EA. It
-     * powers up with the ADC per conversion and is released when the ADC is
-     * disabled (LOWLAT stays 0 = no standing analog current). */
-    ADC0.CTRLC   = ADC_REFSEL_2V500_gc;
+    /* Reference: internal 2.048 V (NOT 2.500 V -- see ADC_VREF_MV above; the
+     * 2.500 V option is out of spec below VDD 3.0 V and this card runs to 2.6 V).
+     * Selected in the ADC itself on the EA. It powers up with the ADC per
+     * conversion and is released when the ADC is disabled (LOWLAT stays 0 = no
+     * standing analog current). */
+    ADC0.CTRLC   = ADC_REFSEL_2V048_gc;
 
     /* long sample time: the VSENSE divider is 1M//1M ~ 500k source impedance,
      * far above the SAR's comfort zone, so stretch acquisition. C5 holds the
@@ -288,6 +322,7 @@ void sense_count_inc(void)
 #define SUN_POLLS_PER_HOUR ((uint16_t)(3600UL / POLL_PERIOD_S))   /* strong-sun polls that make one banked hour */
 
 static uint16_t sun_polls;                   /* strong-sun polls counted in the current partial hour */
+static uint8_t  hours_pending;               /* whole hours completed but not yet committed (rail below the EE floor) */
 
 /* Banked whole-hours of strong sun. Erased EEPROM reads all-ones -> report 0. Uncalled
  * on-chip BY DESIGN (UPDI/NDEF readout), like sense_count_get; kept as API. */
@@ -299,19 +334,28 @@ uint16_t sense_sun_hours_get(void)
 
 void sense_sun_tick(void)
 {
-    if (sun_polls < SUN_POLLS_PER_HOUR) sun_polls++;   /* saturate: a waiting hour can't wrap the counter */
-    if (sun_polls < SUN_POLLS_PER_HOUR)
+    /* Bank COMPLETED HOURS, not just one. The rollover must always reset sun_polls
+     * and credit an hour; only the EEPROM COMMIT waits for a safe rail. Getting this
+     * wrong (saturating sun_polls at the rollover and returning) silently discarded
+     * every hour after the first for as long as the rail stayed low -- exactly the
+     * cold-start case of strong sun on a deeply drained tank, where VIN is high while
+     * STO is still under the floor, i.e. the longest sun spells were the ones least
+     * likely to be counted. Same shape as the tap tally above, for the same reason. */
+    if (++sun_polls < SUN_POLLS_PER_HOUR)
         return;                              /* still inside the current hour */
-    /* Rail gate, same as every other writer (board.h EE_WRITE_FLOOR_MV). Hold the
-     * banked hour in RAM rather than dropping it: an hour completed at a low rail is
-     * credited on the next safe tick instead of being lost or written unsafely.
-     * Strong sun implies the harvester is running, so this rarely waits at all. */
-    if (!sense_ee_safe())
-        return;                              /* hour stays banked -- retry next poll */
     sun_polls = 0;
+    if (hours_pending < 0xFFu) hours_pending++;   /* saturate: 255 unflushed hours is already pathological */
+    /* Rail gate, same as every other writer (board.h EE_WRITE_FLOOR_MV). Checked only
+     * when there is something to flush, so a low rail costs no ADC conversion here. */
+    if (!sense_ee_safe())
+        return;                              /* hours stay banked -- retry next rollover */
     uint16_t h = sense_sun_hours_get();
-    if (h < 0xFFFEu)                         /* saturate near the top (and never store 0xFFFF, which reads as 0) */
-        eeprom_update_word(EE_SUN_HOURS_ADDR, (uint16_t)(h + 1u));
+    uint16_t add = hours_pending;
+    if (h + add > 0xFFFEu) add = (uint16_t)(0xFFFEu - h);   /* saturate; never store 0xFFFF (reads as 0) */
+    if (add) {
+        eeprom_update_word(EE_SUN_HOURS_ADDR, (uint16_t)(h + add));
+        hours_pending = 0;
+    }
 }
 
 /* ---------- MCU internal die temperature + lifetime-max log ---------- */
@@ -329,7 +373,7 @@ int16_t sense_temp_c(void)
 {
     ADC0.CTRLC = ADC_REFSEL_1V024_gc;                       /* temp-sensor reference (EA: 1.024 V) */
     uint16_t raw = adc_read_raw(ADC_MUXPOS_TEMPSENSE_gc);   /* 12-bit, right-adjusted */
-    ADC0.CTRLC = ADC_REFSEL_2V500_gc;                       /* restore for rail/light reads */
+    ADC0.CTRLC = ADC_REFSEL_2V048_gc;                       /* restore for rail/light reads (see ADC_VREF_MV) */
     if (raw == 0) return INT16_MIN;                         /* stuck ADC -> sentinel (max logger ignores) */
     int32_t offset = (int16_t)SIGROW.TEMPSENSE1;            /* signed offset correction */
     int32_t slope  = (int16_t)SIGROW.TEMPSENSE0;            /* signed gain/slope correction */

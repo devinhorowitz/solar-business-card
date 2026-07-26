@@ -400,6 +400,19 @@ int main(void)
              * fired; only the latch was left behind. */
             if ((ACC_PORT.IN & ACC_INT1_bm) && !f_tap)     adxl367_clear_tap();
             if ((ACC_PORT.IN & ACC_INT2_bm) && !f_motion)  adxl367_clear_activity();
+            /* Held-field release. The FD handler disables AEM charging while a
+             * reader's field is present (to quiet the DCDC for the read), and
+             * re-enables it on the field-LEAVE edge. A field that never leaves
+             * therefore never produces that edge: a phone left sitting on the
+             * card, a transit gate, an always-on reader in a drawer -- and the
+             * card sits with harvesting DISABLED indefinitely, unable to recharge
+             * from the very light it is lying in. A read is milliseconds; a field
+             * still present a full poll later is furniture, not a transaction, so
+             * stop paying for it and resume charging. If it is genuinely still
+             * reading, the only cost is DCDC noise during an exchange the phone
+             * will retry anyway -- strictly better than never charging again. */
+            if (!(FD_PORT.IN & FD_PIN_bm))
+                ENSTOCH_PORT.OUTCLR = ENSTOCH_PIN_bm;   /* field still held -> re-enable charging */
 #if USE_NFC_ACK_COOLDOWN
             if (nfc_cooldown) nfc_cooldown--;   /* age the NFC-ack rate-limit on the poll tick (~1 s) */
 #endif

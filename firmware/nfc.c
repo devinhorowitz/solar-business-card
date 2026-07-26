@@ -265,9 +265,19 @@ uint8_t nfc_provision_default(void)
     /* power the tag on for the write and drop it back off on EVERY path. */
     if (nfc_power_on()) { nfc_power_off(); return 1; }   /* tag never came up  */
     if (!nfc_present()) { nfc_power_off(); return 1; }   /* up, but wrong part */
-    /* CC first: without it the NDEF below is invisible to every phone. */
-    rc  = nfc_write_cc();
-    rc |= nfc_write_ndef(ndef_default, (uint16_t)sizeof ndef_default);
+    /* NDEF FIRST, CC LAST. The CC is what makes a phone parse the user pages at
+     * all, so publishing it before the payload is written is publishing a promise
+     * we have not kept: if the NDEF write then faults partway (a bus glitch, or --
+     * per nfc_write_cc's own documented risk -- the tag having moved to another I2C
+     * address so every following block NACKs), the tag advertises itself as
+     * NDEF-capable over pages whose content the datasheet says is undefined at
+     * delivery, and a phone shows the user garbage. Ordered this way the failure
+     * mode is a tag that readers simply ignore, which is recoverable by re-running
+     * provisioning. Costs nothing: the NDEF is invisible until the CC lands either
+     * way. Bail before the CC if the payload did not land. */
+    rc = nfc_write_ndef(ndef_default, (uint16_t)sizeof ndef_default);
+    if (rc == 0)
+        rc = nfc_write_cc();      /* publish only once the payload behind it is good */
     nfc_power_off();
     return rc ? 1u : 0u;
 }

@@ -62,7 +62,14 @@ void fram_sleep(void)
             return;                       /* all three ACKed -> part is asleep */
         }
         twi_stop();
-        _delay_us(FRAM_TREC_US);          /* maybe mid-recovery: retry once */
+        /* Only delay if another attempt will actually use it. The common case on
+         * this card is the per-poll defensive re-park (FRAM_RESLEEP_EVERY_POLL) of
+         * an ALREADY-sleeping part, which NACKs both attempts -- so a delay after
+         * the final one was pure busy-wait: 600 us of ACTIVE-mode spin, every poll,
+         * forever, for nothing. Halving it here costs nothing in behaviour (the
+         * retry still gets its full tREC settle). */
+        if (t == 0)
+            _delay_us(FRAM_TREC_US);      /* maybe mid-recovery: settle, retry once */
     }
 }
 
