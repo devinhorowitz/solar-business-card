@@ -238,9 +238,12 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
 - [x] **[BOARD — FAB CORRECTNESS] DNP attributes corrected in BOTH .kicad_sch and .kicad_pcb**
   _(2026-07-26 PCB audit; DONE — attribute/metadata only, no copper touched.)_ The two files disagreed
   with each other and with intent. **U7** (MB85RC512TY FRAM) carried `(attr smd dnp)` in the .kicad_pcb
-  though the schematic correctly had `(dnp no)` — assembly output would have told the assembler to skip
-  a fitted, firmware-required part (the driver is NACK-tolerant, so it would have failed silently);
-  cleared to `(attr smd)`. **SJ1** was wrong in *both* files — `(dnp no)` in the schematic and a bare
+  though the schematic correctly had `(dnp no)`; cleared to `(attr smd)`. *(Consequence stated
+  accurately: this did NOT threaten the fab output — `solar-glow-drh.kibot.yaml` marks the pick+place
+  CSV "informational, the fab CPL follows the pre-order checklist", and the generated CPL in fact lists
+  U7 and every other DNP part. The real point is that the schematic is UPSTREAM: on the next
+  "Update PCB from Schematic" the board's stray flag would have been overwritten anyway, while SJ1's
+  do-not-populate intent — which lived only in a Value string — would have been silently lost.)* **SJ1** was wrong in *both* files — `(dnp no)` in the schematic and a bare
   `(attr smd)` in the board, with the intent recorded only in its Value text; set to `(dnp yes)` /
   `(attr smd dnp)`, matching C9's in-BOM-but-not-placed pattern so its documented "(DNP — not ordered)"
   BOM row survives. Every part's sch and pcb flags now agree. Schematic edited byte-safe: 24,650 CRLF
