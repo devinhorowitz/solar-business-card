@@ -12,9 +12,12 @@
  * so calling it on an already-sleeping or absent part is harmless.
  *
  * Memory model: linear 16-bit byte address 0x0000..0xFFFF (64 KB). Unlike the
- * NFC EEPROM, FeRAM writes commit at the STOP -- there is NO post-write settle
- * delay and no busy poll (datasheet: "does not need a polling sequence after
- * writing"). Endurance is ~1e13 cycles, so per-event logging is effectively free.
+ * NFC EEPROM there is NO post-write settle delay and no busy poll (datasheet:
+ * "does not need a polling sequence after writing"); each byte commits as it is
+ * acknowledged ("the data will be written to FeRAM right after the ACK response
+ * finished"), so an aborted multi-byte write keeps the bytes already ACKed --
+ * see fram.c on why the boot record is safe under that. Endurance is ~1e13
+ * cycles, so per-event logging is effectively free.
  *
  * Transactions (datasheet):
  *   write  = [S][0x50|W][addrHi][addrLo][data..][P]

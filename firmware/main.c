@@ -257,6 +257,16 @@ int main(void)
      * any FD edge on PORTA (PA6). */
     PORTF.INTFLAGS = ACC_INT1_bm | ACC_INT2_bm;
     FD_PORT.INTFLAGS = FD_PIN_bm;
+    /* ... and only THEN re-clear the accel's own event latches. Order matters:
+     * adxl367_init_tap()'s trailing clears ran BEFORE the flag clear above, so a
+     * real tap in between would sit latched (the ADXL367 holds INTn HIGH until
+     * STATUS is read) with its one PF0 rising edge just discarded -- no new edge
+     * would ever come and tap wake would be dead until the next reset. This
+     * second STATUS/STATUS_2 read releases any such latch; a tap from here on
+     * lands a fresh edge in the already-cleared INTFLAGS and is served normally
+     * once sei() arms the ISRs. (Cost: two I2C byte reads, boot-only.) */
+    adxl367_clear_tap();
+    adxl367_clear_activity();
     f_tap = f_motion = f_tick = f_nfc = 0;
 
 #if USE_WDT
@@ -304,7 +314,10 @@ int main(void)
                 /* tally BEFORE the glow: the EEPROM write then happens at the
                  * higher pre-glow rail, not after the glow has sagged it. The
                  * ~13 ms write is imperceptible ahead of the animation. peak is the
-                 * rail-scaled brightness (brownout stretch), 0 below the floor. */
+                 * rail-scaled brightness (brownout stretch), 0 below the floor.
+                 * (sense_count_inc also honors EE_WRITE_FLOOR_MV: with the rail in
+                 * the [glow floor, EE floor) band it banks the tap in RAM and
+                 * flushes on a later safe tap -- erratum 2.2.1 discipline.) */
                 sense_count_inc();
                 if (dbl)
                     led_breathe(DTAP_CYCLES, DTAP_BREATH_MS, peak);  /* signature */
@@ -374,6 +387,19 @@ int main(void)
         }
         else if (f_tick) {
             f_tick = 0;
+            /* Stuck-INT backstop. The ADXL367 holds INTn HIGH until its status
+             * register is read, and PF0/PF1 sense RISING edges only -- so if an
+             * ack ever fails (a bus fault inside adxl367_read_tap() /
+             * clear_activity(), which return quietly by design), the pin stays
+             * high, no further edge can ever occur, and that input is dead until
+             * the next reset. Tap is the card's PRIMARY input, so it gets a
+             * backstop: a pin still asserted at poll time with no flag pending
+             * means exactly that failure, and re-reading the status register
+             * re-arms the edge. Free in the healthy case (a PORT.IN read, no I2C)
+             * and it cannot invent an event -- the glow for that tap already
+             * fired; only the latch was left behind. */
+            if ((ACC_PORT.IN & ACC_INT1_bm) && !f_tap)     adxl367_clear_tap();
+            if ((ACC_PORT.IN & ACC_INT2_bm) && !f_motion)  adxl367_clear_activity();
 #if USE_NFC_ACK_COOLDOWN
             if (nfc_cooldown) nfc_cooldown--;   /* age the NFC-ack rate-limit on the poll tick (~1 s) */
 #endif
@@ -387,7 +413,8 @@ int main(void)
             /* black box: lowest rail ever (RAM-tracked, committed to EEPROM only from a healthy rail)
              * plus the deferred power-cycle count. Before the dormancy gate, so a quietly-starving
              * stowed card is still tracked. Both defer their EEPROM write off a low/collapsing rail so
-             * it can't corrupt (DS40002443 sec 8.3.4 (EA; same corruption window as the DD's 11.3.3)). */
+             * it can't corrupt (DS40002443 sec 11.3.3, "Preventing Flash/EEPROM Corruption"; the DD
+             * documents the same window). */
             sense_vmin_tick();
             sense_boot_commit();   /* write a boot-flagged power cycle once the rail has charged past the write floor */
 #endif
@@ -448,7 +475,12 @@ int main(void)
 
 /* ---------------- ISRs ---------------- */
 
-/* accel interrupts share PORTF: PF0 = tap, PF1 = activity. */
+/* accel interrupts share PORTF: PF0 = tap, PF1 = activity. The snapshot ->
+ * write-back order is SAFE here (unlike the FD ISR below, which must clear
+ * first): a same-pin re-edge inside the ISR is impossible because the ADXL367
+ * LATCHES INTn high until its STATUS/STATUS_2 register is read in the main
+ * loop, and a cross-pin edge landing mid-ISR sets a bit that is 0 in `fl`, so
+ * the write-1-to-clear below leaves it pending and the vector re-runs. */
 ISR(PORTF_PORT_vect)
 {
     uint8_t fl = PORTF.INTFLAGS;
@@ -465,16 +497,25 @@ ISR(PORTF_PORT_vect)
  * reads FD live) and the loop falls back to sleep, keeping the MCU quiet for the read. */
 ISR(PORTA_PORT_vect)
 {
-    uint8_t fl = PORTA.INTFLAGS;
-    if (fl & FD_PIN_bm) {
-        if (FD_PORT.IN & FD_PIN_bm) {
-            f_nfc = 1;                              /* pin high now = rising = field left */
-            ENSTOCH_PORT.OUTCLR = ENSTOCH_PIN_bm;   /* gate low -> Q2 off -> AEM charge resumes */
-        } else {
-            ENSTOCH_PORT.OUTSET = ENSTOCH_PIN_bm;   /* field present -> Q2 on -> quiet the DCDC */
-        }
+    /* Clear FIRST, then act on the LIVE pin level. The old snapshot -> act ->
+     * write-back order ate edges: a second FD edge landing inside the ISR set
+     * the SAME already-set flag bit, and the trailing write-1 then cleared it
+     * unseen -- no re-run. Losing a rising edge that chased a falling one left
+     * EN_STO_CH latched high (CHARGING DISABLED) until the next NFC tap came
+     * to toggle it, or until a full drain killed the MCU and R18 rescued the
+     * gate. Cleared up front, any edge from here on re-pends the vector and
+     * this handler runs again; acting on the level (not the edge direction)
+     * makes the re-run converge on the correct final state even for a fast
+     * fall+rise pair. PA6 is the only PORTA pin with interrupts enabled, and
+     * an edge with the pin now high implies a field DID leave, so the ack
+     * semantics of f_nfc are preserved (main rate-limits the glow anyway). */
+    PORTA.INTFLAGS = FD_PIN_bm;
+    if (FD_PORT.IN & FD_PIN_bm) {
+        f_nfc = 1;                              /* high = field left -> post-read ack glow */
+        ENSTOCH_PORT.OUTCLR = ENSTOCH_PIN_bm;   /* gate low -> Q2 off -> AEM charge resumes */
+    } else {
+        ENSTOCH_PORT.OUTSET = ENSTOCH_PIN_bm;   /* field present -> Q2 on -> quiet the DCDC */
     }
-    PORTA.INTFLAGS = fl;                   /* write-1-to-clear */
 }
 
 ISR(RTC_PIT_vect)

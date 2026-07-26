@@ -67,7 +67,10 @@ uint8_t nfc_read_reg(uint8_t reg, uint8_t *val)
     if (twi_write(reg))               { twi_stop(); return 1; }   /* REGA       */
     twi_stop();                                                   /* end addr phase (Fig 19) */
     if (twi_start(NT3H_ADDR, 1))      { twi_stop(); return 1; }   /* START + read */
-    return twi_read(0, val);                                      /* NACK + STOP */
+    if (twi_read(0, val))             { twi_stop(); return 1; }   /* fault mid-read: force the
+                                                                   * STOP ourselves (success
+                                                                   * already NACKed + STOPped) */
+    return 0;
 }
 
 /* ---- sec 9.8 register WRITE (mask): START, AA, FEh, REGA, MASK, DAT, STOP ---- */
@@ -206,6 +209,55 @@ static const uint8_t ndef_default[] = {
     0x52, 0x44, 0x0D, 0x0A, 0xFE, 0x00, 0x00, 0x00
 };
 
+/* ---- Capability Container: REQUIRED, the tag does not ship with one ----
+ *
+ * Datasheet sec 8.3.10 ("Memory content at delivery") is explicit: "the CC in
+ * page 03h is set to all 00h to keep the full flexibility. To allow NFC Forum
+ * NDEF message reading and writing page 03h (CC) and the following data page
+ * (NDEF TLV) ... need to be initialized by the user". A CC of 00 00 00 00 means
+ * NO phone recognises the tag as NDEF-capable -- the vCard would be written,
+ * intact, and simply never offered to anyone. (nfc.h previously asserted the CC
+ * "ships = E1 10 6D 00"; that is Table 8's REQUIRED target value, not the
+ * delivery state. nfc_check_cc() would have caught it -- it was never called.)
+ *
+ * The CC lives in NFC page 03h = I2C block 0 bytes 12..15, so this is a
+ * read-modify-write of block 0 -- the one block the driver otherwise never
+ * touches, because byte 0 is the I2C address:
+ *
+ *   "I2C slave address is stored in most significant 7 bits of byte 0 in block
+ *    0. However, when reading block 0, NTAG I2C plus always returns 04h for
+ *    byte 0. WARNING: When configuring Static lock bytes and Capability
+ *    container, Address byte gets updated, too." (sec 8.3.2)
+ *
+ * So a naive write-back of what we read (04h) would, by that same normative
+ * sentence, re-address the tag to 04h>>1 = 0x02 and lose I2C access to it. The
+ * datasheet's trailing REMARK does recommend 04h "for convenience", which
+ * contradicts the rule directly above it. We write (NT3H_ADDR << 1) = 0xAA
+ * instead: it is the ONLY value that is correct under BOTH readings -- its top
+ * 7 bits ARE 0x55, so the address is preserved literally, and no reading of the
+ * datasheet has it meaning anything else. Bytes 1..11 (UID, internal, lock
+ * bytes) are written back exactly as read.
+ *
+ * BENCH: confirm on the first tag before provisioning a keepsake card -- after
+ * this write the tag must still ACK at 0x55 (nfc_present()). If it does not,
+ * the "04h" reading was the operative one and the tag now lives at 0x02; that
+ * is recoverable (point NT3H_ADDR there), not fatal, and RF/vCard is unaffected
+ * either way since the RF side never uses the I2C address. */
+static uint8_t nfc_write_cc(void)
+{
+    uint8_t b0[NFC_BLOCK_SZ];
+
+    if (nfc_read_block(0x00, b0)) return 1;
+    if (b0[12] == NFC_CC0 && b0[13] == NFC_CC1 &&
+        b0[14] == NFC_CC2 && b0[15] == NFC_CC3)
+        return 0;                      /* already provisioned -- no EEPROM wear */
+
+    b0[0]  = (uint8_t)(NT3H_ADDR << 1); /* keep the tag at its current address */
+    b0[12] = NFC_CC0; b0[13] = NFC_CC1; /* E1 10 6D 00: NDEF-capable, 872 B in */
+    b0[14] = NFC_CC2; b0[15] = NFC_CC3; /* sector 0 (Table 8)                  */
+    return nfc_write_block(0x00, b0);
+}
+
 uint8_t nfc_provision_default(void)
 {
     uint8_t rc;
@@ -213,7 +265,9 @@ uint8_t nfc_provision_default(void)
     /* power the tag on for the write and drop it back off on EVERY path. */
     if (nfc_power_on()) { nfc_power_off(); return 1; }   /* tag never came up  */
     if (!nfc_present()) { nfc_power_off(); return 1; }   /* up, but wrong part */
-    rc = nfc_write_ndef(ndef_default, (uint16_t)sizeof ndef_default);
+    /* CC first: without it the NDEF below is invisible to every phone. */
+    rc  = nfc_write_cc();
+    rc |= nfc_write_ndef(ndef_default, (uint16_t)sizeof ndef_default);
     nfc_power_off();
-    return rc;
+    return rc ? 1u : 0u;
 }

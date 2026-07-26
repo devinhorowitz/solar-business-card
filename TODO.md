@@ -59,6 +59,28 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
 
 ## Firmware — `firmware/`, `firmware/README.md`
 
+- [ ] **[BENCH] NFC Capability Container write — confirm the tag survives at 0x55**
+  _(2026-07-26 firmware audit; fix LANDED in `nfc_write_cc()`.)_ The tag ships with CC = all-00h
+  (datasheet 8.3.10), so provisioning now writes `E1 10 6D 00` into I2C block 0 — the block whose
+  byte 0 is the I²C address. We write `NT3H_ADDR << 1` = 0xAA there, the only value correct under
+  both of the datasheet's two contradictory statements (8.3.2's "MS 7 bits are the address" rule vs.
+  its trailing REMARK recommending 04h). **On the first provisioned tag, verify `nfc_present()` still
+  ACKs at 0x55 after the CC write.** If it does not, the tag moved to 0x02 — repoint `NT3H_ADDR`;
+  RF/vCard is unaffected either way. Then confirm a phone actually offers the vCard (the whole point
+  of the fix — before it, no phone would).
+
+- [ ] **[BENCH] I²C bus-clear — exercise the recovery path** _(2026-07-26 firmware audit; fix LANDED
+  in `twi_bus_clear()`, called from `twi_init()`.)_ Deliberately wedge the bus (reset the MCU mid-read
+  so a target is left driving SDA low) and confirm the 9-pulse + STOP recovery frees it and the accel
+  answers on the next boot. Also worth scoping once: that the recovery's 5 µs half-period is really
+  ~100 kHz at the fused 1 MHz CLK_PER.
+
+- [ ] **[BENCH] ADXL367 7.5 ms reset latency — confirm config now sticks** _(2026-07-26 firmware audit;
+  `_delay_ms(2)` → `_delay_ms(10)`, datasheet Rev. B Table 37.)_ The old under-spec wait could leave the
+  part at reset defaults with the tap engine off. After flashing, read back FILTER_CTL / POWER_CTL /
+  INTMAP1_UPPER over I²C and confirm they hold the configured values, not 0x00 / reset defaults.
+
+
 - [ ] **[BENCH] LED sub-emission idle-bias — Hi-Z park + docs LANDED, bench measurement remains**
   _(2026-07-23 fw / 2026-07-25 docs; the pads park as inputs between animations (bias → clamp-limited
   ~1 V worst case, zero below STO ≈ 3.6 V), and both the Hi-Z park and the SW2-OFF stow discipline are

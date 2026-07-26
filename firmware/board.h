@@ -293,8 +293,11 @@
 #define VS_GLOW_DIM_PEAK     70
 
 /* EEPROM write-safety floor, mV: the rail must be at/above this for firmware to START an EEPROM
- * write (the telemetry loggers -- min-rail, max-temp, power-cycle count). A Flash/EEPROM write on a
- * collapsing rail can corrupt (DS40002443 sec 8.3.4 (EA; same corruption window as the DD's 11.3.3) "Preventing Flash/EEPROM Corruption"); the
+ * write (EVERY writer honors it: the telemetry loggers -- min-rail, max-temp, power-cycle count --
+ * and the tap tally, which banks taps in RAM below the floor and flushes on a later safe tap). A
+ * Flash/EEPROM write on a
+ * collapsing rail can corrupt (DS40002443 sec 11.3.3 "Preventing Flash/EEPROM Corruption"; the DD
+ * documents the same window); the
  * hardware BOD only *aborts* a write already in progress, so this is the software "don't start a
  * write near the edge" guard -- the job the datasheet assigns to the VLM, done here so it holds
  * between the sampled BOD's checks (and even if the BOD is off). Set comfortably above the BOD level

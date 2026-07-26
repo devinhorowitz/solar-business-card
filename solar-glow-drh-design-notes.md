@@ -1379,3 +1379,122 @@ binning tables). Brightness may land anywhere from **V2 (900 mcd / 3030 mlm, ~49
 mid-span nominal, not a guarantee. **The energy-budget measurement and the glow-duty constants must be
 sized against the V2 floor**, not the nominal; a lucky reel could be 3x brighter than the worst case,
 so the design must work at the floor and simply look better if the bin is kind.
+
+---
+
+## Addendum — end-to-end firmware audit (2026-07-26)
+
+The EA port, the Q2 charge-disable inversion, the FRAM sleep model, the LED Hi-Z park and the
+Rev. B1 errata guards all landed **incrementally**, each verified on its own. This was the first
+sweep of the whole tree (2,540 lines) for *cross-module* defects: four parallel audit lanes
+(register contracts / ISR + concurrency / peripheral drivers / state machine + arithmetic), every
+fatal or major finding then handed to independent adversarial refuters, and every survivor
+re-verified by hand against the primary source before any code changed. 16 findings raised,
+13 survived, all 13 fixed. Firmware went 4,234 -> 4,444 B (+210 B, ~0.3 % of flash).
+
+**Two would have shipped a visibly broken card.**
+
+**1. FATAL-in-effect — the NFC tag has no Capability Container until we write one.** `nfc.h`
+asserted the CC "ships = E1 10 6D 00", so provisioning never wrote it. The NT3H2211 datasheet
+sec 8.3.10 says the opposite in as many words: *"the CC in page 03h is set to all 00h to keep the
+full flexibility. To allow NFC Forum NDEF message reading and writing page 03h (CC) and the
+following data page (NDEF TLV) ... need to be initialized by the user."* E1 10 6D 00 is Table 8's
+**required target**, not the delivery state. The consequence is silent and total: the vCard gets
+written perfectly and **no phone ever offers it**, because a CC of all-zeros means "not an NDEF
+tag." The card's entire NFC value proposition, dead, with every self-test passing — `nfc_check_cc()`
+existed and would have caught it, but was never called. Now `nfc_write_cc()` runs first in
+provisioning.
+
+The fix has a sharp edge worth recording. The CC lives in I2C block 0, whose **byte 0 is the I2C
+address** — and sec 8.3.2 warns *"When configuring Static lock bytes and Capability container,
+Address byte gets updated, too."* Reading block 0 always returns `04h` for byte 0, so the naive
+read-modify-write writes `04h` back, which by that section's own rule ("slave address ... most
+significant 7 bits") re-addresses the tag to **0x02** and loses I2C access to it. The datasheet
+then muddies it with a trailing REMARK recommending exactly `04h` "for convenience" — contradicting
+the rule directly above. We write **`NT3H_ADDR << 1` = 0xAA**, which is the only value correct under
+*both* readings: its top 7 bits literally are 0x55. Bench-confirm on the first tag (it must still
+ACK at 0x55); if it does not, the tag is at 0x02 — recoverable, and the RF/vCard path is unaffected
+regardless, since RF never uses the I2C address.
+
+**2. MAJOR — the accelerometer was configured 5.5 ms too early.** `_delay_ms(2)` after the soft
+reset, against the ADXL367 datasheet's flat requirement (Rev. B, Table 37): *"A latency of 7.5 ms is
+required after a software reset."* The ID check and all fourteen config writes could land while the
+part was still resetting, leaving it at reset defaults — tap engine off, interrupts unmapped — i.e.
+**the card's only input dead, on a boot that reported success.** Now 10 ms.
+
+**Three dead-input / dead-charging latch paths.** All share one shape: the ADXL367 holds INTn high
+until its status register is read, and PF0/PF1 sense *rising edges only*, so any missed ack is
+permanent — no further edge can ever arrive.
+- *Boot*: a tap landing between `adxl367_init_tap()`'s trailing latch clears and main's
+  `PORTF.INTFLAGS` clear was discarded with the pin left high. Tap dead until reset. Fixed by
+  re-clearing the device latches **after** the port flags.
+- *Runtime*: a single bus fault inside the tap branch's `STATUS_2` read orphaned the latch the same
+  way. Fixed with a poll-tick backstop — a pin still asserted with no flag pending is precisely that
+  failure, and re-reading status re-arms the edge. Free in the healthy case (a `PORT.IN` read, no
+  I2C traffic) and it cannot invent an event: the glow for that tap already fired.
+- *FD ISR*: the snapshot -> act -> write-back order let a second FD edge arriving mid-ISR set an
+  already-set flag bit, which the trailing write-1-to-clear then erased unseen. Losing a rising edge
+  that chased a falling one left `EN_STO_CH` latched high — **supercap charging disabled** until the
+  next NFC tap happened by, or a full drain killed the MCU and R18 rescued the gate. Now clears
+  first and acts on the live pin level, so any mid-ISR edge re-pends the vector and the re-run
+  converges.
+
+**The I²C bus could hang the core, and could wedge permanently.** Two independent gaps, both now
+closed:
+- `twi.h` claimed "every wait has a bus-error / arbitration escape so a wedged bus cannot hang the
+  core." False. The `MCTRLA` inactive-bus TIMEOUT is SMBus **bus-free** detection: per DS40002443
+  sec 27.5 it only returns the state machine to Idle, sets no MSTATUS flag any wait tests, and a
+  target stretching SCL low is not an idle bus at all. The NT3H2211 stretches by POR default and NXP
+  warns an interrupted read leaves it stretching *"infinitely."* Before the fix that was an
+  **unbounded hang** in the pre-watchdog init window (harvested light can power a spinning core
+  indefinitely) and an 8 s watchdog reset after. All four waits now run through a bounded
+  `twi_wait()` — 8192 spins x 10 cycles, disassembly-verified, ~82 ms, far above any legitimate
+  transfer and far under the watchdog. The same rework closed a subtler hole: WIF sets *together*
+  with ARBLOST/BUSERR, and RXACK is only valid when both are clear (sec 27.3.2.2.4), so a lost
+  arbitration could previously read as success.
+- There was **no bus-clear**. A watchdog or brown-out reset landing while a target clocks out a byte
+  leaves that target driving SDA low forever, and a host cannot issue a START on a low SDA — every
+  transaction fails for the life of the power cycle, which for the accel means a dead card that
+  still boots and still polls. `twi_init()` now runs the I²C-spec recovery (UM10204 sec 3.1.16) —
+  up to 9 SCL pulses then a STOP — before handing the pins to TWI0, emulating open-drain correctly
+  (drive low or release; never drive high into a held line). No-op when SDA is already high.
+
+**EEPROM write-floor discipline, completed.** `board.h` states every writer honors
+`EE_WRITE_FLOOR_MV` (2850 mV) — on Rev. B1 that is a *functional* requirement, since errata 2.2.1
+says NVM writes below 2.7 V may simply fail. Two writers didn't: the **tap tally** (gated only by
+the 2750 mV *glow* floor, so any tap in that 100 mV band wrote at ~2.7 V) and the **sun diary**
+(ungated entirely). Both now bank in RAM and flush on a later safe tick, so the discipline is real
+rather than aspirational, and no count is dropped merely for arriving at a low rail.
+
+**Corrections to our own documentation** (each verified against the source, not assumed):
+- The EA's "Preventing Flash/EEPROM Corruption" is **sec 11.3.3**, not 8.3.4 — seven sites had the
+  EA/DD numbers transposed.
+- BODLEVEL2's falling minimum is **2.43 V**: DS80001048C's data-sheet-clarification section
+  supersedes the 2.47 V in the DS40002443 table. The errata sheet is the newer document.
+- FeRAM commits **per byte, right after each ACK** ("the data will be written to FeRAM right after
+  the ACK response finished"), *not* at the STOP as fram.c/fram.h claimed. Immaterial to timing but
+  material to **failure atomicity**: an aborted multi-byte write keeps the bytes already ACKed, so
+  any future record that must not be read half-written needs a commit marker written last. The boot
+  record is safe by construction (magic re-checked and re-seeded on read).
+- The ADC guard loop bounds a stuck ADC to **3 wakes, not a time**; on a dark, motionless card the
+  only Idle wake is the 1 Hz PIT, so a tick chaining several reads can outrun the 8 s watchdog. That
+  is the *designed* recovery for dead analog, not an oversight — but the comment claimed the
+  opposite ("well under the watchdog") and is now honest.
+
+**Verified clean** (recorded so the next audit need not re-derive it): the SEI+SLEEP atomicity idiom
+at all three sleep sites; EA sec 18.3.3.1 fully-asynchronous pin sensing, so PF0/PF1/PA6 genuinely
+wake from Power-Down; CCP hardware-blocks interrupts for its duration, making the EEPROM write
+sequence ISR-safe; the PORTF ISR's snapshot ordering (safe for the opposite reason the FD ISR's was
+not — the accel latch prevents same-pin re-edges, and cross-pin edges survive the write-1-to-clear);
+the EEPROM telemetry map (offsets 0-10, no overlap); all five compile-time ADC count folds,
+recomputed by hand; the NDEF TLV framing, byte-exact; `led_sweep`'s Q8 fixed-point including the
+overlap=0 guard; and the FRAM/NFC bounds arithmetic (`(uint32_t)addr + len` cannot wrap).
+
+Also fixed en route, found by the audit rather than reported by it: the **Makefile had no header
+dependencies**, so an edited `twi.h` or `board.h` silently left stale objects in an incremental
+build — caught live when a twi.h change didn't rebuild.
+
+**Still bench-gated** (unchanged by this pass): the energy budget remains the #1 open gate, and
+every one of these fixes is reasoning from datasheets, not from a scope trace. The new bench items
+this audit created — confirm the tag still ACKs at 0x55 after the CC write, and confirm the bus-clear
+path on a deliberately-wedged bus — are in TODO.
