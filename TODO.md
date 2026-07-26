@@ -423,6 +423,10 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   process margin. Fixed by necking **only the 9 congested segments** (8 VINT + 1 EN_STO_CH, matched
   one-to-one against the CI violation list) back to 0.15 mm — standard practice for a run passing
   between pads — and leaving the widening on the other 30 segments, where it is legal and harmless.
+  **Confirmed by CI at `b674f68`: DRC errors 15 → 4.** All 11 cleared. The 4 that remain are exactly
+  the two KiCad-requiring items above — 2× `shorting_items` for D2's anode/K2 short, and 2×
+  `clearance 0.0000` for D2.A / D5.K against the stale `GND_B` fill. **PCB CI stays red until both
+  are done**, and the D2 reroute forces a refill anyway, so they are one sitting.
 
 - [ ] **PCBWay orders** — confirm both replies sent (`W567099ASH69` bare fab, `T-H70W567099A` PCBA);
   get the LED package dimension answer (1.25 vs 1.9 mm) and the merged PCB+PCBA total; ensure the PO
