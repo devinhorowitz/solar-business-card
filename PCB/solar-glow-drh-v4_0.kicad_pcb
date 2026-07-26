@@ -9466,7 +9466,7 @@
 		(pad "5" smd roundrect
 			(at 1.1375 0 270)
 			(size 1.325 0.6)
-			(layers "B.Cu" "B.Mask" "B.Paste")
+			(layers "B.Cu" "B.Mask")
 			(roundrect_rratio 0.25)
 			(net "unconnected-(U9-NC-Pad5)")
 			(pinfunction "NC_5")

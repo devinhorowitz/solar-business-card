@@ -243,6 +243,19 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
 
 ## PCB — `PCB/solar-glow-drh-v4_0.kicad_pcb` / `.kicad_sch`
 
+- [ ] **[COPPER — optional cleanup] U9 sits on a SOT-23-6 land for a 5-pin part**
+  _(2026-07-26; the electrical defect is FIXED — this is the tidy-up.)_ The OUT-on-the-wrong-pad bug
+  is resolved (symbol OUT = pin 6, board pad 6 = VS), and pad 5's paste aperture is removed so the
+  vacant middle land cannot form a loose solder ball under the package. What remains is cosmetic:
+  the footprint still carries a 6th land for a part with 5 leads. **Do not simply delete pad 5** —
+  the symbol has a pin 5, so deleting the pad orphans it and KiCad will complain on the next netlist
+  update. The proper cure is to move U9 to a genuine `Package_TO_SOT_SMD:SOT-23-5` footprint and
+  renumber the symbol to the standard 1 IN / 2 GND / 3 EN / 4 NC / 5 OUT, where pad 5 sits opposite
+  pad 1 exactly where the OUT lead lands — which also makes the original mistake impossible to
+  repeat. Check first whether that footprint's pads sit at the same X as the current ±1.1375 mm; if
+  they are narrower, the three STO_LDO/GND/VS connections need touching up, which makes this a
+  moderate job rather than a swap. Low priority: the board is electrically correct as it stands.
+
 - [ ] **[COPPER — yours] AEM10300 CSRC ground return runs the long way round**
   _(2026-07-26 copper audit; you said you'd take this one.)_ C25's (22 µF CSRC) GND pad sits on a
   B.Cu ground island whose only layer transition is ~11 mm away, so the return to U8's thermal pad —
