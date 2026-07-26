@@ -243,6 +243,38 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
 
 ## PCB — `PCB/solar-glow-drh-v4_0.kicad_pcb` / `.kicad_sch`
 
+- [ ] **[COPPER — yours] AEM10300 CSRC ground return runs the long way round**
+  _(2026-07-26 copper audit; you said you'd take this one.)_ C25's (22 µF CSRC) GND pad sits on a
+  B.Cu ground island whose only layer transition is ~11 mm away, so the return to U8's thermal pad —
+  6 mm in a straight line — travels ~42 mm of pour. This is the input side of the DCDC's high-di/dt
+  loop, and the AEM10300 datasheet §14.1 is explicit: *"The GND return path between the DCDC
+  decoupling capacitors (CSRC - CSTO) and the AEM10300 thermal pad … must be as direct and short as
+  possible."* Fix is a couple of stitching vias near **(25.12, 54.22)** and **(29.18, 55.82)**.
+  ⚠ I measured the nearest non-GND copper at **0.281 mm** from the first location and 0.465 mm from
+  the second — both legal against the 0.126 mm floor but tighter than the audit claimed, so place
+  them with the pour visible and DRC live rather than from these coordinates alone.
+
+- [ ] **[COPPER — yours] U1 / U8 exposed-pad stencil apertures are 1:1 with the copper**
+  _(2026-07-26 copper audit.)_ U1's EP is 2.65 × 2.65 mm (7.02 mm²) and U8's is 2.3 × 2.3 mm
+  (5.29 mm²), each with a single full-size B.Paste aperture. IPC-7093 practice is to window-pane a
+  thermal pad to ~50–80 % paste coverage in an array, so the part does not float on excess solder and
+  outgassing has a path. **Deliberately not changed by me**: the right percentage depends on the
+  stencil foil thickness the assembler actually uses (the audit separately flagged apertures falling
+  under the 0.66 area-ratio floor at 0.125 mm foil), and PCBWay often supplies its own stencil data.
+  Worth one question to them before editing the footprints.
+
+- [ ] **[COPPER — yours] Two tight spots, each needing a part nudge rather than a reroute**
+  _(2026-07-26 copper audit.)_ R10 and C8 pads sit **0.159 mm** apart on different nets — the
+  tightest inter-component gap on the board. C13's pads leave a **0.075 mm** solder-mask sliver
+  against the glow-window opening, below a typical 0.1 mm (4 mil) dam minimum, so the web there will
+  likely not survive. Both want a small component move, which is why they are yours and not mine.
+
+- [ ] **[COPPER — low value] Teardrops applied to roughly half the board**
+  _(2026-07-26 copper audit.)_ 143 of 290 track-to-pad/via junctions have none. Teardrops are already
+  enabled in the board settings, so this is a regenerate-and-refill in KiCad, not hand work. Cosmetic
+  for reliability at this scale — do it only if you are in there anyway.
+
+
 - [x] **[BOARD — FAB CORRECTNESS] DNP attributes corrected in BOTH .kicad_sch and .kicad_pcb**
   _(2026-07-26 PCB audit; DONE — attribute/metadata only, no copper touched.)_ The two files disagreed
   with each other and with intent. **U7** (MB85RC512TY FRAM) carried `(attr smd dnp)` in the .kicad_pcb
