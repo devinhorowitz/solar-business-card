@@ -299,9 +299,32 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
 - [x] **[SCH] C29 added to the schematic — board and netlist now agree** _(2026-07-26; DONE.)_
   `solarglow:C29` lib symbol + instance at (410.21, 261.62), Reference C29, Value 100nF, Footprint
   `solarglow:C1` to match the board, wired VS/GND with the project's stub-and-global-label pattern.
-  Verified paren-balanced, 24,909 CRLF, zero bare LF. **Remaining small task: add C29 to the BOM
-  master** (`solar-glow-drh-v4_0-BOM.xlsx`) — it should join the existing 100 nF 0402 line, same
-  part as C1, not a new row.
+  Verified paren-balanced, 24,909 CRLF, zero bare LF.
+
+- [x] **[BOM] C29 added to the master, and two stale rows corrected** _(2026-07-26; DONE.)_
+  C29 is now its own row in `solar-glow-drh-v4_0-BOM.xlsx`, directly after C28. (An earlier note here
+  said it should "join the existing 100 nF 0402 line, not a new row" — **that was wrong**: the sheet
+  keeps one row per refdes and already carries nine separate rows for this same MPN, C5/C1/C3/C6/C12/
+  C7/C8/C24/C28. C29 makes ten.) Subtotal is a hardcoded number rather than a formula, so it was
+  updated by hand: **140.20 → 140.30**. Two corrections found while placing it:
+  - **C28's Function read "FRAM VNFC decoupling"** — stale. That predates the 2026-07-23 back-power
+    fix; U7 was re-railed to always-on VS and C28 followed it. Board pad 1 is on **VS**, not VNFC.
+    Now "FRAM (U7) decoupling — on VS". (VNFC decoupling is C8's job, on U5, and C8 *is* on VNFC.)
+  - **C1's Function** now names which pair it serves. Measured off the board: C29 pad 1 sits 1.00 mm
+    from U1 pin 18 (VS) and 1.27 mm from pin 19 (GND); C1 pad 1 sits 1.97 mm from pin 24 and 2.32 mm
+    from pin 25. So C29 serves 18/19 and C1 serves 24/25 — the split the decoupling finding asked for.
+
+- [x] **[TOOLING] `check_consistency.py` was blind to 4 of the board's 71 footprints**
+  _(2026-07-26; DONE — found while cross-checking BOM coverage against the board.)_ `board_footprints()`
+  matched the lib_id with `"([^"]+)"`, which cannot match an **empty** lib_id — and **MP1–MP4** (the
+  corner mounting pads) are stored as `(footprint ""`. They were silently dropped, so the map held 67
+  of 71 refdes and said nothing about it. My "all 67 footprints agree" claim was really "all 67 that
+  the regex could see." Fixed to `[^"]*`. The same pass added the flag that makes the board-only check
+  correct rather than merely quiet: all four carry **`attr board_only`**, KiCad's own "exists only on
+  the board, a sync must not delete it" marker, so they are *supposed* to be absent from the schematic
+  and must not trip the delete-warning. The checker now exempts by that flag and **prints the exempt
+  list every run**, so if one ever loses the flag it reappears as a real error instead of vanishing.
+  (`NPTH_mech` is board_only too but has no Reference property, so a refdes-keyed check cannot see it.)
 - [ ] **[COPPER] U1 has one decoupling cap for two VDD/GND pin pairs**
   _(2026-07-26 copper audit; moderate effort.)_ Contrary to an explicit datasheet requirement, and it
   bears on the ADC noise floor — which now matters more than it used to, since the glow floor, the
@@ -383,6 +406,22 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   BOM row survives. Every part's sch and pcb flags now agree. Schematic edited byte-safe: 24,650 CRLF
   line endings preserved, zero bare LF. PCB/README's machine-place list corrected to match (SJ1 removed,
   Q2/R18 added).
+- [x] **[BOARD — FAB CORRECTNESS] Paste removed from the hand-soldered PV and SC lands**
+  _(2026-07-26, Devin's call; DONE — paste layer only, no copper and no mask touched.)_ The stencil
+  now opens only where paste is actually wanted. Stripped **16 pads**:
+  - **PV1, PV2** (solar cells) — **8 pads, not 4.** Worth recording, because the request said "all 4
+    large pads": each cell has **four** pads, a Ø3.5 mm terminal *plus* a 4 × 3 mm tab 3.1 mm
+    outboard, per polarity. Pasting the tab while sparing the terminal would make no sense, so all
+    eight went.
+  - **SC1–SC4** (supercaps) — 8 pads, 2 each, matching the request exactly.
+
+  These are the largest apertures on the board by a wide margin: **≈ 366 mm²** (PV ≈ 86.5, SC = 280),
+  about 1,200 0402 pads' worth. Both part families are hand-soldered and `exclude_from_bom`
+  (the BOM calls the supercaps "solder to under-body pads"), so that paste was never going to be
+  reflowed — it was solder volume waiting to float a hand-placed part. Copper and mask are unchanged,
+  so every land hand-solders exactly as before. Board-wide SMD paste tally is now 176 pasted / 45 bare
+  (was 192 / 29). Documented in `PCB/README.md` under the stencil note.
+
 - [x] **[PCB] LED land pattern D2–D5 corrected — pads to X = ±1.55** _(2026-07-26; DONE.)_
   A and K moved from ±1.300 to ±1.550 local (C-C 2.60 → 3.10 mm), ±0.4 stagger kept — the
   stagger was always correct, the terminals are diagonal. Applied identically to all four

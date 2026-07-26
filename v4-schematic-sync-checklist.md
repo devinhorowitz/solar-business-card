@@ -109,9 +109,15 @@ Assign each new symbol the footprint the PCB already uses (so "Update PCB from S
 footprint change): U8 = the QFN-28 land on the board, U9 = its SOT-23, passives = their 0402 lands,
 L2 / C25 / C26 / C27 / FB1 = whatever you re-landed them to.
 
-> As of 2026-07-26 the schematic and the board agree on **all 67** footprint assignments (U7 was the
+> As of 2026-07-26 the schematic and the board agree on **every** footprint assignment (U7 was the
 > last holdout — see TODO), and `scripts/check_consistency.py` now **fails** on any disagreement, so
 > a footprint drift is caught in CI rather than discovered as moved pads after a sync.
+>
+> The board carries **71** footprints with a refdes, not 67: **MP1–MP4** (the corner mounting pads)
+> are stored with an *empty* `lib_id` and are flagged `attr board_only`, KiCad's marker for "exists
+> only on the board; a sync must not delete it." They are supposed to have no schematic counterpart,
+> so the checker exempts them by that flag and prints the exempt list each run. The `NPTH_mech` hole
+> set is board_only as well but has no Reference property, so a refdes-based check cannot see it.
 
 ## D. Verify
 
