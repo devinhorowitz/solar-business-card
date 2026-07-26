@@ -189,6 +189,21 @@ A **frameless solder-paste stencil** (from the F.Paste / B.Paste plot) is strong
 recommended — the QFN EP and the LGA accelerometer reflow far more reliably with paste than
 hand-tinning. Order it alongside the board.
 
+> **What the stencil deliberately does NOT open (2026-07-26).** Paste has been removed from the
+> pads of every part that is not reflowed, so the stencil only opens where paste is wanted:
+>
+> | | pads | why |
+> |---|---|---|
+> | **PV1, PV2** (solar cells) | 8 | hand-soldered, consigned; **4 pads each** — a Ø3.5 mm terminal plus a 4 × 3 mm tab 3.1 mm outboard |
+> | **SC1–SC4** (supercaps) | 8 | hand-soldered to the under-body P/N pads |
+> | 10 DNP parts + **TC1** | 29 | not placed / pogo contacts must stay bare |
+>
+> The PV and SC pads alone are **≈ 366 mm² of aperture** — the largest on the board by a wide
+> margin, equivalent to about 1,200 0402 pads. Reflowing that much paste under parts meant to be
+> hand-soldered is not a small waste: it is enough solder volume to float the part.
+> **Copper and mask are untouched** — only the paste layer was removed, so every pad solders by
+> hand exactly as before.
+
 ---
 
 ## Step 4 — Order the parts

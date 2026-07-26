@@ -409,7 +409,7 @@
 		(pad "N" smd circle
 			(at -18 0)
 			(size 3.5 3.5)
-			(layers "F.Cu" "F.Mask" "F.Paste")
+			(layers "F.Cu" "F.Mask")
 			(net "GND")
 			(pinfunction "N_N")
 			(pintype "passive")
@@ -429,7 +429,7 @@
 		(pad "Nt" smd roundrect
 			(at -21.1 0)
 			(size 4 3)
-			(layers "F.Cu" "F.Mask" "F.Paste")
+			(layers "F.Cu" "F.Mask")
 			(roundrect_rratio 0.25)
 			(net "GND")
 			(pinfunction "Nt_Nt")
@@ -450,7 +450,7 @@
 		(pad "P" smd circle
 			(at 18 0)
 			(size 3.5 3.5)
-			(layers "F.Cu" "F.Mask" "F.Paste")
+			(layers "F.Cu" "F.Mask")
 			(net "SRC")
 			(pinfunction "P_P")
 			(pintype "passive")
@@ -470,7 +470,7 @@
 		(pad "Pt" smd roundrect
 			(at 21.1 0)
 			(size 4 3)
-			(layers "F.Cu" "F.Mask" "F.Paste")
+			(layers "F.Cu" "F.Mask")
 			(roundrect_rratio 0.25)
 			(net "SRC")
 			(pinfunction "Pt_Pt")
@@ -1105,7 +1105,7 @@
 		(pad "N" smd circle
 			(at -18 0)
 			(size 3.5 3.5)
-			(layers "F.Cu" "F.Mask" "F.Paste")
+			(layers "F.Cu" "F.Mask")
 			(net "GND")
 			(pinfunction "N_N")
 			(pintype "passive")
@@ -1125,7 +1125,7 @@
 		(pad "Nt" smd roundrect
 			(at -21.1 0)
 			(size 4 3)
-			(layers "F.Cu" "F.Mask" "F.Paste")
+			(layers "F.Cu" "F.Mask")
 			(roundrect_rratio 0.25)
 			(net "GND")
 			(pinfunction "Nt_Nt")
@@ -1146,7 +1146,7 @@
 		(pad "P" smd circle
 			(at 18 0)
 			(size 3.5 3.5)
-			(layers "F.Cu" "F.Mask" "F.Paste")
+			(layers "F.Cu" "F.Mask")
 			(net "SRC")
 			(pinfunction "P_P")
 			(pintype "passive")
@@ -1166,7 +1166,7 @@
 		(pad "Pt" smd roundrect
 			(at 21.1 0)
 			(size 4 3)
-			(layers "F.Cu" "F.Mask" "F.Paste")
+			(layers "F.Cu" "F.Mask")
 			(roundrect_rratio 0.25)
 			(net "SRC")
 			(pinfunction "Pt_Pt")
@@ -1551,7 +1551,7 @@
 		(pad "N" smd roundrect
 			(at 0 -16.25 90)
 			(size 3.5 12.25)
-			(layers "B.Cu" "B.Mask" "B.Paste")
+			(layers "B.Cu" "B.Mask")
 			(roundrect_rratio 0.25)
 			(net "MID")
 			(pinfunction "N_N")
@@ -1561,7 +1561,7 @@
 		(pad "P" smd roundrect
 			(at 0 16.25 90)
 			(size 3.5 7.75)
-			(layers "B.Cu" "B.Mask" "B.Paste")
+			(layers "B.Cu" "B.Mask")
 			(roundrect_rratio 0.25)
 			(net "STO")
 			(pinfunction "P_P")
@@ -9218,7 +9218,7 @@
 		(pad "N" smd roundrect
 			(at 0 -16.25 270)
 			(size 3.5 12.25)
-			(layers "B.Cu" "B.Mask" "B.Paste")
+			(layers "B.Cu" "B.Mask")
 			(roundrect_rratio 0.25)
 			(net "GND")
 			(pinfunction "N_N")
@@ -9228,7 +9228,7 @@
 		(pad "P" smd roundrect
 			(at 0 16.25 270)
 			(size 3.5 7.75)
-			(layers "B.Cu" "B.Mask" "B.Paste")
+			(layers "B.Cu" "B.Mask")
 			(roundrect_rratio 0.25)
 			(net "MID")
 			(pinfunction "P_P")
@@ -12588,7 +12588,7 @@
 		(pad "N" smd roundrect
 			(at 0 -11 90)
 			(size 3.5 12.25)
-			(layers "B.Cu" "B.Mask" "B.Paste")
+			(layers "B.Cu" "B.Mask")
 			(roundrect_rratio 0.25)
 			(net "GND")
 			(pinfunction "N_N")
@@ -12609,7 +12609,7 @@
 		(pad "P" smd roundrect
 			(at 0 11 90)
 			(size 3.5 7.75)
-			(layers "B.Cu" "B.Mask" "B.Paste")
+			(layers "B.Cu" "B.Mask")
 			(roundrect_rratio 0.25)
 			(net "MID")
 			(pinfunction "P_P")
@@ -13033,7 +13033,7 @@
 		(pad "N" smd roundrect
 			(at 0 -11 270)
 			(size 3.5 12.25)
-			(layers "B.Cu" "B.Mask" "B.Paste")
+			(layers "B.Cu" "B.Mask")
 			(roundrect_rratio 0.25)
 			(net "MID")
 			(pinfunction "N_N")
@@ -13054,7 +13054,7 @@
 		(pad "P" smd roundrect
 			(at 0 11 270)
 			(size 3.5 7.75)
-			(layers "B.Cu" "B.Mask" "B.Paste")
+			(layers "B.Cu" "B.Mask")
 			(roundrect_rratio 0.25)
 			(net "STO")
 			(pinfunction "P_P")

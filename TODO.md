@@ -406,6 +406,22 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   BOM row survives. Every part's sch and pcb flags now agree. Schematic edited byte-safe: 24,650 CRLF
   line endings preserved, zero bare LF. PCB/README's machine-place list corrected to match (SJ1 removed,
   Q2/R18 added).
+- [x] **[BOARD — FAB CORRECTNESS] Paste removed from the hand-soldered PV and SC lands**
+  _(2026-07-26, Devin's call; DONE — paste layer only, no copper and no mask touched.)_ The stencil
+  now opens only where paste is actually wanted. Stripped **16 pads**:
+  - **PV1, PV2** (solar cells) — **8 pads, not 4.** Worth recording, because the request said "all 4
+    large pads": each cell has **four** pads, a Ø3.5 mm terminal *plus* a 4 × 3 mm tab 3.1 mm
+    outboard, per polarity. Pasting the tab while sparing the terminal would make no sense, so all
+    eight went.
+  - **SC1–SC4** (supercaps) — 8 pads, 2 each, matching the request exactly.
+
+  These are the largest apertures on the board by a wide margin: **≈ 366 mm²** (PV ≈ 86.5, SC = 280),
+  about 1,200 0402 pads' worth. Both part families are hand-soldered and `exclude_from_bom`
+  (the BOM calls the supercaps "solder to under-body pads"), so that paste was never going to be
+  reflowed — it was solder volume waiting to float a hand-placed part. Copper and mask are unchanged,
+  so every land hand-solders exactly as before. Board-wide SMD paste tally is now 176 pasted / 45 bare
+  (was 192 / 29). Documented in `PCB/README.md` under the stencil note.
+
 - [x] **[PCB] LED land pattern D2–D5 corrected — pads to X = ±1.55** _(2026-07-26; DONE.)_
   A and K moved from ±1.300 to ±1.550 local (C-C 2.60 → 3.10 mm), ±0.4 stagger kept — the
   stagger was always correct, the terminals are diagonal. Applied identically to all four
