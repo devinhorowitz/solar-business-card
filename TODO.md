@@ -235,28 +235,17 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
 
 ## PCB — `PCB/solar-glow-drh-v4_0.kicad_pcb` / `.kicad_sch`
 
-- [ ] **[BOARD — FAB CORRECTNESS] U7 is flagged DNP but is a fitted, firmware-required part**
-  _(2026-07-26 PCB audit; still open from the earlier sift.)_ `U7` (MB85RC512TY FRAM) carries
-  `(attr smd dnp)` in the .kicad_pcb. It is **not** `exclude_from_bom`, so it sits in the BOM but
-  is marked do-not-populate — kibot's placement/assembly output will tell the assembler to skip
-  it. That contradicts the whole 2026-07-23 back-power fix (U7 re-railed to always-on VS) and the
-  firmware, which calls `fram_sleep()` unconditionally at boot and documents it as
-  "POWER-CRITICAL even headless". Failure mode is quiet: the driver is NACK-tolerant by design,
-  so a missing part logs nothing and the card just silently has no FRAM. **Clear the DNP attr on
-  U7.** (Contrast `C9`, which is correctly `smd dnp` — the antenna trim cap is genuinely no-fit
-  until the coil is tuned.)
-
-- [ ] **[BOARD — FAB CORRECTNESS] SJ1 is meant to be DNP but has no DNP attribute**
-  _(2026-07-26 PCB audit.)_ `SJ1` has `(attr smd)` and encodes its intent only in the Value text:
-  `"DNP (was 0R VDDIO2 tie)"`. Automated BOM/placement output reads the attribute, not the value
-  string, so SJ1 reads as a part to place — with a nonsense value. It bridges **VS ↔ VDDIO2**
-  (MCU pin 10 / PD0), and `board.h` states "SJ1 = DNP so it floats -> held by internal pull-up".
-  If it were ever populated, PD0 would be tied to VS: electrically benign (the firmware's pull-up
-  and VS are both high, no conflict, no current), but board.h's stated premise would be false.
-  **Set the DNP attr** (and `exclude_from_bom`, matching SB1–SB4 / JP1 / TC1) so intent and
-  attribute agree.
-
-
+- [x] **[BOARD — FAB CORRECTNESS] DNP attributes corrected in BOTH .kicad_sch and .kicad_pcb**
+  _(2026-07-26 PCB audit; DONE — attribute/metadata only, no copper touched.)_ The two files disagreed
+  with each other and with intent. **U7** (MB85RC512TY FRAM) carried `(attr smd dnp)` in the .kicad_pcb
+  though the schematic correctly had `(dnp no)` — assembly output would have told the assembler to skip
+  a fitted, firmware-required part (the driver is NACK-tolerant, so it would have failed silently);
+  cleared to `(attr smd)`. **SJ1** was wrong in *both* files — `(dnp no)` in the schematic and a bare
+  `(attr smd)` in the board, with the intent recorded only in its Value text; set to `(dnp yes)` /
+  `(attr smd dnp)`, matching C9's in-BOM-but-not-placed pattern so its documented "(DNP — not ordered)"
+  BOM row survives. Every part's sch and pcb flags now agree. Schematic edited byte-safe: 24,650 CRLF
+  line endings preserved, zero bare LF. PCB/README's machine-place list corrected to match (SJ1 removed,
+  Q2/R18 added).
 - [ ] **[PCB, PRE-FAB] LED land pattern D2–D5: pads sit 0.25 mm too far inward** _(2026-07-25 LED audit;
   full derivation in the design-notes LED-audit addendum)._ The `solarglow:D2..D5` pads are at
   **C-C 2.60 mm** (centers ±1.30) and **0.65 mm wide**; the ams-OSRAM reverse-mount recommended land

@@ -21481,7 +21481,7 @@
 		(in_bom yes)
 		(on_board yes)
 		(in_pos_files yes)
-		(dnp no)
+		(dnp yes)
 		(uuid "85387da4-cc38-4010-b8bc-82efe2eb37c1")
 		(property "Reference" "SJ1"
 			(at 421.21 165.1 0)

@@ -296,9 +296,14 @@ them on the **back**; the front stays naked until you fit the cells. You finish 
 types by hand afterward.
 
 **The split**
-- **PCBWay machine-places** (reflow, bottom): U1, U3, U5–U9, D2–D5, R1–R6, R10–R12, R14–R17, L2, FB1,
-  SJ1, C1, C3–C8, C11–C13, C22–C28. (Recompute the placed count from the v4 board; the v3 clamp/comparator
-  parts - U2, U4, Q1, D1, D9–D11, R7–R9, C2, C10 - are gone.) `solar-glow-drh-v4_0-BOM-assembly.xlsx` is
+- **PCBWay machine-places** (reflow, bottom): U1, U3, U5–U9, Q2, D2–D5, R1–R6, R10–R12, R14–R18, L2, FB1,
+  C1, C3–C8, C11–C13, C22–C28. (Recompute the placed count from the v4 board; the v3 clamp/comparator
+  parts - U2, U4, Q1, D1, D9–D11, R7–R9, C2, C10 - are gone.)
+  *(Corrected 2026-07-26: **SJ1 removed** from this list — it is DNP/not-ordered and must be left open,
+  so it is never placed; the DNP attribute now says so in both the .kicad_sch and .kicad_pcb. **Q2 and
+  R18 added** — the charge-disable buffer from the cold-start-deadlock fix. **U7 is correctly in this
+  list**: it carried a stray DNP attribute in the .kicad_pcb that would have told the assembler to skip
+  the FRAM; that is cleared.)* `solar-glow-drh-v4_0-BOM-assembly.xlsx` is
   that trimmed file - **regenerate it from the v4 board** so it reflects the v4 placed set.
 - **You hand-solder afterward:** SC1–SC4 supercaps and PV1–PV2 solar cells. They are kept
   **off** the PCBA BOM on purpose — the supercaps are manual-solder only (SCHURTER SCPC),
