@@ -67,7 +67,10 @@ uint8_t nfc_read_reg(uint8_t reg, uint8_t *val)
     if (twi_write(reg))               { twi_stop(); return 1; }   /* REGA       */
     twi_stop();                                                   /* end addr phase (Fig 19) */
     if (twi_start(NT3H_ADDR, 1))      { twi_stop(); return 1; }   /* START + read */
-    return twi_read(0, val);                                      /* NACK + STOP */
+    if (twi_read(0, val))             { twi_stop(); return 1; }   /* fault mid-read: force the
+                                                                   * STOP ourselves (success
+                                                                   * already NACKed + STOPped) */
+    return 0;
 }
 
 /* ---- sec 9.8 register WRITE (mask): START, AA, FEh, REGA, MASK, DAT, STOP ---- */

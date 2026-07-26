@@ -612,7 +612,7 @@ the `fuses` target prints the exact `avrdude` commands (all three values derived
   µA, far too heavy for this rail; sampled costs a small fraction. `SAMPFREQ = 1`
   (32 Hz → `0x5A`) shaves a little more standby at ~31 ms detection latency.
 - **EEPROM-write safety (a software VLM).** Even a correct 2.60 V BOD does not fully protect a write:
-  the BOD only *aborts* a write already in progress (DS40002443 sec 8.3.4), and the sampled BOD checks
+  the BOD only *aborts* a write already in progress (DS40002443 sec 11.3.3), and the sampled BOD checks
   at just 128 Hz. So firmware refuses to **start** a telemetry write unless the rail is above
   **`EE_WRITE_FLOOR_MV`** (2.85 V) -- the job the datasheet assigns to the VLM, done in software so it holds
   between BOD samples and even if the BOD is off. The two lifetime-extreme loggers (min-rail, max-temp)

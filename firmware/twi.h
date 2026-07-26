@@ -10,8 +10,19 @@
  * 10 CLK_PER, so MBAUD = 0 gives 1 MHz / 10 = 100 kHz exactly (same bus speed
  * as the old 4 MHz build, which used MBAUD = 15). 100 kHz is therefore also the
  * ceiling at this clock; 400 kHz fast-mode would need a faster CLK_PER. All
- * transactions are polled; every wait has a bus-error / arbitration escape so
- * a wedged bus cannot hang the core.
+ * transactions are polled; every wait is DOUBLY bounded -- a bus-error /
+ * arbitration escape for flagged faults, and a spin budget (TWI_SPIN_MAX) for
+ * the un-flagged wedge: a client stretching SCL low forever. The MCTRLA
+ * inactive-bus TIMEOUT can NOT bound that case -- per the datasheet (27.5,
+ * MCTRLA.TIMEOUT) it is SMBus bus-FREE detection: it only moves the bus state
+ * to Idle, sets no MSTATUS flag a wait could see, and a stretched-low SCL is
+ * not an "inactive" (idle-high) bus in the first place. It is kept enabled for
+ * what it does do: un-sticking the Busy->Idle state so a new transaction can
+ * start after a glitch. The stretch hazard is real on this bus -- the NT3H2211
+ * stretches by POR default, and NXP warns an interrupted read can leave it
+ * stretching "infinitely" -- and before the spin bound it meant a hang: fatal
+ * pre-WDT (init/provisioning run before the watchdog is armed, and harvested
+ * light can power a spinning core indefinitely), an 8 s WDT reset after.
  *
  * Return convention: 0 = OK, non-zero = fault (NACK or bus error). Callers
  * treat any non-zero as "accel not talking" and skip gracefully.
@@ -23,6 +34,31 @@
 #include <stdint.h>
 
 #define TWI_MBAUD_100K  0    /* 1 MHz / (10 + 2*0) = 100 kHz @ F_CPU = 1 MHz */
+
+/* Spin budget for the polled MSTATUS waits (see header note): the escape for a
+ * clock-stretching client, which sets NO flag and would otherwise spin forever.
+ * One twi_wait() iteration is 10 cycles at -Os (LDS+MOV+AND+BRNE+SUBI+SBC+BRNE,
+ * disassembly-verified), so 8192 spins ~ 82 ms at 1 MHz -- orders beyond any legitimate
+ * transfer (a byte is ~90 us) or NT3H RF-arbitration stretch (~ms), and far
+ * under the 8.192 s watchdog even across a multi-wait transaction chain. On
+ * expiry the wait reports a plain fault: the caller STOPs and skips, and a
+ * still-stretched bus just faults each later transaction the same bounded way
+ * -- degraded, never hung. */
+#define TWI_SPIN_MAX    8192u
+
+/* Bounded wait for any flag in `bits` (RIF/WIF/BUSERR/ARBLOST): returns the
+ * MSTATUS snapshot that satisfied it, or 0 on spin-budget expiry. Callers must
+ * still inspect the snapshot -- error flags can arrive TOGETHER with WIF (the
+ * datasheet sets WIF alongside ARBLOST/BUSERR, and RXACK is only valid when
+ * both are clear), so "the wait ended" never by itself means "success". */
+static inline uint8_t twi_wait(uint8_t bits)
+{
+    for (uint16_t spin = TWI_SPIN_MAX; spin; spin--) {
+        uint8_t st = TWI0.MSTATUS;
+        if (st & bits) return st;
+    }
+    return 0;
+}
 
 static inline void twi_init(void)
 {
@@ -36,18 +72,21 @@ static inline void twi_init(void)
 /* address phase. read=0 write, read=1 read. returns 0 ok, 1 fault. */
 static inline uint8_t twi_start(uint8_t addr7, uint8_t read)
 {
+    uint8_t st;
     TWI0.MADDR = (uint8_t)((addr7 << 1) | (read & 1u));
     if (read) {
         /* The address phase is a WRITE regardless of direction: if no device
-         * ACKs, WIF (not RIF) is set together with RXACK. Watch WIF/BUSERR/
-         * ARBLOST here too, or this spins forever on an absent/dead device.
-         * RIF and WIF are mutually exclusive, so WIF here means address-NACK. */
-        while (!(TWI0.MSTATUS & TWI_RIF_bm))
-            if (TWI0.MSTATUS & (TWI_WIF_bm | TWI_BUSERR_bm | TWI_ARBLOST_bm)) return 1;
+         * ACKs, WIF (not RIF) is set together with RXACK. Wait on WIF/BUSERR/
+         * ARBLOST here too -- RIF and WIF are mutually exclusive, so anything
+         * but RIF (or a spin expiry, st = 0) is an address-NACK / fault. */
+        st = twi_wait(TWI_RIF_bm | TWI_WIF_bm | TWI_BUSERR_bm | TWI_ARBLOST_bm);
+        if (!(st & TWI_RIF_bm)) return 1;
     } else {
-        while (!(TWI0.MSTATUS & TWI_WIF_bm))
-            if (TWI0.MSTATUS & (TWI_BUSERR_bm | TWI_ARBLOST_bm)) return 1;
-        if (TWI0.MSTATUS & TWI_RXACK_bm) return 1;   /* address NACKed */
+        st = twi_wait(TWI_WIF_bm | TWI_BUSERR_bm | TWI_ARBLOST_bm);
+        if (!(st & TWI_WIF_bm) || (st & (TWI_BUSERR_bm | TWI_ARBLOST_bm)))
+            return 1;                     /* wedge (st=0), bus error, or arb lost
+                                           * (RXACK is not valid on those) */
+        if (st & TWI_RXACK_bm) return 1;  /* address NACKed */
     }
     return 0;
 }
@@ -55,10 +94,11 @@ static inline uint8_t twi_start(uint8_t addr7, uint8_t read)
 /* write one data byte. returns 0 ok (ACK), 1 fault (NACK / bus error). */
 static inline uint8_t twi_write(uint8_t b)
 {
+    uint8_t st;
     TWI0.MDATA = b;
-    while (!(TWI0.MSTATUS & TWI_WIF_bm))
-        if (TWI0.MSTATUS & (TWI_BUSERR_bm | TWI_ARBLOST_bm)) return 1;
-    return (TWI0.MSTATUS & TWI_RXACK_bm) ? 1 : 0;
+    st = twi_wait(TWI_WIF_bm | TWI_BUSERR_bm | TWI_ARBLOST_bm);
+    if (!(st & TWI_WIF_bm) || (st & (TWI_BUSERR_bm | TWI_ARBLOST_bm))) return 1;
+    return (st & TWI_RXACK_bm) ? 1 : 0;
 }
 
 /* read one data byte into *out. ack=1 -> ACK + clock next byte; ack=0 -> NACK
@@ -66,8 +106,8 @@ static inline uint8_t twi_write(uint8_t b)
  * separately from the data so a real 0xFF byte is never confused with an error. */
 static inline uint8_t twi_read(uint8_t ack, uint8_t *out)
 {
-    while (!(TWI0.MSTATUS & TWI_RIF_bm))
-        if (TWI0.MSTATUS & (TWI_BUSERR_bm | TWI_ARBLOST_bm)) return 1;
+    uint8_t st = twi_wait(TWI_RIF_bm | TWI_BUSERR_bm | TWI_ARBLOST_bm);
+    if (!(st & TWI_RIF_bm) || (st & (TWI_BUSERR_bm | TWI_ARBLOST_bm))) return 1;
     *out = TWI0.MDATA;
     if (ack) TWI0.MCTRLB = TWI_MCMD_RECVTRANS_gc;                 /* ACK, go again */
     else     TWI0.MCTRLB = TWI_ACKACT_bm | TWI_MCMD_STOP_gc;      /* NACK + STOP   */

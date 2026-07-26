@@ -86,10 +86,15 @@ static uint16_t adc_read_raw(uint8_t muxpos)
     /* Conversion = start-up + SAMPDUR + ~13.5 CLK_ADC, a few hundred us here.
      * IDLE-sleep through it rather than spinning the core in active mode: the ADC
      * keeps converting in IDLE and RESRDY wakes us (same race-free SEI+SLEEP idiom
-     * as the glow). RESRDY is the first wake in the healthy case; the loop is bounded
-     * so a stuck ADC (RESRDY never arrives) bails after a few wakes with RESULT 0 --
-     * reads as low rail / dark, fail-safe no glow, and well under the watchdog -- and
-     * a stray PIT/accel wake just re-checks the flag and sleeps again. */
+     * as the glow). RESRDY is the first wake in the healthy case; a stray PIT/accel
+     * wake just re-checks the flag and sleeps again. The guard bounds a stuck ADC
+     * (RESRDY never arrives) to 3 wakes, then bails with RESULT 0 -- reads as low
+     * rail / dark, fail-safe no glow. NOTE the bound is 3 WAKES, not a time: on a
+     * dark, motionless card the only Idle wake is the PIT, so a stuck read costs up
+     * to ~3 poll periods, and a tick that chains several reads (temp + vmin + light)
+     * can then outrun the 8 s WDT -> watchdog reset. That is the intended recovery
+     * for dead analog (reinit everything), not a hang -- the WDT is the designed
+     * backstop here, not a bystander. */
     slp_set_mode(SLEEP_MODE_IDLE);
     for (uint8_t guard = 0; guard < 3 && !adc_done; guard++) {
         cli();
@@ -189,7 +194,8 @@ uint8_t sense_caps_full(void)
 }
 
 /* EEPROM write-safety gate: rail at/above EE_WRITE_FLOOR_MV, so a ~13 ms EEPROM write can start and
- * finish without the rail collapsing through it (the corruption window, DS40002443 sec 8.3.4 (EA; same corruption window as the DD's 11.3.3)). The
+ * finish without the rail collapsing through it (the corruption window, DS40002443 sec 11.3.3,
+ * "Preventing Flash/EEPROM Corruption"; the DD documents the same window). The
  * BOD only ABORTS an in-progress write; this is the firmware "don't start near the edge" guard (the
  * VLM's role), so it holds between the sampled BOD's checks. Same STO-divider channel and compile-time
  * fold as the other rail gates; same fail-safe -- a stuck ADC reads 0 -> not safe -> no write. */
@@ -247,9 +253,23 @@ uint32_t sense_count_get(void)
 
 void sense_count_inc(void)
 {
+    /* The tap tally honors the same EE_WRITE_FLOOR_MV discipline as the other
+     * writers (it was historically the ONE ungated site): a glow is allowed from
+     * the 2750 mV glow floor, but with the rail in [glow floor, EE floor) the
+     * write would start at VDD ~2.7 V -- erratum 2.2.1 territory on Rev. B1 until
+     * the BODLEVEL2 fuse (its sanctioned workaround) is burned, and outside
+     * board.h's stated invariant either way. So: bank the tap in RAM and flush
+     * the batch on a later tap from a healthy rail. Only a card whose last-ever
+     * taps all landed in that 100 mV band loses counts -- a keepsake-grade loss.
+     * Costs one extra STO read per tap, trivial next to the glow it precedes. */
+    static uint8_t pending;                /* taps banked below the EE write floor */
+    if (pending < 0xFFu) pending++;        /* saturate: 255 unflushed taps is already pathological */
+    if (!sense_ee_safe())
+        return;
     uint32_t c = eeprom_read_dword(EE_COUNT_ADDR);
     if (c == 0xFFFFFFFFUL) c = 0;          /* erased EEPROM reads all-ones */
-    c++;
+    c += pending;
+    pending = 0;
     eeprom_update_dword(EE_COUNT_ADDR, c); /* update = no write if unchanged */
 }
 
@@ -328,7 +348,7 @@ void sense_temp_log(void)
     if ((int16_t)c > tmax_ram) tmax_ram = (int8_t)c;   /* track the true max in RAM -- wear-free, rail-safe */
     /* commit a new lifetime max only from a healthy rail: a heat spell can coincide with a draining
      * rail (a dark hot car), and an EEPROM write on a collapsing rail can corrupt (DS40002443 sec
-     * 8.3.4). The RAM max means a peak-while-low is still written once the rail recovers, not lost. */
+     * 11.3.3). The RAM max means a peak-while-low is still written once the rail recovers, not lost. */
     int8_t stored = (int8_t)eeprom_read_byte(EE_TMAX_ADDR);
     if ((int16_t)stored < tmax_ram && sense_ee_safe())
         eeprom_update_byte(EE_TMAX_ADDR, (uint8_t)tmax_ram);
@@ -344,7 +364,7 @@ int8_t sense_temp_max_get(void)
 /* Lowest rail (VS, mV) ever seen -- the starvation half of the field black box (max-temp is the
  * heat half). Sampled sparsely (every VMIN_SAMPLE_POLLS; the supercap sags over minutes). The catch
  * is that a "new low" is by definition the WORST moment to write EEPROM -- a ~13 ms write on a
- * collapsing rail can corrupt (DS40002443 sec 8.3.4 (EA; same corruption window as the DD's 11.3.3)). So the running low is tracked in RAM (vmin_ram,
+ * collapsing rail can corrupt (DS40002443 sec 11.3.3; the DD documents the same window). So the running low is tracked in RAM (vmin_ram,
  * wear-free and safe at any rail) and only COMMITTED to EEPROM from a healthy rail (>= EE_WRITE_FLOOR_MV).
  * A recoverable sag is thus captured and written once the rail climbs back; only a terminal drain
  * below the floor goes unrecorded, which is unavoidable. Erased EEPROM reads 0xFFFF, a perfect "no low

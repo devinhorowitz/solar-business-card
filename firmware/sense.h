@@ -99,7 +99,7 @@ int8_t   sense_temp_max_get(void);
 
 /* EEPROM "black box" (USE_HEALTH_LOG): lowest rail ever + power-cycle count. Both defer their EEPROM
  * write to a healthy rail (>= EE_WRITE_FLOOR_MV) so a write never lands on a collapsing rail (the
- * corruption window, DS40002443 sec 8.3.4): the min-rail is tracked in RAM and committed on recovery,
+ * corruption window, DS40002443 sec 11.3.3): the min-rail is tracked in RAM and committed on recovery,
  * and the power-cycle count is flagged at boot and committed once the rail has charged.
  *   sense_vmin_tick()      : call every poll; samples VS every VMIN_SAMPLE_POLLS, keeps the RAM min, commits when safe.
  *   sense_vmin_get()       : lowest rail mV ever seen (0xFFFF = never sampled).

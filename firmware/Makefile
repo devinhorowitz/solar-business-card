@@ -55,6 +55,11 @@ all: $(TARGET).hex
 %.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
+# Every object depends on every header: blunt but correct for a 6-file tree
+# whose headers carry code (twi.h) and tunables (board.h). Without this, an
+# edited header silently leaves stale objects in an incremental build.
+$(OBJ): $(wildcard *.h)
+
 $(TARGET).elf: $(OBJ)
 	$(CC) $(LDFLAGS) -o $@ $(OBJ)
 	$(SIZE) $@
