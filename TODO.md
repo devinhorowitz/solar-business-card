@@ -59,6 +59,28 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
 
 ## Firmware — `firmware/`, `firmware/README.md`
 
+- [ ] **[FIRMWARE] Functional audit findings never filed — carried over honestly**
+  _(2026-07-26; surfaced by the pass-3/pass-4 firmware audits, actioned in docs only.)_ Each is real,
+  each survived adversarial verification, none is fixed:
+  (a) **`adc_read_raw`'s guard is a WAKE COUNT, not a time bound** (sense.c). Three unrelated
+  interrupts inside one ~212 µs conversion make a *healthy* ADC return 0, which every caller reads as
+  "rail below floor / dark". Fail-safe for the glow, but it also clears `prev_light`, so it is not
+  fail-safe for the light edge. Bounding by time instead of wakes is the fix.
+  (b) **ADXL367 configured inside its 100 ms data-valid window** (adxl367.c:62). `POWER_CTL` enters
+  MEASURE and the latch clears run immediately after, inside the window the datasheet says must
+  elapse before acceleration data is valid. The 10 ms reset-latency fix did not address this.
+  (c) **Tap tally wears one EEPROM cell** (sense.c). It is the only writer with a user-driven,
+  unbounded rate, and byte 0 of the dword at offset 0 changes on every tallied tap → a hard 100 k
+  ceiling on that byte. A rotating/gray-coded counter or a wear-levelled slot would remove it.
+  (d) **`EE_WRITE_FLOOR_MV` is derived against VDD hazards but compared against STO** — different
+  nodes. Harmless below 3.3 V where STO ≈ VS, but the derivation should say so.
+  (e) **`twi_bus_clear()` ends with START-immediately-followed-by-STOP**, which the EA datasheet
+  itself names an illegal bus operation. Benign for the targets, but worth a deliberate comment or a
+  reordered terminating sequence.
+  (f) **`ndef_default[]` has no Lock Control TLV**, which the NT3H datasheet says a Type-2 tag needs
+  for full NFC-Forum compliance. Phones read it fine without one; strict validators may not.
+
+
 - [ ] **[BENCH/DESIGN] SWEEP_SUN_VIN_MV measures the wrong thing — retune or retire it**
   _(2026-07-26 PCB audit; board.h comment already corrected in full, constant deliberately left
   at 3600 pending this decision.)_ The AEM10300 does not let SRC float to a light-dependent
@@ -242,6 +264,90 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   V2; a kind reel just looks better. (LED-audit addendum, 2026-07-25.)
 
 ## PCB — `PCB/solar-glow-drh-v4_0.kicad_pcb` / `.kicad_sch`
+
+- [x] **[COPPER] NFC coil shorted-turn claim — CHECKED AND REFUTED**
+  _(2026-07-26; verified with shapely against the actual zone fills.)_ The copper audit's headline RF
+  finding — "GND forms a galvanically closed shorted turn encircling the NFC coil (F.Cu certain, 3-D
+  cage with B.Cu)" — **does not hold**. A shorted turn requires a *galvanically closed* loop, i.e. one
+  connected conductor forming a ring, so the rigorous test is whether the coil sits inside an interior
+  hole of a single connected GND component. Extracted all GND `filled_polygon` fills (F.Cu 2646.6 mm²
+  across 8 connected components, B.Cu 2878.1 mm² across 10) and tested every one: **`hole_contains_coil
+  = False` for all 18.** No closed ring on either layer. (My earlier parser missed these because zones
+  in this file carry `(net "GND")`, a name string, not `(net_name …)`.)
+  A straight-ray test is *not* a valid substitute and initially looked alarming — 0 of 720 rays escape
+  on B.Cu — but straight rays hitting scattered GND blobs says nothing about a closed loop, and the
+  hole test settles it. On F.Cu, 231 of 720 rays escape outright.
+  **What is real, and minor:** small GND intrusions into the winding aperture — F.Cu 10.6 mm² (3.2 %
+  of the aperture; a strip at y46.8–58.0 and a thin one along the north edge at y31.1–31.6) and B.Cu
+  6.2 mm² (1.9 %), most of the B.Cu figure being an artifact of the B.Cu keepout starting at x36.8
+  while the F.Cu one starts at x36.5. Worth an eyeball at fab time, not a redesign — and nothing like
+  a shorted turn. The coil aperture keepouts themselves are correct.
+- [ ] **[COPPER] U1 has one decoupling cap for two VDD/GND pin pairs**
+  _(2026-07-26 copper audit; moderate effort.)_ Contrary to an explicit datasheet requirement, and it
+  bears on the ADC noise floor — which now matters more than it used to, since the glow floor, the
+  EEPROM floor and the caps-full gate are all decided from ADC reads. Worth pricing before fab.
+
+- [ ] **[COPPER] Tag-Connect keep-out violated by the ground pour**
+  _(2026-07-26 copper audit.)_ B.Cu ground comes within **0.127 mm** of every TC1 contact pad against a
+  **0.508 mm** datasheet keep-out. Paste on those pads is already fixed; this is the other half.
+
+- [ ] **[COPPER — judgement calls, effort disputed by the verifiers]** _(2026-07-26 copper audit; all
+  were pitched as "trivial" but re-rated as needing neighbour reroutes.)_ No analog net class (both ADC
+  nodes sit at the 0.126 mm clearance floor against active nets); F.Cu pour under L2 and under 93 % of
+  the switching-node copper, with B.Cu hugging LIN/LOUT at 0.20 mm; LIN/LOUT/BUFSRC at the 0.15 mm
+  minimum width, adding ~47 mΩ in series with the inductor; CINT (C26) 12.3 mm of 0.15 mm track from
+  the real VINT pin; STO feed to U8 pin 14 necking to 0.3 mm for 15.8 mm. Each is defensible to leave.
+
+- [ ] **[COPPER — cosmetic/low]** _(2026-07-26 copper audit.)_ Stencil area ratio falls below the 0.66
+  laser-cut floor for U1/U8/U5 at TI's recommended 0.125 mm foil (same conversation as the exposed-pad
+  window-paning); four 45° copper corners and eight ~34° cusps where the gold frame clips the monogram;
+  seven sub-micron degenerate track segments (I declined to strip these — no manufacturing effect and a
+  small connectivity risk; note the audit's claim of 8 duplicate tracks does not reproduce, an
+  exact-endpoint test finds zero); and `PCB/README`'s via-in-pad list is v3-era — two new
+  via-touching-pad cases, zero true via-in-pad remaining.
+
+
+- [x] **[COPPER] U9 moved to a genuine 5-pin land — the pin-map trap is now structurally impossible**
+  _(2026-07-26; DONE.)_ U9 was on `Package_TO_SOT_SMD:SOT-23-6` for a 5-lead part, which is what let
+  OUT be netted to a pad no lead touches. Now on project-local **`solarglow:U9_SOT23_5`** with
+  standard numbering (1 IN / 2 GND / 3 EN / 4 NC / **5 OUT**, pad 5 opposite pad 1 — where the OUT
+  lead actually lands). The land geometry is carried over verbatim from the routed SOT-23-6 pattern
+  minus the vacant middle pad, so every remaining pad is bit-identical in position and **no trace
+  moved**. Symbol renumbered to match and its 6th pin deleted; orphaned instance pin entry removed;
+  `PCB/solarglow.pretty/U9_SOT23_5.kicad_mod` created so the lib_id resolves. Re-verified after the
+  swap: copper lands on the OUT pad from both layers, 93 VS nodes joined to it, C23 and the MCU-side
+  VS run both reachable, no stale copper at the old vacant land.
+- [ ] **[COPPER — yours] AEM10300 CSRC ground return runs the long way round**
+  _(2026-07-26 copper audit; you said you'd take this one.)_ C25's (22 µF CSRC) GND pad sits on a
+  B.Cu ground island whose only layer transition is ~11 mm away, so the return to U8's thermal pad —
+  6 mm in a straight line — travels ~42 mm of pour. This is the input side of the DCDC's high-di/dt
+  loop, and the AEM10300 datasheet §14.1 is explicit: *"The GND return path between the DCDC
+  decoupling capacitors (CSRC - CSTO) and the AEM10300 thermal pad … must be as direct and short as
+  possible."* Fix is a couple of stitching vias near **(25.12, 54.22)** and **(29.18, 55.82)**.
+  ⚠ I measured the nearest non-GND copper at **0.281 mm** from the first location and 0.465 mm from
+  the second — both legal against the 0.126 mm floor but tighter than the audit claimed, so place
+  them with the pour visible and DRC live rather than from these coordinates alone.
+
+- [ ] **[COPPER — yours] U1 / U8 exposed-pad stencil apertures are 1:1 with the copper**
+  _(2026-07-26 copper audit.)_ U1's EP is 2.65 × 2.65 mm (7.02 mm²) and U8's is 2.3 × 2.3 mm
+  (5.29 mm²), each with a single full-size B.Paste aperture. IPC-7093 practice is to window-pane a
+  thermal pad to ~50–80 % paste coverage in an array, so the part does not float on excess solder and
+  outgassing has a path. **Deliberately not changed by me**: the right percentage depends on the
+  stencil foil thickness the assembler actually uses (the audit separately flagged apertures falling
+  under the 0.66 area-ratio floor at 0.125 mm foil), and PCBWay often supplies its own stencil data.
+  Worth one question to them before editing the footprints.
+
+- [ ] **[COPPER — yours] Two tight spots, each needing a part nudge rather than a reroute**
+  _(2026-07-26 copper audit.)_ R10 and C8 pads sit **0.159 mm** apart on different nets — the
+  tightest inter-component gap on the board. C13's pads leave a **0.075 mm** solder-mask sliver
+  against the glow-window opening, below a typical 0.1 mm (4 mil) dam minimum, so the web there will
+  likely not survive. Both want a small component move, which is why they are yours and not mine.
+
+- [ ] **[COPPER — low value] Teardrops applied to roughly half the board**
+  _(2026-07-26 copper audit.)_ 143 of 290 track-to-pad/via junctions have none. Teardrops are already
+  enabled in the board settings, so this is a regenerate-and-refill in KiCad, not hand work. Cosmetic
+  for reliability at this scale — do it only if you are in there anyway.
+
 
 - [x] **[BOARD — FAB CORRECTNESS] DNP attributes corrected in BOTH .kicad_sch and .kicad_pcb**
   _(2026-07-26 PCB audit; DONE — attribute/metadata only, no copper touched.)_ The two files disagreed

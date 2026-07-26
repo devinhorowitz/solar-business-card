@@ -1,0 +1,60 @@
+(footprint "U9_SOT23_5"
+	(version 20240108)
+	(generator "solar-glow-drh")
+	(generator_version "1.0")
+	(layer "F.Cu")
+	(descr "SOT-23-5 (JEDEC MO-178 Var AA), 2.90x1.60mm body, 0.95mm pitch. Land geometry carried over verbatim from the SOT-23-6 pattern this project routed U9 against, MINUS the vacant middle land on the two-lead side -- so pad positions are bit-identical to the routed board and no trace moves. Numbering is the standard 5-pin one: pads 1/2/3 down one side, pad 4 opposite pad 3, PAD 5 OPPOSITE PAD 1. That last point is the whole reason this footprint exists: on a SOT-23-6 land the OUT lead of a 5-pin part falls on pad 6, not pad 5, which silently left VS unconnected. For TPS7A0233PDBVR (and any 5-pin SOT-23).")
+	(tags "SOT-23-5 SOT23 TPS7A02 LDO")
+	(attr smd)
+	(fp_text reference "REF**"
+		(at 0 -2.6 0)
+		(layer "F.SilkS")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(fp_text value "U9_SOT23_5"
+		(at 0 2.6 0)
+		(layer "F.Fab")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(pad "1" smd roundrect
+			(at -1.1375 0.95 270)
+			(size 1.325 0.6)
+			(layers "B.Cu" "B.Mask" "B.Paste")
+			(roundrect_rratio 0.25)
+		)
+	(pad "2" smd roundrect
+			(at -1.1375 0 270)
+			(size 1.325 0.6)
+			(layers "B.Cu" "B.Mask" "B.Paste")
+			(roundrect_rratio 0.25)
+			(zone_connect 2)
+		)
+	(pad "3" smd roundrect
+			(at -1.1375 -0.95 270)
+			(size 1.325 0.6)
+			(layers "B.Cu" "B.Mask" "B.Paste")
+			(roundrect_rratio 0.25)
+		)
+	(pad "4" smd roundrect
+			(at 1.1375 -0.95 270)
+			(size 1.325 0.6)
+			(layers "B.Cu" "B.Mask" "B.Paste")
+			(roundrect_rratio 0.25)
+		)
+	(pad "5" smd roundrect
+			(at 1.1375 0.95 270)
+			(size 1.325 0.6)
+			(layers "B.Cu" "B.Mask" "B.Paste")
+			(roundrect_rratio 0.25)
+		)
+)
