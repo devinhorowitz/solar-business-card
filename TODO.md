@@ -59,6 +59,28 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
 
 ## Firmware — `firmware/`, `firmware/README.md`
 
+- [ ] **[FIRMWARE] Functional audit findings never filed — carried over honestly**
+  _(2026-07-26; surfaced by the pass-3/pass-4 firmware audits, actioned in docs only.)_ Each is real,
+  each survived adversarial verification, none is fixed:
+  (a) **`adc_read_raw`'s guard is a WAKE COUNT, not a time bound** (sense.c). Three unrelated
+  interrupts inside one ~212 µs conversion make a *healthy* ADC return 0, which every caller reads as
+  "rail below floor / dark". Fail-safe for the glow, but it also clears `prev_light`, so it is not
+  fail-safe for the light edge. Bounding by time instead of wakes is the fix.
+  (b) **ADXL367 configured inside its 100 ms data-valid window** (adxl367.c:62). `POWER_CTL` enters
+  MEASURE and the latch clears run immediately after, inside the window the datasheet says must
+  elapse before acceleration data is valid. The 10 ms reset-latency fix did not address this.
+  (c) **Tap tally wears one EEPROM cell** (sense.c). It is the only writer with a user-driven,
+  unbounded rate, and byte 0 of the dword at offset 0 changes on every tallied tap → a hard 100 k
+  ceiling on that byte. A rotating/gray-coded counter or a wear-levelled slot would remove it.
+  (d) **`EE_WRITE_FLOOR_MV` is derived against VDD hazards but compared against STO** — different
+  nodes. Harmless below 3.3 V where STO ≈ VS, but the derivation should say so.
+  (e) **`twi_bus_clear()` ends with START-immediately-followed-by-STOP**, which the EA datasheet
+  itself names an illegal bus operation. Benign for the targets, but worth a deliberate comment or a
+  reordered terminating sequence.
+  (f) **`ndef_default[]` has no Lock Control TLV**, which the NT3H datasheet says a Type-2 tag needs
+  for full NFC-Forum compliance. Phones read it fine without one; strict validators may not.
+
+
 - [ ] **[BENCH/DESIGN] SWEEP_SUN_VIN_MV measures the wrong thing — retune or retire it**
   _(2026-07-26 PCB audit; board.h comment already corrected in full, constant deliberately left
   at 3600 pending this decision.)_ The AEM10300 does not let SRC float to a light-dependent
@@ -242,6 +264,44 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   V2; a kind reel just looks better. (LED-audit addendum, 2026-07-25.)
 
 ## PCB — `PCB/solar-glow-drh-v4_0.kicad_pcb` / `.kicad_sch`
+
+- [ ] **[COPPER — HIGHEST VALUE UNRESOLVED] GND may form a closed shorted turn around the NFC coil**
+  _(2026-07-26 copper audit; rated trivial-to-fix / high-benefit, and NOT verified by me.)_ A pour that
+  encircles an NFC antenna and closes on itself acts as a shorted secondary and absorbs field energy,
+  cutting read range. The audit reports GND doing exactly that (F.Cu stated as certain, plus a 3-D
+  cage with B.Cu), and separately that **the F.Cu keepout notch cut for the LB bridge re-admits pour
+  inside the coil's north turns**. I could NOT confirm either — my zone parser did not resolve fill
+  polygons in this file's format, so treat both as unverified. Standard fix is a slit in the ring so
+  it cannot close, plus closing the notch; both are zone edits, minutes in KiCad. **Check this before
+  fab** — it is the one open item that could quietly halve NFC performance. Related, cheap if you are
+  already in there: the coil track is 0.30 mm where 0.40 mm fits in the same outline (~23 % less AC
+  resistance), and C9's LA terminal taps the outer turn well inside the winding rather than at the
+  antenna terminal.
+
+- [ ] **[COPPER] U1 has one decoupling cap for two VDD/GND pin pairs**
+  _(2026-07-26 copper audit; moderate effort.)_ Contrary to an explicit datasheet requirement, and it
+  bears on the ADC noise floor — which now matters more than it used to, since the glow floor, the
+  EEPROM floor and the caps-full gate are all decided from ADC reads. Worth pricing before fab.
+
+- [ ] **[COPPER] Tag-Connect keep-out violated by the ground pour**
+  _(2026-07-26 copper audit.)_ B.Cu ground comes within **0.127 mm** of every TC1 contact pad against a
+  **0.508 mm** datasheet keep-out. Paste on those pads is already fixed; this is the other half.
+
+- [ ] **[COPPER — judgement calls, effort disputed by the verifiers]** _(2026-07-26 copper audit; all
+  were pitched as "trivial" but re-rated as needing neighbour reroutes.)_ No analog net class (both ADC
+  nodes sit at the 0.126 mm clearance floor against active nets); F.Cu pour under L2 and under 93 % of
+  the switching-node copper, with B.Cu hugging LIN/LOUT at 0.20 mm; LIN/LOUT/BUFSRC at the 0.15 mm
+  minimum width, adding ~47 mΩ in series with the inductor; CINT (C26) 12.3 mm of 0.15 mm track from
+  the real VINT pin; STO feed to U8 pin 14 necking to 0.3 mm for 15.8 mm. Each is defensible to leave.
+
+- [ ] **[COPPER — cosmetic/low]** _(2026-07-26 copper audit.)_ Stencil area ratio falls below the 0.66
+  laser-cut floor for U1/U8/U5 at TI's recommended 0.125 mm foil (same conversation as the exposed-pad
+  window-paning); four 45° copper corners and eight ~34° cusps where the gold frame clips the monogram;
+  seven sub-micron degenerate track segments (I declined to strip these — no manufacturing effect and a
+  small connectivity risk; note the audit's claim of 8 duplicate tracks does not reproduce, an
+  exact-endpoint test finds zero); and `PCB/README`'s via-in-pad list is v3-era — two new
+  via-touching-pad cases, zero true via-in-pad remaining.
+
 
 - [x] **[COPPER] U9 moved to a genuine 5-pin land — the pin-map trap is now structurally impossible**
   _(2026-07-26; DONE.)_ U9 was on `Package_TO_SOT_SMD:SOT-23-6` for a 5-lead part, which is what let
