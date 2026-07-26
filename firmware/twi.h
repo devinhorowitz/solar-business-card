@@ -42,7 +42,9 @@
  * One twi_wait() iteration is 10 cycles at -Os (LDS+MOV+AND+BRNE+SUBI+SBC+BRNE,
  * disassembly-verified), so 8192 spins ~ 82 ms at 1 MHz -- orders beyond any legitimate
  * transfer (a byte is ~90 us) or NT3H RF-arbitration stretch (~ms), and far
- * under the 8.192 s watchdog even across a multi-wait transaction chain. On
+ * under the 8.0 s watchdog (WDT.CTRLA PERIOD = 0xB, 8KCLK = 8.0 s per the
+ * DS40002443 WDT PERIOD table -- NOT the 8.192 s an earlier note here assumed)
+ * even across a multi-wait transaction chain. On
  * expiry the wait reports a plain fault: the caller STOPs and skips, and a
  * still-stretched bus just faults each later transaction the same bounded way
  * -- degraded, never hung. */

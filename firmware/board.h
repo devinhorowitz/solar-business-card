@@ -208,18 +208,48 @@
  * number the PCB side owed firmware; derived here, bench-tunable (it sets feel, not
  * safety -- SWEEP_CAPS_FULL_MV below is the hard gate).
  *
- * Derivation. VIN is the raw SRC solar node that the AEM10300 (U8) draws from for
- * MPPT charging of the STO tank; there is no blocking diode (so no Vf drop) and no
- * shunt clamp (no TLV3011B, no Q1) in v4. The panel is a current source rolling off
- * toward Voc, so under load the SRC node self-settles below Voc (SM141K06TF Voc
- * 4.15 V, as current->0) and never exceeds it. We pick VIN >= 3.60 V: a SRC-node
- * voltage this high indicates genuine strong sun lifting the node, yet stays below
- * Voc. It also sits far above indoor light (VIN ~0.8-2.1 V), and the caps-full
- * co-gate rejects the bright-indoor corner (indoor rarely tops the caps AND lifts
- * VIN this high at once). ADC: VSENSE pin = VIN/2 vs the 2.048 V ref, so 3.60 V ->
- * 3600 counts, which sense.c folds at compile time (SUN_COUNT) so the poll compares
- * raw, no per-poll mV math. (Ref changed from 2.500 V in the 2026-07-26 audit -- see
- * the ADC_VREF_MV block in sense.c; the fold tracks the constant automatically.) */
+ * WHAT THIS ACTUALLY MEASURES (corrected 2026-07-26 PCB audit -- the old derivation
+ * below was wrong and the consequence is real, so it is written out in full).
+ *
+ * The OLD reasoning was: "the panel is a current source rolling off toward Voc, so
+ * under load the SRC node self-settles below Voc; VIN >= 3.60 V therefore means
+ * strong sun." That models SRC as a PASSIVE node. It is not. While the AEM10300 is
+ * harvesting it ACTIVELY REGULATES SRC to a fixed fraction of the panel's open-
+ * circuit voltage: "the voltage on SRC is regulated by an internal Maximum Power
+ * Point Tracking (MPPT) module ... as a given fraction of the open-circuit voltage"
+ * (AEM10300 sec 8.4), the fraction being R_ZMPP = V_MPP/V_OC, set by the R_MPP[2:0]
+ * straps. This board straps R_MPP[2:0] = H,L,L (read off the .kicad_pcb: R_MPP2 ->
+ * VINT, R_MPP1 -> GND, R_MPP0 -> GND) = 80% (Table 9).
+ *
+ * So while CHARGING, SRC = 0.80 x Voc. Reaching 3600 mV would need Voc >= 4500 mV,
+ * above the SM141K06TF's 4.15 V Voc -- so in ordinary charging this threshold is
+ * UNREACHABLE in any light, however bright. It trips in only two situations:
+ *   1. Caps full. At VOVCH the DCDC stops and "the SRC pin is set to high impedance"
+ *      (sec 8.3.2), so the unloaded panel rises to Voc (4.15 V in sun) -> pin 2.075 V,
+ *      which also SATURATES the 2.048 V reference -> 4095 counts, far above SUN_COUNT.
+ *   2. Briefly, during an MPP evaluation, when the AEM disconnects the source to
+ *      measure Voc. T_MPP[1:0] straps H,L on this board = 70.8 ms every 4.5 s
+ *      (Table 10) = a 1.6% duty window in which SRC reads Voc even while charging.
+ *
+ * CONSEQUENCE, and why it is left as-is for now: SENSE_SUN_bm is therefore NOT a
+ * "strong sun" tell -- it is very nearly a "the harvester has stopped charging" tell,
+ * i.e. the same condition SWEEP_CAPS_FULL_MV already gates on. The two sweep co-gates
+ * are not independent as the comment below once claimed. The SWEEP still behaves
+ * correctly (it fires when the tank is full and the panel is unloaded, which is
+ * exactly when surplus light is free), so this is a wrong RATIONALE rather than a
+ * broken feature -- but SWEEP_SUN_VIN_MV is close to meaningless as a tunable: any
+ * value from ~3.4 V to 4.096 V behaves identically. To make it mean "strong sun"
+ * again it must sit BELOW 0.8 x Voc, i.e. nearer 3000-3200 mV, which would let it
+ * discriminate bright from dim while charging (Voc does rise with illumination).
+ * That is a feel-and-energy retune, so it waits for the bench (see TODO) rather than
+ * being changed blind. The SAME correction applies to USE_SUN_DIARY: it counts polls
+ * where this flag is set, so it is banking "caps-full time" plus a ~1.6% sampling
+ * artifact, NOT hours of sun.
+ *
+ * ADC: VSENSE pin = VIN/2 vs the 2.048 V ref, so 3.60 V -> 3600 counts, which sense.c
+ * folds at compile time (SUN_COUNT) so the poll compares raw, no per-poll mV math.
+ * (Ref changed from 2.500 V in the 2026-07-26 audit -- see the ADC_VREF_MV block in
+ * sense.c; the fold tracks the constant automatically.) */
 #define SWEEP_SUN_VIN_MV   3600
 
 /* SWEEP_CAPS_FULL_MV -- the sweep's HARD safety gate: sweep only when the TANK (STO)
@@ -276,7 +306,7 @@
 #define VMIN_SAMPLE_POLLS  16   /* polls between rail-min samples (16 s at POLL_PERIOD_S=1) */
 
 /* FRAM archival log (U7 MB85RC512TY, 64 KB on always-on VS, sleep-parked; driver in
- * fram.c). The internal-EEPROM loggers above are a 256 B black box; the FRAM is the
+ * fram.c). The internal-EEPROM loggers above are a 512 B black box; the FRAM is the
  * big-store companion for richer archival (per-event history, larger diaries). Left
  * HEADLESS (0) by default: the driver is built and ready, but the WHAT/WHEN of archival
  * is a policy tied to the unmeasured harvest budget (README "the open question") -- a
@@ -322,7 +352,7 @@
  * hardware BOD only *aborts* a write already in progress, so this is the software "don't start a
  * write near the edge" guard -- the job the datasheet assigns to the VLM, done here so it holds
  * between the sampled BOD's checks (and even if the BOD is off). Set comfortably above the BOD level
- * (EA: 2.60 V at BODCFG=0x4A, BODLEVEL2 -- the ladder has no 2.45 V step) so a started ~13 ms write completes above it; the write's MCU-only load
+ * (EA: 2.60 V at BODCFG=0x4A, BODLEVEL2 -- the ladder has no 2.45 V step) so a started ~4 ms write completes above it; the write's MCU-only load
  * -- and on Rev. B1 silicon this floor is also the erratum guard: DS80001048C 2.2.1 says NVM
  * erase/write below 2.7 V may simply FAIL, so 2.85 V is a functional requirement there, not
  * just corruption margin --
@@ -333,8 +363,16 @@
  * been glowing, it is healthy enough to commit a log entry. */
 #define EE_WRITE_FLOOR_MV  2850
 
-/* wake-on-light threshold on VSENSE (= VIN/2), mV at the pin.
- * ~0 in dark, ~1.2-2.1 V in light. ~0.4 V sits comfortably above dark. */
+/* wake-on-light threshold on VSENSE (= VIN/2), mV AT THE PIN (so the VIN node is 2x this).
+ * ~0 in dark; well above that in any usable light. 400 mV at the pin = VIN 800 mV.
+ * SOURCING CAVEAT (2026-07-26 audit): the "~1.2-2.1 V in light" range this line used to
+ * assert is unsourced AND contradicts the range asserted for the SAME node in the
+ * SWEEP_SUN_VIN_MV block above ("indoor VIN ~0.8-2.1 V") by about 3x once you account for
+ * pin-vs-node. Neither figure has a measurement behind it. What IS sourced is the shape:
+ * while the AEM is charging it holds SRC at 0.80 x Voc (R_MPP straps; see the
+ * SWEEP_SUN_VIN_MV block), and Voc rises with illumination, so this threshold is a
+ * genuine dark/light discriminator even though its exact trip point is a guess. Both
+ * ranges are bench items; do not quote either as fact. */
 #define LIGHT_THRESH_MV    400
 
 /* baseline poll period (option B), seconds (RTC PIT). 1 or 2. */
@@ -357,7 +395,7 @@
 /* Face-down dormant ("dead-man") mode: if the card lies FACE-DOWN (accel Z clearly
  * negative) continuously for FACEDOWN_DORMANT_S seconds, go dormant -- suppress every glow
  * (tap / motion / NFC-ack / greeting / sweep) until it is turned face-up again, so a stowed
- * card (face-down in a drawer, under papers) can't bleed the ~21 J reserve on false-trigger
+ * card (face-down in a drawer, under papers) can't bleed the reserve on false-trigger
  * glows. Flipping it face-up resumes at once (the flip is motion, and the poll re-checks
  * orientation as a backstop). Net ENERGY WIN -- the only overhead is one accel Z read per
  * poll, dwarfed by the glows it suppresses; the passive RF vCard read is untouched (it is

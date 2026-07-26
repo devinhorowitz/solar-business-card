@@ -280,9 +280,14 @@ FD still resolves to one interaction (priority is tap → nfc → motion → tic
 
 The contact NDEF lives in `nfc.c` as a byte array, machine-generated from the vCard
 fields — **regenerate, don't hand-edit**. Memory facts (NT3H2111_2211 Rev 3.6): the tag
-ships with a valid Capability Container (`E1 10 6D 00`, 872 B in sector 0), so firmware
-writes **only the NDEF into user memory from block 1** and never touches block 0
-(writing block 0 would change the I2C address). `nfc_provision_default()` runs the
+ships with the Capability Container **set to all `00h`** (sec 8.3.10 — it "need[s] to be
+initialized by the user"), so a tag with only an NDEF written is not recognised as
+NDEF-capable by any phone. Provisioning therefore writes the NDEF into user memory from
+block 1 **and then writes the CC** (`E1 10 6D 00`, 872 B in sector 0) into block 0 —
+NDEF first, CC last, so a partial write leaves a tag readers ignore rather than one
+advertising undefined pages. Block 0 also holds the I2C address byte and the static lock
+bytes, so that write is a read-modify-write which preserves byte 0 as `NT3H_ADDR << 1`
+(see `nfc_write_cc()`). `nfc_provision_default()` runs the
 whole sequence: raise `NFC_EN`, ACK-poll until the tag boots, confirm it's present,
 write the NDEF, drop `NFC_EN`. To provision:
 

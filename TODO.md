@@ -59,6 +59,22 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
 
 ## Firmware — `firmware/`, `firmware/README.md`
 
+- [ ] **[BENCH/DESIGN] SWEEP_SUN_VIN_MV measures the wrong thing — retune or retire it**
+  _(2026-07-26 PCB audit; board.h comment already corrected in full, constant deliberately left
+  at 3600 pending this decision.)_ The AEM10300 does not let SRC float to a light-dependent
+  voltage: while charging it **regulates SRC to 0.80 × Voc** (R_MPP[2:0] = H,L,L → 80%, Table 9,
+  read off the board straps). Reaching 3600 mV would need Voc ≥ 4500 mV, above the SM141K06TF's
+  4.15 V — so the SUN flag is unreachable while charging in ANY light. It sets only when the tank
+  is full (DCDC off, SRC high-Z → Voc, which also saturates the 2.048 V ref) or during the 70.8 ms
+  MPP-evaluation window every 4.5 s (T_MPP = H,L, Table 10) — a 1.6% duty artifact.
+  Consequences: (a) the sweep's two co-gates are really one condition, so the sweep still behaves
+  correctly but for the wrong stated reason; (b) **the sun diary does not bank sun-hours** — it
+  banks caps-full time plus that 1.6% artifact, which is a second independent error on top of the
+  poll-counting one already filed. Decide at the bench: set the threshold below 0.8 × Voc
+  (~3000–3200 mV) so it genuinely discriminates bright from dim while charging, or drop the
+  co-gate and re-scope the diary to what it actually measures.
+
+
 - [ ] **[BENCH/CALIBRATION] VS_GLOW_FLOOR_MV vs the STO-channel accuracy stack-up**
   _(2026-07-26 pass 4; the highest-value open firmware item.)_ Pass 3 removed the *systematic*
   error (the 2.500 V reference sagged below its 3.0 V spec floor and inverted the guard). What
@@ -104,14 +120,22 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   if the AEM's charge taper makes 4400 unreachable in practice, tune down toward ~4300, but do
   NOT return to a value that is not a fullness criterion.
 
-- [ ] **[SOURCING] Retire the unsourced numbers in comments** _(2026-07-26 deep audit.)_ Each is
-  documentation-only but each is quoted as fact: (a) the **"~13 ms EEPROM write"** in six places
-  (board.h x2, sense.c x3, main.c) — the DS says 2 ms write + 2 ms erase; (b) `adxl367.h`'s
-  **0.89 µA** is spec'd at a **2.0 V supply**, not our 3.3 V; (c) **"256 B"** EEPROM — the part
-  has **512 B**; (d) **"~21 J reserve"** is 5.5 V nameplate (VOVCH-capped ~15 J stored, ~9.6 J
-  spendable above the glow floor); (e) `board.h:49`'s F_CPU rationale cites an IDD at 1 MHz that
-  the datasheet does not publish (lowest row is 5 MHz). Fix the comments to cite or drop.
-
+- [x] **[SOURCING] Unsourced numbers in comments — retired** _(2026-07-26; DONE.)_ Every claim
+  below was checked against its primary source and corrected in place: the **"~13 ms EEPROM write"**
+  (6 sites) → ~4 ms, since DS Table 35-8 gives tD_BPW 2 ms + tD_BPE 2 ms; **"256 B"** EEPROM → 512 B;
+  **"~21 J reserve"** → dropped (nameplate, not the ~9.6 J actually spendable above the glow floor);
+  **"8.192 s"** watchdog → 8.0 s (WDT.CTRLA PERIOD 0xB); **0.89 µA** for the ADXL367 now carries its
+  test condition (2.0 V supply, while this board runs the part at 3.3 V); the **SUN_COUNT** comment's
+  2.500 V-era arithmetic (2950 / ×0.8192) → the fold now collapses to count == VIN in mV exactly;
+  **`sense_caps_full`** doc said "VS ≥" → STO; the **SAMPDUR** rationale blamed divider impedance when
+  both nodes carry a 100 nF reservoir (C5 / C24) that dominates by orders of magnitude — real reason
+  is the temp sensor's ≥32 µs rule; **`nfc.h`'s block map** (write "MUST stop below 0x3A" → the first
+  non-user block is 0x38; "raw ceiling 0x7A" → 0x7F; "NO sector-select" was never the reason — the I2C
+  side addresses 0x00–0x7F linearly); **`firmware/README`** still claimed the tag ships with a valid CC
+  and that firmware "never touches block 0", both false since the pass-2 CC fix; the **`LIGHT_THRESH_MV`
+  light-range** and the SWEEP_SUN range contradicted each other ~3× for the same node — both now flagged
+  as unsourced bench items rather than asserted; and the **tap tally's RAM bank** now states that
+  `pending` lives in .bss and does not survive a reset.
 - [ ] **[BENCH/DESIGN] Sun diary counts POLLS, not TIME — and is least accurate while measuring**
   _(2026-07-26 deep audit.)_ `SUN_POLLS_PER_HOUR` assumes one poll == POLL_PERIOD_S exactly, but
   (a) OSC32K total error is <1% only at 25 °C/3.0 V and **<10% over the full range** (Table 35-10),
@@ -219,6 +243,20 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
 
 ## PCB — `PCB/solar-glow-drh-v4_0.kicad_pcb` / `.kicad_sch`
 
+- [x] **[BOARD — FAB CORRECTNESS] DNP attributes corrected in BOTH .kicad_sch and .kicad_pcb**
+  _(2026-07-26 PCB audit; DONE — attribute/metadata only, no copper touched.)_ The two files disagreed
+  with each other and with intent. **U7** (MB85RC512TY FRAM) carried `(attr smd dnp)` in the .kicad_pcb
+  though the schematic correctly had `(dnp no)`; cleared to `(attr smd)`. *(Consequence stated
+  accurately: this did NOT threaten the fab output — `solar-glow-drh.kibot.yaml` marks the pick+place
+  CSV "informational, the fab CPL follows the pre-order checklist", and the generated CPL in fact lists
+  U7 and every other DNP part. The real point is that the schematic is UPSTREAM: on the next
+  "Update PCB from Schematic" the board's stray flag would have been overwritten anyway, while SJ1's
+  do-not-populate intent — which lived only in a Value string — would have been silently lost.)* **SJ1** was wrong in *both* files — `(dnp no)` in the schematic and a bare
+  `(attr smd)` in the board, with the intent recorded only in its Value text; set to `(dnp yes)` /
+  `(attr smd dnp)`, matching C9's in-BOM-but-not-placed pattern so its documented "(DNP — not ordered)"
+  BOM row survives. Every part's sch and pcb flags now agree. Schematic edited byte-safe: 24,650 CRLF
+  line endings preserved, zero bare LF. PCB/README's machine-place list corrected to match (SJ1 removed,
+  Q2/R18 added).
 - [ ] **[PCB, PRE-FAB] LED land pattern D2–D5: pads sit 0.25 mm too far inward** _(2026-07-25 LED audit;
   full derivation in the design-notes LED-audit addendum)._ The `solarglow:D2..D5` pads are at
   **C-C 2.60 mm** (centers ±1.30) and **0.65 mm wide**; the ams-OSRAM reverse-mount recommended land

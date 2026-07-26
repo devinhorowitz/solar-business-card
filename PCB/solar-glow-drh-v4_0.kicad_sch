@@ -21481,7 +21481,7 @@
 		(in_bom yes)
 		(on_board yes)
 		(in_pos_files yes)
-		(dnp no)
+		(dnp yes)
 		(uuid "85387da4-cc38-4010-b8bc-82efe2eb37c1")
 		(property "Reference" "SJ1"
 			(at 421.21 165.1 0)
@@ -23745,7 +23745,7 @@
 				)
 			)
 		)
-		(property "Description" "512kbit I2C FeRAM 0x50, power-gated via VNFC; DFN LCC-8P-M05 5.0x6.0mm, 0.90mm MAX (was SOP-8 1.75mm)"
+		(property "Description" "512kbit I2C FeRAM 0x50, on always-on VS and parked in I2C Sleep (2026-07-23 back-power fix; VNFC now gates the tag alone); DFN LCC-8P-M05 5.0x6.0mm, 0.90mm MAX (was SOP-8 1.75mm)"
 			(at 855.98 372.11 0)
 			(hide yes)
 			(show_name no)

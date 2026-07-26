@@ -17,7 +17,9 @@
  *     by reading STATUS (LINKLOOP = 00). Drives the motion soft-breath.
  *
  * Running mode: measurement, +/-2 g, 100 Hz (FILTER_CTL = 0x23, the reset default
- * written explicitly). Data-sheet current 0.89 uA @ 100 Hz. Tap/activity thresholds
+ * written explicitly). Data-sheet current 0.89 uA @ 100 Hz ODR -- but specified at a
+ * 2.0 V supply (Table 1); this board runs the part from the 3.3 V VS rail, so treat
+ * 0.89 uA as a floor, not the figure to budget. Tap/activity thresholds
  * are BARE-CARD starting points; re-tune enclosed (same flow as the LIS2DH12).
  */
 #ifndef ADXL367_H
@@ -66,7 +68,8 @@
 #define ADXL_CFG_FILTER_CTL  0x23
 
 /* POWER_CTL: MEASURE[1:0]=10 (measurement mode); NOISE=00, WAKEUP=0, AUTOSLEEP=0.
- * Always-measurement (0.89 uA) -- no wake-up mode, so no first-tap-on-motion corner. */
+ * Always-measurement (0.89 uA typ @ 2.0 V; higher at this board's 3.3 V) -- no
+ * wake-up mode, so no first-tap-on-motion corner. */
 #define ADXL_CFG_POWER_CTL   0x02
 
 /* ACT_INACT_CTL: LINKLOOP=00, INACT_EN=00 (off), ACT_EN=11 (referenced activity).

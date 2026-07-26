@@ -273,9 +273,15 @@ Summary of the **orderable** lines:
 - **MH1–MH4** are plated drills — supply your own **M2 screws** if enclosing.
 
 **Flags to clear before you buy:**
-- **R1–R4 value (150 Ω) is `SIZED`, not locked.** It sets per-LED peak current (~9 mA on the
-  clamped rail) and is **bench-pending** — the energy-budget test may re-tune it. Buy a small
-  0402 range (e.g. 100 / 150 / 220 / 330 Ω) so you can swap after the measurement.
+- **R1–R4 value (150 Ω) is `SIZED`, not locked.** It sets per-LED peak current and is
+  **bench-pending** — the energy-budget test may re-tune it. Buy a small 0402 range
+  (e.g. 100 / 150 / 220 / 330 Ω) so you can swap after the measurement.
+  *(Corrected 2026-07-26 PCB audit: this used to read "~9 mA on the clamped rail", a stale
+  v3 figure — v3 fed the LED anodes from a rail the TLV3011B held near 3.5 V, giving
+  (3.5−2.25)/150 ≈ 8.3 mA. v4 deleted that clamp: SW2 now feeds ANODE straight from STO, so
+  the peak is (STO−Vf)/150 ≈ **14–18 mA** near the 4.65 V VOVCH ceiling — the LA P47F's Vf
+  is itself unbinned across the 3B–5A groups, 1.95–2.55 V at 30 mA. The firmware
+  (board.h/led.h) already assumes the v4 number; this line did not.)*
 - **C9 stays DNP** until the coil is trimmed on the bench (resonance target 13.56 MHz with
   the NT3H2211's internal capacitance; the Ti shell behind the coil moves it — measure with
   the shell fitted).
@@ -290,9 +296,15 @@ them on the **back**; the front stays naked until you fit the cells. You finish 
 types by hand afterward.
 
 **The split**
-- **PCBWay machine-places** (reflow, bottom): U1, U3, U5–U9, D2–D5, R1–R6, R10–R12, R14–R17, L2, FB1,
-  SJ1, C1, C3–C8, C11–C13, C22–C28. (Recompute the placed count from the v4 board; the v3 clamp/comparator
-  parts - U2, U4, Q1, D1, D9–D11, R7–R9, C2, C10 - are gone.) `solar-glow-drh-v4_0-BOM-assembly.xlsx` is
+- **PCBWay machine-places** (reflow, bottom): U1, U3, U5–U9, Q2, D2–D5, R1–R6, R10–R12, R14–R18, L2, FB1,
+  C1, C3–C8, C11–C13, C22–C28. (Recompute the placed count from the v4 board; the v3 clamp/comparator
+  parts - U2, U4, Q1, D1, D9–D11, R7–R9, C2, C10 - are gone.)
+  *(Corrected 2026-07-26: **SJ1 removed** from this list — it is DNP/not-ordered and must be left open,
+  so it is never placed; the DNP attribute now says so in both the .kicad_sch and .kicad_pcb. **Q2 and
+  R18 added** — the charge-disable buffer from the cold-start-deadlock fix. **U7 is correctly in this
+  list**: it carried a stray DNP attribute in the .kicad_pcb, now cleared so the board agrees with the
+  schematic. That flag did not affect this project's fab output — the CI pick+place CSV is informational
+  and already listed U7 — but the two files must agree, since a schematic sync overwrites the board.)* `solar-glow-drh-v4_0-BOM-assembly.xlsx` is
   that trimmed file - **regenerate it from the v4 board** so it reflects the v4 placed set.
 - **You hand-solder afterward:** SC1–SC4 supercaps and PV1–PV2 solar cells. They are kept
   **off** the PCBA BOM on purpose — the supercaps are manual-solder only (SCHURTER SCPC),
