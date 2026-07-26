@@ -387,6 +387,19 @@ int main(void)
         }
         else if (f_tick) {
             f_tick = 0;
+            /* Stuck-INT backstop. The ADXL367 holds INTn HIGH until its status
+             * register is read, and PF0/PF1 sense RISING edges only -- so if an
+             * ack ever fails (a bus fault inside adxl367_read_tap() /
+             * clear_activity(), which return quietly by design), the pin stays
+             * high, no further edge can ever occur, and that input is dead until
+             * the next reset. Tap is the card's PRIMARY input, so it gets a
+             * backstop: a pin still asserted at poll time with no flag pending
+             * means exactly that failure, and re-reading the status register
+             * re-arms the edge. Free in the healthy case (a PORT.IN read, no I2C)
+             * and it cannot invent an event -- the glow for that tap already
+             * fired; only the latch was left behind. */
+            if ((ACC_PORT.IN & ACC_INT1_bm) && !f_tap)     adxl367_clear_tap();
+            if ((ACC_PORT.IN & ACC_INT2_bm) && !f_motion)  adxl367_clear_activity();
 #if USE_NFC_ACK_COOLDOWN
             if (nfc_cooldown) nfc_cooldown--;   /* age the NFC-ack rate-limit on the poll tick (~1 s) */
 #endif

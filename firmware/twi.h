@@ -32,6 +32,8 @@
 
 #include <avr/io.h>
 #include <stdint.h>
+#include "board.h"          /* F_CPU (for util/delay) + the pin map */
+#include <util/delay.h>
 
 #define TWI_MBAUD_100K  0    /* 1 MHz / (10 + 2*0) = 100 kHz @ F_CPU = 1 MHz */
 
@@ -60,11 +62,67 @@ static inline uint8_t twi_wait(uint8_t bits)
     return 0;
 }
 
+/* ---- SDA/SCL as plain GPIO, for the pre-enable bus recovery below ----
+ * TWI0 ALT2 routing (PORTMUX.TWIROUTEA, set in main): SDA = PC2, SCL = PC3.
+ * While TWI0.MCTRLA.ENABLE is 0 the pins are ordinary PORT pins, which is what
+ * makes the recovery possible at all. Open-drain is emulated the only correct
+ * way on a shared bus: never drive HIGH (that would fight a target holding the
+ * line), only drive LOW or release to input and let the 4.7k pull-ups lift it. */
+#define TWI_SDA_bm   PIN2_bm
+#define TWI_SCL_bm   PIN3_bm
+#define TWI_PORT     PORTC
+#define TWI_HALF_US  5            /* 5 us half-period = 100 kHz recovery clock */
+
+/* Recover a bus wedged with SDA held LOW by a target mid-transaction.
+ *
+ * The reachable cause on this card is our OWN reset: a watchdog reset (or a
+ * brownout, or a UPDI attach) that lands while a target is clocking out a byte
+ * leaves that target still driving SDA low, waiting for clocks that will never
+ * come -- and the TWI host cannot issue a START on a bus whose SDA is already
+ * low, so every transaction fails forever. The accel is the card's only input,
+ * so "forever" means a dead card that still boots and still polls.
+ *
+ * The I2C-bus spec's recovery (UM10204 sec 3.1.16) is up to 9 SCL pulses, which
+ * walks the stuck target through the rest of its byte until it releases SDA at
+ * an ACK slot, followed by a STOP to resynchronise every target's state machine.
+ * Cheap and safe to run unconditionally-when-needed at init: if SDA is already
+ * high (the normal case) this does nothing at all. */
+static inline void twi_bus_clear(void)
+{
+    /* Release both lines to inputs first; the pull-ups define the idle state. */
+    TWI_PORT.DIRCLR = TWI_SDA_bm | TWI_SCL_bm;
+    TWI_PORT.OUTCLR = TWI_SDA_bm | TWI_SCL_bm;   /* drive LOW when DIR is set */
+    _delay_us(TWI_HALF_US);
+
+    if (TWI_PORT.IN & TWI_SDA_bm)
+        return;                                  /* SDA idle high -> nothing wedged */
+
+    for (uint8_t i = 0; i < 9 && !(TWI_PORT.IN & TWI_SDA_bm); i++) {
+        TWI_PORT.DIRSET = TWI_SCL_bm;            /* SCL low  */
+        _delay_us(TWI_HALF_US);
+        TWI_PORT.DIRCLR = TWI_SCL_bm;            /* SCL released -> pulled high */
+        _delay_us(TWI_HALF_US);
+    }
+
+    /* STOP: SDA low -> high while SCL is high. */
+    TWI_PORT.DIRSET = TWI_SDA_bm;
+    _delay_us(TWI_HALF_US);
+    TWI_PORT.DIRCLR = TWI_SDA_bm;
+    _delay_us(TWI_HALF_US);
+}
+
 static inline void twi_init(void)
 {
+    /* Clear a stuck bus BEFORE handing the pins to TWI0 -- the peripheral has no
+     * way to do this itself, and a wedged SDA would otherwise fault every
+     * transaction for the life of the power cycle. */
+    twi_bus_clear();
+
     TWI0.MBAUD   = TWI_MBAUD_100K;
-    /* host on; enable the inactive-bus timeout so a wedged bus (SCL stuck low)
-     * recovers into a BUSERR instead of hanging a polled wait forever. */
+    /* Host on. The inactive-bus timeout does NOT rescue a hung wait (see the
+     * header note -- that is what TWI_SPIN_MAX is for); it is enabled because it
+     * DOES auto-return the bus-state machine to Idle after a disturbance, so a
+     * transaction that faulted can be retried without a manual state poke. */
     TWI0.MCTRLA  = TWI_TIMEOUT_200US_gc | TWI_ENABLE_bm;
     TWI0.MSTATUS = TWI_BUSSTATE_IDLE_gc;      /* force bus state to IDLE */
 }

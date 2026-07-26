@@ -299,8 +299,15 @@ uint16_t sense_sun_hours_get(void)
 
 void sense_sun_tick(void)
 {
-    if (++sun_polls < SUN_POLLS_PER_HOUR)
+    if (sun_polls < SUN_POLLS_PER_HOUR) sun_polls++;   /* saturate: a waiting hour can't wrap the counter */
+    if (sun_polls < SUN_POLLS_PER_HOUR)
         return;                              /* still inside the current hour */
+    /* Rail gate, same as every other writer (board.h EE_WRITE_FLOOR_MV). Hold the
+     * banked hour in RAM rather than dropping it: an hour completed at a low rail is
+     * credited on the next safe tick instead of being lost or written unsafely.
+     * Strong sun implies the harvester is running, so this rarely waits at all. */
+    if (!sense_ee_safe())
+        return;                              /* hour stays banked -- retry next poll */
     sun_polls = 0;
     uint16_t h = sense_sun_hours_get();
     if (h < 0xFFFEu)                         /* saturate near the top (and never store 0xFFFF, which reads as 0) */

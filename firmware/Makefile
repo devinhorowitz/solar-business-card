@@ -81,6 +81,9 @@ flash: $(TARGET).hex
 #   DISABLED -- same trap as the DD), 0x1 = 1.90 V, 0x2 = 2.60 V, 0x3 = 4.30 V. There is NO 2.45 V
 #   step on the EA. Use LVL=0x2 (2.60 V typ falling, 2.47 min), SAMPFREQ=0 (128 Hz), ACTIVE=0x2
 #   (sampled), SLEEP=0x2 (sampled) -> 0x4A.
+#   LEVEL NUMBERS: 2.60 V typ falling, 2.43 V min. The 2.47 V min in the DS40002443 table is
+#   SUPERSEDED -- DS80001048C's data-sheet-clarification section restates BODLEVEL2 falling as
+#   2.43/2.60 V (and BODLEVEL3 as 4.05/4.30). Use the errata numbers; they are the newer document.
 #   2.60 V sits below the 2.75 V glow floor (VS_GLOW_FLOOR_MV, re-derived for the EA in board.h so a
 #   glow-load sag never trips it) and above the 1.8 V core min; it also holds the core in low-current
 #   reset on the slow-ramp cold-start. 1.90 V would guard EEPROM writes far too low; 4.30 V is above

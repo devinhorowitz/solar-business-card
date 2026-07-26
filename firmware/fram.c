@@ -5,8 +5,15 @@
  * follows the standard "set the 16-bit address pointer, then read" idiom: an
  * address phase (SA+W, addrHi, addrLo) followed by a repeated START with SA+R
  * for the data phase. Unlike the NFC EEPROM there is NO post-write settle delay
- * -- FeRAM commits at the STOP (datasheet: "does not need a polling sequence
- * after writing"), so fram_write returns as soon as the STOP is on the wire.
+ * and no busy poll (datasheet: "does not need a polling sequence after
+ * writing"), so fram_write returns as soon as the STOP is on the wire.
+ * Precisely: each byte is committed as it is acknowledged -- "the data will be
+ * written to FeRAM right after the ACK response finished" (Page Write section)
+ * -- NOT batched to the STOP. The practical difference is failure atomicity: a
+ * multi-byte fram_write aborted mid-way (bus fault) leaves the bytes already
+ * ACKed permanently in memory, so a record that must not be read half-written
+ * needs its own valid/commit marker written last. The boot record is safe by
+ * construction (its magic is re-checked and re-seeded on read).
  *
  * Power (option A, 2026-07-23 back-power fix): VDD rides the ALWAYS-ON VS rail
  * -- not the gated VNFC -- so the bus pull-ups (also on VS) can never sit above

@@ -29,7 +29,14 @@ uint8_t adxl367_init_tap(void)
     /* soft reset -> all registers cleared, part left in standby. Belt-and-suspenders
      * against a warm MCU reset (UPDI / watchdog) where the accel kept its old config. */
     rc |= twi_reg_write(ADXL367_ADDR, ADXL_SOFT_RESET, ADXL_SOFT_RESET_CODE);
-    _delay_ms(2);                       /* conservative reset settle */
+    /* MANDATORY 7.5 ms: "A latency of 7.5 ms is required after a software reset"
+     * (data sheet Rev. B, Table 37, SOFT_RESET register). 10 ms = spec + margin.
+     * The old 2 ms was a guess and under spec: the ID check and all fourteen
+     * config writes below could land while the part was still resetting, so the
+     * config silently reverted to reset defaults (tap engine OFF, INTs unmapped)
+     * -- the card's only input, dead, on a boot that reported success. Cost is
+     * 8 ms once per boot, before the watchdog is armed. */
+    _delay_ms(10);
 
     if (adxl367_present()) return 1;    /* wrong / absent part after reset */
 

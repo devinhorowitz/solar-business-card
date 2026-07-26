@@ -24,9 +24,14 @@
  * --- memory model (datasheet, I2C perspective; Table 6/7, sec 8.3.2/8.3.8/9.7) ---
  *   - access is in 16-byte BLOCKS, addressed by a 1-byte block address (MEMA).
  *   - block 0x00: I2C-addr byte (byte0, reads back 04h) + UID + lock + the
- *     Capability Container (CC) at bytes 12..15. WRITING block 0 changes the I2C
- *     address (byte0), so we NEVER touch it. The CC ships = E1 10 6D 00
- *     (NDEF-capable, 872 B in sector 0), so no CC write is needed.
+ *     Capability Container (CC) at bytes 12..15. WRITING block 0 also rewrites
+ *     the I2C address (byte0), so it is touched exactly once, by nfc_write_cc()
+ *     during provisioning, which preserves the address deliberately.
+ *     The CC does NOT ship valid: sec 8.3.10 says it is "set to all 00h" at
+ *     delivery and "need[s] to be initialized by the user" -- E1 10 6D 00
+ *     (NDEF-capable, 872 B in sector 0) is Table 8's REQUIRED value, not the
+ *     factory state. Without that write a phone sees a non-NDEF tag and offers
+ *     the user nothing, however perfect the NDEF behind it is.
  *   - block 0x01 = first user-memory block = WHERE THE NDEF STARTS (NFC page 04h).
  *   - the NDEF is an NFC-Forum Type-2 TLV: 03h, <len>, <NDEF message>, FEh, padded
  *     to a whole block with 00h. <len> is 1 byte if <255, else FFh + 2-byte BE.
