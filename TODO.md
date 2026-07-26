@@ -265,6 +265,25 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
 
 ## PCB — `PCB/solar-glow-drh-v4_0.kicad_pcb` / `.kicad_sch`
 
+- [ ] **[SCH/PCB — ⚠ ARMED TRAP, decide before any sync] U7 footprint identity is INCONSISTENT**
+  _(2026-07-26; investigated, deliberately NOT "fixed" — a blind swap would wreck the FRAM routing.)_
+  The schematic's `Footprint` property for U7 already reads **`solarglow:U7_DFN8`**, but the board
+  still carries **`Package_DFN_QFN:DFN-8-1EP_6x5mm_P1.27mm_EP4x4mm`**, and the two geometries are NOT
+  the same:
+  - board pads sit at X **−1.95 / +2.25** (asymmetric); the library land is at **±2.1** (symmetric)
+  - the Y order is **reversed** — board pad 1 at +1.905, library pad 1 at −1.905
+  Part of that Y difference may simply be back-side mirroring (U7 is on B.Cu; the `.kicad_mod`
+  declares `F.Cu`), but the asymmetric X offset is not explained by mirroring.
+  **This is already armed:** because the schematic points at the library land, any sync run with
+  "replace footprints" enabled will move U7's pads and possibly flip the pin order, breaking the
+  routing on a part the firmware depends on. Decide deliberately, one of:
+  (a) correct `U7_DFN8.kicad_mod` to match the routed geometry (mirrors the U9 approach — keeps copper
+      untouched, and is probably right since the board land was the one verified against the RAMXEED
+      drawing); (b) point the schematic property back at the `Package_DFN_QFN` land; or (c) accept the
+      library land and re-place + re-route U7. **Do not run Update-from-Schematic with footprint
+      replacement on until this is settled.**
+
+
 - [x] **[SCH] C29 added to the schematic — board and netlist now agree** _(2026-07-26; DONE.)_
   `solarglow:C29` lib symbol + instance at (410.21, 261.62), Reference C29, Value 100nF, Footprint
   `solarglow:C1` to match the board, wired VS/GND with the project's stub-and-global-label pattern.
