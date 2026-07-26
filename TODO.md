@@ -265,19 +265,23 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
 
 ## PCB — `PCB/solar-glow-drh-v4_0.kicad_pcb` / `.kicad_sch`
 
-- [ ] **[COPPER — HIGHEST VALUE UNRESOLVED] GND may form a closed shorted turn around the NFC coil**
-  _(2026-07-26 copper audit; rated trivial-to-fix / high-benefit, and NOT verified by me.)_ A pour that
-  encircles an NFC antenna and closes on itself acts as a shorted secondary and absorbs field energy,
-  cutting read range. The audit reports GND doing exactly that (F.Cu stated as certain, plus a 3-D
-  cage with B.Cu), and separately that **the F.Cu keepout notch cut for the LB bridge re-admits pour
-  inside the coil's north turns**. I could NOT confirm either — my zone parser did not resolve fill
-  polygons in this file's format, so treat both as unverified. Standard fix is a slit in the ring so
-  it cannot close, plus closing the notch; both are zone edits, minutes in KiCad. **Check this before
-  fab** — it is the one open item that could quietly halve NFC performance. Related, cheap if you are
-  already in there: the coil track is 0.30 mm where 0.40 mm fits in the same outline (~23 % less AC
-  resistance), and C9's LA terminal taps the outer turn well inside the winding rather than at the
-  antenna terminal.
-
+- [x] **[COPPER] NFC coil shorted-turn claim — CHECKED AND REFUTED**
+  _(2026-07-26; verified with shapely against the actual zone fills.)_ The copper audit's headline RF
+  finding — "GND forms a galvanically closed shorted turn encircling the NFC coil (F.Cu certain, 3-D
+  cage with B.Cu)" — **does not hold**. A shorted turn requires a *galvanically closed* loop, i.e. one
+  connected conductor forming a ring, so the rigorous test is whether the coil sits inside an interior
+  hole of a single connected GND component. Extracted all GND `filled_polygon` fills (F.Cu 2646.6 mm²
+  across 8 connected components, B.Cu 2878.1 mm² across 10) and tested every one: **`hole_contains_coil
+  = False` for all 18.** No closed ring on either layer. (My earlier parser missed these because zones
+  in this file carry `(net "GND")`, a name string, not `(net_name …)`.)
+  A straight-ray test is *not* a valid substitute and initially looked alarming — 0 of 720 rays escape
+  on B.Cu — but straight rays hitting scattered GND blobs says nothing about a closed loop, and the
+  hole test settles it. On F.Cu, 231 of 720 rays escape outright.
+  **What is real, and minor:** small GND intrusions into the winding aperture — F.Cu 10.6 mm² (3.2 %
+  of the aperture; a strip at y46.8–58.0 and a thin one along the north edge at y31.1–31.6) and B.Cu
+  6.2 mm² (1.9 %), most of the B.Cu figure being an artifact of the B.Cu keepout starting at x36.8
+  while the F.Cu one starts at x36.5. Worth an eyeball at fab time, not a redesign — and nothing like
+  a shorted turn. The coil aperture keepouts themselves are correct.
 - [ ] **[COPPER] U1 has one decoupling cap for two VDD/GND pin pairs**
   _(2026-07-26 copper audit; moderate effort.)_ Contrary to an explicit datasheet requirement, and it
   bears on the ADC noise floor — which now matters more than it used to, since the glow floor, the
