@@ -360,16 +360,30 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   `PCB/solarglow.pretty/U9_SOT23_5.kicad_mod` created so the lib_id resolves. Re-verified after the
   swap: copper lands on the OUT pad from both layers, 93 VS nodes joined to it, C23 and the MCU-side
   VS run both reachable, no stale copper at the old vacant land.
-- [ ] **[COPPER — yours] AEM10300 CSRC ground return runs the long way round**
-  _(2026-07-26 copper audit; you said you'd take this one.)_ C25's (22 µF CSRC) GND pad sits on a
-  B.Cu ground island whose only layer transition is ~11 mm away, so the return to U8's thermal pad —
-  6 mm in a straight line — travels ~42 mm of pour. This is the input side of the DCDC's high-di/dt
-  loop, and the AEM10300 datasheet §14.1 is explicit: *"The GND return path between the DCDC
-  decoupling capacitors (CSRC - CSTO) and the AEM10300 thermal pad … must be as direct and short as
-  possible."* Fix is a couple of stitching vias near **(25.12, 54.22)** and **(29.18, 55.82)**.
-  ⚠ I measured the nearest non-GND copper at **0.281 mm** from the first location and 0.465 mm from
-  the second — both legal against the 0.126 mm floor but tighter than the audit claimed, so place
-  them with the pour visible and DRC live rather than from these coordinates alone.
+- [x] **[COPPER] AEM10300 CSRC ground return — FIXED, and it was fixed on 2026-07-26**
+  _(closed 2026-07-27 after re-measuring; the work landed in the `3803c18` board upload and was never
+  ticked off here.)_ The finding was real. At `2b65aef`, C25's (22 µF CSRC) GND pad sat on its **own
+  99.4 mm² B.Cu island**, separate from the 2544.3 mm² main pour carrying U8's thermal pad — so there
+  was **no B.Cu return path at all** between them, board-wide, and the return had to cross to F.Cu and
+  back. That is what the "~42 mm of pour" figure was describing. The AEM10300 datasheet §14.1 is
+  explicit here: *"The GND return path between the DCDC decoupling capacitors (CSRC - CSTO) and the
+  AEM10300 thermal pad … must be as direct and short as possible."*
+
+  **What fixed it:** a GND stitching via now sits at **(29.125, 56.15)** — 0.33 mm from the audit's
+  suggested (29.18, 55.82) — and the island merged into the main pour. Re-measured on the current
+  board by rasterising the B.Cu GND copper (pour + GND tracks) and running a shortest-path search:
+
+  | | C25.GND → U8.EP, path *in copper* |
+  |---|---|
+  | `2b65aef` (audit) | **no path** — different islands |
+  | `3803c18` onward  | **8.78 mm** (straight line 5.37 mm, 1.6×) |
+
+  **Residual, and why I would leave it:** the audit's *second* suggested via at (25.12, 54.22) was
+  never placed. It would not shorten the B.Cu path — both pads are already on the same island — it
+  would only add a parallel return through F.Cu. **F.Cu is now a 47%-copper crosshatch**, so that
+  parallel path is a mesh rather than a plane and buys materially less than it would have when the
+  audit was written. The real return is the 8.78 mm run on solid B.Cu, and 1.6× detour on a
+  low-power harvester's DCDC input loop is comfortable. Adding the via is optional, not indicated.
 
 - [ ] **[COPPER — yours] U1 / U8 exposed-pad stencil apertures are 1:1 with the copper**
   _(2026-07-26 copper audit.)_ U1's EP is 2.65 × 2.65 mm (7.02 mm²) and U8's is 2.3 × 2.3 mm
