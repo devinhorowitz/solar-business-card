@@ -442,6 +442,19 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   shows it: PV1/PV2 cover 1932 mm² and the optical window another 146. Knock-on effects are filed
   separately below (gold-frame merge).
 
+  **DESIGN INTENT — read this before "cleaning up" the pour.** The crosshatch is a *functional
+  ornament*, and specifically a **sub-mask** one: it is meant to be read softly THROUGH the matte
+  black solder mask, giving the face a woven texture instead of a flat matte plane interrupted by
+  traces. **89.6% of it (1816.9 of 2028.1 mm²) is under mask by design**; only 211.2 mm² is exposed,
+  and that is hatch falling inside the monogram / frame / ornament mask windows. Three things follow,
+  none of them obvious from the board file alone:
+  - The effect depends on the mask **telegraphing the 35 µm copper step**. Anything that flattens
+    that — a thicker mask, a fab "evening out" the surface — kills the feature. The plating request
+    now says so explicitly.
+  - It is **not** a plating surface and must not be mask-opened. Do not "fix" the pour by exposing it.
+  - Electrically it is still just the F.Cu ground pour. Nothing here is decorative-only copper that
+    can be deleted; changing it changes the ground plane.
+
 - [x] **[SCH] Removed an orphaned no-connect flag** _(2026-07-27; DONE.)_ ERC reported
   `no_connect_dangling` at (490.22, 397.51) mm — a flag sitting in empty schematic space with no pin
   or wire within 3 mm (nearest symbol is U9, 25.4 mm away). **Not caused by the U9 six-pin deletion**,
@@ -489,20 +502,32 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   headroom); it is our own gate that is fragile. ~0.025 mm more would settle it — and the D2 anode
   rework above is the natural time to do it.
 
-- [ ] **[PCB/FAB — decision] The crosshatch pour now merges with 52% of the gold frame**
-  _(2026-07-27 upload.)_ The hatch rework enlarged the F.Cu pour outline to 0.5 mm from the board edge
-  (it used to sit ~3.65 mm in), so the pour now overlaps the F.Cu gold artwork by **157.3 mm² — 52%
-  of the frame + ornament copper (157.3 of 303.8 mm²)**, up from a 0.069 mm² graze. **The monogram
-  field is untouched** (0.00 mm² overlap) because it lives inside the `optical_window` keepout, which
-  the pour cannot enter. The plating request has been reworded to mask the gold **by area rather than
-  by net** (see `PCB/README.md`), which is executable — selective plating uses a photoimaged resist,
-  so a shared-copper boundary is still platable. Two things still open, both yours:
-  1. **Aesthetic:** `hatch_border_algorithm` is `hatch_thickness`, so the pour edge is hatched, not
-     solid. Do you want the texture running over the frame, or the frame reading as a solid border
-     that contains it? The latter means pulling the zone outline back off the artwork.
-  2. **Durability:** define the gold area on a dedicated user layer (`User.1` is empty) and plot it as
-     its own gerber, so the region is artwork rather than prose and cannot drift the next time a pour
-     outline moves.
+- [x] **[PCB/FAB] Plating request renamed the gold area by mask opening, not by connectivity**
+  _(2026-07-27; DONE — and my first read of this was overstated, corrected below.)_ The hatch rework
+  enlarged the F.Cu pour outline to 0.5 mm from the board edge (was ~3.65 mm in), so the pour now
+  overlaps the gold artwork by **157.3 mm² — 52% of the frame + ornament copper**, where it used to
+  graze it over 0.069 mm². The request's old phrase "all connected copper on F.Cu" therefore stopped
+  naming anything useful. **But the consequence was ambiguity, not expense:** a fab plates only what
+  the mask exposes, and this crosshatch is a *sub-mask* ornament — **89.6% of it (1816.9 of
+  2028.1 mm²) is under solder mask** and cannot be plated at all. Only 211.2 mm² is exposed, all of
+  it inside the monogram / frame / ornament windows where plating it alongside them is correct. An
+  earlier version of this item said the old wording would have gold-plated ~2,400 mm² of pour; that
+  ignored the mask and was wrong. The monogram field is untouched either way (0.00 mm² overlap — the
+  `optical_window` keepout excludes the pour). Request now names the gold area by **F.Mask opening**,
+  which is what physically governs it, and tells the fab the pour is decorative and must stay masked.
+
+- [ ] **[PCB — aesthetic, your call] Should the frame contain the texture, or should the texture run
+  over it?** _(2026-07-27.)_ `hatch_border_algorithm` is `hatch_thickness`, so the pour edge is
+  hatched rather than solid, and the enlarged outline runs the mesh right up to and over the gold
+  frame. Reading it as a solid border that frames the texture means pulling the zone outline back off
+  the artwork. Purely a look decision — no electrical or fab consequence either way now that the
+  plating request is defined by mask opening.
+
+- [ ] **[PCB/FAB — durability] Define the gold area on a user layer instead of in prose**
+  _(2026-07-27.)_ `User.1` is empty. Drawing the gold region there and plotting it as its own gerber
+  makes the area artwork rather than a paragraph, so it cannot drift the next time a pour outline
+  moves — which is exactly what just happened. Adds one file to the fab package, so it needs a
+  deliberate yes before the order goes out.
 
 - [x] **[COPPER] VINT / EN_STO_CH necked back to 0.15 mm through the U8 pocket** _(2026-07-26; DONE.)_
   The 2026-07-26 board upload widened 39 segments from 0.15 to 0.20 mm — VINT ×24, EN_STO_CH ×12, plus
