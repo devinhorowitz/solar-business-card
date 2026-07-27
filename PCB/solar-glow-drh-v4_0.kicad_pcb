@@ -31482,7 +31482,7 @@
 	)
 	(segment
 		(start 32.004 32.421626)
-		(end 32.004 32.461)
+		(end 32.004 32.615)
 		(width 0.152)
 		(layer "B.Cu")
 		(net "VNFC")
