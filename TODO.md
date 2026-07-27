@@ -497,6 +497,36 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
      1). That is what the single `unconnected_items` error reports — GND_B unconnected to itself.
      Isolated ground copper: harmless electrically, untidy. Turning on island removal clears it.
 
+  - [x] **Full-board width audit — every trace justified or reduced to the floor** _(2026-07-27;
+    DONE.)_ Went net by net asking whether the width buys anything: ampacity, IR drop, inductance,
+    RF, or signal integrity. **564 segments normalised to 0.152 mm**, track copper 532 → 361 mm²
+    (−32%). Two numbers decided almost all of it:
+    - **Ampacity at the floor is 610 mA** (IPC-2221, 1 oz, 10 °C rise). The board's largest current
+      is **ANODE at 64 mA** — four LEDs × ~16 mA at a full tank, (4.65 V − 2.25 V)/150 Ω. That is
+      **10% of capacity**, and the IR drop over a 40 mm run is **8.2 mV**, which through a 150 Ω
+      ballast shifts LED current by 0.05 mA out of 16. Ampacity binds nowhere on this board.
+    - **Inductance depends on width only logarithmically.** 0.500 → 0.152 mm costs **+22–30%** on a
+      5–20 mm trace. Length dominates; width is a weak lever even where inductance matters at all.
+
+    **Kept wide, with the reason:**
+
+    | net | mm | why |
+    |---|---|---|
+    | `LA` / `LB` | 0.300 | the trace **is** the NFC coil — width sets inductance, Q and self-resonance |
+    | `LX_LIN` / `LX_LOUT` | 0.200 | DCDC switch node, the one place di/dt is real (10 µH at ns edges) |
+    | `GND` | mixed | return path — and already 52.3 of 55.4 mm at the floor anyway |
+
+    **Reversed on inspection, because the per-net heuristic was too coarse:** `SRC` (128 mm at
+    0.375) is the *cell* input — DC, MPPT-sampled every 4.5 s; the converter's pulsed current comes
+    from C25 on BUFSRC, not from this run, so it narrowed. Likewise one `BUFSRC` segment (the cap
+    feed, not the switch node — it was violating against `LX_LIN`, so narrowing one fixed both at
+    ~1% of loop inductance) and one `LB` segment at (33.98, 33.08), which is **outside the coil
+    region entirely** — a feed trace, where +0.133 nH against a µH-scale coil is ~5 parts in 100,000.
+
+    Result: **segments under 0.152 mm wide: 22 → 0.** Under-clearance 61 → **49**. Narrowing can
+    only increase clearance, so nothing was created. Widths now: 781 at 0.152, 13 at 0.2 (the switch
+    node), 93 at 0.3 (the coil), 1 at 0.4 (a GND stub).
+
   - [x] **The monogram's GND tie widened 0.150 → 0.200 mm** _(2026-07-27; investigated in full.)_
     Chasing the lone `unconnected_items` error (`Polygon [GND] on F.Cu @ (17.709, 46.104)` vs zone
     `GND_A`) turned into a useful map of how the front artwork is actually wired:
