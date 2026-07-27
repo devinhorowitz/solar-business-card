@@ -299,7 +299,7 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
 - [x] **[SCH] C29 added to the schematic — board and netlist now agree** _(2026-07-26; DONE.)_
   `solarglow:C29` lib symbol + instance at (410.21, 261.62), Reference C29, Value 100nF, Footprint
   `solarglow:C1` to match the board, wired VS/GND with the project's stub-and-global-label pattern.
-  Verified paren-balanced, 24,909 CRLF, zero bare LF.
+  Verified paren-balanced, 24,909 lines, zero bare LF *at the time* (the file was CRLF then; it became LF in the 2026-07-27 upload — see the repo item below).
 
 - [x] **[BOM] C29 added to the master, and two stale rows corrected** _(2026-07-26; DONE.)_
   C29 is now its own row in `solar-glow-drh-v4_0-BOM.xlsx`, directly after C28. (An earlier note here
@@ -403,7 +403,7 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   do-not-populate intent — which lived only in a Value string — would have been silently lost.)* **SJ1** was wrong in *both* files — `(dnp no)` in the schematic and a bare
   `(attr smd)` in the board, with the intent recorded only in its Value text; set to `(dnp yes)` /
   `(attr smd dnp)`, matching C9's in-BOM-but-not-placed pattern so its documented "(DNP — not ordered)"
-  BOM row survives. Every part's sch and pcb flags now agree. Schematic edited byte-safe: 24,650 CRLF
+  BOM row survives. Every part's sch and pcb flags now agree. Schematic edited byte-safe: 24,650 CRLF (the file was CRLF then; now LF)
   line endings preserved, zero bare LF. PCB/README's machine-place list corrected to match (SJ1 removed,
   Q2/R18 added).
 - [x] **[BOARD — FAB CORRECTNESS] Paste removed from the hand-soldered PV and SC lands**
@@ -429,27 +429,80 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   centres, 0.25 mm away, which still falls inside the 0.65 mm-wide pads at their new
   positions — verified all 8 pads retain a trace endpoint within their bounds.
 
-- [ ] **[PCB — needs KiCad, 2 min] Refill the GND_B zone after the LED land move** _(2026-07-26.)_
-  The pad move was made at file level, so the zone fill polygons stored in the `.kicad_pcb` still
-  describe the *old* pad positions. Exactly two of the eight moved pads — **D2 pad A** (moved outward
-  to 14.550, 44.300) and **D5 pad K** (outward to 36.250, 43.500), the two ends of the LED row — now
-  land inside the stored `GND_B` B.Cu pour, ~0.091 mm² each; the other six stayed clear (checked all
-  eight against the stored fill polygon). CI reports them as two `clearance ... actual 0.0000 mm`
-  errors against `Zone 'GND_B'`. A refill carves the clearance void and both clear. **This also
-  matters beyond DRC:** KiBot plots the gerbers from the stored fill, so the fab copper is stale until
-  the refill is saved. Open the board → Edit → Fill All Zones → save. (Same visit as the D2 anode
-  reroute below.)
+- [x] **[PCB — AESTHETIC] F.Cu ground pour crosshatched** _(2026-07-27 upload; DONE.)_
+  45° crosshatch, **0.2 mm strand / 0.5 mm gap** (0.7 mm pitch, 46 cells/inch), smoothing level 3.
+  Reads as a woven texture in the hand and blends to flat tone past ~700 mm — the intended "fine
+  stitch that melts." The parameters dodge both traps that a finer 0.15/0.4 setting would have hit:
+  the hole is 0.25 mm² against `hatch_min_hole_area` 0.15 (a 0.4 mm gap gives 0.16 mm², close enough
+  to the cull threshold to risk silently filling back to solid), and the 0.2 mm strand clears the
+  zone's `min_thickness` 0.15 by 0.05 mm (an at-minimum strand gets pruned wherever geometry pinches
+  it, which shows up as blotches in a texture). **Copper balance held up far better than projected:**
+  F.Cu pour 2660 → 2028 mm², so front/back is **0.84** (was 1.06 solid; a 0.5/1.0 hatch would have
+  been 0.37) — the warp concern on the 0.51 mm core is largely moot. Note only ~45% of the card face
+  shows it: PV1/PV2 cover 1932 mm² and the optical window another 146. Knock-on effects are filed
+  separately below (gold-frame merge).
 
-- [ ] **[PCB, PRE-FAB] D2's ANODE trace crosses D2's own light window** _(2026-07-25 LED audit)._ On
-  B.Cu — the emitting face — the ANODE segments `(14.8, 44.3)→(16.176, 42.924)` and
-  `(16.176, 42.924)→(17.727924, 42.924)` pass **0.636 mm** from D2's emitter center (16.1, 43.9),
-  i.e. *inside* the Ø2.1 aperture (r = 1.05), partially shadowing the brightest part of D2's cone.
-  **D3/D4/D5 are clear** — they route their pads straight out of the window, which is the documented
-  rule (design-notes: LED anodes trace out of the window). Re-route D2's anode to exit the window the
-  way its siblings do. Verified numerically against the committed board.
-  **Now also a hard DRC error, not just an optical one:** with D2's K pad moved out to X = +1.55 the
-  ANODE run and pad K [K2] overlap — CI reports it as `shorting_items (nets K2 and ANODE)`, both
-  directions. The reroute fixes the short and the shadowing in one move.
+- [x] **[SCH] Removed an orphaned no-connect flag** _(2026-07-27; DONE.)_ ERC reported
+  `no_connect_dangling` at (490.22, 397.51) mm — a flag sitting in empty schematic space with no pin
+  or wire within 3 mm (nearest symbol is U9, 25.4 mm away). **Not caused by the U9 six-pin deletion**,
+  which was the obvious suspect: the flag is present at `2b65aef`, before that edit. It surfaced only
+  because the committed `ERC.rpt` was stale (dated 2026-07-25) and got regenerated. Deleted; 18 → 17
+  no-connects, file paren-balanced.
+
+- [x] **[REPO] The schematic is now LF, not CRLF** _(2026-07-27 upload; recorded, no action.)_ The
+  upload rewrote all 24,909 line endings CRLF → LF, which is essentially the entire 49,818-line
+  schematic diff. **Semantically identical** — same 160 lib_symbols, same 67 components, same values,
+  footprints, no-connect count and global labels; verified structurally, not by eyeballing the diff.
+  Nothing to fix, but worth recording so nobody "restores" CRLF and produces another whole-file diff.
+  The byte-safe **CRLF** preservation discipline referenced in older entries here is obsolete; the
+  rule that still matters is byte-safe editing (don't reflow the file), now against LF.
+
+- [x] **[PCB] GND_B refilled — the two stale-fill errors are gone** _(2026-07-27 upload; DONE.)_
+  D2 pad A and D5 pad K no longer sit inside the stored pour (overlap 0.000 mm², was ~0.091 each).
+  Both now clear it by **0.1265 mm**, measured against true roundrect pad geometry. That is the
+  `clearance-hard-floor` value plus 0.5 µm — normal for a zone fill (KiCad fills to exactly the
+  effective clearance), and it passes. Worth knowing the zone's own `clearance` is set to 0.254 mm
+  but the achieved gap is 0.126: the `.kicad_dru` custom rule resolves as the effective clearance and
+  overrides the zone setting, so raising the zone number alone would not widen it. PCB CI went green
+  with this, and `Generated/` regenerated at `fdb4d18` after being 8 commits stale.
+
+- [ ] **[PCB, PRE-FAB] D2's ANODE trace still crosses D2's own light window — the reroute fixed
+  only the short** _(2026-07-25 LED audit; re-verified against the 2026-07-27 crosshatch upload.)_
+  The 2026-07-27 reroute added a detour at x = 18.201 that cleared the `shorting_items (K2/ANODE)`
+  error — **that half is done**. But it only touched the run east of D2. The diagonal off D2's A pad,
+  `(14.8, 44.3) → (16.176, 42.924)`, is untouched and still passes **0.536 mm** (copper edge) /
+  0.636 mm (centreline) from D2's emitter centre (16.1, 43.9) — inside the Ø2.1 aperture (r = 1.05),
+  so it still shadows the brightest part of D2's cone. Checked whether the upload made it worse: it
+  did not — that trace was already 0.2 mm wide, so the geometry is unchanged. (The older "0.636 mm"
+  figure in this item was a *centreline* measure; 0.536 mm is the same trace measured to its copper
+  edge, which is the number that matters optically.) **D3/D4/D5 remain clear** — they route straight
+  out of the window, the documented rule. Fix: take D2's anode out of the window the way its siblings
+  do, rather than across it.
+
+- [ ] **[PCB, MARGIN] D2's new K-pad clearance is exactly 0.126000 mm — zero margin**
+  _(2026-07-27 upload.)_ The reroute put the ANODE run's left edge at x = 18.101 and D2 pad K's right
+  edge at x = 17.975: a gap of **precisely** the `clearance-hard-floor` minimum. DRC compares `>=`, so
+  it passes and CI is green — but this is the exact hazard the `.kicad_dru` header itself calls out,
+  where the annular floor was deliberately set to 0.1249 "so an at-spec via does not coin-flip on
+  floating-point rounding." The clearance rule carries no such margin, so this one sits on a knife
+  edge across KiCad versions and rounding. Not a fab risk (PCBWay's floor is 0.1 mm, so there is 26%
+  headroom); it is our own gate that is fragile. ~0.025 mm more would settle it — and the D2 anode
+  rework above is the natural time to do it.
+
+- [ ] **[PCB/FAB — decision] The crosshatch pour now merges with 52% of the gold frame**
+  _(2026-07-27 upload.)_ The hatch rework enlarged the F.Cu pour outline to 0.5 mm from the board edge
+  (it used to sit ~3.65 mm in), so the pour now overlaps the F.Cu gold artwork by **157.3 mm² — 52%
+  of the frame + ornament copper (157.3 of 303.8 mm²)**, up from a 0.069 mm² graze. **The monogram
+  field is untouched** (0.00 mm² overlap) because it lives inside the `optical_window` keepout, which
+  the pour cannot enter. The plating request has been reworded to mask the gold **by area rather than
+  by net** (see `PCB/README.md`), which is executable — selective plating uses a photoimaged resist,
+  so a shared-copper boundary is still platable. Two things still open, both yours:
+  1. **Aesthetic:** `hatch_border_algorithm` is `hatch_thickness`, so the pour edge is hatched, not
+     solid. Do you want the texture running over the frame, or the frame reading as a solid border
+     that contains it? The latter means pulling the zone outline back off the artwork.
+  2. **Durability:** define the gold area on a dedicated user layer (`User.1` is empty) and plot it as
+     its own gerber, so the region is artwork rather than prose and cannot drift the next time a pour
+     outline moves.
 
 - [x] **[COPPER] VINT / EN_STO_CH necked back to 0.15 mm through the U8 pocket** _(2026-07-26; DONE.)_
   The 2026-07-26 board upload widened 39 segments from 0.15 to 0.20 mm — VINT ×24, EN_STO_CH ×12, plus

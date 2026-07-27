@@ -155,11 +155,17 @@ via), and no controlled-impedance nets to declare.
 - **Selective hard gold (the reason the plating bus exists):** paste this verbatim into the
   special-request box —
 
-  > *"Selective hard gold plating on top side: the DRH monogram field, the perimeter frame, and
-  > the six edge ornament shapes (all connected copper on F.Cu). Remaining exposed copper: ENIG.
-  > The two 0.25 mm traces crossing the board outline at x=25.4 (top and bottom edges) are
-  > plating-bus connections; please retain to panel rail and rout at depanel. The gold set is
-  > GND-referenced by design (the four M2 mounting-hole pads overlap the frame at all four
+  > *"Selective hard gold plating on top side, MASKED BY AREA, not by net: plate the DRH monogram
+  > field, the perimeter frame, and the six edge ornament shapes — these are the SOLID artwork
+  > shapes on F.Cu. Everything else exposed on the top side stays ENIG, including the 45°
+  > crosshatched ground pour (0.2 mm strands on a 0.7 mm pitch) that surrounds and abuts the frame
+  > and ornaments. The crosshatch and the frame are continuous copper in places, so the gold
+  > boundary is the artwork outline, NOT a copper-connectivity boundary — where a hatch strand runs
+  > inside the frame/ornament outline, plating it gold is correct and expected. Do not attempt to
+  > gold the crosshatch field itself: it is a fine mesh and hard gold on it would band with plating
+  > current density. The two 0.25 mm traces crossing the board outline at x=25.4 (top and bottom
+  > edges) are plating-bus connections; please retain to panel rail and rout at depanel. The gold
+  > set is GND-referenced by design (the four M2 mounting-hole pads overlap the frame at all four
   > corners); not floating copper, not a defect. All in-pad vias: resin-filled and copper-capped
   > (POFV, IPC-4761 Type VII)."*
 
@@ -168,6 +174,21 @@ via), and no controlled-impedance nets to declare.
   component, both stubs + all four corner M2 GND pads on it (the 4 panel-corner MP1-4 holes are GND but not on the front gold set); everything else exposed on F is the solar
   lands, which stay ENIG.) Ordering plain ENIG without this request leaves the bus as dead
   copper and no wear surface on the face — do not ship without it.
+
+  > **Why the wording changed (2026-07-27, the crosshatch upload).** The request used to say the
+  > gold set was "**all connected copper on F.Cu**." That phrasing was safe while the GND pour
+  > merely grazed the artwork — they touched over **0.069 mm²**. The crosshatch rework enlarged the
+  > pour outline to 0.5 mm from the board edge, and the pour now overlaps the artwork by
+  > **157.3 mm²**, i.e. **52% of the frame + ornament copper (157.3 of 303.8 mm²)**. Read literally,
+  > the old sentence would have told the fab to gold ~2,400 mm² of hatched pour instead of the
+  > 387.5 mm² artwork. **The monogram field is unaffected** — it sits inside the `optical_window`
+  > keepout, which the pour cannot enter, so its overlap is exactly 0.00 mm².
+  >
+  > Selective plating masks by *area* (a photoimaged plating resist), not by net, so a shared-copper
+  > boundary is still platable — the request just has to say where the boundary is. That is what the
+  > new wording does. **Durable fix, if you want one:** draw the gold area on a dedicated user layer
+  > (`User.1`, empty today) and plot it as its own gerber, so the region is defined by artwork rather
+  > than by prose and cannot drift again the next time a pour outline moves. Not done here.
 - "**The LA/LB track crossing at (41.0, 38.0) is the NFC coil junction — intentional.**"
 - **Bench pad strip (`TP1` + `JP1`, back east edge, x 48.4):** five bare 1.7 mm SMD probe pads
   (SRC / GND / STO / SCL / SDA at 2.54 pitch) - no component; they are in the mark-as-DNP list

@@ -10643,10 +10643,6 @@
 		(uuid "59dda182-75f5-4f48-ac76-0b7885e398ef")
 	)
 	(no_connect
-		(at 490.22 397.51)
-		(uuid "624976f0-e65d-496a-891f-fb75d03b61b2")
-	)
-	(no_connect
 		(at 209.55 114.3)
 		(uuid "627796f3-3d60-403a-ba9b-8fa9d354d6ce")
 	)
