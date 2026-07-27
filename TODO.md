@@ -481,15 +481,36 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
      `min_via_annular_width`~~ — DONE. `min_clearance` had been **0.0**, i.e. nothing enforced
      spacing during interactive routing, which is *why* the board drifted to 0.126–0.145. It is
      0.152 now, so the router holds the line live instead of DRC catching it afterwards.
-  2. Open in KiCad → **Fill All Zones** → save. That alone should retire ~1,083 of the 1,444.
-  3. **Re-verify the CSRC return afterwards** — a bigger pour pullback can re-fragment B.Cu and undo
-     the C25↔U8 island merge that gives the 8.78 mm path. The measurement is scripted.
-  4. Re-run DRC for the real bounded worklist, then route it out.
-  5. 234 track segments sit at 0.150 mm and need 0.152. Nine of them are the ones necked to clear
-     the U8 pocket, where the corridor is 0.150 + 0.126 = 0.276 mm against the 0.304 mm now
-     required — **that pocket is a re-route, not a re-width**.
+  2. ~~Fill All Zones~~ — DONE in the 2026-07-27 upload. Predicted ~1,083 of 1,444 would clear on
+     the re-fill; KiCad came back with **420 violations**, so that held.
+  3. ~~Re-verify the CSRC return~~ — DONE, **it survived**. C25.GND and U8.EP are still on the same
+     island (2,609.7 mm²) and the return measures **8.87 mm** against 8.78 before (straight line
+     5.37). The pour-fragmentation regression I flagged did not materialise.
+  4. ~~Width-only pass~~ — DONE (see the sub-item below).
+  5. **Route out what's left.** After the width pass: **146 segments** with sub-0.152 clearance to
+     fixed copper (was 262) and **74** still under 0.152 wide (was 231). The U8 pocket is still a
+     **re-route, not a re-width** — that corridor was 0.150 + 0.126 = 0.276 mm against the 0.304 mm
+     now required.
   6. Fold in the two already-filed D2 items (the exactly-0.126 clearance, the anode across the
      light window) since the work is in that area anyway.
+  7. **Zone housekeeping:** the re-fill left 3 orphan GND_B islands (3.71 / 1.51 / 1.09 mm², up from
+     1). That is what the single `unconnected_items` error reports — GND_B unconnected to itself.
+     Isolated ground copper: harmless electrically, untidy. Turning on island removal clears it.
+
+  - [x] **Width-only pass — 246 edits, no copper moved** _(2026-07-27; DONE.)_ Purely `(width …)`
+    values: no trace re-routed, no via/pad/net touched, so there is no collateral to review.
+    - **157 widened to 0.152.** Only segments with ≥ 0.153 mm to *fixed* copper were touched —
+      clearance to the pour does not constrain this, because the pour re-fills around whatever it
+      is given. That distinction is what made 157 safe instead of 59.
+    - **89 narrowed to buy clearance**, each to the *widest* width that still clears 0.152 with
+      5 µm to spare, snapped down to 0.005 mm. Rounding down only adds clearance, and it keeps the
+      power rails fat: the 0.5 mm runs came back at 0.435–0.465, not at the floor.
+    - **Deliberately not narrowed**, whatever the clearance gain: `GND` (return path), `LA`/`LB`
+      (NFC coil — Q depends on the conductor), and `LX_LIN`/`LX_LOUT`/`BUFSRC`/`SRC`/`VINT` (the
+      AEM10300 switching loop, where width is loop inductance, not ampacity). 16 segments that
+      *could* have been resolved this way were left alone for that reason.
+    - Ampacity is never the constraint here — 0.152 mm at 1 oz carries ~0.7 A and nothing on this
+      board exceeds ~20 mA — so the only reasons to keep a trace wide are the ones above.
 
   **Also worth knowing:** 106 pairs measure between 0.100 and 0.126 mm — below even the *old* floor
   — while DRC reports clean and only 11 exclusions are stored in the project file. Either they are
