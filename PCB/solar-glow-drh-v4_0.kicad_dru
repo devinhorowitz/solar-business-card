@@ -1,44 +1,73 @@
 (version 1)
 
-# SOLAR-GLOW DRH v3.0 — PCBWay 2-layer capability rules
+# SOLAR-GLOW DRH v4.0 — DUAL-FAB ENVELOPE (PCBWay ∩ OSH Park)
 #
-# SINGLE-TIER HARD FLOORS (revised 2026-07-04).
+# Retargeted 2026-07-27. These floors are no longer "PCBWay with margin"; they are the
+# INTERSECTION of two fabs, so one board file can be ordered from either without re-checking
+# anything. The point is interchangeability: PCBWay for fast, cheap, local prototypes and small
+# batches; OSH Park After Dark (black FR4 + clear mask) for the naked "midnight" variant.
 #
-# Why the old two-tier scheme was dropped:
-#   The previous rules paired an error floor (min 0.126 mm) with a looser marginal-band
-#   WARNING (min 0.1524 mm). That does not do what it reads like. KiCad resolves ONE
-#   effective clearance per object pair — the most restrictive applicable min — and reports
-#   under the rule that set it. Because the marginal band's 0.1524 is looser (larger) than
-#   the 0.126 floor, the band always won: every sub-6-mil spot came back as a WARNING and
-#   the 0.126 error floor never fired. Result: genuine sub-floor clearances (the zone-refill
-#   spots down to 0.1247 mm near U3) were masked as warnings and would have shipped.
-#   Two clearance tiers (error < A, warning < B, A < B) simply cannot coexist in KiCad.
+#   parameter        PCBWay      OSH Park     governs      gate here
+#   ---------------  ----------  -----------  -----------  ---------
+#   trace width      0.100 mm    0.1524 mm    OSH Park     0.152 mm
+#   clearance        0.100 mm    0.1524 mm    OSH Park     0.152 mm
+#   drill            0.200 mm    0.254 mm     OSH Park     0.254 mm
+#   annular ring     0.150 mm    0.127 mm     >> PCBWay << 0.1499 mm
+#   copper -> edge   (n/s)       0.381 mm     OSH Park     0.381 mm
 #
-# What this does now:
-#   One floor, severity error, at 0.126 mm ("do not ship below this"). The board's intentional
-#   uniform 0.15 mm trace/space passes clean (>= 0.126). Anything that drops below the floor —
-#   a too-tight pour, a pinched escape — fires as a real error, uncluttered by the ~200 warnings
-#   the old band produced against the intentional 0.15 mm design.
+# Note the inversion on annular ring: OSH Park is LOOSER there (5 mil vs PCBWay's 6 mil), so the
+# envelope is a genuine per-parameter intersection, not simply "OSH Park's rule sheet". Anyone
+# tempted to relax annular to 0.127 because that is what the OSH Park page says would put the
+# board out of spec at PCBWay.
 #
-# PCBWay stated capability: 0.1 mm / 4 mil trace+space, drill 0.2-6.3 mm, annular 0.15 mm / 6 mil.
-# Every floor here sits above PCBWay's stated minimum by design (margin against their process).
-# The 0.1247 min the refill hit is inside PCBWay capability but below our own floor — that is the
-# call to fix (bump the GND zone clearance near U3 and re-fill), which this rule now surfaces.
+# Sources: OSH Park docs (two-layer + After Dark service pages, read 2026-07-27) and PCBWay's
+# stated 2-layer capability as recorded in this file's previous revision.
+#
+# SINGLE-TIER HARD FLOORS — the reasoning below is retained because it still governs.
+#
+# Why a two-tier scheme does not work here:
+#   An earlier revision paired an error floor with a looser marginal-band WARNING. That does not
+#   do what it reads like. KiCad resolves ONE effective clearance per object pair — the most
+#   restrictive applicable min — and reports under the rule that set it. Because the marginal
+#   band's value was LOOSER (larger) than the error floor, the band always won: every tight spot
+#   came back as a warning and the error floor never fired, masking genuine sub-floor clearances
+#   that would have shipped. Two clearance tiers (error < A, warning < B, A < B) cannot coexist.
+#   If you want routing margin, put it in the board's net-class clearance (which the router obeys
+#   live) — NOT in a second DRU rule. That is a different mechanism and it composes correctly.
+#
+# Why the gates sit a hair BELOW the fab minimum:
+#   These are "do not ship below this" lines, and geometry built exactly at spec must not
+#   coin-flip on floating-point rounding. A 0.1524 mm gap computed as 0.15239999 would fail a
+#   0.1524 gate for no physical reason. Each floor is therefore set a fraction under the true
+#   limit (0.152 vs 0.1524; 0.1499 vs 0.150) — close enough that nothing physically out of spec
+#   passes, loose enough that at-spec geometry does not flicker. This is the same trick the
+#   annular rule already used, now applied consistently.
 
 (rule "clearance-hard-floor"
   (severity error)
-  (constraint clearance (min 0.126mm)))
+  (constraint clearance (min 0.152mm)))
 
 (rule "track-hard-floor"
   (severity error)
-  (constraint track_width (min 0.126mm)))
+  (constraint track_width (min 0.152mm)))
 
-# Uniform 0.6/0.3 vias sit at exactly 0.15 mm annular by construction; floor set just below spec
-# (0.1249) so an at-spec via does not coin-flip on floating-point rounding.
+# Uniform 0.6/0.3 vias sit at exactly 0.150 mm annular by construction, which is EXACTLY
+# PCBWay's stated minimum -- zero margin. Left as-is because widening the via pad to 0.65 would
+# cost clearance everywhere on a board that is already being re-spaced; flagged in TODO instead.
 (rule "annular-hard-floor"
   (severity error)
-  (constraint annular_width (min 0.1249mm)))
+  (constraint annular_width (min 0.1499mm)))
 
 (rule "drill-floor"
   (severity error)
-  (constraint hole_size (min 0.2mm)))
+  (constraint hole_size (min 0.254mm)))
+
+# OSH Park requires 15 mil of copper pullback from the nominal board edge. The GND pours already
+# clear it (0.5005 mm measured), and the board's own min_copper_edge_clearance is 0.5 mm, which is
+# stricter still. The known and deliberate exception is the pair of 0.25 mm plating-bus stubs that
+# cross the outline at x=25.4 to feed electrolytic hard gold at PCBWay -- they are REQUIRED there
+# and PROHIBITED at OSH Park, so they are the one object that cannot satisfy both fabs. See
+# PCB/README.md: the OSH Park upload deletes those two stubs, and nothing else.
+(rule "edge-clearance-floor"
+  (severity error)
+  (constraint edge_clearance (min 0.381mm)))

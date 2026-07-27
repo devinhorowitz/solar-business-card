@@ -148,6 +148,33 @@ and **0.15 mm tracks** — inside PCBWay's stated 0.1 mm/4 mil 2-layer capabilit
 glance at their sheet. There are no fine vias on this board (the whole board runs the one 0.30/0.60
 via), and no controlled-impedance nets to declare.
 
+> ### Two fabs, one board file (2026-07-27)
+>
+> The design rules in `solar-glow-drh-v4_0.kicad_dru` are the **intersection of PCBWay and OSH Park**,
+> so this board can be ordered from either without re-checking anything: PCBWay for fast, cheap,
+> local prototypes and small batches, OSH Park **After Dark** (black FR4 + clear soldermask, ENIG,
+> 1.6 mm) for the naked "midnight" variant.
+>
+> | | PCBWay | OSH Park | governs |
+> |---|---|---|---|
+> | trace / space | 0.100 mm | **0.1524 mm** | OSH Park |
+> | drill | 0.200 mm | **0.254 mm** | OSH Park |
+> | annular ring | **0.150 mm** | 0.127 mm | **PCBWay** |
+> | copper → board edge | not stated | **0.381 mm** | OSH Park |
+>
+> Annular ring inverts — OSH Park is the *looser* one there. Do not relax it to 0.127 on the strength
+> of their spec page; that breaks PCBWay.
+>
+> **The single thing that cannot satisfy both fabs** is the pair of 0.25 mm plating-bus stubs
+> crossing the outline at x = 25.4. They are *required* at PCBWay to feed electrolytic hard gold and
+> *prohibited* at OSH Park, which needs 0.381 mm of copper pullback from the edge and offers ENIG
+> only. **The OSH Park upload deletes those two objects and nothing else** — everything else in the
+> board is common to both. (OSH Park also cannot do the selective hard gold at all, so the midnight
+> variant's monogram table is ENIG rather than hard gold; the bus has no job there regardless.)
+>
+> Variant differences are otherwise fab *order options*, not artwork: soldermask colour, substrate
+> colour, board thickness, and whether the Ti back-shell is fitted.
+
 **Add to the order notes / gerber review:**
 - "**Leave soldermask open over the central window per the mask layers — do not tent or
   flood.**" (The bare-FR4 + open-ENIG window is the whole optical trick.)
