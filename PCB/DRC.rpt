@@ -1,26 +1,19 @@
 ** Drc report for solar-glow-drh-v4_0.kicad_pcb **
-** Created on 2026-07-25T07:56:56 **
+** Created on 2026-07-27T06:13:38 **
 ** Report includes: Errors, Warnings, Exclusions **
 
-** Found 16 DRC violations **
-[text_height]: Text height out of range (board setup constraints silk text height min height 0.8000 mm; actual 0.5000 mm)
-    Rule: board setup constraints silk text height; warning
-    @(31.7500 mm, 50.9500 mm): PCB text 'TINY MODE' on B.Silkscreen
+** Found 14 DRC violations **
 [silk_over_copper]: Silkscreen clipped by solder mask
     Local override; warning
-    @(30.5250 mm, 43.1000 mm): Segment of D4 on B.Silkscreen
+    @(18.1000 mm, 43.1000 mm): Segment of D2 on B.Silkscreen
     @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
 [silk_over_copper]: Silkscreen clipped by solder mask
     Local override; warning
-    @(25.6594 mm, 40.5100 mm): Segment of U7 on B.Silkscreen
+    @(30.7000 mm, 43.1000 mm): Segment of D4 on B.Silkscreen
     @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
 [silk_over_copper]: Silkscreen clipped by solder mask
     Local override; warning
-    @(24.2250 mm, 43.1000 mm): Segment of D3 on B.Silkscreen
-    @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
-[silk_over_copper]: Silkscreen clipped by solder mask
-    Local override; warning
-    @(17.9250 mm, 43.1000 mm): Segment of D2 on B.Silkscreen
+    @(24.4000 mm, 43.1000 mm): Segment of D3 on B.Silkscreen
     @(35.1500 mm, 40.3000 mm): Polygon on B.Mask
 [tracks_crossing]: Tracks crossing
     Rule: clearance-hard-floor; error (excluded)
@@ -69,16 +62,7 @@
 
 ** Found 0 unconnected pads **
 
-** Found 3 Footprint errors **
-[footprint_symbol_field_mismatch]: Field 'Description' differs (PCB: '', Schematic: '1M 0402 Q2 gate pulldown -- holds charge ENABLED while the MCU is dead/resetting (cold-start-deadlock fix)')
-    Local override; warning
-    @(46.1000 mm, 66.1750 mm): Footprint R18
-[footprint_symbol_mismatch]: Package_DFN_QFN:DFN-8-1EP_6x5mm_P1.27mm_EP4x4mm doesn't match footprint given by symbol (solarglow:U7_DFN8)
-    Local override; warning
-    @(28.0594 mm, 37.4000 mm): Footprint U7
-[footprint_symbol_mismatch]: Footprint attributes don't match symbol: 'Do not populate' settings differ
-    Local override; warning
-    @(28.0594 mm, 37.4000 mm): Footprint U7
+** Found 0 Footprint errors **
 
 ** Ignored checks **
     - Footprint has no courtyard defined
