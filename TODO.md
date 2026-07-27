@@ -497,6 +497,24 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
      1). That is what the single `unconnected_items` error reports — GND_B unconnected to itself.
      Isolated ground copper: harmless electrically, untidy. Turning on island removal clears it.
 
+  - [x] **REGRESSION FIXED: the width audit broke VNFC** _(2026-07-27; found by CI after #86 merged.)_
+    Narrowing a trace can sever a connection when two segments never actually met — when they only
+    *overlapped by virtue of their width*. Exactly one net on this board was held together that way:
+    - The 0.0394 mm **VNFC** stub on B.Cu ended at y = 32.4610; the run it feeds sits at y = 32.6150.
+      That is a **0.154 mm gap between endpoints**. At 0.300 mm wide, each half-width of 0.15 mm
+      closed it with 0.146 mm to spare. At 0.152 mm the copper falls **0.002 mm short** and the net
+      splits in two.
+    - VNFC is the NFC tag's gated supply, so the break would have left **U5 unpowered** — silent,
+      because nothing in firmware can sense it.
+    - **Fixed at the cause, not the symptom:** the stub's end moved from y 32.4610 → **32.6150**, so
+      it now lands on the run's centreline. The joint is geometric and no longer depends on width —
+      the same edit would have been correct at any width. Tightest VNFC clearance after: 0.209 mm.
+    - **Swept every net** the same way (per-net connected-component count, before vs after, tracks +
+      vias + pads across both layers): **VNFC was the only one**. All others unchanged.
+
+    Lesson for the next width pass: a narrowing is only safe once you have re-counted per-net
+    connected components, not merely re-checked clearance. Width changes are not purely subtractive.
+
   - [x] **Full-board width audit — every trace justified or reduced to the floor** _(2026-07-27;
     DONE.)_ Went net by net asking whether the width buys anything: ampacity, IR drop, inductance,
     RF, or signal integrity. **564 segments normalised to 0.152 mm**, track copper 532 → 361 mm²
