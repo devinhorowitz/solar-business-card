@@ -443,6 +443,59 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   centres, 0.25 mm away, which still falls inside the 0.65 mm-wide pads at their new
   positions — verified all 8 pads retain a trace endpoint within their bounds.
 
+- [ ] **[PCB — IN PROGRESS] Re-space the board to the dual-fab envelope (PCBWay ∩ OSH Park)**
+  _(2026-07-27; the DRU gate and board settings are DONE, the routing is not — **PCB CI is expected
+  RED until it is**.)_ Goal: order the same board from either fab without re-checking anything.
+  PCBWay for fast/cheap local prototypes and small batches; OSH Park **After Dark** (black FR4 +
+  clear mask, verified from their docs) for the naked "midnight" variant.
+
+  **The envelope is a genuine per-parameter intersection, not "OSH Park's rule sheet":**
+
+  | | PCBWay | OSH Park | governs | gate |
+  |---|---|---|---|---|
+  | trace / space | 0.100 | **0.1524** | OSH Park | 0.152 |
+  | drill | 0.200 | **0.254** | OSH Park | 0.254 |
+  | annular | **0.150** | 0.127 | **PCBWay** | 0.1499 |
+  | copper → edge | n/s | **0.381** | OSH Park | 0.381 |
+
+  Annular inverts — OSH Park is *looser* there. Relaxing it to 0.127 "because that's what the OSH
+  Park page says" would put the board out of spec at PCBWay.
+
+  **Scope, measured rather than guessed — 1,444 copper pairs sit under 0.1524 mm, but 75% is free:**
+
+  | between | count | |
+  |---|---|---|
+  | track/pad/via/zone ↔ **zone** | **1,083** | clears on a re-fill, no manual work |
+  | track ↔ track | 212 | hand |
+  | pad ↔ track | 87 | hand |
+  | track ↔ via | 51 | hand |
+  | pad↔via, via↔via, pad↔pad | 11 | hand |
+
+  So the real worklist is **361 pairs**, and fewer edits than that since one nudged trace clears
+  several. Spread across signal routing (SDA 19, UPDI 18, K2 17, SCL 16, INT1+INT2 27) rather than
+  one bad corner. **The 2 pad↔pad pairs cannot be routed away** — they need a component move or a
+  footprint change, so identify those first in case they constrain placement.
+
+  **Order of operations:**
+  1. ~~DRU gate + board `min_clearance`/`min_track_width`/`min_through_hole_diameter`/
+     `min_via_annular_width`~~ — DONE. `min_clearance` had been **0.0**, i.e. nothing enforced
+     spacing during interactive routing, which is *why* the board drifted to 0.126–0.145. It is
+     0.152 now, so the router holds the line live instead of DRC catching it afterwards.
+  2. Open in KiCad → **Fill All Zones** → save. That alone should retire ~1,083 of the 1,444.
+  3. **Re-verify the CSRC return afterwards** — a bigger pour pullback can re-fragment B.Cu and undo
+     the C25↔U8 island merge that gives the 8.78 mm path. The measurement is scripted.
+  4. Re-run DRC for the real bounded worklist, then route it out.
+  5. 234 track segments sit at 0.150 mm and need 0.152. Nine of them are the ones necked to clear
+     the U8 pocket, where the corridor is 0.150 + 0.126 = 0.276 mm against the 0.304 mm now
+     required — **that pocket is a re-route, not a re-width**.
+  6. Fold in the two already-filed D2 items (the exactly-0.126 clearance, the anode across the
+     light window) since the work is in that area anyway.
+
+  **Also worth knowing:** 106 pairs measure between 0.100 and 0.126 mm — below even the *old* floor
+  — while DRC reports clean and only 11 exclusions are stored in the project file. Either they are
+  artifacts of my pad-geometry model or they are real and being missed. Step 4 settles it; do not
+  chase it before then.
+
 - [x] **[PCB — AESTHETIC] F.Cu ground pour crosshatched** _(2026-07-27 upload; DONE.)_
   45° crosshatch, **0.2 mm strand / 0.5 mm gap** (0.7 mm pitch, 46 cells/inch), smoothing level 3.
   Reads as a woven texture in the hand and blends to flat tone past ~700 mm — the intended "fine
