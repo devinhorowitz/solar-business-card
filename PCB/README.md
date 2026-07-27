@@ -155,19 +155,48 @@ via), and no controlled-impedance nets to declare.
 - **Selective hard gold (the reason the plating bus exists):** paste this verbatim into the
   special-request box —
 
-  > *"Selective hard gold plating on top side: the DRH monogram field, the perimeter frame, and
-  > the six edge ornament shapes (all connected copper on F.Cu). Remaining exposed copper: ENIG.
-  > The two 0.25 mm traces crossing the board outline at x=25.4 (top and bottom edges) are
-  > plating-bus connections; please retain to panel rail and rout at depanel. The gold set is
-  > GND-referenced by design (the four M2 mounting-hole pads overlap the frame at all four
-  > corners); not floating copper, not a defect. All in-pad vias: resin-filled and copper-capped
-  > (POFV, IPC-4761 Type VII)."*
+  > *"Selective hard gold plating on top side: gold **every copper surface exposed by an F.Mask
+  > opening in the DRH monogram field, the perimeter frame, and the six edge ornament shapes**. The
+  > top-side mask openings define the gold area — where the crosshatched ground pour shows inside one
+  > of those openings, plate it with them; that is intended, not a defect. All other exposed top-side
+  > copper (the solar-cell lands PV1/PV2 and the component pads) stays ENIG. The crosshatched pour
+  > itself is under solder mask across ~90% of its area and is not a plating surface — it is a
+  > decorative texture meant to be read THROUGH the mask, so please do not open mask over it or add
+  > extra mask thickness to 'even it out'. The two 0.25 mm traces crossing the board outline at
+  > x=25.4 (top and bottom edges) are plating-bus connections; please retain to panel rail and rout
+  > at depanel. The gold set is GND-referenced by design (the four M2 mounting-hole pads overlap the
+  > frame at all four corners); not floating copper, not a defect. All in-pad vias: resin-filled and
+  > copper-capped (POFV, IPC-4761 Type VII)."*
 
   A DFM reviewer will flag copper-to-edge = 0 at the two stubs; that is by design. (Geometry
   re-verified against the committed board 2026-07-02: the gold set is a single connected F.Cu
   component, both stubs + all four corner M2 GND pads on it (the 4 panel-corner MP1-4 holes are GND but not on the front gold set); everything else exposed on F is the solar
   lands, which stay ENIG.) Ordering plain ENIG without this request leaves the bus as dead
   copper and no wear surface on the face — do not ship without it.
+
+  > **Why the wording changed (2026-07-27, the crosshatch upload).** The request used to say the
+  > gold set was "**all connected copper on F.Cu**." The crosshatch rework enlarged the F.Cu pour
+  > outline to 0.5 mm from the board edge, so the pour now overlaps the gold artwork by **157.3 mm²**
+  > — 52% of the frame + ornament copper — where it used to graze it over 0.069 mm². Connectivity
+  > therefore stopped being a usable way to name the gold area.
+  >
+  > **How big a problem that actually was: smaller than it first looked.** A fab can only plate
+  > copper the mask leaves exposed, and the crosshatch is a *sub-mask* ornament — **89.6% of it
+  > (1816.9 of 2028.1 mm²) sits under solder mask** and is not a plating surface at all. Only
+  > **211.2 mm²** of hatch is exposed, and that is hatch falling inside the monogram / frame /
+  > ornament mask windows, where plating it with them is the correct outcome anyway. So the old
+  > wording was ambiguous rather than expensive. (An earlier draft of this note claimed it would have
+  > gold-plated ~2,400 mm² of pour. That was wrong — it ignored the mask.) **The monogram field is
+  > untouched** regardless: it sits inside the `optical_window` keepout, which the pour cannot enter,
+  > so its overlap is exactly 0.00 mm².
+  >
+  > The new wording names the gold area by **F.Mask opening** instead, which is what physically
+  > governs it: top-side mask openings total 562.2 mm² (473.0 graphics + 89.2 pad apertures), and
+  > 97% of the 387.5 mm² artwork sits inside one. It also tells the fab the pour is decorative and
+  > must stay masked — the texture only reads if the mask telegraphs the 35 µm copper step, so extra
+  > mask thickness would flatten the effect the hatch exists for. **Durable fix, if you want one:**
+  > draw the gold area on a dedicated user layer (`User.1`, empty today) and plot it as its own
+  > gerber, so the region is artwork rather than prose. Not done here.
 - "**The LA/LB track crossing at (41.0, 38.0) is the NFC coil junction — intentional.**"
 - **Bench pad strip (`TP1` + `JP1`, back east edge, x 48.4):** five bare 1.7 mm SMD probe pads
   (SRC / GND / STO / SCL / SDA at 2.54 pitch) - no component; they are in the mark-as-DNP list
