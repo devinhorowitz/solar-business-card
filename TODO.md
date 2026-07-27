@@ -497,6 +497,57 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
      1). That is what the single `unconnected_items` error reports — GND_B unconnected to itself.
      Isolated ground copper: harmless electrically, untidy. Turning on island removal clears it.
 
+  - [x] **The monogram's GND tie widened 0.150 → 0.200 mm** _(2026-07-27; investigated in full.)_
+    Chasing the lone `unconnected_items` error (`Polygon [GND] on F.Cu @ (17.709, 46.104)` vs zone
+    `GND_A`) turned into a useful map of how the front artwork is actually wired:
+    - The F.Cu artwork is **351 `gr_poly` + 17 `gr_line`**. The monogram is drawn as ~0.108 mm
+      scanline slivers at 0.1 mm pitch, so adjacent slivers overlap by ~0.008 mm to form the field.
+    - **104 of the 351 polygons carry no net at all**; 247 are net GND. All 17 `gr_line` are GND —
+      those are the perimeter frame, the bus taps, and the two plating stubs at x = 25.4.
+    - The monogram field is **not** touched by the pour (the `optical_window` keepout forbids it,
+      overlap exactly 0.00 mm²). It reaches GND through **one deliberate tie**: a `gr_line` at
+      x ≈ 34.82 running y 46.45 → 47.60, i.e. from the table's lower-right corner down past the
+      window edge (y 47.2) into the pour.
+    - That tie was **0.150 mm — under the new 0.152 mm floor**, so it was a real violation of the
+      dual-fab envelope independent of the connectivity question. Widened to **0.200 mm**, matching
+      the hatch strand width so it reads consistently. Room was never tight: nearest non-GND copper
+      is 0.608 mm (an LDRV4 via), so at 0.2 mm the clearance is 0.508 mm. Contact with the pour goes
+      from 0.152 mm to 0.202 mm wide (overlap 0.0545 → 0.0747 mm²).
+
+    **What this does not settle:** the copper is physically continuous — the tie genuinely bridges
+    the field to the pour, verified by geometry — so the fab and the plating see one connected mass
+    and hard gold reaches the monogram either way. KiCad still reporting the polygon as unconnected
+    is most likely its connectivity engine not fully traversing graphic-to-graphic contact on copper
+    layers, rather than a real break. **Confirm after the next Fill All Zones**: if the error
+    persists at 0.2 mm with 0.2 mm of contact, it is a KiCad model artifact and belongs in the
+    exclusions list with this note attached, not in the fix list. Do not "fix" it by moving copper
+    until that is established.
+
+  - [x] **`GND_B_DCDC_SOLID` added — solid return plane under the converter** _(2026-07-27; the zone
+    is in the board, but it is **unfilled until you open KiCad and Fill All Zones** — KiCad computes
+    `filled_polygon`, a text edit cannot.)_ B.Cu, net GND, **priority 1** so it wins the area from
+    GND_B (priority 0), solid fill, rectangle **x 23.4–37.7, y 50.3–61.7 mm** (14.3 × 11.4 mm,
+    163 mm²). That is the combined extent of **U8 + L2 + C25 + C26** (12.26 × 9.33 mm) plus 1.0 mm,
+    so it covers the whole switching loop — input cap → converter → inductor → VINT cap — and the
+    return between them. Inside that rectangle the hatch currently leaves **49.5 mm²** of copper;
+    solid gives roughly **117 mm²**, so about **+68 mm² of return plane exactly where the di/dt is**.
+    Pad-connection settings match GND_B (thermal relief, 0.2 gap / 0.25 bridge) so SB2 and SW2 stay
+    hand-solderable; U8's exposed pad already carries `zone_connect=2` (solid), so the node that
+    matters most is directly bonded either way.
+
+    Why it was needed: the 2026-07-27 upload hatched B.Cu as well (GND_B 2874 → 1668 mm²). The CSRC
+    return *survived* that — C25.GND and U8.EP stayed on one island and the path measures **8.97 mm**
+    (8.78 solid, 8.87 after the first re-fill) — but it now runs through a 0.2/0.5 mesh rather than a
+    plane. Connectivity was never the worry; impedance is.
+
+  - [x] **Second width pass + 2 dangling stubs removed** _(2026-07-27; DONE.)_ 51 more widened to
+    0.152, 8 more narrowed to buy clearance (VS ×3, VSENSE ×3, SDA, SCL), same rules as the first
+    pass. Deleted two re-route leftovers KiCad flagged as `track_dangling`: **VSENSE** at
+    (12.900, 42.416), 0.383 mm, and **SDA** at (16.271, 31.923), 0.176 mm. Both verified as true
+    stubs first — one anchored end, one free end touching no same-net copper — so removing them
+    cannot break a connection. Running totals: segments under 0.152 wide **73 → 22**, under 0.152
+    clearance **71 → 61**.
+
   - [x] **Width-only pass — 246 edits, no copper moved** _(2026-07-27; DONE.)_ Purely `(width …)`
     values: no trace re-routed, no via/pad/net touched, so there is no collateral to review.
     - **157 widened to 0.152.** Only segments with ≥ 0.153 mm to *fixed* copper were touched —
