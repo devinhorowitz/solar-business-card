@@ -223,6 +223,33 @@ TARGETS = {
 }
 
 
+VENDORED_3D = ROOT / "PCB" / "kicad-3dmodels"
+
+
+def stock_model_dir() -> str:
+    """Where ${KICAD10_3DMODEL_DIR} should point for a render on THIS machine.
+
+    The KiBot image CI renders in ships no KiCad 3D model library at all -- proved by
+    this script's own report on 2026-07-28: "15/53 resolve ... NO stock 3D library
+    found", i.e. the published assembled render was missing all 38 stock bodies while
+    KiCad reported nothing. So the nine stock models this board actually uses are
+    vendored in PCB/kicad-3dmodels/, mirroring the library's directory layout, and we
+    point KiCad at them when the host has no library of its own.
+
+    A host library wins when present, so a developer with KiCad installed renders from
+    their own install and the vendored copy is only the CI fallback.
+    """
+    import os
+    env = os.environ.get("KICAD10_3DMODEL_DIR")
+    if env and os.path.isdir(env):
+        return env
+    for d in ("/usr/share/kicad/3dmodels", "/usr/local/share/kicad/3dmodels",
+              "/usr/share/kicad/modules/packages3d"):
+        if os.path.isdir(d):
+            return d
+    return str(VENDORED_3D)
+
+
 def _report_model_resolution(src: str) -> None:
     """Say out loud how many component bodies this machine can actually draw.
 
@@ -237,32 +264,27 @@ def _report_model_resolution(src: str) -> None:
     instead of quietly publishing a half-populated board.
     """
     import os
-    stock = os.environ.get("KICAD10_3DMODEL_DIR")
-    if not stock or not os.path.isdir(stock):
-        stock = next((d for d in ("/usr/share/kicad/3dmodels",
-                                  "/usr/local/share/kicad/3dmodels",
-                                  "/usr/share/kicad/modules/packages3d") if os.path.isdir(d)), None)
+    stock = stock_model_dir()
     prj = str(BOARD.parent)
     refs = re.findall(r'\(model "([^"]+)"', src)
     missing, unresolvable = [], []
     for ref in refs:
         if "KIPRJMOD" in ref:
             path = ref.replace("${KIPRJMOD}", prj)
-        elif stock:
-            path = ref.replace("${KICAD10_3DMODEL_DIR}", stock)
         else:
-            unresolvable.append(ref)
-            continue
+            path = ref.replace("${KICAD10_3DMODEL_DIR}", stock)
         if not os.path.exists(path):
             missing.append(ref)
-    good = len(refs) - len(missing) - len(unresolvable)
-    print(f"    models: {good}/{len(refs)} resolve on this host"
-          + (f"  (stock lib: {stock})" if stock else "  (NO stock 3D library found)"))
+    good = len(refs) - len(missing)
+    where = "vendored" if stock == str(VENDORED_3D) else stock
+    print(f"    models: {good}/{len(refs)} resolve  (stock lib: {where})")
     for ref in sorted(set(missing)):
         print(f"    MISSING: {ref}")
-    if unresolvable:
-        print(f"    !! {len(unresolvable)} stock refs cannot be checked — no 3D model library "
-              f"on this host, so this render WILL be missing those bodies")
+    if missing:
+        raise SystemExit(
+            f"render: {len(missing)} model file(s) missing — an assembled render with absent "
+            f"bodies is worse than none, so this is a hard stop. Vendor them into "
+            f"{VENDORED_3D.relative_to(ROOT)}/ or fix the path in the board.")
 
 
 
@@ -305,10 +327,12 @@ def build_input(name: str, spec: dict, workdir: Path) -> Path:
 
 
 def render(pcb: Path, out: Path, cam: list[str], w: int, h: int) -> bool:
+    import os
+    env = dict(os.environ, KICAD10_3DMODEL_DIR=stock_model_dir())
     cmd = ["kicad-cli", "pcb", "render", "--output", str(out),
            "--quality", "high", "--use-board-stackup-colors", "--background", "opaque",
            "--width", str(w), "--height", str(h)] + cam + [str(pcb)]
-    r = subprocess.run(cmd, capture_output=True, text=True)
+    r = subprocess.run(cmd, capture_output=True, text=True, env=env)
     if r.returncode != 0:
         tail = (r.stderr or r.stdout).strip().splitlines()[-1:] or ["(no output)"]
         print(f"  !! {out.name} failed: {tail[0]}")

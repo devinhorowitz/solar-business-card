@@ -11,7 +11,8 @@ change to one that isn't mirrored in the others fails loudly (in CI or locally):
       component in the netlist (no phantom BOM lines).         [ERROR on drift]
   [4] PACKAGE FIT   -- the package the BOM orders must match the land the board
       draws (0402 part on a 0402 land).                        [ERROR on drift]
-  [5] MODEL REFS -- every (model ...) path on the board resolves to a real file.
+  [5] MODEL REFS -- every (model ...) path resolves, AND every stock model is
+      vendored in PCB/kicad-3dmodels/ (what CI renders from).  [ERROR on drift]
   [3] DOC FILE REFS -- every solar-glow-drh-*.kicad_* file named in board.h,
       README.md, or firmware/README.md must actually exist.    [WARN on drift]
 
@@ -189,6 +190,23 @@ def check_model_refs():
     if skipped:
         print(f"  note:   {skipped} stock model ref(s) not checked -- no KiCad 3D model "
               f"library on this machine (set KICAD10_3DMODEL_DIR to check them)")
+
+    # And separately: is every STOCK model vendored? CI renders in an image that ships no
+    # KiCad 3D library, so PCB/kicad-3dmodels/ is what the assembled render actually reads.
+    # A machine with KiCad installed will pass the check above while CI still draws nothing,
+    # which is exactly how the published render lost 38 bodies. Check the vendored set on its
+    # own terms, independent of whatever this host happens to have.
+    vend = os.path.join(ROOT, "PCB", "kicad-3dmodels")
+    stock_refs = sorted({r for r in refs if "KICAD10_3DMODEL_DIR" in r})
+    if not os.path.isdir(vend):
+        warn("PCB/kicad-3dmodels/ is missing -- CI renders will have no stock component bodies")
+    elif stock_refs:
+        gaps = [r for r in stock_refs
+                if not os.path.exists(r.replace("${KICAD10_3DMODEL_DIR}", vend))]
+        for r in gaps:
+            err(f"stock model not vendored, so CI renders it with NO body: {r}")
+        if not gaps:
+            ok(f"all {len(stock_refs)} stock models vendored in PCB/kicad-3dmodels/")
 
 def check_doc_file_refs():
     print("[3] referenced .kicad_* files exist")
