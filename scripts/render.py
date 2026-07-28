@@ -147,11 +147,60 @@ def board_extent(src: str) -> tuple[float, float]:
     return max(xs) - min(xs), max(ys) - min(ys)
 
 
+# Camera notes, so nobody has to re-derive these by eye:
+#   * Framing was SOLVED, not guessed. Probes rendered with --background transparent give a
+#     clean alpha bounding box; zoom was bisected until the tightest margin hit ~10%, then
+#     --pan was calibrated in pixels-per-unit and solved for centre. Angled shots at zoom
+#     0.85-0.95 clipped a bottom corner; 0.736 is the value that fits a portrait board in a
+#     4:3 frame. Re-solve rather than nudge if you change --rotate.
+#   * --floor is the single biggest quality lever: it enables shadows and the post-processing
+#     pass. It works even at --quality basic, if CI time ever needs cutting.
+#   * The light options take INTENSITIES, not colours — a float or "R,G,B" floats. Hex is
+#     rejected outright with "Invalid light top intensity format".
+FLAT = []
+ANGLE = ["--perspective", "--floor", "--zoom", "0.736"]
+WARM = ["--light-top", "0.20,0.18,0.15", "--light-side", "1.0,0.70,0.28",
+        "--light-camera", "0.05", "--light-side-elevation", "10"]
+
 TARGETS = {
-    "panel": dict(source=PANEL, midnight=False,
-                  desc="PCBWay view — the card still in its frame, both faces"),
-    "midnight": dict(source=BOARD, midnight=True,
-                     desc="OSH Park After Dark — black core, clear mask, naked, 1-up"),
+    "panel": dict(
+        source=PANEL, midnight=False,
+        desc="PCBWay view — the card still in its frame",
+        views=[
+            ("top", ["--side", "top", "--floor"], None),
+            ("bottom", ["--side", "bottom", "--floor"], None),
+            ("angle", ANGLE + ["--side", "top", "--rotate", "-28,0,14",
+                               "--pan", "0.27,0.65,0"], (1600, 1200)),
+        ],
+    ),
+    "card": dict(
+        source=BOARD, midnight=False,
+        desc="The card itself, depanelised — reference faces plus the hero angles",
+        views=[
+            ("face", ["--side", "top", "--floor"], None),
+            ("back", ["--side", "bottom", "--floor"], None),
+            ("hero", ANGLE + ["--side", "top", "--rotate", "-25,0,20",
+                              "--pan", "-0.05,0.56,0"], (1600, 1200)),
+            ("back-angle", ANGLE + ["--side", "bottom", "--rotate", "-25,0,-18",
+                                    "--pan", "0.05,0.56,0"], (1600, 1200)),
+            # Low raking macro: the monogram sits centre-frame and the crosshatch finally
+            # reads as texture rather than a dot screen. This is the main-README hero.
+            ("macro", ["--perspective", "--floor", "--side", "top", "--rotate", "-62,0,6",
+                       "--zoom", "1.9", "--pan", "0,0.35,0"] + WARM, (1800, 1100)),
+            # Near-grazing: sells the 0.6 mm stack and the gold rim. Monogram is unreadable
+            # here by design — this is a supporting image, never a hero.
+            ("grazing", ["--perspective", "--floor", "--side", "top", "--rotate", "-78,0,0",
+                         "--zoom", "1.35", "--pan", "0,0.15,0"] + WARM, (1800, 1100)),
+        ],
+    ),
+    "midnight": dict(
+        source=BOARD, midnight=True,
+        desc="OSH Park After Dark — black core, clear mask, naked, 1-up",
+        views=[
+            ("top", ["--side", "top", "--floor"], None),
+            ("bottom", ["--side", "bottom", "--floor"], None),
+        ],
+    ),
 }
 
 
@@ -181,13 +230,14 @@ def build_input(name: str, spec: dict, workdir: Path) -> Path:
     return dest
 
 
-def render(pcb: Path, out: Path, side: str, w: int, h: int) -> bool:
-    cmd = ["kicad-cli", "pcb", "render", "--output", str(out), "--side", side,
+def render(pcb: Path, out: Path, cam: list[str], w: int, h: int) -> bool:
+    cmd = ["kicad-cli", "pcb", "render", "--output", str(out),
            "--quality", "high", "--use-board-stackup-colors", "--background", "opaque",
-           "--width", str(w), "--height", str(h), str(pcb)]
+           "--width", str(w), "--height", str(h)] + cam + [str(pcb)]
     r = subprocess.run(cmd, capture_output=True, text=True)
     if r.returncode != 0:
-        print(f"  !! {side} failed: {(r.stderr or r.stdout).strip().splitlines()[-1:]}")
+        tail = (r.stderr or r.stdout).strip().splitlines()[-1:] or ["(no output)"]
+        print(f"  !! {out.name} failed: {tail[0]}")
         return False
     print(f"  wrote {out.relative_to(ROOT)}  ({out.stat().st_size:,} bytes)")
     return True
@@ -221,10 +271,11 @@ def main() -> int:
             pcb = build_input(name, spec, work)
             with open(pcb, newline="") as f:
                 bw, bh = board_extent(f.read().replace("\r\n", "\n"))
-            w = max(400, int(round(HEIGHT * bw / bh / 2) * 2))
-            for side in ("top", "bottom"):
-                out = OUTDIR / f"{STEM}-{name}-{side}.png"
-                ok &= render(pcb, out, side, w, HEIGHT)
+            flat_w = max(400, int(round(HEIGHT * bw / bh / 2) * 2))
+            for view, cam, size in spec["views"]:
+                w, h = size if size else (flat_w, HEIGHT)
+                out = OUTDIR / f"{STEM}-{name}-{view}.png"
+                ok &= render(pcb, out, cam, w, h)
     return 0 if ok else 1
 
 

@@ -493,7 +493,17 @@
 			)
 			(uuid "32806de9-4763-462c-b098-9799188b0707")
 		)
-		(embedded_fonts no)
+		(embedded_fonts no)		(model "${KIPRJMOD}/solarglow.3dshapes/SM141K06TF.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 0)
+			)
+		)
 	)
 	(footprint ""
 		(layer "F.Cu")
@@ -1195,7 +1205,17 @@
 			)
 			(uuid "1f4dd0f9-38ce-4fe4-82b7-930ba2d5d5a8")
 		)
-		(embedded_fonts no)
+		(embedded_fonts no)		(model "${KIPRJMOD}/solarglow.3dshapes/SM141K06TF.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 0)
+			)
+		)
 	)
 	(footprint "solarglow:NPTH_mech"
 		(layer "F.Cu")
@@ -1601,7 +1621,17 @@
 			)
 			(uuid "9262cbf0-4674-4da7-8573-7c9d11405e6c")
 		)
-		(embedded_fonts no)
+		(embedded_fonts no)		(model "${KIPRJMOD}/solarglow.3dshapes/SCHURTER_SCPC_SS17.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 90)
+			)
+		)
 	)
 	(footprint "solarglow:R2"
 		(layer "B.Cu")
@@ -1747,7 +1777,17 @@
 			)
 			(uuid "eddeb487-6aed-494e-9c1a-1fd8f592c69a")
 		)
-		(embedded_fonts no)
+		(embedded_fonts no)		(model "${KICAD10_3DMODEL_DIR}/Resistor_SMD.3dshapes/R_0402_1005Metric.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 0)
+			)
+		)
 	)
 	(footprint "Package_TO_SOT_SMD:SOT-23-6"
 		(layer "B.Cu")
@@ -2371,7 +2411,17 @@
 			)
 			(uuid "7981ea94-f199-42c1-bc18-2a2eb667e182")
 		)
-		(embedded_fonts no)
+		(embedded_fonts no)		(model "${KICAD10_3DMODEL_DIR}/Resistor_SMD.3dshapes/R_0402_1005Metric.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 0)
+			)
+		)
 	)
 	(footprint "solarglow:SW2"
 		(layer "B.Cu")
@@ -2657,7 +2707,17 @@
 			)
 			(uuid "321f739e-646f-447c-b77a-25425f163fcd")
 		)
-		(embedded_fonts no)
+		(embedded_fonts no)		(model "${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_0402_1005Metric.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 0)
+			)
+		)
 	)
 	(footprint "Resistor_SMD:R_0603_1608Metric"
 		(layer "B.Cu")
@@ -3234,7 +3294,17 @@
 			)
 			(uuid "e6d7169a-886a-4669-baa9-4ffb7362f70b")
 		)
-		(embedded_fonts no)
+		(embedded_fonts no)		(model "${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_0402_1005Metric.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 0)
+			)
+		)
 	)
 	(footprint "solarglow:C6"
 		(layer "B.Cu")
@@ -3381,7 +3451,17 @@
 			)
 			(uuid "deec1a13-70cd-46e8-8578-d8e7c5d2dd1a")
 		)
-		(embedded_fonts no)
+		(embedded_fonts no)		(model "${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_0402_1005Metric.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 0)
+			)
+		)
 	)
 	(footprint "solarglow:SB2"
 		(layer "B.Cu")
@@ -4536,7 +4616,17 @@
 			)
 			(uuid "2caff473-005a-4c0c-abeb-2ef4ce3229f2")
 		)
-		(embedded_fonts no)
+		(embedded_fonts no)		(model "${KICAD10_3DMODEL_DIR}/Resistor_SMD.3dshapes/R_0402_1005Metric.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 0)
+			)
+		)
 	)
 	(footprint "solarglow:D4"
 		(layer "B.Cu")
@@ -6158,7 +6248,17 @@
 			)
 			(uuid "36cfaa31-d2fb-4724-ae05-f943ab308898")
 		)
-		(embedded_fonts no)
+		(embedded_fonts no)		(model "${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_0402_1005Metric.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 0)
+			)
+		)
 	)
 	(footprint "solarglow:D5"
 		(layer "B.Cu")
@@ -6690,7 +6790,17 @@
 			)
 			(uuid "231d0808-5df5-4ce3-b0cf-4f629ef4145d")
 		)
-		(embedded_fonts no)
+		(embedded_fonts no)		(model "${KICAD10_3DMODEL_DIR}/Resistor_SMD.3dshapes/R_0402_1005Metric.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 0)
+			)
+		)
 	)
 	(footprint "Capacitor_SMD:C_0603_1608Metric"
 		(layer "B.Cu")
@@ -8142,7 +8252,17 @@
 			)
 			(uuid "cc287b63-6f11-4ae2-8b95-d6d9ffd1491a")
 		)
-		(embedded_fonts no)
+		(embedded_fonts no)		(model "${KICAD10_3DMODEL_DIR}/Resistor_SMD.3dshapes/R_0402_1005Metric.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 0)
+			)
+		)
 	)
 	(footprint "solarglow:R3"
 		(layer "B.Cu")
@@ -8288,7 +8408,17 @@
 			)
 			(uuid "233ebf6b-a9ac-4fcc-9297-6f0c92b91f4a")
 		)
-		(embedded_fonts no)
+		(embedded_fonts no)		(model "${KICAD10_3DMODEL_DIR}/Resistor_SMD.3dshapes/R_0402_1005Metric.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 0)
+			)
+		)
 	)
 	(footprint "solarglow:C8"
 		(layer "B.Cu")
@@ -8434,7 +8564,17 @@
 			)
 			(uuid "0f4a243e-9d29-410a-a5f0-558ff675d18a")
 		)
-		(embedded_fonts no)
+		(embedded_fonts no)		(model "${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_0402_1005Metric.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 0)
+			)
+		)
 	)
 	(footprint "Capacitor_SMD:C_0603_1608Metric"
 		(layer "B.Cu")
@@ -8801,7 +8941,17 @@
 			)
 			(uuid "c8f0fd58-cfb1-4f09-bd74-6f072289cd03")
 		)
-		(embedded_fonts no)
+		(embedded_fonts no)		(model "${KICAD10_3DMODEL_DIR}/Resistor_SMD.3dshapes/R_0402_1005Metric.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 0)
+			)
+		)
 	)
 	(footprint "Resistor_SMD:R_0603_1608Metric"
 		(layer "B.Cu")
@@ -9617,7 +9767,17 @@
 			)
 			(uuid "f11450ad-3613-4e26-8604-f566d7e75866")
 		)
-		(embedded_fonts no)
+		(embedded_fonts no)		(model "${KIPRJMOD}/solarglow.3dshapes/SCHURTER_SCPC_SS17.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 90)
+			)
+		)
 	)
 	(footprint "solarglow:U9_SOT23_5"
 		(layer "B.Cu")
@@ -10069,7 +10229,17 @@
 			)
 			(uuid "c9847b04-7766-46eb-a686-33f2f67c04b5")
 		)
-		(embedded_fonts no)
+		(embedded_fonts no)		(model "${KICAD10_3DMODEL_DIR}/Inductor_SMD.3dshapes/L_0402_1005Metric.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 0)
+			)
+		)
 	)
 	(footprint "solarglow:SB4"
 		(layer "B.Cu")
@@ -10525,7 +10695,17 @@
 			)
 			(uuid "b2f6fd73-05ec-49bb-b8aa-a3b0714fd4df")
 		)
-		(embedded_fonts no)
+		(embedded_fonts no)		(model "${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_0402_1005Metric.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 0)
+			)
+		)
 	)
 	(footprint "solarglow:C3"
 		(layer "B.Cu")
@@ -10672,7 +10852,17 @@
 			)
 			(uuid "c56df7ad-ac88-48a6-bd7e-37f0043a1afb")
 		)
-		(embedded_fonts no)
+		(embedded_fonts no)		(model "${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_0402_1005Metric.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 0)
+			)
+		)
 	)
 	(footprint "solarglow:D3"
 		(layer "B.Cu")
@@ -11372,7 +11562,17 @@
 			)
 			(uuid "bd795c1b-1435-4264-b686-56e4c9ea256e")
 		)
-		(embedded_fonts no)
+		(embedded_fonts no)		(model "${KICAD10_3DMODEL_DIR}/Resistor_SMD.3dshapes/R_0402_1005Metric.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 0)
+			)
+		)
 	)
 	(footprint "Package_TO_SOT_SMD:ADXL367 CC-12-4_ADI"
 		(layer "B.Cu")
@@ -12009,7 +12209,17 @@
 			)
 			(uuid "cfddc243-a208-4d0a-875b-1014e5b18347")
 		)
-		(embedded_fonts no)
+		(embedded_fonts no)		(model "${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_0402_1005Metric.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 0)
+			)
+		)
 	)
 	(footprint "Capacitor_SMD:C_0603_1608Metric"
 		(layer "B.Cu")
@@ -12374,7 +12584,17 @@
 			)
 			(uuid "6f59814b-2cc4-4204-804f-64283dc9b1f1")
 		)
-		(embedded_fonts no)
+		(embedded_fonts no)		(model "${KICAD10_3DMODEL_DIR}/Resistor_SMD.3dshapes/R_0402_1005Metric.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 0)
+			)
+		)
 	)
 	(footprint "solarglow:R1"
 		(layer "B.Cu")
@@ -12520,7 +12740,17 @@
 			)
 			(uuid "dc1669c7-749e-4c5f-84e4-359daa35046c")
 		)
-		(embedded_fonts no)
+		(embedded_fonts no)		(model "${KICAD10_3DMODEL_DIR}/Resistor_SMD.3dshapes/R_0402_1005Metric.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 0)
+			)
+		)
 	)
 	(footprint "solarglow:C7"
 		(layer "B.Cu")
@@ -12666,7 +12896,17 @@
 			)
 			(uuid "2aebca21-b28f-421f-b427-f034eca84c5e")
 		)
-		(embedded_fonts no)
+		(embedded_fonts no)		(model "${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_0402_1005Metric.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 0)
+			)
+		)
 	)
 	(footprint "Capacitor_SMD:C_0402_1005Metric"
 		(layer "B.Cu")
@@ -13179,7 +13419,17 @@
 			)
 			(uuid "abce6dee-b91b-48fa-b0ba-a70f259d4059")
 		)
-		(embedded_fonts no)
+		(embedded_fonts no)		(model "${KIPRJMOD}/solarglow.3dshapes/SCHURTER_SCPC_WS17.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 90)
+			)
+		)
 	)
 	(footprint "solarglow:C1"
 		(layer "B.Cu")
@@ -13326,7 +13576,17 @@
 			)
 			(uuid "29c967a3-824e-4c7a-9de4-a444f73a29a2")
 		)
-		(embedded_fonts no)
+		(embedded_fonts no)		(model "${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_0402_1005Metric.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 0)
+			)
+		)
 	)
 	(footprint "Downloads:SCHURTER_SCPC_WS17-mod2"
 		(layer "B.Cu")
@@ -13631,7 +13891,17 @@
 			)
 			(uuid "f731ce65-e143-4433-b1c7-5559c1ef83e2")
 		)
-		(embedded_fonts no)
+		(embedded_fonts no)		(model "${KIPRJMOD}/solarglow.3dshapes/SCHURTER_SCPC_WS17.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 90)
+			)
+		)
 	)
 	(footprint "Capacitor_SMD:C_0603_1608Metric"
 		(layer "B.Cu")
@@ -14229,7 +14499,17 @@
 			)
 			(uuid "bc49062b-bb41-4802-9c0c-6bca39e83063")
 		)
-		(embedded_fonts no)
+		(embedded_fonts no)		(model "${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_0402_1005Metric.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 0)
+			)
+		)
 	)
 	(footprint "Resistor_SMD:R_0603_1608Metric"
 		(layer "B.Cu")

@@ -3111,7 +3111,7 @@
 					)
 				)
 			)
-			(property "Footprint" "solarglow:C1"
+			(property "Footprint" "Inductor_SMD:L_0603_1608Metric"
 				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -24552,7 +24552,7 @@
 				)
 			)
 		)
-		(property "Footprint" "solarglow:C1"
+		(property "Footprint" "Inductor_SMD:L_0603_1608Metric"
 			(at 562.18 387.35 0)
 			(show_name no)
 			(do_not_autoplace no)
