@@ -45,6 +45,12 @@ DRC/ERC are **not** expected to be zero — the intentional exceptions are catal
 in `README.md` and filtered in `PCB/solar-glow-drh.kibot.yaml`. Every real DRC error
 should be `(excluded)` and map to that list; a *new* unexcluded error is a real find.
 
+**Front mask ornament** (the left-field cartouche IS the routing, in negative):
+```sh
+python3 scripts/mask_art.py --check     # does the board match the current routing?
+python3 scripts/mask_art.py --apply     # regenerate after ANY front re-route
+```
+
 **Consistency** (drift guard — also runs in CI):
 ```sh
 python3 scripts/check_consistency.py
@@ -67,6 +73,14 @@ every `.kicad_*` file referenced in the docs exists.
 - `consistency.yml` — runs the drift guard on doc/board/firmware changes.
 
 ## Gotchas
+- **The front cartouche is generated from the routing.** Move a front trace and the
+  ornament no longer describes the copper under it — re-run `scripts/mask_art.py --apply`.
+  Consistency check [6] errors if you forget. It is the one artwork here that goes *wrong*,
+  not merely stale, when the board is edited.
+- **`solder_mask_bridge` DRC was `ignore` until 2026-07-28** and is now `warning`. Everything
+  it currently reports (222 hits) is the single rear glow-window aperture at (35.1, 40.3)
+  spanning the LED nets — intentional, nothing is soldered there. **Zero come from F.Mask**,
+  so the front art is clean. A *new* F.Mask hit is a real find.
 - **The energy budget is the #1 open gate** — harvest vs. LED draw under real indoor
   light has never been measured. Treat firmware duty-cycle / glow constants as
   provisional until it is. See README → "The open question."

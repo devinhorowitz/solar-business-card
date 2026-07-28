@@ -123,6 +123,7 @@ PCB/
 | Components | **52 on the back**; the front carries only the two solar cells (PV1/PV2) |
 | Teardrops | **Enabled** — **298** curved teardrop zones (pads, vias, and track-ends). _(Was documented as 243; recounted from the board 2026-07-28.)_ R14 and the reworked U6 area have none, and **6 more were removed from the PV1/PV2 SRC pads** when the cells were re-centred on 2026-07-28 — their shape is derived from a pad/track relationship that changed, so translating them would have been wrong. **Run Tools → Add Teardrops before plotting** to regenerate all of them. |
 | NFC | NT3H2211 tag (U5) + **PCB-etched 7-turn coil** on B.Cu, power-gated by U6 |
+| Front ornament | **Generated, not drawn** — `scripts/mask_art.py` opens F.Mask only where the copper beneath is GND, so the routing itself becomes the pattern (gold mesh, dark rivers). 216 mm², narrowest gold aperture 0.122 mm. Re-run `--apply` after any front re-route; consistency check [6] fails if you don't |
 | Indicative parts cost | **≈ $93/board** at qty 1–10; supercaps + solar cells are most of it |
 
 **Glow window — the one feature a fab must not "clean up."** A rectangle at
