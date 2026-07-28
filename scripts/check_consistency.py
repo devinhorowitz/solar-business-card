@@ -130,6 +130,13 @@ def check_bom_parity(comps):
               f"(mechanical / DNP / bare-pad / hand-soldered): {' '.join(excluded)}")
 
 
+# Board revisions deliberately removed from PCB/ and kept only in git history (see
+# PCB/README.md). A history doc that names one is a record, not a broken link, so it must
+# not warn forever -- but it must not go silent either, or a genuinely dangling reference
+# to the CURRENT revision would be indistinguishable from an intentional one.
+RETIRED_REVS = ("v2_1", "v2_2", "v2_3", "v3_0")
+
+
 def check_doc_file_refs():
     print("[3] referenced .kicad_* files exist")
     pat = re.compile(r'solar-glow-drh-v[0-9_]+\.kicad_(?:pcb|sch|pro|prl)')
@@ -144,11 +151,17 @@ def check_doc_file_refs():
             continue
         for name in pat.findall(txt):
             seen.add((rel, name))
+    retired = []
     for rel, name in sorted(seen):
         if os.path.exists(os.path.join(ROOT, "PCB", name)):
             ok(f"{name} (in {rel})")
+        elif any(f"-{rev}." in name for rev in RETIRED_REVS):
+            retired.append(f"{name} (in {rel})")
         else:
             warn(f"{rel} references PCB/{name}, which does not exist")
+    if retired:
+        print(f"  note:   {len(retired)} reference(s) to retired revisions, kept in git "
+              f"history on purpose (see PCB/README.md): {', '.join(retired)}")
 
 
 def board_footprints():

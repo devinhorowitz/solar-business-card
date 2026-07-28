@@ -34,7 +34,7 @@ the layer you cannot see; these are datasheet-verified maxima in mm:
 
 | Item | Location (x, y) | Height | Note |
 |---|---|---|---|
-| U7 (SOIC-8, FRAM) | 28.1, 37.3 | **1.75** | Tall pole - brace thickness derives from it (existing relief pocket logic carries over) |
+| U7 (DFN-8, FRAM) | 28.1, 37.3 | **0.90** | _(Corrected 2026-07-28: was "SOIC-8, 1.75, tall pole - brace thickness derives from it". The v4 board carries the DFN-8 — `solarglow.pretty/U7_DFN8.kicad_mod` `descr`, RAMXEED DS501-00087-1v0-E p.21: 5.00 × 6.00 body, **0.90 MAX**. **U7 is no longer the tall pole**; in this zone U6 at 1.45 is, and the cavity is cap-limited at 1.70 regardless. Any brace thickness derived from the 1.75 needs re-deriving.)_ |
 | U6 (SOT-23-6) | 6.34, 32.2 | 1.45 | TI DBV, with leads |
 | U1 (VQFN-28) | 9.5, 40.9 | 1.0 | |
 | U3 (LGA-12 accel) | 20, 35.9 | 0.87 | ADXL367 (CC-12-4); was 1.0 for the retired LIS2DH12 |

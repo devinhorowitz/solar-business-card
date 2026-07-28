@@ -1,5 +1,12 @@
 # SOLAR-GLOW · DRH — As-Built Mechanical Reference (v2-era; v3.0 deltas inline)
 
+> **The v3.0 board files this doc names are no longer in `PCB/`** _(removed 2026-07-28; the current
+> board is v4.0)_. They stay in git history —
+> `git log --diff-filter=D -- PCB/solar-glow-drh-v3_0.kicad_pcb`, then
+> `git show <sha>^:PCB/solar-glow-drh-v3_0.kicad_pcb`. The `enclosure/solar-glow-drh-v3_0-backshell-*`
+> files are **not** affected: they keep their v3_0 names, are still current, and are still what goes
+> to the fab.
+
 > **Superseded for the enclosure — read the v3.0 deltas.** The authoritative shell spec is now
 > `enclosure/README.md` and the generator `enclosure/solar-glow-drh-v3_0-backshell-0p6b-brace-cad.py`; the board
 > is **v3.0** (`PCB/solar-glow-drh-v3_0.kicad_pcb`). Since this doc was written the shell was built

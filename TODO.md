@@ -779,20 +779,49 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   **The 17 that correctly have no body:** MH1–4, MP1–4, SB1–4, SJ1, SW2, TP1, JP1, TC1. Holes,
   solder bridges and pad-only features. Not a gap; do not "fix" these.
 
-  **Still missing, and ranked by what the enclosure actually needs:**
+  **Built, not yet attached — 8 more solids, waiting on the FB1 board edit.** Every remaining
+  height was already in this repo, so nothing here needed a fresh datasheet dig:
 
-  | part | package / size | why it matters |
+  | part | solid | source of the height |
   |---|---|---|
-  | **D2–D5** | LA P47F reverse-mount, land 3.8 × 2.0 | sit on the back surface, under the brace |
-  | **U1, U8** | 29-pad, 5.3 × 5.3 courtyard (QFN-28-ish) | stock QFN model is probably close enough |
-  | **U3** | ADXL367, LGA 2.6 × 2.7 | a correctly-sized box is enough |
-  | **U5** | NT3H2211, 8-pad 2.3 × 2.3 | a correctly-sized box is enough |
-  | **J1** | 2.0 × 7.6 header land | only if J1 is fitted |
+  | **D2–D5** | `LA_P47F` 3.4 × 1.9 × **0.83** | brace height map §2; outline from the BOM table + datasheet p.12 |
+  | **U1, U8** | `QFN28_4x4` 4.0 × 4.0 × **1.00** | brace height map §2 (U1). **U8's own max is unrecorded — confirm** |
+  | **U3** | `ADXL367_CC12` 2.2 × 2.3 × **0.87** | `PCB/README.md` BOM table, corroborated by the height map |
+  | **U5** | `NT3H2211_XQFN8` 1.6 × 1.6 × **0.50** | `PCB/README.md` + height map, "SOT902-3 … verbatim" |
+  | **J1** | — | still open; only matters if J1 is fitted, and no height is recorded |
+
+  `python3 scripts/make_3d_models.py` generates them; `--attach` writes the `(model ...)` lines into
+  the board, byte-safely and idempotently. **The attach is deliberately not done yet** — the board
+  is being edited in KiCad for the FB1 land, and a KiCad save would drop anything written underneath
+  it. Run `--attach` once that lands; it takes the board to **53 of 72**.
+
+  > **A stock model is not automatically the right model.** KiCad ships
+  > `QFN-28-1EP_4x4mm_P0.4mm_EP2.4x2.4mm.step` and it is prettier than a box — but measured it is
+  > **4.000 × 4.000 × 0.770 mm**, i.e. 0.23 mm *shorter* than this repo's own brace map budgets for
+  > U1. For a solid whose entire job is "does the brace clear it?", understating height is worse
+  > than having no model, so U1/U8 get a box at the documented maximum.
 
   For the enclosure the *height* is the whole point, so a plain box at the datasheet dimension beats
-  a pretty model at the wrong one. Next in order: D2–D5 (blocked on pulling the LA P47F height out
-  of the datasheet — the land is known, the height is not), then map U1/U8 onto a stock QFN-28,
-  then plain boxes for U3/U5 and J1.
+  a pretty model at the wrong one.
+
+- [ ] **[ENCLOSURE] U7 is 0.90 mm, not 1.75 — the relief pocket has no reason left to exist**
+  _(2026-07-28. Found while sourcing heights for the 3D models.)_ Two docs still describe U7 as a
+  **SOIC-8 at 1.75 mm** and build on it: `enclosure/README.md` calls it "the single tallest part" and
+  specs a **7.8 × 5.4 × 0.05 mm relief pocket** at board (28.1, 37.3) purely to clear it — machined
+  into the STEP marked *"Send this to the fab"* — and `PCB/PCB-side-notes-brace-direction.md` §2
+  called it the "tall pole - brace thickness derives from it".
+
+  The v4 board carries the **DFN-8**: `PCB/solarglow.pretty/U7_DFN8.kicad_mod` `descr` quotes RAMXEED
+  DS501-00087-1v0-E p.21 for a 5.00 × 6.00 body at **0.90 mm MAX**, `PCB/README.md` agrees, and
+  `solar-glow-drh-design-notes.md` recorded the swap on 2026-07-23 — it just never reached the
+  enclosure docs. At 0.90 U7 clears the uniform 1.00 mm floor by 0.80 mm.
+
+  **Nothing here is unsafe** — the cavity is cap-limited at 1.80 by the 1.70 mm supercaps either
+  way, and a pocket that isn't needed is extra clearance, not a collision. Both docs are corrected.
+  What is left is a **decision before the next fab order**: keep the pocket (already modelled and
+  quoted, costs nothing) or drop it and take the floor back to a true uniform 1.00 mm. Also
+  re-derive anything that was sized off the old 1.75 "tall pole" — in the brace's middle-third zone
+  the tallest part is now U6 at 1.45.
 
 - [ ] **[BOARD — ACTION NEEDED] FB1 needs its 0603 land drawn; CI is red until it is**
   _(2026-07-28. Found while assigning 3D models; the 0603 choice was deliberate and simply never
