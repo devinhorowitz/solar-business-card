@@ -80,6 +80,14 @@ BUS_W_SPUR = 0.4    # across tab and rail -- matches the board-side stub width e
 BUS_W_RAIL = 1.0    # the ring the plating rack clips onto
 BUS_INSET = 2.5     # ring centreline inset from the panel edge (rail is RAIL_W wide)
 
+# The ring is useless buried under soldermask -- a plating rack needs bare copper to clip. So the
+# ring gets an F.Mask opening along its whole length, which also lets the fab pick its own contact
+# point. Exposing all of it does risk the gold bath reaching it, but that is ~319 mm^2 at ~1 um,
+# i.e. about 6 mg of gold (well under a dollar) on copper that gets routed away at depanel. The
+# special request in PCB/README.md names the gold set as card artwork and excludes the rail
+# explicitly, so this should not happen anyway; it is priced in rather than engineered around.
+BUS_MASK_EXPAND = 0.1
+
 SILK_SIZE = 1.0
 SILK_THICK = 0.15
 
@@ -191,6 +199,23 @@ def track(p0, p1, w, tag, net="GND", layer="F.Cu"):
     )
 
 
+def mask_open(p0, p1, w, tag):
+    """Filled F.Mask graphic over a bus run = an opening in the mask (this board already
+    uses 605 of them for the monogram artwork, so the convention is established)."""
+    x0, x1 = sorted((p0[0], p1[0]))
+    y0, y1 = sorted((p0[1], p1[1]))
+    e = w / 2 + BUS_MASK_EXPAND
+    x0, x1, y0, y1 = x0 - e, x1 + e, y0 - e, y1 + e
+    pts = " ".join(
+        f"(xy {n(x)} {n(y)})" for x, y in ((x0, y0), (x1, y0), (x1, y1), (x0, y1))
+    )
+    return (
+        f"\t(gr_poly\n\t\t(pts\n\t\t\t{pts}\n\t\t)\n"
+        f"\t\t(stroke\n\t\t\t(width 0)\n\t\t\t(type solid)\n\t\t)\n"
+        f'\t\t(fill yes)\n\t\t(layer "F.Mask")\n\t\t(uuid "{uid(tag)}")\n\t)\n'
+    )
+
+
 def text(s, x, y, tag):
     return (
         f'\t(gr_text "{s}"\n\t\t(at {n(x)} {n(y)} 0)\n\t\t(layer "F.SilkS")\n'
@@ -294,6 +319,7 @@ def main() -> int:
         ]
     ):
         add.append(track(a, b, BUS_W_RAIL, f"ring{k}"))
+        add.append(mask_open(a, b, BUS_W_RAIL, f"ringmask{k}"))
 
     # ---- panel silkscreen, both rails, clear of the bus ring
     add.append(text("SOLAR-GLOW DRH v4.0 - PCBWay 1-up panel", TAB_X, ring_y0 + 1.5, "t0"))

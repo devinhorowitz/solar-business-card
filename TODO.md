@@ -760,6 +760,11 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   **65.6 × 103.7 mm, 1-up.** Moat 2.4 mm, rail 5.0 mm, two 5.0 mm break tabs centred on x = 25.4,
   8 × Ø0.5 mm mouse bites, and a 1.0 mm GND bus ring on the frame joined to both stubs.
 
+  **The ring is mask-opened along its whole length**, which was nearly missed: a bus buried under
+  soldermask gives the plating rack nothing bare to clip, so it would have been decoration. Cost of
+  exposing all of it is ~319 mm² of copper in reach of the gold bath ≈ 6 mg of gold, under a dollar,
+  on material that is routed away — priced in rather than engineered around.
+
   **Derived, not duplicated.** A hand-maintained panel file would be a byte-for-byte copy of a
   9.7 MB board that has to be re-synced on every copper edit — precisely the drift the repo's
   one-fact-one-home rule exists to stop. So the panel is a script output, and the board file stays

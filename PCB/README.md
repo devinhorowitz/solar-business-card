@@ -196,6 +196,13 @@ tabs.
 | Break tabs | **2**, one per short edge, 5.0 mm wide, centred on **x = 25.4** |
 | Mouse bites | **8** total: Ø0.5 mm NPTH, 4 per tab, on the card outline (y = 0 / 88.9) |
 | Plating bus | 0.4 mm across each tab → 1.0 mm ring inset 2.5 mm from the panel edge, F.Cu, GND |
+| Bus mask | Ring is **mask-opened along its whole length** — a plating rack needs bare copper to clip |
+
+The mask opening matters more than it looks: a bus ring buried under soldermask is decoration, not
+a plating path, because the rack has nothing bare to grip. Exposing the whole ring does put ~319 mm²
+of copper in reach of the gold bath, but that is ~6 mg of gold — well under a dollar — on material
+that gets routed away, so it is priced in rather than engineered around. The special request above
+tells the fab the rail is hardware and not artwork.
 
 The tab sits at x = 25.4 because that is where the stubs already crossed the outline — the
 board was drawn expecting this panel long before it existed. Each tab keeps a **1.0 mm
@@ -246,7 +253,9 @@ a PCBWay DFM reviewer asks — their absence is a decision, not an oversight.
   > extra mask thickness to 'even it out'. The two 0.4 mm traces crossing the board outline at
   > x=25.4 (top and bottom edges) are plating-bus connections; they run across the break tabs onto
   > the panel frame's bus ring, which is where the plating rack should clip. Please retain them
-  > through plating and rout at depanel. The gold set is GND-referenced by design (the four M2 mounting-hole pads overlap the
+  > through plating and rout at depanel. The bus ring on the frame rail is plating hardware, NOT part
+  > of the gold set — it is mask-opened so you have bare copper to contact, and it is routed away at
+  > depanel; no need to plate it. The gold set is GND-referenced by design (the four M2 mounting-hole pads overlap the
   > frame at all four corners); not floating copper, not a defect. All in-pad vias: resin-filled and
   > copper-capped (POFV, IPC-4761 Type VII)."*
 
