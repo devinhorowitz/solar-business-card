@@ -46,6 +46,13 @@ that actually gets populated. The other 19 are holes, solder-bridge pads, the `N
 >
 > The supercap **locator tabs are deliberately absent** — see `TODO.md`; their real folded geometry
 > has never been measured, so the envelope near the two short edges is unverified.
+>
+> **Every body you see is rendered from this repo, not from a KiCad install.** The nine stock models
+> live in `PCB/kicad-3dmodels/` because the image CI renders in carries no 3D library at all — that
+> was measured, not assumed (`models: 15/53 resolve ... NO stock 3D library found`), and it is why an
+> earlier version of this render was missing every chip passive and both SOT-23s. `render.py` points
+> `${KICAD10_3DMODEL_DIR}` at the vendored copy when the host has none, and consistency check [5]
+> fails if a new part references a stock model nobody vendored.
 
 ---
 
@@ -76,6 +83,10 @@ PCB/
 ├── solar-glow-drh.kibot.yaml         # CI recipe — regenerates ../Generated/ on every push
 ├── solar-glow-drh-v4_0-BOM.xlsx      # bill of materials - v4.0 master (adds the AEM10300 harvest chain: U7 FRAM, U8 PMIC, U9 LDO, L2/FB1, C22–C28, R15–R17; mostly 0402, with C26/C27 on 0805 and ten more on 0603 — see the BOM table below — and SJ1 on its own 0R land)
 ├── solar-glow-drh-v4_0-BOM-assembly.xlsx  # trimmed PCBA BOM (36 placed parts)
+├── kicad-3dmodels/                   # the 9 stock KiCad .step bodies this board uses, mirroring the
+│                                     #   library layout (CC-BY-SA 4.0, licence bundled). CI's render
+│                                     #   image ships NO 3D library, so without these the assembled
+│                                     #   render silently loses 38 of 53 component bodies.
 ├── sw2-anode-selector.png            # how to read/set the SW2 OFF/ON/TINY bridge
 ├── led-orientation-D2-D5.png         # reverse-mount LED rotation reference for PCBA
 └── DRC.rpt / ERC.rpt                 # last GUI report exports (CI keeps live copies in ../Generated/)
