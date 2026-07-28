@@ -497,6 +497,40 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
      1). That is what the single `unconnected_items` error reports — GND_B unconnected to itself.
      Isolated ground copper: harmless electrically, untidy. Turning on island removal clears it.
 
+  - [x] **DUAL-FAB COMPLIANCE AUDIT — rule by rule, both fab sheets** _(2026-07-27, against
+    `85f3d64`; PCB CI green.)_ Checked every published rule, not just trace/space:
+
+    | # | rule | limit (whose) | board | |
+    |---|---|---|---|---|
+    | 1 | trace width | 0.1524 (OSH Park) | 0 under | **PASS** |
+    | 2 | clearance | 0.1524 (OSH Park) | 0 real¹ | **PASS** |
+    | 3 | drill | 0.254 (OSH Park) | 0.300 PTH / 0.9906 NPTH | **PASS** |
+    | 4 | annular ring | 0.150 (**PCBWay**) | exactly 0.150 | **PASS, zero margin** |
+    | 5 | copper → board edge | 0.381 (OSH Park) | **0.000, ×2** | **FAIL** |
+    | 6 | hole-to-hole | 0.127 | 0.4634 | **PASS** |
+    | 7 | silk line width | 0.0762 hard / 0.127 rec | 0.100 min | **PASS**² |
+    | 8 | mask web | 0.1016 (OSH Park) | 0.0750 B / 0.0801 F | **REVIEW** |
+    | 9 | board size | — | 50.8 × 88.9 mm | **PASS** |
+
+    ¹ the only sub-floor pair is LA↔LB at 0.000 — the NFC coil junction, intentional and filtered.
+    ² 56 elements sit below the 0.127 *recommendation* but above the 0.0762 hard minimum; cosmetic,
+      and the silk pass will pick them up.
+
+    **Row 5 is the only hard failure, and it is the known one:** the two 0.4 mm plating-bus stubs
+    crossing the outline at x = 25.4 (y −0.6…1.45 and 87.45…89.5). Required at PCBWay to feed
+    electrolytic hard gold, prohibited at OSH Park, which needs 0.381 mm of pullback and offers ENIG
+    only. **This cannot be edited into compliance — it is a product decision** (see below).
+
+    **Row 4 deserves a note:** the uniform 0.6/0.3 vias give exactly 0.150 mm of annular ring, which
+    is precisely PCBWay's stated minimum with nothing to spare. Widening the via pad to 0.65 would
+    cost clearance board-wide on a board that was just re-spaced, so it stays — but it is the one
+    parameter with no margin at either fab.
+
+    **Row 8, characterised:** exactly one pad-to-pad web is short on B.Mask — **SC1.N ↔ D2.K at
+    0.0750 mm** — plus one 0.0801 mm web inside the F.Mask artwork. Low severity: SC1 carries no
+    paste (hand-soldered) so a merged opening there does not raise bridging risk, and the artwork web
+    is cosmetic. Worth telling the fab rather than fixing.
+
   - [x] **REGRESSION FIXED: the width audit broke VNFC** _(2026-07-27; found by CI after #86 merged.)_
     Narrowing a trace can sever a connection when two segments never actually met — when they only
     *overlapped by virtue of their width*. Exactly one net on this board was held together that way:
@@ -715,6 +749,66 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   makes the area artwork rather than a paragraph, so it cannot drift the next time a pour outline
   moves — which is exactly what just happened. Adds one file to the fab package, so it needs a
   deliberate yes before the order goes out.
+
+- [x] **[FAB] PCBWay fabrication panel — the stubs finally connect to something**
+  _(2026-07-28; DONE.)_ The two plating stubs at x = 25.4 had been drawn for a panel rail since v4
+  began, but no panel existed, so on a 1-up board they ended 0.4 mm outside the outline and connected
+  to nothing — an ENIG-only run would have left them dead copper and the face with no wear surface.
+  `scripts/panelize.py` now derives the panel from the committed board; CI runs it and plots the fab
+  set into `Generated/panel/`.
+
+  **65.6 × 103.7 mm, 1-up.** Moat 2.4 mm, rail 5.0 mm, two 5.0 mm break tabs centred on x = 25.4,
+  8 × Ø0.5 mm mouse bites, and a 1.0 mm GND bus ring on the frame joined to both stubs.
+
+  **The ring is mask-opened along its whole length**, which was nearly missed: a bus buried under
+  soldermask gives the plating rack nothing bare to clip, so it would have been decoration. Cost of
+  exposing all of it is ~319 mm² of copper in reach of the gold bath ≈ 6 mg of gold, under a dollar,
+  on material that is routed away — priced in rather than engineered around.
+
+  **Derived, not duplicated.** A hand-maintained panel file would be a byte-for-byte copy of a
+  9.7 MB board that has to be re-synced on every copper edit — precisely the drift the repo's
+  one-fact-one-home rule exists to stop. So the panel is a script output, and the board file stays
+  1-up (the 3D view, pcbdraw renders and iBOM keep showing a card). The script is purely additive
+  apart from replacing Edge.Cuts, which was verified by diffing the panel minus every generated
+  object against the board minus Edge.Cuts: **identical**.
+
+  **Two constants differ from v0's working panel**, both because v0 had no rail copper and this one
+  does: rail 3.0 → 5.0 mm (a 3 mm rail cannot hold a bus plus panel silk with any margin; 5 mm is
+  also what fabs expect, at ~11% more panel area), and tab 3.0 → 5.0 mm (v0's bite pattern puts hole
+  edges 0.15 mm either side of x = 25.4; the wider tab opens a **1.0 mm hole-free web** for the bus
+  at 0.30 mm drill-to-copper, and still fits two bites per side).
+
+  Left off deliberately: fiducials, tooling holes, copper thieving. The first two want a wider rail
+  than the bus leaves, and the board is hand-finished, not machine-placed.
+
+- [ ] **[MIDNIGHT — THE DECISION THAT GATES THE REST] Hard gold, or one truly identical file?**
+  _(2026-07-27; revised 2026-07-28 — the panel changed the price of option (a).)_
+  The compliance audit above found exactly one hard failure: the two 0.4 mm plating-bus stubs
+  crossing the outline at x = 25.4. They are **required at PCBWay** (electrolytic hard gold needs a
+  path to the panel rail during plating) and **prohibited at OSH Park** (0.381 mm pullback, ENIG
+  only). No edit satisfies both — it is a product call:
+
+  **(a) Keep hard gold. PCBWay orders the panel; OSH Park orders the 1-up set minus two objects.**
+  Production keeps its wear surface. The panel above did most of the work here: the PCBWay side is
+  now a finished, CI-built artifact rather than something to remember, so what is left is a 2-object
+  delete on the OSH Park side only. That delete is still manual — automating it (a `--variant
+  oshpark` mode on `panelize.py`, or a `check_consistency.py` assertion that the OSH Park upload
+  differs by exactly those two objects) would close the gap entirely and is maybe twenty lines. Cost
+  as it stands: one thing to remember, on one of the two fabs.
+
+  **(b) Drop hard gold, delete the stubs, ship ENIG everywhere.** One file, genuinely
+  interchangeable, nothing to remember. Cost: the monogram table becomes ENIG (~0.05–0.1 µm gold)
+  rather than electrolytic hard gold (~0.5–1.5 µm). Worth being honest about the real difference:
+  hard gold exists for **connector insertion wear**, which a monogram never sees. ENIG is still
+  gold-coloured and perfectly serviceable for handling; it tarnishes sooner over years. `PCB/README`
+  currently says "do not ship without it", which was written when the bus had no downside.
+
+  **(c) Keep the stubs and let OSH Park route through them.** Not recommended — they cut copper at
+  the board edge, which risks burrs and edge shorts on a card people handle.
+
+  Everything else about the midnight variant is a fab *order option*, not artwork: substrate colour,
+  mask colour, thickness, and whether the Ti shell is fitted. So this one decision is the whole
+  remaining gap.
 
 - [x] **[COPPER] VINT / EN_STO_CH necked back to 0.15 mm through the U8 pocket** _(2026-07-26; DONE.)_
   The 2026-07-26 board upload widened 39 segments from 0.15 to 0.20 mm — VINT ×24, EN_STO_CH ×12, plus

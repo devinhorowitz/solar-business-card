@@ -33,6 +33,7 @@ Each fact has exactly one home; everything else points at it rather than restati
 | Domain | Source of truth |
 |---|---|
 | Board copper / geometry / holes | `PCB/solar-glow-drh-v4_0.kicad_pcb` + `.kicad_sch` |
+| Fabrication panel (PCBWay) | `scripts/panelize.py` — derived from the board on every CI run into `Generated/panel/`; never hand-maintained |
 | Enclosure geometry | `enclosure/solar-glow-drh-v3_0-backshell-0p6b-brace-cad.py` (prints the Z-stack; regenerates the STEP) |
 | Firmware pin map + knobs | `firmware/board.h` (+ `firmware/README.md`; both match the schematic) |
 | BOM | `PCB/solar-glow-drh-v4_0-BOM.xlsx` (v4.0 master -- every ordered line live-priced, 2026-07-23 sourcing pass; see `PCB/README.md` Step 4) |

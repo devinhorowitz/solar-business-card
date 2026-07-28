@@ -1,0 +1,8 @@
+# The panel .kicad_pcb is a ~9.7 MB intermediate: scripts/panelize.py rebuilds it from
+# PCB/solar-glow-drh-v4_0.kicad_pcb on every PCB push, so committing it would add a
+# fresh blob that size to an already 200 MB+ repo each time, for a file nobody reads.
+# The FAB SET generated from it (gerbers, drills, zip) IS committed under Generated/panel
+# and is what gets uploaded to PCBWay.
+#
+# Need the panel board itself? Rebuild it:  python3 scripts/panelize.py
+Generated/panel/*.kicad_pcb

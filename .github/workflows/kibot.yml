@@ -11,6 +11,7 @@ on:
   push:
     paths:
       - 'PCB/**'
+      - 'scripts/panelize.py'
       - '.github/workflows/kibot.yml'
  
 permissions:
@@ -32,6 +33,21 @@ jobs:
           board: PCB/solar-glow-drh-v4_0.kicad_pcb
           schema: PCB/solar-glow-drh-v4_0.kicad_sch
  
+      # The PCBWay panel is DERIVED from the board above, never hand-maintained: it is the
+      # board plus a frame, two routed slots, two break tabs and the hard-gold plating bus
+      # that feeds them. See scripts/panelize.py for why it is a script and not a file.
+      - name: Build the PCBWay panel
+        run: |
+          python3 -m pip install --quiet shapely
+          python3 scripts/panelize.py
+
+      - name: Run KiBot on the panel (fab set only)
+        uses: INTI-CMNB/KiBot@v2_k10
+        with:
+          config: PCB/solar-glow-drh-panel.kibot.yaml
+          dir: Generated/panel
+          board: Generated/panel/solar-glow-drh-v4_0-panel.kicad_pcb
+
       - name: Commit generated outputs
         if: github.ref == 'refs/heads/main'
         run: |
