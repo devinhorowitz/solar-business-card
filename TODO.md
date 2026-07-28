@@ -855,6 +855,39 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
     **vendored in `enclosure/fonts/`** under its SIL OFL 1.1 licence (bundled, as the OFL requires),
     with `MAKER_FONT_DIR` to override. Missing fonts now fail loudly instead of mid-build.
 
+- [ ] **[BOARD — DO THIS IN KiCad] Regenerate teardrops after the PV1/PV2 re-centring**
+  _(2026-07-28.)_ Re-centring the solar cells moved their SRC pads, so **6 F.Cu teardrop zones on
+  the PV1/PV2 pads were deleted** rather than translated — a teardrop's shape is derived from a
+  pad/track relationship, and that relationship changed, so shifting the polygon would have shipped
+  a wrong-shaped fillet. The board is DRC-clean without them (teardrops are a robustness nicety,
+  not connectivity). **Open the board and run Tools → Add Teardrops before plotting** — which
+  `PCB/README.md` already lists as a pre-plot step. Count is 298 now; it was 304 before.
+
+- [x] **[BOARD] Solar cells re-centred between their mounting holes** _(done 2026-07-28)_
+  The cells' inner edges sat exactly on the centreline of the four middle screw holes — PV1's top
+  edge at y 28.50 against MP1/MP2 at y 28.50, PV2's bottom edge at y 60.40 against MP3/MP4 — so a
+  screw head would foul the cell corner nearest the glow window.
+
+  | | corner → hole centre | vs Ø3.8 head (r 1.90) |
+  |---|---|---|
+  | before | 1.400 mm | **interferes 0.500 mm** |
+  | after | 1.877 mm | grazes 0.023 mm |
+
+  **PV1 → (25.40, 15.750)** (−1.25 mm), **PV2 → (25.40, 73.150)** (+1.25 mm). All eight corners are
+  now equidistant at 1.877 mm, which is what "even" means here. **Centring is provably optimal** —
+  it maximises the minimum clearance, so no other position does better.
+
+  > **It does not fully clear, and that is a fastener question, not a placement one.** Clearing both
+  > ends needs 2 × 1.285 = 2.569 mm of slack; the hole box offers 2.50. The 0.023 mm residual assumes
+  > the head is at its **Ø3.8 maximum** — DIN 84 is a max with negative tolerance, so a real screw
+  > measures under it and clears. If you want it guaranteed rather than tolerance-dependent, spec a
+  > head of **Ø3.75 or less**; the alternative is moving MP1–MP4, which re-opens the 8-hole pattern
+  > the shell was verified against.
+
+  Carried with the move: the F.Cu GND/SRC feeds on 5 tracks, and one **GND stitching via** at
+  x 46.334 that PV1's Pt pad landed on top of — it shifted the same −1.25 mm, which preserves its
+  original relationship to the pad. That via was caught by DRC as an SRC/GND **short**, not by eye.
+
 - [ ] **[ENCLOSURE] Regenerate the 2D drawing — its Detail B still shows the removed pocket**
   _(2026-07-28.)_ `...-DRAWING.pdf/.png` was not regenerated with the STEP, so it draws a floor
   relief pocket the model no longer has. **The STEP governs, so the part is correct**, but the PDF
