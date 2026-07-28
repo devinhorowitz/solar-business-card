@@ -48,6 +48,18 @@ jobs:
           dir: Generated/panel
           board: Generated/panel/solar-glow-drh-v4_0-panel.kicad_pcb
 
+      # Presentation renders for the READMEs: the panel (both faces, as PCBWay ships it) and
+      # the OSH Park "midnight" variant. Raytraced by kicad-cli, which the KiBot action does
+      # not expose, so we borrow the same KiCad 10 image directly. --user keeps the PNGs
+      # owned by the runner so the commit step below can stage them; HOME must be writable
+      # for kicad-cli's config. ~90 s per face, 4 faces.
+      - name: Render panel + midnight images
+        run: |
+          docker run --rm -u "$(id -u):$(id -g)" -e HOME=/tmp \
+            -v "$PWD":/wk -w /wk \
+            ghcr.io/inti-cmnb/kicad10_auto_full:latest \
+            python3 scripts/render.py
+
       - name: Commit generated outputs
         if: github.ref == 'refs/heads/main'
         run: |
