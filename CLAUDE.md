@@ -56,6 +56,10 @@ every `.kicad_*` file referenced in the docs exists.
   The same job also rebuilds the **PCBWay panel** via `scripts/panelize.py` and plots its
   fab set into `Generated/panel/`. The panel is derived from the board, never edited —
   see `PCB/README.md` → "The PCBWay panel".
+  It then raytraces the README images via `scripts/render.py` (panel front/back + the OSH Park
+  midnight variant) into `Generated/docs/`. That step borrows the KiCad 10 docker image directly
+  because the KiBot action does not expose `kicad-cli`; it costs ~6 min, so it only runs on
+  `PCB/**` / `scripts/**` pushes like the rest of this job.
 - `firmware.yml` — builds the firmware on `firmware/**` changes, uploads the hex.
 - `consistency.yml` — runs the drift guard on doc/board/firmware changes.
 

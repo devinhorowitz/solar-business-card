@@ -1,6 +1,22 @@
 # SOLAR-GLOW · DRH - PCB (v4.0): Order & Build Guide
 
-![Generated/docs/solar-glow-drh-v4_0-bottom.png](https://github.com/devinhorowitz/solar-business-card/blob/main/Generated/docs/solar-glow-drh-v4_0-bottom.png)
+<table>
+<tr>
+<td width="50%"><img src="https://raw.githubusercontent.com/devinhorowitz/solar-business-card/main/Generated/docs/solar-glow-drh-v4_0-panel-top.png" alt="Panel, front — the card face, gold monogram on matte black, still in its frame"></td>
+<td width="50%"><img src="https://raw.githubusercontent.com/devinhorowitz/solar-business-card/main/Generated/docs/solar-glow-drh-v4_0-panel-bottom.png" alt="Panel, back — the component side, NFC coil and LED window, still in its frame"></td>
+</tr>
+<tr>
+<td align="center"><b>Front</b> — the card face</td>
+<td align="center"><b>Back</b> — the component side</td>
+</tr>
+</table>
+
+**This is what PCBWay ships**: the 1-up card still attached to its 65.6 × 103.7 mm frame, before
+you snap the two tabs. The gold ring inset in the frame is the hard-gold plating bus, mask-opened
+so the plating rack has bare copper to clip, with a spur crossing each break tab into the card at
+x = 25.4. Both faces are raytraced from the panel CI actually generates — see
+`scripts/render.py`, and "The PCBWay panel" below. No components are shown because none are
+fitted at this stage; that is the fab's deliverable, not an omission.
 
 This folder holds the **board** for SOLAR-GLOW · DRH — the KiCad project, the bill of
 materials, and the artwork reference for the SW2 selector. It is the thing you fab and
@@ -179,6 +195,30 @@ via), and no controlled-impedance nets to declare.
 >
 > Variant differences are otherwise fab *order options*, not artwork: soldermask colour, substrate
 > colour, board thickness, and whether the Ti back-shell is fitted.
+
+#### The midnight variant, rendered
+
+<table>
+<tr>
+<td width="50%"><img src="https://raw.githubusercontent.com/devinhorowitz/solar-business-card/main/Generated/docs/solar-glow-drh-v4_0-midnight-top.png" alt="Midnight variant, front — clear mask over black substrate, copper crosshatch fully visible"></td>
+<td width="50%"><img src="https://raw.githubusercontent.com/devinhorowitz/solar-business-card/main/Generated/docs/solar-glow-drh-v4_0-midnight-bottom.png" alt="Midnight variant, back — clear mask over black substrate, NFC coil and routing visible"></td>
+</tr>
+<tr>
+<td align="center"><b>Front</b></td>
+<td align="center"><b>Back</b></td>
+</tr>
+</table>
+
+**OSH Park After Dark: black substrate, clear soldermask, ENIG, 1.6 mm, no components.** Not
+panelised — OSH Park panelises for you, and the plating bus has no job there, so the render drops
+the two stubs exactly as the upload does.
+
+The important thing this render shows is that **midnight is not just production-in-a-different-colour.**
+Under a clear mask you see *all* the copper, so the crosshatch stops being a sub-mask texture and
+becomes the dominant graphic — a copper field with the black core showing through its gaps. And
+because surface finish only lands on mask-opened copper, the hatch stays bare copper while the
+monogram table, frame and ornaments come back gold. Production hides the hatch and shows the gold;
+midnight shows both, and the contrast between them *is* the design.
 
 ### The PCBWay panel (`scripts/panelize.py` → `Generated/panel/`)
 
