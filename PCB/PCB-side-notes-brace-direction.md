@@ -32,17 +32,26 @@ built.
 Positions and outlines: take from the committed board (CPL / STEP) as usual. Heights are
 the layer you cannot see; these are datasheet-verified maxima in mm:
 
+> **Re-measured against the v4 board 2026-07-28.** Every `(x, y)` below is now the footprint
+> origin read out of `solar-glow-drh-v4_0.kicad_pcb` with `pcbnew`, not carried forward. Three had
+> drifted since v3 — **U1** (was 9.5, 40.9), **U3** (was 20, 35.9) and especially **U6**, listed at
+> 6.34, 32.2 but actually at **3.91, 7.31 — out of the brace zone entirely**. Three v4 parts had
+> never been added at all: U8, U9 and L2.
+
 | Item | Location (x, y) | Height | Note |
 |---|---|---|---|
-| U7 (DFN-8, FRAM) | 28.1, 37.3 | **0.90** | _(Corrected 2026-07-28: was "SOIC-8, 1.75, tall pole - brace thickness derives from it". The v4 board carries the DFN-8 — `solarglow.pretty/U7_DFN8.kicad_mod` `descr`, RAMXEED DS501-00087-1v0-E p.21: 5.00 × 6.00 body, **0.90 MAX**. **U7 is no longer the tall pole**; in this zone U6 at 1.45 is, and the cavity is cap-limited at 1.70 regardless. Any brace thickness derived from the 1.75 needs re-deriving.)_ |
-| U6 (SOT-23-6) | 6.34, 32.2 | 1.45 | TI DBV, with leads |
-| U1 (VQFN-28) | 9.5, 40.9 | 1.0 | |
-| U3 (LGA-12 accel) | 20, 35.9 | 0.87 | ADXL367 (CC-12-4); was 1.0 for the retired LIS2DH12 |
-| D2–D5 (reverse-mount LEDs) | 16.1 / 22.4 / 28.7 / 34.7, y 43.9 | 0.83 | Inside the window bay — see §6 |
-| U5 (XQFN8, NFC) | 34.8, 34 | 0.5 | SOT902-3, 1.6 × 1.6 × 0.5 verbatim |
+| U9 (SOT-23-5, LDO) | 3.90, 55.40 | **1.45** | TPS7A0233 DBV. Datasheet package outline DBV0005A, verbatim: "SOT-23 - 1.45 mm max height". **Tallest component in this zone** now that U7 is 0.90 |
+| U7 (DFN-8, FRAM) | 28.21, 37.40 | **0.90** | _(Corrected 2026-07-28: was "SOIC-8, 1.75, tall pole - brace thickness derives from it". The v4 board carries the DFN-8 — `solarglow.pretty/U7_DFN8.kicad_mod` `descr`, RAMXEED DS501-00087-1v0-E p.21: 5.00 × 6.00 body, **0.90 MAX**. **U7 is no longer the tall pole**, and the cavity is cap-limited at 1.70 regardless. Any brace thickness derived from the 1.75 needs re-deriving.)_ |
+| U1 (VQFN-28, MCU) | 8.23, 44.07 | **1.00** | AVR64EA28. DS40002443A §38.5: D/E 4.00 BSC, "Overall Height A" 0.80 / 0.90 / **1.00 max** |
+| L2 (1008/2520 inductor) | 26.52, 58.50 | **1.00** | Murata DFE252010F-100M, 2.5 × 2.0 × 1.0 — **added 2026-07-28**, this row never existed |
+| U8 (QFN-28 4x4, PMIC) | 31.20, 54.00 | **0.85** | AEM10300. DS-AEM10300-v1.4 §15.1 Fig. 17: 4.000 ± 0.05 square, thickness **0.800 ± 0.05** — **added 2026-07-28**, this row never existed |
+| U3 (LGA-12 accel) | 25.80, 32.80 | 0.87 | ADXL367 (CC-12-4); was 1.0 for the retired LIS2DH12 |
+| D2–D5 (reverse-mount LEDs) | 16.10 / 22.40 / 28.70 / 34.70, y 43.90 | 0.83 | Inside the window bay — see §6 |
+| U5 (XQFN8, NFC) | 35.05, 34.00 | 0.5 | SOT902-3, 1.6 × 1.6 × 0.5 verbatim |
 | All 0402 R/C | various | 0.55 budget | Includes solder |
-| SW2, SB1–SB4, SJ1 solder-bridge pads | SW2 ~24–25, y 48.6; others per CPL | **0.8 budget, variable** | Bare pads until an operator bridges them; blob height is uncontrolled. Generous cutouts; never load-bearing. |
-| C9 (0402 trim, NFC tank) | 32.01, 38.5 | 0.55 | Bench-fitted — see §5 |
+| SW2, SB1–SB4, SJ1 solder-bridge pads | SW2 26.35, 50.37; others per CPL | **0.8 budget, variable** | Bare pads until an operator bridges them; blob height is uncontrolled. Generous cutouts; never load-bearing. |
+| C9 (0402 trim, NFC tank) | 35.66, 39.14 | 0.55 | Bench-fitted — see §5 |
+| ~~U6 (SOT-23-6)~~ | ~~6.34, 32.2~~ → **3.91, 7.31** | 1.45 | TI DBV, with leads. **Not in the brace zone** — it sits at y 7.31, in the top third. Kept here only so the old row is not silently dropped; the brace does not clear it because the brace never reaches it |
 
 Outside the brace zone (top third): TC1 land, JP1/TP1 bench strip (x 47.55–49.25, TP1 y 12,
 JP1 y 14.54–22.16 — the 0.50 mm shell clearance already agreed for the lip still applies),

@@ -785,7 +785,8 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   | part | solid | source of the height |
   |---|---|---|
   | **D2–D5** | `LA_P47F` 3.4 × 1.9 × **0.83** | brace height map §2; outline from the BOM table + datasheet p.12 |
-  | **U1, U8** | `QFN28_4x4` 4.0 × 4.0 × **1.00** | brace height map §2 (U1). **U8's own max is unrecorded — confirm** |
+  | **U1** | `AVR64EA28_VQFN28` 4.0 × 4.0 × **1.00** | DS40002443A §38.5, "Overall Height A" max |
+  | **U8** | `AEM10300_QFN28` 4.0 × 4.0 × **0.85** | DS-AEM10300-v1.4 §15.1 Fig. 17, 0.800 ± 0.05 |
   | **U3** | `ADXL367_CC12` 2.2 × 2.3 × **0.87** | `PCB/README.md` BOM table, corroborated by the height map |
   | **U5** | `NT3H2211_XQFN8` 1.6 × 1.6 × **0.50** | `PCB/README.md` + height map, "SOT902-3 … verbatim" |
   | **J1** | — | still open; only matters if J1 is fitted, and no height is recorded |
@@ -797,9 +798,20 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
 
   > **A stock model is not automatically the right model.** KiCad ships
   > `QFN-28-1EP_4x4mm_P0.4mm_EP2.4x2.4mm.step` and it is prettier than a box — but measured it is
-  > **4.000 × 4.000 × 0.770 mm**, i.e. 0.23 mm *shorter* than this repo's own brace map budgets for
-  > U1. For a solid whose entire job is "does the brace clear it?", understating height is worse
-  > than having no model, so U1/U8 get a box at the documented maximum.
+  > **4.000 × 4.000 × 0.770 mm**, 0.23 mm short of U1's max and 0.08 mm short of U8's. For a solid
+  > whose entire job is "does the brace clear it?", understating height is worse than having no
+  > model, so both get a box at their own documented maximum.
+  >
+  > **And U1 and U8 are not the same height** — 1.00 vs 0.85, each off its own datasheet. They share
+  > a 4×4 QFN-28 land and even a footprint *name*, which is exactly why one shared "QFN-28 4×4"
+  > solid looked reasonable and was wrong by 0.15 mm on U8. It no longer exists.
+
+  > **The two QFN-28 lands are correct, and they are not identical.** Measured on the board: U1's
+  > exposed pad is **2.65 × 2.65**, matching DS40002443A §38.5's nominal D2/E2 of 2.65; U8's is
+  > **2.30 × 2.30**, matching the AEM10300 datasheet's recommended board layout (§15.2 Fig. 18)
+  > exactly. Both right for their own part — but they share the footprint name `solarglow:U1`, so a
+  > KiCad **"Update Footprints from Library"** would overwrite one land with the other's geometry.
+  > Worth giving U8 its own footprint name before that happens.
 
   For the enclosure the *height* is the whole point, so a plain box at the datasheet dimension beats
   a pretty model at the wrong one.
@@ -821,7 +833,11 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   What is left is a **decision before the next fab order**: keep the pocket (already modelled and
   quoted, costs nothing) or drop it and take the floor back to a true uniform 1.00 mm. Also
   re-derive anything that was sized off the old 1.75 "tall pole" — in the brace's middle-third zone
-  the tallest part is now U6 at 1.45.
+  the tallest component is now **U9 at 1.45** (TPS7A0233, DBV0005A: "SOT-23 - 1.45 mm max height").
+
+  _(Corrected 2026-07-28: this first said U6 at 1.45. U6 is 1.45, but it is **not in the brace
+  zone** — the height map listed it at y 32.2 and the board puts it at y 7.31, in the top third.
+  The whole §2 table has since been re-measured against the board; see the note at its head.)_
 
 - [ ] **[BOARD — ACTION NEEDED] FB1 needs its 0603 land drawn; CI is red until it is**
   _(2026-07-28. Found while assigning 3D models; the 0603 choice was deliberate and simply never
