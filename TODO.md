@@ -750,6 +750,50 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   moves — which is exactly what just happened. Adds one file to the fab package, so it needs a
   deliberate yes before the order goes out.
 
+- [ ] **[3D] Component models — 39 of 72 done, and the rest is what the enclosure work needs**
+  _(2026-07-28; the passives are done, the bodies that matter for fit are not.)_
+  The renders and, more importantly, **the brace / back-shell fit check** depend on footprints
+  carrying `(model ...)`. At the start only **17 of 72** did, all KiCad stock parts; every custom
+  `solarglow:*` footprint had none, so KiCad's 3D viewer and any STEP export showed a bare board.
+
+  **Done — 22 assigned, mechanically, not by guesswork.** Every one of C1/C3/C5–C9/C11/C12/C24/C29,
+  R1–R4/R10–R12/R14/R17/R18 and FB1 sits on one land: **pitch 1.02 mm, pads 0.59 × 0.66**. Measured
+  against the footprints that already had models — `C_0402_1005Metric` is pitch 0.96 / 0.56 × 0.62,
+  `C_0603_1608Metric` is 1.55 / 0.9 × 0.95 — that is unambiguously **0402 class on a slightly
+  enlarged hand-solder land**. They now point at the stock 0402 C/R/L models. **39 of 72.**
+
+  **The 17 that correctly have no body:** MH1–4, MP1–4, SB1–4, SJ1, SW2, TP1, JP1, TC1. Holes,
+  solder bridges and pad-only features. Not a gap; do not "fix" these.
+
+  **Still missing, and ranked by what the enclosure actually needs:**
+
+  | part | package / size | why it matters |
+  |---|---|---|
+  | **SC1–SC4** | SCHURTER SCPC, lands 17.5 × 39.5 and 17.5 × 29.0 mm | the tallest things on the board; the brace clears them or it does not |
+  | **PV1, PV2** | SM141K06TF, cell ≈ 1.2 mm ± 0.3 | front-face height drives the fence / shell gap |
+  | **D2–D5** | LA P47F reverse-mount, land 3.8 × 2.0 | sit on the back surface, under the brace |
+  | **U1, U8** | 29-pad, 5.3 × 5.3 courtyard (QFN-28-ish) | stock QFN model is probably close enough |
+  | **U3** | ADXL367, LGA 2.6 × 2.7 | a correctly-sized box is enough |
+  | **U5** | NT3H2211, 8-pad 2.3 × 2.3 | a correctly-sized box is enough |
+  | **J1** | 2.0 × 7.6 header land | only if J1 is fitted |
+
+  For the enclosure the *height* is the whole point, so a plain box at the datasheet dimension beats
+  a pretty model at the wrong one. Suggested order: supercaps and cells first (they set the
+  envelope), then the LEDs, then map U1/U8 onto a stock QFN-28.
+
+- [ ] **[BOM ↔ BOARD] FB1 is a 0603 part on a 0402 land**
+  _(2026-07-28; found while assigning 3D models.)_ The BOM specifies **`BLM18PG221SN1D`** — Murata's
+  `BLM18` series is 1608 metric, i.e. **0603**. The board's FB1 land is `solarglow:C1`: pads
+  **0.59 × 0.66 at pitch 1.02**, the same 0402 land as C1, C24, C29, R17 and R18, all of which the
+  BOM calls 0402 explicitly. A genuine 0603 land is 0.9 × 0.95 at pitch 1.55 (see C13).
+
+  A 0603 body on that land puts the terminations ~0.165 mm outboard of the pad centres, with almost
+  no fillet outside the body — poor joints on a part that is meant to isolate the LDO from DCDC
+  ripple. **Two ways out, and it is a component call, not a layout one:** order a 0402 bead instead
+  (Murata `BLM15` series is the direct 1005-metric equivalent — re-check impedance and DC current),
+  or widen the land to 0603. Nothing else on that land is affected either way.
+  The 3D model assigned to FB1 is the **0402** one, matching the board, per "the source file wins".
+
 - [x] **[CI/AUDIT] Went through all 14 excluded DRC findings — two were hiding something**
   _(2026-07-28; DONE. Method: `kicad-cli pcb drc --severity-all --refill-zones`, KiCad 10.0.5.)_
 
