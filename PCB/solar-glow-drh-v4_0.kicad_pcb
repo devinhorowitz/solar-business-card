@@ -5959,7 +5959,7 @@
 			(uuid "d027cb04-d5d9-42b1-ad3d-2a03e734e924")
 		)
 		(embedded_fonts no)
-		(model "${KICAD10_3DMODEL_DIR}/Package_DFN_QFN.3dshapes/DFN-8-1EP_6x5mm_Pitch1.27mm.step"
+		(model "${KIPRJMOD}/solarglow.3dshapes/MB85RC512TY_DFN8.step"
 			(offset
 				(xyz 0 0 0)
 			)

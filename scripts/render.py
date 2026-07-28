@@ -193,6 +193,25 @@ TARGETS = {
                          "--zoom", "1.35", "--pan", "0,0.15,0"] + WARM, (1800, 1100)),
         ],
     ),
+    # The only target that KEEPS its component bodies. Everything else here is a bare
+    # fabricated board on purpose; this one answers the other question — what the thing
+    # looks like assembled. It renders from the same committed board, so the parts you
+    # see are the 53 footprints that actually carry a resolvable model, no more.
+    "populated": dict(
+        source=BOARD, midnight=False, keep_models=True,
+        desc="The assembled card — components on, both faces plus a hero angle",
+        views=[
+            ("back", ["--side", "bottom", "--floor"], None),
+            ("face", ["--side", "top", "--floor"], None),
+            ("hero", ANGLE + ["--side", "bottom", "--rotate", "-25,0,-18",
+                              "--pan", "0.05,0.56,0"], (1600, 1200)),
+            # NO macro here, deliberately. The card target's raking -62 deg macro was solved for a
+            # FLAT board; with 1.70 mm supercaps standing on it the near cap fills the frame, the
+            # monogram window is fully occluded, and the shot becomes a wall of grey slabs. Rendered
+            # it to check rather than assuming, and it is unusable. A populated detail shot needs its
+            # own camera solve, not this one reused.
+        ],
+    ),
     "midnight": dict(
         source=BOARD, midnight=True,
         desc="OSH Park After Dark — black core, clear mask, naked, 1-up",
@@ -210,8 +229,11 @@ def build_input(name: str, spec: dict, workdir: Path) -> Path:
     nl = "\r\n" if raw.count("\r\n") else "\n"
     src = raw.replace("\r\n", "\n")
 
-    src, n_models = strip_models(src)
-    note = f"{name}: stripped {n_models} 3D model refs"
+    if spec.get("keep_models"):
+        note = f"{name}: KEEPING {src.count('(model ')} 3D model refs (assembled view)"
+    else:
+        src, n_models = strip_models(src)
+        note = f"{name}: stripped {n_models} 3D model refs"
     if spec["midnight"]:
         src, n_stubs = strip_plating_stubs(src)
         src = paint_midnight(src)
@@ -227,6 +249,14 @@ def build_input(name: str, spec: dict, workdir: Path) -> Path:
             s = BOARD.with_suffix("." + ext)
         if s.exists():
             shutil.copy(s, dest.with_suffix("." + ext))
+    # ${KIPRJMOD} resolves to whatever directory the board sits in — and the board we render
+    # sits in a temp dir, not PCB/. Without this the project's own models (the supercaps, the
+    # cells, the LEDs, both QFNs, the FRAM) silently resolve to nothing while the stock KiCad
+    # models still load, so an "assembled" render comes back looking half-populated and nothing
+    # reports an error. Carry the project 3D library along with the copy.
+    shapes = BOARD.parent / "solarglow.3dshapes"
+    if shapes.is_dir():
+        shutil.copytree(shapes, workdir / shapes.name, dirs_exist_ok=True)
     return dest
 
 
