@@ -223,6 +223,49 @@ TARGETS = {
 }
 
 
+def _report_model_resolution(src: str) -> None:
+    """Say out loud how many component bodies this machine can actually draw.
+
+    An assembled render is the one output where a missing model is INVISIBLE as an
+    error and obvious as a lie: KiCad draws nothing for a path it cannot resolve and
+    reports nothing, so the image just comes back with fewer parts on it. That already
+    happened twice — once because ${KIPRJMOD} pointed at the temp workdir, and once
+    because U7 named a .step no KiCad 10 library ships.
+
+    So before rendering, resolve every path the same way kicad-cli will and print the
+    result. If the render host is missing model files, the CI log says which ones
+    instead of quietly publishing a half-populated board.
+    """
+    import os
+    stock = os.environ.get("KICAD10_3DMODEL_DIR")
+    if not stock or not os.path.isdir(stock):
+        stock = next((d for d in ("/usr/share/kicad/3dmodels",
+                                  "/usr/local/share/kicad/3dmodels",
+                                  "/usr/share/kicad/modules/packages3d") if os.path.isdir(d)), None)
+    prj = str(BOARD.parent)
+    refs = re.findall(r'\(model "([^"]+)"', src)
+    missing, unresolvable = [], []
+    for ref in refs:
+        if "KIPRJMOD" in ref:
+            path = ref.replace("${KIPRJMOD}", prj)
+        elif stock:
+            path = ref.replace("${KICAD10_3DMODEL_DIR}", stock)
+        else:
+            unresolvable.append(ref)
+            continue
+        if not os.path.exists(path):
+            missing.append(ref)
+    good = len(refs) - len(missing) - len(unresolvable)
+    print(f"    models: {good}/{len(refs)} resolve on this host"
+          + (f"  (stock lib: {stock})" if stock else "  (NO stock 3D library found)"))
+    for ref in sorted(set(missing)):
+        print(f"    MISSING: {ref}")
+    if unresolvable:
+        print(f"    !! {len(unresolvable)} stock refs cannot be checked — no 3D model library "
+              f"on this host, so this render WILL be missing those bodies")
+
+
+
 def build_input(name: str, spec: dict, workdir: Path) -> Path:
     with open(spec["source"], newline="") as f:
         raw = f.read()
@@ -231,6 +274,7 @@ def build_input(name: str, spec: dict, workdir: Path) -> Path:
 
     if spec.get("keep_models"):
         note = f"{name}: KEEPING {src.count('(model ')} 3D model refs (assembled view)"
+        _report_model_resolution(src)
     else:
         src, n_models = strip_models(src)
         note = f"{name}: stripped {n_models} 3D model refs"
