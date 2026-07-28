@@ -779,7 +779,7 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   **The 17 that correctly have no body:** MH1–4, MP1–4, SB1–4, SJ1, SW2, TP1, JP1, TC1. Holes,
   solder bridges and pad-only features. Not a gap; do not "fix" these.
 
-  **Built, not yet attached — 8 more solids, waiting on the FB1 board edit.** Every remaining
+  **Attached 2026-07-28 — 8 more solids, board is now 53 of 72.** Every remaining
   height was already in this repo, so nothing here needed a fresh datasheet dig:
 
   | part | solid | source of the height |
@@ -792,9 +792,14 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   | **J1** | — | still open; only matters if J1 is fitted, and no height is recorded |
 
   `python3 scripts/make_3d_models.py` generates them; `--attach` writes the `(model ...)` lines into
-  the board, byte-safely and idempotently. **The attach is deliberately not done yet** — the board
-  is being edited in KiCad for the FB1 land, and a KiCad save would drop anything written underneath
-  it. Run `--attach` once that lands; it takes the board to **53 of 72**.
+  the board, byte-safely and idempotently. The attach was held back while the FB1 land was drawn in
+  KiCad — a KiCad save drops anything written underneath it — and **ran on 2026-07-28 once that
+  landed**, taking the board from 45 to **53 of 72**. CRLF was preserved (129,143 lines, zero bare
+  LF) and DRC was byte-for-byte unchanged: 14 violations, all excluded, 0 unconnected, 0 parity.
+
+  **What legitimately still has no body: 19 footprints** — MH1–4, MP1–4, SB1–4, SJ1, SW2, TP1, JP1,
+  TC1 (holes, solder bridges, pad-only features), the unnamed `NPTH_mech` hole set, **and J1**. J1 is
+  the only real gap left, and it is blocked on a height, not on effort.
 
   > **A stock model is not automatically the right model.** KiCad ships
   > `QFN-28-1EP_4x4mm_P0.4mm_EP2.4x2.4mm.step` and it is prettier than a box — but measured it is

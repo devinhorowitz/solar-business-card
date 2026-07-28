@@ -4479,7 +4479,18 @@
 			)
 			(uuid "64c06a94-187d-4017-816a-96e2a373fd24")
 		)
-		(embedded_fonts no)
+		(embedded_fonts no)		(model "${KIPRJMOD}/solarglow.3dshapes/AEM10300_QFN28.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 0)
+			)
+		)
+
 	)
 	(footprint "solarglow:R12"
 		(layer "B.Cu")
@@ -4803,7 +4814,18 @@
 			)
 			(uuid "8768c8ea-3a6d-4d6f-acef-4e28887983f0")
 		)
-		(embedded_fonts no)
+		(embedded_fonts no)		(model "${KIPRJMOD}/solarglow.3dshapes/LA_P47F.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 0)
+			)
+		)
+
 	)
 	(footprint "solarglow:U1"
 		(layer "B.Cu")
@@ -5543,7 +5565,18 @@
 			)
 			(uuid "bc5d8ddc-87fb-4968-aab4-9d79364f1f85")
 		)
-		(embedded_fonts no)
+		(embedded_fonts no)		(model "${KIPRJMOD}/solarglow.3dshapes/AVR64EA28_VQFN28.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 0)
+			)
+		)
+
 	)
 	(footprint "solarglow:U7_DFN8"
 		(layer "B.Cu")
@@ -6436,7 +6469,18 @@
 			)
 			(uuid "5e1ee8f1-7b50-4026-ac3a-86fca3c3b91d")
 		)
-		(embedded_fonts no)
+		(embedded_fonts no)		(model "${KIPRJMOD}/solarglow.3dshapes/LA_P47F.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 0)
+			)
+		)
+
 	)
 	(footprint "Capacitor_SMD:C_0805_2012Metric"
 		(layer "B.Cu")
@@ -7790,7 +7834,18 @@
 			)
 			(uuid "ef17ad01-8de7-47d4-b831-9edd4ab1175d")
 		)
-		(embedded_fonts no)
+		(embedded_fonts no)		(model "${KIPRJMOD}/solarglow.3dshapes/NT3H2211_XQFN8.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 0)
+			)
+		)
+
 	)
 	(footprint "Capacitor_SMD:C_0805_2012Metric"
 		(layer "B.Cu")
@@ -11100,7 +11155,18 @@
 			)
 			(uuid "672721c9-5efc-4475-8502-3bdb17c3fabf")
 		)
-		(embedded_fonts no)
+		(embedded_fonts no)		(model "${KIPRJMOD}/solarglow.3dshapes/LA_P47F.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 0)
+			)
+		)
+
 	)
 	(footprint "Inductor_SMD:L_1008_2520Metric"
 		(layer "B.Cu")
@@ -11486,7 +11552,18 @@
 			)
 			(uuid "8d5cf29b-7866-45db-b68b-d710068ef56a")
 		)
-		(embedded_fonts no)
+		(embedded_fonts no)		(model "${KIPRJMOD}/solarglow.3dshapes/LA_P47F.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 0)
+			)
+		)
+
 	)
 	(footprint "solarglow:C1"
 		(layer "B.Cu")
@@ -12134,7 +12211,18 @@
 			)
 			(uuid "4863d4e0-6c23-4672-b756-1f89bb3b4558")
 		)
-		(embedded_fonts no)
+		(embedded_fonts no)		(model "${KIPRJMOD}/solarglow.3dshapes/ADXL367_CC12.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 0)
+			)
+		)
+
 	)
 	(footprint "solarglow:C5"
 		(layer "B.Cu")
