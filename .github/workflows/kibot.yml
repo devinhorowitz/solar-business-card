@@ -52,8 +52,8 @@ jobs:
       # the OSH Park "midnight" variant. Raytraced by kicad-cli, which the KiBot action does
       # not expose, so we borrow the same KiCad 10 image directly. --user keeps the PNGs
       # owned by the runner so the commit step below can stage them; HOME must be writable
-      # for kicad-cli's config. ~90 s per face, 4 faces.
-      - name: Render panel + midnight images
+      # for kicad-cli's config. ~14 views, ~16 min total.
+      - name: Render panel, card, populated + midnight images
         run: |
           docker run --rm -u "$(id -u):$(id -g)" -e HOME=/tmp \
             -v "$PWD":/wk -w /wk \
@@ -66,6 +66,29 @@ jobs:
           git config user.name "kibot-ci"
           git config user.email "kibot-ci@users.noreply.github.com"
           git add -A Generated
-          git diff --cached --quiet || git commit -m "CI: regenerate fab + docs [skip ci]"
-          git push
+          git diff --cached --quiet && { echo "Generated/ already current"; exit 0; }
+          git commit -m "CI: regenerate fab + docs [skip ci]"
+          # This job takes ~16 min, so main can easily move underneath it -- merge two PRs
+          # in one sitting and the second run's bare `git push` loses the race with
+          # `! [rejected] main -> main (fetch first)`. That happened twice on 2026-07-28
+          # and silently DROPPED both regenerations: the job goes red, nobody is watching a
+          # post-merge run, and Generated/ quietly stays a revision behind until some later
+          # push happens to rebuild it.
+          #
+          # Retry by replaying our Generated/ onto whatever main is now. `reset --soft`
+          # keeps the freshly generated tree staged, so the newest generation wins -- which
+          # is what we want, and if the other run already produced identical bytes the
+          # staged diff is empty and we stop.
+          for attempt in 1 2 3 4 5; do
+            if git push; then exit 0; fi
+            echo "push rejected (attempt $attempt) -- replaying onto current main"
+            sleep $((attempt * 5))
+            git fetch origin main || continue
+            git reset --soft origin/main
+            git add -A Generated
+            git diff --cached --quiet && { echo "current main already has this Generated/"; exit 0; }
+            git commit -m "CI: regenerate fab + docs [skip ci]"
+          done
+          echo "::error::could not push Generated/ after 5 attempts"
+          exit 1
  
