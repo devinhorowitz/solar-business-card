@@ -103,11 +103,16 @@ labels above, so nothing extra to set.
 | **R15** | 2 M | 1 STO · 2 STO_SNS |
 | **R16** | 1 M | 1 STO_SNS · 2 GND |
 | **R17** | 1 M | 1 VINT · 2 EN_STO_CH |
-| **FB1** | ferrite | 1 STO · 2 STO |
+| **FB1** | ferrite | 1 STO · 2 STO_LDO |
+
+> _(Corrected 2026-07-28: this row said `1 STO · 2 STO` when written, recording FB1's original
+> both-pads-shorted state. The `STO_LDO` split below is what was actually applied, and what the
+> board carries.)_
 
 Assign each new symbol the footprint the PCB already uses (so "Update PCB from Schematic" reports no
 footprint change): U8 = the QFN-28 land on the board, U9 = its SOT-23, passives = their 0402 lands,
-L2 / C25 / C26 / C27 / FB1 = whatever you re-landed them to.
+L2 / C25 / C26 / C27 = whatever you re-landed them to. **FB1 is the exception** — it names
+`Inductor_SMD:L_0603_1608Metric`, which the board does *not* yet draw; see TODO.md.
 
 > As of 2026-07-26 the schematic and the board agree on **every** footprint assignment (U7 was the
 > last holdout — see TODO), and `scripts/check_consistency.py` now **fails** on any disagreement, so
@@ -135,7 +140,7 @@ L2 / C25 / C26 / C27 / FB1 = whatever you re-landed them to.
 Use this to confirm after capture -- every pin listed for a net must carry that net's label:
 
 - **STO** (11): SC1+, SC2+, SW2, R12, J1.2, JP1.2, TC1.2, U8.14, C27.1, R15.1, FB1.1
-- **STO_LDO** (4): FB1.2, U9.1, U9.3, C22.1 -- FB1 series-filters the LDO island: STO --FB1--> STO_LDO, with C22 (1 uF) as the filtered LDO-input cap and U9 IN/EN on the island. (Board copper still needs the trace cut between FB1.1/FB1.2 + STO_LDO routed to U9/C22.)
+- **STO_LDO** (4): FB1.2, U9.1, U9.3, C22.1 -- FB1 series-filters the LDO island: STO --FB1--> STO_LDO, with C22 (1 uF) as the filtered LDO-input cap and U9 IN/EN on the island. _(Board copper done: FB1.1 is STO, FB1.2 is STO_LDO, and STO_LDO is routed to U9.1 and C22.1. What remains on FB1 is its **land**, not its net — see TODO.md.)_
 - **SRC** (8): PV1+, PV1+t, PV2+, PV2+t, R5.1, TP1.1, U8.2, U8.28
 - **VINT** (7): U8.8, U8.10, U8.20, U8.23, U8.24, C26.1, R17.1
 - **STO_SNS** (4): U1.11, C24.1, R15.2, R16.1

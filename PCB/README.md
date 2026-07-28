@@ -31,7 +31,7 @@ PCB/
 ├── solar-glow-drh-v4_0.kicad_prl     # local project state
 ├── solar-glow-drh-v4_0.kicad_dru     # two-tier design rules (PCBWay floor + marginal band)
 ├── solar-glow-drh.kibot.yaml         # CI recipe — regenerates ../Generated/ on every push
-├── solar-glow-drh-v4_0-BOM.xlsx      # bill of materials - v4.0 master (adds the AEM10300 harvest chain: U7 FRAM, U8 PMIC, U9 LDO, L2/FB1, C22–C28, R15–R17; mostly 0402, with C4/C13/C25/C27 on 0603 and SJ1 on its own 0R land)
+├── solar-glow-drh-v4_0-BOM.xlsx      # bill of materials - v4.0 master (adds the AEM10300 harvest chain: U7 FRAM, U8 PMIC, U9 LDO, L2/FB1, C22–C28, R15–R17; mostly 0402, with C26/C27 on 0805 and ten more on 0603 — see the BOM table below — and SJ1 on its own 0R land)
 ├── solar-glow-drh-v4_0-BOM-assembly.xlsx  # trimmed PCBA BOM (36 placed parts)
 ├── sw2-anode-selector.png            # how to read/set the SW2 OFF/ON/TINY bridge
 ├── led-orientation-D2-D5.png         # reverse-mount LED rotation reference for PCBA
@@ -374,7 +374,9 @@ hand-tinning. Order it alongside the board.
 **U6 (TPS22917DBVT since the 2026-07-23 dark-current swap) and R14 (1 M `NFC_EN` pulldown) added**, the stale **JP1/JP2 rows dropped** (the `JP1` designator is reused for the v3.0 bench pad strip — bare pads, not a BOM part)
 (those headers left the board in v3.0), and **most passives converted to 0402** to match the board's placed lands — the v2.2 file still
 listed 0805 MPNs for most R/C. _(Updated 2026-07-25: the 2026-07-23 longevity/precision passes moved
-several off 0402 — **0603**: C4, C13, C25, C22, C23, R5, R6, R15, R16; **0805**: C26, C27. SJ1's 0R
+several off 0402 — **0603**: C4, C13, C25, C22, C23, R5, R6, R15, R16, **FB1**; **0805**: C26, C27.
+(FB1 is 0603 in the BOM and the schematic but the **board still draws its 0402 land** — see TODO.md.)
+SJ1's 0R
 land is now **DNP**. New parts since: **Q2** (SOT-23) + **R18** (0402). The table below is the
 current truth.)_ Converted and added
 lines had their prices blanked at the time; **that is no longer true — every ordered line is now
@@ -428,7 +430,7 @@ Summary of the **orderable** lines:
 | U9 | 1 | TPS7A0233, 3.3 V, ~25 nA Iq | SOT-23-5 | `TPS7A0233PDBVR` |
 | U7 | 1 | MB85RC512TY | DFN-8 LCC-8P-M05 (5.0×6.0×0.90 mm MAX, 1.27 mm pitch) | `MB85RC512TYPN-GS-AWEWE1` |
 | L2 | 1 | 10 uH | 1008/2520 (L_1008_2520Metric), 2.5x2.0 mm | `DFE252010F-100M` |
-| FB1 | 1 | 0603 bead | 0603 | `BLM18PG221SN1D` |
+| FB1 | 1 | 0603 bead | 0603 (`L_0603_1608Metric` — **board still draws the 0402 land**, see TODO.md) | `BLM18PG221SN1D` |
 | C22 | 1 | 1 uF, 25 V, 0603, X7R | 0603 (C_0603_1608Metric) | `GRT188R71E105KE13D` |
 | C23 | 1 | 2.2 µF, 25 V, 0603, X7R | 0603 (C_0603_1608Metric) | `GRM188Z71E225ME43D` |
 | C24 | 1 | 100 nF, 0402, X7R | 0402 | `GRT155R71H104KE01D` |

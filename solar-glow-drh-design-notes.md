@@ -159,7 +159,9 @@ belongs in KiCad** (push-shove router, real thermal reliefs, exact mask expansio
   U9's IN and EN both sit on `STO_LDO`; everything else stays on raw STO (the LED string, sense
   divider, program pads, tank caps). The ferrite passes DC (sub-ohm DCR) so the LDO never starves
   during LED bursts. *(FB1 originally sat with both pads shorted on STO -- non-functional; the
-  `STO_LDO` split makes it a real series element. Board copper re-route is tracked in `TODO.md`.)*
+  `STO_LDO` split makes it a real series element. **The board copper re-route is done** -- FB1.1 on
+  STO, FB1.2 on STO_LDO, routed to U9.1/C22.1. What is still open on FB1 is its **land**: the 0603
+  choice above never reached the copper, which still draws the 0402 land. Tracked in `TODO.md`.)*
 - **Why VQFN, not SSOP-28:** height is irrelevant (U7 (FRAM) then set the cavity floor at 1.75 mm; the QFN is
   0.9 mm). _(2026-07-23: U7 is now the 0.90 mm DFN, so the FRAM no longer sets the floor — the
   argument stands, only the example part changed.)_ The binding constraint is **X/Y footprint** — with the cells eating ~43% of the board, the

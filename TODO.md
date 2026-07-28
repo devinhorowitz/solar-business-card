@@ -750,8 +750,8 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   moves — which is exactly what just happened. Adds one file to the fab package, so it needs a
   deliberate yes before the order goes out.
 
-- [ ] **[3D] Component models — 39 of 72 done, and the rest is what the enclosure work needs**
-  _(2026-07-28; the passives are done, the bodies that matter for fit are not.)_
+- [ ] **[3D] Component models — 45 of 72 done, and the rest is what the enclosure work needs**
+  _(2026-07-28; the passives and the fit-critical bodies are done, the small actives are not.)_
   The renders and, more importantly, **the brace / back-shell fit check** depend on footprints
   carrying `(model ...)`. At the start only **17 of 72** did, all KiCad stock parts; every custom
   `solarglow:*` footprint had none, so KiCad's 3D viewer and any STEP export showed a bare board.
@@ -762,6 +762,20 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   `C_0603_1608Metric` is 1.55 / 0.9 × 0.95 — that is unambiguously **0402 class on a slightly
   enlarged hand-solder land**. They now point at the stock 0402 C/R/L models. **39 of 72.**
 
+  **Done — the 6 bodies that set the enclosure envelope.** KiCad ships no model for any
+  `solarglow:*` footprint, so `scripts/make_3d_models.py` generates them with cadquery:
+  `SCHURTER_SCPC_SS17` (39.0 × 17.0 × 1.70) on SC1/SC3, `SCHURTER_SCPC_WS17` (28.5 × 17.0 × 1.70)
+  on SC2/SC4, `SM141K06TF` (42.0 × 23.0 × 1.50) on PV1/PV2, into `PCB/solarglow.3dshapes/`. These
+  are **maximum-envelope clearance solids, not cosmetic models** — every dimension traces to a
+  footprint `descr` or a datasheet line, and the script header records which. **45 of 72.**
+
+  > **Open question the models raised: the supercap locator tabs are not modelled.** The footprint
+  > `descr` puts them ~2.75 mm past each end. Modelled flat and in-plane they push all four caps
+  > past the board edge (SC1 by 1.00 mm, SC3 by 0.83, SC4 by 0.90, SC2 by 0.10) — but `PCB/README.md`
+  > calls them **folded**, and the footprint courtyard covers only the cell. So a flat extension is
+  > the wrong shape and shipping it would invent an overhang for the enclosure to design around.
+  > **Until a real cell is measured, treat the envelope near the two short edges as unverified.**
+
   **The 17 that correctly have no body:** MH1–4, MP1–4, SB1–4, SJ1, SW2, TP1, JP1, TC1. Holes,
   solder bridges and pad-only features. Not a gap; do not "fix" these.
 
@@ -769,8 +783,6 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
 
   | part | package / size | why it matters |
   |---|---|---|
-  | **SC1–SC4** | SCHURTER SCPC, lands 17.5 × 39.5 and 17.5 × 29.0 mm | the tallest things on the board; the brace clears them or it does not |
-  | **PV1, PV2** | SM141K06TF, cell ≈ 1.2 mm ± 0.3 | front-face height drives the fence / shell gap |
   | **D2–D5** | LA P47F reverse-mount, land 3.8 × 2.0 | sit on the back surface, under the brace |
   | **U1, U8** | 29-pad, 5.3 × 5.3 courtyard (QFN-28-ish) | stock QFN model is probably close enough |
   | **U3** | ADXL367, LGA 2.6 × 2.7 | a correctly-sized box is enough |
@@ -778,8 +790,9 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   | **J1** | 2.0 × 7.6 header land | only if J1 is fitted |
 
   For the enclosure the *height* is the whole point, so a plain box at the datasheet dimension beats
-  a pretty model at the wrong one. Suggested order: supercaps and cells first (they set the
-  envelope), then the LEDs, then map U1/U8 onto a stock QFN-28.
+  a pretty model at the wrong one. Next in order: D2–D5 (blocked on pulling the LA P47F height out
+  of the datasheet — the land is known, the height is not), then map U1/U8 onto a stock QFN-28,
+  then plain boxes for U3/U5 and J1.
 
 - [ ] **[BOARD — ACTION NEEDED] FB1 needs its 0603 land drawn; CI is red until it is**
   _(2026-07-28. Found while assigning 3D models; the 0603 choice was deliberate and simply never
@@ -795,16 +808,44 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   **Done here:** the schematic now names `Inductor_SMD:L_0603_1608Metric` (both the placed instance
   and the cached `lib_symbols` copy). The other 17 `solarglow:C1` references are untouched.
 
-  **Still to do — in KiCad, by hand:** update the board so FB1 carries the 0603 land, then re-check
-  clearance to its neighbours (the pads grow 0.59 → 0.9 wide and the pitch opens 1.02 → 1.55, so
-  the part gets ~0.5 mm longer overall). This deliberately leaves **two red gates** that name the
-  work and clear themselves when it is done:
+  **Still to do — in KiCad, by hand. It is NOT a drop-in: the land does not fit where FB1 sits.**
+  Measured against the actual copper (pcbnew, 2026-07-28), the widened land lands 0.075 mm from
+  U9's left pad column — under the 0.152 mm dual-fab floor, on **both** pads:
+
+  | land | pad1 → U9.1 (STO_LDO) | pad2 → U9.5 (VS) | → board edge |
+  |---|---|---|---|
+  | today's 0402, at (2.10, 54.65) | **0.220 mm** | 0.430 mm | 1.770 mm |
+  | IPC 0603, same centre | **0.075 mm** ❌ | **0.075 mm** ❌ | 1.625 mm |
+  | IPC 0603, centre (1.95, 54.65) | **0.225 mm** ✓ | 0.225 mm ✓ | 1.475 mm |
+
+  So **move FB1 0.15 mm in −X, to (1.95, 54.65)**, and give it a 0603 land. Either vintage works,
+  and they are **geometrically interchangeable here** — FB1 is rotated −90°, so the dimension facing
+  U9 is the pad's 0.95 mm cross-width in both, and both put pad2's outer edge at y 55.875:
+
+  - today's `Inductor_SMD:L_0603_1608Metric` — pads 0.875 × 0.95 at ±0.7875, pitch **1.575**
+  - what this board's other 0603s draw (C13/C22/C23/C25, an older library cut) — 0.9 × 0.95 at
+    ±0.775, pitch **1.55**
+
+  Both satisfy both gates: parity compares the footprint *name*, and check [4]'s 0603 band is
+  1.45–1.75 mm. Matching C13 keeps every 0603 on the board identical; placing the library part
+  fresh is less work. Either way the clearance result above is unchanged, it restores exactly the
+  clearance FB1 has today (0.225 vs 0.220), and it needs **no rerouting**: the
+  existing STO and STO_LDO track ends at (2.100, 54.140) and (2.100, 55.160) still terminate inside
+  the enlarged pads, and U9 is untouched. Placing the library footprint also brings the correct
+  `L_0603_1608Metric.step` model with it.
+
+  A narrower house land (cross-dimension 0.80 instead of 0.95, shifted only 0.10) buys 0.250 mm
+  instead, but costs a `solarglow:L_0603` footprint that the schematic then has to name in place of
+  the stock library part — more custom geometry for 25 µm. Not worth it.
+
+  This deliberately leaves **two red gates** that name the work and clear themselves when it is done:
   - `kicad-cli pcb drc --schematic-parity` → `footprint_symbol_mismatch: solarglow:C1 doesn't match
     footprint given by symbol (Inductor_SMD:L_0603_1608Metric) — Footprint FB1`
   - `scripts/check_consistency.py` → check [4], `FB1: BOM orders a 0603 part but the board land is
     0402`
 
-  The 3D model on FB1 is still the 0402 one; swap it to `L_0603_1608Metric.step` with the land.
+  The 3D model on FB1 is still the 0402 one; placing the library footprint swaps it to
+  `L_0603_1608Metric.step` automatically.
 
   > **Why this is the whole argument for the 3D/model work.** Nothing in the toolchain caught this.
   > KiCad's schematic parity only compares the schematic to the board, and those two agreed —
