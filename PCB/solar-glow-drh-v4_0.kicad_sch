@@ -9879,7 +9879,7 @@
 					)
 				)
 			)
-			(property "Footprint" "solarglow:U1"
+			(property "Footprint" "solarglow:U8_QFN28"
 				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -21761,7 +21761,7 @@
 				)
 			)
 		)
-		(property "Footprint" "solarglow:U1"
+		(property "Footprint" "solarglow:U8_QFN28"
 			(at 470.74 387.35 0)
 			(show_name no)
 			(do_not_autoplace no)

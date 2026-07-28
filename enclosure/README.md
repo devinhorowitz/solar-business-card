@@ -6,7 +6,7 @@ the bare show-front (two solar cells + the backlit DRH monogram window) stays ex
 the eight screws clamping, not a press fit.
 
 This is the **0.6 mm-board "dumb box"** shell. It reduces to a floor, walls, eight M2 bosses,
-a U7 (FRAM) relief pocket -- nothing else. All center support and all
+no relief pocket -- nothing else. All center support and all
 optical/EMI features live in a separate **resin diffuser brace** (see `brace/`), so a PCB layout
 change is a brace reprint, never a shell re-machine. The shell is aligned to
 `PCB/solar-glow-drh-v4_0.kicad_pcb` (bosses on the 8-hole pattern: four corner bosses concentric
@@ -16,7 +16,7 @@ with the r3.0 board-corner fillets, plus four panel-corner bosses).
 > Repointing it is safe and was **verified, not assumed**: the v4 board's eight holes measure
 > x 3.00 / 47.80 and y 3.00 · 28.50 · 60.40 · 85.90, which is exactly the C3 pattern below. The
 > generator already agrees — its own header says it is "aligned to
-> `PCB/solar-glow-drh-v4_0.kicad_pcb` … geometry identical to v3, v4 re-keyed the relief to U7" —
+> `PCB/solar-glow-drh-v4_0.kicad_pcb` … geometry identical to v3" —
 > and it hardcodes its geometry rather than reading any board file, so nothing here ever loaded the
 > v3 PCB.)_
 
@@ -30,9 +30,9 @@ with the r3.0 board-corner fillets, plus four panel-corner bosses).
 | File | Purpose |
 |---|---|
 | `solar-glow-drh-v3_0-backshell-0p6b-brace-cad.py` | Parametric CadQuery generator. **Source of truth** — regenerates the STEP/STL from the PCB anchors. |
-| `solar-glow-drh-v3_0-backshell-0p6b-brace-Ti-max.step` | **Send this to the fab.** 1.00 floor, 1.80 cavity, 0.60 board recess, U7 (FRAM) relief pocket, no ribs, no locator pillars, 1.0 walls, asymmetric lip (W2.5/N2.0/S2.0/E1.0), 8 M2 bosses, 3.55 overall. |
+| `solar-glow-drh-v3_0-backshell-0p6b-brace-Ti-max.step` | **Send this to the fab.** 1.00 floor (**true uniform** — the U7 relief pocket was removed 2026-07-28), 1.80 cavity, 0.60 board recess, no ribs, no locator pillars, 1.0 walls, asymmetric lip (W2.5/N2.0/S2.0/E1.0), 8 M2 bosses, 3.55 overall. |
 | `solar-glow-drh-v3_0-backshell-0p6b-brace-Ti-max.stl` | Same geometry, for a quick plastic dry-fit print before committing to titanium. |
-| `solar-glow-drh-v3_0-backshell-0p6b-brace-DRAWING.pdf` / `.png` | **Current** 2D dimensioned drawing (plan + Section A-A + Detail B + critical dims + notes + title block). Attach to the CNC quote. |
+| `solar-glow-drh-v3_0-backshell-0p6b-brace-DRAWING.pdf` / `.png` | 2D dimensioned drawing (plan + Section A-A + Detail B + critical dims + notes + title block). **⚠ Not regenerated since the U7 pocket was removed 2026-07-28 — its Detail B still shows a pocket the STEP no longer has.** See §7 before attaching it to a quote. |
 | `brace/` | The resin diffuser brace — separate printed part. Has its own README, generator, STEP/STL, and drawing. |
 | `solar-glow-drh-v2_1-backshell-DRAWING.pdf` / `.png` | **STALE — v2.1 numbers (0.55 floor / 1.90 cavity / 43.80 pitch / brace posts).** Superseded by the drawing above; do **not** send this. Kept only as history; safe to delete. |
 
@@ -47,15 +47,22 @@ The mating PCB, the resin brace, and the eight M2 screws are separate parts, not
 
 ## The 2D drawing
 
-`solar-glow-drh-v3_0-backshell-0p6b-brace-DRAWING.pdf` is current and matches the committed STEP
-(1.00 floor / 1.80 cavity / 0.60 board recess / 8-hole mount pattern [x 44.80; y rows 3.0/28.5/60.4/85.9] / 3.55 overall).
-The old `v2_1` drawing is stale and must not be sent. The **STEP governs** all geometry; the drawing
-and the notes below flag the few dimensions that need tighter-than-standard control.
+`solar-glow-drh-v3_0-backshell-0p6b-brace-DRAWING.pdf` matches the committed STEP on every headline
+dimension (1.00 floor / 1.80 cavity / 0.60 board recess / 8-hole mount pattern [x 44.80; y rows
+3.0/28.5/60.4/85.9] / 3.55 overall) — **with one exception as of 2026-07-28: its Detail B still shows
+the U7 relief pocket, which the STEP no longer contains.** The **STEP governs**, so the part is
+correct either way, but say so on the quote or the shop may machine the pocket from the drawing.
+Regenerating the PDF needs `...-DRAWING-gen.py`, which still writes to a hardcoded
+`/mnt/user-data/outputs/` path (tracked in `TODO.md`). The old `v2_1` drawing is stale and must not
+be sent. The drawing and the notes below flag the few dimensions that need tighter-than-standard
+control.
 
 ## What to send PCBWay
 
 The **`...-0p6b-brace-Ti-max.step`** + the **`...-0p6b-brace-DRAWING.pdf`** + the callouts below.
-Material: **Titanium Gr5 (TC4)**.
+Material: **Titanium Gr5 (TC4)**. Add one line to the order: *"The STEP governs. Detail B on the
+drawing shows a small floor relief pocket that has been removed — the cavity floor is a true uniform
+1.00 mm, as modelled."*
 
 ## Ordering instructions (PCBWay)
 
@@ -77,8 +84,7 @@ Form settings on the CNC quote page (the on-screen selections override the drawi
 Paste into **Other special request**:
 
 ```
-- Cavity floor is a uniform 1.00 mm, with one shallow relief pocket under U7 that
-  takes the local floor to 0.95 mm over a 7.8 x 5.4 mm area only. If you cannot
+- Cavity floor is a uniform 1.00 mm with no local relief anywhere. If you cannot
   reliably hold 1.00 mm titanium over this ~48 x 86 mm pocket, advise the minimum
   floor you can hold and we will re-issue the STEP.
 - No locator pillars: the resin H-brace registers by fitment (4 outboard rails +
@@ -114,7 +120,7 @@ Expect the instant price to move: the thin floor routes this to manual engineeri
 - Z stack from the back face:
   - back frame and 4 boss annuli: **proud 0.15 mm** (to Z −0.15)
   - recessed rear art field: at Z 0
-  - cavity floor: at **Z +1.00** (0.95 local under the U7 pocket)
+  - cavity floor: at **Z +1.00**, uniform (the 0.95 local U7 pocket was removed 2026-07-28)
   - boss / lip tops (the PCB rest plane): **Z +2.80**
   - PCB recess: Z +2.80 to +3.40 (receives the 0.60 mm board)
 - Wall 1.00 mm. **Asymmetric perimeter lip: W 2.5 / N 2.0 / S 2.0 / E 1.0 mm (E widens to 2.5 at the N/S ends).** Exterior back border is **uniform 2.0 on all 4 sides** (independent of the lip).** Back-frame step 0.15 mm. **No internal ribs or posts.**
@@ -144,7 +150,7 @@ Default everything to ISO 2768-1 general. Control **only** the items below.
 
 ### 3. Thin-wall advisory (read before quoting)
 
-The cavity floor is a **uniform 1.00 mm** (0.95 mm over the small U7 relief pocket only). That is
+The cavity floor is a **true uniform 1.00 mm** (no local relief since 2026-07-28). That is
 still below the titanium min-wall guidance (~1.0 mm) but a healthy step above the earlier 0.55/0.75.
 The floor no longer has ribs behind it (the resin brace carries center support in service, but is
 not present during machining). Please proceed one of two ways and note which on the quote:
@@ -167,13 +173,25 @@ not present during machining). Please proceed one of two ways and note which on 
 
 - 8× back-face spotface **Ø3.0 mm**, concentric with the mounting holes, depth ~0.2 mm (screw tip seats flush below the proud boss annulus). Modeled.
 
-### 7. U7 (FRAM) relief pocket
+### 7. U7 relief pocket — REMOVED 2026-07-28
 
-- **7.8 × 5.4 mm** in the cavity floor, centered at board **(28.1, 37.3)**, **0.05 mm deep** (local floor 0.95), R1.0 corners. ~~U7 (1.75) keeps 0.10 mm air.~~ General floor stays 1.00. Modeled.
-- **⚠ 2026-07-28: this pocket no longer has a reason to exist.** It was cut for a 1.75 mm SOIC-8; the
-  v4 board's U7 is the **0.90 mm MAX DFN-8**, which clears the uniform 1.00 mm floor by 0.80 mm. Keep
-  it or drop it — see the cavity note in §2. It is already modelled and quoted, so keeping it costs
-  nothing but a pocket; dropping it simplifies the floor.
+- **There is no relief pocket.** The cavity floor is a true uniform 1.00 mm.
+- What it was: 7.8 × 5.4 mm, centred at board (28.1, 37.3), 0.05 mm deep (local floor 0.95), R1.0
+  corners — cut so a **1.75 mm SOIC-8** U7 would keep 0.10 mm of air under the cap-limited 1.80 cavity.
+- Why it went: the v4 board carries the **0.90 mm MAX DFN-8** (`PCB/solarglow.pretty/U7_DFN8.kicad_mod`
+  `descr`, RAMXEED DS501-00087-1v0-E p.21). U7 clears the uniform 1.00 mm floor by **0.80 mm**, so the
+  pocket cleared nothing. It was machining that bought nothing.
+- The generator removes it by **arithmetic, not deletion**: `U7_H` is now 0.90, so
+  `U7_POCKET = max(0, U7_H - cap_H)` evaluates to 0 and the cut is skipped. The mechanism stays in
+  place for the next part that genuinely needs local relief.
+- **Verified on the regenerated solid**, not assumed: volume went from 6524.4817 to 6526.5447 mm³,
+  **+2.0631 mm³** of material back. The nominal pocket is 7.8 × 5.4 × 0.05 = 2.1060 mm³; the 0.043
+  mm³ difference is exactly the R1.0 corner fillets. Bounding box unchanged at 52.700 × 90.800 × 3.550.
+
+> **⚠ The 2D drawing has not been regenerated.** `...-DRAWING.pdf` still shows the pocket in its
+> Detail B. The STEP governs, and the STEP no longer has one — but **do not send the current PDF
+> without saying so**, or the shop will machine a feature the model does not contain. Regenerating it
+> needs `...-DRAWING-gen.py`, which still writes to a hardcoded `/mnt/user-data/outputs/` path.
 
 ### 8. Press fit — do NOT rely on it
 

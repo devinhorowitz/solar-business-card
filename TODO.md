@@ -779,7 +779,7 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   **The 17 that correctly have no body:** MH1–4, MP1–4, SB1–4, SJ1, SW2, TP1, JP1, TC1. Holes,
   solder bridges and pad-only features. Not a gap; do not "fix" these.
 
-  **Built, not yet attached — 8 more solids, waiting on the FB1 board edit.** Every remaining
+  **Attached 2026-07-28 — 8 more solids, board is now 53 of 72.** Every remaining
   height was already in this repo, so nothing here needed a fresh datasheet dig:
 
   | part | solid | source of the height |
@@ -789,12 +789,18 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   | **U8** | `AEM10300_QFN28` 4.0 × 4.0 × **0.85** | DS-AEM10300-v1.4 §15.1 Fig. 17, 0.800 ± 0.05 |
   | **U3** | `ADXL367_CC12` 2.2 × 2.3 × **0.87** | `PCB/README.md` BOM table, corroborated by the height map |
   | **U5** | `NT3H2211_XQFN8` 1.6 × 1.6 × **0.50** | `PCB/README.md` + height map, "SOT902-3 … verbatim" |
-  | **J1** | — | still open; only matters if J1 is fitted, and no height is recorded |
+  | ~~**J1**~~ | — | **closed 2026-07-28: J1 is DNP.** A UPDI header, never populated — leads get hand-soldered to the pads if it is ever wanted. A DNP part needs no clearance solid, so this is not a gap |
 
   `python3 scripts/make_3d_models.py` generates them; `--attach` writes the `(model ...)` lines into
-  the board, byte-safely and idempotently. **The attach is deliberately not done yet** — the board
-  is being edited in KiCad for the FB1 land, and a KiCad save would drop anything written underneath
-  it. Run `--attach` once that lands; it takes the board to **53 of 72**.
+  the board, byte-safely and idempotently. The attach was held back while the FB1 land was drawn in
+  KiCad — a KiCad save drops anything written underneath it — and **ran on 2026-07-28 once that
+  landed**, taking the board from 45 to **53 of 72**. CRLF was preserved (129,143 lines, zero bare
+  LF) and DRC was byte-for-byte unchanged: 14 violations, all excluded, 0 unconnected, 0 parity.
+
+  **What legitimately still has no body: 19 footprints, and that is the finished state** — MH1–4,
+  MP1–4, SB1–4, SJ1, SW2, TP1, JP1, TC1 (holes, solder bridges, pad-only features), the unnamed
+  `NPTH_mech` hole set, and **J1, which is DNP** (UPDI header; hand-soldered leads if ever wanted).
+  Nothing that gets populated is missing a body. **This item is done.**
 
   > **A stock model is not automatically the right model.** KiCad ships
   > `QFN-28-1EP_4x4mm_P0.4mm_EP2.4x2.4mm.step` and it is prettier than a box — but measured it is
@@ -809,35 +815,52 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   > **The two QFN-28 lands are correct, and they are not identical.** Measured on the board: U1's
   > exposed pad is **2.65 × 2.65**, matching DS40002443A §38.5's nominal D2/E2 of 2.65; U8's is
   > **2.30 × 2.30**, matching the AEM10300 datasheet's recommended board layout (§15.2 Fig. 18)
-  > exactly. Both right for their own part — but they share the footprint name `solarglow:U1`, so a
-  > KiCad **"Update Footprints from Library"** would overwrite one land with the other's geometry.
-  > Worth giving U8 its own footprint name before that happens.
+  > exactly. Both right for their own part — but they shared the footprint name `solarglow:U1`, so
+  > one name described two different lands.
+  >
+  > **Fixed 2026-07-28.** U8 now has its own `solarglow:U8_QFN28`, written from its actual board land
+  > and checked by loading it back through KiCad (29 pads: 14 × 0.8 × 0.2, 14 × 0.2 × 0.8, EP
+  > 2.3 × 2.3, 4.000 pad-centre span). Board `lib_id` and both schematic Footprint fields (placed
+  > instance + `lib_symbols` cache) point at it; U1 keeps `solarglow:U1`. It is a real library file in
+  > `PCB/solarglow.pretty/`, so it is also the first of these two that a library update could safely
+  > act on. _(Most `solarglow:*` footprints are still board-embedded only, with no library file —
+  > that is pre-existing and unchanged here.)_
 
   For the enclosure the *height* is the whole point, so a plain box at the datasheet dimension beats
   a pretty model at the wrong one.
 
-- [ ] **[ENCLOSURE] U7 is 0.90 mm, not 1.75 — the relief pocket has no reason left to exist**
-  _(2026-07-28. Found while sourcing heights for the 3D models.)_ Two docs still describe U7 as a
-  **SOIC-8 at 1.75 mm** and build on it: `enclosure/README.md` calls it "the single tallest part" and
-  specs a **7.8 × 5.4 × 0.05 mm relief pocket** at board (28.1, 37.3) purely to clear it — machined
-  into the STEP marked *"Send this to the fab"* — and `PCB/PCB-side-notes-brace-direction.md` §2
-  called it the "tall pole - brace thickness derives from it".
+- [x] **[ENCLOSURE] U7 relief pocket removed — the floor is a true uniform 1.00 mm** _(done 2026-07-28)_
+  Two docs described U7 as a **SOIC-8 at 1.75 mm** and built on it: `enclosure/README.md` called it
+  "the single tallest part" and specced a **7.8 × 5.4 × 0.05 mm relief pocket** at board (28.1, 37.3)
+  purely to clear it — machined into the STEP marked *"Send this to the fab"* — and
+  `PCB-side-notes-brace-direction.md` §2 called it the "tall pole" brace thickness derives from.
 
-  The v4 board carries the **DFN-8**: `PCB/solarglow.pretty/U7_DFN8.kicad_mod` `descr` quotes RAMXEED
-  DS501-00087-1v0-E p.21 for a 5.00 × 6.00 body at **0.90 mm MAX**, `PCB/README.md` agrees, and
-  `solar-glow-drh-design-notes.md` recorded the swap on 2026-07-23 — it just never reached the
-  enclosure docs. At 0.90 U7 clears the uniform 1.00 mm floor by 0.80 mm.
+  The v4 board carries the **DFN-8 at 0.90 mm MAX** (`U7_DFN8.kicad_mod` `descr`, RAMXEED
+  DS501-00087-1v0-E p.21), which clears the 1.00 mm floor by 0.80. The pocket cleared nothing.
 
-  **Nothing here is unsafe** — the cavity is cap-limited at 1.80 by the 1.70 mm supercaps either
-  way, and a pocket that isn't needed is extra clearance, not a collision. Both docs are corrected.
-  What is left is a **decision before the next fab order**: keep the pocket (already modelled and
-  quoted, costs nothing) or drop it and take the floor back to a true uniform 1.00 mm. Also
-  re-derive anything that was sized off the old 1.75 "tall pole" — in the brace's middle-third zone
-  the tallest component is now **U9 at 1.45** (TPS7A0233, DBV0005A: "SOT-23 - 1.45 mm max height").
+  **Removed by arithmetic, not deletion.** The generator's `U7_H` is now 0.90, so
+  `U7_POCKET = max(0, U7_H - cap_H)` evaluates to 0 and the existing `if U7_POCKET > 0` guard skips
+  the cut. The mechanism stays for the next part that genuinely needs local relief.
 
-  _(Corrected 2026-07-28: this first said U6 at 1.45. U6 is 1.45, but it is **not in the brace
-  zone** — the height map listed it at y 32.2 and the board puts it at y 7.31, in the top third.
-  The whole §2 table has since been re-measured against the board; see the note at its head.)_
+  **Verified on the regenerated solid:** volume 6524.4817 → 6526.5447 mm³, **+2.0631 mm³** back,
+  against a nominal pocket of 7.8 × 5.4 × 0.05 = 2.1060 — the 0.043 difference is the R1.0 corner
+  fillets. Bounding box unchanged. STEP and STL are regenerated and committed.
+
+  Two blockers had to be cleared to regenerate at all, and both were the same bug class — a path
+  that only ever existed on one machine:
+  - `OUT` was hardcoded to `/mnt/user-data/outputs/`, so the generator could not write its own STEP.
+    Now defaults next to the script, `OUT_DIR` overrides.
+  - The maker-text fonts pointed at `/home/claude/fonts/`. The engraved glyphs are cut into the
+    titanium, so the font is part of the deliverable and not substitutable — JetBrains Mono is now
+    **vendored in `enclosure/fonts/`** under its SIL OFL 1.1 licence (bundled, as the OFL requires),
+    with `MAKER_FONT_DIR` to override. Missing fonts now fail loudly instead of mid-build.
+
+- [ ] **[ENCLOSURE] Regenerate the 2D drawing — its Detail B still shows the removed pocket**
+  _(2026-07-28.)_ `...-DRAWING.pdf/.png` was not regenerated with the STEP, so it draws a floor
+  relief pocket the model no longer has. **The STEP governs, so the part is correct**, but the PDF
+  goes to the shop — `enclosure/README.md` now carries a line to add to the order saying so. The
+  real fix is to re-run `...-DRAWING-gen.py`, which still writes to a hardcoded
+  `/mnt/user-data/outputs/` path (same bug the CAD generator just had; fix it the same way).
 
 - [ ] **[BOARD — ACTION NEEDED] FB1 needs its 0603 land drawn; CI is red until it is**
   _(2026-07-28. Found while assigning 3D models; the 0603 choice was deliberate and simply never
