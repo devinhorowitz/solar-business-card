@@ -122,7 +122,17 @@ Default everything to ISO 2768-1 general. Control **only** the items below.
 | C3 | 8× mounting-hole pattern (pitch, linear) | x 44.80 / y rows 3.0·28.5·60.4·85.9 mm | **±0.05** | Must align with the PCB's 8 M2 holes (MH1–4 corners + 4 panel-corner). |
 | C4 | Mounting-hole diameter (tapped) | **M2** (tap-drill Ø1.6, through) | standard | Thread fit for the M2 screws. |
 
-> **Cavity note.** The cavity is **cap-limited**: the four WS17 supercaps set it. The SCHURTER SCPC datasheet (Case WS17) gives height **max 1.7 mm** and body 28.5 +0.5/−0.0 long, so the general cavity is **1.80 mm** (0.10 nominal air; worst-case 1.75 − 1.70 = 0.05, non-contact). U7 (FRAM, SOIC-8, 1.75 mm) is the single tallest part but sits over the local relief pocket (note 7), which drops the floor 0.05 mm there so U7 keeps a 0.10 mm air gap. The freed 0.05 mm went into the floor (0.95 → 1.00).
+> **Cavity note.** The cavity is **cap-limited**: the four WS17 supercaps set it. The SCHURTER SCPC datasheet (Case WS17) gives height **max 1.7 mm** and body 28.5 +0.5/−0.0 long, so the general cavity is **1.80 mm** (0.10 nominal air; worst-case 1.75 − 1.70 = 0.05, non-contact). ~~U7 (FRAM, SOIC-8, 1.75 mm) is the single tallest part but sits over the local relief pocket (note 7), which drops the floor 0.05 mm there so U7 keeps a 0.10 mm air gap.~~ The freed 0.05 mm went into the floor (0.95 → 1.00).
+>
+> **⚠ Superseded 2026-07-28 — U7 is no longer a tall pole, and this was written when it was.** The v4
+> board carries the **DFN-8**, not a SOIC-8: `PCB/solarglow.pretty/U7_DFN8.kicad_mod` `descr` quotes
+> RAMXEED DS501-00087-1v0-E p.21 for a **5.00 × 6.00 mm body, 0.90 mm MAX** height, and
+> `PCB/README.md` agrees. That is **0.85 mm shorter** than the 1.75 assumed here, and well under the
+> 1.70 mm the supercaps already demand — so U7 clears the uniform 1.00 mm floor with 0.80 mm to
+> spare and the note-7 relief pocket is **not needed for clearance**. The cavity stays cap-limited
+> at 1.80 either way, so nothing here is unsafe; the pocket is simply machining that buys nothing.
+> **Decide before the next fab order** whether to keep it (harmless, already modelled and quoted) or
+> drop it and take the floor back to a true uniform 1.00 mm. Tracked in `TODO.md`.
 
 ### 3. Thin-wall advisory (read before quoting)
 
@@ -151,7 +161,11 @@ not present during machining). Please proceed one of two ways and note which on 
 
 ### 7. U7 (FRAM) relief pocket
 
-- **7.8 × 5.4 mm** in the cavity floor, centered at board **(28.1, 37.3)**, **0.05 mm deep** (local floor 0.95), R1.0 corners. U7 (1.75) keeps 0.10 mm air. General floor stays 1.00. Modeled.
+- **7.8 × 5.4 mm** in the cavity floor, centered at board **(28.1, 37.3)**, **0.05 mm deep** (local floor 0.95), R1.0 corners. ~~U7 (1.75) keeps 0.10 mm air.~~ General floor stays 1.00. Modeled.
+- **⚠ 2026-07-28: this pocket no longer has a reason to exist.** It was cut for a 1.75 mm SOIC-8; the
+  v4 board's U7 is the **0.90 mm MAX DFN-8**, which clears the uniform 1.00 mm floor by 0.80 mm. Keep
+  it or drop it — see the cavity note in §2. It is already modelled and quoted, so keeping it costs
+  nothing but a pocket; dropping it simplifies the floor.
 
 ### 8. Press fit — do NOT rely on it
 

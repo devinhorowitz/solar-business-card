@@ -4,6 +4,8 @@
     pip install cadquery
     python3 scripts/make_3d_models.py            # -> PCB/solarglow.3dshapes/*.step
     python3 scripts/make_3d_models.py --list
+    python3 scripts/make_3d_models.py --attach   # write (model ...) into the .kicad_pcb
+    python3 scripts/make_3d_models.py --attach --dry-run
 
 WHY THESE EXIST
 
@@ -30,6 +32,30 @@ WHERE THE NUMBERS COME FROM — every dimension below is traceable, none invente
   SM141K06TF       datasheet: "Dimensions (W x L x H): 42 x 23 x 1.2 +/- 0.3 [mm]".
                    Modelled at the +0.3 worst case = 1.5 mm, since this is a
                    clearance solid.
+  LA_P47F          outline 3.4 x 1.9 from PCB/README.md's BOM table ("SMD, 3.4x1.9 mm")
+                   and solar-glow-drh-design-notes.md, which sources it to the
+                   datasheet p.12 dimensional drawing (a 3.4 x 1.9 outline around a
+                   Ø2.5 round body). Height 0.83 from
+                   PCB/PCB-side-notes-brace-direction.md §2, whose heights are stated
+                   to be datasheet-verified maxima.
+  ADXL367_CC12     PCB/README.md: "LGA-12 CC-12-4 (2.2x2.3x0.87 mm)". The 0.87 is
+                   corroborated by the brace height map.
+  NT3H2211_XQFN8   PCB/README.md and the brace height map agree: "SOT902-3,
+                   1.6 x 1.6 x 0.5 verbatim".
+  QFN28_4x4        4.0 x 4.0 body (QFN-28 4x4, the land both U1 and U8 sit on) at
+                   **1.00 mm**, which is U1's entry in the brace height map.
+
+WHY U1/U8 ARE NOT THE STOCK KiCad QFN. KiCad ships
+`Package_DFN_QFN.3dshapes/QFN-28-1EP_4x4mm_P0.4mm_EP2.4x2.4mm.step`, and it is a
+prettier model. Measured, it is **4.000 x 4.000 x 0.770 mm** — 0.23 mm SHORTER than
+the height this repo's own brace map budgets for U1. For a part whose only job in the
+3D view is to answer "does the brace clear it?", a model that understates height is
+worse than no model, so U1/U8 get a box at the documented maximum instead.
+
+**U8's own maximum is not recorded anywhere in this repo.** It is modelled at U1's
+1.00 mm because it shares the same 4x4 QFN-28 land and 1.00 mm is the standard
+JEDEC max for that body, which is the safe direction for a clearance solid — but
+confirm it against the e-peas datasheet before the brace is cut.
 
 THE END TABS ARE DELIBERATELY NOT MODELLED — and that is a finding, not laziness.
 
@@ -79,6 +105,40 @@ SPECS = {
         body=(42.0, 23.0, 1.50), tab=None,
         desc="ANYSOLAR SM141K06TF cell — 42 x 23 x 1.2 +0.3 (modelled at max 1.5)",
     ),
+    "LA_P47F": dict(
+        body=(3.4, 1.9, 0.83), tab=None,
+        desc="ams OSRAM LA P47F reverse-mount amber LED — outline 3.4 x 1.9, height 0.83 max",
+    ),
+    "ADXL367_CC12": dict(
+        body=(2.2, 2.3, 0.87), tab=None,
+        desc="ADI ADXL367 accelerometer, LGA-12 CC-12-4 — 2.2 x 2.3 x 0.87",
+    ),
+    "NT3H2211_XQFN8": dict(
+        body=(1.6, 1.6, 0.50), tab=None,
+        desc="NXP NT3H2211 NTAG I2C plus, XQFN8 SOT902-3 — 1.6 x 1.6 x 0.5",
+    ),
+    "QFN28_4x4": dict(
+        body=(4.0, 4.0, 1.00), tab=None,
+        desc="QFN-28 4x4 envelope (U1 AVR64EA28, U8 AEM10300) — 1.00 max, see header",
+    ),
+}
+
+# refdes -> (model path as KiCad should store it, Z rotation in degrees)
+#
+# Every footprint below sits at orientation 0 (U3 at 180, but its body is a box), so
+# the solids are built on the footprint's own axes and need no rotation. All are on
+# the back — KiCad mirrors a model for a flipped footprint by itself, so these are
+# still built growing +Z from z=0.
+PRJ = "${KIPRJMOD}/solarglow.3dshapes"
+ATTACH = {
+    "D2": (f"{PRJ}/LA_P47F.step", 0),
+    "D3": (f"{PRJ}/LA_P47F.step", 0),
+    "D4": (f"{PRJ}/LA_P47F.step", 0),
+    "D5": (f"{PRJ}/LA_P47F.step", 0),
+    "U1": (f"{PRJ}/QFN28_4x4.step", 0),
+    "U8": (f"{PRJ}/QFN28_4x4.step", 0),
+    "U3": (f"{PRJ}/ADXL367_CC12.step", 0),
+    "U5": (f"{PRJ}/NT3H2211_XQFN8.step", 0),
 }
 
 
@@ -99,10 +159,113 @@ def build(name: str, spec: dict):
     return solid
 
 
+BOARD = ROOT / "PCB" / "solar-glow-drh-v4_0.kicad_pcb"
+
+
+def _blocks(txt: str, tag: str):
+    """(start, end) of every top-level `(tag ...)` block, paren-matched, string-aware."""
+    import re
+    out = []
+    for m in re.finditer(r"(?m)^\s*\(%s[\s(]" % tag, txt):
+        i = txt.index("(", m.start())
+        depth, instr, esc = 0, False, False
+        for j in range(i, len(txt)):
+            c = txt[j]
+            if instr:
+                if esc:
+                    esc = False
+                elif c == "\\":
+                    esc = True
+                elif c == '"':
+                    instr = False
+                continue
+            if c == '"':
+                instr = True
+            elif c == "(":
+                depth += 1
+            elif c == ")":
+                depth -= 1
+                if depth == 0:
+                    out.append((i, j + 1))
+                    break
+    return out
+
+
+def attach(dry_run: bool = False) -> int:
+    """Write a `(model ...)` into each footprint in ATTACH that has none.
+
+    Byte-safe and idempotent. The board alternates between CRLF and LF depending on
+    who saved it last, so the line ending is DETECTED, never assumed, and only the
+    inserted text is new — nothing else in the file is rewritten. A footprint that
+    already carries a model is left alone and reported, so running this after a
+    KiCad round-trip is a no-op rather than a duplicate.
+    """
+    import re
+    raw = BOARD.read_bytes()
+    crlf = raw.count(b"\r\n")
+    if crlf and crlf != raw.count(b"\n"):
+        sys.exit(f"make_3d_models: {BOARD.name} has mixed line endings; refusing to edit")
+    nl = "\r\n" if crlf else "\n"
+    txt = raw.decode("utf-8").replace("\r\n", "\n")
+
+    edits, skipped, missing = [], [], set(ATTACH)
+    for a, b in _blocks(txt, "footprint"):
+        blk = txt[a:b]
+        m = re.search(r'\(property "Reference" "([^"]+)"', blk)
+        if not m or m.group(1) not in ATTACH:
+            continue
+        ref = m.group(1)
+        missing.discard(ref)
+        if re.search(r"(?m)^\s*\(model[\s\"]", blk):
+            skipped.append(ref)
+            continue
+        path, rot = ATTACH[ref]
+        chunk = (
+            f'\t\t(model "{path}"{nl}'
+            f"\t\t\t(offset{nl}\t\t\t\t(xyz 0 0 0){nl}\t\t\t){nl}"
+            f"\t\t\t(scale{nl}\t\t\t\t(xyz 1 1 1){nl}\t\t\t){nl}"
+            f"\t\t\t(rotate{nl}\t\t\t\t(xyz 0 0 {rot}){nl}\t\t\t){nl}"
+            f"\t\t){nl}"
+        )
+        # Anchor on the footprint's last child token so the model lands where KiCad
+        # writes it; fall back to just inside the closing paren.
+        anchor = blk.rfind("(embedded_fonts ")
+        if anchor >= 0:
+            at = a + blk.index(")", anchor) + 1
+        else:
+            at = a + blk.rindex(")")
+        edits.append((at, chunk, ref))
+
+    if missing:
+        sys.exit(f"make_3d_models: refdes not found on the board: {' '.join(sorted(missing))}")
+    for ref in sorted(skipped):
+        print(f"  skip   {ref}: already has a model")
+    if not edits:
+        print("  nothing to do — every mapped footprint already carries a model")
+        return 0
+
+    for at, chunk, ref in sorted(edits, reverse=True):
+        txt = txt[:at] + chunk.replace(nl, "\n") + txt[at:]
+        print(f"  attach {ref}: {ATTACH[ref][0].rsplit('/', 1)[1]}")
+    out = txt.replace("\n", nl).encode("utf-8")
+    if dry_run:
+        print(f"  --dry-run: would write {len(out):,} bytes ({len(out) - len(raw):+,})")
+        return 0
+    BOARD.write_bytes(out)
+    print(f"  wrote {BOARD.relative_to(ROOT)}  ({len(out) - len(raw):+,} bytes, {nl!r} preserved)")
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--list", action="store_true")
+    ap.add_argument("--attach", action="store_true",
+                    help="write (model ...) into the board for every refdes in ATTACH")
+    ap.add_argument("--dry-run", action="store_true", help="with --attach, do not write")
     args = ap.parse_args()
+
+    if args.attach:
+        return attach(dry_run=args.dry_run)
 
     if args.list:
         for n, s in SPECS.items():
@@ -120,12 +283,28 @@ def main() -> int:
     for name, spec in SPECS.items():
         solid = build(name, spec)
         dest = OUT / f"{name}.step"
+        before = dest.read_text() if dest.exists() else None
         cq.exporters.export(solid, str(dest))
         bb = solid.val().BoundingBox()
+        # STEP stamps a write time into FILE_NAME, so an unchanged solid still comes
+        # back as a modified file. Put the old bytes back when only that line moved —
+        # otherwise every run dirties the tree and the real geometry changes hide in
+        # the noise.
+        if before is not None and _same_geometry(before, dest.read_text()):
+            dest.write_text(before)
+            print(f"  {dest.relative_to(ROOT)}  unchanged")
+            continue
         print(f"  {dest.relative_to(ROOT)}  "
               f"{bb.xlen:.2f} x {bb.ylen:.2f} x {bb.zlen:.2f} mm  "
               f"({dest.stat().st_size:,} bytes)")
     return 0
+
+
+def _same_geometry(a: str, b: str) -> bool:
+    """Equal STEP files ignoring the FILE_NAME write timestamp."""
+    import re
+    strip = lambda s: re.sub(r"(?m)^FILE_NAME\('[^']*','[^']*'", "FILE_NAME(", s)
+    return strip(a) == strip(b)
 
 
 if __name__ == "__main__":
