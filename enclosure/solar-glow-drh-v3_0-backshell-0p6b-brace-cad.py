@@ -5,10 +5,10 @@ solar-glow-drh-v3_0-backshell-0p6b-brace-cad.py  -  0.6 mm-board DUMB-BOX shell 
 Back-only titanium shell for the SOLAR-GLOW DRH PCB. It drops over the populated back and is held by
 eight M2 screws (four corner + four panel-corner); the bare show-front (two solar cells + the backlit DRH monogram window) stays
 exposed. This is the "dumb box": floor + walls + eight M2 bosses (four corner + four panel-corner) +
-a U7 (FRAM) relief pocket, no locator pillars, nothing else. All center support and the window/EMI features live in a separate
+no relief pocket, no locator pillars, nothing else. All center support and the window/EMI features live in a separate
 dielectric resin brace, so a PCB layout change is a brace reprint, never a shell re-machine.
 
-Z stack (aligned to PCB/solar-glow-drh-v4_0.kicad_pcb, 0.60 mm board; geometry identical to v3, v4 re-keyed the relief to U7):
+Z stack (aligned to PCB/solar-glow-drh-v4_0.kicad_pcb, 0.60 mm board; geometry identical to v3):
   floor 1.00  +  cavity 1.80  +  board recess 0.60  =  3.40 field  (3.55 at the 0.15 back frame).
 The 0.60 board (vs 0.80) frees 0.20 mm into the floor: 1.00 clears stainless/copper and puts aluminum
 past the old titanium-0.75 stiffness, without growing the assembled part. Overall stays 3.55.
@@ -23,9 +23,11 @@ sanded to fit, so 0.4 preserves the axial margin against sanding variation. The 
 No ribs, no support posts: the resin brace carries center support. The rib/brace machinery is retained
 as build() options (ribs=/braces=) for a fallback, but the shipped part uses neither.
 
-U7 (MB85RC512TY FRAM, SOIC-8, 1.75 mm, the tallest B-side part) sits over a local 0.05 relief pocket in the cavity floor
-(local floor 0.95) so it keeps its full 0.10 mm air under its through-cutout. Watch U7-region flex at
-bench bring-up -- no rib props it now; the fallback if it matters is a short local rib stub there.
+The cavity floor is now a TRUE UNIFORM 1.00 mm. U7 used to dip it locally by 0.05 (local floor 0.95),
+because U7 was believed to be a 1.75 mm SOIC-8 and so 0.05 taller than the 1.70 caps. The v4 board
+carries the 0.90 mm DFN-8 instead: it clears the 1.00 floor by 0.80 and needs no relief, so the pocket
+is gone as of 2026-07-28. Watch U7-region flex at bench bring-up -- no rib props it; the fallback if
+it matters is a short local rib stub there.
 
 Bench / board-side items (not resolved in CAD):
  - Grounded pillars land on the board back (GND pour with VS mesh + signals). A pillar on GND pour is
@@ -37,6 +39,7 @@ Bench / board-side items (not resolved in CAD):
 The 3D STEP governs all geometry; this generator is the source of truth (it prints the full Z-stack and
 regenerates the STEP/STL from the PCB anchors).
 """
+import os
 import cadquery as cq
 from shapely.geometry import Point, box
 from shapely.ops import unary_union
@@ -48,16 +51,25 @@ mounts = [(3.0, 3.0), (47.8, 3.0), (3.0, 85.9), (47.8, 85.9),      # 4x corner M
           (3.0, 28.5), (47.8, 28.5), (3.0, 60.4), (47.8, 60.4)]    # +4 panel-corner M2, GND -- match PCB nudge (holes at panel inner corners). 2-col 8-mount pattern. Verified vs committed board: W(3.0,28.5) boss r2.6 clears R14 by 0.34 (R14 y0 31.44, boss top y31.10) and U6 by 0.25 (U6 x0 5.85, boss E x5.60) -- TIGHT; a board-side nudge of U6/R14 (or a local boss trim there) buys margin if a fit check wants it. E bosses at x47.8 merge into the pinched east lip like the corner bosses.
 
 # ===== fixed shell knobs =====
-U7_H       = 1.75                  # U7 (MB85RC512TY FRAM, SOIC-8 max, datasheet): the single tallest back part
+U7_H       = 0.90                  # U7 (MB85RC512TY FRAM). 2026-07-28: was 1.75 for a SOIC-8, which the v4
+                                   # board does not carry. It is the DFN-8 -- PCB/solarglow.pretty/U7_DFN8.kicad_mod
+                                   # descr, RAMXEED DS501-00087-1v0-E p.21: 5.00 x 6.00 body, 0.90 mm MAX.
+                                   # U7 is NOT the tallest back part and never was on v4; the caps are.
 cap_H      = 1.70                  # WS17 supercaps (locked): the 2nd-tallest parts (x4) -> set the GENERAL cavity
 kapton_th  = 0.00                  # DROPPED (all contacts on bare laminate). set 0.05 to reinstate.
 cav_margin = 0.10                  # air over the cavity-setting parts. general cavity 1.80 = cap_H + air. Reduced 0.15->0.10 now the brace + cell-sandwiches carry the board: cavity 1.80 +-0.05 -> 1.75 worst-case, minus WS17 1.70 MAX (datasheet Case WS17: height max 1.7) = 0.05 non-contact. The freed 0.05 goes into the floor.
 cavity     = round(cap_H + kapton_th + cav_margin, 3)   # 1.80 general (cap-limited); toleranced 1.80 +-0.05 -> 1.75 min
-# U7 alone is 0.05 mm taller than the caps, so a LOCAL relief pocket in the cavity floor under U7 dips
-# the floor 0.05 there (local cavity 1.85) to keep U7's full 0.10 air, while the GENERAL floor runs
-# 0.05 thicker for back-engraving stock. 0.05 = U7_H - cap_H is the ceiling for this trick: beyond it
-# you'd have to pocket the caps (17x28.5 mm each, x4 = a second cavity). Pocket = U7 pad box + margin.
-U7_POCKET    = round(U7_H - cap_H, 3)     # 0.05 mm local floor relief under U7
+# LOCAL RELIEF POCKET -- computed, and as of 2026-07-28 it computes to ZERO, so no pocket is cut.
+# The mechanism: if one part stands taller than the cap-limited general cavity, dip the floor locally
+# by exactly that excess so it keeps the same air gap, while the GENERAL floor stays thick for
+# back-engraving stock. The excess is the ceiling for the trick -- beyond it you would have to pocket
+# the caps themselves (17x28.5 mm each, x4 = a second cavity).
+#
+# It existed for a 1.75 mm SOIC-8 U7, 0.05 taller than the 1.70 caps. The v4 board's U7 is the 0.90 mm
+# DFN, which clears the 1.00 mm floor by 0.80 -- so U7_H - cap_H goes negative and the pocket is not
+# cut. This is deliberate: the arithmetic removes it, so the mechanism stays here for the next part
+# that genuinely needs it rather than being deleted and re-derived from scratch.
+U7_POCKET    = max(0.0, round(U7_H - cap_H, 3))   # 0.0 -> no pocket (was 0.05 for the SOIC-8)
 U7_POS       = (28.1, 37.3)               # U7 (MB85RC512TY FRAM) origin, board coords (v4 board): re-keyed from the removed U2 balancer, essentially where U2 sat (old (30.10,37.64)). Same SOIC-8_3.9x4.9 package; pad box 6.75 x 4.41 (unchanged footprint), centered here.
 U7_POCKET_WH = (7.8, 5.4)                 # pocket size: pad box + ~0.5 margin all round (same SOIC-8, unchanged). At U7_POS the pocket spans y[34.6,40.0] -> N edge ~0.8 clear of the glow window (y40.80); x[24.2,32.0] covers the U7 east pad (~x31.48).
 
@@ -102,8 +114,19 @@ MARK_DEPTH = 0.00                  # 0 = laser mark (no cut). >0 would engrave a
 # 0.20mm into the 1.0mm floor stock -> a real machined mark, not a surface etch. Mirrored about the board
 # center X so it reads correctly when the card is turned over. Name in Bold, the line above it in Regular. ----
 MAKER_DEPTH  = 0.20
-MAKER_FONT_R = "/home/claude/fonts/JetBrainsMono-Regular.ttf"
-MAKER_FONT_B = "/home/claude/fonts/JetBrainsMono-Bold.ttf"
+# Back-engraved maker text. The exact glyph outlines end up cut into the titanium, so the font is
+# part of the deliverable, not a styling choice -- it is vendored in enclosure/fonts/ (JetBrains Mono,
+# SIL OFL 1.1, license bundled alongside as the OFL requires). These paths used to point at
+# /home/claude/fonts/, which exists on nobody's checkout, so the generator could not regenerate its
+# own STEP. Set MAKER_FONT_DIR to override.
+_FONT_DIR = os.environ.get("MAKER_FONT_DIR") or os.path.join(os.path.dirname(os.path.abspath(__file__)), "fonts")
+MAKER_FONT_R = os.path.join(_FONT_DIR, "JetBrainsMono-Regular.ttf")
+MAKER_FONT_B = os.path.join(_FONT_DIR, "JetBrainsMono-Bold.ttf")
+for _f in (MAKER_FONT_R, MAKER_FONT_B):
+    if not os.path.exists(_f):
+        raise SystemExit(f"maker font missing: {_f}\n"
+                         "  the engraved text is part of the machined part, so this is not "
+                         "substitutable -- set MAKER_FONT_DIR to a directory holding JetBrains Mono.")
 MAKER_LINES  = [                       # (text, LEFT-edge x, centerline y, cap height, font)  board coords, readable
     ("DESIGNED & MADE BY", 7.0, 79.3, 1.20, MAKER_FONT_R),
     ("DEVIN HOROWITZ",     7.0, 81.9, 1.65, MAKER_FONT_B),
@@ -400,17 +423,19 @@ def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pill
     return res
 
 # ===== variants (titanium only; 7075 retired -- final part is Ti) =====
-OUT = "/mnt/user-data/outputs/"
+# Write next to this script by default. This used to be a hardcoded /mnt/user-data/outputs/ that
+# does not exist in a plain checkout, so the generator could not actually regenerate its own STEP.
+OUT = os.environ.get("OUT_DIR") or os.path.join(os.path.dirname(os.path.abspath(__file__)), "")
 B = "solar-glow-drh-v3_0-backshell-0p6b-brace"
 jobs = [
     # name                 floor wall  border ribs  prog   note
-    ("Ti-max",             1.00, 1.00, 0.15, False, False, "0.6mm-board DUMB BOX for the resin brace: TRUE 1.00 floor (cavity 1.80, cap gap 0.10) + U7 relief pocket + 1.0 walls + 8 bosses (4 corner + 4 panel-corner). NO locator pillars (retired: the H-brace registers by fitment). NO ribs (the brace carries center support). Overall 3.55."),
+    ("Ti-max",             1.00, 1.00, 0.15, False, False, "0.6mm-board DUMB BOX for the resin brace: TRUE 1.00 floor (cavity 1.80, cap gap 0.10) + NO relief pocket (true uniform floor) + 1.0 walls + 8 bosses (4 corner + 4 panel-corner). NO locator pillars (retired: the H-brace registers by fitment). NO ribs (the brace carries center support). Overall 3.55."),
     ("Ti-max-progwindow",  1.00, 1.00, 0.15, False, True,  "0.6mm-board / ribs-trimmed + TC2030 re-flash window"),
 ]
 # Ti-conservative (0.60 floor / 1.60 wall) struck: if the shop cannot hold the floor we
 # re-issue to whatever minimum they will hold, so a pre-baked 0.60 fallback is dead weight.
 print(f"cavity={cavity} general (cap {cap_H}+air {cav_margin}; kapton {kapton_th}); U7 pocket {U7_POCKET} deep "
-      f"-> 1.85 local (U7 keeps 0.10)  lips W/N/S/E={lip_W}/{lip_N}/{lip_S}/{lip_E} (E ends {lip_E_wide})  "
+      f"({'NO POCKET -- uniform floor' if U7_POCKET == 0 else 'local relief'})  lips W/N/S/E={lip_W}/{lip_N}/{lip_S}/{lip_E} (E ends {lip_E_wide})  "
       f"braces=OFF (removed; {len(BRACE)} defs retained) ribs={len(RIBS)}  border=0.15  "
       f"cavity tool R{TOOL_R} (Ø{2*TOOL_R}) / back tool R{BACK_TOOL_R} (Ø{2*BACK_TOOL_R})  "
       f"deburr: outer rim {edge_ease}, ends {EDGE_BREAK}  reflector-frame {GLOW_WIN[2]-GLOW_WIN[0]:.1f}x{GLOW_WIN[3]-GLOW_WIN[1]:.1f} laser-marked (full floor under it)  "

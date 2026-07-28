@@ -3736,7 +3736,7 @@
 		)
 		(embedded_fonts no)
 	)
-	(footprint "solarglow:U1"
+	(footprint "solarglow:U8_QFN28"
 		(layer "B.Cu")
 		(uuid "4bb30655-b71a-43de-8fca-f4488e1f7251")
 		(at 31.2 54)
