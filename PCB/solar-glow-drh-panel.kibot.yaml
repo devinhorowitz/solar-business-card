@@ -23,7 +23,7 @@ global:
   output: '%f-%i.%x'
 
 outputs:
-  - name: panel_gerbers
+  - name: gerbers
     comment: Panel copper/mask/paste/silk/outline
     type: gerber
     dir: gerbers
@@ -42,7 +42,7 @@ outputs:
       - B.SilkS
       - Edge.Cuts
 
-  - name: panel_drill
+  - name: drill
     comment: Panel Excellon (the 8 mouse bites land in the NPTH file)
     type: excellon
     dir: gerbers
@@ -50,11 +50,11 @@ outputs:
       pth_and_npth_single_file: false
       map: pdf
 
-  - name: panel_fab_zip
+  - name: fab_zip
     comment: Upload-ready panel fab set
     type: compress
     dir: .
     options:
       files:
-        - from_output: panel_gerbers
-        - from_output: panel_drill
+        - from_output: gerbers
+        - from_output: drill

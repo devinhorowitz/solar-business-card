@@ -209,9 +209,10 @@ board was drawn expecting this panel long before it existed. Each tab keeps a **
 hole-free web** at its centre so the bus crosses without a mouse bite eating into it
 (0.30 mm drill-to-copper either side); the remaining 4.0 mm of tab is perforated.
 
-**Getting it:** CI rebuilds the panel on every `PCB/**` push and commits the fab set. The panel
-`.kicad_pcb` itself is gitignored (a ~9.7 MB regenerated blob), so rebuild it locally if you want
-to look at it:
+**Getting it:** CI rebuilds the panel on every `PCB/**` push and plots its fab set. As with the rest
+of `Generated/`, the result is **committed only on `main`** — on a feature branch the panel build is
+a gate, not a commit. The panel `.kicad_pcb` itself is gitignored everywhere (a ~9.7 MB regenerated
+blob), so rebuild it locally if you want to look at it:
 
 ```sh
 python3 -m pip install shapely
@@ -223,8 +224,8 @@ The panel is **derived, never hand-maintained** — it is the committed board pl
 script asserts that (it re-reads Edge.Cuts and fails loudly if the outline stops being one closed
 region). Change the board; the panel follows. Never edit the panel and expect it to survive.
 
-**On the order form:** upload `Generated/panel/*-panel_fab_zip.zip` and set **panel = "panel by
-customer"**. Quantity is counted in *panels*, so 5 cards = 5 panels. Everything else (2-layer,
+**On the order form:** upload `Generated/panel/solar-glow-drh-v4_0-panel-fab_zip.zip` and set
+**panel = "panel by customer"**. Quantity is counted in *panels*, so 5 cards = 5 panels. Everything else (2-layer,
 0.6 mm, ENIG + the hard-gold special request above, matte black, white silk) is unchanged.
 
 **Depanel:** snap the two tabs, then file the edge flat at x ≈ 25.4 on both short edges. The
