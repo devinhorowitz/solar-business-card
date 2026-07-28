@@ -29558,7 +29558,7 @@
 		(uuid "f75354da-a72d-4160-ac50-f43fe347c084")
 	)
 	(segment
-		(start 15.2908 33.5)
+		(start 15.2908 33.55)
 		(end 15.2908 31.7092)
 		(width 0.152)
 		(layer "F.Cu")
@@ -29714,7 +29714,7 @@
 		(uuid "79a5d7f2-0995-4e71-b949-350953519981")
 	)
 	(via
-		(at 15.2908 33.5)
+		(at 15.2908 33.55)
 		(size 0.6)
 		(drill 0.3)
 		(layers "F.Cu" "B.Cu")
@@ -29761,7 +29761,7 @@
 	)
 	(segment
 		(start 15.2908 37.2908)
-		(end 15.2908 33.5)
+		(end 15.2908 33.55)
 		(width 0.152)
 		(layer "B.Cu")
 		(net "MID")
@@ -128915,4 +128915,12 @@
 		)
 	)
 	(embedded_fonts no)
+	(segment
+		(start 15.2 33)
+		(end 15.38 33)
+		(width 0.152)
+		(layer "B.Cu")
+		(net "GND")
+		(uuid "b91d0000-0000-4000-8000-000000000001")
+	)
 )

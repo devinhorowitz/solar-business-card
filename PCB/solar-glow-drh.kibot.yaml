@@ -7,6 +7,15 @@ global:
   output: '%f-%i.%x'
 
 preflight:
+  # Fill zones before any layer operation, then leave the committed PCB untouched.
+  # WHY THIS IS ON: KiBot builds `kicad-cli pcb drc --severity-all` with NO --refill-zones, so
+  # without this it checks whatever fill was last SAVED. That made CI disagree with the board's own
+  # documented check (`kicad-cli pcb drc --refill-zones ...` in CLAUDE.md) whenever copper moved and
+  # the fills went stale -- a moved via reads as a clearance error against a pour that would have
+  # receded on any refill. Enabling it also means the plotted gerbers carry current fills.
+  # `check_zone_fills` (not `fill_zones`) is deliberate: it fills for the checks and restores the
+  # original PCB, so CI never rewrites the board file.
+  check_zone_fills: true
   erc:
     enabled: true
   drc:

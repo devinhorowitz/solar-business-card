@@ -750,6 +750,42 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   moves — which is exactly what just happened. Adds one file to the fab package, so it needs a
   deliberate yes before the order goes out.
 
+- [x] **[COPPER] The GND net was in two pieces — a 45.2 µm gap on B.Cu, not a monogram problem**
+  _(2026-07-28; DONE, verified against KiCad 10.0.5.)_ The `unconnected_items` DRC error that turned
+  PCB CI red reported **"Zone GND_A [GND] on F.Cu ↔ Polygon [GND] on F.Cu @(17.7091, 46.104)"**, which
+  reads like a monogram-artwork defect. It is not. KiCad names one member of the floating cluster as
+  the marker endpoint, and the cluster's real severance is on the **back**: a 13.69 mm² GND_B pour
+  island (x 8.858–15.266, y 32.904–42.145, carrying **C1 pad 2**) cut off from the main pour by a
+  **45.2 µm gap at (15.2658, 32.9834)**. The GND net had exactly two clusters.
+
+  **Why it could not simply be bridged.** The corridor there is 0.449 mm — pinched between the MID
+  via at (15.2908, 33.5) above and the VS track at y = 32.675 below — and a 0.152 mm track at
+  0.152 mm clearance needs 0.456 mm. Short by **7 µm**. Lowering the bridge made it worse
+  (0.143 → 0.123 → 0.103 mm); no legal stitching via exists either, because both pours are hatched
+  so a 0.6 mm pad cannot find copper in U1's fanout.
+
+  **The fix: move the MID via up 50 µm, then bridge.** The via is a plain layer change with both
+  tracks vertical at x = 15.2908, so moving it to y = **33.55** carries the whole junction and keeps
+  MID geometrically continuous (verified: MID stays **1** connected piece, area unchanged at
+  26.2366 mm²). Corridor opens to 0.499 mm; a 0.152 mm B.Cu GND bridge at
+  **(15.2, 33.0) → (15.38, 33.0)** then clears the via by 174 µm and the VS track by 173 µm.
+  Result: **unconnected 1 → 0, violations 14, all excluded** — the pre-existing set, nothing new.
+
+  **CI had to learn to refill.** KiBot builds `kicad-cli pcb drc --severity-all` with **no
+  `--refill-zones`**, so it checks the last *saved* fill. Moving a via makes the stored fill stale and
+  the via then reads as a clearance error against a pour that would recede on any refill (0.1025 mm
+  vs GND_A, 0.1329 mm vs GND_B). `check_zone_fills: true` is now set in
+  `PCB/solar-glow-drh.kibot.yaml` — it fills for the checks and plots, then restores, so CI never
+  rewrites the board. This also makes CI agree with the board's own documented command in `CLAUDE.md`,
+  which has always used `--refill-zones`. **Refill zones in KiCad before judging a DRC result here.**
+
+  > **Lesson worth keeping: a geometric model is not KiCad's connectivity model.** Four independent
+  > analyses (and my own) concluded the 241-polygon monogram plate was floating, all by running
+  > union-find over `gr_poly` only. Wrong: deleting the 0.200 mm `gr_line` tie at x = 34.82 takes
+  > unconnected **1 → 2**, so that graphic *does* carry connectivity. The only thing that settled any
+  > of this was running the real checker. `kicad-cli` is installable from the KiCad PPA — use it
+  > before moving copper on the strength of a shapely result.
+
 - [x] **[FAB] PCBWay fabrication panel — the stubs finally connect to something**
   _(2026-07-28; DONE.)_ The two plating stubs at x = 25.4 had been drawn for a panel rail since v4
   began, but no panel existed, so on a 1-up board they ended 0.4 mm outside the outline and connected
