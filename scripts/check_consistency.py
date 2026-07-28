@@ -13,6 +13,8 @@ change to one that isn't mirrored in the others fails loudly (in CI or locally):
       draws (0402 part on a 0402 land).                        [ERROR on drift]
   [5] MODEL REFS -- every (model ...) path resolves, AND every stock model is
       vendored in PCB/kicad-3dmodels/ (what CI renders from).  [ERROR on drift]
+  [6] MASK ART -- the generated front cartouche still matches the routing it
+      depicts (scripts/mask_art.py).                          [ERROR on drift]
   [3] DOC FILE REFS -- every solar-glow-drh-*.kicad_* file named in board.h,
       README.md, or firmware/README.md must actually exist.    [WARN on drift]
 
@@ -207,6 +209,43 @@ def check_model_refs():
             err(f"stock model not vendored, so CI renders it with NO body: {r}")
         if not gaps:
             ok(f"all {len(stock_refs)} stock models vendored in PCB/kicad-3dmodels/")
+
+def check_mask_art():
+    """Does the generated front cartouche still match the routing it depicts?
+
+    scripts/mask_art.py draws the left-field ornament as (cartouche - live copper), so
+    the pattern IS the wiring. That makes it the one piece of artwork on this board that
+    goes WRONG when the board is edited rather than merely stale: move a trace and the
+    committed mask no longer describes the copper beneath it, and nothing else would
+    ever say so. Hence a gate.
+
+    Degrades honestly: the check needs pcbnew and shapely, and CI's image may carry
+    neither. When they are missing it says so rather than passing quietly.
+    """
+    print("[6] front mask art matches the routing")
+    sys.path.insert(0, os.path.join(ROOT, "scripts"))
+    try:
+        import pcbnew  # noqa: F401
+        import shapely  # noqa: F401
+        import mask_art
+    except Exception as e:
+        print(f"  note:   not checked -- {type(e).__name__}: {e}. "
+              f"Needs pcbnew + shapely; run `python3 scripts/mask_art.py --check` locally.")
+        return
+    import pcbnew
+    board = pcbnew.LoadBoard(PCB)
+    body = mask_art.emit(mask_art.build(board))
+    with open(PCB, encoding="utf-8") as fh:
+        txt = fh.read().replace("\r\n", "\n")
+    kept, had = mask_art.strip_existing(txt)
+    want = mask_art._splice(kept, body)
+    if want == txt:
+        ok(f"cartouche matches: {had} generated shape(s) agree with current routing")
+    elif had == 0:
+        warn("no generated mask art in the board -- run `python3 scripts/mask_art.py --apply`")
+    else:
+        err(f"front mask art is STALE: the board carries {had} generated shape(s) that no "
+            f"longer match the routing. Re-run `python3 scripts/mask_art.py --apply`.")
 
 def check_doc_file_refs():
     print("[3] referenced .kicad_* files exist")
@@ -478,6 +517,7 @@ def main():
     check_board_sch_parity(comps, sch_fps)
     check_package_vs_land()
     check_model_refs()
+    check_mask_art()
     check_doc_file_refs()
     print(f"\n== {len(errors)} error(s), {len(warnings)} warning(s) ==")
     sys.exit(1 if errors else 0)
