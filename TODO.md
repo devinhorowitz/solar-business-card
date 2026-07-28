@@ -750,6 +750,46 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   moves — which is exactly what just happened. Adds one file to the fab package, so it needs a
   deliberate yes before the order goes out.
 
+- [x] **[CI/AUDIT] Went through all 14 excluded DRC findings — two were hiding something**
+  _(2026-07-28; DONE. Method: `kicad-cli pcb drc --severity-all --refill-zones`, KiCad 10.0.5.)_
+
+  **Retired permanently — CI is now strictly tighter, with zero change to what passes:**
+  - **Both broad regex filters deleted from `solar-glow-drh.kibot.yaml`.** They were redundant
+    *and* dangerous. Redundant because `kicad-cli` reads only `.kicad_pro` `drc_exclusions`, and a
+    bare run already returns all 14 findings with `excluded=true`; KiBot's filters only ever ADD
+    exclusions (`kibot/pre_drc.py` → `apply_filters`). Dangerous because they matched by error
+    *type* + a generic message regex, not by instance: `'edge clearance'` swallowed **every**
+    `copper_edge_clearance` anywhere on the board, `'Tracks crossing'` every crossing. A new short
+    at the rim or a new crossing would have vanished in CI. Verified after removal: 14 violations,
+    **all still excluded**, 0 unconnected.
+  - **The `unconnected_items` exclusion deleted from `.kicad_pro`** — dead since the GND island fix
+    above. `drc_exclusions` is now 14 entries for 14 findings, one-to-one.
+
+  **The 14 that legitimately stay:** 2 plating stubs crossing the outline at x = 25.4 (required for
+  hard gold), 1 courtyard overlap + 7 NPTH-inside-courtyard (TC1 under SC1), 3 silkscreen clips,
+  1 LA/LB coil junction.
+
+  **Finding 1 — TC1 is 100% underneath SC1, and nothing said so.** Pad cluster
+  (12.215, 15.18)–(14.385, 18.62), **5.465 mm inside** SC1's outline, both on B.Cu. TC1 is *the
+  primary programming path* (`PCB/README.md`). Once the supercap is soldered, a TC2030-MCP cable
+  cannot reach it. The geometry was an accepted decision; the **assembly-order consequence was
+  undocumented**. Now a warning block in `PCB/README.md` → "Finishing the board by hand":
+  **flash before fitting SC1**, or load J1. Not a defect — but it was one bad assembly order away
+  from a bricked-feeling board.
+
+  **Finding 2 — 3 of the 4 LED orientation markers will not print.** Each `D2`/`D3`/`D4` B.SilkS
+  marker is a 1.6 × 0.15 mm segment = **0.2400 mm²**, and the area clipped by the B.Mask window
+  (14.445, 40.3)–(36.345, 47.5) is **also 0.2400 mm²** — the whole thing. **D5 survives only
+  because its marker sits at x = 36.7, 0.355 mm past the window edge.** That asymmetry is the tell
+  that this was never intentional. `PCB/README.md` calls a flipped LED "the single most common PCBA
+  defect on this board", so losing 3 of 4 orientation marks is worth something.
+  **Not fixed — it needs a judgement call**, because the window spans the whole LED row: there is
+  no spot within ~3.6 mm of D2/D3/D4 that is outside it. Options: (a) move the three markers below
+  y = 40.3 or above y = 47.5 and accept the distance, (b) notch the B.Mask window around each
+  marker, (c) leave it and rely on `led-orientation-D2-D5.png`, which is what actually gets handed
+  to the assembler today. **(c) is the status quo and is defensible — but it should be a decision,
+  not an accident.**
+
 - [x] **[COPPER] The GND net was in two pieces — a 45.2 µm gap on B.Cu, not a monogram problem**
   _(2026-07-28; DONE, verified against KiCad 10.0.5.)_ The `unconnected_items` DRC error that turned
   PCB CI red reported **"Zone GND_A [GND] on F.Cu ↔ Polygon [GND] on F.Cu @(17.7091, 46.104)"**, which

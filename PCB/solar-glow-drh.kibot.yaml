@@ -20,23 +20,22 @@ preflight:
     enabled: true
   drc:
     enabled: true
-    filters:
-      # The NFC coil is one continuous copper trace whose two ends are nets LA and LB;
-      # KiCad reports the label-flip junction as tracks_crossing. Intentional.
-      # Broad regex tradeoff: filters ALL tracks_crossing; any genuinely new crossing
-      # will also raise clearance errors, which are NOT filtered.
-      - filter: 'Coil LA/LB junction (intentional)'
-        error: 'tracks_crossing'
-        regex: 'Tracks crossing'
-      # Hard-gold plating-bus stubs cross the outline at x25.4 N/S (panel-rail ties).
-      # Broad regex tradeoff: filters all copper_edge findings in CI; Devin's local
-      # DRC (board rule 0.5mm) still surfaces any new edge encroachment.
-      - filter: 'Plating stubs crossing outline (intentional)'
-        error: 'copper_edge_clearance'
-        regex: 'edge clearance'
-      # NOTE: courtyards_overlap is intentionally NOT broad-filtered here, so it stays a hard
-      # CI gate. The one accepted overlap (TC1 Tag-Connect over the SC1 supercap zone) is
-      # excluded in the KiCad DRC (.kicad_pro drc_exclusions), which kibot honors per-instance.
+    # NO broad regex filters here — deliberately. There used to be two, for tracks_crossing
+    # (the LA/LB coil junction) and copper_edge_clearance (the plating stubs at x=25.4). Both
+    # were REDUNDANT and both were a masking risk:
+    #
+    #   Redundant, because kicad-cli reads only the .kicad_pro drc_exclusions, and a bare
+    #   `kicad-cli pcb drc --severity-all` already returns every one of those findings with
+    #   excluded=true. KiBot's filters only ever ADD exclusions on top (see kibot/pre_drc.py
+    #   apply_filters), so deleting them changes nothing about what passes today — verified.
+    #
+    #   Dangerous, because they matched by error TYPE plus a generic message regex, not by
+    #   instance. 'edge clearance' filtered EVERY copper_edge_clearance finding anywhere on the
+    #   board, and 'Tracks crossing' every crossing. A new short at the board rim or a new
+    #   crossing would have been swallowed in CI and nobody would have seen it.
+    #
+    # Every intentional finding is now excluded per-instance in .kicad_pro, keyed to the specific
+    # objects. A NEW instance of any of these types now fails CI, which is the point.
 
 outputs:
   - name: gerbers

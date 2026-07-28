@@ -472,6 +472,21 @@ needs translucent FR4, the black look comes from the soldermask.
 
 ### Finishing the board by hand (after PCBWay returns it)
 
+> ### ⚠ Program the MCU BEFORE fitting SC1
+>
+> **TC1 sits entirely underneath SC1.** Both are on B.Cu, and the Tag-Connect pad cluster
+> (12.215, 15.18)–(14.385, 18.62) is **5.465 mm inside** SC1's outline — 100% covered, not a
+> near miss. Once the supercap is soldered down, a TC2030-MCP pogo cable physically cannot
+> reach the pads, and TC1 is *the primary programming path* (see the parts notes above).
+>
+> So: **flash and verify the firmware first, then fit the supercaps.** If you need to
+> re-program after SC1 is on, your options are the optional **J1** UPDI header or removing the
+> cell. Worth loading J1 on any board you expect to iterate firmware on.
+>
+> This is the assembly consequence of the `courtyards_overlap` + 7 × `npth_inside_courtyard`
+> DRC exclusions. Those were accepted as a *geometry* decision; the ordering constraint they
+> imply was never written down until the 2026-07-28 exclusion audit.
+
 Work outside-in by heat sensitivity:
 
 1. **Supercaps SC1–SC4 — hot air / hotplate, not an iron.** They solder to **flat pads under
