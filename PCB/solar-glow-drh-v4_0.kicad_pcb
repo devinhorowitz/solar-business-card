@@ -493,7 +493,17 @@
 			)
 			(uuid "32806de9-4763-462c-b098-9799188b0707")
 		)
-		(embedded_fonts no)
+		(embedded_fonts no)		(model "${KIPRJMOD}/solarglow.3dshapes/SM141K06TF.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 0)
+			)
+		)
 	)
 	(footprint ""
 		(layer "F.Cu")
@@ -1195,7 +1205,17 @@
 			)
 			(uuid "1f4dd0f9-38ce-4fe4-82b7-930ba2d5d5a8")
 		)
-		(embedded_fonts no)
+		(embedded_fonts no)		(model "${KIPRJMOD}/solarglow.3dshapes/SM141K06TF.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 0)
+			)
+		)
 	)
 	(footprint "solarglow:NPTH_mech"
 		(layer "F.Cu")
@@ -1601,7 +1621,17 @@
 			)
 			(uuid "9262cbf0-4674-4da7-8573-7c9d11405e6c")
 		)
-		(embedded_fonts no)
+		(embedded_fonts no)		(model "${KIPRJMOD}/solarglow.3dshapes/SCHURTER_SCPC_SS17.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 90)
+			)
+		)
 	)
 	(footprint "solarglow:R2"
 		(layer "B.Cu")
@@ -9737,7 +9767,17 @@
 			)
 			(uuid "f11450ad-3613-4e26-8604-f566d7e75866")
 		)
-		(embedded_fonts no)
+		(embedded_fonts no)		(model "${KIPRJMOD}/solarglow.3dshapes/SCHURTER_SCPC_SS17.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 90)
+			)
+		)
 	)
 	(footprint "solarglow:U9_SOT23_5"
 		(layer "B.Cu")
@@ -13379,7 +13419,17 @@
 			)
 			(uuid "abce6dee-b91b-48fa-b0ba-a70f259d4059")
 		)
-		(embedded_fonts no)
+		(embedded_fonts no)		(model "${KIPRJMOD}/solarglow.3dshapes/SCHURTER_SCPC_WS17.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 90)
+			)
+		)
 	)
 	(footprint "solarglow:C1"
 		(layer "B.Cu")
@@ -13841,7 +13891,17 @@
 			)
 			(uuid "f731ce65-e143-4433-b1c7-5559c1ef83e2")
 		)
-		(embedded_fonts no)
+		(embedded_fonts no)		(model "${KIPRJMOD}/solarglow.3dshapes/SCHURTER_SCPC_WS17.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 90)
+			)
+		)
 	)
 	(footprint "Capacitor_SMD:C_0603_1608Metric"
 		(layer "B.Cu")
