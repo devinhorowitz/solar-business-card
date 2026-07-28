@@ -750,6 +750,82 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   moves — which is exactly what just happened. Adds one file to the fab package, so it needs a
   deliberate yes before the order goes out.
 
+- [x] **[CI/AUDIT] Went through all 14 excluded DRC findings — two were hiding something**
+  _(2026-07-28; DONE. Method: `kicad-cli pcb drc --severity-all --refill-zones`, KiCad 10.0.5.)_
+
+  **Retired permanently — CI is now strictly tighter, with zero change to what passes:**
+  - **Both broad regex filters deleted from `solar-glow-drh.kibot.yaml`.** They were redundant
+    *and* dangerous. Redundant because `kicad-cli` reads only `.kicad_pro` `drc_exclusions`, and a
+    bare run already returns all 14 findings with `excluded=true`; KiBot's filters only ever ADD
+    exclusions (`kibot/pre_drc.py` → `apply_filters`). Dangerous because they matched by error
+    *type* + a generic message regex, not by instance: `'edge clearance'` swallowed **every**
+    `copper_edge_clearance` anywhere on the board, `'Tracks crossing'` every crossing. A new short
+    at the rim or a new crossing would have vanished in CI. Verified after removal: 14 violations,
+    **all still excluded**, 0 unconnected.
+  - **The `unconnected_items` exclusion deleted from `.kicad_pro`** — dead since the GND island fix
+    above. `drc_exclusions` is now 14 entries for 14 findings, one-to-one.
+
+  **The 14 that legitimately stay:** 2 plating stubs crossing the outline at x = 25.4 (required for
+  hard gold), 1 courtyard overlap + 7 NPTH-inside-courtyard (TC1 under SC1), 3 silkscreen clips,
+  1 LA/LB coil junction.
+
+  **Finding 1 — TC1 is 100% underneath SC1, and nothing said so.** Pad cluster
+  (12.215, 15.18)–(14.385, 18.62), **5.465 mm inside** SC1's outline, both on B.Cu. TC1 is *the
+  primary programming path* (`PCB/README.md`). Once the supercap is soldered, a TC2030-MCP cable
+  cannot reach it. The geometry was an accepted decision; the **assembly-order consequence was
+  undocumented**. Now a warning block in `PCB/README.md` → "Finishing the board by hand":
+  **flash before fitting SC1**, or load J1. Not a defect — but it was one bad assembly order away
+  from a bricked-feeling board.
+
+  **Finding 2 — 3 of the 4 LED orientation markers will not print.** Each `D2`/`D3`/`D4` B.SilkS
+  marker is a 1.6 × 0.15 mm segment = **0.2400 mm²**, and the area clipped by the B.Mask window
+  (14.445, 40.3)–(36.345, 47.5) is **also 0.2400 mm²** — the whole thing. **D5 survives only
+  because its marker sits at x = 36.7, 0.355 mm past the window edge.** That asymmetry is the tell
+  that this was never intentional. `PCB/README.md` calls a flipped LED "the single most common PCBA
+  defect on this board", so losing 3 of 4 orientation marks is worth something.
+  **Not fixed — it needs a judgement call**, because the window spans the whole LED row: there is
+  no spot within ~3.6 mm of D2/D3/D4 that is outside it. Options: (a) move the three markers below
+  y = 40.3 or above y = 47.5 and accept the distance, (b) notch the B.Mask window around each
+  marker, (c) leave it and rely on `led-orientation-D2-D5.png`, which is what actually gets handed
+  to the assembler today. **(c) is the status quo and is defensible — but it should be a decision,
+  not an accident.**
+
+- [x] **[COPPER] The GND net was in two pieces — a 45.2 µm gap on B.Cu, not a monogram problem**
+  _(2026-07-28; DONE, verified against KiCad 10.0.5.)_ The `unconnected_items` DRC error that turned
+  PCB CI red reported **"Zone GND_A [GND] on F.Cu ↔ Polygon [GND] on F.Cu @(17.7091, 46.104)"**, which
+  reads like a monogram-artwork defect. It is not. KiCad names one member of the floating cluster as
+  the marker endpoint, and the cluster's real severance is on the **back**: a 13.69 mm² GND_B pour
+  island (x 8.858–15.266, y 32.904–42.145, carrying **C1 pad 2**) cut off from the main pour by a
+  **45.2 µm gap at (15.2658, 32.9834)**. The GND net had exactly two clusters.
+
+  **Why it could not simply be bridged.** The corridor there is 0.449 mm — pinched between the MID
+  via at (15.2908, 33.5) above and the VS track at y = 32.675 below — and a 0.152 mm track at
+  0.152 mm clearance needs 0.456 mm. Short by **7 µm**. Lowering the bridge made it worse
+  (0.143 → 0.123 → 0.103 mm); no legal stitching via exists either, because both pours are hatched
+  so a 0.6 mm pad cannot find copper in U1's fanout.
+
+  **The fix: move the MID via up 50 µm, then bridge.** The via is a plain layer change with both
+  tracks vertical at x = 15.2908, so moving it to y = **33.55** carries the whole junction and keeps
+  MID geometrically continuous (verified: MID stays **1** connected piece, area unchanged at
+  26.2366 mm²). Corridor opens to 0.499 mm; a 0.152 mm B.Cu GND bridge at
+  **(15.2, 33.0) → (15.38, 33.0)** then clears the via by 174 µm and the VS track by 173 µm.
+  Result: **unconnected 1 → 0, violations 14, all excluded** — the pre-existing set, nothing new.
+
+  **CI had to learn to refill.** KiBot builds `kicad-cli pcb drc --severity-all` with **no
+  `--refill-zones`**, so it checks the last *saved* fill. Moving a via makes the stored fill stale and
+  the via then reads as a clearance error against a pour that would recede on any refill (0.1025 mm
+  vs GND_A, 0.1329 mm vs GND_B). `check_zone_fills: true` is now set in
+  `PCB/solar-glow-drh.kibot.yaml` — it fills for the checks and plots, then restores, so CI never
+  rewrites the board. This also makes CI agree with the board's own documented command in `CLAUDE.md`,
+  which has always used `--refill-zones`. **Refill zones in KiCad before judging a DRC result here.**
+
+  > **Lesson worth keeping: a geometric model is not KiCad's connectivity model.** Four independent
+  > analyses (and my own) concluded the 241-polygon monogram plate was floating, all by running
+  > union-find over `gr_poly` only. Wrong: deleting the 0.200 mm `gr_line` tie at x = 34.82 takes
+  > unconnected **1 → 2**, so that graphic *does* carry connectivity. The only thing that settled any
+  > of this was running the real checker. `kicad-cli` is installable from the KiCad PPA — use it
+  > before moving copper on the strength of a shapely result.
+
 - [x] **[FAB] PCBWay fabrication panel — the stubs finally connect to something**
   _(2026-07-28; DONE.)_ The two plating stubs at x = 25.4 had been drawn for a panel rail since v4
   began, but no panel existed, so on a 1-up board they ended 0.4 mm outside the outline and connected
