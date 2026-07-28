@@ -130,6 +130,10 @@ SPECS = {
         body=(4.0, 4.0, 0.85), tab=None,
         desc="U8 AEM10300, QFN-28 4x4 — thickness 0.800 +/- 0.05, modelled at max 0.85",
     ),
+    "MB85RC512TY_DFN8": dict(
+        body=(5.0, 6.0, 0.90), tab=None,
+        desc="U7 MB85RC512TY FRAM, LCC-8P-M05 DFN-8 — 5.00 x 6.00 x 0.90 MAX",
+    ),
 }
 
 # refdes -> (model path as KiCad should store it, Z rotation in degrees)
@@ -148,6 +152,13 @@ ATTACH = {
     "U8": (f"{PRJ}/AEM10300_QFN28.step", 0),
     "U3": (f"{PRJ}/ADXL367_CC12.step", 0),
     "U5": (f"{PRJ}/NT3H2211_XQFN8.step", 0),
+    # U7 already carried a model, and it was BROKEN: it named
+    # `Package_DFN_QFN.3dshapes/DFN-8-1EP_6x5mm_Pitch1.27mm.step`, which no KiCad 10 library
+    # ships -- the naming convention changed to `..._P1.27mm_EP4x4mm`. So U7 has been rendering
+    # and exporting with no body at all. It is also the wrong package family: every `-1EP` model
+    # carries an exposed pad and U7's footprint has 8 pads and no EP, and the nearest stock part
+    # measures 0.870 tall against U7's 0.90 MAX. Own solid, at the datasheet maximum.
+    "U7": (f"{PRJ}/MB85RC512TY_DFN8.step", 0),
 }
 
 
@@ -200,6 +211,33 @@ def _blocks(txt: str, tag: str):
     return out
 
 
+def _model_span(blk: str):
+    """(start, end) of the first `(model ...)` block inside a footprint block."""
+    import re
+    m = re.search(r'\(model "', blk)
+    i = blk.rindex("(", 0, m.end())
+    depth, instr, esc = 0, False, False
+    for j in range(i, len(blk)):
+        c = blk[j]
+        if instr:
+            if esc:
+                esc = False
+            elif c == "\\":
+                esc = True
+            elif c == '"':
+                instr = False
+            continue
+        if c == '"':
+            instr = True
+        elif c == "(":
+            depth += 1
+        elif c == ")":
+            depth -= 1
+            if depth == 0:
+                return i, j + 1
+    raise ValueError("unbalanced model block")
+
+
 def attach(dry_run: bool = False) -> int:
     """Write a `(model ...)` into each footprint in ATTACH that has none.
 
@@ -217,7 +255,7 @@ def attach(dry_run: bool = False) -> int:
     nl = "\r\n" if crlf else "\n"
     txt = raw.decode("utf-8").replace("\r\n", "\n")
 
-    edits, skipped, missing = [], [], set(ATTACH)
+    edits, skipped, replaced, missing = [], [], [], set(ATTACH)
     for a, b in _blocks(txt, "footprint"):
         blk = txt[a:b]
         m = re.search(r'\(property "Reference" "([^"]+)"', blk)
@@ -225,10 +263,18 @@ def attach(dry_run: bool = False) -> int:
             continue
         ref = m.group(1)
         missing.discard(ref)
-        if re.search(r"(?m)^\s*\(model[\s\"]", blk):
-            skipped.append(ref)
-            continue
         path, rot = ATTACH[ref]
+        have = re.search(r'\(model "([^"]+)"', blk)
+        if have:
+            if have.group(1) == path:
+                skipped.append(ref)
+                continue
+            # Present but NOT what the mapping says. That is drift, and silently leaving it is
+            # how U7 spent this long pointing at a model file that does not exist. Replace it.
+            span = _model_span(blk)
+            replaced.append((ref, have.group(1)))
+            edits.append((a + span[0], a + span[1], path, rot, ref))
+            continue
         chunk = (
             f'\t\t(model "{path}"{nl}'
             f"\t\t\t(offset{nl}\t\t\t\t(xyz 0 0 0){nl}\t\t\t){nl}"
@@ -243,19 +289,33 @@ def attach(dry_run: bool = False) -> int:
             at = a + blk.index(")", anchor) + 1
         else:
             at = a + blk.rindex(")")
-        edits.append((at, chunk, ref))
+        edits.append((at, at, path, rot, ref))
 
     if missing:
         sys.exit(f"make_3d_models: refdes not found on the board: {' '.join(sorted(missing))}")
     for ref in sorted(skipped):
-        print(f"  skip   {ref}: already has a model")
+        print(f"  skip   {ref}: already has the right model")
+    for ref, was in sorted(replaced):
+        print(f"  FIX    {ref}: was {was}")
     if not edits:
-        print("  nothing to do — every mapped footprint already carries a model")
+        print("  nothing to do — every mapped footprint already carries the right model")
         return 0
 
-    for at, chunk, ref in sorted(edits, reverse=True):
-        txt = txt[:at] + chunk.replace(nl, "\n") + txt[at:]
-        print(f"  attach {ref}: {ATTACH[ref][0].rsplit('/', 1)[1]}")
+    def _chunk(path, rot):
+        return ('\t\t(model "%s"\n' % path
+                + "\t\t\t(offset\n\t\t\t\t(xyz 0 0 0)\n\t\t\t)\n"
+                + "\t\t\t(scale\n\t\t\t\t(xyz 1 1 1)\n\t\t\t)\n"
+                + "\t\t\t(rotate\n\t\t\t\t(xyz 0 0 %s)\n\t\t\t)\n" % rot
+                + "\t\t)\n")
+
+    for st, en, path, rot, ref in sorted(edits, reverse=True):
+        body = _chunk(path, rot)
+        if st == en:                       # insertion
+            txt = txt[:st] + body + txt[st:]
+            print(f"  attach {ref}: {path.rsplit('/', 1)[1]}")
+        else:                              # replacement of an existing (model ...)
+            txt = txt[:st] + body.strip("\n").lstrip("\t") + txt[en:]
+            print(f"  replace {ref}: -> {path.rsplit('/', 1)[1]}")
     out = txt.replace("\n", nl).encode("utf-8")
     if dry_run:
         print(f"  --dry-run: would write {len(out):,} bytes ({len(out) - len(raw):+,})")

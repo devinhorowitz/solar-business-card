@@ -11,6 +11,7 @@ change to one that isn't mirrored in the others fails loudly (in CI or locally):
       component in the netlist (no phantom BOM lines).         [ERROR on drift]
   [4] PACKAGE FIT   -- the package the BOM orders must match the land the board
       draws (0402 part on a 0402 land).                        [ERROR on drift]
+  [5] MODEL REFS -- every (model ...) path on the board resolves to a real file.
   [3] DOC FILE REFS -- every solar-glow-drh-*.kicad_* file named in board.h,
       README.md, or firmware/README.md must actually exist.    [WARN on drift]
 
@@ -136,6 +137,58 @@ def check_bom_parity(comps):
 # to the CURRENT revision would be indistinguishable from an intentional one.
 RETIRED_REVS = ("v2_1", "v2_2", "v2_3", "v3_0")
 
+
+def check_model_refs():
+    """Does every `(model ...)` on the board point at a file that exists?
+
+    This exists because of U7 (2026-07-28). Its footprint named
+    `Package_DFN_QFN.3dshapes/DFN-8-1EP_6x5mm_Pitch1.27mm.step`, which no KiCad 10
+    library ships -- the naming convention changed to `..._P1.27mm_EP4x4mm`. KiCad does
+    not complain about a model path it cannot resolve; it just draws nothing. So U7 sat
+    in the 3D view and the STEP export with NO BODY, while every census in this repo
+    counted it as modelled because the footprint did carry a `(model ...)` line.
+
+    Counting model REFERENCES is not the same as counting model BODIES, and only this
+    check knows the difference.
+
+    Project models (${KIPRJMOD}) must always resolve -- those files are in this repo, so
+    a miss is an error. Stock models (${KICAD10_3DMODEL_DIR}) are only checked when the
+    stock library is actually installed, since CI images may omit the ~3 GB package; when
+    it is absent the check says so rather than passing quietly.
+    """
+    print("[5] 3D model refs resolve to real files")
+    with open(PCB, encoding="utf-8", errors="replace") as fh:
+        refs = re.findall(r'\(model "([^"]+)"', fh.read())
+    if not refs:
+        warn("no (model ...) refs found on the board at all")
+        return
+
+    prj = os.path.join(ROOT, "PCB")
+    stock = os.environ.get("KICAD10_3DMODEL_DIR")
+    if not stock or not os.path.isdir(stock):
+        stock = next((d for d in ("/usr/share/kicad/3dmodels",
+                                  "/usr/local/share/kicad/3dmodels",
+                                  "/usr/share/kicad/modules/packages3d") if os.path.isdir(d)), None)
+
+    bad, checked, skipped = [], 0, 0
+    for ref in refs:
+        if "KIPRJMOD" in ref:
+            path = ref.replace("${KIPRJMOD}", prj)
+        elif stock:
+            path = ref.replace("${KICAD10_3DMODEL_DIR}", stock)
+        else:
+            skipped += 1
+            continue
+        checked += 1
+        if not os.path.exists(path):
+            bad.append(ref)
+    for ref in sorted(set(bad)):
+        err(f"model file does not exist, so the part renders with NO body: {ref}")
+    if not bad:
+        ok(f"all {checked} of {len(refs)} model refs resolve")
+    if skipped:
+        print(f"  note:   {skipped} stock model ref(s) not checked -- no KiCad 3D model "
+              f"library on this machine (set KICAD10_3DMODEL_DIR to check them)")
 
 def check_doc_file_refs():
     print("[3] referenced .kicad_* files exist")
@@ -406,6 +459,7 @@ def main():
     check_bom_parity(comps)
     check_board_sch_parity(comps, sch_fps)
     check_package_vs_land()
+    check_model_refs()
     check_doc_file_refs()
     print(f"\n== {len(errors)} error(s), {len(warnings)} warning(s) ==")
     sys.exit(1 if errors else 0)
