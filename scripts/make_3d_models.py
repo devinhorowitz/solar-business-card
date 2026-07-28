@@ -42,20 +42,25 @@ WHERE THE NUMBERS COME FROM — every dimension below is traceable, none invente
                    corroborated by the brace height map.
   NT3H2211_XQFN8   PCB/README.md and the brace height map agree: "SOT902-3,
                    1.6 x 1.6 x 0.5 verbatim".
-  QFN28_4x4        4.0 x 4.0 body (QFN-28 4x4, the land both U1 and U8 sit on) at
-                   **1.00 mm**, which is U1's entry in the brace height map.
+  AVR64EA28_VQFN28 `datasheets/U1  AVR64EA28-E-STX  $1.23.pdf` §38.5, 28-Pin VQFN:
+                   D and E are 4.00 BSC, "Overall Height A" is 0.80 / 0.90 / **1.00
+                   MAX**. Modelled at the max, and independently corroborated by
+                   PCB-side-notes-brace-direction.md §2, which budgets U1 at 1.0.
+  AEM10300_QFN28   `datasheets/aem10300.pdf` (DS-AEM10300-v1.4) §15.1 Figure 17, the
+                   QFN 28-pin 4x4 package drawing: body 4.000 +/- 0.05 square,
+                   thickness **0.800 +/- 0.05**. Modelled at the max, 0.85.
 
-WHY U1/U8 ARE NOT THE STOCK KiCad QFN. KiCad ships
+U1 AND U8 ARE NOT THE SAME HEIGHT, despite sharing a 4x4 QFN-28 land and a footprint
+name: 1.00 max vs 0.85 max, 0.15 mm apart, each read off its own datasheet. They were
+briefly modelled with one shared 1.00 mm solid, which overstated U8. A single
+"QFN-28 4x4" body is the wrong abstraction and no longer exists here.
+
+WHY NEITHER IS THE STOCK KiCad QFN. KiCad ships
 `Package_DFN_QFN.3dshapes/QFN-28-1EP_4x4mm_P0.4mm_EP2.4x2.4mm.step`, and it is a
-prettier model. Measured, it is **4.000 x 4.000 x 0.770 mm** — 0.23 mm SHORTER than
-the height this repo's own brace map budgets for U1. For a part whose only job in the
-3D view is to answer "does the brace clear it?", a model that understates height is
-worse than no model, so U1/U8 get a box at the documented maximum instead.
-
-**U8's own maximum is not recorded anywhere in this repo.** It is modelled at U1's
-1.00 mm because it shares the same 4x4 QFN-28 land and 1.00 mm is the standard
-JEDEC max for that body, which is the safe direction for a clearance solid — but
-confirm it against the e-peas datasheet before the brace is cut.
+prettier model. Measured, it is **4.000 x 4.000 x 0.770 mm** — 0.23 mm short of U1's
+max and 0.08 mm short of U8's. For a part whose only job in the 3D view is to answer
+"does the brace clear it?", a model that understates height is worse than no model,
+so both get a box at their own documented maximum instead.
 
 THE END TABS ARE DELIBERATELY NOT MODELLED — and that is a finding, not laziness.
 
@@ -117,9 +122,13 @@ SPECS = {
         body=(1.6, 1.6, 0.50), tab=None,
         desc="NXP NT3H2211 NTAG I2C plus, XQFN8 SOT902-3 — 1.6 x 1.6 x 0.5",
     ),
-    "QFN28_4x4": dict(
+    "AVR64EA28_VQFN28": dict(
         body=(4.0, 4.0, 1.00), tab=None,
-        desc="QFN-28 4x4 envelope (U1 AVR64EA28, U8 AEM10300) — 1.00 max, see header",
+        desc="U1 AVR64EA28, 28-pin VQFN 4x4 — overall height A max 1.00",
+    ),
+    "AEM10300_QFN28": dict(
+        body=(4.0, 4.0, 0.85), tab=None,
+        desc="U8 AEM10300, QFN-28 4x4 — thickness 0.800 +/- 0.05, modelled at max 0.85",
     ),
 }
 
@@ -135,8 +144,8 @@ ATTACH = {
     "D3": (f"{PRJ}/LA_P47F.step", 0),
     "D4": (f"{PRJ}/LA_P47F.step", 0),
     "D5": (f"{PRJ}/LA_P47F.step", 0),
-    "U1": (f"{PRJ}/QFN28_4x4.step", 0),
-    "U8": (f"{PRJ}/QFN28_4x4.step", 0),
+    "U1": (f"{PRJ}/AVR64EA28_VQFN28.step", 0),
+    "U8": (f"{PRJ}/AEM10300_QFN28.step", 0),
     "U3": (f"{PRJ}/ADXL367_CC12.step", 0),
     "U5": (f"{PRJ}/NT3H2211_XQFN8.step", 0),
 }
