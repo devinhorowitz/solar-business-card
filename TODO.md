@@ -781,18 +781,37 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   a pretty model at the wrong one. Suggested order: supercaps and cells first (they set the
   envelope), then the LEDs, then map U1/U8 onto a stock QFN-28.
 
-- [ ] **[BOM ↔ BOARD] FB1 is a 0603 part on a 0402 land**
-  _(2026-07-28; found while assigning 3D models.)_ The BOM specifies **`BLM18PG221SN1D`** — Murata's
-  `BLM18` series is 1608 metric, i.e. **0603**. The board's FB1 land is `solarglow:C1`: pads
-  **0.59 × 0.66 at pitch 1.02**, the same 0402 land as C1, C24, C29, R17 and R18, all of which the
-  BOM calls 0402 explicitly. A genuine 0603 land is 0.9 × 0.95 at pitch 1.55 (see C13).
+- [ ] **[BOARD — ACTION NEEDED] FB1 needs its 0603 land drawn; CI is red until it is**
+  _(2026-07-28. Found while assigning 3D models; the 0603 choice was deliberate and simply never
+  reached the copper.)_ The decision to make FB1 a **0603** bead exists in **three** places —
+  `solar-glow-drh-design-notes.md` L157 ("a 0603 ferrite FB1"), the BOM (`BLM18PG221SN1D`; Murata's
+  `BLM18` series is 1608 metric = 0603), and even the schematic symbol's own Value string
+  (`"ferrite *0603"`) and Description ("Ferrite bead 0603"). The one field never updated was the
+  **Footprint**, so schematic and board both still carried `solarglow:C1` — pads 0.59 × 0.66 at
+  pitch 1.02, the 0402 land shared with C1/C24/C29/R17/R18. A real 0603 land is 0.9 × 0.95 at
+  pitch 1.55 (see C13). A 0603 body there sits with its terminations ~0.165 mm outboard of the pad
+  centres and almost no fillet.
 
-  A 0603 body on that land puts the terminations ~0.165 mm outboard of the pad centres, with almost
-  no fillet outside the body — poor joints on a part that is meant to isolate the LDO from DCDC
-  ripple. **Two ways out, and it is a component call, not a layout one:** order a 0402 bead instead
-  (Murata `BLM15` series is the direct 1005-metric equivalent — re-check impedance and DC current),
-  or widen the land to 0603. Nothing else on that land is affected either way.
-  The 3D model assigned to FB1 is the **0402** one, matching the board, per "the source file wins".
+  **Done here:** the schematic now names `Inductor_SMD:L_0603_1608Metric` (both the placed instance
+  and the cached `lib_symbols` copy). The other 17 `solarglow:C1` references are untouched.
+
+  **Still to do — in KiCad, by hand:** update the board so FB1 carries the 0603 land, then re-check
+  clearance to its neighbours (the pads grow 0.59 → 0.9 wide and the pitch opens 1.02 → 1.55, so
+  the part gets ~0.5 mm longer overall). This deliberately leaves **two red gates** that name the
+  work and clear themselves when it is done:
+  - `kicad-cli pcb drc --schematic-parity` → `footprint_symbol_mismatch: solarglow:C1 doesn't match
+    footprint given by symbol (Inductor_SMD:L_0603_1608Metric) — Footprint FB1`
+  - `scripts/check_consistency.py` → check [4], `FB1: BOM orders a 0603 part but the board land is
+    0402`
+
+  The 3D model on FB1 is still the 0402 one; swap it to `L_0603_1608Metric.step` with the land.
+
+  > **Why this is the whole argument for the 3D/model work.** Nothing in the toolchain caught this.
+  > KiCad's schematic parity only compares the schematic to the board, and those two agreed —
+  > *with each other, and both were wrong.* The BOM was the only copy that was right, and no check
+  > read it. Chasing 3D models is what surfaced it, because a model forces the question "does the
+  > part we ordered actually fit the land we drew?". Check [4] in `check_consistency.py` now asks
+  > that question of every two-pad part on every CI run.
 
 - [x] **[CI/AUDIT] Went through all 14 excluded DRC findings — two were hiding something**
   _(2026-07-28; DONE. Method: `kicad-cli pcb drc --severity-all --refill-zones`, KiCad 10.0.5.)_
