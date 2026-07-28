@@ -23,6 +23,18 @@ materials, and the artwork reference for the SW2 selector. It is the thing you f
 populate. This README is the procedure: **how to order the bare PCB, how to order the
 parts, and how to build the assembly.**
 
+> **One revision lives here.** As of 2026-07-28 that is **v4.0**; the seven `*-v3_0.*` files
+> (board, schematic, project, prl, dru, and both BOMs) were removed, the same way v2_1–v2_3 were
+> before them. Superseded revisions are kept by git, not by this folder — carrying a second 1.6 MB
+> board around only invites someone to open the wrong one. To get one back:
+> ```sh
+> git log --diff-filter=D -- PCB/solar-glow-drh-v3_0.kicad_pcb   # the commit that removed it
+> git show <sha>^:PCB/solar-glow-drh-v3_0.kicad_pcb > /tmp/v3.kicad_pcb
+> ```
+> **`enclosure/solar-glow-drh-v3_0-backshell-*` is unaffected.** Those keep their v3_0 names but are
+> current, fab-ready, and staying — the name records which board revision the shell was first cut
+> against, and the v4 board carries the identical 8-hole pattern.
+
 ```
 PCB/
 ├── solar-glow-drh-v4_0.kicad_pro     # KiCad project (open this)
@@ -36,7 +48,7 @@ PCB/
 ├── sw2-anode-selector.png            # how to read/set the SW2 OFF/ON/TINY bridge
 ├── led-orientation-D2-D5.png         # reverse-mount LED rotation reference for PCBA
 └── DRC.rpt / ERC.rpt                 # last GUI report exports (CI keeps live copies in ../Generated/)
-                                      # (v2_1 / v2_2 / v2_3 revisions live in git history, not this folder)
+                                      # (v2_1 / v2_2 / v2_3 / v3_0 revisions live in git history, not this folder)
 ```
 
 > **The board is the source of truth.** `solar-glow-drh-v4_0.kicad_pcb` / `.kicad_sch`

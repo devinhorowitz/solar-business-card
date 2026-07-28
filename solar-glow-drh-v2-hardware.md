@@ -1,5 +1,11 @@
 # SOLAR-GLOW · DRH — As-Built Hardware & Wiring Reference (v2-era; v3.0 deltas inline)
 
+> **The v3.0 files this doc names are no longer in `PCB/`** _(removed 2026-07-28; the current board
+> is v4.0)_. They are not lost — every revision stays in git history. To read one:
+> `git log --diff-filter=D -- PCB/solar-glow-drh-v3_0.kicad_pcb` for the commit that removed it, then
+> `git show <sha>^:PCB/solar-glow-drh-v3_0.kicad_pcb`. Nothing below is edited for v4; this is a
+> historical record and the filenames are part of it.
+
 > **v2-era doc — read the v3.0 deltas.** Written for v2.1 (+ the v2.2 NFC add). The current board is
 > **v3.0 (2-layer)**; `PCB/solar-glow-drh-v3_0.kicad_pcb` governs and `firmware/README.md` carries the
 > working pin map. Two v3.0 changes are applied inline here: the **LDRV/LED pin map was permuted**

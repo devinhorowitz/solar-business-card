@@ -9,8 +9,16 @@ This is the **0.6 mm-board "dumb box"** shell. It reduces to a floor, walls, eig
 a U7 (FRAM) relief pocket -- nothing else. All center support and all
 optical/EMI features live in a separate **resin diffuser brace** (see `brace/`), so a PCB layout
 change is a brace reprint, never a shell re-machine. The shell is aligned to
-`PCB/solar-glow-drh-v3_0.kicad_pcb` (bosses on the v3.0 8-hole pattern: four corner bosses concentric
+`PCB/solar-glow-drh-v4_0.kicad_pcb` (bosses on the 8-hole pattern: four corner bosses concentric
 with the r3.0 board-corner fillets, plus four panel-corner bosses).
+
+> _(2026-07-28: this said `v3_0`, whose files have been removed from `PCB/` — see `PCB/README.md`.
+> Repointing it is safe and was **verified, not assumed**: the v4 board's eight holes measure
+> x 3.00 / 47.80 and y 3.00 · 28.50 · 60.40 · 85.90, which is exactly the C3 pattern below. The
+> generator already agrees — its own header says it is "aligned to
+> `PCB/solar-glow-drh-v4_0.kicad_pcb` … geometry identical to v3, v4 re-keyed the relief to U7" —
+> and it hardcodes its geometry rather than reading any board file, so nothing here ever loaded the
+> v3 PCB.)_
 
 > **Source of truth.** `solar-glow-drh-v3_0-backshell-0p6b-brace-cad.py` is authoritative for all
 > geometry — it prints the full Z-stack when run and regenerates the STEP/STL from the PCB anchors.

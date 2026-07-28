@@ -10,9 +10,11 @@ breathes four amber LEDs through a "DRH" monogram cut into the front copper
 tag serves a contact vCard. Current revision: **v4.0 -- the managed-solar redesign
 (AVR64EA28 + AEM10300 active harvest), in progress; the working files are `v4_0`.**
 v3.0 (2-layer, fully routed, passive diode feed + shunt clamp) is frozen as the
-**final unmanaged-solar revision**. The v4 rework is specified in the v4 addendum of
-`solar-glow-drh-design-notes.md` and the net/pin plan `v4-aem10300-prewiring.md`; the
-`v4_0` files currently start as a copy of `v3_0` and are being reworked from there.
+**final unmanaged-solar revision**; its files were removed from `PCB/` on 2026-07-28 and
+live in git history only — see `PCB/README.md` for how to get one back. The v4 rework is
+specified in the v4 addendum of `solar-glow-drh-design-notes.md` and the net/pin plan
+`v4-aem10300-prewiring.md`; the `v4_0` files started as a copy of `v3_0` and have been
+reworked from there. **`PCB/` holds exactly one board revision — do not add another.**
 
 ## Where the truth lives
 Each fact has exactly one home; everything else points at it. The canonical map
