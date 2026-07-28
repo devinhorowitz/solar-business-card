@@ -165,15 +165,69 @@ via), and no controlled-impedance nets to declare.
 > Annular ring inverts — OSH Park is the *looser* one there. Do not relax it to 0.127 on the strength
 > of their spec page; that breaks PCBWay.
 >
-> **The single thing that cannot satisfy both fabs** is the pair of 0.25 mm plating-bus stubs
+> **The single thing that cannot satisfy both fabs** is the pair of 0.4 mm plating-bus stubs
 > crossing the outline at x = 25.4. They are *required* at PCBWay to feed electrolytic hard gold and
 > *prohibited* at OSH Park, which needs 0.381 mm of copper pullback from the edge and offers ENIG
 > only. **The OSH Park upload deletes those two objects and nothing else** — everything else in the
 > board is common to both. (OSH Park also cannot do the selective hard gold at all, so the midnight
 > variant's monogram table is ENIG rather than hard gold; the bus has no job there regardless.)
 >
+> Since 2026-07-28 that difference is a **build step, not an edit**: PCBWay gets the panel
+> (`Generated/panel/`, see below), whose frame carries the bus the stubs were always drawn for;
+> OSH Park gets the plain 1-up set from `Generated/gerbers/` with the two stubs deleted. Both come
+> out of the same committed board.
+>
 > Variant differences are otherwise fab *order options*, not artwork: soldermask colour, substrate
 > colour, board thickness, and whether the Ti back-shell is fitted.
+
+### The PCBWay panel (`scripts/panelize.py` → `Generated/panel/`)
+
+**Order the panel, not the bare board.** The plating stubs are only half a circuit on a 1-up
+board — they end 0.4 mm outside the outline and connect to nothing, so an ENIG-only run would
+leave them as dead copper and the face with no wear surface. The panel is the other half: a
+frame the plating rack can clip, with a copper bus ring joined to both stubs across the break
+tabs.
+
+| | |
+|---|---|
+| Panel | **65.6 × 103.7 mm**, 1-up, card at (0, 0)–(50.8, 88.9) |
+| Routed slot (moat) | **2.4 mm**, follows the card's rounded outline |
+| Frame rail | **5.0 mm** all four sides |
+| Break tabs | **2**, one per short edge, 5.0 mm wide, centred on **x = 25.4** |
+| Mouse bites | **8** total: Ø0.5 mm NPTH, 4 per tab, on the card outline (y = 0 / 88.9) |
+| Plating bus | 0.4 mm across each tab → 1.0 mm ring inset 2.5 mm from the panel edge, F.Cu, GND |
+
+The tab sits at x = 25.4 because that is where the stubs already crossed the outline — the
+board was drawn expecting this panel long before it existed. Each tab keeps a **1.0 mm
+hole-free web** at its centre so the bus crosses without a mouse bite eating into it
+(0.30 mm drill-to-copper either side); the remaining 4.0 mm of tab is perforated.
+
+**Getting it:** CI rebuilds the panel on every `PCB/**` push and commits the fab set. The panel
+`.kicad_pcb` itself is gitignored (a ~9.7 MB regenerated blob), so rebuild it locally if you want
+to look at it:
+
+```sh
+python3 -m pip install shapely
+python3 scripts/panelize.py          # -> Generated/panel/solar-glow-drh-v4_0-panel.kicad_pcb
+python3 scripts/panelize.py --check  # geometry report only, writes nothing
+```
+
+The panel is **derived, never hand-maintained** — it is the committed board plus a frame, and the
+script asserts that (it re-reads Edge.Cuts and fails loudly if the outline stops being one closed
+region). Change the board; the panel follows. Never edit the panel and expect it to survive.
+
+**On the order form:** upload `Generated/panel/*-panel_fab_zip.zip` and set **panel = "panel by
+customer"**. Quantity is counted in *panels*, so 5 cards = 5 panels. Everything else (2-layer,
+0.6 mm, ENIG + the hard-gold special request above, matte black, white silk) is unchanged.
+
+**Depanel:** snap the two tabs, then file the edge flat at x ≈ 25.4 on both short edges. The
+filing is not optional and not a defect — a gold-plated bus nub is left behind by design, and
+dressing it flush is the last step of the plating scheme. Expect to touch up the mask/edge there.
+
+**Deliberately not on this panel:** fiducials, tooling holes and copper thieving. The first two
+want a wider rail than the bus leaves room for, and this board is hand-finished rather than
+machine-placed (see the hand-assembly notes below), so none of them buy anything today. Say so if
+a PCBWay DFM reviewer asks — their absence is a decision, not an oversight.
 
 **Add to the order notes / gerber review:**
 - "**Leave soldermask open over the central window per the mask layers — do not tent or
@@ -189,9 +243,10 @@ via), and no controlled-impedance nets to declare.
   > copper (the solar-cell lands PV1/PV2 and the component pads) stays ENIG. The crosshatched pour
   > itself is under solder mask across ~90% of its area and is not a plating surface — it is a
   > decorative texture meant to be read THROUGH the mask, so please do not open mask over it or add
-  > extra mask thickness to 'even it out'. The two 0.25 mm traces crossing the board outline at
-  > x=25.4 (top and bottom edges) are plating-bus connections; please retain to panel rail and rout
-  > at depanel. The gold set is GND-referenced by design (the four M2 mounting-hole pads overlap the
+  > extra mask thickness to 'even it out'. The two 0.4 mm traces crossing the board outline at
+  > x=25.4 (top and bottom edges) are plating-bus connections; they run across the break tabs onto
+  > the panel frame's bus ring, which is where the plating rack should clip. Please retain them
+  > through plating and rout at depanel. The gold set is GND-referenced by design (the four M2 mounting-hole pads overlap the
   > frame at all four corners); not floating copper, not a defect. All in-pad vias: resin-filled and
   > copper-capped (POFV, IPC-4761 Type VII)."*
 

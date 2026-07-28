@@ -64,10 +64,15 @@
 
 # OSH Park requires 15 mil of copper pullback from the nominal board edge. The GND pours already
 # clear it (0.5005 mm measured), and the board's own min_copper_edge_clearance is 0.5 mm, which is
-# stricter still. The known and deliberate exception is the pair of 0.25 mm plating-bus stubs that
+# stricter still. The known and deliberate exception is the pair of 0.4 mm plating-bus stubs that
 # cross the outline at x=25.4 to feed electrolytic hard gold at PCBWay -- they are REQUIRED there
 # and PROHIBITED at OSH Park, so they are the one object that cannot satisfy both fabs. See
 # PCB/README.md: the OSH Park upload deletes those two stubs, and nothing else.
+#
+# Those stubs are only complete inside the PCBWay panel (scripts/panelize.py), where they cross a
+# break tab onto the frame's bus ring. This DRC gate deliberately runs on the 1-up board and not on
+# the panel: the panel adds frame geometry and moves no board object, so gating it twice would only
+# add a rule set that has to be kept in sync with this one.
 (rule "edge-clearance-floor"
   (severity error)
   (constraint edge_clearance (min 0.381mm)))

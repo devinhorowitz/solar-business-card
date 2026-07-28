@@ -1,0 +1,60 @@
+# SOLAR-GLOW DRH v4.0 — KiBot config for the PCBWay FABRICATION PANEL
+#
+# Runs against Generated/panel/solar-glow-drh-v4_0-panel.kicad_pcb, which
+# scripts/panelize.py derives from the committed board. Driven by the second KiBot
+# step in .github/workflows/kibot.yml.
+#
+# Deliberately NOT a copy of solar-glow-drh.kibot.yaml:
+#   * No ERC/DRC preflight. The panel has no schematic, so parity is meaningless, and
+#     KiCad would flag the frame's plating bus as unconnected copper crossing the
+#     outline at the tabs — which is the entire point of the panel. The board file is
+#     where DRC is a gate; that gate already ran in the first KiBot step, on the same
+#     copper. Panelising adds frame geometry, it does not move a single board object.
+#   * No iBOM / pcbdraw / position files. Those describe the card, and the card's
+#     versions are generated from the 1-up board. Duplicating them panel-shaped would
+#     give two answers to one question.
+#
+# Output of this config = the zip you actually upload to PCBWay.
+
+kibot:
+  version: 1
+
+global:
+  output: '%f-%i.%x'
+
+outputs:
+  - name: panel_gerbers
+    comment: Panel copper/mask/paste/silk/outline
+    type: gerber
+    dir: gerbers
+    options:
+      use_gerber_x2_attributes: true
+      create_gerber_job_file: true
+      tent_vias: true
+    layers:
+      - F.Cu
+      - B.Cu
+      - F.Mask
+      - B.Mask
+      - F.Paste
+      - B.Paste
+      - F.SilkS
+      - B.SilkS
+      - Edge.Cuts
+
+  - name: panel_drill
+    comment: Panel Excellon (the 8 mouse bites land in the NPTH file)
+    type: excellon
+    dir: gerbers
+    options:
+      pth_and_npth_single_file: false
+      map: pdf
+
+  - name: panel_fab_zip
+    comment: Upload-ready panel fab set
+    type: compress
+    dir: .
+    options:
+      files:
+        - from_output: panel_gerbers
+        - from_output: panel_drill

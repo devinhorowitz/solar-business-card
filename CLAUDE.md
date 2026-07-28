@@ -53,6 +53,9 @@ every `.kicad_*` file referenced in the docs exists.
 ## CI
 - `kibot.yml` — regenerates `Generated/` (fab + docs) on `PCB/**` changes and commits
   it back as `kibot-ci`. **Do not hand-edit or commit `Generated/` yourself — CI owns it.**
+  The same job also rebuilds the **PCBWay panel** via `scripts/panelize.py` and plots its
+  fab set into `Generated/panel/`. The panel is derived from the board, never edited —
+  see `PCB/README.md` → "The PCBWay panel".
 - `firmware.yml` — builds the firmware on `firmware/**` changes, uploads the hex.
 - `consistency.yml` — runs the drift guard on doc/board/firmware changes.
 

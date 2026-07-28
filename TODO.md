@@ -516,7 +516,7 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
     ² 56 elements sit below the 0.127 *recommendation* but above the 0.0762 hard minimum; cosmetic,
       and the silk pass will pick them up.
 
-    **Row 5 is the only hard failure, and it is the known one:** the two 0.25 mm plating-bus stubs
+    **Row 5 is the only hard failure, and it is the known one:** the two 0.4 mm plating-bus stubs
     crossing the outline at x = 25.4 (y −0.6…1.45 and 87.45…89.5). Required at PCBWay to feed
     electrolytic hard gold, prohibited at OSH Park, which needs 0.381 mm of pullback and offers ENIG
     only. **This cannot be edited into compliance — it is a product decision** (see below).
@@ -750,17 +750,46 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   moves — which is exactly what just happened. Adds one file to the fab package, so it needs a
   deliberate yes before the order goes out.
 
+- [x] **[FAB] PCBWay fabrication panel — the stubs finally connect to something**
+  _(2026-07-28; DONE.)_ The two plating stubs at x = 25.4 had been drawn for a panel rail since v4
+  began, but no panel existed, so on a 1-up board they ended 0.4 mm outside the outline and connected
+  to nothing — an ENIG-only run would have left them dead copper and the face with no wear surface.
+  `scripts/panelize.py` now derives the panel from the committed board; CI runs it and plots the fab
+  set into `Generated/panel/`.
+
+  **65.6 × 103.7 mm, 1-up.** Moat 2.4 mm, rail 5.0 mm, two 5.0 mm break tabs centred on x = 25.4,
+  8 × Ø0.5 mm mouse bites, and a 1.0 mm GND bus ring on the frame joined to both stubs.
+
+  **Derived, not duplicated.** A hand-maintained panel file would be a byte-for-byte copy of a
+  9.7 MB board that has to be re-synced on every copper edit — precisely the drift the repo's
+  one-fact-one-home rule exists to stop. So the panel is a script output, and the board file stays
+  1-up (the 3D view, pcbdraw renders and iBOM keep showing a card). The script is purely additive
+  apart from replacing Edge.Cuts, which was verified by diffing the panel minus every generated
+  object against the board minus Edge.Cuts: **identical**.
+
+  **Two constants differ from v0's working panel**, both because v0 had no rail copper and this one
+  does: rail 3.0 → 5.0 mm (a 3 mm rail cannot hold a bus plus panel silk with any margin; 5 mm is
+  also what fabs expect, at ~11% more panel area), and tab 3.0 → 5.0 mm (v0's bite pattern puts hole
+  edges 0.15 mm either side of x = 25.4; the wider tab opens a **1.0 mm hole-free web** for the bus
+  at 0.30 mm drill-to-copper, and still fits two bites per side).
+
+  Left off deliberately: fiducials, tooling holes, copper thieving. The first two want a wider rail
+  than the bus leaves, and the board is hand-finished, not machine-placed.
+
 - [ ] **[MIDNIGHT — THE DECISION THAT GATES THE REST] Hard gold, or one truly identical file?**
-  _(2026-07-27; this is the only thing standing between the board and full dual-fab interchangeability.)_
-  The compliance audit above found exactly one hard failure: the two 0.25 mm plating-bus stubs
+  _(2026-07-27; revised 2026-07-28 — the panel changed the price of option (a).)_
+  The compliance audit above found exactly one hard failure: the two 0.4 mm plating-bus stubs
   crossing the outline at x = 25.4. They are **required at PCBWay** (electrolytic hard gold needs a
   path to the panel rail during plating) and **prohibited at OSH Park** (0.381 mm pullback, ENIG
   only). No edit satisfies both — it is a product call:
 
-  **(a) Keep hard gold. One board file, a 2-object delete before any OSH Park upload.** Production
-  keeps its wear surface. The delta is tiny, mechanical, and `check_consistency.py` could assert that
-  the OSH Park variant differs by exactly those two objects and nothing else. Cost: you are back to
-  "worrying about which fab", which is the thing this whole retarget was meant to end.
+  **(a) Keep hard gold. PCBWay orders the panel; OSH Park orders the 1-up set minus two objects.**
+  Production keeps its wear surface. The panel above did most of the work here: the PCBWay side is
+  now a finished, CI-built artifact rather than something to remember, so what is left is a 2-object
+  delete on the OSH Park side only. That delete is still manual — automating it (a `--variant
+  oshpark` mode on `panelize.py`, or a `check_consistency.py` assertion that the OSH Park upload
+  differs by exactly those two objects) would close the gap entirely and is maybe twenty lines. Cost
+  as it stands: one thing to remember, on one of the two fabs.
 
   **(b) Drop hard gold, delete the stubs, ship ENIG everywhere.** One file, genuinely
   interchangeable, nothing to remember. Cost: the monogram table becomes ENIG (~0.05–0.1 µm gold)
