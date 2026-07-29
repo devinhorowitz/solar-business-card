@@ -25,6 +25,101 @@ with the r3.0 board-corner fillets, plus four panel-corner bosses).
 > Every number in this README is echoed from that generator; if one ever disagrees, re-run it and
 > trust the generator. This README is the **fab + ordering companion**, not an independent spec.
 
+## The 2026-07-29 respin — measured against the real board
+
+Both parts were checked against the committed board for the first time, and **neither would
+have assembled.** Everything below is measured, not asserted; the numbers are reproducible
+with `python3 scripts/check_consistency.py` (check **[8]**).
+
+![Exploded: shell, brace, PCB, 8× M2 brass](solar-glow-drh-assembly-exploded.png)
+
+### What was wrong
+
+| | before | after |
+|---|---|---|
+| brace resin inside a supercap | **593 mm³** across SC1/SC3/SC4 | **0** |
+| brace that actually fits | 1296.75 mm² (33.4% of cavity) | **1385.1 mm² (34.6%)** |
+| B-side parts under the support lip | **9**, incl. **4.17 mm² of live pad** | **0** |
+| parts inside an M2 boss | 7 intrusions across 5 bosses | **0** |
+| NFC coil standoff (grounded Ti) | **−0.15 mm (overhang)** | **+1.00 mm** |
+
+Three findings deserve naming, because none was visible by eye:
+
+1. **The brace could not be installed.** Its middle band was a literal rectangle sized for
+   supercap bays ending at y31.15 / y57.75 — the **28.5 mm WS17** length. SC1/SC3 are
+   **39 mm SS17** cells. Commit `bdaef17` reconciled the hybrid tank across *docs + sch + BOM*;
+   the enclosure was not in that change, and nothing in CI triggered on `enclosure/`. SC2 is
+   clear precisely *because* it really is a WS17 — the one cap the assumption fit.
+2. **The shell shorted the storage rail.** The board sets `pad_to_mask_clearance = 0`, so every
+   B-side pad is bare copper, and the lip is grounded titanium. 4.17 mm² of **live** pad sat
+   under it: U6 `VS`/`NFC_EN`, C27 `STO`, FB1 `STO`/`STO_LDO`, C22 `STO_LDO`, R15 `STO`. Two of
+   the five fouled bosses were live too (R14 pad 1 `NFC_EN`, R5 pad 2 `VSENSE`).
+3. **The coil constant was optimistic.** `COIL_EAST` was hardcoded 48.40; LA/LB copper reaches
+   **x48.550**, so the lip sized against it overhung the antenna it existed to avoid.
+
+### The fix: derive, don't assert
+
+`enclosure/fit_rules.py` is now the single home for the geometry both generators obey, reading
+part positions from `enclosure/board_parts.py` (true 3D body ∪ pads, with the model's own
+`rotate`/`offset` applied on top of the footprint's `at x y rot`).
+
+- **Brace** — `footprint = cavity − blockers(+CLR) − boss reliefs`, morphologically opened at
+  `SLA_WALL`. A part is coverable only if the resin above it still prints
+  (`web = GAP − (h + AIR) ≥ SLA_WEB`, i.e. `h ≤ 1.28`); anything taller is *subtracted* rather
+  than pocketed. Interference is structurally impossible — the thing that would collide is the
+  thing removed. Ceiling is 38.5%: the caps are 1.70 mm in a 1.80 mm cavity and occupy 58.8% of
+  the floor, so nothing can ever span them.
+- **Lip** — 17 bands computed per edge, backed off `LIP_CLR` from the nearest part body-or-pad
+  and never overhanging the coil. Wide wherever nothing is in the way, because it supports a
+  0.60 mm board. A Ø2.0 finisher cannot reach the corners a band step leaves, so five parts get
+  local reliefs dilated by the tool radius (48.89 mm² of lip, the price of clearing them at all).
+- **Bosses** — scalloped clear of whatever fouls them. Worst case (3.0, 60.4), fouled by
+  C22+C23+C24, keeps **92.3%** of the r0.80–r2.60 annulus at a minimum radius of 1.80 mm, well
+  outside the 1.30 mm M2 thread keep-out.
+
+**No board change was required for any of it.**
+
+### Decisions taken, and what they cost
+
+- **Single piece.** The computation also yields an ~85 mm² island east of SC4 that cannot reach
+  the main body without crossing SC4. Dropped: a loose part in an assembly that comes apart for
+  C9 NFC trim is a thing to lose. `fit_rules.DROPPED_AREA` records the 2.1 points of coverage
+  given up rather than hiding it.
+- **1.00 mm coil standoff.** Costs east lip width; the tradeoff is linear and on one line —
+  `0.30 → 1.95 mm lip / 490 mm²`, `1.00 → 1.25 / 463`, `1.25 → 1.00 / 442`. At 1.00 the east lip
+  is a single 1.25 mm band, still wider than the flat 1.0 the original design used.
+
+### Assembly and the Z stack
+
+![Reverse side, closed — brass tips flush in their Ø3.0 spotfaces](solar-glow-drh-assembly-reverse.png)
+
+```
+ 0.00 .. 1.00   Ti floor
+ 1.00 .. 2.80   cavity — brace + B-side parts
+ 2.80 .. 3.40   board recess — 0.60 mm PCB          (3.55 at the 0.15 back frame)
+```
+
+**M2×3 slotted brass**, head Ø3.0 (matched to `CBORE_D`, the back spotface — the notes cap it at
+Ø4.0, cell-limited), shank Ø2.0. The head seats on the board *front*; the tip reaches **z 0.40**
+against a spotface floor cut to `3.40 − 3.00 = 0.40`, so it sits **flush** and nothing stands
+proud of the back face. Engagement is 2.40 mm — more than the 1.80 mm boss, so the screw
+deliberately continues into the floor, whose pilot is tap-drilled clean through.
+
+Views regenerate with `python3 enclosure/assembly_render.py`. They are a **fit and material
+check, not the raytraced article** — B-side parts are drawn as bounding boxes (exact for the
+supercap cans, conservative for small passives), and the photographic renders come from
+`scripts/render.py` into `Generated/docs/`.
+
+### The gate
+
+`check_consistency` **[8]** asserts all of this on every push touching `enclosure/**`. It is
+deliberately written against *physics and the board*, not against `fit_rules`' own output — a
+first cut compared the module to itself and passed `SPAN_LIMIT = 1.75` and `LIP_CLR = −0.50`
+without complaint. Verified falsifiable by injection: those two now raise 2 and 11 errors,
+`COIL_CLR = −0.60` raises 4, `BOSS_CLR = 2.00` raises 5, and the unmodified tree is clean.
+
+---
+
 ## Files
 
 | File | Purpose |
