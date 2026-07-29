@@ -13,7 +13,7 @@ change to one that isn't mirrored in the others fails loudly (in CI or locally):
       draws (0402 part on a 0402 land).                        [ERROR on drift]
   [5] MODEL REFS -- every (model ...) path resolves, AND every stock model is
       vendored in PCB/kicad-3dmodels/ (what CI renders from).  [ERROR on drift]
-  [6] MASK ART -- the generated front cartouche still matches the routing it
+  [6] MASK ART -- the generated front soldermask art still matches the routing it
       depicts (scripts/mask_art.py).                          [ERROR on drift]
   [7] PART HEIGHTS -- every enclosure pocket depth clears the part it is cut
       for, measured against that part's own 3D model.         [ERROR on drift]
@@ -215,18 +215,18 @@ def check_model_refs():
             ok(f"all {len(stock_refs)} stock models vendored in PCB/kicad-3dmodels/")
 
 def check_mask_art():
-    """Does the generated front cartouche still match the routing it depicts?
+    """Does the generated front mask art still match the routing it sits on?
 
-    scripts/mask_art.py draws the left-field ornament as (cartouche - live copper), so
-    the pattern IS the wiring. That makes it the one piece of artwork on this board that
-    goes WRONG when the board is edited rather than merely stale: move a trace and the
-    committed mask no longer describes the copper beneath it, and nothing else would
+    scripts/mask_art.py opens every aperture as (shape - live copper), so the art is a
+    function of the wiring. That makes it the one piece of artwork on this board that goes
+    WRONG when the board is edited rather than merely stale: move a trace under an opening
+    and the committed mask lays a live signal bare on the show face, and nothing else would
     ever say so. Hence a gate.
 
     Degrades honestly: the check needs pcbnew and shapely, and CI's image may carry
     neither. When they are missing it says so rather than passing quietly.
     """
-    print("[6] mask art matches the routing (front cartouche + NFC indicator)")
+    print("[6] mask art matches the routing (NFC indicator; cartouche off)")
     sys.path.insert(0, os.path.join(ROOT, "scripts"))
     try:
         import pcbnew  # noqa: F401
@@ -238,7 +238,7 @@ def check_mask_art():
         return
     import pcbnew
     board = pcbnew.LoadBoard(PCB)
-    # generate(), not emit(build()): the generator owns BOTH the front cartouche and the
+    # generate(), not emit(build()): the generator's own definition of what it writes, and the
     # back coil aperture, and rebuilding only half of it here reported a correct board
     # as STALE while the generator's own --check said MATCH.
     body = mask_art.generate(board)[0]

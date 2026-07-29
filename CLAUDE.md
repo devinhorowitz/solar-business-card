@@ -45,11 +45,14 @@ DRC/ERC are **not** expected to be zero — the intentional exceptions are catal
 in `README.md` and filtered in `PCB/solar-glow-drh.kibot.yaml`. Every real DRC error
 should be `(excluded)` and map to that list; a *new* unexcluded error is a real find.
 
-**Front mask ornament** (the left-field cartouche IS the routing, in negative):
+**Front mask art** (every opening is computed as `shape − live copper`, so it tracks the routing):
 ```sh
 python3 scripts/mask_art.py --check     # does the board match the current routing?
 python3 scripts/mask_art.py --apply     # regenerate after ANY front re-route
 ```
+Today it writes one thing, the NFC contactless mark. The left-field **cartouche is off**
+(`CARTOUCHE = False` in that file, since 2026-07-29) — generator intact, one constant brings
+it back; the reason it is off is in the comment above the switch.
 
 **Consistency** (drift guard — also runs in CI):
 ```sh
@@ -91,7 +94,7 @@ every `.kicad_*` file referenced in the docs exists.
   `--apply` yourself, push, and everything downstream regenerates from there.
 - `firmware.yml` — builds the firmware on `firmware/**` changes, uploads the hex.
 - `consistency.yml` — runs the drift guard on doc/board/firmware changes, plus
-  `scripts/mask_art.py` (check [6] regenerates the cartouche through it) and `enclosure/**`
+  `scripts/mask_art.py` (check [6] regenerates the mask art through it) and `enclosure/**`
   (check [7] reads the part-height table). Until 2026-07-29 **nothing in CI triggered on
   `enclosure/` at all**, which is how a stale U7 height survived there for a day.
 - **Everything CI runs is pinned.** The KiCad 10 image is pinned by *digest* in both
@@ -111,10 +114,11 @@ every `.kicad_*` file referenced in the docs exists.
   through a silent default and were cut up to 0.58 mm too shallow. Never re-declare a height in a
   generator or a drawing — import it. Check [7] measures each one against that part's own 3D model,
   and `part_height()` **raises** on an unmapped refdes instead of guessing.
-- **The front cartouche is generated from the routing.** Move a front trace and the
-  ornament no longer describes the copper under it — re-run `scripts/mask_art.py --apply`.
-  Consistency check [6] errors if you forget. It is the one artwork here that goes *wrong*,
-  not merely stale, when the board is edited.
+- **The front mask art is generated from the routing.** Every opening is `shape − live copper`,
+  so moving a front trace can put a signal under an aperture — re-run `scripts/mask_art.py
+  --apply`. Consistency check [6] errors if you forget. It is the one artwork here that goes
+  *wrong*, not merely stale, when the board is edited. (The left-field cartouche this rule was
+  written for is now off; the NFC mark it still writes obeys exactly the same rule.)
 - **`solder_mask_bridge` DRC was `ignore` until 2026-07-28** and is now `warning`. Everything
   it reports is the single rear glow-window aperture at (35.1, 40.3) spanning the LED nets —
   intentional, nothing is soldered there.
@@ -126,7 +130,7 @@ every `.kicad_*` file referenced in the docs exists.
   items near it, and the set it finds varies run to run — most likely because `check_zone_fills` refills the pours first
   and the fill is not bit-reproducible. What IS stable, and what to assert if this ever gets a
   gate: `Errors: 0 (+11 excluded)`, zero hits on F.Mask, and every hit citing that one aperture.
-- **`mask_art.py` owns more than the cartouche** — it also draws the NFC contactless mark — and
+- **`mask_art.py`'s `generate()` is the single definition of what it writes** — and
   `generate()` is the single definition of what it writes. Check [6] calls that same function.
   It used to rebuild `emit(build(board))` itself, which was a quieter second copy: correct while
   the generator owned one thing, and it declared a correct board STALE the moment a second art
