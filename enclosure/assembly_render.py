@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
 """Assembly views: shell + brace + PCB + 8x M2 brass, exploded, closed, and turning.
 
-    python3 enclosure/assembly_render.py            # writes all five views beside this file
+    python3 enclosure/assembly_render.py            # writes all six views
 
-CI OWNS THESE OUTPUTS. The PCB CI workflow runs this script right after the raytrace that
-produces the texture, and commits the five files below with the rest of the generated set, so
-changing the board artwork updates the README hero automatically. Run it locally to check a
-change by all means -- but do not COMMIT the result: VTK does not produce identical pixels
-across GL stacks, so a hand-run render and CI's will churn against each other forever.
+CI OWNS THESE OUTPUTS. The PCB CI workflow runs this script after rebuilding the enclosure CAD
+and raytracing the card face -- both of which it consumes -- and commits the six files below with
+the rest of the generated set, so changing the board updates the imagery automatically. Run it
+locally to check a change by all means, but do not COMMIT the result: VTK does not produce
+identical pixels across GL stacks, so a hand-run render and CI's will churn against each other.
 
       solar-glow-drh-assembly.gif           exploded -> closed
       solar-glow-drh-assembly-exploded.png  first frame of that
       solar-glow-drh-assembly-hero.png      last frame of that
       solar-glow-drh-assembly-reverse.png   closed, from behind: brass flush in its spotfaces
       solar-glow-drh-assembly-spin.gif      one seamless revolution -- the root README hero
+      brace/…-diffuser-brace-render.png     the brace alone -- hero of enclosure/brace/README.md
 
 WHAT MAKES THIS TRUSTWORTHY
 
@@ -445,6 +446,74 @@ _y1 += (_y1 - _y0) & 1
 _spin = [im.crop((_x0, _y0, _x1, _y1)) for im in _spin]
 
 encode_gif(_spin, os.path.join(HERE, f"{STEM}-spin.gif"), SPIN_MS, "turntable")
+
+# ---- the brace alone: the hero of enclosure/brace/README.md ------------------------------
+# That image shipped in the repo's initial import with NO generator behind it, so while the
+# brace was respun against the real board it went on showing the OLD one -- the H with the
+# straight middle band, the geometry that put 593 mm3 of resin inside SC1/SC3/SC4. A doc hero
+# nothing can regenerate is a doc hero that goes quietly wrong, which is the failure this whole
+# pipeline exists to stop. It is now built from the same STL the assembly views load.
+BRACE_PNG = os.path.join(HERE, "brace", "solar-glow-drh-diffuser-brace-render.png")
+BRACE_SIZE = 960
+
+ren4 = vtk.vtkRenderer(); ren4.SetBackground(0.965, 0.963, 0.955)
+rw4 = vtk.vtkRenderWindow(); rw4.SetOffScreenRendering(1); rw4.AddRenderer(ren4)
+rw4.SetSize(BRACE_SIZE, BRACE_SIZE)
+ren4.AddActor(_mat(brace_pd, RESIN, 0.88, 0.16, 12, 0.20))
+for _pos, _i in [((-70, -120, 140), 0.85), ((110, 60, 90), 0.40), ((0, 0, -120), 0.18)]:
+    _L = vtk.vtkLight(); _L.SetPosition(*_pos); _L.SetIntensity(_i)
+    _L.SetLightTypeToSceneLight(); ren4.AddLight(_L)
+
+_c4 = ren4.GetActiveCamera()
+_az4, _el4 = math.radians(232.0), math.radians(56.0)
+_c4.SetPosition(math.sin(_el4) * math.cos(_az4), math.sin(_el4) * math.sin(_az4), math.cos(_el4))
+_c4.SetFocalPoint(0, 0, 0); _c4.SetViewUp(0, 0, 1); _c4.SetViewAngle(26)
+# Frame from the part's own bounds rather than a hand-tuned distance: the brace footprint is
+# computed from the board and changes shape when the board does, so a fixed camera would crop it.
+ren4.ResetCamera()
+_base4 = _c4.GetParallelScale(), _c4.GetPosition()
+
+
+def _shot4(zoom):
+    """Render at a zoom and report (image, margin in px). Negative margin means it is clipped."""
+    ren4.ResetCamera()
+    _c4.Zoom(zoom)
+    ren4.ResetCameraClippingRange(); rw4.Render()
+    w = vtk.vtkWindowToImageFilter(); w.SetInput(rw4); w.Update()
+    a = vtk_to_numpy(w.GetOutput().GetPointData().GetScalars())
+    a = a.reshape(BRACE_SIZE, BRACE_SIZE, -1)[::-1, :, :3]
+    fg = np.abs(a.astype(np.int16) - _BG.astype(np.int16)).max(axis=2) > 6
+    if not fg.any():
+        return a, -1
+    ys, xs = np.nonzero(fg)
+    return a, min(xs.min(), ys.min(), BRACE_SIZE - 1 - xs.max(), BRACE_SIZE - 1 - ys.max())
+
+
+# Pick the tightest framing that still leaves a margin, rather than hand-tuning a constant: the
+# brace footprint is COMPUTED from the board and changes shape when the board does, so whatever
+# number looked right today is wrong after the next re-route. The guard below already caught
+# exactly that -- a zoom of 1.18 clipped the legs.
+BRACE_MARGIN = 18
+_best4 = None
+for _z in (1.20, 1.15, 1.10, 1.05, 1.00, 0.95, 0.90, 0.85):
+    _img4, _m4 = _shot4(_z)
+    if _m4 >= BRACE_MARGIN:
+        _best4 = (_img4, _z, _m4)
+        break
+if _best4 is None:
+    raise SystemExit("brace render never fits the frame -- the part is far larger than expected")
+_img4, _z4, _m4 = _best4
+_fg4 = np.abs(_img4.astype(np.int16) - _BG.astype(np.int16)).max(axis=2) > 6
+# Crop to the part. A brace that is mostly long thin legs occupies ~11% of a square frame, and
+# the rest is background nobody asked for; the bbox is measured, so it follows the geometry.
+_ys4, _xs4 = np.nonzero(_fg4)
+_p4 = 24
+_img4 = _img4[max(0, _ys4.min() - _p4):min(BRACE_SIZE, _ys4.max() + _p4 + 1),
+              max(0, _xs4.min() - _p4):min(BRACE_SIZE, _xs4.max() + _p4 + 1)]
+_fg4 = np.abs(_img4.astype(np.int16) - _BG.astype(np.int16)).max(axis=2) > 6
+Image.fromarray(_img4).save(BRACE_PNG)
+print(f"wrote brace/{os.path.basename(BRACE_PNG)}  {_img4.shape[1]}x{_img4.shape[0]}  "
+      f"zoom {_z4:.2f}, margin {_m4}px, fills {100.0 * _fg4.sum() / _fg4.size:.1f}% of frame")
 
 print(f"wrote {STEM}-hero.png, -exploded.png, -reverse.png, .gif, -spin.gif")
 

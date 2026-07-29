@@ -227,6 +227,12 @@ for lab,val in tol:
 import os as _o
 _OUT = _o.environ.get("OUT_DIR") or _o.path.dirname(_o.path.abspath(__file__))
 _o.makedirs(_OUT, exist_ok=True)
-fig.savefig(_o.path.join(_OUT,"solar-glow-drh-v3_0-backshell-0p6b-brace-DRAWING.pdf"),facecolor="white")
+# CreationDate=None: matplotlib stamps a write time into the PDF, so an unchanged drawing
+# rewrote itself on every run. That is not cosmetic once CI regenerates these -- a job that
+# commits its outputs would produce a "changed drawing" commit for every board edit that did
+# not touch the drawing at all, and a real change would be invisible among them. PNG carries
+# no such stamp and is already reproducible.
+fig.savefig(_o.path.join(_OUT,"solar-glow-drh-v3_0-backshell-0p6b-brace-DRAWING.pdf"),facecolor="white",
+            metadata={"CreationDate": None})
 fig.savefig(_o.path.join(_OUT,"solar-glow-drh-v3_0-backshell-0p6b-brace-DRAWING.png"),dpi=150,facecolor="white")
 print("saved")

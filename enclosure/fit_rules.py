@@ -247,10 +247,16 @@ def export_step_stable(solid, path, **kw):
     generators did not, which is how a rebuild against a front-copper-only re-route showed
     three "changed" STEP files whose STLs were byte-identical.
     """
-    import os as _os, re as _re, tempfile as _tf
+    import os as _os, re as _re
     import cadquery as _cq
     strip = lambda s: _re.sub(r"(?m)^FILE_NAME\('[^']*','[^']*'", "FILE_NAME(", s)
     tmp = path + ".tmp"
+    # exportType is REQUIRED here and was the bug that kept this function from ever running:
+    # cq.exporters.export infers the format from the extension, and the extension is ".tmp",
+    # so it raised "Unknown extensions, specify export type explicitly" on the first line that
+    # mattered. Both enclosure CAD generators died there -- which nothing noticed, because
+    # nothing in CI ran them. Wiring them into the pipeline is what surfaced it.
+    kw.setdefault("exportType", "STEP")
     _cq.exporters.export(solid, tmp, **kw)
     new = open(tmp, encoding="utf-8", errors="replace").read()
     if _os.path.exists(path):
