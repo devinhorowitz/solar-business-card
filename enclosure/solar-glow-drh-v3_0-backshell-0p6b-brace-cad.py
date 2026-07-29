@@ -227,6 +227,134 @@ def _recess_mouth_ease(wt, c):
     return cq.Workplane("XY").workplane(offset=wt-c).placeSketch(sk).extrude(c, taper=-45)
 
 # ---- round-tool corner relief (pure-2D, matches the CAD cavity cut exactly) ----
+# ---------------------------------------------------------------------------------------
+# THE SUPPORT LIP IS COMPUTED PER BAND FROM THE BOARD, NOT FOUR SCALARS.
+#
+# It used to be lip_W/N/S/E = 2.5/2.0/2.0/1.0 with one hand-written east widening. Measured
+# against the committed board that lip lands on NINE B-side parts -- and the board sets
+# pad_to_mask_clearance = 0, so those pads are bare copper and this lip is grounded
+# titanium. 4.17 mm2 of LIVE pad sits under it (U6 VS + NFC_EN, C27 STO, FB1 STO/STO_LDO,
+# C22 STO_LDO, R15 STO). Fitting the shell shorts the storage rail to ground.
+#
+# So derive the width. For each span of each edge, take the nearest part body-or-pad and
+# back off LIP_CLR. Everywhere no part intrudes, the lip stays at its structural maximum --
+# the point is to keep the lip WIDE (it supports a 0.60 mm board) and pinch it only where
+# something is actually in the way.
+#
+# The east edge gains the most: it was pinched to a flat 1.0 for parts that have since
+# moved, and the real constraint there is the NFC coil (east copper ~x48.40), which a
+# grounded lip must never overhang or it detunes the antenna. That allows 2.40 over most
+# of the edge instead of 1.00.
+# ---------------------------------------------------------------------------------------
+LIP_CLR   = 0.30        # lip edge to the nearest part body or pad
+LIP_MAX   = {"W": 2.5, "E": 2.5, "S": 2.0, "N": 2.0}
+COIL_EAST = 48.40       # NFC coil east copper -- hard cap on the east lip
+BOSS_CLR  = 0.20        # Ti boss to part/pad
+THREAD_KEEP = 1.30      # never scallop inside this: the M2 thread lives at r0.80..~1.0
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from board_parts import parts as _board_parts   # noqa: E402
+_BPARTS = _board_parts("B")
+
+
+def _lip_reach(edge, lo, hi):
+    lim = LIP_MAX[edge]
+    for _ref, poly, _h, _src in _BPARTS:
+        x0, y0, x1, y1 = poly.bounds
+        if edge in ("W", "E"):
+            if y1 <= lo or y0 >= hi:
+                continue
+            d = x0 if edge == "W" else (W - x1)
+        else:
+            if x1 <= lo or x0 >= hi:
+                continue
+            d = y0 if edge == "S" else (H - y1)
+        lim = min(lim, d - LIP_CLR)
+    if edge == "E":
+        lim = min(lim, W - COIL_EAST)
+    return max(0.0, round(lim, 2))
+
+
+def lip_bands(edge, step=0.5):
+    """[(lo, hi, width)] along `edge`, merged. Computed, so it cannot go stale."""
+    span = H if edge in ("W", "E") else W
+    out, cur, start = [], None, 0.0
+    a = 0.0
+    while a < span - 1e-9:
+        b = min(a + step, span)
+        w = _lip_reach(edge, a, b)
+        if cur is None:
+            cur, start = w, a
+        elif abs(w - cur) > 1e-9:
+            out.append((start, a, cur)); cur, start = w, a
+        a = b
+    out.append((start, span, cur))
+    merged = []
+    for bnd in out:
+        if merged and abs(merged[-1][2] - bnd[2]) < 1e-9:
+            merged[-1] = (merged[-1][0], bnd[1], bnd[2])
+        else:
+            merged.append(bnd)
+    return merged
+
+
+def _cavity_void_poly(tool_r=1.0):
+    """Cavity void in BOARD coords: the board rect inset by the per-band lip, then opened by
+    the finisher radius so what is drawn is what a dia 2.0 tool can actually leave."""
+    void = box(0.0, 0.0, W, H)
+    strips = []
+    for lo, hi, w in lip_bands("W"):
+        strips.append(box(0.0, lo, w, hi))
+    for lo, hi, w in lip_bands("E"):
+        strips.append(box(W - w, lo, W, hi))
+    for lo, hi, w in lip_bands("S"):
+        strips.append(box(lo, 0.0, hi, w))
+    for lo, hi, w in lip_bands("N"):
+        strips.append(box(lo, H - w, hi, H))
+    void = void.difference(unary_union(strips))
+    opened = void.buffer(-tool_r, join_style=1, resolution=48).buffer(tool_r, join_style=1, resolution=48)
+
+    # A dia 2.0 finisher cannot reach into the concave corners a band step leaves, so opening
+    # the void puts material BACK over a few parts sitting near a step -- SC1, Q2, TP1, JP1,
+    # R5, a fixed 0.088 mm2 worst case that does not improve at any band clearance. Widening
+    # the bands cannot fix it; only a pocket the tool can actually cut can.
+    #
+    # Dilating a part's keep-out by the tool radius makes it tool-reachable by construction
+    # (a region dilated by r is unchanged by an opening at r), so union those in as local
+    # reliefs. Costs 48.89 mm2 of lip and is the price of clearing them at all.
+    lip_now = box(0.0, 0.0, W, H).difference(opened)
+    stuck = [poly for _ref, poly, _h, _src in _BPARTS
+             if lip_now.intersection(poly).area > 1e-6]
+    if stuck:
+        opened = opened.union(unary_union(
+            [poly.buffer(LIP_CLR + tool_r, join_style=1, resolution=48) for poly in stuck]))
+
+    if opened.geom_type == "MultiPolygon":
+        opened = max(opened.geoms, key=lambda g: g.area)
+    return opened.simplify(0.01, preserve_topology=True)
+
+
+def _boss_island(mx, my):
+    """A boss disc SCALLOPED clear of anything that fouls it.
+
+    Five of the eight bosses collide with a B-side part (worst: C23 0.528 mm into the boss
+    at (3.0,60.4)), and two of those are live nets under a grounded post -- R14 pad 1 is
+    NFC_EN, R5 pad 2 is VSENSE. Cutting the offending part out of the disc costs almost
+    nothing: the worst case keeps 92.4% of the r0.80..r2.60 annulus at a minimum radius of
+    1.80 mm, well outside the M2 thread. No board change, no lost fastener.
+    """
+    disc = Point(mx, my).buffer(boss_r, resolution=64)
+    foul = [poly for _ref, poly, _h, _src in _BPARTS
+            if poly.distance(Point(mx, my)) < boss_r]
+    if not foul:
+        return disc
+    scal = disc.difference(unary_union([p.buffer(BOSS_CLR, join_style=2) for p in foul]))
+    if scal.geom_type == "MultiPolygon":
+        keep = [g for g in scal.geoms if g.contains(Point(mx, my))]
+        scal = keep[0] if keep else disc
+    return scal.simplify(0.005, preserve_topology=True)
+
+
 def _inner_pocket():
     """pocket-interior (void) footprint in BOARD coords, identical to the CAD cavity cut:
     centered iw x ih rect inset by lip_w, corner radius ir."""
@@ -248,7 +376,7 @@ def _relief_for(islands, tool_r=TOOL_R):
 
 def _cavity_islands(ribs_on, braces_on=False):
     """interior pocket islands: bosses (+ optional brace posts) (+ cap-gap ribs)."""
-    isl  = [Point(mx, my).buffer(boss_r, resolution=64) for mx, my in mounts]
+    isl  = [_boss_island(mx, my) for mx, my in mounts]
     if braces_on:
         isl += [Point(x, y).buffer(rr, resolution=48) for x, y, rr in BRACE]
     if ribs_on:
@@ -283,6 +411,9 @@ def _maker_text(txt, lx, cy, capH, fontpath):
     return _aff.translate(geom, lx-mnx, cy-(mny+mxy)/2)
 
 # ===== build =====
+_LIPSUM = {e: len(lip_bands(e)) for e in ('W', 'E', 'S', 'N')}
+
+
 def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pillars=False, locators=False, prog_window=False, glow_marker=True, maker_mark=True, tool_relief=False):
     bb = floor + cavity                       # board-back / boss-top / lip-top / rib-top plane
     wt = bb + board_th
@@ -297,7 +428,7 @@ def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pill
                     .extrude(board_th + 0.02).edges("|Z").fillet(cavR))
     if edge_ease > 0:                                   # ease the recess mouth to match the outer rim (board lead-in)
         res = res.cut(_recess_mouth_ease(wt, edge_ease))
-    res = res.cut(_cav_inner(floor, cavity)).union(_east_blocks(floor, cavity))
+    res = res.cut(_poly_solid(_cavity_void_poly(), floor, cavity))
     # corner relief (recess depth)
     cwp = cq.Workplane("XY").workplane(offset=bb - 0.01)
     for ccx, ccy in [(R, R), (W - R, R), (R, H - R), (W - R, H - R)]:
@@ -444,7 +575,7 @@ jobs = [
 # Ti-conservative (0.60 floor / 1.60 wall) struck: if the shop cannot hold the floor we
 # re-issue to whatever minimum they will hold, so a pre-baked 0.60 fallback is dead weight.
 print(f"cavity={cavity} general (cap {cap_H}+air {cav_margin}; kapton {kapton_th}); U7 pocket {U7_POCKET} deep "
-      f"({'NO POCKET -- uniform floor' if U7_POCKET == 0 else 'local relief'})  lips W/N/S/E={lip_W}/{lip_N}/{lip_S}/{lip_E} (E ends {lip_E_wide})  "
+      f"({'NO POCKET -- uniform floor' if U7_POCKET == 0 else 'local relief'})  lip PER-BAND from the board (W {_LIPSUM['W']} / E {_LIPSUM['E']} / S {_LIPSUM['S']} / N {_LIPSUM['N']} bands)  "
       f"braces=OFF (removed; {len(BRACE)} defs retained) ribs={len(RIBS)}  border=0.15  "
       f"cavity tool R{TOOL_R} (Ø{2*TOOL_R}) / back tool R{BACK_TOOL_R} (Ø{2*BACK_TOOL_R})  "
       f"deburr: outer rim {edge_ease}, ends {EDGE_BREAK}  reflector-frame {GLOW_WIN[2]-GLOW_WIN[0]:.1f}x{GLOW_WIN[3]-GLOW_WIN[1]:.1f} laser-marked (full floor under it)  "
