@@ -11,7 +11,7 @@ a supercapacitor bank that holds the charge.
 Not an artist's impression: every surface is the committed STEP-derived STL, the outline and the
 eight mount positions come straight out of the `.kicad_pcb`, the Z stack is the one
 `enclosure/fit_rules.py` enforces, and the show face is the **raytraced board itself** — the
-monogram window, the cartouche, the ENIG and the contact line are the real artwork, not a stand-in.
+monogram window, the ENIG, the contactless mark and the contact line are the real artwork, not a stand-in.
 Re-route the front and this picture follows. Stills, the exploded and reverse views, and the full
 respin are in [`enclosure/README.md`](enclosure/README.md).</sub>
 

@@ -1,40 +1,32 @@
 #!/usr/bin/env python3
-"""Generate the front "negative routing" cartouche — the ornament IS the wiring.
+"""Generate the front soldermask artwork — every opening is computed from the copper.
 
     python3 scripts/mask_art.py              # report only, touch nothing
     python3 scripts/mask_art.py --apply      # write the art into the board
     python3 scripts/mask_art.py --check      # does the board match current routing?
 
-WHAT IT DRAWS
+WHAT IT DRAWS TODAY
 
-A cartouche in the left mid-field with the soldermask opened everywhere the copper
-underneath is GND, and left in place everywhere a live signal runs. The GND pour
-plates gold and reads as a fine mesh (that pour is a CROSSHATCH, so the texture is
-inherent, not a choice); the twelve signal nets stay under black mask and read as
-dark rivers. The pattern is not drawn — it is the actual circuit, in negative.
+One thing: the NFC contactless mark over the antenna (see "the NFC indicator" below).
 
-WHY IT IS GENERATED AND NOT DRAWN
+The left-field CARTOUCHE — the negative-routing ornament that was this script's whole
+reason to exist — is switched off (`CARTOUCHE = False`). The generator is intact and
+one constant brings it back; see the block above the switch for why it is off.
 
-That field carries ~278 mm of live front routing on twelve nets. Two things follow,
-and they are what rule out every ordinary approach:
+THE RULE THAT GOVERNS EVERY OPENING HERE
 
-  * NEW SOLID COPPER would short across those nets, so gold artwork cannot simply be
-    added there.
-  * A PLAIN MASK WINDOW would expose live signal traces on the show face of a card
-    that lives in a wallet. Only GND may be laid bare.
-
-So the opening is computed as (cartouche - live copper), which also means the art
-tracks the routing: re-route, re-run, and the ornament is correct again. That is why
-check_consistency has a gate for it — art drawn once and left behind would go quietly
-wrong the first time a trace moved, and the whole point of this ornament is that it
-tells the truth about the board.
+Whatever this script opens, it opens as (shape - live copper). The show face carries
+live front routing, and a plain mask window would lay a signal trace bare on a card
+that lives in a wallet. Only GND and bare laminate may be exposed. That subtraction is
+also why the art has to be GENERATED: it tracks the routing, so a re-route followed by
+`--apply` is correct again, and check_consistency [6] gates on it — art drawn once and
+left behind goes quietly WRONG the first time a trace moves, rather than merely stale.
 
 MANUFACTURING
 
-Opening edges stand off live copper by KEEP (0.18 mm), so the black rivers are at
-least trace + 2 x 0.18 wide — comfortably above any soldermask dam floor. The number
-that needs watching is the other one: small gold apertures pinched between two nearby
-rivers. --report measures both and prints the worst case.
+Opening edges stand off live copper by KEEP (0.18 mm), and nothing narrower than
+MIN_APERTURE (0.12 mm) survives the cleanup pass, so no opening asks the fab for a
+gold sliver or a mask dam it cannot image. --report prints the worst case.
 """
 from __future__ import annotations
 
@@ -57,6 +49,23 @@ BOARD = ROOT / "PCB" / "solar-glow-drh-v4_0.kicad_pcb"
 # art it had just written.
 MARK = "a17e0000-0000-4000-8000-"
 TAG = "maskart"
+
+# --- the left-field cartouche (OFF) -----------------------------------------------
+# WHY IT IS OFF, 2026-07-29. The cartouche opened 222 mm2 of mask over the left mid-field
+# so the GND crosshatch under it plated ENIG and read as a gold mesh with the signal nets
+# as dark rivers. It worked, and against MATTE BLACK mask it was the best thing on the card.
+#
+# What killed it was the finish study for the transparent-mask variant. Under clear LPI the
+# covered copper shows through as bare copper, so the face becomes gold-on-copper-on-tan --
+# three warm tones with almost no separation, and 222 mm2 of gold mesh sitting next to the
+# gold monogram plate reads as one indistinct field rather than two elements. Gold vs. matte
+# black is contrast; gold vs. copper is a smudge. Removing the cartouche is what buys the
+# monogram its silence back, on either mask colour.
+#
+# Nothing about the GENERATOR was wrong, so nothing about it is deleted: flip this to True,
+# run --apply, and the ornament comes back exactly as it was. `build()` below and the
+# FIELD/RING constants are its whole definition.
+CARTOUCHE = False
 
 # --- geometry, in board mm -------------------------------------------------------
 # Cartouche sits in the left mid-field: clear of both cells (they occupy y 4.25-27.25
@@ -290,7 +299,7 @@ def report(geom):
 
 
 def generate(board):
-    """-> (body, cartouche, coil). THE one definition of what this generator writes.
+    """-> (body, cartouche_or_None, nfc_mark). THE one definition of what this generator writes.
 
     main() and check_consistency [6] both call this. They used not to: the check rebuilt only
     `emit(build(board))` and compared that against the whole file, which was a second, quieter
@@ -298,11 +307,12 @@ def generate(board):
     owned one thing -- and reported the board STALE the moment the coil aperture made it two,
     while `mask_art --check` on the same board said MATCH. One home instead.
     """
-    art = build(board)
+    art = build(board) if CARTOUCHE else None
     mark = nfc_mark(board)
     if mark.is_empty:
         raise SystemExit("mask_art: the NFC mark came out empty -- live copper ate all of it")
-    return emit(art) + emit(mark, tag=f"{TAG}-nfc"), art, mark
+    body = emit(art) if art is not None else ""
+    return body + emit(mark, tag=f"{TAG}-nfc"), art, mark
 
 
 def main() -> int:
@@ -318,14 +328,16 @@ def main() -> int:
     import pcbnew
 
     board = pcbnew.LoadBoard(str(BOARD))
-    art = build(board)
-    r = report(art)
-    print(f"  cartouche: {r['pieces']} piece(s), {r['area']:.1f} mm² of gold, "
-          f"narrowest gold aperture {r['min_aperture']:.3f} mm")
-    if r["min_aperture"] < 0.10:
-        print(f"  WARNING: {r['min_aperture']:.3f} mm is below a 0.10 mm mask aperture floor")
+    body, art, mark = generate(board)
+    if art is None:
+        print("  cartouche: OFF (CARTOUCHE = False) — the left mid-field stays under mask")
+    else:
+        r = report(art)
+        print(f"  cartouche: {r['pieces']} piece(s), {r['area']:.1f} mm² of gold, "
+              f"narrowest gold aperture {r['min_aperture']:.3f} mm")
+        if r["min_aperture"] < 0.10:
+            print(f"  WARNING: {r['min_aperture']:.3f} mm is below a 0.10 mm mask aperture floor")
 
-    body, art2, mark = generate(board)
     complaints = nfc_guard(board, mark)
     if complaints:
         for c in complaints:
