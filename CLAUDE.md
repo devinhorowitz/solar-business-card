@@ -97,9 +97,16 @@ every `.kicad_*` file referenced in the docs exists.
   Consistency check [6] errors if you forget. It is the one artwork here that goes *wrong*,
   not merely stale, when the board is edited.
 - **`solder_mask_bridge` DRC was `ignore` until 2026-07-28** and is now `warning`. Everything
-  it currently reports (222 hits) is the single rear glow-window aperture at (35.1, 40.3)
-  spanning the LED nets — intentional, nothing is soldered there. **Zero come from F.Mask**,
-  so the front art is clean. A *new* F.Mask hit is a real find.
+  it reports is the single rear glow-window aperture at (35.1, 40.3) spanning the LED nets —
+  intentional, nothing is soldered there. **Zero come from F.Mask**, so the front art is clean.
+  A *new* F.Mask hit is a real find.
+  **Do not treat the hit COUNT as a constant, and never gate on it.** It is not deterministic:
+  two runs on byte-identical inputs (same board, `.kicad_pro`, `.kicad_dru` and the same pinned
+  image digest) reported **222** and **208**. KiCad pairs that one aperture against the copper
+  items near it, and the set it finds varies run to run — most likely because `check_zone_fills`
+  refills the pours first and the fill is not bit-reproducible. What IS stable, and what to
+  assert if this ever gets a gate: `Errors: 0 (+11 excluded)`, zero hits on F.Mask, and every
+  hit citing that one aperture.
 - **The energy budget is the #1 open gate** — harvest vs. LED draw under real indoor
   light has never been measured. Treat firmware duty-cycle / glow constants as
   provisional until it is. See README → "The open question."
