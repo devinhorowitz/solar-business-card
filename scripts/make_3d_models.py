@@ -104,9 +104,18 @@ OUT = ROOT / "PCB" / "solarglow.3dshapes"
 #
 # Values are the real materials, not decoration -- the renders are what the board is judged
 # by, and a silver-looking supercap next to a black-looking IC is information.
+#
+# COLOUR_RGB is a DIFFUSE ALBEDO, and the raytracer's response to it is compressive at the dark
+# end and clips hard at the bright end. Measured in the shipped render: albedo 0.045/0.055/0.090
+# (the cells) lands at 32/40/47, and 0.100 (the IC bodies) at 47 -- but 0.780 for the supercap
+# cans came out at a flat, blown-out 254 on every pixel of all four. That is not "silver", it is
+# a hole in the picture: before the colour was set at all they were KiCad's default grey at 197,
+# which at least had form. There is no specular or metalness channel in a STEP colour, so the
+# only lever for "bright metal" is lightness, and it has to stay clear of the clip to read as a
+# surface. 0.58 is a deliberate step back from the ceiling.
 COL_SOLAR   = (0.045, 0.055, 0.090)   # monocrystalline cell: near-matte black, hint of blue
 COL_IC      = (0.100, 0.100, 0.105)   # moulded black epoxy/polymer IC body
-COL_SUPERCAP = (0.780, 0.790, 0.810)  # SCPC can: bright reflective silver
+COL_SUPERCAP = (0.580, 0.590, 0.610)  # SCPC can: bright silver, below the raytracer's clip
 
 SPECS = {
     "SCHURTER_SCPC_SS17": dict(

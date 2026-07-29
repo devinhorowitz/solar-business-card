@@ -91,6 +91,23 @@ part positions from `enclosure/board_parts.py` (true 3D body ∪ pads, with the 
 
 ### Assembly and the Z stack
 
+![The assembled card, one revolution](solar-glow-drh-assembly-spin.gif)
+
+<sub>One seamless revolution of the closed assembly at the hero camera — 60 frames, 954×558. This is
+the root README's hero. `solar-glow-drh-assembly-hero.png` is the same camera as a still, and
+`solar-glow-drh-assembly.gif` is the exploded-to-closed sequence. The show face is
+`Generated/docs/…-card-face.png` textured on, so the monogram, cartouche and contact line are the
+board's real artwork.</sub>
+
+> **These five files are CI-owned — don't commit a hand-run render.** `assembly_render.py` runs in
+> the PCB CI job immediately after the raytrace that produces its texture, and its outputs are
+> committed alongside `Generated/`. That is what keeps the hero from quietly showing a previous
+> board: change the artwork, and the picture follows in the same commit. Run it locally to check a
+> change by all means — but VTK does not produce identical pixels across GL stacks, so committing
+> a local render starts a churn war with CI. (It also means the renderer has a **CI-generated
+> input**: a clone that has never run the workflow has no `card-face.png` to texture with, and the
+> script says so and exits rather than shipping a blank card.)
+
 ![Reverse side, closed — brass tips flush in their Ø3.0 spotfaces](solar-glow-drh-assembly-reverse.png)
 
 ```

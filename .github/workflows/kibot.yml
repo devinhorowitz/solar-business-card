@@ -1,6 +1,8 @@
 # .github/workflows/kibot.yml — PCB CI for solar-business-card
 # On every push touching PCB/: run ERC+DRC (intentional findings filtered) and
-# regenerate fab zip, iBOM, board images, BOM/position docs into Generated/.
+# regenerate fab zip, iBOM, board images, BOM/position docs into Generated/ — and then
+# the enclosure assembly views, which are textured with the card face this job just
+# raytraced, so updating the board artwork updates the README hero in the same commit.
 # The regenerated artifacts are committed back ONLY on main (the default branch),
 # so the repo always carries current reports without feature branches diverging
 # from main in Generated/ (which used to force a merge conflict on every PR).
@@ -13,6 +15,15 @@ on:
       - 'PCB/**'
       - 'scripts/panelize.py'
       - 'scripts/render.py'
+      # The assembly views are textured with the raytraced card face and read the board's
+      # own outline, mounts and part positions, so they are a function of PCB/** too — they
+      # are regenerated in this job, after the raytrace that produces their texture. These
+      # extra paths are their NON-board inputs; a change to any of them makes the committed
+      # views stale in exactly the way a board change does.
+      - 'enclosure/assembly_render.py'
+      - 'enclosure/fit_rules.py'
+      - 'enclosure/board_parts.py'
+      - 'enclosure/**.stl'
       - '.github/workflows/kibot.yml'
 
 permissions:
@@ -103,13 +114,43 @@ jobs:
           docker run --rm -u "$(id -u):$(id -g)" -e HOME=/tmp -v "$PWD":/wk -w /wk \
             "$KICAD_IMAGE" python3 scripts/render.py
 
+      # THE HERO IS DOWNSTREAM OF THE ARTWORK, so it is regenerated here rather than by hand.
+      # enclosure/assembly_render.py textures the assembled card with the raytraced card-face
+      # plot the step above just wrote, and reads the outline, the eight mounts and every part
+      # position out of the .kicad_pcb. Left to a human it silently goes on showing the previous
+      # board — the same failure the front cartouche has a consistency check for. Running it
+      # HERE, in the same job and the same commit as the texture it consumes, means the two can
+      # never disagree: there is no window where Generated/docs is a revision ahead of the hero.
+      #
+      # Runner-side, not in the KiCad container: this is VTK/shapely, nothing to do with KiCad.
+      # Deps are pinned for the reason everything else here is — these outputs get committed.
+      # xvfb is belt-and-braces: the script asks for offscreen rendering and VTK will fall back
+      # to it with no DISPLAY, but a real X server costs ~10 s and removes the question.
+      - name: Render the enclosure assembly views
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq xvfb
+          python3 -m pip install --quiet 'vtk==9.6.2' 'pillow==12.3.0' 'numpy==2.4.6' 'shapely==2.1.2'
+          xvfb-run -a python3 enclosure/assembly_render.py
+
       - name: Commit generated outputs
         if: github.ref == 'refs/heads/main'
         run: |
           git config user.name "kibot-ci"
           git config user.email "kibot-ci@users.noreply.github.com"
-          git add -A Generated
-          git diff --cached --quiet && { echo "Generated/ already current"; exit 0; }
+
+          # Everything this job owns. The assembly views sit beside the enclosure docs rather
+          # than under Generated/, because that is where they are read from — but they are just
+          # as CI-owned, and hand-running the renderer will fight this job (VTK does not produce
+          # identical pixels across GL stacks). See enclosure/README.md.
+          OUTS="Generated
+                enclosure/solar-glow-drh-assembly.gif
+                enclosure/solar-glow-drh-assembly-spin.gif
+                enclosure/solar-glow-drh-assembly-hero.png
+                enclosure/solar-glow-drh-assembly-exploded.png
+                enclosure/solar-glow-drh-assembly-reverse.png"
+
+          git add -A $OUTS
+          git diff --cached --quiet && { echo "outputs already current"; exit 0; }
           git commit -m "CI: regenerate fab + docs [skip ci]"
 
           # This job takes ~16 min, so main can easily move underneath it -- merge two PRs
@@ -141,24 +182,30 @@ jobs:
           # Concurrency: groups do NOT solve this. They serialize workflow runs, and what
           # moves main is a human merge, which no group can serialize against a run already
           # in flight (checkout builds on github.sha, not the tip of main).
-          snap="${RUNNER_TEMP:-/tmp}/generated-snapshot"
-          # mkdir -p the parent: the step runs under `bash -e`, so a cp that fails here
+          # A tarball rather than `cp -a`, because the snapshot is no longer one directory:
+          # it is Generated/ plus five files that live among hand-maintained ones, so the
+          # restore has to put each back exactly where it came from without disturbing its
+          # neighbours.
+          snap="${RUNNER_TEMP:-/tmp}/ci-outputs.tar"
+          # mkdir -p the parent: the step runs under `bash -e`, so a tar that fails here
           # would kill the step before it ever pushed.
-          mkdir -p "$(dirname "$snap")"; rm -rf "$snap"; cp -a Generated "$snap"
+          mkdir -p "$(dirname "$snap")"; rm -f "$snap"; tar -cf "$snap" $OUTS
           for attempt in 1 2 3 4 5; do
             if git push; then exit 0; fi
-            echo "push rejected (attempt $attempt) -- replaying Generated/ onto current main"
+            echo "push rejected (attempt $attempt) -- replaying outputs onto current main"
             sleep $((attempt * 5))
             # Retry the fetch itself; falling through to the next attempt without it would
             # re-push the identical rejected commit and burn a slot for nothing.
             git fetch origin main || { sleep 5; git fetch origin main || continue; }
             git reset --hard origin/main
+            # rm Generated/ so a file this run deleted does not survive the restore; the five
+            # assembly views are a fixed set, so extracting over them is enough.
             rm -rf Generated
-            cp -a "$snap" Generated
-            git add -A Generated
-            git diff --cached --quiet && { echo "current main already has this Generated/"; exit 0; }
+            tar -xf "$snap"
+            git add -A $OUTS
+            git diff --cached --quiet && { echo "current main already has these outputs"; exit 0; }
             git commit -m "CI: regenerate fab + docs [skip ci]"
           done
-          echo "::error::could not push Generated/ after 5 attempts"
+          echo "::error::could not push generated outputs after 5 attempts"
           exit 1
 
