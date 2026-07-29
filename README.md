@@ -5,6 +5,12 @@ A business card that runs on light. An AVR microcontroller breathes four amber L
 backlight it through the bare fiberglass — while a pair of indoor solar cells trickle-charge
 a supercapacitor bank that holds the charge.
 
+![SOLAR-GLOW · DRH — assembled: titanium back-shell, resin brace, PCB, 8× M2 brass](https://raw.githubusercontent.com/devinhorowitz/solar-business-card/main/enclosure/solar-glow-drh-assembly-hero.png)
+
+<sub>The assembled card — Ti back-shell, resin diffuser brace, 0.60 mm PCB and eight M2 brass screws.
+Rendered from the committed STLs and the board itself by `enclosure/assembly_render.py`; the
+exploded and reverse views, and the full respin, are in [`enclosure/README.md`](enclosure/README.md).</sub>
+
 ![SOLAR-GLOW · DRH — front and back, gold ENIG on black soldermask](https://github.com/devinhorowitz/solar-business-card/blob/main/Generated/docs/solar-glow-drh-v4_0-top.png)
 
 > **Status: v4.0 (managed-solar redesign) in progress** -- working files are `v4_0`, currently the v3.0
@@ -22,7 +28,7 @@ a supercapacitor bank that holds the charge.
 | **PCB** | **v4.0 - 2-layer** (F / B) | GND = full-board B.Cu pour; VS = routed B mesh. **v2.3 (4-layer: F / In1 GND / In2 VS / B) is the fallback design, in git history.** v2.1 was 6-layer (history). |
 | Board | 50.80 × 88.90 mm, r3.0 corners, **0.60 mm** FR4, ENIG, matte-black mask | 0.6 mm — committed in the board stackup (frees the shell floor to 1.0 mm) |
 | Mounting holes | **8× M2, GND** -- 4 corner (MH1-4) at **(3.0, 3.0) / (47.8, 3.0) / (3.0, 85.9) / (47.8, 85.9)** (pitch **44.80 × 82.90 mm**) + 4 panel-corner (MP1-4) at **(3.0, 28.5) / (47.8, 28.5) / (3.0, 60.4) / (47.8, 60.4)** | corners concentric with the r3.0 fillets; MP1-4 at the E/W mid-edges for the shell clamp |
-| **Enclosure** | **Ti back-shell** - 1.00 floor, 1.80 cavity, overall **3.55 mm**; center support via the resin diffuser brace. _(The 0.95 mm local relief pocket is under review: it was sized for a 1.75 mm U7, but U7 is the 0.90 mm DFN since 2026-07-23, so the pocket is likely deletable — the generator also still carries the deleted v3 `U2_POS`. Tracked under Enclosure in `TODO.md`; the enclosure pass runs after the PCB/firmware lock.)_ | 8-hole pattern (4 corner + 4 panel-corner); see `enclosure/README.md` |
+| **Enclosure** | **Ti back-shell** - 1.00 floor, 1.80 cavity, overall **3.55 mm**; center support via the single-piece resin diffuser brace. **Respun 2026-07-29 against the real board** — the brace had 593 mm³ of resin inside three supercaps and the shell lip sat on 4.17 mm² of live pad; both geometries are now computed from the board and gated by `check_consistency` **[8]**. | 8-hole pattern (4 corner + 4 panel-corner); see [`enclosure/README.md`](enclosure/README.md) |
 | BOM | **v4_0 master** - fully live-priced (2026-07-23 sourcing pass, ≈ $140); most passives 0402 with the precision/bulk set on **0603** (C4/C13/C25/C22/C23/R5/R6/R15/R16) and **0805** (C26/C27); **SJ1 is DNP**; Q2 + R18 added by the cold-start-deadlock fix | master is `PCB/solar-glow-drh-v4_0-BOM.xlsx`; placed set in `-BOM-assembly.xlsx` |
 | Firmware | AVR64EA28 C, register-verified **and compile-verified in CI**; not yet on hardware | LED pin map re-mapped in v3.0 (see `firmware/README.md`) |
 
@@ -35,7 +41,10 @@ Each fact has exactly one home; everything else points at it rather than restati
 | Board copper / geometry / holes | `PCB/solar-glow-drh-v4_0.kicad_pcb` + `.kicad_sch` |
 | Fabrication panel (PCBWay) | `scripts/panelize.py` — derived from the board on every CI run into `Generated/panel/`; never hand-maintained |
 | README renders | `scripts/render.py` — raytraced from the board/panel on every CI run into `Generated/docs/`; add a target there rather than committing a hand-made image |
+| Enclosure **fit rules** | `enclosure/fit_rules.py` — one home for the brace footprint, the lip bands and the boss scallops; both generators import it and check [8] asserts it |
+| Enclosure part positions | `enclosure/board_parts.py` — true body ∪ pads, read from the committed `.kicad_pcb` |
 | Enclosure geometry | `enclosure/solar-glow-drh-v3_0-backshell-0p6b-brace-cad.py` (prints the Z-stack; regenerates the STEP) |
+| Assembly views | `enclosure/assembly_render.py` — regenerated from the STLs + the board; not hand-made |
 | Firmware pin map + knobs | `firmware/board.h` (+ `firmware/README.md`; both match the schematic) |
 | BOM | `PCB/solar-glow-drh-v4_0-BOM.xlsx` (v4.0 master -- every ordered line live-priced, 2026-07-23 sourcing pass; see `PCB/README.md` Step 4) |
 | Design *reasoning* / lineage | `solar-glow-drh-design-notes.md` |
