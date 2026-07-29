@@ -5,7 +5,7 @@ A business card that runs on light. An AVR microcontroller breathes four amber L
 backlight it through the bare fiberglass — while a pair of indoor solar cells trickle-charge
 a supercapacitor bank that holds the charge.
 
-![SOLAR-GLOW · DRH — the assembled card turning: titanium back-shell, resin brace, PCB, 8× M2 brass](https://raw.githubusercontent.com/devinhorowitz/solar-business-card/main/enclosure/solar-glow-drh-assembly-spin.gif)
+![SOLAR-GLOW · DRH — the assembled card turned over: titanium back-shell, resin brace, PCB, 8× M2 brass](https://raw.githubusercontent.com/devinhorowitz/solar-business-card/main/enclosure/solar-glow-drh-assembly-spin.gif)
 
 <sub>The assembled card — Ti back-shell, resin diffuser brace, 0.60 mm PCB and eight M2 brass screws.
 Not an artist's impression: every surface is the committed STEP-derived STL, the outline and the

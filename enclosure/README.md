@@ -1,5 +1,12 @@
 # SOLAR-GLOW DRH v3.0 — Titanium Back-Shell (enclosure)
 
+![The bare titanium shell, one revolution](solar-glow-drh-assembly-shell-spin.gif)
+
+<sub>The shell on its own, turned about its long axis — the machined cavity with its eight bosses and
+the support lip on one side, the bead-blast back with its recessed field and boss annuli on the other.
+96 frames, 550×954, rendered from the committed STL by `assembly_render.py` in the same CI job that
+rebuilds that STL from the board.</sub>
+
 Back-only titanium shell for the SOLAR-GLOW DRH PCB. It drops over the populated back of the
 board and is held by eight M2 screws (four at the board corners + four at the panel inner corners);
 the bare show-front (two solar cells + the backlit DRH monogram window) stays exposed. Retention is
@@ -93,8 +100,9 @@ part positions from `enclosure/board_parts.py` (true 3D body ∪ pads, with the 
 
 ![The assembled card, one revolution](solar-glow-drh-assembly-spin.gif)
 
-<sub>One seamless revolution of the closed assembly at the hero camera — 60 frames, 954×558. This is
-the root README's hero. `solar-glow-drh-assembly-hero.png` is the same camera as a still, and
+<sub>One seamless revolution of the closed assembly, turned about its long axis the way a hand turns a
+card over — front, edge, back, edge, front — 96 frames, 552×954. This is the root README's hero.
+`solar-glow-drh-assembly-hero.png` is a still from the *exploded* sequence's camera, not this one, and
 `solar-glow-drh-assembly.gif` is the exploded-to-closed sequence. The show face is
 `Generated/docs/…-card-face.png` textured on, so the monogram, cartouche and contact line are the
 board's real artwork.</sub>
