@@ -169,7 +169,7 @@ solar-business-card/
 ├── PCB/                            # KiCad projects + fabrication BOM
 │   ├── solar-glow-drh-v4_0.kicad_pcb   # the board: v4.0 managed-solar rework (AEM10300), 2-layer (source of truth)
 │   ├── solar-glow-drh-v4_0.kicad_sch   # schematic: synced to the v4.0 board netlist
-│   ├── solar-glow-drh-v4_0-BOM.xlsx    # bill of materials -- v4.0 master (U6 + R14; mostly 0402, C4/C13/C25/C27 are 0603)
+│   ├── solar-glow-drh-v4_0-BOM.xlsx    # bill of materials -- v4.0 master (mostly 0402; 0603 and 0805 sets per the table above)
 │   ├── solar-glow-drh-v4_0-BOM-assembly.xlsx  # placed-parts BOM for PCBA (machine-place count pending recount/xlsx regen against the v4 net)
 │   └── README.md                       # order & build guide
 ├── solar-glow-drh-v2-hardware.md   # as-built wiring & pin map (v2-era; v3.0 LED-map delta noted at top)
@@ -178,7 +178,8 @@ solar-business-card/
 ├── firmware/                       # bare-metal C (AVR64EA28); compile-verified, see firmware/README.md
 ├── datasheets/                     # every component's datasheet
 ├── docs/                           # renders and figures
-├── enclosure/                      # machined-titanium back-shell: CAD / STEP / STL / README (v3.0 + v2.1 kept)
+├── enclosure/                      # Ti back-shell + resin brace: CAD / STEP / STL / drawings / assembly views
+│                                   #   fit_rules.py + board_parts.py = the geometry both generators derive from
 └── v0 prototype/                   # the original prototype, kept for posterity
 ```
 
@@ -190,7 +191,7 @@ The board is a KiCad project — open it, run DRC, and export the fab set:
 
 1. Open `solar-glow-drh-v4_0.kicad_pro` in **KiCad** (2026 file format).
 2. **Run DRC.** It comes back clean apart from the intentional exceptions catalogued in
-   `PCB/README.md` and `solar-glow-drh-design-notes.md` (the NFC coil `LA`↔`LB` short, the four
+   `PCB/README.md` and `solar-glow-drh-design-notes.md` (the NFC coil `LA`↔`LB` short, the eight
    GND-tie mounting-hole/gold-frame contacts, the two plating-bus stubs crossing Edge.Cuts at
    x=25.4, the illumination copper inside the glow window, and the benign `lib_footprint_issues`
    plus the **intentional** `BTN` global label on PA5 — the documented future-button pin
@@ -198,10 +199,14 @@ The board is a KiCad project — open it, run DRC, and export the fab set:
 3. **Plot Gerbers + drill** from KiCad's own Fabrication Outputs and order from **PCBWay**
    (**2-layer**, 0.6 mm; selective hard gold + plating bus + resin-fill/cap per `PCB/README.md`).
 
-> The supercap land is the one thing to never get wrong. The WS17 cell solders to **flat pads
-> under its body** (the asymmetric P/N widths are the polarity key), **not** to the folded end
-> tabs — those are non-solderable mechanical locators. The footprint in this design is built to
-> the correct under-body land; don’t substitute an end-tab land.
+> The supercap land is the one thing to never get wrong. **Both** SCPC cells — the 39 mm
+> **SS17** (SC1/SC3) and the 28.5 mm **WS17** (SC2/SC4) — solder to **flat pads under the body**
+> (the asymmetric P/N widths are the polarity key), **not** to the folded end tabs, which are
+> non-solderable mechanical locators. The footprints here are built to the correct under-body
+> land; don't substitute an end-tab land.
+>
+> Mind the two lengths. Assuming every cell was the 28.5 mm WS17 is exactly what put 593 mm³ of
+> brace inside SC1 and SC3 — see [`enclosure/README.md`](enclosure/README.md).
 
 ---
 
@@ -222,8 +227,10 @@ The board is a KiCad project — open it, run DRC, and export the fab set:
 A first implementation now lives in **`firmware/`** — bare-metal C, **verified at the register
 level** against the AVR64EA28 and ADXL367 datasheets and **compile-verified in CI** (warning-free
 against the AVR-Ex DFP; not yet run on hardware). Its knobs, wake model, and power notes are in
-**`firmware/README.md`** (authoritative); the wiring it targets is in
-**`solar-glow-drh-v2-hardware.md`** (complete pin map, PORTMUX, the accel at I²C `0x1D`). Final
+**`firmware/README.md`** (authoritative); the wiring it targets is **`firmware/board.h`**, which
+`check_consistency` **[1]** holds against the schematic netlist pin by pin. (The complete v2-era
+pin map in **`solar-glow-drh-v2-hardware.md`** is lineage, not a current source — see the truth
+table above.) Final
 duty-cycle and feature tuning stay **gated on the energy-budget measurement** below. In short,
 the board gives it:
 
@@ -250,8 +257,7 @@ the board gives it:
   fire. Instant response isn't lost: the accelerometer interrupt wakes from Power-Down, and
   picking the card up to carry it into the light *is* that motion. (Standing current is ~2.7 µA total — the
   always-on accelerometer (ADXL367, ~0.89 µA) no longer dominates it, and neither the poll nor the NFC tag do, the latter being
-  power-gated off by default — see `firmware/README.md`, and the corrected
-  `solar-glow-drh-v2-hardware.md` §6.)
+  power-gated off by default — see `firmware/README.md`.)
 - **Low-power housekeeping** — `VREGCTRL.PMODE = AUTO` for sub-µA power-down; RTC/PIT off the
   internal ULP oscillator (no crystal); an EEPROM “times-activated” counter that survives a
   full supercap drain; and the core **IDLE-sleeps through the breathing glow** while TCA0 keeps
@@ -264,24 +270,43 @@ harvest number sizes.
 
 ---
 
-## Enclosure (parked)
+## Enclosure
 
-An optional back-only **machined-titanium** shell hugs the populated rear; the front stays naked.
-CAD, STEP, STL, fab notes and a dimensioned drawing are in `enclosure/`, on ice until the board is
-validated — see `enclosure/README.md`.
+A back-only **machined-titanium** shell hugs the populated rear; the front stays naked. A
+single-piece **resin diffuser brace** fills the cavity, carries centre support, backs the
+monogram window and holds the ferrite over the NFC coil. CAD, STEP, STL, fab notes and
+dimensioned drawings are in `enclosure/` — full detail in
+[`enclosure/README.md`](enclosure/README.md).
 
-![Titanium back-shell (Ti-max) — design render, not yet built](docs/enclosure-hero.png)
+![Exploded: titanium shell, resin brace, PCB, 8× M2 brass](enclosure/solar-glow-drh-assembly-exploded.png)
 
-The decisions that matter once it’s cut: **titanium (Ti-6Al-4V Grade 5)**, **3-axis CNC-milled** by
-PCBWay, **bead-blast** finish; the general cavity is **cap-limited to 1.80 mm** by the four 1.70 mm
-supercaps (the v3 U2 balancer (removed in v4) sat at 1.75 mm over a small **relief pocket** that drops the local floor 0.05 mm so it
-still clears), the floor runs to **1.00 mm** (no ribs — a resin diffuser brace carries center support), and the overall height
-is **3.55 mm**. The four bosses sit on the **v3.0 hole pattern** (concentric with the r3.0 corner
-fillets), the internal braces are **removed**, and retention is **eight M2 screws** (four corner + four panel-corner), not a press
-fit. The electrical gotcha — the screws tie the metal body to board GND, so the enclosed variant
-**drops the edge castellations** (or adds a die-cut Kapton layer) so nothing shorts to the grounded
-shell, and the **accelerometer tap is the actuator** (cap-touch dies behind a grounded plate). The
-dimensioned drawing is mid-regeneration for v3.0 — see `enclosure/README.md`.
+**Respun 2026-07-29 against the real board, because neither part would have assembled.** The
+brace's middle band was sized for supercap bays ending at y31.15 / y57.75 — the 28.5 mm WS17
+length — while SC1/SC3 are 39 mm SS17 cells, so it put **593 mm³ of solid resin inside three
+1.70 mm cans**. The shell's support lip landed on nine B-side parts including **4.17 mm² of
+live pad** (`STO`, `STO_LDO`, `VS`, `NFC_EN`) under grounded titanium — fitting it shorted the
+storage rail — and five of the eight M2 bosses fouled a part, two on live nets.
+
+Both geometries are now **computed from the board** (`enclosure/fit_rules.py`, reading part
+positions from `enclosure/board_parts.py`) rather than hand-placed, and gated by
+`check_consistency` **[8]**. Interference is structurally impossible: a part the brace cannot
+span is *subtracted* from its footprint rather than pocketed. No board change was required.
+
+The decisions that matter once it's cut: **titanium (Ti-6Al-4V Grade 5)**, **3-axis CNC-milled**
+by PCBWay, **bead-blast** finish. The cavity is **cap-limited to 1.80 mm** by the four 1.70 mm
+supercaps; the floor is a **true uniform 1.00 mm** (the old 0.05 mm U7 relief pocket was deleted
+2026-07-28 — U7 is the 0.90 mm DFN-8, not the 1.75 mm SOIC it was sized for); overall height
+**3.55 mm**. **Eight** bosses on the v4 8-hole pattern (four corner, concentric with the r3.0
+fillets, plus four panel-corner), each **scalloped** clear of whatever fouls it while keeping
+≥ 92.3 % of its M2 thread annulus. Retention is **eight M2×3 slotted brass screws**, not a press
+fit; the head is Ø3.0 and the tip lands **flush** in a Ø3.0 back spotface.
+
+The electrical gotchas: the screws tie the metal body to board GND, so the enclosed variant
+**drops the edge castellations** (or adds a die-cut Kapton layer) so nothing shorts to the
+grounded shell; the **accelerometer tap is the actuator** (cap-touch dies behind a grounded
+plate); and the east lip is held **1.00 mm clear of NFC coil copper measured at x48.550** — a
+grounded feature over the antenna detunes it, and the constant it used to be sized against
+(48.40) was optimistic enough to overhang.
 
 ---
 
