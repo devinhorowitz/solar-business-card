@@ -5,11 +5,13 @@ A business card that runs on light. An AVR microcontroller breathes four amber L
 backlight it through the bare fiberglass — while a pair of indoor solar cells trickle-charge
 a supercapacitor bank that holds the charge.
 
-![SOLAR-GLOW · DRH — assembled: titanium back-shell, resin brace, PCB, 8× M2 brass](https://raw.githubusercontent.com/devinhorowitz/solar-business-card/main/enclosure/solar-glow-drh-assembly-hero.png)
+![SOLAR-GLOW · DRH — the assembled card turning: titanium back-shell, resin brace, PCB, 8× M2 brass](https://raw.githubusercontent.com/devinhorowitz/solar-business-card/main/enclosure/solar-glow-drh-assembly-spin.gif)
 
 <sub>The assembled card — Ti back-shell, resin diffuser brace, 0.60 mm PCB and eight M2 brass screws.
-Rendered from the committed STLs and the board itself by `enclosure/assembly_render.py`; the
-exploded and reverse views, and the full respin, are in [`enclosure/README.md`](enclosure/README.md).</sub>
+Not an artist's impression: every surface here is the committed STEP-derived STL, the board outline
+and the eight mount positions come straight out of the `.kicad_pcb`, and the Z stack is the one
+`enclosure/fit_rules.py` enforces — so if the board moves, this picture moves with it. Stills, the
+exploded and reverse views, and the full respin are in [`enclosure/README.md`](enclosure/README.md).</sub>
 
 ![SOLAR-GLOW · DRH — front and back, gold ENIG on black soldermask](https://github.com/devinhorowitz/solar-business-card/blob/main/Generated/docs/solar-glow-drh-v4_0-top.png)
 

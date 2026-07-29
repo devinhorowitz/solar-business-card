@@ -1,7 +1,13 @@
 #!/usr/bin/env python3
-"""Assembly views: shell + brace + PCB + 8x M2 brass, exploded and closed.
+"""Assembly views: shell + brace + PCB + 8x M2 brass, exploded, closed, and turning.
 
-    python3 enclosure/assembly_render.py            # writes the four views beside this file
+    python3 enclosure/assembly_render.py            # writes all five views beside this file
+
+      solar-glow-drh-assembly.gif           exploded -> closed
+      solar-glow-drh-assembly-exploded.png  first frame of that
+      solar-glow-drh-assembly-hero.png      last frame of that
+      solar-glow-drh-assembly-reverse.png   closed, from behind: brass flush in its spotfaces
+      solar-glow-drh-assembly-spin.gif      one seamless revolution -- the root README hero
 
 WHAT MAKES THIS TRUSTWORTHY
 
@@ -25,6 +31,13 @@ CAVEATS, because a render invites more trust than it has earned:
   * The screwdriver slot is drawn as a recessed element rather than cut, because
     vtkBooleanOperationPolyDataFilter returns an empty mesh on these coarse cylinders --
     it did exactly that once and silently left a plain puck.
+  * The GIFs are 256-colour, so read them for form and fit, not for colour matching. The
+    turntable's palette is sampled around the whole revolution for a reason -- see the note
+    at the encode step, and the check that keeps it honest.
+
+Both animations are checked as they are built rather than trusted: the turntable aborts if any
+frame touches the render border (a silently cropped hero would ship) or if too much of the loop
+moves on quantisation (a silently mis-coloured one would too).
 """
 import os, sys, math
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -271,7 +284,121 @@ ren2.ResetCameraClippingRange(); rw2.Render()
 _w = vtk.vtkWindowToImageFilter(); _w.SetInput(rw2); _w.Update()
 _wr = vtk.vtkPNGWriter(); _wr.SetFileName(os.path.join(HERE, f"{STEM}-reverse.png"))
 _wr.SetInputConnection(_w.GetOutputPort()); _wr.Write()
-print(f"wrote {STEM}-hero.png, -exploded.png, -reverse.png, .gif")
+# ---- turntable: the assembled article, one seamless revolution --------------------------
+#
+# Same camera family as the hero still (elev 58 deg, view angle 30) so the spin reads as that
+# picture rotating rather than a different render. Constant angular velocity and an exclusive
+# 0..360 sweep, so the last frame hands off to the first with no stutter -- any easing here
+# would make the loop visibly hitch once per revolution.
+#
+# The frame is CROPPED to the box the part actually sweeps, not to the render window. At this
+# elevation the card fills barely half a square frame's height, and on a 60-frame GIF that
+# dead background is most of the file. The crop box is measured from the frames themselves
+# (union over the whole revolution), so it stays correct if the camera or the board changes.
+SPIN_FRAMES = 60
+SPIN_SIZE = 1000                       # square render; the crop below sets the real output size
+SPIN_DIST, SPIN_ELEV, SPIN_VANG = 215.0, 58.0, 30.0
+SPIN_PAD = 22                          # px of background kept around the swept box
+SPIN_COLORS = 256                      # GIF maximum -- see the palette note below
+SPIN_MS = 70                           # -> 4.2 s per revolution
+SPIN_DE = 20                           # a shift this big in a flat area is visible as a wrong hue
+SPIN_DE_FRAC = 0.5                     # ...and this much of the frame moving that far is the bug
+
+import numpy as np
+from PIL import Image
+
+ren3 = vtk.vtkRenderer(); ren3.SetBackground(0.965, 0.963, 0.955)
+rw3 = vtk.vtkRenderWindow(); rw3.SetOffScreenRendering(1); rw3.AddRenderer(ren3)
+rw3.SetSize(SPIN_SIZE, SPIN_SIZE)
+
+for _a in ([_mat(shell_pd, TI, 0.85, 0.55, 42, 0.16), _mat(brace_pd, RESIN, 0.85, 0.12, 8, 0.16),
+            _mat(board_pd, MASK, 0.85, 0.30, 26, 0.16)]
+           + [_mat(p, SOLAR, 0.85, 0.42, 48, 0.16) for p in solar_pds]
+           + [_mat(p, SILVER, 0.85, 0.75, 60, 0.16) for p in cap_pds]
+           + [_mat(p, IC, 0.85, 0.22, 18, 0.16) for p in ic_pds]
+           + [_mat(pd, (0.22, 0.16, 0.07) if k == "slot" else BRASS, 0.85,
+                   0.20 if k == "slot" else 0.70, 12 if k == "slot" else 55, 0.16)
+              for k, pd in screws]):
+    ren3.AddActor(_a)
+for _pos, _i in [((-60, -120, 150), 0.90), ((90, 40, 70), 0.45)]:
+    _L = vtk.vtkLight(); _L.SetPosition(*_pos); _L.SetIntensity(_i)
+    _L.SetLightTypeToSceneLight(); ren3.AddLight(_L)
+
+_BG = np.array([0.965, 0.963, 0.955]) * 255
+_cam3 = ren3.GetActiveCamera()
+_spin, _boxes = [], []
+for _i in range(SPIN_FRAMES):
+    _az = math.radians(360.0 * _i / SPIN_FRAMES)      # exclusive of 360 -> seamless loop
+    _el = math.radians(SPIN_ELEV)
+    _cam3.SetPosition(W / 2 + SPIN_DIST * math.sin(_el) * math.cos(_az),
+                      H / 2 + SPIN_DIST * math.sin(_el) * math.sin(_az),
+                      Z_FRONT / 2 + SPIN_DIST * math.cos(_el))
+    _cam3.SetFocalPoint(W / 2, H / 2, Z_FRONT / 2)
+    _cam3.SetViewUp(0, 0, 1); _cam3.SetViewAngle(SPIN_VANG)
+    ren3.ResetCameraClippingRange(); rw3.Render()
+    _w3 = vtk.vtkWindowToImageFilter(); _w3.SetInput(rw3); _w3.Update()
+    _arr = vtk_to_numpy(_w3.GetOutput().GetPointData().GetScalars())
+    _arr = _arr.reshape(SPIN_SIZE, SPIN_SIZE, -1)[::-1, :, :3]
+    _fg = np.abs(_arr.astype(np.int16) - _BG.astype(np.int16)).max(axis=2) > 6
+    _ys, _xs = np.nonzero(_fg)
+    if len(_xs) == 0:
+        raise SystemExit(f"turntable frame {_i} rendered empty -- the camera is inside the part")
+    # A clipped hero is the kind of thing that ships unnoticed, so make it fatal rather than
+    # trusting that the framing constants above still suit the geometry.
+    if _xs.min() == 0 or _ys.min() == 0 or _xs.max() == SPIN_SIZE - 1 or _ys.max() == SPIN_SIZE - 1:
+        raise SystemExit(f"turntable frame {_i} (az {math.degrees(_az):.0f} deg) touches the frame "
+                         f"edge -- raise SPIN_DIST or lower SPIN_VANG")
+    _boxes.append((_xs.min(), _ys.min(), _xs.max(), _ys.max()))
+    _spin.append(Image.fromarray(_arr))
+
+_x0 = max(0, min(b[0] for b in _boxes) - SPIN_PAD)
+_y0 = max(0, min(b[1] for b in _boxes) - SPIN_PAD)
+_x1 = min(SPIN_SIZE, max(b[2] for b in _boxes) + SPIN_PAD + 1)
+_y1 = min(SPIN_SIZE, max(b[3] for b in _boxes) + SPIN_PAD + 1)
+_x1 += (_x1 - _x0) & 1                                # even dimensions, for the video encoders
+_y1 += (_y1 - _y0) & 1
+_spin = [im.crop((_x0, _y0, _x1, _y1)) for im in _spin]
+
+# ONE palette for the whole loop -- but derived from a SAMPLE OF THE WHOLE LOOP, not from a
+# single frame. Per-frame ADAPTIVE palettes (PIL's default when handed RGB frames) cost a colour
+# table per frame and make flat areas shimmer; a palette taken from frame 0 alone is worse still.
+# This scene is mostly near-neutral darks -- black soldermask, near-black cells, titanium in
+# shadow -- with one small warm brass ramp, and frame 0 is the edge-on view that shows least of
+# it. Fitting 128 colours to that one histogram left the shell's dark greys with no near
+# neighbour, and undithered they snapped onto the brass browns: the titanium rim came out
+# visibly TAN in the GIF while the render behind it was neutral. Sampling around the revolution
+# at the GIF's 256-colour maximum is what fixes it, and the delta below is what proves it.
+_srcs = _spin[::max(1, SPIN_FRAMES // 10)]
+_mont = Image.new("RGB", (_spin[0].width, _spin[0].height * len(_srcs)))
+for _n, _im in enumerate(_srcs):
+    _mont.paste(_im, (0, _n * _spin[0].height))
+_pal = _mont.convert("P", palette=Image.ADAPTIVE, colors=SPIN_COLORS)
+_qs = [im.quantize(palette=_pal, dither=Image.Dither.NONE) for im in _spin]
+
+# Gate on HOW MUCH of the picture moves, not on the single worst pixel. Over 60 frames of ~530k
+# pixels there is always some specular outlier, so a max-shift gate only measures highlights --
+# it fired at 70/255 on a loop whose flat areas were already clean. What went wrong before was
+# broad: 2.43% of the frame shifted >20 and the rim read tan. Measured the same way, sampling the
+# palette around the revolution puts that at 0.06% -- 39x better -- while >40 and >60 barely move,
+# which is exactly the signature of "the flat areas are fixed, the highlights were never the
+# problem". 256 colours alone only reached 1.83%; the montage is what does the work.
+_moved = 0
+for _q, _s in zip(_qs, _spin):
+    _d = np.abs(np.asarray(_q.convert("RGB")).astype(np.int16)
+                - np.asarray(_s).astype(np.int16)).max(axis=2)
+    _moved += int((_d > SPIN_DE).sum())
+_frac = 100.0 * _moved / (len(_qs) * _spin[0].width * _spin[0].height)
+if _frac > SPIN_DE_FRAC:
+    raise SystemExit(f"turntable palette is starved: {_frac:.3f}% of the loop shifts more than "
+                     f"{SPIN_DE}/255 (limit {SPIN_DE_FRAC}%). Widen the palette sample or raise "
+                     f"SPIN_COLORS -- an undithered dark neutral lands on the brass ramp.")
+
+_gif = os.path.join(HERE, f"{STEM}-spin.gif")
+_qs[0].save(_gif, save_all=True, append_images=_qs[1:], duration=SPIN_MS, loop=0, optimize=True)
+print(f"wrote {STEM}-spin.gif  {_x1 - _x0}x{_y1 - _y0}  {SPIN_FRAMES} frames  "
+      f"{os.path.getsize(_gif) // 1024} KB  {_frac:.3f}% of pixels shifted >{SPIN_DE}")
+
+print(f"wrote {STEM}-hero.png, -exploded.png, -reverse.png, .gif, -spin.gif")
 
 import shutil
 shutil.rmtree(OUT, ignore_errors=True)

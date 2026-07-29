@@ -91,6 +91,12 @@ part positions from `enclosure/board_parts.py` (true 3D body ∪ pads, with the 
 
 ### Assembly and the Z stack
 
+![The assembled card, one revolution](solar-glow-drh-assembly-spin.gif)
+
+<sub>One seamless revolution of the closed assembly at the hero camera — 60 frames, 954×558. This is
+the root README's hero. `solar-glow-drh-assembly-hero.png` is the same camera as a still, and
+`solar-glow-drh-assembly.gif` is the exploded-to-closed sequence.</sub>
+
 ![Reverse side, closed — brass tips flush in their Ø3.0 spotfaces](solar-glow-drh-assembly-reverse.png)
 
 ```
