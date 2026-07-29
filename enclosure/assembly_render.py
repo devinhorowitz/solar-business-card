@@ -129,6 +129,61 @@ GIF_COLORS = 256                       # GIF maximum
 GIF_DE = 20                            # a shift this big in a flat area is a visible wrong hue
 GIF_DE_FRAC = 0.5                      # ...and this much of the loop moving that far is the bug
 
+# Re-render noise floor, measured between two consecutive CI runs on IDENTICAL inputs (main
+# f841b95 -> 7963c0f): 0.0317% of pixels moved more than 8, worst single pixel 54, mean absolute
+# difference 0.0072. The thresholds below sit ~16x and ~70x above that.
+NOISE_DE = 8
+NOISE_FRAC = 0.5                       # % of pixels allowed past NOISE_DE
+NOISE_MEAN = 0.5                       # mean absolute channel difference
+
+
+def _is_noise(old_frames, new_frames):
+    """True if two renders differ only by re-render noise, not by anything anyone can see.
+
+    THE RAYTRACER IS NOT BIT-REPRODUCIBLE. Generated/docs/…-card-face.png comes back a few
+    hundred bytes different on every run with the same board, and that plot is the TEXTURE on
+    the show face here -- so every textured view inherits the wobble, and GIF encoding turns a
+    handful of jittered pixels into a wholly different byte stream. The result was ~7 MB of
+    binary rewritten on every kibot run for no visible change, which is both repo bloat and the
+    thing that makes a REAL change impossible to spot in a diff.
+    (The tell that this is the mechanism and not a GL difference: the brace render, which is the
+    only output with no raytraced texture, comes back byte-identical across those same runs.)
+    """
+    if len(old_frames) != len(new_frames) or old_frames[0].size != new_frames[0].size:
+        return False
+    moved = 0
+    total = 0.0
+    for o, n in zip(old_frames, new_frames):
+        d = np.abs(np.asarray(o).astype(np.int16) - np.asarray(n).astype(np.int16))
+        moved += int((d.max(axis=2) > NOISE_DE).sum())
+        total += float(d.mean())
+    frac = 100.0 * moved / (len(new_frames) * new_frames[0].width * new_frames[0].height)
+    return frac <= NOISE_FRAC and total / len(new_frames) <= NOISE_MEAN
+
+
+def _frames_of(path):
+    """Decode a committed GIF or PNG to RGB frames; [] if it is missing or unreadable."""
+    if not os.path.exists(path):
+        return []
+    try:
+        im = Image.open(path)
+        out = []
+        for i in range(getattr(im, "n_frames", 1)):
+            im.seek(i)
+            out.append(im.convert("RGB"))
+        return out
+    except Exception:
+        return []
+
+
+def save_png_stable(img, path):
+    """Same noise gate as the GIFs, for the textured stills."""
+    if _is_noise(_frames_of(path), [img]):
+        print(f"kept {os.path.basename(path)}  (re-render differs only by raytracer noise)")
+        return False
+    img.save(path)
+    return True
+
 
 def encode_gif(imgs, path, ms, label):
     """Write an animation as ONE palette sampled across the WHOLE sequence, and prove it landed.
@@ -186,6 +241,9 @@ def encode_gif(imgs, path, ms, label):
         raise SystemExit(f"{label}: palette is starved -- {frac:.3f}% of the sequence shifts more "
                          f"than {GIF_DE}/255 (limit {GIF_DE_FRAC}%) at {colors} colours. Widen the "
                          f"palette sample; an undithered dark neutral lands on the brass ramp.")
+    if _is_noise(_frames_of(path), [q.convert("RGB") for q in qs]):
+        print(f"kept {os.path.basename(path)}  (re-render differs only by raytracer noise)")
+        return frac
     qs[0].save(path, save_all=True, append_images=qs[1:], duration=ms, loop=0, optimize=True)
     print(f"wrote {os.path.basename(path)}  {imgs[0].width}x{imgs[0].height}  {len(imgs)} frames  "
           f"{os.path.getsize(path) // 1024} KB  {colors} colours  "
@@ -367,8 +425,8 @@ print(f"rendered {len(frames)} frames")
 
 gif = os.path.join(HERE, f"{STEM}.gif")
 encode_gif([Image.open(f).convert("RGB") for f in frames], gif, 90, "exploded")
-Image.open(frames[-1]).save(os.path.join(HERE, f"{STEM}-hero.png"))
-Image.open(frames[0]).save(os.path.join(HERE, f"{STEM}-exploded.png"))
+save_png_stable(Image.open(frames[-1]).convert("RGB"), os.path.join(HERE, f"{STEM}-hero.png"))
+save_png_stable(Image.open(frames[0]).convert("RGB"), os.path.join(HERE, f"{STEM}-exploded.png"))
 
 # ---- reverse side, fully closed: the 8 brass tips flush in their CBORE_D spotfaces -------
 ren2 = vtk.vtkRenderer(); ren2.SetBackground(0.965, 0.963, 0.955)
@@ -400,8 +458,9 @@ _c2.SetPosition(W / 2 + _d * math.sin(_el) * math.cos(_az),
 _c2.SetFocalPoint(W / 2, H / 2, Z_FRONT / 2); _c2.SetViewUp(0, 0, 1); _c2.SetViewAngle(25)
 ren2.ResetCameraClippingRange(); rw2.Render()
 _w = vtk.vtkWindowToImageFilter(); _w.SetInput(rw2); _w.Update()
-_wr = vtk.vtkPNGWriter(); _wr.SetFileName(os.path.join(HERE, f"{STEM}-reverse.png"))
-_wr.SetInputConnection(_w.GetOutputPort()); _wr.Write()
+_rv = vtk_to_numpy(_w.GetOutput().GetPointData().GetScalars())
+_rv = _rv.reshape(rw2.GetSize()[1], rw2.GetSize()[0], -1)[::-1, :, :3]
+save_png_stable(Image.fromarray(_rv), os.path.join(HERE, f"{STEM}-reverse.png"))
 # ---- card flip: upright, front -> back -> front ------------------------------------------
 #
 # NOT a turntable. Spinning the card flat about its thickness axis is the pizza view: it never
@@ -597,11 +656,11 @@ _p4 = 24
 _img4 = _img4[max(0, _ys4.min() - _p4):min(BRACE_SIZE, _ys4.max() + _p4 + 1),
               max(0, _xs4.min() - _p4):min(BRACE_SIZE, _xs4.max() + _p4 + 1)]
 _fg4 = np.abs(_img4.astype(np.int16) - _BG.astype(np.int16)).max(axis=2) > 6
-Image.fromarray(_img4).save(BRACE_PNG)
-print(f"wrote brace/{os.path.basename(BRACE_PNG)}  {_img4.shape[1]}x{_img4.shape[0]}  "
-      f"zoom {_z4:.2f}, margin {_m4}px, fills {100.0 * _fg4.sum() / _fg4.size:.1f}% of frame")
+_wrote4 = save_png_stable(Image.fromarray(_img4), BRACE_PNG)
+if _wrote4:
+    print(f"wrote brace/{os.path.basename(BRACE_PNG)}  {_img4.shape[1]}x{_img4.shape[0]}  "
+          f"zoom {_z4:.2f}, margin {_m4}px, fills {100.0 * _fg4.sum() / _fg4.size:.1f}% of frame")
 
-print(f"wrote {STEM}-hero.png, -exploded.png, -reverse.png, .gif, -spin.gif")
 
 import shutil
 shutil.rmtree(OUT, ignore_errors=True)
