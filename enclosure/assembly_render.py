@@ -125,6 +125,25 @@ def actor(pd, rgb, spec=0.25, power=20, opacity=1.0):
     return a
 
 
+# THE SCENE IS LEFT-HANDED, so every render leaves here mirrored unless we say otherwise.
+# Board coords are X-right, Y-down, Z-front -- x_hat cross y_hat = -z_hat -- and dropping that
+# straight into a right-handed renderer mirrors the picture. Probed rather than assumed: with the
+# camera in front and up = -Y, a marker at board x=45 lands on the LEFT of frame, where the real
+# card puts it on the right. You cannot fix it with the up vector either; up = +Y rights the X
+# axis and stands the card on its head.
+#
+# It hid for so long because the shell is X-symmetric -- outline, eight bosses, both cell cutouts.
+# The only tells are the engraved maker's mark, which read backwards in every hero we shipped, and
+# the asymmetric support lip (2.5 west against 1.0 east), which sat on the wrong side in every
+# cavity view.
+#
+# Mirroring the finished image is exactly equivalent to mirroring the scene, because that is all
+# the defect is. Two cosmetic consequences, neither factual: the turntables now turn the other
+# way, and the key light appears to come from the other side.
+def present(img):
+    return img.transpose(Image.FLIP_LEFT_RIGHT)
+
+
 GIF_COLORS = 256                       # GIF maximum
 GIF_DE = 20                            # a shift this big in a flat area is a visible wrong hue
 GIF_DE_FRAC = 0.5                      # ...and this much of the loop moving that far is the bug
@@ -178,6 +197,7 @@ def _frames_of(path):
 
 def save_png_stable(img, path):
     """Same noise gate as the GIFs, for the textured stills."""
+    img = present(img)
     if _is_noise(_frames_of(path), [img]):
         print(f"kept {os.path.basename(path)}  (re-render differs only by raytracer noise)")
         return False
@@ -201,6 +221,7 @@ def encode_gif(imgs, path, ms, label):
     of half-megapixel there is always a specular outlier, and a max-shift gate fired at 70/255 on
     a sequence whose flat areas were already clean.
     """
+    imgs = [present(i) for i in imgs]
     srcs = imgs[::max(1, len(imgs) // 10)]
     mont = Image.new("RGB", (imgs[0].width, imgs[0].height * len(srcs)))
     for n, im in enumerate(srcs):
@@ -291,11 +312,11 @@ if not os.path.exists(TEX):
 _tm = vtk.vtkTextureMapToPlane()
 _tm.SetInputData(board_pd)
 # Orientation is not guessable from VTK's conventions -- the texture origin, the PNG reader's
-# row order and KiCad's y-down all interact. All four u/v corner assignments were rendered
-# top-down and correlated against the plot itself: this one scores 0.981, the others 0.62-0.82.
-# The failure mode is quiet and embarrassing rather than loud: the first attempt textured
-# perfectly and rendered the name and number MIRRORED.
-_tm.SetOrigin(W, H, Z_FRONT); _tm.SetPoint1(0.0, H, Z_FRONT); _tm.SetPoint2(W, 0.0, Z_FRONT)
+# row order and KiCad's y-down all interact -- so all four u/v corner assignments were rendered
+# top-down and correlated against the plot itself. This corner assignment is the one that is
+# correct once `present()` undoes the scene's left-handedness; the opposite one was correct
+# BEFORE that, because it cancelled the mirror. Change one and you must change the other.
+_tm.SetOrigin(0.0, H, Z_FRONT); _tm.SetPoint1(W, H, Z_FRONT); _tm.SetPoint2(0.0, 0.0, Z_FRONT)
 _tm.Update()
 board_pd = _tm.GetOutput()
 
