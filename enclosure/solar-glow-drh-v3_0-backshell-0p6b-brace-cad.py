@@ -246,114 +246,12 @@ def _recess_mouth_ease(wt, c):
 # grounded lip must never overhang or it detunes the antenna. That allows 2.40 over most
 # of the edge instead of 1.00.
 # ---------------------------------------------------------------------------------------
-LIP_CLR   = 0.30        # lip edge to the nearest part body or pad
-LIP_MAX   = {"W": 2.5, "E": 2.5, "S": 2.0, "N": 2.0}
-COIL_EAST = 48.40       # NFC coil east copper -- hard cap on the east lip
-BOSS_CLR  = 0.20        # Ti boss to part/pad
-THREAD_KEEP = 1.30      # never scallop inside this: the M2 thread lives at r0.80..~1.0
-
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from board_parts import parts as _board_parts   # noqa: E402
-_BPARTS = _board_parts("B")
-
-
-def _lip_reach(edge, lo, hi):
-    lim = LIP_MAX[edge]
-    for _ref, poly, _h, _src in _BPARTS:
-        x0, y0, x1, y1 = poly.bounds
-        if edge in ("W", "E"):
-            if y1 <= lo or y0 >= hi:
-                continue
-            d = x0 if edge == "W" else (W - x1)
-        else:
-            if x1 <= lo or x0 >= hi:
-                continue
-            d = y0 if edge == "S" else (H - y1)
-        lim = min(lim, d - LIP_CLR)
-    if edge == "E":
-        lim = min(lim, W - COIL_EAST)
-    return max(0.0, round(lim, 2))
-
-
-def lip_bands(edge, step=0.5):
-    """[(lo, hi, width)] along `edge`, merged. Computed, so it cannot go stale."""
-    span = H if edge in ("W", "E") else W
-    out, cur, start = [], None, 0.0
-    a = 0.0
-    while a < span - 1e-9:
-        b = min(a + step, span)
-        w = _lip_reach(edge, a, b)
-        if cur is None:
-            cur, start = w, a
-        elif abs(w - cur) > 1e-9:
-            out.append((start, a, cur)); cur, start = w, a
-        a = b
-    out.append((start, span, cur))
-    merged = []
-    for bnd in out:
-        if merged and abs(merged[-1][2] - bnd[2]) < 1e-9:
-            merged[-1] = (merged[-1][0], bnd[1], bnd[2])
-        else:
-            merged.append(bnd)
-    return merged
-
-
-def _cavity_void_poly(tool_r=1.0):
-    """Cavity void in BOARD coords: the board rect inset by the per-band lip, then opened by
-    the finisher radius so what is drawn is what a dia 2.0 tool can actually leave."""
-    void = box(0.0, 0.0, W, H)
-    strips = []
-    for lo, hi, w in lip_bands("W"):
-        strips.append(box(0.0, lo, w, hi))
-    for lo, hi, w in lip_bands("E"):
-        strips.append(box(W - w, lo, W, hi))
-    for lo, hi, w in lip_bands("S"):
-        strips.append(box(lo, 0.0, hi, w))
-    for lo, hi, w in lip_bands("N"):
-        strips.append(box(lo, H - w, hi, H))
-    void = void.difference(unary_union(strips))
-    opened = void.buffer(-tool_r, join_style=1, resolution=48).buffer(tool_r, join_style=1, resolution=48)
-
-    # A dia 2.0 finisher cannot reach into the concave corners a band step leaves, so opening
-    # the void puts material BACK over a few parts sitting near a step -- SC1, Q2, TP1, JP1,
-    # R5, a fixed 0.088 mm2 worst case that does not improve at any band clearance. Widening
-    # the bands cannot fix it; only a pocket the tool can actually cut can.
-    #
-    # Dilating a part's keep-out by the tool radius makes it tool-reachable by construction
-    # (a region dilated by r is unchanged by an opening at r), so union those in as local
-    # reliefs. Costs 48.89 mm2 of lip and is the price of clearing them at all.
-    lip_now = box(0.0, 0.0, W, H).difference(opened)
-    stuck = [poly for _ref, poly, _h, _src in _BPARTS
-             if lip_now.intersection(poly).area > 1e-6]
-    if stuck:
-        opened = opened.union(unary_union(
-            [poly.buffer(LIP_CLR + tool_r, join_style=1, resolution=48) for poly in stuck]))
-
-    if opened.geom_type == "MultiPolygon":
-        opened = max(opened.geoms, key=lambda g: g.area)
-    return opened.simplify(0.01, preserve_topology=True)
-
-
-def _boss_island(mx, my):
-    """A boss disc SCALLOPED clear of anything that fouls it.
-
-    Five of the eight bosses collide with a B-side part (worst: C23 0.528 mm into the boss
-    at (3.0,60.4)), and two of those are live nets under a grounded post -- R14 pad 1 is
-    NFC_EN, R5 pad 2 is VSENSE. Cutting the offending part out of the disc costs almost
-    nothing: the worst case keeps 92.4% of the r0.80..r2.60 annulus at a minimum radius of
-    1.80 mm, well outside the M2 thread. No board change, no lost fastener.
-    """
-    disc = Point(mx, my).buffer(boss_r, resolution=64)
-    foul = [poly for _ref, poly, _h, _src in _BPARTS
-            if poly.distance(Point(mx, my)) < boss_r]
-    if not foul:
-        return disc
-    scal = disc.difference(unary_union([p.buffer(BOSS_CLR, join_style=2) for p in foul]))
-    if scal.geom_type == "MultiPolygon":
-        keep = [g for g in scal.geoms if g.contains(Point(mx, my))]
-        scal = keep[0] if keep else disc
-    return scal.simplify(0.005, preserve_topology=True)
-
+# The lip bands, the cavity void and the boss scallops are all computed in
+# enclosure/fit_rules.py -- ONE home, shared with the brace generator and asserted by
+# check_consistency [8]. See that module for why they are not four scalars any more.
+from fit_rules import (lip_bands, cavity_void_poly as _cavity_void_poly,
+                       boss_island as _boss_island, LIP_CLR, LIP_MAX, COIL_EAST,
+                       BOSS_CLR, THREAD_KEEP)                                 # noqa: E402
 
 def _inner_pocket():
     """pocket-interior (void) footprint in BOARD coords, identical to the CAD cavity cut:

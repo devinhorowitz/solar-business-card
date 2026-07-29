@@ -17,6 +17,8 @@ change to one that isn't mirrored in the others fails loudly (in CI or locally):
       depicts (scripts/mask_art.py).                          [ERROR on drift]
   [7] PART HEIGHTS -- every enclosure pocket depth clears the part it is cut
       for, measured against that part's own 3D model.         [ERROR on drift]
+  [8] ENCLOSURE FIT -- the brace, the shell lip and all eight M2 bosses clear
+      every B-side part in XY, and the bosses keep their thread. [ERROR on drift]
   [3] DOC FILE REFS -- every solar-glow-drh-*.kicad_* file named in board.h,
       README.md, or firmware/README.md must actually exist.    [WARN on drift]
 
@@ -361,6 +363,134 @@ def check_part_heights():
               f"{ph.MODEL_NOTES[model]}")
 
 
+def check_enclosure_fit():
+    """Does the enclosure actually clear the parts on the board it is built for?
+
+    Check [7] proves the pocket DEPTHS clear their parts. Nothing proved the XY footprints
+    did, and on 2026-07-29 all three were wrong at once against the committed board:
+
+      * the brace's middle band was sized for supercap bays ending at y31.15/57.75 -- the
+        28.5 mm WS17 length -- while SC1/SC3 are 39 mm SS17 cells. 348.83 mm2 / 593 mm3 of
+        solid resin inside three 1.70 mm cans in a 1.80 mm cavity. Not installable.
+      * the shell's support lip landed on NINE B-side parts, including 4.17 mm2 of LIVE pad
+        (STO, STO_LDO, VS, NFC_EN) under grounded titanium. The board sets
+        pad_to_mask_clearance = 0, so those pads are bare copper: fitting the shell shorted
+        the storage rail to ground.
+      * five of the eight M2 bosses fouled a part, two of them on live nets.
+
+    None of it was catchable by eye, and the enclosure generators ran happily on all three.
+    They now derive their geometry from enclosure/fit_rules.py; this asserts the invariants
+    against those same functions, so it cannot drift into being a third opinion.
+    """
+    print("[8] enclosure geometry clears the board")
+    sys.path.insert(0, os.path.join(ROOT, "enclosure"))
+    try:
+        import fit_rules as fr
+        import board_parts  # noqa: F401
+    except Exception as e:
+        err(f"cannot import enclosure fit rules -- {type(e).__name__}: {e}")
+        return
+
+    ps = board_parts.parts("B")
+    bad = 0
+
+    # ---------------------------------------------------------------------------------
+    # These assertions are deliberately made against PHYSICS and against the BOARD, not
+    # against fit_rules' own outputs. A first cut of this check compared fit_rules geometry
+    # to fit_rules blockers and passed happily when SPAN_LIMIT was injected at 1.75 and
+    # again when LIP_CLR was injected at -0.50: it only ever proved the module agreed with
+    # itself. cavity_void_poly() also REPAIRS any lip-on-part overlap by adding a local
+    # relief, so "does the lip overlap a part" cannot fail by construction. What follows
+    # can fail.
+    # ---------------------------------------------------------------------------------
+
+    # 1. Anything the brace covers must leave a printable web above it. This is the real
+    #    constraint; SPAN_LIMIT is just its cached form, and a wrong SPAN_LIMIT fails here.
+    pieces = fr.brace_footprint()
+    for ref, poly, h, _src in ps:
+        if not any(g.intersects(poly) for g in pieces):
+            continue
+        a = sum(g.intersection(poly).area for g in pieces)
+        if a <= 1e-6:
+            continue
+        if h is None:
+            err(f"brace covers {ref} by {a:.3f} mm2 but {ref} has no height, so the resin "
+                f"web over it is unknown")
+            bad += 1
+            continue
+        web = fr.GAP - (h + fr.AIR)
+        if web < fr.SLA_WEB - 1e-9:
+            err(f"brace covers {ref} ({h:.2f} mm) over {a:.2f} mm2, leaving a {web:.2f} mm "
+                f"web -- below the {fr.SLA_WEB} mm printable minimum")
+            bad += 1
+
+    # 2. Every lip band must stand off the nearest part it runs past. Asserted on the BAND
+    #    WIDTH against the part positions, upstream of the self-healing relief.
+    MIN_STANDOFF = 0.10
+    for edge in ("W", "E", "S", "N"):
+        for lo, hi, w in fr.lip_bands(edge):
+            if w <= 0:
+                continue
+            for ref, poly, _h, _src in ps:
+                x0, y0, x1, y1 = poly.bounds
+                if edge in ("W", "E"):
+                    if y1 <= lo or y0 >= hi:
+                        continue
+                    d = x0 if edge == "W" else (fr.W - x1)
+                else:
+                    if x1 <= lo or x0 >= hi:
+                        continue
+                    d = y0 if edge == "S" else (fr.H - y1)
+                if w > d - MIN_STANDOFF:
+                    err(f"{edge} lip band {lo:.1f}..{hi:.1f} is {w:.2f} mm wide but {ref} "
+                        f"starts at {d:.2f} mm -- the grounded lip would land on it")
+                    bad += 1
+
+    # 3. The east lip may never overhang the NFC coil (a grounded feature there detunes it).
+    #    Compared against the coil copper MEASURED FROM THE BOARD and a standoff this check
+    #    owns -- comparing to fr.COIL_EAST would just be fit_rules agreeing with itself, and
+    #    that is exactly how the original hardcoded 48.40 hid a real 0.15 mm overhang.
+    MIN_COIL_STANDOFF = 0.10
+    coil_max = board_parts.coil_extent()[1]
+    for lo, hi, w in fr.lip_bands("E"):
+        lip_edge = fr.W - w
+        if lip_edge < coil_max + MIN_COIL_STANDOFF:
+            err(f"E lip band {lo:.1f}..{hi:.1f} reaches x{lip_edge:.2f}, within "
+                f"{MIN_COIL_STANDOFF} mm of NFC coil copper measured at x{coil_max:.3f} -- "
+                f"grounded titanium there detunes the antenna")
+            bad += 1
+
+    # 4. No part inside a boss, and the scallops must not eat the tapped thread.
+    import math
+    from shapely.geometry import Point as _P
+    for mx, my in fr.MOUNTS:
+        island = fr.boss_island(mx, my)
+        for ref, poly, _h, _src in ps:
+            a = island.intersection(poly).area
+            if a > 1e-6:
+                err(f"M2 boss at ({mx}, {my}) fouls {ref} by {a:.3f} mm2")
+                bad += 1
+        minr = fr.BOSS_R
+        for k in range(360):
+            ang = 2 * math.pi * k / 360
+            r = 0.0
+            while r <= fr.BOSS_R and island.contains(
+                    _P(mx + r * math.cos(ang), my + r * math.sin(ang))):
+                r += 0.05
+            minr = min(minr, r)
+        if minr < fr.THREAD_KEEP:
+            err(f"boss at ({mx}, {my}) is scalloped to r{minr:.2f}, inside the "
+                f"{fr.THREAD_KEEP} mm M2 thread keep-out")
+            bad += 1
+
+    if not bad:
+        cav = fr.cavity_rect().buffer(-fr.WALL_FIT, join_style=1, resolution=64)
+        cov = 100 * sum(g.area for g in pieces) / cav.area
+        ok(f"brace {len(pieces)} piece(s), {cov:.1f}% of cavity, every covered part keeps a "
+           f">={fr.SLA_WEB} mm web; {sum(len(fr.lip_bands(e)) for e in 'WESN')} lip bands all "
+           f"stand off their parts and clear the coil; 8 bosses clear, thread intact")
+
+
 def check_doc_file_refs():
     print("[3] referenced .kicad_* files exist")
     pat = re.compile(r'solar-glow-drh-v[0-9_]+\.kicad_(?:pcb|sch|pro|prl)')
@@ -633,6 +763,7 @@ def main():
     check_model_refs()
     check_mask_art()
     check_part_heights()
+    check_enclosure_fit()
     check_doc_file_refs()
     print(f"\n== {len(errors)} error(s), {len(warnings)} warning(s) ==")
     sys.exit(1 if errors else 0)

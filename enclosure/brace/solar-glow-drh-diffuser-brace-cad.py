@@ -8,8 +8,11 @@ REV B folds in the PCB-side notes (PCB/PCB-side-notes-brace-direction.md):
    sheets, and verified against each part's own 3D model by check_consistency [7]. It is not
    restated here on purpose: the copy that used to sit in this file went stale on U7 (kept 1.75
    for a SOIC-8 the v4 board does not carry) and cut it as a through-hole for a day.
- - Envelope clipped to the component-free middle band y 31.6-57.4 to KEEP CLEAR OF THE SUPERCAP BAYS
-   (cap bodies at y31.15 / y57.75). Caps are no longer cut as through-holes; they are simply outside.
+ - Envelope COMPUTED from the board (enclosure/fit_rules.py), not hand-placed. This line used to
+   read "clipped to the component-free middle band y 31.6-57.4 ... (cap bodies at y31.15 / y57.75)",
+   which is the 28.5 mm WS17 length; SC1/SC3 are 39 mm SS17 cells, so that band drove straight
+   through both of them. The footprint now subtracts every part it cannot span, so the caps are
+   outside it by construction rather than by an assumption about where they end.
  - FERRITE CHANNEL over the NFC coil (Wurth WE-FSFS 364006, DK 732-5049-ND). The pocket is an OPEN-ENDED
    CHANNEL: the WIDTH (12 mm, x) is walled and critical -- it is edge-limited by the board/coil east edge;
    the LENGTH (y) is open at both ends, so the ferrite (nominal 12 x 26 mm, even on the 2mm score grid) can
@@ -63,29 +66,13 @@ PCB = os.path.join(os.path.dirname(__file__), "..", "..", "PCB", "solar-glow-drh
 OUT = os.environ.get("OUT_DIR") or os.path.join(os.path.dirname(os.path.abspath(__file__)), "")
 BASE = "solar-glow-drh-diffuser-brace"
 
-BX0, BX1, BY0, BY1 = 2.60, 49.70, 31.6, 57.4  # band fills the SC gap (y31.15-57.75) full width; W edge x2.60 + E edge x49.70 CONTACT the flat walls (x2.55 / x49.75) at ~0.05mm
-# H-BRACE, PRECISION FIT: middle band + two outboard rails, sized so all four FLAT cavity walls are CONTACTED
-# (~0.05mm) for a no-rattle fit; the four corner bosses (r2.6) + rounded corners are RELIEVED (need not fit).
-# Rails run the FULL length (y2.10->86.80, S wall to N wall) OUTBOARD of the supercaps (SC1/SC3 x7-24, SC2/SC4
-# x26.8-43.8, 0.25mm gap), so they also back the Nt/Pt panel tabs. Band fills the SC gap (y31.15-57.75) full width.
-RAIL_W = (2.60, 2.10, 6.75, 86.80)   # west rail: x0 2.60 CONTACTS the W wall (x2.55); runs S->N wall (y2.10-86.80); x1 0.25 W of SC1/SC3
-RAIL_E_S = (44.05, 2.10, 48.20, 10.0)  # east rail S: widened-lip band (y0-10, wall x48.25) -> x48.20 CONTACT
-RAIL_E_M = (44.05, 10.0, 49.70, 72.0)  # east rail MID: pinched band (y10-72, wall x49.75) -> x49.70 CONTACT
-RAIL_E_N = (44.05, 72.0, 49.70, 86.80) # east rail N: shell east lip PINCHED here 2026-07-11 (was the 2.5 wide
-                                       # lip, wall x48.25; removed to clear the relocated clamp cluster). Now the
-                                       # wall is the pinched x49.75, so the rail extends to x49.70 CONTACT, like
-                                       # RAIL_E_M. The moved parts (U4 x49.16, R7/R9 48.98, Q1 48.51, C7 49.55; C10
-                                       # was DELETED in the passive consolidation) sit under this band and get pocketed.
-                                       # Re-verified vs the committed board: C7 is the east-closest -- its pocket (pad
-                                       # east 49.55 + 0.25 CLR = 49.80) EXCEEDS the rail edge x49.70, so it clips FLUSH
-                                       # to the east face (an open-edge pocket), NOT a fragile 0.15mm rail fin. No split
-                                       # needed. NOTE: the _clip cavity model below (line ~163) must reach x49.75 here
-                                       # too, or the intersect would pull this rail back to the OLD x48.25 -- fixed there.
-FP = [(BX0, BY0, BX1, BY1), RAIL_W, RAIL_E_S, RAIL_E_M, RAIL_E_N]
-def in_fp(x0,x1,y0,y1): return any(not (x1<=r[0] or x0>=r[2] or y1<=r[1] or y0>=r[3]) for r in FP)
-GAP   = 1.80
-CLR   = 0.25
-AIR   = 0.12
+# The five literal rectangles that used to define the footprint (BX*/RAIL_W/RAIL_E_*) are
+# GONE, with the in_fp rectangle test that went with them. They encoded supercap bays ending
+# at y31.15/57.75 -- the 28.5 mm WS17 length -- while SC1/SC3 are 39 mm SS17 cells, so the
+# brace put 593 mm3 of solid resin inside three 1.70 mm cans and could not be installed.
+# The footprint is computed from the board now; see enclosure/fit_rules.py.
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+from fit_rules import GAP, CLR, AIR                                          # noqa: E402
 GLOW  = (14.95, 40.8, 35.85, 47.0)
 FER   = (36.9, 31.5, 48.9, 57.5)   # 12 WIDE (x, CRITICAL -- edge-limited) x 26 LONG (y, nominal; length is
                                    # forgiving -- open-ended channel, may run long/short and extend slightly past the brace).
@@ -108,7 +95,6 @@ def wy(by): return by - H/2
 # `part_height()` ladder ending in a silent `return 0.60`; that copy went stale on U7 (1.75,
 # a SOIC-8 the v4 rework removed -> a pocket cut clean THROUGH the brace) and defaulted Q2
 # and FB1 too shallow. Import, do not re-declare.
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 from part_heights import part_height  # noqa: E402
 
 from board_parts import parts as _board_parts  # noqa: E402
@@ -143,47 +129,21 @@ _KEEPOUT = {ref: poly for ref, poly, _h, _src in _board_parts("B")}
 # Opening is what keeps it printable: subtracting round reliefs from rails leaves slivers,
 # and the opening deletes anything narrower than SLA_WALL and rounds the necks it leaves.
 # ---------------------------------------------------------------------------------------
-from shapely.geometry import box as _bx2, Point as _pt2                      # noqa: E402
-from shapely.ops import unary_union as _uu2                                  # noqa: E402
+from shapely.geometry import box as _bx2                                     # noqa: E402
+from fit_rules import (brace_footprint as _brace_footprint, cavity_rect as _cavity_rect,
+                       blockers as _fit_blockers, SPAN_LIMIT, SLA_WEB, SLA_WALL,
+                       WALL_FIT as _WCLR, RELIEF_R, BOSS_R)                   # noqa: E402
 
-SLA_WEB   = 0.40                  # thinnest resin that may remain OVER a pocket
-SLA_WALL  = 0.60                  # thinnest in-plane feature we will print
-SPAN_LIMIT = GAP - AIR - SLA_WEB  # 1.28 -- taller than this cannot be covered at all
-BOSS_R     = 2.60
-RELIEF_R   = BOSS_R + CLR         # 2.85. Was a flat 3.00, which pinched every rail to a
-                                  # 0.750 mm waist at all eight bosses; at 2.85 the waist is
-                                  # 0.901 and the clearance matches the CLR used everywhere else.
-BOSS_RELIEF=[(3.0,3.0),(47.8,3.0),(3.0,85.9),(47.8,85.9),
-             (3.0,28.5),(47.8,28.5),(3.0,60.4),(47.8,60.4)]
-
-# the shell's own cavity void, inset by the wall-contact fit
-_WCLR = 0.05
-_x0,_y0,_x1,_y1,_ir = 2.50,2.00,49.80,86.90,1.95
-_cav=_bx2(_x0+_ir,_y0,_x1-_ir,_y1).union(_bx2(_x0,_y0+_ir,_x1,_y1-_ir))
-for _cx,_cy in [(_x0+_ir,_y0+_ir),(_x1-_ir,_y0+_ir),(_x0+_ir,_y1-_ir),(_x1-_ir,_y1-_ir)]:
-    _cav=_cav.union(_pt2(_cx,_cy).buffer(_ir,resolution=64))
-_cav=_cav.buffer(-_WCLR,join_style=1,resolution=64)
-
-_blockers=[(ref,poly) for ref,poly,h,_src in _board_parts("B")
-           if h is None or h > SPAN_LIMIT]
-_keep=_uu2([poly.buffer(CLR,join_style=2) for _ref,poly in _blockers])
-_boss=_uu2([_pt2(b).buffer(RELIEF_R,resolution=64) for b in BOSS_RELIEF])
-
-_fp=_cav.difference(_keep).difference(_boss)
-_t=SLA_WALL/2.0
-_fp=_fp.buffer(-_t,join_style=1,resolution=32).buffer(_t,join_style=1,resolution=32).intersection(_cav)
-
-# Keep every piece above MIN_PIECE; smaller crumbs are print debris, not support. The NE
-# island (~84 mm2, east of SC4) is a genuine second piece -- it cannot connect to the main
-# body without crossing SC4 -- so it is reported, and shipped, as its own part.
-MIN_PIECE = 25.0
-_pieces=sorted((list(_fp.geoms) if _fp.geom_type=="MultiPolygon" else [_fp]),
-               key=lambda g:-g.area)
-_pieces=[g for g in _pieces if g.area >= MIN_PIECE]
-# The buffer chain leaves ~2200 vertices on the main outline, which OCC extrudes in
-# minutes. simplify(0.01) takes it to ~270 for an area change of 0.10 mm2 (0.007%) --
-# far inside the SLA print tolerance this outline will ever be held to.
-_pieces=[g.simplify(0.01, preserve_topology=True) for g in _pieces]
+# The rules live in enclosure/fit_rules.py, shared with the shell generator and asserted by
+# check_consistency [8]. They are NOT restated here: the copy that used to sit in this file
+# is what went stale against the supercaps.
+_pieces = _brace_footprint()
+_cav = _cavity_rect().buffer(-_WCLR, join_style=1, resolution=64)
+_blockers = _fit_blockers()
+# The ferrite channel and the window backing below are still expressed relative to the
+# brace's outer extent, so publish it -- derived from the computed footprint rather than
+# from the retired hand-placed band constants of the same name.
+BX0, BY0, BX1, BY1 = _pieces[0].bounds
 
 brace=None
 for _g in _pieces:
@@ -199,7 +159,7 @@ for _g in _pieces:
 def in_fp(x0,x1,y0,y1):
     """Is any of this part's keep-out actually under the brace? (was a rectangle test that
     tied on L2 at exactly y57.400000 and silently gave it no pocket)"""
-    return _fp.intersects(_bx2(x0,y0,x1,y1))
+    return any(g.intersects(_bx2(x0,y0,x1,y1)) for g in _pieces)
 
 cut_log=[]; pk=[]
 for ref,x0,x1,y0,y1 in comps:
@@ -270,7 +230,6 @@ try:
     g=GProp_GProps(); BRepGProp.VolumeProperties_s(brace.val().wrapped,g)
     print(f"brace volume {g.Mass()/1000:.2f} cm^3 (~{g.Mass()/1000*1.15:.1f} g tough white SLA)")
 except Exception as e: print("vol:",e)
-_fx=[r[0] for r in FP]+[r[2] for r in FP]; _fy=[r[1] for r in FP]+[r[3] for r in FP]
 print(f"brace {len(_pieces)} piece(s), {sum(g.area for g in _pieces):.1f} mm2 = "
       f"{100*sum(g.area for g in _pieces)/_cav.area:.1f}% of the {_cav.area:.0f} mm2 cavity floor; "
       f"{len(cut_log)} pockets; footprint COMPUTED from the board (blockers: "
@@ -283,11 +242,14 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle, Circle
 import matplotlib.patches as mp
 fig,ax=plt.subplots(figsize=(9,5)); ax.set_facecolor("#0d0d10"); fig.patch.set_facecolor("#0d0d10")
-for _rx0,_ry0,_rx1,_ry1 in FP:
-    ax.add_patch(Rectangle((_rx0,_ry0),_rx1-_rx0,_ry1-_ry0,fc="#e8e4d8",ec="#fff",lw=1.5,alpha=0.28))
+# the pocket map draws the ACTUAL computed footprint, not the retired FP rectangles -- the
+# map disagreeing with the part is how a wrong pocket stays invisible to review
+for _g in _pieces:
+    ax.add_patch(mp.Polygon(list(_g.exterior.coords), closed=True,
+                            fc="#e8e4d8", ec="#fff", lw=1.5, alpha=0.28))
 for _tx,_ty,_lb in [(4.3,17.0,"PV1 N-tab"),(46.5,17.0,"PV1 P-tab"),(4.3,71.9,"PV2 N-tab"),(46.5,71.9,"PV2 P-tab")]:
     ax.plot(_tx,_ty,marker="*",ms=9,color="#ff5252",zorder=8); ax.text(_tx,_ty+2.0,_lb,color="#ff8a80",ha="center",va="bottom",fontsize=4.2,zorder=8)
-ax.text((BX0+BX1)/2,BY1-0.9,"WHITE RESIN BRACE (fills the gap, y31.6-57.4)",color="#eee",ha="center",fontsize=7,fontweight="bold")
+ax.text((BX0+BX1)/2,BY1-0.9,f"WHITE RESIN BRACE ({len(_pieces)} piece(s), computed from the board)",color="#eee",ha="center",fontsize=7,fontweight="bold")
 ax.add_patch(Rectangle((FER[0]-FER_CLR,BY0),FER[2]-FER[0]+2*FER_CLR,BY1-BY0,fc="#2a2140",ec="#7e57c2",lw=0.9,ls=(0,(3,2)),alpha=0.6))   # open channel (walled x, open y)
 ax.add_patch(Rectangle((FER[0],FER[1]),FER[2]-FER[0],FER[3]-FER[1],fc="#3a2b55",ec="#b39ddb",lw=1.3,alpha=0.9))                                # ferrite 12x26 (runs past the brace y-edges)
 ax.text((FER[0]+FER[2])/2,(FER[1]+FER[3])/2,"FERRITE 12x26\nwidth CRITICAL\nlength forgiving\n(open channel)",color="#d1c4e9",ha="center",va="center",fontsize=5.2,fontweight="bold")

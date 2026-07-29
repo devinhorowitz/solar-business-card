@@ -79,7 +79,9 @@ def model_extent(name: str):
 def _blocks(text: str, tag: str = "footprint"):
     """Balanced-paren s-expression blocks; the board is too big for a naive regex."""
     out = []
-    for m in re.finditer(r'\(' + tag + r' ', text):
+    # \s not a literal space: footprints are written "(footprint " but tracks are
+    # "(segment\n", so a space-only match silently found zero coil segments.
+    for m in re.finditer(r'\(' + tag + r'[\s]', text):
         depth, i = 0, m.start()
         while i < len(text):
             c = text[i]
@@ -168,6 +170,34 @@ def parts(side: str = "B", pcb: str | None = None):
             h = None
         out.append((ref, keepout, h, source))
     return out
+
+
+COIL_NETS = ("LA", "LB")
+
+
+def coil_extent(pcb: str | None = None):
+    """(min_x, max_x) of the NFC coil copper, measured from the board.
+
+    The shell hard-coded COIL_EAST = 48.40 as the coil's east edge. The board's LA/LB
+    copper actually reaches x 48.550 -- so the constant was 0.15 mm optimistic and the
+    grounded titanium lip, sized against it, overhung the antenna. Derive it instead.
+    """
+    with open(pcb or PCB, encoding="utf-8", errors="replace") as fh:
+        text = fh.read()
+    xs = []
+    for tag in ("segment", "arc"):
+        for b in _blocks(text, tag):
+            nm = re.search(r'\(net "([^"]*)"', b)
+            if not nm or nm.group(1) not in COIL_NETS:
+                continue
+            wm = re.search(r'\(width ([\d.]+)\)', b)
+            half = float(wm.group(1)) / 2 if wm else 0.0
+            for pm in re.finditer(r'\((?:start|end|mid) (-?[\d.]+) (-?[\d.]+)\)', b):
+                x = float(pm.group(1))
+                xs.append(x - half); xs.append(x + half)
+    if not xs:
+        raise RuntimeError("no LA/LB coil copper found on the board")
+    return min(xs), max(xs)
 
 
 if __name__ == "__main__":
