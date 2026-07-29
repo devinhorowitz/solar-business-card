@@ -130,6 +130,78 @@ def build(board):
     return art
 
 
+
+# --- the NFC coil, exposed on the back -------------------------------------------
+# The 7-turn antenna is etched copper on B.Cu and was sitting under black soldermask,
+# so the finished card never showed it: 81 segments of real spiral, invisible. The
+# front's whole argument is that the ornament IS the wiring; the back had 639 apertures
+# on F.Mask and exactly one on B.Mask -- the glow window -- and nothing over the coil.
+#
+# Opening the mask over LA/LB plates the spiral in ENIG and reads as gold on black. Like
+# the cartouche it is COMPUTED from the copper, so a re-route or a retune moves the art
+# with it rather than leaving a drawing behind.
+#
+# ONLY LA/LB. Every other B.Cu net stays under mask -- verified below, not assumed,
+# because this is the face that sits against a GROUNDED titanium shell and the lip
+# already landed on live pad once in this project's history.
+COIL_NETS = ("LA", "LB")
+COIL_EXPANSION = 0.05        # aperture grown off the copper edge
+
+
+def coil_aperture(board):
+    """Union of the LA/LB back copper, grown by the mask expansion."""
+    from shapely.geometry import Point, LineString
+    from shapely.ops import unary_union
+    IU = 1e6
+    bcu = board.GetLayerID("B.Cu")
+    parts = []
+    for t in board.GetTracks():
+        if not t.IsOnLayer(bcu) or t.GetNetname() not in COIL_NETS:
+            continue
+        s, e = t.GetStart(), t.GetEnd()
+        try:
+            r = t.GetWidth() / IU / 2.0 + COIL_EXPANSION
+        except Exception:
+            continue
+        a, b = (s.x / IU, s.y / IU), (e.x / IU, e.y / IU)
+        parts.append(Point(a).buffer(r) if a == b else
+                     LineString([a, b]).buffer(r, cap_style=2))
+    if not parts:
+        return None
+    return unary_union(parts)
+
+
+def coil_guard(board, ap):
+    """Refuse to expose anything that is not the antenna, or anything the grounded Ti
+    shell reaches. Returns a list of complaints; empty means safe."""
+    from shapely.geometry import box, Point
+    IU = 1e6
+    bad = []
+    bcu = board.GetLayerID("B.Cu")
+    for t in board.GetTracks():
+        if not t.IsOnLayer(bcu) or t.GetNetname() in COIL_NETS:
+            continue
+        s, e = t.GetStart(), t.GetEnd()
+        from shapely.geometry import LineString, Point as P
+        a, b = (s.x / IU, s.y / IU), (e.x / IU, e.y / IU)
+        g = P(a).buffer(0.05) if a == b else LineString([a, b]).buffer(0.05)
+        if g.intersects(ap):
+            bad.append(f"aperture would expose net {t.GetNetname()!r} on B.Cu")
+            break
+    sys.path.insert(0, str(ROOT / "enclosure"))
+    try:
+        import fit_rules as fr
+        if fr.lip_poly().intersects(ap):
+            bad.append("aperture is under the grounded Ti support lip")
+        for m in fr.MOUNTS:
+            if Point(m).buffer(fr.BOSS_R).intersects(ap):
+                bad.append(f"aperture is under the Ti boss annulus at {m}")
+                break
+    except Exception as exc:
+        bad.append(f"could not check the shell against it: {exc}")
+    return bad
+
+
 # --- emit ------------------------------------------------------------------------
 
 def _bridge(poly):
@@ -148,7 +220,7 @@ def _bridge(poly):
     return ext
 
 
-def emit(geom) -> str:
+def emit(geom, layer="F.Mask", tag=None) -> str:
     from shapely.geometry import MultiPolygon
     out = []
     geoms = list(geom.geoms) if isinstance(geom, MultiPolygon) else [geom]
@@ -163,8 +235,8 @@ def emit(geom) -> str:
                    # even with the routing untouched -- a gate that cries wolf, and an
                    # --apply that produces a no-op-but-noisy board diff to silence it.
                    # Matching KiCad's own canonical form makes the check stable.
-                   f'\t\t(fill yes)\n\t\t(layer "F.Mask")\n'
-                   f'\t\t(uuid "{_uid(f"{TAG}-{k}")}")\n\t)\n')
+                   f'\t\t(fill yes)\n\t\t(layer "{layer}")\n'
+                   f'\t\t(uuid "{_uid(f"{tag or TAG}-{k}")}")\n\t)\n')
     return "".join(out)
 
 
@@ -227,6 +299,23 @@ def report(geom):
                 min_aperture=min(radii) if radii else 0.0)
 
 
+
+def generate(board):
+    """-> (body, cartouche, coil). THE one definition of what this generator writes.
+
+    main() and check_consistency [6] both call this. They used not to: the check rebuilt only
+    `emit(build(board))` and compared that against the whole file, which was a second, quieter
+    copy of "what the generator emits". It agreed with reality exactly as long as the generator
+    owned one thing -- and reported the board STALE the moment the coil aperture made it two,
+    while `mask_art --check` on the same board said MATCH. One home instead.
+    """
+    art = build(board)
+    coil = coil_aperture(board)
+    if coil is None:
+        raise SystemExit("mask_art: no LA/LB copper on B.Cu -- the coil IS the art, so this is fatal")
+    return emit(art) + emit(coil, layer="B.Mask", tag=f"{TAG}-coil"), art, coil
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--apply", action="store_true")
@@ -247,7 +336,15 @@ def main() -> int:
     if r["min_aperture"] < 0.10:
         print(f"  WARNING: {r['min_aperture']:.3f} mm is below a 0.10 mm mask aperture floor")
 
-    body = emit(art)
+    body, art2, coil = generate(board)
+    complaints = coil_guard(board, coil)
+    if complaints:
+        for c in complaints:
+            print(f"  COIL ABORT: {c}")
+        sys.exit("mask_art: refusing to expose the coil")
+    print(f"  nfc coil: {len(coil.geoms) if coil.geom_type == 'MultiPolygon' else 1} piece(s), "
+          f"{coil.area:.1f} mm² of gold on B.Mask, nothing but {'/'.join(COIL_NETS)} exposed")
+
     raw = BOARD.read_bytes()
     crlf = raw.count(b"\r\n")
     if crlf and crlf != raw.count(b"\n"):

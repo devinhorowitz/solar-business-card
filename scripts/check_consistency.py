@@ -226,7 +226,7 @@ def check_mask_art():
     Degrades honestly: the check needs pcbnew and shapely, and CI's image may carry
     neither. When they are missing it says so rather than passing quietly.
     """
-    print("[6] front mask art matches the routing")
+    print("[6] mask art matches the routing (front cartouche + back NFC coil)")
     sys.path.insert(0, os.path.join(ROOT, "scripts"))
     try:
         import pcbnew  # noqa: F401
@@ -238,17 +238,20 @@ def check_mask_art():
         return
     import pcbnew
     board = pcbnew.LoadBoard(PCB)
-    body = mask_art.emit(mask_art.build(board))
+    # generate(), not emit(build()): the generator owns BOTH the front cartouche and the
+    # back coil aperture, and rebuilding only half of it here reported a correct board
+    # as STALE while the generator's own --check said MATCH.
+    body = mask_art.generate(board)[0]
     with open(PCB, encoding="utf-8") as fh:
         txt = fh.read().replace("\r\n", "\n")
     kept, had = mask_art.strip_existing(txt)
     want = mask_art._splice(kept, body)
     if want == txt:
-        ok(f"cartouche matches: {had} generated shape(s) agree with current routing")
+        ok(f"mask art matches: {had} generated shape(s) agree with current routing")
     elif had == 0:
         warn("no generated mask art in the board -- run `python3 scripts/mask_art.py --apply`")
     else:
-        err(f"front mask art is STALE: the board carries {had} generated shape(s) that no "
+        err(f"mask art is STALE: the board carries {had} generated shape(s) that no "
             f"longer match the routing. Re-run `python3 scripts/mask_art.py --apply`.")
 
 def _b_side_parts():
