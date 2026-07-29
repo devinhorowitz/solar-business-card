@@ -137,8 +137,8 @@ for _f in (MAKER_FONT_R, MAKER_FONT_B):
                          "  the engraved text is part of the machined part, so this is not "
                          "substitutable -- set MAKER_FONT_DIR to a directory holding JetBrains Mono.")
 MAKER_LINES  = [                       # (text, LEFT-edge x, centerline y, cap height, font)  board coords, readable
-    ("DESIGNED & MADE BY", 7.0, 79.3, 1.20, MAKER_FONT_R),
-    ("DEVIN HOROWITZ",     7.0, 81.9, 1.65, MAKER_FONT_B),
+    ("DESIGNED & MADE BY", 7.0, 51.5, 1.20, MAKER_FONT_R),
+    ("DEVIN HOROWITZ",     7.0, 54.1, 1.65, MAKER_FONT_B),
 ]
 
 # round-tool relief: a spinning end mill cannot cut a sharp INTERNAL (concave) corner -- it always
@@ -251,7 +251,9 @@ def _recess_mouth_ease(wt, c):
 # check_consistency [8]. See that module for why they are not four scalars any more.
 from fit_rules import (lip_bands, cavity_void_poly as _cavity_void_poly,
                        boss_island as _boss_island, LIP_CLR, LIP_MAX, COIL_EAST,
-                       BOSS_CLR, THREAD_KEEP, export_step_stable)                                 # noqa: E402
+                       BOSS_CLR, THREAD_KEEP, export_step_stable,
+                       fin_region as _fin_region, fin_ribs as _fin_ribs,
+                       FIN_PROUD, FIN_VALLEY)                                 # noqa: E402
 
 def _inner_pocket():
     """pocket-interior (void) footprint in BOARD coords, identical to the CAD cavity cut:
@@ -312,7 +314,7 @@ def _maker_text(txt, lx, cy, capH, fontpath):
 _LIPSUM = {e: len(lip_bands(e)) for e in ('W', 'E', 'S', 'N')}
 
 
-def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pillars=False, locators=False, prog_window=False, glow_marker=True, maker_mark=True, tool_relief=False):
+def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pillars=False, locators=False, prog_window=False, glow_marker=True, maker_mark=True, tool_relief=False, fins=True):
     bb = floor + cavity                       # board-back / boss-top / lip-top / rib-top plane
     wt = bb + board_th
     outW, outH, outR = cavW + 2*wall_th, cavH + 2*wall_th, cavR + wall_th
@@ -391,6 +393,18 @@ def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pill
         if tool_relief:
             for poly in _relief_for(_back_islands(), BACK_TOOL_R):
                 res = res.union(_poly_solid(poly, -border_h, border_h))
+    # BACK FIN FIELDS: two fields with a clear band between them, texture rather than cooling.
+    # Cut the whole field VALLEY deep into the floor, then stand the ribs back up PROUD of it --
+    # 0.40 mm peak-to-valley while the thinnest floor is 0.70, and the rib tops stay 0.05 under
+    # the frame plane so the frame remains the sole bearing surface and the texture never scuffs
+    # on a desk. Geometry is computed in fit_rules from the board: the clear band IS the gap the
+    # two solar cells leave on the show face, so it tracks the board rather than being drawn.
+    if fins and border_h > 0:
+        for _p in _fin_region().geoms if _fin_region().geom_type == "MultiPolygon" else [_fin_region()]:
+            res = res.cut(_poly_solid(_p, 0.0, FIN_VALLEY))
+        for _p in _fin_ribs():
+            res = res.union(_poly_solid(_p, -FIN_PROUD, FIN_PROUD + FIN_VALLEY))
+
     # M2 holes CLEAN THROUGH (boss + skin + back annulus)
     twp = cq.Workplane("XY").workplane(offset=-border_h - 0.1)
     for mx, my in mounts:
@@ -427,7 +441,21 @@ def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pill
     if maker_mark:
         import shapely.affinity as _aff
         from shapely.ops import unary_union as _uu
-        _mk=[g for g in (_maker_text(t,lx,cy,cH,fp) for t,lx,cy,cH,fp in MAKER_LINES) if g is not None]
+        # EACH LINE IS MIRRORED ABOUT ITS OWN CENTRELINE FIRST. Glyph outlines come out of the
+        # font in Y-UP space; board space is Y-DOWN, so dropping them in as-is engraves every
+        # letter UPSIDE DOWN while leaving the letter order and the line order correct -- which
+        # is exactly why it survived: it reads as text, just inverted. Rasterising the cut
+        # geometry is what caught it, and the tell is that V comes out as a lambda and W as an M.
+        # Those two letters are horizontally symmetric, so no left-right mirror can touch them;
+        # only a vertical flip does that.
+        #
+        # NOT a 180 deg rotation. That also rights the letters, but it reverses the reading order
+        # with them -- verified, it renders "ZTIWOROH NIVED". Per-line about its own cy rights the
+        # glyphs and leaves the two lines where they belong.
+        _mk=[]
+        for _t,_lx,_cy,_cH,_fp in MAKER_LINES:
+            _g=_maker_text(_t,_lx,_cy,_cH,_fp)
+            if _g is not None: _mk.append(_aff.scale(_g, xfact=1, yfact=-1, origin=(0,_cy)))
         if _mk:
             _mg=_aff.scale(_uu(_mk), xfact=-1, yfact=1, origin=(25.4,44.45))
             for _p in (_mg.geoms if _mg.geom_type=="MultiPolygon" else [_mg]):
