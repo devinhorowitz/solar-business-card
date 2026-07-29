@@ -39,7 +39,7 @@ from __future__ import annotations
 import os
 import sys
 
-from shapely.geometry import box, Point
+from shapely.geometry import box, Point, Polygon
 from shapely.ops import unary_union
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -236,6 +236,107 @@ def boss_island(mx, my):
         keep = [g for g in scal.geoms if g.contains(Point(mx, my))]
         scal = keep[0] if keep else disc
     return scal.simplify(0.005, preserve_topology=True)
+
+
+# ---- back-side fin fields ----------------------------------------------------------------
+# Texture on the exterior back: two fin fields with a clear band between them. Called "cooling
+# fins" and they cool nothing -- Ti-6Al-4V conducts at ~6.7 W/m*K against aluminium's ~150, and
+# this card's entire budget is microwatts. They are grip and they are aggression; the surface-area
+# story is a joke the geometry is in on. Saying so here rather than in the part name.
+#
+# HORIZONTAL (ribs across X). Held in portrait the card wants to slide down through the fingers,
+# and ridges perpendicular to that slide are the ones that stop it. The trade is real: ribs across
+# the short axis do NOT stiffen the card against its dominant flex, which is curling along its
+# length -- lengthwise ribs would. Grip wins because the plate is screwed to a PCB at eight points,
+# not carried bare, and 0.70 mm of floor survives under the valleys.
+FIN_PITCH  = 3.2           # centre-to-centre; coarser reads as fins, finer reads as knurl
+FIN_RIB_W  = 1.7           # rib width; the rest of the pitch is valley
+FIN_PROUD  = 0.10          # rib tops stand this proud of the art field...
+FIN_VALLEY = 0.30          # ...and valleys are cut this far into the 1.00 floor -> 0.40 relief
+FIN_BOSS_CLR = 0.40        # rib to back boss annulus
+BACK_BORDER = 2.0          # the proud back frame's width (mirrors the generator's own constant)
+
+
+def _dedupe(poly):
+    """Drop zero-length edges. Buffer operations leave coincident consecutive vertices, and OCC
+    turns one of those into `BRepAdaptor_Curve::No geometry` the moment it tries to build a face
+    -- which is exactly how the first finned build died. Deliberately NOT simplify(): that moves
+    vertices, and these polygons are holding a boss clearance that is exactly 3.000 mm.
+    """
+    def ring(cs):
+        out = [cs[0]]
+        for c in cs[1:]:
+            if abs(c[0] - out[-1][0]) > 1e-9 or abs(c[1] - out[-1][1]) > 1e-9:
+                out.append(c)
+        if len(out) > 1 and abs(out[0][0] - out[-1][0]) < 1e-9 and abs(out[0][1] - out[-1][1]) < 1e-9:
+            out.pop()
+        return out
+    ext = ring(list(poly.exterior.coords))
+    ints = [ring(list(r.coords)) for r in poly.interiors]
+    return Polygon(ext, [r for r in ints if len(r) >= 3])
+
+
+def _back_field():
+    """The recessed back art field: the cavity rect inset by the proud border, own fillet."""
+    c = cavity_rect()
+    return c.buffer(-BACK_BORDER, join_style=1, resolution=64)
+
+
+def fin_band():
+    """The clear centre band, taken from THE FRONT'S OWN LAYOUT rather than invented.
+
+    The two cells leave a gap on the show face; using exactly that gap on the back puts the clear
+    field behind the artwork and the fin fields behind the cells, and it tracks the board -- move
+    a cell and the bands follow. It also drops the y-mid bosses inside the clear band, so the fin
+    fields only have the four corner annuli to work around.
+    """
+    pv = sorted((p.bounds for r, p, _h, _s in board_parts("F") if r.startswith("PV")),
+                key=lambda b: b[1])
+    if len(pv) < 2:
+        raise SystemExit("fin_band: expected two PV cells on the front to derive the clear band")
+    return pv[0][3], pv[1][1]
+
+
+def fin_region():
+    """Everything the fin field may occupy: both bands, minus the boss annuli."""
+    field = _back_field()
+    y0, y1 = fin_band()
+    fx0, fy0, fx1, fy1 = field.bounds
+    blockers = unary_union([Point(mx, my).buffer(BOSS_R + FIN_BOSS_CLR, resolution=48)
+                            for mx, my in MOUNTS])
+    bands = [box(fx0, fy0, fx1, y0), box(fx0, y1, fx1, fy1)]
+    reg = unary_union([field.intersection(b) for b in bands]).difference(blockers)
+    return unary_union([_dedupe(g) for g in
+                        (reg.geoms if reg.geom_type == "MultiPolygon" else [reg])])
+
+
+def fin_ribs(pitch=FIN_PITCH, rib_w=FIN_RIB_W):
+    """The rib polygons themselves, opened at the tool radius so nothing survives that a Ø1.0
+    cutter could not actually leave standing."""
+    region = fin_region()
+    field = _back_field()
+    fx0, fy0, fx1, fy1 = field.bounds
+    y0, y1 = fin_band()
+    out = []
+    for a, b in [(fy0, y0), (y1, fy1)]:
+        span = b - a
+        n = max(1, int(span // pitch))
+        off = (span - (n - 1) * pitch) / 2.0          # centre the run inside its own field
+        for i in range(n):
+            cy = a + off + i * pitch
+            r = region.intersection(box(fx0, cy - rib_w / 2, fx1, cy + rib_w / 2))
+            if r.is_empty:
+                continue
+            # Open at the tool radius to kill slivers, THEN clip back to the region. The dilate
+            # half of an opening overshoots outward wherever the boundary is concave -- which
+            # here is every boss cutout -- and without the clip four ribs escaped the field and
+            # one closed to 2.851 mm of a boss centre against a required 3.00.
+            r = (r.buffer(-TOOL_R / 2, join_style=2).buffer(TOOL_R / 2, join_style=2)
+                  .intersection(region))
+            for g in (r.geoms if r.geom_type == "MultiPolygon" else [r]):
+                if g.area > 0.8:
+                    out.append(_dedupe(g))
+    return out
 
 
 def export_step_stable(solid, path, **kw):
