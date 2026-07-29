@@ -1,4 +1,4 @@
-# SOLAR-GLOW DRH v3.0 — KiBot CI configuration
+# SOLAR-GLOW DRH v4.0 — KiBot CI configuration
 # Lives at PCB/solar-glow-drh.kibot.yaml; driven by .github/workflows/kibot.yml
 kibot:
   version: 1

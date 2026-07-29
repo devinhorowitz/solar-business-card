@@ -65,12 +65,23 @@ every `.kicad_*` file referenced in the docs exists.
   fab set into `Generated/panel/`. The panel is derived from the board, never edited —
   see `PCB/README.md` → "The PCBWay panel".
   It then raytraces the README images via `scripts/render.py` (panel front/back, the depanelised
-  card, the **assembled/populated** views, and the OSH Park midnight variant) into `Generated/docs/`. That step borrows the KiCad 10 docker image directly
-  because the KiBot action does not expose `kicad-cli`; it costs **~16 min** across 14 views (the populated target added 3, ~2.5 min), so it
-  only runs on `PCB/**` / `scripts/**` pushes like the rest of this job. If that ever needs
-  trimming, `--quality basic --floor` keeps most of the look for roughly half the time.
+  card, the **assembled/populated** views, and the OSH Park midnight variant) into `Generated/docs/`.
+  It costs **~12 min** across 14 views (the populated target added 3, ~2.5 min). If that ever
+  needs trimming, `--quality basic --floor` keeps most of the look for roughly half the time.
+  Triggers are `PCB/**`, `scripts/panelize.py`, `scripts/render.py` and the workflow itself —
+  **not** all of `scripts/`, so editing an unrelated script regenerates nothing.
 - `firmware.yml` — builds the firmware on `firmware/**` changes, uploads the hex.
-- `consistency.yml` — runs the drift guard on doc/board/firmware changes.
+- `consistency.yml` — runs the drift guard on doc/board/firmware changes, plus
+  `scripts/mask_art.py` (check [6] regenerates the cartouche through it).
+- **Everything CI runs is pinned.** The KiCad 10 image is pinned by *digest* in both
+  `kibot.yml` and `consistency.yml` (keep the two in step), every action by commit SHA,
+  shapely and the AVR toolchain/DFP by version. This is not hygiene: DRC is a merge gate
+  and `Generated/` is the gerber set that goes to a fab, and the upstream image is a KiCad
+  **testing** build. Bumping the digest is a deliberate commit whose `Generated/` diff is
+  the upgrade's blast radius. That is also why `kibot.yml` calls the container directly
+  instead of `uses: INTI-CMNB/KiBot@v2_k10` — that action's Dockerfile is `FROM
+  …kicad10_auto_full:latest` with no version input, so pinning the action would pin the
+  wrapper and leave KiCad floating.
 
 ## Gotchas
 - **The front cartouche is generated from the routing.** Move a front trace and the
