@@ -8,9 +8,13 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle, Circle, Polygon as MplPoly
 
 # ---- brace geometry (mirrors solar-glow-drh-diffuser-brace-cad.py) ----
-BX0,BY0,BX1,BY1 = 2.60,31.6,49.70,57.4        # middle band, full width (W/E walls contacted)
-RW = (2.60,2.10,6.75,86.80)                    # west rail, full length S->N wall; backs PV N-tabs, 0.25 W of caps
-RE = (44.05,2.10,49.70,86.80)                  # east rail, full length; east edge STEPPED (x48.20 ends / x49.70 mid) to follow the wall
+# Geometry comes from enclosure/fit_rules.py, the single home the CAD generator also uses.
+# The band/rail constants that used to sit here described the retired hand-placed "H".
+import os as _o0, sys as _s0
+_s0.path.insert(0, _o0.path.join(_o0.path.dirname(_o0.path.abspath(__file__)), ".."))
+import fit_rules as _fit                        # noqa: E402
+_PIECES_FOR_NOTES = _fit.brace_footprint()
+BX0,BY0,BX1,BY1 = _fit.brace_footprint()[0].bounds
 YT,YB = 2.10,86.80                             # rails run S wall to N wall (contact)
 GAP = 1.80                                     # brace thickness (fills the 1.80 cavity)
 FER = (36.9,31.5,48.9,57.5)                    # ferrite 12 wide (x, CRITICAL) x 26 long (y, forgiving)
@@ -24,19 +28,33 @@ import os as _os, sys as _sys
 _sys.path.insert(0, _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), ".."))
 from part_heights import part_height as _ph     # noqa: E402
 
+def _covered(ref):
+    """Is this part actually under the brace at all? Tall parts are stepped around now."""
+    for r, poly, h, _s in _fit._cached_parts():
+        if r != ref:
+            continue
+        return (h is not None and h <= _fit.SPAN_LIMIT
+                and any(g.intersects(poly) for g in _PIECES_FOR_NOTES))
+    return False
+
 def _is_thru(ref):
-    """Same rule the CAD generator applies: pocket >= GAP-0.05 breaks through."""
+    """A pocket breaks through only if its blind web would be unprintable. Was hardcoded
+    `or ref == "U6"`, which kept printing U6 THRU on this sheet after the footprint started
+    stepping around U6 entirely."""
     h = _ph(ref)
-    return h is not None and (h + AIR >= GAP - 0.05 or ref == "U6")
+    return _covered(ref) and h is not None and (GAP - (h + AIR)) < _fit.SLA_WEB
 
 def _thru_note():
-    thru = [r for r in ("U6","U7","U9","U1") if _is_thru(r)]
+    thru = [r for r, _p, _h, _s in _fit._cached_parts() if _is_thru(r)]
+    blockers = [r for r, _p in _fit.blockers()]
     if not thru:
-        return ("8. ALL COMPONENT POCKETS ARE BLIND. (U6 IS FORCED THROUGH ONLY IF ITS BLIND WEB FALLS BELOW THE SLA MINIMUM -- "
-                "SEE THE CAD GENERATOR.) U7 IS THE 0.90 DFN-8: A %.2f BLIND POCKET, %.2f RESIN CEILING."
-                % (_ph("U7")+AIR, GAP-(_ph("U7")+AIR)))
-    return ("8. THROUGH-POCKETS: %s. U6 IS FORCED THROUGH -- ITS BLIND WEB WOULD BE 0.23 < SLA MIN; U6 IS %.2f IN THE 1.80 CAVITY "
-            "-> 0.35 AIR TO THE SHELL FLOOR. OTHERS BLIND." % (" AND ".join(thru), _ph("U6")))
+        return ("8. ALL COMPONENT POCKETS ARE BLIND. PARTS TALLER THAN %.2f CANNOT BE COVERED AT ALL "
+                "(WEB WOULD FALL BELOW %.2f), SO THE FOOTPRINT STEPS AROUND THEM: %s. "
+                "U7 IS THE 0.90 DFN-8 -- A %.2f BLIND POCKET, %.2f RESIN CEILING."
+                % (_fit.SPAN_LIMIT, _fit.SLA_WEB, ", ".join(blockers),
+                   _ph("U7")+AIR, GAP-(_ph("U7")+AIR)))
+    return ("8. THROUGH-POCKETS: %s. OTHERS BLIND. STEPPED AROUND (TOO TALL TO COVER): %s."
+            % (" AND ".join(thru), ", ".join(blockers)))
 
 INK="#111111"; GRY="#9a9a9a"; HATCH="#ededed"; PUR="#6a4fb0"; AMB="#c79a2e"
 fig=plt.figure(figsize=(420/25.4,297/25.4))
@@ -64,14 +82,19 @@ Y=lambda by:Pbot+(YB-by)*S          # flip: y15 (top rails / PV N+P tabs) high o
 # outline: band + two full-length rails (east edge stepped), 4 corner-boss reliefs cut clear
 from shapely.geometry import box as _sbox, Point as _spt
 from shapely.ops import unary_union as _uu
-_FP=[(BX0,BY0,BX1,BY1),RW,(44.05,2.10,48.20,10.0),(44.05,10.0,49.70,72.0),(44.05,72.0,49.70,86.80)]  # N end pinched to x49.70 (was x48.20) -- matches RAIL_E_N in the cad script (clamp-cluster backing)
-_out=_uu([_sbox(a,b,c,d) for a,b,c,d in _FP])
-for _bx,_by in [(3,3),(47.8,3),(3,85.9),(47.8,85.9)]:
-    _out=_out.difference(_spt(_bx,_by).buffer(3.0,resolution=32))
-_g=max(_out.geoms,key=lambda q:q.area) if _out.geom_type=="MultiPolygon" else _out
-Hxy=[(X(x),Y(y)) for x,y in _g.exterior.coords]
-ax.add_patch(MplPoly(Hxy,closed=True,fc=HATCH,ec="none",alpha=0.5,zorder=0))
-ax.add_patch(MplPoly(Hxy,closed=True,fill=False,ec=INK,lw=1.1,zorder=3))
+# The plan is the COMPUTED footprint from enclosure/fit_rules.py -- the same geometry the
+# STEP is built from. It used to be five literal rectangles restated here (BX*/RW/RE), which
+# is how a sheet keeps describing a part that changed underneath it.
+_PIECES = _fit.brace_footprint()
+_PIECES_FOR_NOTES = _PIECES
+for _k, _g in enumerate(_PIECES):
+    Hxy=[(X(x),Y(y)) for x,y in _g.exterior.coords]
+    ax.add_patch(MplPoly(Hxy,closed=True,fc=HATCH,ec="none",alpha=0.5,zorder=0))
+    ax.add_patch(MplPoly(Hxy,closed=True,fill=False,ec=INK,lw=1.1,zorder=3))
+    if _k:      # label the separate piece so nobody assembles it as one part
+        _c=_g.centroid
+        ax.text(X(_c.x),Y(_c.y),"PIECE %d"%(_k+1),color=INK,ha="center",va="center",
+                fontsize=5.0,fontweight="bold")
 # ferrite OPEN CHANNEL (band; walled on the 12 width, open both y-ends) + the 12x26 ferrite extent
 cxl=max(FER[0]-FER_CLR,BX0+0.2)
 ax.add_patch(Rectangle((X(cxl),Y(BY1)),(BX1-cxl)*S,(BY1-BY0)*S,fc="#efeaf7",ec=PUR,lw=0.9,ls=(0,(4,2))))
@@ -91,14 +114,14 @@ ax.text(X(U7[0]),Y(U7[1]),"U7\n%s" % ("THRU" if _u7_thru else "%.2f" % (_ph("U7"
 # the 4 panel solder tabs the rails back (red stars)
 for tx,ty in [(4.3,17.0),(46.5,17.0),(4.3,71.9),(46.5,71.9)]:
     ax.plot(X(tx),Y(ty),marker="*",ms=8,color="#d23b2a",zorder=6)
-ax.text(X(4.4),Y(23.5),"W\nRAIL",ha="center",va="center",fontsize=4.4,color=INK)
-ax.text(X(46.5),Y(23.5),"E\nRAIL",ha="center",va="center",fontsize=4.4,color=INK)
+ax.text(X(4.4),Y(23.5),"W\nLEG",ha="center",va="center",fontsize=4.4,color=INK)
+ax.text(X(46.5),Y(23.5),"E\nLEG",ha="center",va="center",fontsize=4.4,color=INK)
 ax.text(X(25.4),272,"BOARD-FACING FACE   SCALE 1.7:1",ha="center",fontsize=8.2,fontweight="bold",color=INK)
 # plan dims + leaders
-dimh(X(BX0),X(BX1),Y(YB)-3.0,"47.10",fs=7,side=-1)
-dimv(Y(YT),Y(YB),X(BX0)-3.5,"84.70",fs=7,side=1)
+dimh(X(BX0),X(BX1),Y(YB)-3.0,f"{BX1-BX0:.2f}",fs=7,side=-1)
+dimv(Y(YT),Y(YB),X(BX0)-3.5,f"{BY1-BY0:.2f}",fs=7,side=1)
 leader(X((FER[0]+FER[2])/2),Y(52.0),X(BX1)+9,Y(52.0)+3,"12.0 WIDE\n(CRITICAL)",ha="left",fs=5.0)
-leader(X(46.5),Y(71.9),X(BX1)+9,Y(71.9)-3,"RAILS BACK THE 4\nPANEL SOLDER TABS\n(NOTE 4)",ha="left",fs=5.0)
+leader(X(46.5),Y(71.9),X(BX1)+9,Y(71.9)-3,"LEGS BACK THE 4\nPANEL SOLDER TABS\n(NOTE 4)",ha="left",fs=5.0)
 
 # ===================== SECTION B-B (across the brace) =====================
 S2=13.0; EX,EY=244,206

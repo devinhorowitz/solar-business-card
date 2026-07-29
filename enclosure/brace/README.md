@@ -4,11 +4,14 @@
 
 A printed resin insert that drops into the titanium back-shell cavity, on top of the populated back of
 the PCB. It is **not fastened and not bonded** — it is held by the shell clamping down, and it lifts
-straight out. It is a **precision fit**: a middle band plus two full-length outboard rails, sized so all
+straight out. Its footprint is **computed from the board** (`enclosure/fit_rules.py`), not hand-placed: it was
+a middle band plus two full-length outboard rails until 2026-07-29, when measurement showed that band drove
+**593 mm³ of solid resin through SC1, SC3 and SC4** — it was sized for 28.5 mm WS17 cells and SC1/SC3 are
+39 mm SS17. The footprint now subtracts every part it cannot span, sized so all
 **four flat cavity walls are contacted** (~0.05 mm) for a no-rattle seat. The four corner bosses and the
 rounded corners are **relieved** (cut clear — the brace need not fit them). It does four jobs:
 
-1. **Center + outboard support** — the band props the middle of the thin board (so the shell floor can be a true 1.00 mm with no internal ribs) and the two rails run the full length beside the supercaps.
+1. **Center + outboard support** — the brace props the thin board wherever a part does not stand in the way (so the shell floor can be a true 1.00 mm with no internal ribs). It reaches **1385 mm², 34.6% of the cavity floor**. The ceiling is 38.5%: the supercaps are 1.70 mm tall in a 1.80 mm cavity and occupy 58.8% of the floor, so nothing can ever span them. It is deliberately **one piece** — the computation also yields an ~85 mm² island east of SC4 which cannot reach the main body without crossing SC4, and a loose part in an assembly that must come apart for C9 NFC trim is a thing to lose and a thing to reassemble wrong. That choice gives up 2.1 points of coverage, and `fit_rules.DROPPED_AREA` records it rather than hiding it.
 2. **Panel-tab backing** — the rails sit directly behind the four solar-cell solder tabs, so pressing a cell down lands cell → board → brace → titanium instead of flexing the bare 0.6 mm FR4.
 3. **Window backing** — a solid white face behind the FR4 monogram window turns the four reverse-mount LEDs into an even amber lightbox.
 4. **NFC ferrite carrier** — an open channel over the coil holds a ferrite strip that lifts the antenna off the grounded titanium.
