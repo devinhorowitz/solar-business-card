@@ -114,6 +114,32 @@ jobs:
           docker run --rm -u "$(id -u):$(id -g)" -e HOME=/tmp -v "$PWD":/wk -w /wk \
             "$KICAD_IMAGE" python3 scripts/render.py
 
+      # THE ENCLOSURE IS DOWNSTREAM OF THE BOARD, and until now nothing rebuilt it.
+      #
+      # Both bodies are COMPUTED from the board: fit_rules.py subtracts every part the brace
+      # cannot span, scallops each M2 boss around whatever fouls it, and sizes the support lip
+      # to clear the B-side pads -- all read out of the .kicad_pcb through board_parts.py. Move
+      # a supercap and the brace footprint genuinely changes. Leaving that to a human rebuild is
+      # the same failure mode as the stale drawings this repo already fixed once, except worse:
+      # a stale brace is a part that gets PRINTED and does not fit.
+      #
+      # This runs BEFORE the assembly views on purpose -- those views load these exact STLs, so
+      # rebuilding them afterwards would render the previous enclosure onto the current board.
+      # ~40 s for both bodies plus both drawings.
+      #
+      # Both generators are also the reason to run this in CI at all: neither of them WORKED
+      # until now. export_step_stable() handed cadquery a path ending ".tmp", which cannot infer
+      # a format, so both died on their first STEP write. Nothing caught it because nothing ran
+      # them. (The committed geometry was fine -- the STEP/STL come back byte-identical -- so the
+      # breakage was in the export helper, not the parts.)
+      - name: Regenerate the enclosure CAD and drawings
+        run: |
+          python3 -m pip install --quiet 'cadquery==2.8.0' 'matplotlib==3.10.7' 'shapely==2.1.2'
+          python3 enclosure/brace/solar-glow-drh-diffuser-brace-cad.py
+          python3 enclosure/solar-glow-drh-v3_0-backshell-0p6b-brace-cad.py
+          python3 enclosure/brace/solar-glow-drh-diffuser-brace-DRAWING-gen.py
+          python3 enclosure/solar-glow-drh-v3_0-backshell-0p6b-brace-DRAWING-gen.py
+
       # THE HERO IS DOWNSTREAM OF THE ARTWORK, so it is regenerated here rather than by hand.
       # enclosure/assembly_render.py textures the assembled card with the raytraced card-face
       # plot the step above just wrote, and reads the outline, the eight mounts and every part
@@ -138,16 +164,21 @@ jobs:
           git config user.name "kibot-ci"
           git config user.email "kibot-ci@users.noreply.github.com"
 
-          # Everything this job owns. The assembly views sit beside the enclosure docs rather
-          # than under Generated/, because that is where they are read from — but they are just
-          # as CI-owned, and hand-running the renderer will fight this job (VTK does not produce
-          # identical pixels across GL stacks). See enclosure/README.md.
+          # Everything this job owns. These sit beside the enclosure docs rather than under
+          # Generated/, because that is where they are read from — but they are just as CI-owned.
+          # Globbed by KIND rather than listed by name so a new variant out of the CAD generator
+          # is picked up automatically; the patterns deliberately match no .py, .md, font, or the
+          # two hand-made brace photos (…-brace-fit.png, …-brace-render.png), which no generator
+          # produces. See enclosure/README.md.
           OUTS="Generated
-                enclosure/solar-glow-drh-assembly.gif
-                enclosure/solar-glow-drh-assembly-spin.gif
-                enclosure/solar-glow-drh-assembly-hero.png
-                enclosure/solar-glow-drh-assembly-exploded.png
-                enclosure/solar-glow-drh-assembly-reverse.png"
+                enclosure/*.step enclosure/*.stl
+                enclosure/*DRAWING.pdf enclosure/*DRAWING.png
+                enclosure/solar-glow-drh-assembly*.gif
+                enclosure/solar-glow-drh-assembly*.png
+                enclosure/brace/*.step enclosure/brace/*.stl
+                enclosure/brace/*DRAWING.pdf enclosure/brace/*DRAWING.png
+                enclosure/brace/*pocket-map.png
+                enclosure/brace/*brace-render.png"
 
           git add -A $OUTS
           git diff --cached --quiet && { echo "outputs already current"; exit 0; }

@@ -99,14 +99,21 @@ the root README's hero. `solar-glow-drh-assembly-hero.png` is the same camera as
 `Generated/docs/…-card-face.png` textured on, so the monogram, cartouche and contact line are the
 board's real artwork.</sub>
 
-> **These five files are CI-owned — don't commit a hand-run render.** `assembly_render.py` runs in
-> the PCB CI job immediately after the raytrace that produces its texture, and its outputs are
-> committed alongside `Generated/`. That is what keeps the hero from quietly showing a previous
-> board: change the artwork, and the picture follows in the same commit. Run it locally to check a
-> change by all means — but VTK does not produce identical pixels across GL stacks, so committing
-> a local render starts a churn war with CI. (It also means the renderer has a **CI-generated
-> input**: a clone that has never run the workflow has no `card-face.png` to texture with, and the
-> script says so and exits rather than shipping a blank card.)
+> **Everything generated in this directory is CI-owned — don't commit a hand-run rebuild.** The
+> PCB CI job rebuilds the whole chain in dependency order on any board change: both CAD generators
+> (STEP/STL), both dimensioned drawings, then `assembly_render.py`, which loads those STLs and
+> textures the card with the raytraced card face. That covers the `.step`, `.stl`, `*DRAWING.pdf|png`,
+> the pocket map, the six renders — everything here except the `.py` sources, the READMEs, the fonts,
+> and `solar-glow-drh-brace-fit.png` (which no generator produces and nothing references).
+>
+> Move a part on the board and you get new gerbers, a new brace and shell, new drawings and new
+> imagery in **one commit** — nothing can be a revision behind anything else. Run any generator
+> locally to check a change by all means, but VTK does not produce identical pixels across GL
+> stacks, so committing a local render starts a churn war with CI.
+>
+> It also means the renderer has a **CI-generated input**: a clone that has never run the workflow
+> has no `card-face.png` to texture with, and the script says so and exits rather than shipping a
+> blank card.
 
 ![Reverse side, closed — brass tips flush in their Ø3.0 spotfaces](solar-glow-drh-assembly-reverse.png)
 

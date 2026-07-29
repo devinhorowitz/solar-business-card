@@ -2,6 +2,12 @@
 
 ![Brace render](solar-glow-drh-diffuser-brace-render.png)
 
+<sub>Rendered from the committed STL by `enclosure/assembly_render.py`, in the same CI job that
+rebuilds that STL from the board. Until 2026-07-29 this image had **no generator at all** — it
+shipped in the initial import — so while the brace was respun against the real board it went on
+showing the *old* one: the straight middle band that put 593 mm³ of resin inside SC1/SC3/SC4. It
+now cannot go stale without the STL going stale with it.</sub>
+
 A printed resin insert that drops into the titanium back-shell cavity, on top of the populated back of
 the PCB. It is **not fastened and not bonded** — it is held by the shell clamping down, and it lifts
 straight out. Its footprint is **computed from the board** (`enclosure/fit_rules.py`), not hand-placed: it was

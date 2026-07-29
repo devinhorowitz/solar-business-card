@@ -68,17 +68,27 @@ every `.kicad_*` file referenced in the docs exists.
   card, the **assembled/populated** views, and the OSH Park midnight variant) into `Generated/docs/`.
   It costs **~12 min** across 14 views (the populated target added 3, ~2.5 min). If that ever
   needs trimming, `--quality basic --floor` keeps most of the look for roughly half the time.
-  Finally it runs `enclosure/assembly_render.py`, which textures the assembled card with the
-  card-face plot the raytrace just wrote — so **changing the board artwork updates the README
-  hero in the same commit**, with no window where the two disagree. Its five outputs
-  (`enclosure/solar-glow-drh-assembly*.gif|png`) are **CI-owned exactly like `Generated/`**,
-  despite living beside the hand-maintained enclosure docs: run the renderer locally to check a
-  change, but don't commit the result — VTK's pixels differ across GL stacks and a hand-run
-  render will churn against CI's forever.
-  Triggers are `PCB/**`, `scripts/panelize.py`, `scripts/render.py`, the renderer's own non-board
+  **It then rebuilds the whole enclosure chain**, in dependency order, because every link of it
+  is a function of the board: the two CAD generators (brace + back-shell → STEP/STL), both
+  dimensioned drawings (→ PDF/PNG), then `enclosure/assembly_render.py`, which loads those very
+  STLs *and* textures the card with the card-face plot the raytrace just wrote. Order is
+  load-bearing — render before the CAD and you photograph the previous enclosure onto the current
+  board. One job produces all of it, in one commit, so no two artifacts can be a revision apart.
+  Moving a part on the PCB therefore lands as: new gerbers → new brace and shell → new drawings →
+  new imagery, with no human step. ~40 s of CAD on top of the ~12 min raytrace.
+  **Everything it writes outside `Generated/` is just as CI-owned** — the STEP/STL, both drawings,
+  the six renders — despite living beside the hand-maintained enclosure sources. Run any of them
+  locally to check a change, but don't commit the result: VTK's pixels differ across GL stacks and
+  a hand-run render churns against CI's forever. The commit-back globs these by *kind*, so a new
+  variant out of a generator is picked up without editing the workflow.
+  Triggers are `PCB/**`, `scripts/panelize.py`, `scripts/render.py`, the generators' own non-board
   inputs (`enclosure/assembly_render.py`, `fit_rules.py`, `board_parts.py`, `enclosure/**.stl`)
   and the workflow itself — **not** all of `scripts/` or all of `enclosure/`, so editing an
   unrelated script or doc regenerates nothing.
+  **The one link that is deliberately manual is `mask_art.py`.** It rewrites the *board file*, so
+  auto-applying it in CI would have the job editing a source of truth — and a `.kicad_pcb` whose
+  line endings alternate between saves. It stays a guard (check [6]): re-route the front, run
+  `--apply` yourself, push, and everything downstream regenerates from there.
 - `firmware.yml` — builds the firmware on `firmware/**` changes, uploads the hex.
 - `consistency.yml` — runs the drift guard on doc/board/firmware changes, plus
   `scripts/mask_art.py` (check [6] regenerates the cartouche through it) and `enclosure/**`
