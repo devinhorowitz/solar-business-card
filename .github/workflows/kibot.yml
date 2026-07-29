@@ -111,23 +111,50 @@ jobs:
           git add -A Generated
           git diff --cached --quiet && { echo "Generated/ already current"; exit 0; }
           git commit -m "CI: regenerate fab + docs [skip ci]"
+
           # This job takes ~16 min, so main can easily move underneath it -- merge two PRs
           # in one sitting and the second run's bare `git push` loses the race with
           # `! [rejected] main -> main (fetch first)`. That happened twice on 2026-07-28
           # and silently DROPPED both regenerations: the job goes red, nobody is watching a
-          # post-merge run, and Generated/ quietly stays a revision behind until some later
-          # push happens to rebuild it.
+          # post-merge run, and Generated/ quietly stays a revision behind.
           #
-          # Retry by replaying our Generated/ onto whatever main is now. `reset --soft`
-          # keeps the freshly generated tree staged, so the newest generation wins -- which
-          # is what we want, and if the other run already produced identical bytes the
-          # staged diff is empty and we stop.
+          # So we replay onto whatever main is now. The replay MUST rebuild the tree from
+          # the new main, not merely re-parent our old one:
+          #
+          #   `git reset --soft` moves HEAD and leaves the INDEX alone, so the index still
+          #   held this run's whole tree -- our checkout SHA plus Generated/. The
+          #   `diff --cached` below then compared full trees rather than just Generated/,
+          #   was non-empty *because of the other commit*, skipped the early exit, and
+          #   committed a tree that SILENTLY REVERTED that merge -- under the message
+          #   "CI: regenerate fab + docs [skip ci]", with [skip ci] so nothing re-ran.
+          #   Reproduced verbatim, 2026-07-29: a real board edit merged during the run came
+          #   back as its pre-merge content with the PR still shown as merged in the log.
+          #
+          # `reset --hard` + restoring the snapshot rebuilds the tree as (new main +
+          # our Generated/), so the staged diff is Generated-only. That also keeps the early
+          # exit below honest: it now fires exactly when main already carries these bytes.
+          #
+          # `rebase -X theirs` fixes the revert too, but not here: it leaves the commit
+          # already made, so the early exit would `exit 0` without ever pushing -- a fresh
+          # silent drop in place of the old one.
+          #
+          # Concurrency: groups do NOT solve this. They serialize workflow runs, and what
+          # moves main is a human merge, which no group can serialize against a run already
+          # in flight (checkout builds on github.sha, not the tip of main).
+          snap="${RUNNER_TEMP:-/tmp}/generated-snapshot"
+          # mkdir -p the parent: the step runs under `bash -e`, so a cp that fails here
+          # would kill the step before it ever pushed.
+          mkdir -p "$(dirname "$snap")"; rm -rf "$snap"; cp -a Generated "$snap"
           for attempt in 1 2 3 4 5; do
             if git push; then exit 0; fi
-            echo "push rejected (attempt $attempt) -- replaying onto current main"
+            echo "push rejected (attempt $attempt) -- replaying Generated/ onto current main"
             sleep $((attempt * 5))
-            git fetch origin main || continue
-            git reset --soft origin/main
+            # Retry the fetch itself; falling through to the next attempt without it would
+            # re-push the identical rejected commit and burn a slot for nothing.
+            git fetch origin main || { sleep 5; git fetch origin main || continue; }
+            git reset --hard origin/main
+            rm -rf Generated
+            cp -a "$snap" Generated
             git add -A Generated
             git diff --cached --quiet && { echo "current main already has this Generated/"; exit 0; }
             git commit -m "CI: regenerate fab + docs [skip ci]"
