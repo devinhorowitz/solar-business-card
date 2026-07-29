@@ -1,8 +1,844 @@
 ** Drc report for solar-glow-drh-v4_0.kicad_pcb **
-** Created on 2026-07-28T15:31:36 **
+** Created on 2026-07-28T22:53:51 **
 ** Report includes: Errors, Warnings, Exclusions **
 
-** Found 14 DRC violations **
+** Found 223 DRC violations **
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(23.1000 mm, 46.8505 mm): Track [K3] on B.Cu, length 3.2446 mm
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(23.1000 mm, 46.8505 mm): Track [K3] on B.Cu, length 3.2446 mm
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(23.1000 mm, 46.8505 mm): Track [K3] on B.Cu, length 3.2446 mm
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(23.1000 mm, 46.8505 mm): Track [K3] on B.Cu, length 3.2446 mm
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(23.1000 mm, 46.8505 mm): Track [K3] on B.Cu, length 3.2446 mm
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(23.1000 mm, 46.8505 mm): Track [K3] on B.Cu, length 3.2446 mm
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(23.1000 mm, 46.8505 mm): Track [K3] on B.Cu, length 3.2446 mm
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(23.1000 mm, 46.8505 mm): Track [K3] on B.Cu, length 3.2446 mm
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(23.1000 mm, 46.8505 mm): Track [K3] on B.Cu, length 3.2446 mm
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(23.1000 mm, 46.8505 mm): Track [K3] on B.Cu, length 3.2446 mm
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(23.1000 mm, 46.8505 mm): Track [K3] on B.Cu, length 3.2446 mm
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(23.1000 mm, 46.8505 mm): Track [K3] on B.Cu, length 3.2446 mm
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(23.1000 mm, 46.8505 mm): Track [K3] on B.Cu, length 3.2446 mm
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(23.1000 mm, 46.8505 mm): Track [K3] on B.Cu, length 3.2446 mm
+[solder_mask_bridge]: Front solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(5.1385 mm, 45.0072 mm): Polygon on F.Mask
+    @(8.0250 mm, 43.6603 mm): Track [STO] on F.Cu, length 3.4647 mm
+[solder_mask_bridge]: Front solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(3.4363 mm, 57.3813 mm): Polygon on F.Mask
+    @(5.1866 mm, 54.3500 mm): Track [VS] on F.Cu, length 0.8634 mm
+[solder_mask_bridge]: Front solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(6.6842 mm, 41.4526 mm): Polygon on F.Mask
+    @(8.1500 mm, 42.6500 mm): Track [LDRV3] on F.Cu, length 0.9956 mm
+[solder_mask_bridge]: Front solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(10.0379 mm, 39.4810 mm): Polygon on F.Mask
+    @(10.0750 mm, 39.5000 mm): Track [LDRV4] on F.Cu, length 2.2283 mm
+[solder_mask_bridge]: Front solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(14.0699 mm, 28.6301 mm): Polygon on F.Mask
+    @(13.0000 mm, 37.0500 mm): Track [SCL] on F.Cu, length 10.7500 mm
+[solder_mask_bridge]: Front solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(4.2810 mm, 35.9384 mm): Polygon on F.Mask
+    @(4.5750 mm, 34.3950 mm): Track [SCL] on F.Cu, length 8.0788 mm
+[solder_mask_bridge]: Front solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(13.0771 mm, 40.5101 mm): Polygon on F.Mask
+    @(14.2790 mm, 40.2960 mm): Track [VS] on F.Cu, length 1.6664 mm
+[solder_mask_bridge]: Front solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(14.2300 mm, 40.0738 mm): Polygon on F.Mask
+    @(14.8790 mm, 39.6960 mm): Track [VS] on F.Cu, length 0.8485 mm
+[solder_mask_bridge]: Front solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(14.2300 mm, 38.1620 mm): Polygon on F.Mask
+    @(32.5000 mm, 38.1250 mm): Track [FD] on F.Cu, length 24.8250 mm
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(23.1000 mm, 46.8505 mm): Track [K3] on B.Cu, length 3.2446 mm
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(22.2991 mm, 47.5859 mm): Via [ANODE] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(27.8299 mm, 47.5190 mm): Via [ANODE] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(33.3250 mm, 47.6500 mm): Via [ANODE] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(20.1849 mm, 47.5030 mm): Via [LDRV2] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(33.1500 mm, 44.3000 mm): Pad A [ANODE] of D5 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(36.2500 mm, 43.5000 mm): Pad K [K5] of D5 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(30.2500 mm, 43.5000 mm): Pad K [K4] of D4 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(27.1500 mm, 44.3000 mm): Pad A [ANODE] of D4 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(20.8500 mm, 44.3000 mm): Pad A [ANODE] of D3 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(23.9500 mm, 43.5000 mm): Pad K [K3] of D3 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(14.5500 mm, 44.3000 mm): Pad A [ANODE] of D2 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(0.0000 mm, 0.0000 mm): Zone 'GND_B' [GND] on B.Cu, priority 0
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(23.7760 mm, 44.1457 mm): Teardrop [K3] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(20.7823 mm, 47.4270 mm): Teardrop [LDRV2] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(21.1760 mm, 44.9457 mm): Teardrop [ANODE] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(21.8229 mm, 47.2172 mm): Teardrop [ANODE] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(33.4760 mm, 44.9457 mm): Teardrop [ANODE] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(33.3240 mm, 47.0622 mm): Teardrop [ANODE] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(27.3031 mm, 47.6294 mm): Teardrop [ANODE] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(14.7240 mm, 43.6543 mm): Teardrop [ANODE] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(27.4760 mm, 44.9457 mm): Teardrop [ANODE] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(27.3537 mm, 47.1503 mm): Teardrop [ANODE] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(27.2363 mm, 47.4813 mm): Teardrop [ANODE] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(30.0760 mm, 44.1457 mm): Teardrop [K4] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(36.0760 mm, 44.1457 mm): Teardrop [K5] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(14.5250 mm, 47.2750 mm): Via [GND] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(23.1000 mm, 46.8505 mm): Track [K3] on B.Cu, length 3.2446 mm
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(22.2991 mm, 47.5859 mm): Via [ANODE] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(27.8299 mm, 47.5190 mm): Via [ANODE] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(33.3250 mm, 47.6500 mm): Via [ANODE] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(20.1849 mm, 47.5030 mm): Via [LDRV2] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(33.1500 mm, 44.3000 mm): Pad A [ANODE] of D5 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(36.2500 mm, 43.5000 mm): Pad K [K5] of D5 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(30.2500 mm, 43.5000 mm): Pad K [K4] of D4 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(27.1500 mm, 44.3000 mm): Pad A [ANODE] of D4 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(20.8500 mm, 44.3000 mm): Pad A [ANODE] of D3 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(23.9500 mm, 43.5000 mm): Pad K [K3] of D3 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(14.5500 mm, 44.3000 mm): Pad A [ANODE] of D2 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(0.0000 mm, 0.0000 mm): Zone 'GND_B' [GND] on B.Cu, priority 0
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(23.7760 mm, 44.1457 mm): Teardrop [K3] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(20.7823 mm, 47.4270 mm): Teardrop [LDRV2] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(21.1760 mm, 44.9457 mm): Teardrop [ANODE] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(21.8229 mm, 47.2172 mm): Teardrop [ANODE] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(33.4760 mm, 44.9457 mm): Teardrop [ANODE] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(33.3240 mm, 47.0622 mm): Teardrop [ANODE] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(27.3031 mm, 47.6294 mm): Teardrop [ANODE] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(14.7240 mm, 43.6543 mm): Teardrop [ANODE] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(27.4760 mm, 44.9457 mm): Teardrop [ANODE] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(27.3537 mm, 47.1503 mm): Teardrop [ANODE] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(27.2363 mm, 47.4813 mm): Teardrop [ANODE] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(30.0760 mm, 44.1457 mm): Teardrop [K4] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(36.0760 mm, 44.1457 mm): Teardrop [K5] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(14.5250 mm, 47.2750 mm): Via [GND] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(23.1000 mm, 46.8505 mm): Track [K3] on B.Cu, length 3.2446 mm
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(22.2991 mm, 47.5859 mm): Via [ANODE] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(27.8299 mm, 47.5190 mm): Via [ANODE] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(33.3250 mm, 47.6500 mm): Via [ANODE] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(20.1849 mm, 47.5030 mm): Via [LDRV2] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(33.1500 mm, 44.3000 mm): Pad A [ANODE] of D5 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(36.2500 mm, 43.5000 mm): Pad K [K5] of D5 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(27.1500 mm, 44.3000 mm): Pad A [ANODE] of D4 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(20.8500 mm, 44.3000 mm): Pad A [ANODE] of D3 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(23.9500 mm, 43.5000 mm): Pad K [K3] of D3 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(14.5500 mm, 44.3000 mm): Pad A [ANODE] of D2 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(17.6500 mm, 43.5000 mm): Pad K [K2] of D2 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(0.0000 mm, 0.0000 mm): Zone 'GND_B' [GND] on B.Cu, priority 0
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(23.7760 mm, 44.1457 mm): Teardrop [K3] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(20.7823 mm, 47.4270 mm): Teardrop [LDRV2] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(21.1760 mm, 44.9457 mm): Teardrop [ANODE] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(21.8229 mm, 47.2172 mm): Teardrop [ANODE] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(33.4760 mm, 44.9457 mm): Teardrop [ANODE] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(33.3240 mm, 47.0622 mm): Teardrop [ANODE] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(27.3031 mm, 47.6294 mm): Teardrop [ANODE] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(14.7240 mm, 43.6543 mm): Teardrop [ANODE] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(27.4760 mm, 44.9457 mm): Teardrop [ANODE] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(27.3537 mm, 47.1503 mm): Teardrop [ANODE] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(27.2363 mm, 47.4813 mm): Teardrop [ANODE] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(36.0760 mm, 44.1457 mm): Teardrop [K5] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(17.4760 mm, 44.1457 mm): Teardrop [K2] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(14.5250 mm, 47.2750 mm): Via [GND] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(23.1000 mm, 46.8505 mm): Track [K3] on B.Cu, length 3.2446 mm
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(22.2991 mm, 47.5859 mm): Via [ANODE] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(27.8299 mm, 47.5190 mm): Via [ANODE] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(33.3250 mm, 47.6500 mm): Via [ANODE] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(20.1849 mm, 47.5030 mm): Via [LDRV2] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(33.1500 mm, 44.3000 mm): Pad A [ANODE] of D5 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(36.2500 mm, 43.5000 mm): Pad K [K5] of D5 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(27.1500 mm, 44.3000 mm): Pad A [ANODE] of D4 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(20.8500 mm, 44.3000 mm): Pad A [ANODE] of D3 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(23.9500 mm, 43.5000 mm): Pad K [K3] of D3 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(14.5500 mm, 44.3000 mm): Pad A [ANODE] of D2 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(17.6500 mm, 43.5000 mm): Pad K [K2] of D2 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(0.0000 mm, 0.0000 mm): Zone 'GND_B' [GND] on B.Cu, priority 0
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(23.7760 mm, 44.1457 mm): Teardrop [K3] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(20.7823 mm, 47.4270 mm): Teardrop [LDRV2] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(21.1760 mm, 44.9457 mm): Teardrop [ANODE] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(21.8229 mm, 47.2172 mm): Teardrop [ANODE] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(33.4760 mm, 44.9457 mm): Teardrop [ANODE] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(33.3240 mm, 47.0622 mm): Teardrop [ANODE] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(27.3031 mm, 47.6294 mm): Teardrop [ANODE] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(14.7240 mm, 43.6543 mm): Teardrop [ANODE] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(27.4760 mm, 44.9457 mm): Teardrop [ANODE] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(27.3537 mm, 47.1503 mm): Teardrop [ANODE] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(27.2363 mm, 47.4813 mm): Teardrop [ANODE] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(36.0760 mm, 44.1457 mm): Teardrop [K5] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(17.4760 mm, 44.1457 mm): Teardrop [K2] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(14.5250 mm, 47.2750 mm): Via [GND] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(23.1000 mm, 46.8505 mm): Track [K3] on B.Cu, length 3.2446 mm
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(22.2991 mm, 47.5859 mm): Via [ANODE] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(27.8299 mm, 47.5190 mm): Via [ANODE] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(33.3250 mm, 47.6500 mm): Via [ANODE] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(20.1849 mm, 47.5030 mm): Via [LDRV2] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(33.1500 mm, 44.3000 mm): Pad A [ANODE] of D5 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(30.2500 mm, 43.5000 mm): Pad K [K4] of D4 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(27.1500 mm, 44.3000 mm): Pad A [ANODE] of D4 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(20.8500 mm, 44.3000 mm): Pad A [ANODE] of D3 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(23.9500 mm, 43.5000 mm): Pad K [K3] of D3 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(14.5500 mm, 44.3000 mm): Pad A [ANODE] of D2 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(17.6500 mm, 43.5000 mm): Pad K [K2] of D2 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(0.0000 mm, 0.0000 mm): Zone 'GND_B' [GND] on B.Cu, priority 0
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(23.7760 mm, 44.1457 mm): Teardrop [K3] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(20.7823 mm, 47.4270 mm): Teardrop [LDRV2] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(21.1760 mm, 44.9457 mm): Teardrop [ANODE] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(21.8229 mm, 47.2172 mm): Teardrop [ANODE] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(33.4760 mm, 44.9457 mm): Teardrop [ANODE] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(33.3240 mm, 47.0622 mm): Teardrop [ANODE] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(27.3031 mm, 47.6294 mm): Teardrop [ANODE] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(14.7240 mm, 43.6543 mm): Teardrop [ANODE] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(27.4760 mm, 44.9457 mm): Teardrop [ANODE] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(27.3537 mm, 47.1503 mm): Teardrop [ANODE] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(27.2363 mm, 47.4813 mm): Teardrop [ANODE] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(30.0760 mm, 44.1457 mm): Teardrop [K4] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(17.4760 mm, 44.1457 mm): Teardrop [K2] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(14.5250 mm, 47.2750 mm): Via [GND] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(23.1000 mm, 46.8505 mm): Track [K3] on B.Cu, length 3.2446 mm
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(20.1849 mm, 47.5030 mm): Via [LDRV2] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(36.2500 mm, 43.5000 mm): Pad K [K5] of D5 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(30.2500 mm, 43.5000 mm): Pad K [K4] of D4 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(23.9500 mm, 43.5000 mm): Pad K [K3] of D3 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(17.6500 mm, 43.5000 mm): Pad K [K2] of D2 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(0.0000 mm, 0.0000 mm): Zone 'GND_B' [GND] on B.Cu, priority 0
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(23.7760 mm, 44.1457 mm): Teardrop [K3] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(20.7823 mm, 47.4270 mm): Teardrop [LDRV2] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(30.0760 mm, 44.1457 mm): Teardrop [K4] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(36.0760 mm, 44.1457 mm): Teardrop [K5] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(17.4760 mm, 44.1457 mm): Teardrop [K2] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(14.5250 mm, 47.2750 mm): Via [GND] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(23.1000 mm, 46.8505 mm): Track [K3] on B.Cu, length 3.2446 mm
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(20.1849 mm, 47.5030 mm): Via [LDRV2] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(36.2500 mm, 43.5000 mm): Pad K [K5] of D5 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(30.2500 mm, 43.5000 mm): Pad K [K4] of D4 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(23.9500 mm, 43.5000 mm): Pad K [K3] of D3 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(17.6500 mm, 43.5000 mm): Pad K [K2] of D2 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(0.0000 mm, 0.0000 mm): Zone 'GND_B' [GND] on B.Cu, priority 0
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(23.7760 mm, 44.1457 mm): Teardrop [K3] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(20.7823 mm, 47.4270 mm): Teardrop [LDRV2] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(30.0760 mm, 44.1457 mm): Teardrop [K4] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(36.0760 mm, 44.1457 mm): Teardrop [K5] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(17.4760 mm, 44.1457 mm): Teardrop [K2] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(14.5250 mm, 47.2750 mm): Via [GND] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(23.1000 mm, 46.8505 mm): Track [K3] on B.Cu, length 3.2446 mm
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(33.3250 mm, 47.6500 mm): Via [ANODE] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(20.1849 mm, 47.5030 mm): Via [LDRV2] on F.Cu - B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(33.1500 mm, 44.3000 mm): Pad A [ANODE] of D5 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(30.2500 mm, 43.5000 mm): Pad K [K4] of D4 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(27.1500 mm, 44.3000 mm): Pad A [ANODE] of D4 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(20.8500 mm, 44.3000 mm): Pad A [ANODE] of D3 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(23.9500 mm, 43.5000 mm): Pad K [K3] of D3 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(14.5500 mm, 44.3000 mm): Pad A [ANODE] of D2 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(17.6500 mm, 43.5000 mm): Pad K [K2] of D2 on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(0.0000 mm, 0.0000 mm): Zone 'GND_B' [GND] on B.Cu, priority 0
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(23.7760 mm, 44.1457 mm): Teardrop [K3] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(20.7823 mm, 47.4270 mm): Teardrop [LDRV2] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(21.1760 mm, 44.9457 mm): Teardrop [ANODE] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(21.8229 mm, 47.2172 mm): Teardrop [ANODE] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(33.4760 mm, 44.9457 mm): Teardrop [ANODE] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(33.3240 mm, 47.0622 mm): Teardrop [ANODE] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(27.3031 mm, 47.6294 mm): Teardrop [ANODE] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(14.7240 mm, 43.6543 mm): Teardrop [ANODE] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(27.4760 mm, 44.9457 mm): Teardrop [ANODE] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(27.3537 mm, 47.1503 mm): Teardrop [ANODE] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(27.2363 mm, 47.4813 mm): Teardrop [ANODE] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(30.0760 mm, 44.1457 mm): Teardrop [K4] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(17.4760 mm, 44.1457 mm): Teardrop [K2] on B.Cu
+[solder_mask_bridge]: Rear solder mask aperture bridges items with different nets
+    Rule: board setup solder mask min width; warning
+    @(35.1451 mm, 40.3000 mm): Polygon on B.Mask
+    @(14.5250 mm, 47.2750 mm): Via [GND] on F.Cu - B.Cu
 [tracks_crossing]: Tracks crossing
     Rule: clearance-hard-floor; error (excluded)
     @(41.0000 mm, 52.4200 mm): Track [LA] on B.Cu, length 14.4200 mm
@@ -62,14 +898,10 @@
 
 ** Found 0 unconnected pads **
 
-** Found 1 Footprint errors **
-[footprint_symbol_mismatch]: solarglow:U8_QFN28 doesn't match footprint given by symbol (solarglow:U1)
-    Local override; warning
-    @(31.2000 mm, 54.0000 mm): Footprint U8
+** Found 0 Footprint errors **
 
 ** Ignored checks **
     - Footprint has no courtyard defined
-    - Solder mask aperture bridges items with different nets
     - Track endpoint not centered on via
     - Tuning profile track geometries
     - Footprint doesn't match symbol's footprint filters
