@@ -3,6 +3,12 @@
 
     python3 enclosure/assembly_render.py            # writes all five views beside this file
 
+CI OWNS THESE OUTPUTS. The PCB CI workflow runs this script right after the raytrace that
+produces the texture, and commits the five files below with the rest of the generated set, so
+changing the board artwork updates the README hero automatically. Run it locally to check a
+change by all means -- but do not COMMIT the result: VTK does not produce identical pixels
+across GL stacks, so a hand-run render and CI's will churn against each other forever.
+
       solar-glow-drh-assembly.gif           exploded -> closed
       solar-glow-drh-assembly-exploded.png  first frame of that
       solar-glow-drh-assembly-hero.png      last frame of that

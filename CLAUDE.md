@@ -68,8 +68,17 @@ every `.kicad_*` file referenced in the docs exists.
   card, the **assembled/populated** views, and the OSH Park midnight variant) into `Generated/docs/`.
   It costs **~12 min** across 14 views (the populated target added 3, ~2.5 min). If that ever
   needs trimming, `--quality basic --floor` keeps most of the look for roughly half the time.
-  Triggers are `PCB/**`, `scripts/panelize.py`, `scripts/render.py` and the workflow itself —
-  **not** all of `scripts/`, so editing an unrelated script regenerates nothing.
+  Finally it runs `enclosure/assembly_render.py`, which textures the assembled card with the
+  card-face plot the raytrace just wrote — so **changing the board artwork updates the README
+  hero in the same commit**, with no window where the two disagree. Its five outputs
+  (`enclosure/solar-glow-drh-assembly*.gif|png`) are **CI-owned exactly like `Generated/`**,
+  despite living beside the hand-maintained enclosure docs: run the renderer locally to check a
+  change, but don't commit the result — VTK's pixels differ across GL stacks and a hand-run
+  render will churn against CI's forever.
+  Triggers are `PCB/**`, `scripts/panelize.py`, `scripts/render.py`, the renderer's own non-board
+  inputs (`enclosure/assembly_render.py`, `fit_rules.py`, `board_parts.py`, `enclosure/**.stl`)
+  and the workflow itself — **not** all of `scripts/` or all of `enclosure/`, so editing an
+  unrelated script or doc regenerates nothing.
 - `firmware.yml` — builds the firmware on `firmware/**` changes, uploads the hex.
 - `consistency.yml` — runs the drift guard on doc/board/firmware changes, plus
   `scripts/mask_art.py` (check [6] regenerates the cartouche through it) and `enclosure/**`
