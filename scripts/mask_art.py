@@ -158,7 +158,12 @@ def emit(geom) -> str:
         body = "".join(f"\t\t\t(xy {x:.4f} {y:.4f})\n" for x, y in _bridge(p))
         out.append(f'\t(gr_poly\n\t\t(pts\n{body}\t\t)\n'
                    f'\t\t(stroke\n\t\t\t(width 0)\n\t\t\t(type solid)\n\t\t)\n'
-                   f'\t\t(fill solid)\n\t\t(layer "F.Mask")\n'
+                   # (fill yes), not (fill solid): KiCad REWRITES solid -> yes on every
+                   # save, so emitting `solid` made --check report DRIFT after any GUI save
+                   # even with the routing untouched -- a gate that cries wolf, and an
+                   # --apply that produces a no-op-but-noisy board diff to silence it.
+                   # Matching KiCad's own canonical form makes the check stable.
+                   f'\t\t(fill yes)\n\t\t(layer "F.Mask")\n'
                    f'\t\t(uuid "{_uid(f"{TAG}-{k}")}")\n\t)\n')
     return "".join(out)
 
