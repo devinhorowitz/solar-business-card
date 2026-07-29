@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Assembly views: shell + brace + PCB + 8x M2 brass, exploded, closed, and turning.
 
-    python3 enclosure/assembly_render.py            # writes all six views
+    python3 enclosure/assembly_render.py            # writes all seven views
 
 CI OWNS THESE OUTPUTS. The PCB CI workflow runs this script after rebuilding the enclosure CAD
-and raytracing the card face -- both of which it consumes -- and commits the six files below with
+and raytracing the card face -- both of which it consumes -- and commits the files below with
 the rest of the generated set, so changing the board updates the imagery automatically. Run it
 locally to check a change by all means, but do not COMMIT the result: VTK does not produce
 identical pixels across GL stacks, so a hand-run render and CI's will churn against each other.
@@ -13,7 +13,8 @@ identical pixels across GL stacks, so a hand-run render and CI's will churn agai
       solar-glow-drh-assembly-exploded.png  first frame of that
       solar-glow-drh-assembly-hero.png      last frame of that
       solar-glow-drh-assembly-reverse.png   closed, from behind: brass flush in its spotfaces
-      solar-glow-drh-assembly-spin.gif      one seamless revolution -- the root README hero
+      solar-glow-drh-assembly-spin.gif      the card flip -- hero of the root README
+      solar-glow-drh-assembly-shell-spin.gif  the same flip, bare titanium -- enclosure/README.md
       brace/…-diffuser-brace-render.png     the brace alone -- hero of enclosure/brace/README.md
 
 WHAT MAKES THIS TRUSTWORTHY
@@ -40,13 +41,14 @@ CAVEATS, because a render invites more trust than it has earned:
   * The screwdriver slot is drawn as a recessed element rather than cut, because
     vtkBooleanOperationPolyDataFilter returns an empty mesh on these coarse cylinders --
     it did exactly that once and silently left a plain puck.
-  * The GIFs are 256-colour, so read them for form and fit, not for colour matching. The
-    turntable's palette is sampled around the whole revolution for a reason -- see the note
+  * The GIFs are palette-limited, so read them for form and fit, not for colour matching. The
+    palette is sampled across the whole sequence and sized to the error budget -- see the note
     at the encode step, and the check that keeps it honest.
 
-Both animations are checked as they are built rather than trusted: the turntable aborts if any
-frame touches the render border (a silently cropped hero would ship) or if too much of the loop
-moves on quantisation (a silently mis-coloured one would too).
+Every animation is checked as it is built rather than trusted: a flip aborts if any frame touches
+the render border (a silently cropped hero would ship), if the camera-distance probe cannot frame
+the part at all angles, or if too much of the loop moves on quantisation (a silently mis-coloured
+hero would ship just as quietly).
 """
 import os, sys, math
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -148,22 +150,46 @@ def encode_gif(imgs, path, ms, label):
     mont = Image.new("RGB", (imgs[0].width, imgs[0].height * len(srcs)))
     for n, im in enumerate(srcs):
         mont.paste(im, (0, n * imgs[0].height))
-    pal = mont.convert("P", palette=Image.ADAPTIVE, colors=GIF_COLORS)
+
+    def _pal(n):
+        return mont.convert("P", palette=Image.ADAPTIVE, colors=n)
+
+    def _err(pal, sample):
+        moved = px = 0
+        for s in sample:
+            d = np.abs(np.asarray(s.quantize(palette=pal, dither=Image.Dither.NONE).convert("RGB"))
+                       .astype(np.int16) - np.asarray(s).astype(np.int16)).max(axis=2)
+            moved += int((d > GIF_DE).sum()); px += d.size
+        return 100.0 * moved / px
+
+    # SPEND THE SMALLEST PALETTE THAT STILL MEETS THE BUDGET. These sequences differ enormously
+    # in how much colour they actually contain -- the textured card carries gold, copper and
+    # soldermask, while the bare titanium shell is very nearly one grey ramp and quantises to
+    # 0.000% error at any size. Fixing everything at 256 makes the cheap ones pay the expensive
+    # one's price for nothing, and those bytes are better spent on RESOLUTION, which is what
+    # decides whether the name and number on the card are legible at all.
+    # Chosen on a subsample for speed, then verified on every frame below -- the choice being
+    # cheap does not make the guarantee cheap.
+    _probe = imgs[::max(1, len(imgs) // 12)]
+    pal, colors = _pal(GIF_COLORS), GIF_COLORS
+    for _n in (48, 64, 96, 128, 192):
+        if _n >= GIF_COLORS:
+            break
+        _p = _pal(_n)
+        if _err(_p, _probe) <= GIF_DE_FRAC * 0.6:      # headroom, since this is a subsample
+            pal, colors = _p, _n
+            break
     qs = [im.quantize(palette=pal, dither=Image.Dither.NONE) for im in imgs]
 
-    moved = 0
-    for q, s in zip(qs, imgs):
-        d = np.abs(np.asarray(q.convert("RGB")).astype(np.int16)
-                   - np.asarray(s).astype(np.int16)).max(axis=2)
-        moved += int((d > GIF_DE).sum())
-    frac = 100.0 * moved / (len(qs) * imgs[0].width * imgs[0].height)
+    frac = _err(pal, imgs)
     if frac > GIF_DE_FRAC:
         raise SystemExit(f"{label}: palette is starved -- {frac:.3f}% of the sequence shifts more "
-                         f"than {GIF_DE}/255 (limit {GIF_DE_FRAC}%). Widen the palette sample or "
-                         f"raise GIF_COLORS; an undithered dark neutral lands on the brass ramp.")
+                         f"than {GIF_DE}/255 (limit {GIF_DE_FRAC}%) at {colors} colours. Widen the "
+                         f"palette sample; an undithered dark neutral lands on the brass ramp.")
     qs[0].save(path, save_all=True, append_images=qs[1:], duration=ms, loop=0, optimize=True)
     print(f"wrote {os.path.basename(path)}  {imgs[0].width}x{imgs[0].height}  {len(imgs)} frames  "
-          f"{os.path.getsize(path) // 1024} KB  {frac:.3f}% of pixels shifted >{GIF_DE}")
+          f"{os.path.getsize(path) // 1024} KB  {colors} colours  "
+          f"{frac:.3f}% shifted >{GIF_DE}")
     return frac
 
 
@@ -376,76 +402,136 @@ ren2.ResetCameraClippingRange(); rw2.Render()
 _w = vtk.vtkWindowToImageFilter(); _w.SetInput(rw2); _w.Update()
 _wr = vtk.vtkPNGWriter(); _wr.SetFileName(os.path.join(HERE, f"{STEM}-reverse.png"))
 _wr.SetInputConnection(_w.GetOutputPort()); _wr.Write()
-# ---- turntable: the assembled article, one seamless revolution --------------------------
+# ---- card flip: upright, front -> back -> front ------------------------------------------
 #
-# Same camera family as the hero still (elev 58 deg, view angle 30) so the spin reads as that
-# picture rotating rather than a different render. Constant angular velocity and an exclusive
-# 0..360 sweep, so the last frame hands off to the first with no stutter -- any easing here
-# would make the loop visibly hitch once per revolution.
+# NOT a turntable. Spinning the card flat about its thickness axis is the pizza view: it never
+# shows the back, and it presents a business card in an orientation nobody holds one in. This
+# rotates about the card's LONG axis with that axis vertical -- front, edge, back, edge, front --
+# which is what a hand does when someone turns a card over, and it puts the artwork upright.
 #
-# The frame is CROPPED to the box the part actually sweeps, not to the render window. At this
-# elevation the card fills barely half a square frame's height, and on a 60-frame GIF that
-# dead background is most of the file. The crop box is measured from the frames themselves
-# (union over the whole revolution), so it stays correct if the camera or the board changes.
-SPIN_FRAMES = 60
-SPIN_SIZE = 1000                       # square render; the crop below sets the real output size
-SPIN_DIST, SPIN_ELEV, SPIN_VANG = 215.0, 58.0, 30.0
-SPIN_PAD = 22                          # px of background kept around the swept box
-SPIN_MS = 70                           # -> 4.2 s per revolution
-
-ren3 = vtk.vtkRenderer(); ren3.SetBackground(0.965, 0.963, 0.955)
-rw3 = vtk.vtkRenderWindow(); rw3.SetOffScreenRendering(1); rw3.AddRenderer(ren3)
-rw3.SetSize(SPIN_SIZE, SPIN_SIZE)
-
-for _a in ([_mat(shell_pd, TI, 0.85, 0.55, 42, 0.16), _mat(brace_pd, RESIN, 0.85, 0.12, 8, 0.16),
-            textured(_mat(board_pd, MASK, 0.85, 0.30, 26, 0.16))]
-           + [_mat(p, SOLAR, 0.85, 0.42, 48, 0.16) for p in solar_pds]
-           + [_mat(p, SILVER, 0.85, 0.75, 60, 0.16) for p in cap_pds]
-           + [_mat(p, IC, 0.85, 0.22, 18, 0.16) for p in ic_pds]
-           + [_mat(pd, (0.22, 0.16, 0.07) if k == "slot" else BRASS, 0.85,
-                   0.20 if k == "slot" else 0.70, 12 if k == "slot" else 55, 0.16)
-              for k, pd in screws]):
-    ren3.AddActor(_a)
-for _pos, _i in [((-60, -120, 150), 0.90), ((90, 40, 70), 0.45)]:
-    _L = vtk.vtkLight(); _L.SetPosition(*_pos); _L.SetIntensity(_i)
-    _L.SetLightTypeToSceneLight(); ren3.AddLight(_L)
+# Screen-up is board -Y, because the card-face plot's row 0 (the top of the artwork) maps to
+# board y=0. Constant angular velocity over an exclusive 0..360 sweep, so the last frame hands
+# off to the first with no hitch; easing would stutter once per revolution.
+FLIP_FRAMES = 96                       # 3.75 deg/frame
+FLIP_MS = 70                           # -> 6.7 s per revolution
+FLIP_SIZE = 980                        # square render; the crop below sets the real output size
+FLIP_VANG = 26.0
+FLIP_TILT = 21.0                       # above dead-on, so it reads as a solid, not a sprite
+FLIP_EASE = 0.18                       # linger on the faces, hurry through the edges
+FLIP_PAD = 20                          # px of background kept around the swept box
 
 _BG = np.array([0.965, 0.963, 0.955]) * 255
-_cam3 = ren3.GetActiveCamera()
-_spin, _boxes = [], []
-for _i in range(SPIN_FRAMES):
-    _az = math.radians(360.0 * _i / SPIN_FRAMES)      # exclusive of 360 -> seamless loop
-    _el = math.radians(SPIN_ELEV)
-    _cam3.SetPosition(W / 2 + SPIN_DIST * math.sin(_el) * math.cos(_az),
-                      H / 2 + SPIN_DIST * math.sin(_el) * math.sin(_az),
-                      Z_FRONT / 2 + SPIN_DIST * math.cos(_el))
-    _cam3.SetFocalPoint(W / 2, H / 2, Z_FRONT / 2)
-    _cam3.SetViewUp(0, 0, 1); _cam3.SetViewAngle(SPIN_VANG)
-    ren3.ResetCameraClippingRange(); rw3.Render()
-    _w3 = vtk.vtkWindowToImageFilter(); _w3.SetInput(rw3); _w3.Update()
-    _arr = vtk_to_numpy(_w3.GetOutput().GetPointData().GetScalars())
-    _arr = _arr.reshape(SPIN_SIZE, SPIN_SIZE, -1)[::-1, :, :3]
-    _fg = np.abs(_arr.astype(np.int16) - _BG.astype(np.int16)).max(axis=2) > 6
-    _ys, _xs = np.nonzero(_fg)
-    if len(_xs) == 0:
-        raise SystemExit(f"turntable frame {_i} rendered empty -- the camera is inside the part")
-    # A clipped hero is the kind of thing that ships unnoticed, so make it fatal rather than
-    # trusting that the framing constants above still suit the geometry.
-    if _xs.min() == 0 or _ys.min() == 0 or _xs.max() == SPIN_SIZE - 1 or _ys.max() == SPIN_SIZE - 1:
-        raise SystemExit(f"turntable frame {_i} (az {math.degrees(_az):.0f} deg) touches the frame "
-                         f"edge -- raise SPIN_DIST or lower SPIN_VANG")
-    _boxes.append((_xs.min(), _ys.min(), _xs.max(), _ys.max()))
-    _spin.append(Image.fromarray(_arr))
 
-_x0 = max(0, min(b[0] for b in _boxes) - SPIN_PAD)
-_y0 = max(0, min(b[1] for b in _boxes) - SPIN_PAD)
-_x1 = min(SPIN_SIZE, max(b[2] for b in _boxes) + SPIN_PAD + 1)
-_y1 = min(SPIN_SIZE, max(b[3] for b in _boxes) + SPIN_PAD + 1)
-_x1 += (_x1 - _x0) & 1                                # even dimensions, for the video encoders
-_y1 += (_y1 - _y0) & 1
-_spin = [im.crop((_x0, _y0, _x1, _y1)) for im in _spin]
 
-encode_gif(_spin, os.path.join(HERE, f"{STEM}-spin.gif"), SPIN_MS, "turntable")
+def card_flip(actor_list, path, label, frames=FLIP_FRAMES, ms=FLIP_MS, size=FLIP_SIZE):
+    """One seamless revolution about the long axis, held upright. Returns nothing; writes a GIF."""
+    ren = vtk.vtkRenderer(); ren.SetBackground(0.965, 0.963, 0.955)
+    rw = vtk.vtkRenderWindow(); rw.SetOffScreenRendering(1); rw.AddRenderer(ren)
+    rw.SetSize(size, size)
+    for a in actor_list:
+        ren.AddActor(a)
+
+    _bs = [a.GetBounds() for a in actor_list]
+    b = [min(v[0] for v in _bs), max(v[1] for v in _bs), min(v[2] for v in _bs),
+         max(v[3] for v in _bs), min(v[4] for v in _bs), max(v[5] for v in _bs)]
+    cx, cy, cz = (b[0] + b[1]) / 2, (b[2] + b[3]) / 2, (b[4] + b[5]) / 2
+
+    # Lights are fixed in the WORLD, not carried on the camera, so turning the part changes how
+    # it catches them -- that is most of what makes a rotation read as solid rather than as a
+    # flat sprite being warped. The two behind the part matter more than they look: without
+    # them the entire back half of the revolution is a silhouette.
+    for pos, inten in [((cx - 90, cy - 130, cz + 150), 0.85),
+                       ((cx + 110, cy - 40, cz + 70), 0.40),
+                       ((cx - 40, cy - 90, cz - 160), 0.60),
+                       ((cx + 80, cy + 60, cz - 60), 0.25)]:
+        L = vtk.vtkLight(); L.SetPosition(*pos); L.SetIntensity(inten)
+        L.SetLightTypeToSceneLight(); ren.AddLight(L)
+
+    cam = ren.GetActiveCamera()
+    tilt = math.radians(FLIP_TILT)
+
+    def place(theta, dist):
+        cam.SetPosition(cx + dist * math.cos(tilt) * math.sin(theta),
+                        cy - dist * math.sin(tilt),
+                        cz + dist * math.cos(tilt) * math.cos(theta))
+        cam.SetFocalPoint(cx, cy, cz)
+        cam.SetViewUp(0, -1, 0)        # board -Y is up: y=0 is the top of the artwork
+        cam.SetViewAngle(FLIP_VANG)
+        ren.ResetCameraClippingRange()
+
+    def shoot():
+        rw.Render()
+        w = vtk.vtkWindowToImageFilter(); w.SetInput(rw); w.Update()
+        a = vtk_to_numpy(w.GetOutput().GetPointData().GetScalars())
+        a = a.reshape(size, size, -1)[::-1, :, :3]
+        return a, np.abs(a.astype(np.int16) - _BG.astype(np.int16)).max(axis=2) > 6
+
+    # Fit the distance to the part rather than hardcoding one: this runs over both the assembled
+    # card and the bare shell, which are different sizes, and whichever it is has to clear the
+    # frame at EVERY angle. Probed every 30 deg, then every rendered frame is checked below.
+    span = max(b[1] - b[0], b[3] - b[2], b[5] - b[4])
+    dist = None
+    for trial in [span * k for k in (2.2, 2.4, 2.6, 2.9, 3.2, 3.6)]:
+        worst = size
+        for probe in range(0, 360, 30):
+            place(math.radians(probe), trial)
+            _, fg = shoot()
+            if not fg.any():
+                worst = -1
+                break
+            ys, xs = np.nonzero(fg)
+            worst = min(worst, xs.min(), ys.min(), size - 1 - xs.max(), size - 1 - ys.max())
+        if worst >= FLIP_PAD:
+            dist = trial
+            break
+    if dist is None:
+        raise SystemExit(f"{label}: no camera distance frames the part at every angle")
+
+    # THETA IS EASED, and the easing is what makes this read as a reveal rather than a spin.
+    # A constant sweep spends a full quarter of the loop on the edge -- a 3.55 mm sliver of a
+    # 88.9 mm card -- and hurries past the two faces that are the entire point. theta(t) =
+    # 2*pi*t - A*sin(2*2*pi*t) slows to 0.64x at the front and back and runs 1.36x through the
+    # edges. It stays PERIODIC and monotonic (1 - 2A > 0), so the loop still hands off with no
+    # hitch: the usual objection to easing an animation loop does not apply to this form.
+    imgs, boxes = [], []
+    for i in range(frames):
+        _t = i / frames                               # exclusive of 1.0 -> seamless loop
+        place(2.0 * math.pi * _t - FLIP_EASE * math.sin(2.0 * 2.0 * math.pi * _t), dist)
+        arr, fg = shoot()
+        if not fg.any():
+            raise SystemExit(f"{label} frame {i} rendered empty -- the camera is inside the part")
+        ys, xs = np.nonzero(fg)
+        # A clipped hero is the kind of thing that ships unnoticed, so make it fatal.
+        if xs.min() == 0 or ys.min() == 0 or xs.max() == size - 1 or ys.max() == size - 1:
+            raise SystemExit(f"{label} frame {i} touches the frame "
+                             f"edge -- the distance probe above picked too tight a fit")
+        boxes.append((xs.min(), ys.min(), xs.max(), ys.max()))
+        imgs.append(Image.fromarray(arr))
+
+    x0 = max(0, min(v[0] for v in boxes) - FLIP_PAD)
+    y0 = max(0, min(v[1] for v in boxes) - FLIP_PAD)
+    x1 = min(size, max(v[2] for v in boxes) + FLIP_PAD + 1)
+    y1 = min(size, max(v[3] for v in boxes) + FLIP_PAD + 1)
+    x1 += (x1 - x0) & 1                               # even dimensions, for the video encoders
+    y1 += (y1 - y0) & 1
+    encode_gif([im.crop((x0, y0, x1, y1)) for im in imgs], path, ms, label)
+
+
+card_flip([_mat(shell_pd, TI, 0.85, 0.55, 42, 0.16), _mat(brace_pd, RESIN, 0.85, 0.12, 8, 0.16),
+           textured(_mat(board_pd, MASK, 0.85, 0.30, 26, 0.16))]
+          + [_mat(p, SOLAR, 0.85, 0.42, 48, 0.16) for p in solar_pds]
+          + [_mat(p, SILVER, 0.85, 0.75, 60, 0.16) for p in cap_pds]
+          + [_mat(p, IC, 0.85, 0.22, 18, 0.16) for p in ic_pds]
+          + [_mat(pd, (0.22, 0.16, 0.07) if k == "slot" else BRASS, 0.85,
+                  0.20 if k == "slot" else 0.70, 12 if k == "slot" else 55, 0.16)
+             for k, pd in screws],
+          os.path.join(HERE, f"{STEM}-spin.gif"), "card flip")
+
+# ---- the bare shell, same motion: the hero of enclosure/README.md ------------------------
+# Naked titanium, nothing in it. The same rotation shows what a still cannot: the machined
+# cavity with its bosses and lip on the way round, and the plain bead-blast back coming after.
+card_flip([_mat(shell_pd, TI, 0.82, 0.60, 46, 0.15)],
+          os.path.join(HERE, f"{STEM}-shell-spin.gif"), "shell flip")
 
 # ---- the brace alone: the hero of enclosure/brace/README.md ------------------------------
 # That image shipped in the repo's initial import with NO generator behind it, so while the
