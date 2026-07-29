@@ -54,12 +54,21 @@ Today it writes one thing, the NFC contactless mark. The left-field **cartouche 
 (`CARTOUCHE = False` in that file, since 2026-07-29) — generator intact, one constant brings
 it back; the reason it is off is in the comment above the switch.
 
+**Component colours** (the one part of a render that is data, not decoration):
+```sh
+python3 scripts/part_colors.py --check    # do the STEP bodies match the table?
+python3 scripts/part_colors.py --apply    # write the table into them
+```
+Colour patch only — never geometry, so check [7] stays an independent measurement of height.
+
 **Consistency** (drift guard — also runs in CI):
 ```sh
 python3 scripts/check_consistency.py
 ```
-Verifies `board.h` pin map ↔ schematic netlist, CI-generated BOM ↔ netlist, and that
-every `.kicad_*` file referenced in the docs exists.
+Verifies `board.h` pin map ↔ schematic netlist, CI-generated BOM ↔ netlist, that every
+`.kicad_*` file referenced in the docs exists, that **every image any `.md` displays comes
+from a generator CI runs** (check [9]), and that every 3D model carries its table colour
+(check [10]).
 
 ## CI
 - `kibot.yml` — regenerates `Generated/` (fab + docs) on `PCB/**` changes and commits
@@ -94,9 +103,13 @@ every `.kicad_*` file referenced in the docs exists.
   `--apply` yourself, push, and everything downstream regenerates from there.
 - `firmware.yml` — builds the firmware on `firmware/**` changes, uploads the hex.
 - `consistency.yml` — runs the drift guard on doc/board/firmware changes, plus
-  `scripts/mask_art.py` (check [6] regenerates the mask art through it) and `enclosure/**`
+  `scripts/mask_art.py` (check [6] regenerates the mask art through it), `scripts/part_colors.py`
+  (check [10]), `kibot.yml` (check [9] parses its `OUTS` list) and `enclosure/**`
   (check [7] reads the part-height table). Until 2026-07-29 **nothing in CI triggered on
-  `enclosure/` at all**, which is how a stale U7 height survived there for a day.
+  `enclosure/` at all**, which is how a stale U7 height survived there for a day; and it
+  triggered on `README.md` **by name** until 2026-07-30, so check [9] — which reads every
+  `.md` in the tree — could not have fired on an image added to `PCB/README.md` or
+  `enclosure/README.md`. It is `'**.md'` now.
 - **Everything CI runs is pinned.** The KiCad 10 image is pinned by *digest* in both
   `kibot.yml` and `consistency.yml` (keep the two in step), every action by commit SHA,
   shapely and the AVR toolchain/DFP by version. This is not hygiene: DRC is a merge gate
@@ -114,6 +127,17 @@ every `.kicad_*` file referenced in the docs exists.
   through a silent default and were cut up to 0.58 mm too shallow. Never re-declare a height in a
   generator or a drawing — import it. Check [7] measures each one against that part's own 3D model,
   and `part_height()` **raises** on an unmapped refdes instead of guessing.
+- **Every image a doc displays must come from a generator, and check [9] enforces it.** Add
+  a `![](…)` to any `.md` and the check fails unless some entry in `PRODUCERS` claims the path
+  *and* `kibot.yml`'s own `OUTS` list actually commits it — a producer whose output CI throws
+  away is not automation. The eight analysis figures in `images/` are the standing exception,
+  each with its reason in `UNAUTOMATED`; they plot data that is not in the repo, so a
+  "generator" for them would just hard-code numbers read off a PNG.
+- **An uncoloured 3D model renders default grey, and no other check notices.** `LA_P47F` — the
+  amber LED, ×4, the component this card exists to drive — carried no STEP colour entity at all
+  and shipped as a grey block in every assembled render for months. Check [5] counts models that
+  *resolve*, and an uncoloured model resolves perfectly. Colours live once, in
+  `scripts/part_colors.py`; check [10] gates them, and a new model with no entry is an error.
 - **The front mask art is generated from the routing.** Every opening is `shape − live copper`,
   so moving a front trace can put a signal under an aperture — re-run `scripts/mask_art.py
   --apply`. Consistency check [6] errors if you forget. It is the one artwork here that goes

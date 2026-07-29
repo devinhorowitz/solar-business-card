@@ -1,12 +1,13 @@
 # .github/workflows/consistency.yml — drift guard for docs vs firmware vs board.
 # Runs scripts/check_consistency.py (firmware pin contract, BOM parity, package-vs-land
-# geometry, 3D model refs, generated mask art, and referenced-file existence) inside the
+# geometry, 3D model refs, generated mask art, doc imagery provenance, 3D model colours,
+# and referenced-file existence) inside the
 # KiCad 10 container so kicad-cli is on hand to export the schematic netlist and pcbnew
 # is importable. Errors fail the build; doc-reference drift is reported as a warning.
 #
 # The image is pinned by digest for the same reason kibot.yml pins it — several of these
 # checks are computed by KiCad itself (netlist export, pad geometry) or by shapely
-# (check [6] regenerates the front cartouche and compares), so a floating toolchain can
+# (check [6] regenerates the front mask art and compares), so a floating toolchain can
 # change a verdict with no commit here to explain it. Keep this digest in step with
 # .github/workflows/kibot.yml.
 name: Consistency check
@@ -16,12 +17,20 @@ on:
     paths:
       - 'PCB/**'
       - 'firmware/board.h'
-      - 'firmware/README.md'
-      - 'README.md'
+      # check [9] reads EVERY .md in the tree, so it has to trigger on every .md in the
+      # tree. It used to list README.md and firmware/README.md by name, which meant an
+      # un-generated image added to PCB/README.md or enclosure/README.md -- the two most
+      # likely places -- would never have been checked at all.
+      - '**.md'
       - 'scripts/check_consistency.py'
-      # check [6] regenerates the cartouche by importing this module, so a change to the
+      # check [6] regenerates the mask art by importing this module, so a change to the
       # generator can make the committed board stale without the board file being touched.
       - 'scripts/mask_art.py'
+      # check [10] imports this table and compares it against the STEP files.
+      - 'scripts/part_colors.py'
+      # check [9] parses the OUTS list out of kibot.yml to confirm that everything it calls
+      # "automated" is something CI actually commits.
+      - '.github/workflows/kibot.yml'
       # check [7] reads enclosure/part_heights.py and measures it against the board's
       # 3D models. Until 2026-07-29 nothing in CI triggered on enclosure/ at all.
       - 'enclosure/**'
@@ -30,10 +39,11 @@ on:
     paths:
       - 'PCB/**'
       - 'firmware/board.h'
-      - 'firmware/README.md'
-      - 'README.md'
+      - '**.md'
       - 'scripts/check_consistency.py'
       - 'scripts/mask_art.py'
+      - 'scripts/part_colors.py'
+      - '.github/workflows/kibot.yml'
       - 'enclosure/**'
       - '.github/workflows/consistency.yml'
 

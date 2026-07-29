@@ -167,9 +167,13 @@ jobs:
           # Everything this job owns. These sit beside the enclosure docs rather than under
           # Generated/, because that is where they are read from — but they are just as CI-owned.
           # Globbed by KIND rather than listed by name so a new variant out of the CAD generator
-          # is picked up automatically; the patterns deliberately match no .py, .md, font, or the
-          # two hand-made brace photos (…-brace-fit.png, …-brace-render.png), which no generator
-          # produces. See enclosure/README.md.
+          # is picked up automatically; the patterns deliberately match no .py, .md or font, and
+          # no hand-made image. The one hand-made image down here is …-brace-fit.png, a photo,
+          # and nothing globs it. (This comment used to name …-brace-render.png alongside it as
+          # hand-made — wrong on both counts: assembly_render.py writes it, and the
+          # `enclosure/brace/*brace-render.png` pattern three lines up has always matched it.
+          # Consistency check [9] now reads this OUTS list and cross-checks it, so the comment
+          # and the globs cannot disagree silently again.) See enclosure/README.md.
           OUTS="Generated
                 enclosure/*.step enclosure/*.stl
                 enclosure/*DRAWING.pdf enclosure/*DRAWING.png
