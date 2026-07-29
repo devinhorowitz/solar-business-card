@@ -17,7 +17,9 @@ Every dimension comes from something already committed, not from a mock-up:
   * the board outline, the 8 mount positions and every part footprint come from
     enclosure/board_parts.py, which reads the committed .kicad_pcb;
   * the Z stack (floor 1.00 / cavity 1.80 / board 0.60) and the screw arithmetic come from
-    enclosure/fit_rules.py and the shell generator's own constants.
+    enclosure/fit_rules.py and the shell generator's own constants;
+  * the show face is the RAYTRACED CARD ITSELF, textured on -- monogram window, name, number,
+    cartouche, ENIG -- not a black rectangle standing in for a PCB.
 
 So if the board moves, these pictures move with it. That is the point -- the previous
 enclosure drawings were hand-restated and quietly went on describing a part that had
@@ -43,6 +45,8 @@ import os, sys, math
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import vtk
 from vtk.util.numpy_support import vtk_to_numpy
+import numpy as np
+from PIL import Image
 import fit_rules as fr
 import board_parts as bp
 from shapely.geometry import box as sbox, Point as spt
@@ -112,6 +116,50 @@ def actor(pd, rgb, spec=0.25, power=20, opacity=1.0):
     return a
 
 
+GIF_COLORS = 256                       # GIF maximum
+GIF_DE = 20                            # a shift this big in a flat area is a visible wrong hue
+GIF_DE_FRAC = 0.5                      # ...and this much of the loop moving that far is the bug
+
+
+def encode_gif(imgs, path, ms, label):
+    """Write an animation as ONE palette sampled across the WHOLE sequence, and prove it landed.
+
+    Per-frame ADAPTIVE palettes -- PIL's default when handed RGB frames, and what this script
+    used to do at 192 colours -- cost a colour table per frame and make flat areas shimmer,
+    because the palette is re-derived from each frame's own histogram. A palette from frame 0
+    alone is worse still: these scenes are nearly all neutral darks (black soldermask, near-black
+    cells, titanium in shadow) with one small warm brass ramp, and frame 0 shows least of it.
+    Fitting 128 colours to that one histogram left the shell's dark greys with no near neighbour
+    and, undithered, they snapped onto the brass browns -- the titanium rim came out visibly TAN
+    while the render behind it was neutral.
+
+    The gate is HOW MUCH of the picture moves, not the single worst pixel: across tens of frames
+    of half-megapixel there is always a specular outlier, and a max-shift gate fired at 70/255 on
+    a sequence whose flat areas were already clean.
+    """
+    srcs = imgs[::max(1, len(imgs) // 10)]
+    mont = Image.new("RGB", (imgs[0].width, imgs[0].height * len(srcs)))
+    for n, im in enumerate(srcs):
+        mont.paste(im, (0, n * imgs[0].height))
+    pal = mont.convert("P", palette=Image.ADAPTIVE, colors=GIF_COLORS)
+    qs = [im.quantize(palette=pal, dither=Image.Dither.NONE) for im in imgs]
+
+    moved = 0
+    for q, s in zip(qs, imgs):
+        d = np.abs(np.asarray(q.convert("RGB")).astype(np.int16)
+                   - np.asarray(s).astype(np.int16)).max(axis=2)
+        moved += int((d > GIF_DE).sum())
+    frac = 100.0 * moved / (len(qs) * imgs[0].width * imgs[0].height)
+    if frac > GIF_DE_FRAC:
+        raise SystemExit(f"{label}: palette is starved -- {frac:.3f}% of the sequence shifts more "
+                         f"than {GIF_DE}/255 (limit {GIF_DE_FRAC}%). Widen the palette sample or "
+                         f"raise GIF_COLORS; an undithered dark neutral lands on the brass ramp.")
+    qs[0].save(path, save_all=True, append_images=qs[1:], duration=ms, loop=0, optimize=True)
+    print(f"wrote {os.path.basename(path)}  {imgs[0].width}x{imgs[0].height}  {len(imgs)} frames  "
+          f"{os.path.getsize(path) // 1024} KB  {frac:.3f}% of pixels shifted >{GIF_DE}")
+    return frac
+
+
 def cyl(x, y, z0, dz, r, res=28):
     s = vtk.vtkCylinderSource(); s.SetRadius(r); s.SetHeight(dz); s.SetResolution(res)
     s.CappingOn(); s.Update()
@@ -132,6 +180,46 @@ for cx, cy in [(R, R), (W - R, R), (R, H - R), (W - R, H - R)]:
 for mx, my in fr.MOUNTS:
     out = out.difference(spt(mx, my).buffer(1.10, resolution=32))
 board_pd = poly_prism(out, Z_BOARD, BOARD)
+
+# ---- the show face, textured with the real card ----------------------------------------
+# A flat black slab is honest about the STACK and says nothing about what this OBJECT IS -- no
+# monogram window, no name, no number. The raytraced card-face plot is an orthographic view of
+# the front at the board's own aspect (1008x1768 against 50.8 x 88.9, 0.2% off), so it maps
+# straight onto the show face with a planar projection and no distortion.
+#
+# NOTE this is the one input here that does NOT come from a file this repo hand-maintains:
+# Generated/ is CI's, and CI regenerates it from the board on every PCB/** change. That is the
+# right dependency direction -- re-route the front and this hero follows -- but it does mean a
+# clone that has never run CI has nothing to texture with, so say so plainly rather than
+# rendering a silently blank card.
+TEX = f"{ROOT}/Generated/docs/solar-glow-drh-v4_0-card-face.png"
+if not os.path.exists(TEX):
+    raise SystemExit(f"missing {TEX} -- it is generated by the KiBot workflow on PCB/** changes; "
+                     f"fetch a branch that has it rather than rendering a blank card")
+
+_tm = vtk.vtkTextureMapToPlane()
+_tm.SetInputData(board_pd)
+# Orientation is not guessable from VTK's conventions -- the texture origin, the PNG reader's
+# row order and KiCad's y-down all interact. All four u/v corner assignments were rendered
+# top-down and correlated against the plot itself: this one scores 0.981, the others 0.62-0.82.
+# The failure mode is quiet and embarrassing rather than loud: the first attempt textured
+# perfectly and rendered the name and number MIRRORED.
+_tm.SetOrigin(W, H, Z_FRONT); _tm.SetPoint1(0.0, H, Z_FRONT); _tm.SetPoint2(W, 0.0, Z_FRONT)
+_tm.Update()
+board_pd = _tm.GetOutput()
+
+_tr = vtk.vtkPNGReader(); _tr.SetFileName(TEX); _tr.Update()
+board_tex = vtk.vtkTexture(); board_tex.SetInputConnection(_tr.GetOutputPort())
+board_tex.InterpolateOn(); board_tex.EdgeClampOn(); board_tex.MipmapOn()
+
+
+def textured(a):
+    """Give a board actor the card plot. White base, so the plot's own colours come through
+    untinted -- leaving it at MASK would multiply the gold down to nearly nothing."""
+    a.GetProperty().SetColor(1.0, 1.0, 1.0)
+    a.SetTexture(board_tex)
+    return a
+
 
 # front-side parts (solar cells) and the back-side blockers, for material colour
 front = bp.parts("F")
@@ -188,7 +276,7 @@ rw = vtk.vtkRenderWindow(); rw.SetOffScreenRendering(1); rw.AddRenderer(ren); rw
 groups = {}
 groups["shell"] = [actor(shell_pd, TI, spec=0.55, power=42)]
 groups["brace"] = [actor(brace_pd, RESIN, spec=0.12, power=8)]
-groups["board"] = ([actor(board_pd, MASK, spec=0.30, power=26)]
+groups["board"] = ([textured(actor(board_pd, MASK, spec=0.30, power=26))]
                    + [actor(p, SOLAR, spec=0.42, power=48) for p in solar_pds]
                    + [actor(p, SILVER, spec=0.75, power=60) for p in cap_pds]
                    + [actor(p, IC, spec=0.22, power=18) for p in ic_pds])
@@ -244,11 +332,8 @@ for i in range(FRAMES):
     frames.append(f"{OUT}/f{i:03d}.png")
 print(f"rendered {len(frames)} frames")
 
-from PIL import Image
-imgs = [Image.open(f).convert("P", palette=Image.ADAPTIVE, colors=192) for f in frames]
 gif = os.path.join(HERE, f"{STEM}.gif")
-imgs[0].save(gif, save_all=True, append_images=imgs[1:], duration=90, loop=0, optimize=True)
-print("wrote", gif, os.path.getsize(gif) // 1024, "KB")
+encode_gif([Image.open(f).convert("RGB") for f in frames], gif, 90, "exploded")
 Image.open(frames[-1]).save(os.path.join(HERE, f"{STEM}-hero.png"))
 Image.open(frames[0]).save(os.path.join(HERE, f"{STEM}-exploded.png"))
 
@@ -266,7 +351,7 @@ def _mat(pd, rgb, diff, spec, pw, amb):
 
 
 ren2.AddActor(_mat(shell_pd, (0.68, 0.69, 0.72), 0.60, 0.62, 46, 0.13))
-ren2.AddActor(_mat(board_pd, MASK, 0.85, 0.30, 26, 0.14))
+ren2.AddActor(textured(_mat(board_pd, MASK, 0.85, 0.30, 26, 0.14)))
 for _p in solar_pds:
     ren2.AddActor(_mat(_p, SOLAR, 0.75, 0.45, 55, 0.10))
 for _k, _pd in screws:
@@ -299,20 +384,14 @@ SPIN_FRAMES = 60
 SPIN_SIZE = 1000                       # square render; the crop below sets the real output size
 SPIN_DIST, SPIN_ELEV, SPIN_VANG = 215.0, 58.0, 30.0
 SPIN_PAD = 22                          # px of background kept around the swept box
-SPIN_COLORS = 256                      # GIF maximum -- see the palette note below
 SPIN_MS = 70                           # -> 4.2 s per revolution
-SPIN_DE = 20                           # a shift this big in a flat area is visible as a wrong hue
-SPIN_DE_FRAC = 0.5                     # ...and this much of the frame moving that far is the bug
-
-import numpy as np
-from PIL import Image
 
 ren3 = vtk.vtkRenderer(); ren3.SetBackground(0.965, 0.963, 0.955)
 rw3 = vtk.vtkRenderWindow(); rw3.SetOffScreenRendering(1); rw3.AddRenderer(ren3)
 rw3.SetSize(SPIN_SIZE, SPIN_SIZE)
 
 for _a in ([_mat(shell_pd, TI, 0.85, 0.55, 42, 0.16), _mat(brace_pd, RESIN, 0.85, 0.12, 8, 0.16),
-            _mat(board_pd, MASK, 0.85, 0.30, 26, 0.16)]
+            textured(_mat(board_pd, MASK, 0.85, 0.30, 26, 0.16))]
            + [_mat(p, SOLAR, 0.85, 0.42, 48, 0.16) for p in solar_pds]
            + [_mat(p, SILVER, 0.85, 0.75, 60, 0.16) for p in cap_pds]
            + [_mat(p, IC, 0.85, 0.22, 18, 0.16) for p in ic_pds]
@@ -359,44 +438,7 @@ _x1 += (_x1 - _x0) & 1                                # even dimensions, for the
 _y1 += (_y1 - _y0) & 1
 _spin = [im.crop((_x0, _y0, _x1, _y1)) for im in _spin]
 
-# ONE palette for the whole loop -- but derived from a SAMPLE OF THE WHOLE LOOP, not from a
-# single frame. Per-frame ADAPTIVE palettes (PIL's default when handed RGB frames) cost a colour
-# table per frame and make flat areas shimmer; a palette taken from frame 0 alone is worse still.
-# This scene is mostly near-neutral darks -- black soldermask, near-black cells, titanium in
-# shadow -- with one small warm brass ramp, and frame 0 is the edge-on view that shows least of
-# it. Fitting 128 colours to that one histogram left the shell's dark greys with no near
-# neighbour, and undithered they snapped onto the brass browns: the titanium rim came out
-# visibly TAN in the GIF while the render behind it was neutral. Sampling around the revolution
-# at the GIF's 256-colour maximum is what fixes it, and the delta below is what proves it.
-_srcs = _spin[::max(1, SPIN_FRAMES // 10)]
-_mont = Image.new("RGB", (_spin[0].width, _spin[0].height * len(_srcs)))
-for _n, _im in enumerate(_srcs):
-    _mont.paste(_im, (0, _n * _spin[0].height))
-_pal = _mont.convert("P", palette=Image.ADAPTIVE, colors=SPIN_COLORS)
-_qs = [im.quantize(palette=_pal, dither=Image.Dither.NONE) for im in _spin]
-
-# Gate on HOW MUCH of the picture moves, not on the single worst pixel. Over 60 frames of ~530k
-# pixels there is always some specular outlier, so a max-shift gate only measures highlights --
-# it fired at 70/255 on a loop whose flat areas were already clean. What went wrong before was
-# broad: 2.43% of the frame shifted >20 and the rim read tan. Measured the same way, sampling the
-# palette around the revolution puts that at 0.06% -- 39x better -- while >40 and >60 barely move,
-# which is exactly the signature of "the flat areas are fixed, the highlights were never the
-# problem". 256 colours alone only reached 1.83%; the montage is what does the work.
-_moved = 0
-for _q, _s in zip(_qs, _spin):
-    _d = np.abs(np.asarray(_q.convert("RGB")).astype(np.int16)
-                - np.asarray(_s).astype(np.int16)).max(axis=2)
-    _moved += int((_d > SPIN_DE).sum())
-_frac = 100.0 * _moved / (len(_qs) * _spin[0].width * _spin[0].height)
-if _frac > SPIN_DE_FRAC:
-    raise SystemExit(f"turntable palette is starved: {_frac:.3f}% of the loop shifts more than "
-                     f"{SPIN_DE}/255 (limit {SPIN_DE_FRAC}%). Widen the palette sample or raise "
-                     f"SPIN_COLORS -- an undithered dark neutral lands on the brass ramp.")
-
-_gif = os.path.join(HERE, f"{STEM}-spin.gif")
-_qs[0].save(_gif, save_all=True, append_images=_qs[1:], duration=SPIN_MS, loop=0, optimize=True)
-print(f"wrote {STEM}-spin.gif  {_x1 - _x0}x{_y1 - _y0}  {SPIN_FRAMES} frames  "
-      f"{os.path.getsize(_gif) // 1024} KB  {_frac:.3f}% of pixels shifted >{SPIN_DE}")
+encode_gif(_spin, os.path.join(HERE, f"{STEM}-spin.gif"), SPIN_MS, "turntable")
 
 print(f"wrote {STEM}-hero.png, -exploded.png, -reverse.png, .gif, -spin.gif")
 

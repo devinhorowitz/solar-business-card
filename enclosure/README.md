@@ -95,7 +95,11 @@ part positions from `enclosure/board_parts.py` (true 3D body ∪ pads, with the 
 
 <sub>One seamless revolution of the closed assembly at the hero camera — 60 frames, 954×558. This is
 the root README's hero. `solar-glow-drh-assembly-hero.png` is the same camera as a still, and
-`solar-glow-drh-assembly.gif` is the exploded-to-closed sequence.</sub>
+`solar-glow-drh-assembly.gif` is the exploded-to-closed sequence. The show face is
+`Generated/docs/…-card-face.png` textured on, so the monogram, cartouche and contact line are the
+board's real artwork — which also means this render has a **CI-generated input**: a clone that has
+never run the KiBot workflow has nothing to texture with, and the script says so rather than
+quietly rendering a blank card.</sub>
 
 ![Reverse side, closed — brass tips flush in their Ø3.0 spotfaces](solar-glow-drh-assembly-reverse.png)
 
