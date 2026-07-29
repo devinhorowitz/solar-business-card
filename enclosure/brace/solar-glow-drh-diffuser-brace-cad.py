@@ -72,7 +72,7 @@ BASE = "solar-glow-drh-diffuser-brace"
 # brace put 593 mm3 of solid resin inside three 1.70 mm cans and could not be installed.
 # The footprint is computed from the board now; see enclosure/fit_rules.py.
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
-from fit_rules import GAP, CLR, AIR                                          # noqa: E402
+from fit_rules import GAP, CLR, AIR, export_step_stable                                          # noqa: E402
 GLOW  = (14.95, 40.8, 35.85, 47.0)
 FER   = (36.9, 31.5, 48.9, 57.5)   # 12 WIDE (x, CRITICAL -- edge-limited) x 26 LONG (y, nominal; length is
                                    # forgiving -- open-ended channel, may run long/short and extend slightly past the brace).
@@ -222,7 +222,7 @@ for sx,sy in STUBS:
     prof=wpr.slot2D(4.0, RECESS_R*2, 45) if (sx,sy)==(33.0,55.0) else wpr.circle(RECESS_R)
     brace=brace.cut(prof.extrude(RECESS_DEPTH+0.01))
 
-cq.exporters.export(brace, OUT+BASE+".step")
+export_step_stable(brace, OUT+BASE+".step")
 cq.exporters.export(brace, OUT+BASE+".stl", tolerance=0.03, angularTolerance=0.2)
 try:
     from OCP.GProp import GProp_GProps

@@ -238,6 +238,30 @@ def boss_island(mx, my):
     return scal.simplify(0.005, preserve_topology=True)
 
 
+def export_step_stable(solid, path, **kw):
+    """cq.exporters.export to STEP, but leave the file alone if only the timestamp moved.
+
+    OCC stamps a write time into FILE_NAME, so re-running a generator rewrites a 170k-line
+    STEP whose geometry is identical -- pure churn on every run, and real geometry changes
+    get lost in it. scripts/make_3d_models.py already suppressed this; the enclosure
+    generators did not, which is how a rebuild against a front-copper-only re-route showed
+    three "changed" STEP files whose STLs were byte-identical.
+    """
+    import os as _os, re as _re, tempfile as _tf
+    import cadquery as _cq
+    strip = lambda s: _re.sub(r"(?m)^FILE_NAME\('[^']*','[^']*'", "FILE_NAME(", s)
+    tmp = path + ".tmp"
+    _cq.exporters.export(solid, tmp, **kw)
+    new = open(tmp, encoding="utf-8", errors="replace").read()
+    if _os.path.exists(path):
+        old = open(path, encoding="utf-8", errors="replace").read()
+        if strip(old) == strip(new):
+            _os.remove(tmp)
+            return False            # unchanged apart from the write time
+    _os.replace(tmp, path)
+    return True
+
+
 if __name__ == "__main__":
     import math
     fp = brace_footprint()

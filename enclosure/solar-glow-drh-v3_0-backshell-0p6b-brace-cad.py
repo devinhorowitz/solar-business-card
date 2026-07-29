@@ -251,7 +251,7 @@ def _recess_mouth_ease(wt, c):
 # check_consistency [8]. See that module for why they are not four scalars any more.
 from fit_rules import (lip_bands, cavity_void_poly as _cavity_void_poly,
                        boss_island as _boss_island, LIP_CLR, LIP_MAX, COIL_EAST,
-                       BOSS_CLR, THREAD_KEEP)                                 # noqa: E402
+                       BOSS_CLR, THREAD_KEEP, export_step_stable)                                 # noqa: E402
 
 def _inner_pocket():
     """pocket-interior (void) footprint in BOARD coords, identical to the CAD cavity cut:
@@ -483,7 +483,7 @@ for name_suf, fl, wl, bd, rb, pw, note in jobs:
     field = fl + cavity + board_th
     foot = (W + 2*edge_fit + 2*wl)
     name = f"{B}-{name_suf}"
-    cq.exporters.export(solid, OUT + name + ".step")
+    export_step_stable(solid, OUT + name + ".step")
     cq.exporters.export(solid, OUT + name + ".stl", tolerance=0.04, angularTolerance=0.2)
     print(f"  {name:34s} floor={fl:.2f} wall={wl:.2f} field={field:.2f} at-frame={field+bd:.2f} foot={foot:.1f}mm "
           f"ribs={rb} prog={pw} | {note}")
