@@ -97,16 +97,30 @@ OUT = ROOT / "PCB" / "solarglow.3dshapes"
 #   All solids are centred on the footprint origin in X/Y and sit on z=0 growing +Z,
 #   which is what KiCad expects for a part on the board's top surface; KiCad mirrors
 #   it automatically for footprints placed on the back.
+# ---- appearance ----------------------------------------------------------------------
+# STEP carries colour as COLOUR_RGB + STYLED_ITEM, and KiCad's raytracer honours it. Until
+# now these solids were exported with cq.exporters.export(), which writes geometry only, so
+# every project part rendered in KiCad's default grey regardless of what it actually is.
+#
+# Values are the real materials, not decoration -- the renders are what the board is judged
+# by, and a silver-looking supercap next to a black-looking IC is information.
+COL_SOLAR   = (0.045, 0.055, 0.090)   # monocrystalline cell: near-matte black, hint of blue
+COL_IC      = (0.100, 0.100, 0.105)   # moulded black epoxy/polymer IC body
+COL_SUPERCAP = (0.780, 0.790, 0.810)  # SCPC can: bright reflective silver
+
 SPECS = {
     "SCHURTER_SCPC_SS17": dict(
+        color=COL_SUPERCAP,
         body=(39.0, 17.0, 1.70), tab=None,
         desc="SCPC SS17 supercap, 1.8 F — cell 39.0 x 17.0 x 1.70 max (tabs excluded, see header)",
     ),
     "SCHURTER_SCPC_WS17": dict(
+        color=COL_SUPERCAP,
         body=(28.5, 17.0, 1.70), tab=None,
         desc="SCPC WS17 supercap, 1.0 F — cell 28.5 x 17.0 x 1.70 max (tabs excluded, see header)",
     ),
     "SM141K06TF": dict(
+        color=COL_SOLAR,
         body=(42.0, 23.0, 1.50), tab=None,
         desc="ANYSOLAR SM141K06TF cell — 42 x 23 x 1.2 +0.3 (modelled at max 1.5)",
     ),
@@ -115,22 +129,27 @@ SPECS = {
         desc="ams OSRAM LA P47F reverse-mount amber LED — outline 3.4 x 1.9, height 0.83 max",
     ),
     "ADXL367_CC12": dict(
+        color=COL_IC,
         body=(2.2, 2.3, 0.87), tab=None,
         desc="ADI ADXL367 accelerometer, LGA-12 CC-12-4 — 2.2 x 2.3 x 0.87",
     ),
     "NT3H2211_XQFN8": dict(
+        color=COL_IC,
         body=(1.6, 1.6, 0.50), tab=None,
         desc="NXP NT3H2211 NTAG I2C plus, XQFN8 SOT902-3 — 1.6 x 1.6 x 0.5",
     ),
     "AVR64EA28_VQFN28": dict(
+        color=COL_IC,
         body=(4.0, 4.0, 1.00), tab=None,
         desc="U1 AVR64EA28, 28-pin VQFN 4x4 — overall height A max 1.00",
     ),
     "AEM10300_QFN28": dict(
+        color=COL_IC,
         body=(4.0, 4.0, 0.85), tab=None,
         desc="U8 AEM10300, QFN-28 4x4 — thickness 0.800 +/- 0.05, modelled at max 0.85",
     ),
     "MB85RC512TY_DFN8": dict(
+        color=COL_IC,
         body=(5.0, 6.0, 0.90), tab=None,
         desc="U7 MB85RC512TY FRAM, LCC-8P-M05 DFN-8 — 5.00 x 6.00 x 0.90 MAX",
     ),
@@ -353,7 +372,16 @@ def main() -> int:
         solid = build(name, spec)
         dest = OUT / f"{name}.step"
         before = dest.read_text() if dest.exists() else None
-        cq.exporters.export(solid, str(dest))
+        col = spec.get("color")
+        if col:
+            # An Assembly is the only export path that writes COLOUR_RGB/STYLED_ITEM.
+            assy = cq.Assembly(solid, name=name, color=cq.Color(*col))
+            try:
+                assy.export(str(dest))          # cadquery >= 2.5
+            except AttributeError:
+                assy.save(str(dest))
+        else:
+            cq.exporters.export(solid, str(dest))
         bb = solid.val().BoundingBox()
         # STEP stamps a write time into FILE_NAME, so an unchanged solid still comes
         # back as a modified file. Put the old bytes back when only that line moved —
