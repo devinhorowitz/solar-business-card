@@ -40,6 +40,8 @@ The 3D STEP governs all geometry; this generator is the source of truth (it prin
 regenerates the STEP/STL from the PCB anchors).
 """
 import os
+import sys
+
 import cadquery as cq
 from shapely.geometry import Point, box
 from shapely.ops import unary_union
@@ -51,11 +53,18 @@ mounts = [(3.0, 3.0), (47.8, 3.0), (3.0, 85.9), (47.8, 85.9),      # 4x corner M
           (3.0, 28.5), (47.8, 28.5), (3.0, 60.4), (47.8, 60.4)]    # +4 panel-corner M2, GND -- match PCB nudge (holes at panel inner corners). 2-col 8-mount pattern. Verified vs committed board: W(3.0,28.5) boss r2.6 clears R14 by 0.34 (R14 y0 31.44, boss top y31.10) and U6 by 0.25 (U6 x0 5.85, boss E x5.60) -- TIGHT; a board-side nudge of U6/R14 (or a local boss trim there) buys margin if a fit check wants it. E bosses at x47.8 merge into the pinched east lip like the corner bosses.
 
 # ===== fixed shell knobs =====
-U7_H       = 0.90                  # U7 (MB85RC512TY FRAM). 2026-07-28: was 1.75 for a SOIC-8, which the v4
-                                   # board does not carry. It is the DFN-8 -- PCB/solarglow.pretty/U7_DFN8.kicad_mod
-                                   # descr, RAMXEED DS501-00087-1v0-E p.21: 5.00 x 6.00 body, 0.90 mm MAX.
-                                   # U7 is NOT the tallest back part and never was on v4; the caps are.
-cap_H      = 1.70                  # WS17 supercaps (locked): the 2nd-tallest parts (x4) -> set the GENERAL cavity
+# U7 (MB85RC512TY FRAM). 2026-07-28: was 1.75 for a SOIC-8, which the v4 board does not
+# carry. It is the DFN-8 -- PCB/solarglow.pretty/U7_DFN8.kicad_mod descr, RAMXEED
+# DS501-00087-1v0-E p.21: 5.00 x 6.00 body, 0.90 mm MAX. U7 is NOT the tallest back part
+# and never was on v4; the caps are.
+#
+# Imported, not re-declared: this correction landed here on 2026-07-28 and did NOT reach
+# the brace generator's own copy, which kept cutting U7 as a 1.75 mm through-pocket for a
+# day. One home now, verified against the part's 3D model by check_consistency [7].
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from part_heights import HEIGHTS as _PART_H, SUPERCAP_H as _CAPH  # noqa: E402
+U7_H       = _PART_H["U7"]         # 0.90
+cap_H      = _CAPH                 # WS17 supercaps (locked): the tallest B-side parts (x4) -> set the GENERAL cavity
 kapton_th  = 0.00                  # DROPPED (all contacts on bare laminate). set 0.05 to reinstate.
 cav_margin = 0.10                  # air over the cavity-setting parts. general cavity 1.80 = cap_H + air. Reduced 0.15->0.10 now the brace + cell-sandwiches carry the board: cavity 1.80 +-0.05 -> 1.75 worst-case, minus WS17 1.70 MAX (datasheet Case WS17: height max 1.7) = 0.05 non-contact. The freed 0.05 goes into the floor.
 cavity     = round(cap_H + kapton_th + cav_margin, 3)   # 1.80 general (cap-limited); toleranced 1.80 +-0.05 -> 1.75 min

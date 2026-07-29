@@ -72,7 +72,9 @@ every `.kicad_*` file referenced in the docs exists.
   **not** all of `scripts/`, so editing an unrelated script regenerates nothing.
 - `firmware.yml` — builds the firmware on `firmware/**` changes, uploads the hex.
 - `consistency.yml` — runs the drift guard on doc/board/firmware changes, plus
-  `scripts/mask_art.py` (check [6] regenerates the cartouche through it).
+  `scripts/mask_art.py` (check [6] regenerates the cartouche through it) and `enclosure/**`
+  (check [7] reads the part-height table). Until 2026-07-29 **nothing in CI triggered on
+  `enclosure/` at all**, which is how a stale U7 height survived there for a day.
 - **Everything CI runs is pinned.** The KiCad 10 image is pinned by *digest* in both
   `kibot.yml` and `consistency.yml` (keep the two in step), every action by commit SHA,
   shapely and the AVR toolchain/DFP by version. This is not hygiene: DRC is a merge gate
@@ -84,6 +86,12 @@ every `.kicad_*` file referenced in the docs exists.
   wrapper and leave KiCad floating.
 
 ## Gotchas
+- **Component heights live in `enclosure/part_heights.py`, once.** Every enclosure pocket depth
+  is a function of them, and a wrong one prints an unusable part rather than failing: U7 kept a
+  removed SOIC-8's 1.75 and the brace cut it clean *through*; Q2/FB1/the 0603-0805 caps fell
+  through a silent default and were cut up to 0.58 mm too shallow. Never re-declare a height in a
+  generator or a drawing — import it. Check [7] measures each one against that part's own 3D model,
+  and `part_height()` **raises** on an unmapped refdes instead of guessing.
 - **The front cartouche is generated from the routing.** Move a front trace and the
   ornament no longer describes the copper under it — re-run `scripts/mask_art.py --apply`.
   Consistency check [6] errors if you forget. It is the one artwork here that goes *wrong*,

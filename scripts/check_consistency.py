@@ -15,6 +15,8 @@ change to one that isn't mirrored in the others fails loudly (in CI or locally):
       vendored in PCB/kicad-3dmodels/ (what CI renders from).  [ERROR on drift]
   [6] MASK ART -- the generated front cartouche still matches the routing it
       depicts (scripts/mask_art.py).                          [ERROR on drift]
+  [7] PART HEIGHTS -- every enclosure pocket depth clears the part it is cut
+      for, measured against that part's own 3D model.         [ERROR on drift]
   [3] DOC FILE REFS -- every solar-glow-drh-*.kicad_* file named in board.h,
       README.md, or firmware/README.md must actually exist.    [WARN on drift]
 
@@ -246,6 +248,118 @@ def check_mask_art():
     else:
         err(f"front mask art is STALE: the board carries {had} generated shape(s) that no "
             f"longer match the routing. Re-run `python3 scripts/mask_art.py --apply`.")
+
+def _b_side_parts():
+    """(ref, model_basename) for every back-side footprint that carries a 3D model."""
+    with open(PCB, encoding="utf-8", errors="replace") as fh:
+        s = fh.read()
+    out = []
+    for m in re.finditer(r'\(footprint ', s):
+        d, i = 0, m.start()
+        while i < len(s):
+            if s[i] == '(':
+                d += 1
+            elif s[i] == ')':
+                d -= 1
+                if d == 0:
+                    break
+            i += 1
+        b = s[m.start():i + 1]
+        if not re.search(r'\(footprint "[^"]+"\s*\(layer "B', b):
+            continue
+        rm = re.search(r'\(property "Reference" "([^"]+)"', b)
+        mm = re.search(r'\(model "([^"]+)"', b)
+        if rm and mm:
+            out.append((rm.group(1), os.path.basename(mm.group(1))))
+    return out
+
+
+def _step_body_height(path):
+    """Max z of a STEP file's CARTESIAN_POINTs, i.e. how tall the modelled body stands.
+
+    A plain scan, no CAD kernel: KiCad's models sit on z=0 with +z away from the board, so
+    the largest z IS the body height. Verified against the datasheet numbers in
+    scripts/make_3d_models.py SPECS -- DFN-8 0.900, ADXL367 0.870, LA_P47F 0.830,
+    NT3H2211 0.500, AVR64EA28 1.000, SOT-23 1.200 -- all exact.
+    """
+    with open(path, encoding="utf-8", errors="replace") as fh:
+        txt = fh.read()
+    zs = [float(m.group(3)) for m in re.finditer(
+        r"CARTESIAN_POINT\s*\(\s*'[^']*'\s*,\s*\(\s*(-?[\d.E+-]+)\s*,\s*"
+        r"(-?[\d.E+-]+)\s*,\s*(-?[\d.E+-]+)\s*\)", txt)]
+    return max(zs) if zs else None
+
+
+def check_part_heights():
+    """Does every enclosure pocket depth actually clear the part it is cut for?
+
+    The enclosure generators cut a pocket per B-side part from a hand-maintained height.
+    That number is invisible to every other check here: the generator runs happily on a
+    wrong one and prints a part that does not fit. It has gone wrong in both directions --
+    U7 kept a removed SOIC-8's 1.75 after the board moved to a 0.90 DFN-8 (pocket cut clean
+    THROUGH the brace), while Q2, FB1 and the 0603/0805 capacitors fell through a silent
+    0.60/0.55 default and were cut up to 0.58 mm too shallow.
+
+    So compare each height against the z-extent of the part's OWN 3D model on the board --
+    the same models check [5] proves resolve, and which the assembled render already draws.
+    Short is an error (the part interferes). Wildly generous is an error too: it is how a
+    stale height announces itself, and past OVERSHOOT_MAX it changes a blind pocket into a
+    hole. Known generic-model overshoot is waived by name in part_heights.MODEL_NOTES.
+    """
+    print("[7] enclosure part heights clear their 3D models")
+    sys.path.insert(0, os.path.join(ROOT, "enclosure"))
+    try:
+        import part_heights as ph
+    except Exception as e:
+        err(f"cannot import enclosure/part_heights.py -- {type(e).__name__}: {e}")
+        return
+
+    prj = os.path.join(ROOT, "PCB")
+    vend = os.path.join(ROOT, "PCB", "kicad-3dmodels")
+    index = {}
+    for root in (prj, vend):
+        for p in glob.glob(os.path.join(root, "**", "*.step"), recursive=True):
+            index.setdefault(os.path.basename(p), p)
+
+    short, over, unknown, checked, noted = [], [], [], 0, []
+    for ref, model in _b_side_parts():
+        try:
+            h = ph.part_height(ref)
+        except ph.UnknownPart as e:
+            unknown.append(e.args[0].split(":")[0])
+            continue
+        if h is None:
+            continue
+        path = index.get(model)
+        if not path:
+            continue
+        body = _step_body_height(path)
+        if body is None:
+            continue
+        checked += 1
+        if h < body - 1e-6:
+            if model in ph.MODEL_NOTES:
+                noted.append((ref, model, h, body))
+            else:
+                short.append((ref, model, h, body))
+        elif h - body > ph.OVERSHOOT_MAX:
+            over.append((ref, model, h, body))
+
+    for ref in sorted(set(unknown)):
+        err(f"{ref} has no height in enclosure/part_heights.py, so no pocket can be cut for it")
+    for ref, model, h, body in short:
+        err(f"{ref} height {h:.2f} is SHORTER than its model {model} ({body:.3f}) -- the "
+            f"enclosure pocket interferes with the part by {body - h:.2f} mm")
+    for ref, model, h, body in over:
+        err(f"{ref} height {h:.2f} overshoots its model {model} ({body:.3f}) by "
+            f"{h - body:.2f} mm (> {ph.OVERSHOOT_MAX}) -- stale number? an over-deep pocket "
+            f"can break through the brace")
+    if not (short or over or unknown):
+        ok(f"all {checked} modelled B-side parts clear their pockets")
+    for ref, model, h, body in noted:
+        print(f"  note:   {ref} {h:.2f} < modelled {body:.3f} ({model}) -- "
+              f"{ph.MODEL_NOTES[model]}")
+
 
 def check_doc_file_refs():
     print("[3] referenced .kicad_* files exist")
@@ -518,6 +632,7 @@ def main():
     check_package_vs_land()
     check_model_refs()
     check_mask_art()
+    check_part_heights()
     check_doc_file_refs()
     print(f"\n== {len(errors)} error(s), {len(warnings)} warning(s) ==")
     sys.exit(1 if errors else 0)

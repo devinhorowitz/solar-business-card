@@ -11,3 +11,8 @@ Generated/panel/*.kicad_pcb
 # runs kicad-cli against PCB/ in-repo (scripts/render.py), and kicad-cli takes the lock the
 # same way the GUI does. Never worth committing.
 ~*.lck
+
+# enclosure/part_heights.py is imported by the generators and by check_consistency [7],
+# so a plain run leaves a __pycache__ beside it.
+__pycache__/
+*.pyc

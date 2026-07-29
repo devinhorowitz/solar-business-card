@@ -33,11 +33,18 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   The footprint check was a warning while U7 was open; **since 2026-07-26 it is a hard error**
   (U7 is settled — see the PCB section).
 
-- [ ] **[ENCL] U7 shell-pocket recheck — the last piece of the FRAM repackage**
-  _(sch + BOM + board land + footprint identity + DNP flag are all DONE & verified; the DFN land is
-  placed, routed, 0 unconnected.)_ **Enclosure knock-on only:** U7 is now the 0.90 mm DFN (was the
-  1.75 mm SOIC), so the backshell's dedicated 0.95 mm floor pocket is likely deletable — see the
-  geometry items under Enclosure.
+- [x] **[ENCL] U7 shell-pocket recheck — the last piece of the FRAM repackage**
+  _(2026-07-29; DONE.)_ U7 is the 0.90 mm DFN, not the 1.75 mm SOIC. The backshell's 0.95 mm floor
+  pocket went away by arithmetic on 2026-07-28 (`U7_POCKET = max(0, U7_H - cap_H)` → 0), and the
+  2D drawing that still showed it in Detail B has now been regenerated to match — it reads "NO U7
+  RELIEF POCKET".
+  The recheck turned up a second, worse instance the item did not anticipate: the **brace**
+  generator kept its own `part_height()` copy at 1.75, so it was cutting U7 as a **through-hole**
+  (depth 1.87 ≥ GAP−0.05) instead of a 1.02 blind pocket — a hole through a part, from a number
+  corrected everywhere else a day earlier. Heights now live once in `enclosure/part_heights.py`,
+  every generator imports them, and `check_consistency` **[7]** measures each against that part's
+  own 3D model so neither direction of drift can go quiet again. The brace STEP/STL and both
+  drawing sheets are regenerated; `through-holes: ['U6']` is now the complete list.
 
 - [ ] **[BOM] Buy the low-stock / long-lead parts early** _(2026-07-23)._ Thin at audit: **supercaps**
   SC1–4 (~195–200), **FER1** ferrite (41), **U3** accel (731), **U1** MCU (608), **PV** cells (423).

@@ -6,6 +6,18 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle, Polygon as MplPoly
 
+# Heights come from enclosure/part_heights.py -- the single home, verified against each
+# part's 3D model by check_consistency [7]. This sheet DERIVES the U7 relief pocket from
+# them exactly as the CAD generator does, instead of restating it: the pocket existed for
+# a 1.75 mm SOIC-8 U7 that the v4 board does not carry, and on 2026-07-28 it was removed
+# from the STEP by arithmetic while this drawing kept showing it in Detail B -- a feature
+# a shop would have machined from a sheet the model disagreed with.
+import os as _o, sys as _s
+_s.path.insert(0, _o.path.join(_o.path.dirname(_o.path.abspath(__file__))))
+from part_heights import HEIGHTS as _PH, SUPERCAP_H as _CAPH   # noqa: E402
+U7_H       = _PH["U7"]
+U7_POCKET  = max(0.0, round(U7_H - _CAPH, 3))     # 0.0 on the v4 board -> no pocket drawn
+
 W,H,R = 50.80,88.90,3.0
 wall,lip_w,floor,cavity,board,border = 1.0,2.5,1.00,1.80,0.60,0.15   # lip_w here = WEST lip shown in Section A-A
 lip_W,lip_N,lip_S,lip_E,lip_Ew = 2.5,2.0,2.0,1.0,2.5
@@ -70,10 +82,12 @@ for mx,my in mounts:
     ax.add_patch(plt.Circle((X(mx),Y(my)),pilot_r*S1,fill=False,ec=INK,lw=0.9))
     ax.plot([X(mx)-1.6*S1,X(mx)+1.6*S1],[Y(my),Y(my)],lw=0.4,color=INK)
     ax.plot([X(mx),X(mx)],[Y(my)-1.6*S1,Y(my)+1.6*S1],lw=0.4,color=INK)
-# U7 relief pocket (cavity-floor recess; hidden in back-face view -> dashed)
+# U7 relief pocket (cavity-floor recess; hidden in back-face view -> dashed).
+# Drawn ONLY if the arithmetic still calls for one -- see the import block above.
 u7x,u7y,pw,ph = 28.1,37.3,7.8,5.4
-ax.add_patch(MplPoly(rrect(X(u7x-pw/2),Y(u7y-ph/2),pw*S1,ph*S1,1.0*S1),closed=True,fill=False,ec=GRY,lw=0.6,ls=(0,(4,2))))
-leader(X(u7x-pw/2),Y(u7y-ph/2),100,150,"U7 RELIEF POCKET  (NOTE 7)",ha="left",fs=5.8)
+if U7_POCKET > 0:
+    ax.add_patch(MplPoly(rrect(X(u7x-pw/2),Y(u7y-ph/2),pw*S1,ph*S1,1.0*S1),closed=True,fill=False,ec=GRY,lw=0.6,ls=(0,(4,2))))
+    leader(X(u7x-pw/2),Y(u7y-ph/2),100,150,"U7 RELIEF POCKET  (NOTE 7)",ha="left",fs=5.8)
 dim((X(oxmin),Y(oymin)),(X(51.75),Y(oymin)),Py-20,"52.70",fs=8,side=-1)
 dim((X(oxmin),Y(3.0)),(X(3.0),Y(3.0)),Py-8,"3.95",fs=6.3,side=-1)
 dim((X(3.0),Y(3.0)),(X(47.8),Y(3.0)),Py-8,"44.80 ±0.05",fs=6.3,side=-1)
@@ -115,7 +129,11 @@ leader(xl(3.36),zl(bb-0.04),xl(5.7),zl(2.05),"0.10\u00d745\u00b0 LIP",ha="left",
 leader(xl(0.05),zl(0.06),xl(-2.6),zl(0.55),"0.10\u00d745\u00b0 RIM (btm)",ha="right",fs=5.0)
 leader(xl(1.08),zl(-0.10),xl(1.35),zl(-border)-9,"0.10\u00d745\u00b0 FRAME (2 PL)",ha="left",fs=5.0)
 leader(xl(3.42),zl(-0.10),xl(1.35),zl(-border)-9,"",ha="left")
-ax.text(xl(0.06),zl(floor)+0.8,"  floor 1.00 TRUE (0.95 local under the U7 pocket, note 7)   •   PCB recess 0.60 (0.60 mm board)",fontsize=5.7,color=GRY,va="bottom")
+ax.text(xl(0.06),zl(floor)+0.8,
+        ("  floor %.2f TRUE (%.2f local under the U7 pocket, note 7)   •   PCB recess 0.60 (0.60 mm board)"
+         % (floor, floor-U7_POCKET)) if U7_POCKET > 0 else
+        ("  floor %.2f TRUE, UNIFORM (no local relief)   •   PCB recess 0.60 (0.60 mm board)" % floor),
+        fontsize=5.7,color=GRY,va="bottom")
 ax.text(EX+2,EY-11,"SECTION A-A  (edge)   SCALE 13:1",fontsize=8.5,fontweight="bold",color=INK)
 ax.text(EX+2,EY-16.5,"C1 = cavity depth    C2 = PCB-rest-plane flatness    (back face down; PCB drops in from top)",fontsize=6,color=GRY,style="italic")
 
@@ -156,9 +174,15 @@ notes=[
  "3. GENERAL TOLERANCE PER ISO 2768-1 (MEDIUM). C1-C4 TOLERANCED AS LISTED; C1 & C3 = ±0.05. DATUMS: A = LEFT EDGE, B = BOTTOM EDGE, C = PCB-REST PLANE.",
  "4. BRACE REGISTRATION: THE RESIN H-BRACE REGISTERS TO THIS SHELL BY FITMENT - ITS 4 OUTBOARD RAILS + THE COMPONENT POCKETS + THE BOARD PRESS-FIT. NO LOCATOR PILLARS; THE CAVITY FLOOR IS A FULL 1.00 EVERYWHERE.",
  "5. EDGE BREAKS - ALL 0.10x45°, FELT NOT SEEN, MODELED.  CALLED OUT ON SEC A-A / DETAIL B:  RIM = outer rim (top & bottom);  MOUTH = recess mouth (around PCB);  LIP = inner (cavity-side) lip edge;  FRAME = proud back-frame bottom edges;  BOSS = boss + spotface bottom edges (Detail B).  BREAK ALL OTHER EXPOSED EDGES 0.10x45°.  CONCAVE JUNCTION CORNERS (BOSS-TO-WALL + EAST-LIP STEPS) LEFT SHARP IN THE MODEL: FINISH WITH A Ø2.0 mm TOOL = R1.0 AS-MILLED. THE RESIN BRACE IS RELIEVED TO CLEAR R1.0 AT THESE CORNERS.",
- "6. FLOOR IS NOW A TRUE 1.00 (0.95 LOCAL UNDER THE U7 POCKET), AT THE ~1.0 Ti MIN-WALL GUIDANCE SO IT ALSO CLEARS ALUMINIUM / COPPER / STAINLESS.",
+ ("6. FLOOR IS A TRUE %.2f (%.2f LOCAL UNDER THE U7 POCKET), AT THE ~1.0 Ti MIN-WALL GUIDANCE SO IT ALSO CLEARS ALUMINIUM / COPPER / STAINLESS." % (floor, floor-U7_POCKET))
+   if U7_POCKET > 0 else
+   ("6. FLOOR IS A TRUE %.2f, UNIFORM ACROSS THE CAVITY, AT THE ~1.0 Ti MIN-WALL GUIDANCE SO IT ALSO CLEARS ALUMINIUM / COPPER / STAINLESS." % floor),
  "    CAVITY 1.80 +-0.05 -> 1.75 WORST-CASE, MINUS WS17 1.70 MAX (DATASHEET CASE WS17 HEIGHT) = 0.05 NON-CONTACT; THE BRACE + SOLAR-CELL SANDWICHES CARRY THE BOARD.",
- "7. U7 RELIEF POCKET: 7.8 x 5.4 CENTERED (28.1, 37.3) ON THE CAVITY FLOOR, 0.05 DEEP (LOCAL FLOOR 0.95) - U7 (1.75) KEEPS 0.10 AIR. GENERAL FLOOR 1.00. MODELED IN THE STEP.",
+ ("7. U7 RELIEF POCKET: 7.8 x 5.4 CENTERED (28.1, 37.3) ON THE CAVITY FLOOR, %.2f DEEP (LOCAL FLOOR %.2f) - U7 (%.2f) KEEPS 0.10 AIR. GENERAL FLOOR %.2f. MODELED IN THE STEP."
+   % (U7_POCKET, floor-U7_POCKET, U7_H, floor))
+   if U7_POCKET > 0 else
+   ("7. NO U7 RELIEF POCKET. U7 IS THE %.2f mm MB85RC512TY DFN-8, WELL UNDER THE %.2f CAP-LIMITED CAVITY, SO THE FLOOR IS UNIFORM %.2f. (A POCKET EXISTED FOR A 1.75 SOIC-8 THE v4 BOARD DOES NOT CARRY.)"
+   % (U7_H, _CAPH, floor)),
  "8. FRONT SUPPORT LIP IS ASYMMETRIC (SECTION A-A): WEST 2.5 / NORTH 2.0 / SOUTH 2.0 FOR PCB RIGIDITY; EAST 1.0 CLEARING THE JP1/TP1 PADS, THE NFC COIL (A GROUNDED LIP WOULD DETUNE IT), AND C7 (x49.55, THE ONE EAST-EDGE PART LEFT AFTER v4 REMOVED THE Q1/U4/R7/R9 CLAMP CLUSTER + D9/D10/D11); WIDENING TO 2.5 ONLY AT THE SOUTH END (y0-10, CLEAR OF ALL). THE EXTERIOR BACK BORDER (PLAN) IS INDEPENDENT AND UNIFORM 2.0 ON ALL 4 SIDES.",
  "9. NO INTERNAL RIBS OR SUPPORT POSTS: THE RESIN BRACE (SEPARATE PART) CARRIES CENTER SUPPORT. A PCB LAYOUT CHANGE = A BRACE REPRINT, NOT A SHELL RE-MACHINE.",
  "10. PCB RECESS = 0.60 DEEP (RECEIVES THE 0.60 mm BOARD; SLIP FIT, NOT A PRESS FIT). 3D STEP GOVERNS ALL GEOMETRY; STL NOT FOR CNC.",
@@ -197,6 +221,12 @@ for lab,val in tol:
     ax.text(tx+tw-3,yt,val,ha="right",fontsize=5.85,va="center",fontweight="bold",color=INK)
     yt-=5.3
 
-fig.savefig("/mnt/user-data/outputs/solar-glow-drh-v3_0-backshell-0p6b-brace-DRAWING.pdf",facecolor="white")
-fig.savefig("/mnt/user-data/outputs/solar-glow-drh-v3_0-backshell-0p6b-brace-DRAWING.png",dpi=150,facecolor="white")
+# Write next to this script by default (override with $OUT_DIR). This used to be a hardcoded
+# /mnt/user-data/outputs/, which exists only on the machine this was first authored on, so a
+# plain checkout could not regenerate the sheet -- same fix as the backshell generator.
+import os as _o
+_OUT = _o.environ.get("OUT_DIR") or _o.path.dirname(_o.path.abspath(__file__))
+_o.makedirs(_OUT, exist_ok=True)
+fig.savefig(_o.path.join(_OUT,"solar-glow-drh-v3_0-backshell-0p6b-brace-DRAWING.pdf"),facecolor="white")
+fig.savefig(_o.path.join(_OUT,"solar-glow-drh-v3_0-backshell-0p6b-brace-DRAWING.png"),dpi=150,facecolor="white")
 print("saved")
