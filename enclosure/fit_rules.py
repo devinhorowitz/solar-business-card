@@ -60,6 +60,9 @@ SLA_WEB = 0.40             # thinnest resin that may remain OVER a pocket
 SLA_WALL = 0.60            # thinnest in-plane feature we will print
 SPAN_LIMIT = GAP - AIR - SLA_WEB          # 1.28
 MIN_PIECE = 25.0           # smaller than this is print debris, not support
+SINGLE_PIECE = True        # ship one part; see brace_footprint()
+DROPPED_AREA = 0.0         # set by brace_footprint(): support given up to stay single-piece
+DROPPED_COUNT = 0
 WALL_FIT = 0.05            # brace-to-cavity-wall contact fit
 
 # ---- shell ----------------------------------------------------------------------------
@@ -69,7 +72,13 @@ BOSS_CLR = 0.20            # Ti boss to part/pad
 THREAD_KEEP = 1.30         # never scallop inside this: the M2 thread lives at r0.80..~1.0
 LIP_CLR = 0.30             # lip edge to nearest part body or pad
 LIP_MAX = {"W": 2.5, "E": 2.5, "S": 2.0, "N": 2.0}
-COIL_CLR = 0.30            # grounded metal to coil copper
+COIL_CLR = 1.00            # grounded metal to coil copper. Raised from 0.30 on request:
+                           # the east lip is the only grounded feature that comes near the
+                           # antenna, and 1.00 gives 3.3x the standoff while still leaving a
+                           # 1.25 mm lip -- wider than the flat 1.0 the original design used.
+                           # The tradeoff is linear and lives on one line: 0.30 -> 1.95 mm
+                           # lip / 490 mm2, 1.00 -> 1.25 / 463, 1.25 -> 1.00 / 442, and
+                           # 1.50 leaves 0.75 mm, below the design's own floor.
 # MEASURED from the board, not asserted. The hard-coded 48.40 was 0.15 mm optimistic --
 # LA/LB copper reaches x48.550 -- so the lip sized against it overhung the antenna.
 from board_parts import coil_extent as _coil_extent          # noqa: E402
@@ -122,7 +131,17 @@ def brace_footprint():
             .intersection(cav))
     pieces = sorted((list(fp.geoms) if fp.geom_type == "MultiPolygon" else [fp]),
                     key=lambda g: -g.area)
-    return [g.simplify(0.01, preserve_topology=True) for g in pieces if g.area >= MIN_PIECE]
+    pieces = [g.simplify(0.01, preserve_topology=True) for g in pieces if g.area >= MIN_PIECE]
+
+    # SINGLE PIECE ONLY. The computation naturally yields a second island east of SC4 (~85
+    # mm2) which cannot reach the main body without crossing SC4. It is real support, but a
+    # loose part in an assembly that must come apart for C9 NFC trim is a thing to lose and a
+    # thing to reassemble wrong, so it is dropped by decision, not by accident. Cost is
+    # recorded rather than hidden: DROPPED_AREA is what the choice gave up.
+    global DROPPED_AREA, DROPPED_COUNT
+    DROPPED_AREA = sum(g.area for g in pieces[1:])
+    DROPPED_COUNT = len(pieces) - 1
+    return pieces[:1]
 
 
 def _lip_reach(edge, lo, hi, ps=None):
