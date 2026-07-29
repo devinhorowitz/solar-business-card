@@ -226,7 +226,7 @@ def check_mask_art():
     Degrades honestly: the check needs pcbnew and shapely, and CI's image may carry
     neither. When they are missing it says so rather than passing quietly.
     """
-    print("[6] mask art matches the routing (front cartouche + back NFC coil)")
+    print("[6] mask art matches the routing (front cartouche + NFC indicator)")
     sys.path.insert(0, os.path.join(ROOT, "scripts"))
     try:
         import pcbnew  # noqa: F401

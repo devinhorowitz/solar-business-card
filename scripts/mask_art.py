@@ -131,74 +131,63 @@ def build(board):
 
 
 
-# --- the NFC coil, exposed on the back -------------------------------------------
-# The 7-turn antenna is etched copper on B.Cu and was sitting under black soldermask,
-# so the finished card never showed it: 81 segments of real spiral, invisible. The
-# front's whole argument is that the ornament IS the wiring; the back had 639 apertures
-# on F.Mask and exactly one on B.Mask -- the glow window -- and nothing over the coil.
+# --- the NFC indicator ------------------------------------------------------------
+# A quiet contactless mark on the SHOW FACE, over the antenna, so the card says what it is
+# and where to tap.
 #
-# Opening the mask over LA/LB plates the spiral in ENIG and reads as gold on black. Like
-# the cartouche it is COMPUTED from the copper, so a re-route or a retune moves the art
-# with it rather than leaving a drawing behind.
+# IT IS ON THE FRONT BECAUSE THE FRONT IS THE ONLY FACE ANYONE SEES. The shell is back-only:
+# the whole rear of the board lives inside titanium. Art on B.Mask is invisible in the
+# assembled card -- which is what made exposing the coil a bad trade, and is why that was
+# reverted (see below).
 #
-# ONLY LA/LB. Every other B.Cu net stays under mask -- verified below, not assumed,
-# because this is the face that sits against a GROUNDED titanium shell and the lip
-# already landed on live pad once in this project's history.
-COIL_NETS = ("LA", "LB")
-COIL_EXPANSION = 0.05        # aperture grown off the copper edge
+# THE COIL STAYS UNDER MASK. Opening it plated the turns with ENIG, and nickel is exactly the
+# wrong thing to put in an RF conductor: ~7x copper's resistivity, ferromagnetic, and at
+# 13.56 MHz its skin depth (~3-4 um) is THINNER than the plated layer (3-6 um), so the current
+# crowding into the surface crowds into nickel. It raises the coil's AC resistance and costs Q.
+# Soldermask, by contrast, is non-magnetic and non-conductive -- it does nothing to the flux
+# path, so removing it never helped the ferrite. Gold coil: invisible, and slightly worse.
+#
+# Generic contactless waves, NOT the NFC Forum N-Mark: that mark is licensed, and this is a
+# personal card. Same rule as the cartouche -- the opening is (glyph - live copper), so it can
+# only ever lay GND or bare laminate bare, never a signal.
+NFC_ORIGIN = (41.00, 44.45)     # board coords: over the antenna box, right of the monogram
+NFC_RADII = (0.55, 1.35, 2.15, 2.95)
+NFC_W = 0.38                    # wave stroke
+NFC_SPAN = 46.0                 # half-angle in degrees, opening +X
 
 
-def coil_aperture(board):
-    """Union of the LA/LB back copper, grown by the mask expansion."""
-    from shapely.geometry import Point, LineString
+def nfc_mark(board=None, keep=KEEP):
+    """The contactless waves, minus any live front copper."""
+    import math
+    from shapely.geometry import Point, Polygon
     from shapely.ops import unary_union
-    IU = 1e6
-    bcu = board.GetLayerID("B.Cu")
+    cx, cy = NFC_ORIGIN
+    a0, a1 = math.radians(-NFC_SPAN), math.radians(NFC_SPAN)
+    wedge = Polygon([(cx, cy)] + [(cx + 9 * math.cos(a0 + (a1 - a0) * i / 64.0),
+                                   cy + 9 * math.sin(a0 + (a1 - a0) * i / 64.0))
+                                  for i in range(65)])
     parts = []
-    for t in board.GetTracks():
-        if not t.IsOnLayer(bcu) or t.GetNetname() not in COIL_NETS:
-            continue
-        s, e = t.GetStart(), t.GetEnd()
-        try:
-            r = t.GetWidth() / IU / 2.0 + COIL_EXPANSION
-        except Exception:
-            continue
-        a, b = (s.x / IU, s.y / IU), (e.x / IU, e.y / IU)
-        parts.append(Point(a).buffer(r) if a == b else
-                     LineString([a, b]).buffer(r, cap_style=2))
-    if not parts:
-        return None
-    return unary_union(parts)
+    for r in NFC_RADII:
+        ring = (Point(cx, cy).buffer(r + NFC_W / 2, resolution=64)
+                .difference(Point(cx, cy).buffer(max(r - NFC_W / 2, 0.0), resolution=64)))
+        g = ring.intersection(wedge)
+        if not g.is_empty:
+            parts.append(g)
+    glyph = unary_union(parts)
+    if board is not None:
+        live = live_copper(board, keep)
+        if live is not None:
+            glyph = glyph.difference(live)
+    t = MIN_APERTURE / 2.0
+    return glyph.buffer(-t, join_style=1).buffer(t, join_style=1)
 
 
-def coil_guard(board, ap):
-    """Refuse to expose anything that is not the antenna, or anything the grounded Ti
-    shell reaches. Returns a list of complaints; empty means safe."""
-    from shapely.geometry import box, Point
-    IU = 1e6
+def nfc_guard(board, glyph):
+    """Refuse to lay any live front net bare. Returns complaints; empty means safe."""
+    live = live_copper(board, 0.0)
     bad = []
-    bcu = board.GetLayerID("B.Cu")
-    for t in board.GetTracks():
-        if not t.IsOnLayer(bcu) or t.GetNetname() in COIL_NETS:
-            continue
-        s, e = t.GetStart(), t.GetEnd()
-        from shapely.geometry import LineString, Point as P
-        a, b = (s.x / IU, s.y / IU), (e.x / IU, e.y / IU)
-        g = P(a).buffer(0.05) if a == b else LineString([a, b]).buffer(0.05)
-        if g.intersects(ap):
-            bad.append(f"aperture would expose net {t.GetNetname()!r} on B.Cu")
-            break
-    sys.path.insert(0, str(ROOT / "enclosure"))
-    try:
-        import fit_rules as fr
-        if fr.lip_poly().intersects(ap):
-            bad.append("aperture is under the grounded Ti support lip")
-        for m in fr.MOUNTS:
-            if Point(m).buffer(fr.BOSS_R).intersects(ap):
-                bad.append(f"aperture is under the Ti boss annulus at {m}")
-                break
-    except Exception as exc:
-        bad.append(f"could not check the shell against it: {exc}")
+    if live is not None and live.intersects(glyph):
+        bad.append(f"the mark would expose {live.intersection(glyph).area:.3f} mm2 of live front copper")
     return bad
 
 
@@ -310,10 +299,10 @@ def generate(board):
     while `mask_art --check` on the same board said MATCH. One home instead.
     """
     art = build(board)
-    coil = coil_aperture(board)
-    if coil is None:
-        raise SystemExit("mask_art: no LA/LB copper on B.Cu -- the coil IS the art, so this is fatal")
-    return emit(art) + emit(coil, layer="B.Mask", tag=f"{TAG}-coil"), art, coil
+    mark = nfc_mark(board)
+    if mark.is_empty:
+        raise SystemExit("mask_art: the NFC mark came out empty -- live copper ate all of it")
+    return emit(art) + emit(mark, tag=f"{TAG}-nfc"), art, mark
 
 
 def main() -> int:
@@ -336,14 +325,16 @@ def main() -> int:
     if r["min_aperture"] < 0.10:
         print(f"  WARNING: {r['min_aperture']:.3f} mm is below a 0.10 mm mask aperture floor")
 
-    body, art2, coil = generate(board)
-    complaints = coil_guard(board, coil)
+    body, art2, mark = generate(board)
+    complaints = nfc_guard(board, mark)
     if complaints:
         for c in complaints:
-            print(f"  COIL ABORT: {c}")
-        sys.exit("mask_art: refusing to expose the coil")
-    print(f"  nfc coil: {len(coil.geoms) if coil.geom_type == 'MultiPolygon' else 1} piece(s), "
-          f"{coil.area:.1f} mm² of gold on B.Mask, nothing but {'/'.join(COIL_NETS)} exposed")
+            print(f"  NFC MARK ABORT: {c}")
+        sys.exit("mask_art: refusing to write the NFC mark")
+    b = mark.bounds
+    print(f"  nfc mark: {len(mark.geoms) if mark.geom_type == 'MultiPolygon' else 1} wave(s), "
+          f"{mark.area:.2f} mm² on F.Mask at x[{b[0]:.1f},{b[2]:.1f}] y[{b[1]:.1f},{b[3]:.1f}], "
+          f"no live copper exposed")
 
     raw = BOARD.read_bytes()
     crlf = raw.count(b"\r\n")

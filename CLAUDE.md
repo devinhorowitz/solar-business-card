@@ -115,25 +115,29 @@ every `.kicad_*` file referenced in the docs exists.
   ornament no longer describes the copper under it — re-run `scripts/mask_art.py --apply`.
   Consistency check [6] errors if you forget. It is the one artwork here that goes *wrong*,
   not merely stale, when the board is edited.
-- **`solder_mask_bridge` DRC was `ignore` until 2026-07-28** and is now `warning`. It reports
-  **two** rear apertures, both intentional and neither soldered: the glow window at (35.1, 40.3)
-  spanning the LED nets, and — since 2026-07-29 — the **NFC coil aperture**, which by definition
-  spans LA and LB. The coil adds exactly **one** hit, at the LA↔LB junction, which is the same
-  0.000 mm pair already recorded as intentional in `TODO.md`.
+- **`solder_mask_bridge` DRC was `ignore` until 2026-07-28** and is now `warning`. Everything
+  it reports is the single rear glow-window aperture at (35.1, 40.3) spanning the LED nets —
+  intentional, nothing is soldered there.
   **Zero come from F.Mask**, so the front art is clean. A *new* F.Mask hit is a real find.
   **Do not treat the hit COUNT as a constant, and never gate on it.** It is not deterministic:
   two runs on byte-identical inputs (same board, `.kicad_pro`, `.kicad_dru` and the same pinned
   image digest) reported **222** and **208**, and a third after the coil landed reported 223
-  (222 glow-window + 1 coil). KiCad pairs an aperture against the copper items near it, and the
-  set it finds varies run to run — most likely because `check_zone_fills` refills the pours first
+  and 222 again after the coil aperture was reverted. KiCad pairs that aperture against the copper
+  items near it, and the set it finds varies run to run — most likely because `check_zone_fills` refills the pours first
   and the fill is not bit-reproducible. What IS stable, and what to assert if this ever gets a
-  gate: `Errors: 0 (+11 excluded)`, zero hits on F.Mask, and every hit citing one of those two
-  apertures.
-- **`mask_art.py` owns art on BOTH faces** — the front cartouche and the back NFC coil aperture —
-  and `generate()` is the single definition of what it writes. Check [6] calls that same function.
+  gate: `Errors: 0 (+11 excluded)`, zero hits on F.Mask, and every hit citing that one aperture.
+- **`mask_art.py` owns more than the cartouche** — it also draws the NFC contactless mark — and
+  `generate()` is the single definition of what it writes. Check [6] calls that same function.
   It used to rebuild `emit(build(board))` itself, which was a quieter second copy: correct while
-  the generator owned one thing, and it declared a correct board STALE the moment the coil made
-  it two, while the generator's own `--check` said MATCH.
+  the generator owned one thing, and it declared a correct board STALE the moment a second art
+  set appeared, while the generator's own `--check` said MATCH.
+- **Do not open soldermask over the NFC coil.** It was tried on 2026-07-29 and reverted the same
+  day. Exposed copper gets ENIG, and nickel is the wrong thing in an RF conductor: ~7x copper's
+  resistivity, ferromagnetic, and at 13.56 MHz its skin depth (~3-4 µm) is *thinner* than the
+  plated layer (3-6 µm), so current crowding into the surface crowds into nickel and the coil
+  loses Q. It buys nothing visually either: the shell is back-only, so the entire rear of the
+  board is inside titanium and never seen. Soldermask is non-magnetic — removing it never helped
+  the ferrite, whose shielding scales with µ′ × thickness.
 - **The energy budget is the #1 open gate** — harvest vs. LED draw under real indoor
   light has never been measured. Treat firmware duty-cycle / glow constants as
   provisional until it is. See README → "The open question."
