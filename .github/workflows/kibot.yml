@@ -6,59 +6,102 @@
 # from main in Generated/ (which used to force a merge conflict on every PR).
 # On a feature branch KiBot still runs as the ERC/DRC gate; it just does not commit.
 name: PCB CI
- 
+
 on:
   push:
     paths:
       - 'PCB/**'
       - 'scripts/panelize.py'
+      - 'scripts/render.py'
       - '.github/workflows/kibot.yml'
- 
+
 permissions:
   contents: write
- 
+
+# THE TOOLCHAIN IS PINNED BY DIGEST, and this is load-bearing rather than hygiene.
+#
+# This job's outputs are not just reports: DRC is a merge gate, and Generated/ is the
+# gerber set that gets uploaded to a fab. Both are a function of the KiCad build that
+# produced them, and the image behind `:latest` is a KiCad *testing* build
+# (10.0.5-testing-188+202607221313). Floating it meant a new upstream push could change
+# what DRC finds, or shift the plotted copper, with no commit in this repo to explain it.
+# The digest below is the exact image that produced the Generated/ currently on main
+# (run 30408694464, 2026-07-28) — verified against that run's `Digest:` line.
+#
+# To move it: change the digest here, push, and read the diff CI commits back to
+# Generated/. That diff IS the toolchain upgrade's blast radius, which is the whole
+# reason to pin — an unpinned upgrade produces the same diff with nothing to attribute
+# it to. Keep it in step with .github/workflows/consistency.yml, which pins the same
+# image for the same reason.
+#
+# The container runs as the runner (`-u $(id -u):$(id -g)`) so its output lands
+# runner-owned and the commit step below can stage it, with HOME pointed somewhere
+# writable for kibot/kicad-cli's config.
+env:
+  KICAD_IMAGE: ghcr.io/inti-cmnb/kicad10_auto_full@sha256:dd3b846da945f204fa7b61916df34a99170b2a2095b49c3879cd96d414b8a7b8
+
 jobs:
   kibot:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # v4
         with:
           fetch-depth: 0
- 
+
+      # Provenance, printed once so a build log can be tied back to what produced it.
+      # The KiBot action used to print this banner; we invoke the container directly
+      # now (see below), so print it ourselves.
+      - name: Toolchain provenance
+        run: |
+          echo "image: $KICAD_IMAGE"
+          docker run --rm -u "$(id -u):$(id -g)" -e HOME=/tmp -v "$PWD":/wk -w /wk \
+            "$KICAD_IMAGE" bash -c 'kibot --version; kicad-cli version'
+
+      # WHY NOT `uses: INTI-CMNB/KiBot@v2_k10`:
+      # that action is a Docker action whose Dockerfile is literally
+      #   FROM ghcr.io/inti-cmnb/kicad10_auto_full:latest
+      # and it exposes no way to choose a version — its `kicad:` input is commented out
+      # upstream as "Currently impossible, too much limitations". So pinning the action to
+      # a commit SHA would pin the wrapper and leave the actual KiCad floating, which is
+      # the half that changes the outputs. Its entrypoint.sh is a thin argument shuffle
+      # onto `kibot -c … -d … -b … -e …`, so calling the container directly loses nothing,
+      # pins everything, and skips the ~45 s the runner spent rebuilding that Dockerfile.
       - name: Run KiBot (KiCad 10)
-        uses: INTI-CMNB/KiBot@v2_k10
-        with:
-          config: PCB/solar-glow-drh.kibot.yaml
-          dir: Generated
-          board: PCB/solar-glow-drh-v4_0.kicad_pcb
-          schema: PCB/solar-glow-drh-v4_0.kicad_sch
- 
+        run: |
+          docker run --rm -u "$(id -u):$(id -g)" -e HOME=/tmp -v "$PWD":/wk -w /wk \
+            "$KICAD_IMAGE" kibot \
+              -c PCB/solar-glow-drh.kibot.yaml \
+              -d Generated \
+              -b PCB/solar-glow-drh-v4_0.kicad_pcb \
+              -e PCB/solar-glow-drh-v4_0.kicad_sch
+
       # The PCBWay panel is DERIVED from the board above, never hand-maintained: it is the
       # board plus a frame, two routed slots, two break tabs and the hard-gold plating bus
       # that feeds them. See scripts/panelize.py for why it is a script and not a file.
+      # shapely is pinned for the same reason the image is: it computes panel geometry that
+      # ends up in the uploaded gerbers.
       - name: Build the PCBWay panel
         run: |
-          python3 -m pip install --quiet shapely
+          python3 -m pip install --quiet 'shapely==2.1.2'
           python3 scripts/panelize.py
 
+      # No schematic argument: the panel has none, and its config runs no ERC/DRC preflight
+      # (see the header of solar-glow-drh-panel.kibot.yaml for why).
       - name: Run KiBot on the panel (fab set only)
-        uses: INTI-CMNB/KiBot@v2_k10
-        with:
-          config: PCB/solar-glow-drh-panel.kibot.yaml
-          dir: Generated/panel
-          board: Generated/panel/solar-glow-drh-v4_0-panel.kicad_pcb
+        run: |
+          docker run --rm -u "$(id -u):$(id -g)" -e HOME=/tmp -v "$PWD":/wk -w /wk \
+            "$KICAD_IMAGE" kibot \
+              -c PCB/solar-glow-drh-panel.kibot.yaml \
+              -d Generated/panel \
+              -b Generated/panel/solar-glow-drh-v4_0-panel.kicad_pcb
 
-      # Presentation renders for the READMEs: the panel (both faces, as PCBWay ships it) and
-      # the OSH Park "midnight" variant. Raytraced by kicad-cli, which the KiBot action does
-      # not expose, so we borrow the same KiCad 10 image directly. --user keeps the PNGs
-      # owned by the runner so the commit step below can stage them; HOME must be writable
-      # for kicad-cli's config. ~14 views, ~16 min total.
+      # Presentation renders for the READMEs: the panel (both faces, as PCBWay ships it),
+      # the depanelised card, the populated views and the OSH Park "midnight" variant.
+      # Raytraced by kicad-cli. ~14 views, ~12 min.
       - name: Render panel, card, populated + midnight images
         run: |
-          docker run --rm -u "$(id -u):$(id -g)" -e HOME=/tmp \
-            -v "$PWD":/wk -w /wk \
-            ghcr.io/inti-cmnb/kicad10_auto_full:latest \
-            python3 scripts/render.py
+          docker run --rm -u "$(id -u):$(id -g)" -e HOME=/tmp -v "$PWD":/wk -w /wk \
+            "$KICAD_IMAGE" python3 scripts/render.py
 
       - name: Commit generated outputs
         if: github.ref == 'refs/heads/main'
@@ -68,27 +111,54 @@ jobs:
           git add -A Generated
           git diff --cached --quiet && { echo "Generated/ already current"; exit 0; }
           git commit -m "CI: regenerate fab + docs [skip ci]"
+
           # This job takes ~16 min, so main can easily move underneath it -- merge two PRs
           # in one sitting and the second run's bare `git push` loses the race with
           # `! [rejected] main -> main (fetch first)`. That happened twice on 2026-07-28
           # and silently DROPPED both regenerations: the job goes red, nobody is watching a
-          # post-merge run, and Generated/ quietly stays a revision behind until some later
-          # push happens to rebuild it.
+          # post-merge run, and Generated/ quietly stays a revision behind.
           #
-          # Retry by replaying our Generated/ onto whatever main is now. `reset --soft`
-          # keeps the freshly generated tree staged, so the newest generation wins -- which
-          # is what we want, and if the other run already produced identical bytes the
-          # staged diff is empty and we stop.
+          # So we replay onto whatever main is now. The replay MUST rebuild the tree from
+          # the new main, not merely re-parent our old one:
+          #
+          #   `git reset --soft` moves HEAD and leaves the INDEX alone, so the index still
+          #   held this run's whole tree -- our checkout SHA plus Generated/. The
+          #   `diff --cached` below then compared full trees rather than just Generated/,
+          #   was non-empty *because of the other commit*, skipped the early exit, and
+          #   committed a tree that SILENTLY REVERTED that merge -- under the message
+          #   "CI: regenerate fab + docs [skip ci]", with [skip ci] so nothing re-ran.
+          #   Reproduced verbatim, 2026-07-29: a real board edit merged during the run came
+          #   back as its pre-merge content with the PR still shown as merged in the log.
+          #
+          # `reset --hard` + restoring the snapshot rebuilds the tree as (new main +
+          # our Generated/), so the staged diff is Generated-only. That also keeps the early
+          # exit below honest: it now fires exactly when main already carries these bytes.
+          #
+          # `rebase -X theirs` fixes the revert too, but not here: it leaves the commit
+          # already made, so the early exit would `exit 0` without ever pushing -- a fresh
+          # silent drop in place of the old one.
+          #
+          # Concurrency: groups do NOT solve this. They serialize workflow runs, and what
+          # moves main is a human merge, which no group can serialize against a run already
+          # in flight (checkout builds on github.sha, not the tip of main).
+          snap="${RUNNER_TEMP:-/tmp}/generated-snapshot"
+          # mkdir -p the parent: the step runs under `bash -e`, so a cp that fails here
+          # would kill the step before it ever pushed.
+          mkdir -p "$(dirname "$snap")"; rm -rf "$snap"; cp -a Generated "$snap"
           for attempt in 1 2 3 4 5; do
             if git push; then exit 0; fi
-            echo "push rejected (attempt $attempt) -- replaying onto current main"
+            echo "push rejected (attempt $attempt) -- replaying Generated/ onto current main"
             sleep $((attempt * 5))
-            git fetch origin main || continue
-            git reset --soft origin/main
+            # Retry the fetch itself; falling through to the next attempt without it would
+            # re-push the identical rejected commit and burn a slot for nothing.
+            git fetch origin main || { sleep 5; git fetch origin main || continue; }
+            git reset --hard origin/main
+            rm -rf Generated
+            cp -a "$snap" Generated
             git add -A Generated
             git diff --cached --quiet && { echo "current main already has this Generated/"; exit 0; }
             git commit -m "CI: regenerate fab + docs [skip ci]"
           done
           echo "::error::could not push Generated/ after 5 attempts"
           exit 1
- 
+

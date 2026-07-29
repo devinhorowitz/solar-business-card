@@ -49,12 +49,11 @@ The mating PCB, the resin brace, and the eight M2 screws are separate parts, not
 
 `solar-glow-drh-v3_0-backshell-0p6b-brace-DRAWING.pdf` matches the committed STEP on every headline
 dimension (1.00 floor / 1.80 cavity / 0.60 board recess / 8-hole mount pattern [x 44.80; y rows
-3.0/28.5/60.4/85.9] / 3.55 overall) — **with one exception as of 2026-07-28: its Detail B still shows
-the U7 relief pocket, which the STEP no longer contains.** The **STEP governs**, so the part is
-correct either way, but say so on the quote or the shop may machine the pocket from the drawing.
-Regenerating the PDF needs `...-DRAWING-gen.py`, which still writes to a hardcoded
-`/mnt/user-data/outputs/` path (tracked in `TODO.md`). The old `v2_1` drawing is stale and must not
-be sent. The drawing and the notes below flag the few dimensions that need tighter-than-standard
+3.0/28.5/60.4/85.9] / 3.55 overall). **The U7-pocket discrepancy is closed as of 2026-07-29**: the
+drawing showed a relief pocket the STEP had stopped containing on 2026-07-28, and the sheet has been
+regenerated — its note 7 now reads "NO U7 RELIEF POCKET" and the pocket outline is gone. It is
+derived from `enclosure/part_heights.py` rather than written on the sheet, so it cannot fall out of
+step with the STEP again. The old `v2_1` drawing is stale and must not be sent. The drawing and the notes below flag the few dimensions that need tighter-than-standard
 control.
 
 ## What to send PCBWay
@@ -188,10 +187,12 @@ not present during machining). Please proceed one of two ways and note which on 
   **+2.0631 mm³** of material back. The nominal pocket is 7.8 × 5.4 × 0.05 = 2.1060 mm³; the 0.043
   mm³ difference is exactly the R1.0 corner fillets. Bounding box unchanged at 52.700 × 90.800 × 3.550.
 
-> **⚠ The 2D drawing has not been regenerated.** `...-DRAWING.pdf` still shows the pocket in its
-> Detail B. The STEP governs, and the STEP no longer has one — but **do not send the current PDF
-> without saying so**, or the shop will machine a feature the model does not contain. Regenerating it
-> needs `...-DRAWING-gen.py`, which still writes to a hardcoded `/mnt/user-data/outputs/` path.
+> **Resolved 2026-07-29 — the drawing has been regenerated and agrees with the STEP.** It is safe
+> to send as-is. The pocket outline and its callout are now drawn only when `U7_POCKET > 0`, and
+> note 7 is generated from the same arithmetic the CAD uses, so the sheet and the model derive the
+> feature from one number (`enclosure/part_heights.py`) instead of asserting it separately. The
+> generators also no longer write to a hardcoded `/mnt/user-data/outputs/` — they write beside
+> themselves, overridable with `$OUT_DIR`, so a plain checkout can regenerate both sheets.
 
 ### 8. Press fit — do NOT rely on it
 

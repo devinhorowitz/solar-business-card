@@ -3,8 +3,11 @@
 solar-glow-drh-diffuser-brace-cad.py  -  resin/SLA gap-filling diffuser brace (rev B).
 
 REV B folds in the PCB-side notes (PCB/PCB-side-notes-brace-direction.md):
- - Component HEIGHTS replaced with the datasheet-verified table (U6=1.45 not 0.6; U5=0.5 not 1.0;
-   solder-bridge blobs budgeted 0.8; U1/U3=1.0; 0402=0.55; U2=1.75).
+ - Component HEIGHTS replaced with a datasheet-verified table. That table now lives in
+   enclosure/part_heights.py -- ONE home, shared with the backshell generator and both drawing
+   sheets, and verified against each part's own 3D model by check_consistency [7]. It is not
+   restated here on purpose: the copy that used to sit in this file went stale on U7 (kept 1.75
+   for a SOIC-8 the v4 board does not carry) and cut it as a through-hole for a day.
  - Envelope clipped to the component-free middle band y 31.6-57.4 to KEEP CLEAR OF THE SUPERCAP BAYS
    (cap bodies at y31.15 / y57.75). Caps are no longer cut as through-holes; they are simply outside.
  - FERRITE CHANNEL over the NFC coil (Wurth WE-FSFS 364006, DK 732-5049-ND). The pocket is an OPEN-ENDED
@@ -50,10 +53,14 @@ Resin must be white/translucent near the window (never black at the LED pockets)
 """
 import os
 import re
+import sys
+
 import cadquery as cq
 
 PCB = os.path.join(os.path.dirname(__file__), "..", "..", "PCB", "solar-glow-drh-v4_0.kicad_pcb")
-OUT = "/mnt/user-data/outputs/"
+# Write next to this script by default (override with $OUT_DIR) -- see the backshell
+# generator for why the old hardcoded /mnt/user-data/outputs/ had to go.
+OUT = os.environ.get("OUT_DIR") or os.path.join(os.path.dirname(os.path.abspath(__file__)), "")
 BASE = "solar-glow-drh-diffuser-brace"
 
 BX0, BX1, BY0, BY1 = 2.60, 49.70, 31.6, 57.4  # band fills the SC gap (y31.15-57.75) full width; W edge x2.60 + E edge x49.70 CONTACT the flat walls (x2.55 / x49.75) at ~0.05mm
@@ -96,23 +103,13 @@ W, H = 50.80, 88.90
 def wx(bx): return bx - W/2
 def wy(by): return by - H/2
 
-def part_height(ref):
-    if ref == "U7": return 1.75   # MB85RC512TY FRAM SOIC-8 (v4): re-keyed from the removed U2 balancer; the single tallest B-side part
-    if ref == "U6": return 1.45
-    if ref == "U1": return 1.00
-    if ref == "U3": return 0.87   # ADXL367 CC-12-4 (ADI datasheet Rev.B): 2.2 x 2.3 x 0.87 mm. Was 1.00 (placeholder LIS2DH12); thinner part -> shallower pocket, thicker resin web.
-    if ref == "U5": return 0.50
-    if ref == "U8": return 0.90   # AEM10300 QFN-28 4x4 (v4 active-harvest PMIC)
-    if ref == "U9": return 1.45   # TPS7A0233 SOT-23-6 (v4 LDO; same body height as U6)
-    if ref == "L2": return 1.00   # inductor 2520 (v4)
-    if ref in ("C4","C13","C25","C27"): return 0.90   # 0603 bulk caps (v4; taller than the 0402 default). BEFORE the generic R/C prefix rule so they are not undershot to 0.55.
-    r = ref.rstrip("0123456789")
-    if r == "SC": return None
-    if r == "D":  return 0.83
-    if r in ("SW","SB","SJ"): return 0.80
-    if r in ("J","JP","TC","TP"): return 0.20
-    if r in ("R","C"): return 0.55
-    return 0.60
+# Component heights live in ONE place, enclosure/part_heights.py, and are verified there
+# against each part's 3D model by check_consistency [7]. They used to be inlined here as a
+# `part_height()` ladder ending in a silent `return 0.60`; that copy went stale on U7 (1.75,
+# a SOIC-8 the v4 rework removed -> a pocket cut clean THROUGH the brace) and defaulted Q2
+# and FB1 too shallow. Import, do not re-declare.
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+from part_heights import part_height  # noqa: E402
 
 s = open(PCB).read()
 def fp_blocks():

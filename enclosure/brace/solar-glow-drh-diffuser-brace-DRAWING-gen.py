@@ -16,7 +16,27 @@ GAP = 1.80                                     # brace thickness (fills the 1.80
 FER = (36.9,31.5,48.9,57.5)                    # ferrite 12 wide (x, CRITICAL) x 26 long (y, forgiving)
 FER_CLR = 0.20; FER_DEPTH = 0.33               # channel walls + pocket depth
 GLOW = (14.95,40.8,35.85,47.0)                 # monogram-window footprint (LED-hug backing behind it)
-U7 = (28.1,37.3,7.8,5.4)                        # U7 (MB85RC512TY FRAM SOIC-8): the one through-hole (tall). Re-keyed from the removed U2 balancer, essentially where U2 sat (old (30.10,37.64)).
+U7 = (28.1,37.3,7.8,5.4)                        # U7 (MB85RC512TY FRAM DFN-8) pocket footprint. Re-keyed from the removed U2 balancer, essentially where U2 sat (old (30.10,37.64)).
+AIR = 0.12                                     # air over a part's body (mirrors the CAD generator)
+# Heights come from enclosure/part_heights.py -- the single home, verified against each
+# part's 3D model by check_consistency [7]. Nothing on this sheet may restate one.
+import os as _os, sys as _sys
+_sys.path.insert(0, _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), ".."))
+from part_heights import part_height as _ph     # noqa: E402
+
+def _is_thru(ref):
+    """Same rule the CAD generator applies: pocket >= GAP-0.05 breaks through."""
+    h = _ph(ref)
+    return h is not None and (h + AIR >= GAP - 0.05 or ref == "U6")
+
+def _thru_note():
+    thru = [r for r in ("U6","U7","U9","U1") if _is_thru(r)]
+    if not thru:
+        return ("8. ALL COMPONENT POCKETS ARE BLIND. (U6 IS FORCED THROUGH ONLY IF ITS BLIND WEB FALLS BELOW THE SLA MINIMUM -- "
+                "SEE THE CAD GENERATOR.) U7 IS THE 0.90 DFN-8: A %.2f BLIND POCKET, %.2f RESIN CEILING."
+                % (_ph("U7")+AIR, GAP-(_ph("U7")+AIR)))
+    return ("8. THROUGH-POCKETS: %s. U6 IS FORCED THROUGH -- ITS BLIND WEB WOULD BE 0.23 < SLA MIN; U6 IS %.2f IN THE 1.80 CAVITY "
+            "-> 0.35 AIR TO THE SHELL FLOOR. OTHERS BLIND." % (" AND ".join(thru), _ph("U6")))
 
 INK="#111111"; GRY="#9a9a9a"; HATCH="#ededed"; PUR="#6a4fb0"; AMB="#c79a2e"
 fig=plt.figure(figsize=(420/25.4,297/25.4))
@@ -60,9 +80,14 @@ ax.text(X((FER[0]+FER[2])/2),Y(44.5),"FERRITE\nCHANNEL",ha="center",va="center",
 # window LED-hug diffuser backing (band)
 ax.add_patch(Rectangle((X(GLOW[0]),Y(GLOW[3])),(GLOW[2]-GLOW[0])*S,(GLOW[3]-GLOW[1])*S,fc="#fbf5df",ec=AMB,lw=1.0))
 ax.text(X((GLOW[0]+GLOW[2])/2),Y((GLOW[1]+GLOW[3])/2),"LED-HUG\nBACKING",ha="center",va="center",fontsize=4.4,color="#6b5310",fontweight="bold")
-# U7 through-pocket (band)
-ax.add_patch(Rectangle((X(U7[0]-U7[2]/2),Y(U7[1]+U7[3]/2)),U7[2]*S,U7[3]*S,fc="#f6d6d0",ec="#b23b2a",lw=0.9))
-ax.text(X(U7[0]),Y(U7[1]),"U7\nTHRU",ha="center",va="center",fontsize=4.0,color="#7a1f12")
+# U7 pocket (band) -- blind or through is DERIVED, not asserted; it was drawn as a
+# through-hole for a day after U7 became the 0.90 DFN-8.
+_u7_thru = _is_thru("U7")
+ax.add_patch(Rectangle((X(U7[0]-U7[2]/2),Y(U7[1]+U7[3]/2)),U7[2]*S,U7[3]*S,
+                       fc="#f6d6d0" if _u7_thru else "#fdebd0",
+                       ec="#b23b2a" if _u7_thru else "#b8860b",lw=0.9))
+ax.text(X(U7[0]),Y(U7[1]),"U7\n%s" % ("THRU" if _u7_thru else "%.2f" % (_ph("U7")+AIR)),
+        ha="center",va="center",fontsize=4.0,color="#7a1f12" if _u7_thru else "#6b4e00")
 # the 4 panel solder tabs the rails back (red stars)
 for tx,ty in [(4.3,17.0),(46.5,17.0),(4.3,71.9),(46.5,71.9)]:
     ax.plot(X(tx),Y(ty),marker="*",ms=8,color="#d23b2a",zorder=6)
@@ -107,7 +132,10 @@ notes=[
  "6. WINDOW = LED-HUG DIFFUSER BACKING: SOLID WHITE RESIN FILLS THE MONOGRAM-WINDOW FOOTPRINT BEHIND THE FR4, MINUS THE TIGHT D2-D5 LED POCKETS.",
  "    NO APERTURE, NO FLOOR TAPE. THE POCKET CLEARANCE DOUBLES AS A RESERVOIR IF A VISCOUS OPTICAL GEL IS PRE-FILLED AT FINAL ASSEMBLY (OPTIONAL).",
  "7. REMOVABLE / NOT BONDED: THE BRACE MUST LIFT OUT FOR NFC C9 TRIM DURING BENCH BRING-UP. KEEP IT DRY-FIT WHILE ITERATING; ADD ANY GEL ONLY ON THE FINAL CARD.",
- "8. U7 AND U6 ARE THROUGH-POCKETS (U7 TALL AT 1.75; U6 FORCED THROUGH -- ITS BLIND WEB WOULD BE 0.23 < SLA MIN; U6 IS 1.45 IN THE 1.80 CAVITY -> 0.35 AIR TO THE SHELL FLOOR). OTHERS BLIND.",
+ # Derived, never restated: this note used to read "U7 TALL AT 1.75", which stayed on the
+ # drawing for a day after U7 was corrected to the 0.90 DFN-8 everywhere else. Heights come
+ # from enclosure/part_heights.py, so the sentence cannot outlive the number it describes.
+ _thru_note(),
 ]
 yy=91.5
 for n in notes: ax.text(20,yy,n,fontsize=5.9,color=INK); yy-=3.9
@@ -126,6 +154,12 @@ ax.text(tb_x+63,tb_y+10.5,"SCALE  AS NOTED",fontsize=6.2,va="center",color=INK)
 ax.text(tb_x+3,tb_y+3.7,"ENVELOPE 47.1 x 84.7 x 1.80   process: SLA print",fontsize=5.7,va="center",color=INK)
 ax.text(tb_x+tb_w-3,tb_y+3.7,"SHEET 1/1",ha="right",fontsize=6.2,va="center",color=INK)
 
-fig.savefig("/mnt/user-data/outputs/solar-glow-drh-diffuser-brace-DRAWING.pdf",facecolor="white")
-fig.savefig("/mnt/user-data/outputs/solar-glow-drh-diffuser-brace-DRAWING.png",dpi=150,facecolor="white")
+# Write next to this script by default (override with $OUT_DIR). This used to be a hardcoded
+# /mnt/user-data/outputs/, which exists only on the machine this was first authored on, so a
+# plain checkout could not regenerate the sheet -- same fix as the backshell generator.
+import os as _o
+_OUT = _o.environ.get("OUT_DIR") or _o.path.dirname(_o.path.abspath(__file__))
+_o.makedirs(_OUT, exist_ok=True)
+fig.savefig(_o.path.join(_OUT,"solar-glow-drh-diffuser-brace-DRAWING.pdf"),facecolor="white")
+fig.savefig(_o.path.join(_OUT,"solar-glow-drh-diffuser-brace-DRAWING.png"),dpi=150,facecolor="white")
 print("saved brace drawing")
