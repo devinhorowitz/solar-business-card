@@ -272,10 +272,47 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
 
 ## PCB — `PCB/solar-glow-drh-v4_0.kicad_pcb` / `.kicad_sch`
 
-- [ ] **[PCB] Cull SJ1 — ⚠️ SCHEMATIC HALF IS DONE; THE BOARD IS NOW DELIBERATELY RED**
-  _(2026-07-30.)_ **DRC and `check_consistency` are FAILING ON PURPOSE until SJ1 is deleted from the
-  board.** This is a tripwire, not a regression. SJ1 is gone from the `.kicad_sch`, so the board now
-  carries a footprint the schematic does not know about, and `extra_footprint` was raised from
+- [x] **[PCB] Stitch the stranded GND lobe under C13 / SB2 — one via at (24.707, 49.702)**
+  _(2026-07-30; DONE. DRC `unconnected_items` 1 → 0.)_ The board picked up a stranded GND island in
+  the 2026-07-30 sync. It was **8.20 mm² of B.Cu**, x[23.33, 28.37] y[47.20, 53.17], and it carried
+  two real pins: **C13 pad 2** (the 10 µF LED-rail reservoir) and **SB2 pad 2** (the LED2 jumper).
+  Not decorative copper — two ground connections that were not ground.
+  **Correcting my own PR #115 report, which said the orphan was the 13.6 mm² F.Cu polygon at
+  x[10.13, 35.55] y[39.99, 48.67]:** that was wrong. That island has three GND vias and is fine.
+  Every isolated group on this board is on **B.Cu**. The bad read came from a per-island "does this
+  island contain a GND via" test; connectivity is a *graph*, and the answer only came out right once
+  islands, tracks, vias and pads were unioned across both layers.
+  **Why one via, and why that one.** The via pad has to sit in the stranded lobe, touch F.Cu GND,
+  and clear every other net on both layers by the 0.152 mm floor. Scanning the whole lobe at 5 µm
+  leaves **exactly one pocket**, ~129 sites, all within 0.05 mm of each other. The chosen point is
+  its best-centred member:
+
+  | | |
+  |---|---|
+  | pad on the stranded B.Cu lobe | 75.8 % (0.214 mm²) |
+  | pad on main F.Cu GND | 68.0 % (0.192 mm²) |
+  | clearance, F.Cu | 0.176 mm — the `ANODE` run at y 49.150 |
+  | clearance, B.Cu | 0.175 mm — the corner of `SW2` pad 1 (`STO`) at (25.101, 49.968) |
+  | to C13's stranded GND pad | 0.91 mm |
+
+  0.175 mm reads tight until it is put next to the board: **196 different-net copper pairs already
+  sit closer than that**, and 128 sit below 0.160 — this board is routed hard against its own floor
+  everywhere. The via is looser than most of what is already on it, and it is a plain 0.6/0.3, so
+  it adds no second drill size.
+  **The trap that nearly shipped, worth knowing about:** the first placement, at (27.22, 51.31),
+  looked far better on every number — 100 % pad coverage, 0.24 mm clearances. It was 0.144 mm from
+  a letterform. **The front contact block is drawn as unnetted `PCB_SHAPE`s on F.Cu, not as tracks
+  or zones**, so an obstacle model built from tracks + pads + zones cannot see it and will happily
+  drop a via into the middle of the type. DRC caught it (`clearance … Polygon [<no net>] on F.Cu`).
+  Anything that reasons geometrically about this board's front must include copper-layer graphics.
+
+- [x] **[PCB] Cull SJ1**
+  _(2026-07-30; DONE — the board sync landed and the tripwire cleared.)_ SJ1 is gone from the board:
+  the only `SJ1` left anywhere in the `.kicad_pcb` is the word inside U1's Description text. DRC
+  reports **0 `extra_footprint`** and `check_consistency` is green. The tripwire below is kept
+  because it is the mechanism, and the next deliberate red should be built the same way.
+  **What it was:** SJ1 was gone from the `.kicad_sch`, so the board
+  carried a footprint the schematic did not know about, and `extra_footprint` was raised from
   `warning` to `error` in `.kicad_pro` so that shows up as a build failure rather than one line in a
   217-warning list. It was safe to raise: DRC reported **0 footprint errors** before this change, so
   SJ1 is the only extra footprint on the board — the board-only parts (MH1–4, MP1–4, TC1, …) carry
@@ -334,10 +371,15 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   line 27, and U1's own schematic Description string, which still reads *"pin 10 (VDDIO2->PD0: SJ1
   now DNP)"*.
 
-- [ ] **[PCB] C9 0402 → 0805 — ⚠️ SCHEMATIC HALF IS DONE; THE BOARD IS DELIBERATELY RED**
-  _(2026-07-30.)_ **DRC fails on purpose until the board carries the 0805 land.** The schematic now
-  says `Capacitor_SMD:C_0805_2012Metric` (the same stock land C26/C27 already use) while the board
-  still has `solarglow:C9`, and `footprint_symbol_mismatch` was raised `warning` → `error` in
+- [ ] **[PCB] C9 0402 → 0805 — LAND IS PLACED; the pad toe + thermal relief are still open**
+  _(2026-07-30; the footprint swap is DONE, the two follow-ons at the end of this item are not.)_
+  The board now carries `Capacitor_SMD:C_0805_2012Metric` at (35.52, 37.88, 90°), the
+  `footprint_symbol_mismatch` tripwire has cleared, and `part_heights.py` has its `"C9": 1.25`.
+  Still to do: **the +0.4 mm pad toe and the thermal-relief spokes** described at the end of this
+  item. Kept below, as written, because it is the record of why 0805 and why that part:
+  the schematic said
+  `Capacitor_SMD:C_0805_2012Metric` (the same stock land C26/C27 already use) while the board
+  still had `solarglow:C9`, and `footprint_symbol_mismatch` was raised `warning` → `error` in
   `.kicad_pro` so that is a build failure rather than one line in a 237-warning report. Targeted,
   not blanket: C9 is its only instance. `footprint_symbol_field_mismatch` was deliberately **left
   at warning** — it fires on any text difference (Description, MPN, Datasheet), which is

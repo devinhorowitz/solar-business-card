@@ -190,7 +190,8 @@ CI-built set from `../Generated/gerbers/`, which comes from the same exporter).
 
 **Drill (Excellon):**
 - **File → Fabrication Outputs → Drill Files…** Generate Excellon + a drill map.
-- Plated holes: the 79 vias (uniform 0.30 mm) and the eight M2 mount holes (Ø 2.2 mm; 4 corner MH1-4 + 4 panel-corner MP1-4).
+- Plated holes: the **109** vias (uniform 0.30 mm) and the eight M2 mount holes (Ø 2.2 mm; 4 corner MH1-4 + 4 panel-corner MP1-4).
+  _(Said 79 until 2026-07-30; the board had 108 and now has 109. Count it, don't quote it: `grep -c '^\t(via$'`.)_
   Non-plated: the TC2030 latch/alignment holes. Export PTH and NPTH per PCBWay's preference.
 
 **Bundle** the Gerbers + drill into one zip for upload.
