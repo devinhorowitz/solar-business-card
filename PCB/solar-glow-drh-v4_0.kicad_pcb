@@ -4865,7 +4865,7 @@
 				)
 			)
 		)
-		(property "Description" "MCU - 8-bit AVR-EA (PWM, I2C, charge/sleep logic); EXTENDED -40..125C. Diff 12-bit ADC+PGA, 512B EEPROM, 80nA base sleep. Pin-compatible with the DD28 copper except pin 10 (VDDIO2->PD0: SJ1 now DNP). FIRMWARE PORT REQUIRED - see TODO."
+		(property "Description" "MCU - 8-bit AVR-EA (PWM, I2C, charge/sleep logic); EXTENDED -40..125C. Diff 12-bit ADC+PGA, 512B EEPROM, 80nA base sleep. Pin-compatible with the DD28 copper except pin 10, which is PD0/AIN0 on the EA, not VDDIO2 (no MVIO: DS40002443A Table 3-1). The DD-era SJ1 strap is REMOVED from this schematic - bridging it would have tied a GPIO to VS. FIRMWARE PORT REQUIRED - see TODO."
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)

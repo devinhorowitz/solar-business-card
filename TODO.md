@@ -272,6 +272,129 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
 
 ## PCB — `PCB/solar-glow-drh-v4_0.kicad_pcb` / `.kicad_sch`
 
+- [ ] **[PCB] Cull SJ1 — ⚠️ SCHEMATIC HALF IS DONE; THE BOARD IS NOW DELIBERATELY RED**
+  _(2026-07-30.)_ **DRC and `check_consistency` are FAILING ON PURPOSE until SJ1 is deleted from the
+  board.** This is a tripwire, not a regression. SJ1 is gone from the `.kicad_sch`, so the board now
+  carries a footprint the schematic does not know about, and `extra_footprint` was raised from
+  `warning` to `error` in `.kicad_pro` so that shows up as a build failure rather than one line in a
+  217-warning list. It was safe to raise: DRC reported **0 footprint errors** before this change, so
+  SJ1 is the only extra footprint on the board — the board-only parts (MH1–4, MP1–4, TC1, …) carry
+  the `board_only` attribute and do not trip it.
+  **To clear it:** open the board, *Update PCB from Schematic* (SJ1 disappears), then *Cleanup
+  Tracks & Vias → remove dangling*. Expected after: `extra_footprint` 0, and DRC back to its usual
+  14 excluded errors. Both guards say the same thing today —
+  `check_consistency` → *"on the BOARD but not in the schematic (a sync will DELETE these): SJ1"*,
+  DRC → *"[extra_footprint] … error … @(13.3000 mm, 46.0000 mm): Footprint SJ1"*.
+  **What the schematic edit removed** (six blocks, LF endings preserved, 400,716 → 396,212 bytes):
+  the `SJ1` symbol instance, its two stub wires at (410.21,160.02)→(405.13,160.02) and
+  (410.21,165.1)→(405.13,165.1), the two `global_label`s those stubs landed on (`VS` and `VDDIO2`),
+  and the `solarglow:SJ1` lib_symbol. It was a self-contained island — nothing else touched it.
+  Verified: ERC **identical** before and after (3 pre-existing excluded warnings on BTN/PC0/PC1,
+  none introduced); netlist 67 → 66 components; `VDDIO2` is now exactly `C3.1 + U1.10`, as intended.
+  The former verdict, kept because it is the reason this happened:
+  **AVR64EA28 datasheet DS40002443A §2.2, 28-pin VQFN — pin 10 is `PD0`.** There is no `VDDIO2` pin
+  anywhere on the package; the only supply pins are 18/24 (VDD) and 19/25 (GND), and every I/O is
+  marked *"Pin on VDD Power Domain"*. One domain, no MVIO. The board agrees and has already half
+  admitted it: `U1` pad 10 carries `pinfunction='PD0_10'` while the **net is still named
+  `VDDIO2`** — the pin function was updated in the AVR-EA swap and the net name is a fossil.
+  `firmware/board.h` line 27 says the same: *"10 PD0 (n/c) EA GPIO on the old VDDIO2 pad; SJ1 = DNP
+  so it floats -> held by internal pull-up"*.
+  So SJ1 is not merely unused — **bridging it shorts a GPIO to VS**, which is a footgun sitting
+  0.26 mm from SC3 (a 1.8 F supercap) and 0.30 mm from D2. Cull it.
+  **What the deletion actually is, measured:** SJ1.1 = `VS` @ (13.30, 45.05), SJ1.2 = `VDDIO2` @
+  (13.30, 46.95). On the `VDDIO2` side it is a pure **spur** — C3.1 reaches U1.10 directly along
+  y = 48.50 and up x = 7.83, and SJ1 hangs off that run via 7 segments back to the branch at
+  (7.83, 48.50). Deleting the footprint cannot break C3↔U1.10. The **`VS` side is not a spur**:
+  the B.Cu run (13.16,45.37)→(13.16,45.77)→(12.47,46.46)→(12.47,46.75)→(12.12,47.10)→(10.89,47.10)
+  reads as a through-route that merely passes SJ1.1, and there are 41 VS zones besides. **Do this
+  in KiCad, not by text surgery** — delete the symbol, Update PCB from Schematic, then
+  *Cleanup Tracks & Vias → remove dangling*, and let the connectivity engine decide which copper
+  was only ever SJ1's. Text-editing it risks orphaning VS copper that is carrying current elsewhere.
+  **`C3` is NOT the other half of this fossil — keep it.** An earlier draft of this entry said it
+  was, on the assumption that a 100 nF held charged on a pulled-up pin was costing meaningful
+  energy. Computed rather than assumed, it is not: the part is `GRT155R71H104KE01D` (X7R 0402), and
+  the MLCC insulation-resistance floor of 500 Ω·F ÷ 100 nF = 5 GΩ gives **0.66 nA at VS = 3.3 V**,
+  ~0.8% of the documented 80 nA sleep *at the spec floor* and typically 10–100× better than that;
+  the one-time cold-start charge is C·V² = **1.09 µJ** against a 2.7–7.8 J budget. Negligible.
+  And PD0 is not a bare GPIO. **Datasheet Table 3-1, VQFN-28 column: pin 10 / PD0 = `AIN0`**, plus
+  `AINN1` (AC1 negative input) and the alternate `TCA0 WO0`. `C24` on AIN1 (STO_SNS) is the
+  **identical part number**, so AIN0/AIN1 already carry a matched 100 nF pair — the free adjacent
+  ADC channel, pre-filtered. That is latent value, not dead weight; deleting it is a sch+board+BOM
+  churn to reclaim one 0402 land and 0.66 nA.
+  **Fix the NAME, not the part:** rename net `VDDIO2` → `PD0_AIN0`, and re-annotate C3 in the
+  schematic as an AIN0 input filter rather than supply decoupling. That removes the actual cost,
+  which is that the schematic currently asserts "supply pin needing decoupling" about an ADC input.
+  **And record the gotcha, which is currently written down nowhere:** PD0 is the alternate
+  `TCA0 WO0`, so **PD0 must never be driven as an output** — each full cycle into that 100 nF costs
+  C·V² ≈ 1.09 µJ, i.e. ~1.1 mW at 1 kHz, which would swamp the entire energy budget. Firmware is
+  correct today (`PORTD.PIN0CTRL = PORT_PULLUPEN_bm`, held as a pulled-up input) but `board.h`
+  line 27 says only "(n/c) … held by internal pull-up" and does not say why that is mandatory.
+  Files to follow: `PCB/README.md` (§5 do-not-get-wrong list, the BOM table row, the machine-place
+  list), `README.md` (two mentions), `solar-glow-drh-design-notes.md` (three), `firmware/board.h`
+  line 27, and U1's own schematic Description string, which still reads *"pin 10 (VDDIO2->PD0: SJ1
+  now DNP)"*.
+
+- [ ] **[SCH/PCB/BOM] C9 0402 → 0805, and buy it as a trim KIT not a part**
+  _(2026-07-30; part chosen, layout edit outstanding.)_ C9 is the NFC tank trim across the coil
+  terminals (`LA`/`LB`) and the one part that gets reworked *repeatedly* — you tune resonance by
+  fitting a value, measuring, and fitting another. On an 0402 that is miserable.
+  **It must not move.** Its position and the loop area of its connection are part of the tank being
+  trimmed. It does not need to: measured clearances are C28 1.17 mm to the left, U5 3.64 mm below,
+  D5 3.41 mm above, so **rotating it 90° and growing vertically** takes 0805 with 2.4/2.1 mm clear
+  (1206 would fit too, at 2.0/1.7). C9 already sits inside the hot-plate-safe band **x 26–46,
+  y 31.5–58** — the only region with no supercap on the back and no PV cell on the front — 7.4 mm
+  clear of SC2.
+  **Part (DigiKey, live 2026-07-30): `C0805C820G5GACTU`** — KEMET, 82 pF, **C0G/NP0**, **±2%**,
+  50 V, 0805, body 2.00 × 1.25 mm, **thickness 0.88 mm max**, 6,616 in stock, $0.70 @1,
+  DK `399-C0805C820G5GACTUTR-ND`. C0G is not negotiable (a tuned tank cannot use a dielectric that
+  drifts with temperature or bias); ±2% vs the current ±5% land is the real performance win, since
+  it halves how far off 13.56 MHz the first fit lands.
+  **Buy the spread, not the value** — 68/75/82/91/100 pF, ~$3.90 total: `C0805C680G5GACTU` (6,779),
+  `C0805C750G5GACTU` (3,220), `C0805C820G5GACTU` (6,616), `C0805C910G5GACTU` (2,349),
+  `C0805C101G1GACTU` (3,956, 100 V). **This KEMET line is why it is the pick**: the higher-Q RF
+  series (Murata GQM, Kyocera KGQ) are genuinely better parts but are *not stocked across the trim
+  range* — KGQ 75 pF and 91 pF are at zero and 100 pF had 3 pieces — and their advantage is
+  second-order anyway, because tank Q is dominated by the coil's ESR (~1–3 Ω at 13.56 MHz) against
+  an 0805 C0G's ~0.05–0.2 Ω. Going 0402 → 0805 already lowers ESR; paying 4× for an RF series that
+  cannot be trimmed with is the wrong trade.
+  **Two things that must land with the footprint swap, or the enclosure is cut wrong:**
+  (1) `enclosure/part_heights.py` needs an explicit **`"C9": 1.25`** — the package-generic 0805
+  number that C26/C27 already use, not the part's own 0.88, because check [7] measures the declared
+  height against the generic `C_0805_2012Metric` model and a 0.88 declaration would fail it. Leaving
+  C9 on the `"C"` prefix default of 0.55 is the exact failure the file's own docstring warns about —
+  the brace would be cut 0.70 mm too shallow. (2) Extend each pad's outer toe by **+0.4 mm** and put
+  **thermal-relief spokes** on both pads: they land in the `LA`/`LB` pours, and a pad tied straight
+  into a pour is why an iron feels like it never wets. Four 0.4 mm spokes are nothing against the
+  coil's own inductance.
+
+- [ ] **[PCB/BENCH] Six B-side test pads — the whole harvest chain is unprobeable**
+  _(2026-07-30.)_ Auditing every net for probe access turned up the gap: **`GND`, `SRC`, `STO`,
+  `SCL`, `SDA`, `UPDI` are reachable** (TP1, JP1, TC1, J1) and **nothing else is**. Missing, in
+  bring-up order: **`VS`** (is the logic rail up at all), **`MID`** (the SC1–SC4 stack midpoint —
+  if it drifts, a cell goes overvoltage, so this is a safety node, not a convenience one),
+  **`LX_LOUT`** (the AEM10300 switch node — the one scope point that answers "is the boost
+  running"), **`VINT`**, **`BUFSRC`**, **`STO_LDO`**. That is the entire harvester subsystem, which
+  is also the project's #1 open gate (energy budget). Put them on **B.Cu**, which is 100% inside
+  titanium and therefore costs nothing in artwork — the only reason the rail was ever considered.
+  Candidate zone from the free-space map: **x 40–46, y 36–52**, clear radius 5.5 mm, which is also
+  the hot-plate-safe band (see the C9 entry). Ø0.9–1.0 mm bare pads take a pogo or a probe tip.
+
+- [ ] **[PANEL] Two tooling holes in the rail, so the card can be tested IN the frame**
+  _(2026-07-30.)_ Pairs with the entry above and is the *safe* half of the "test points on the
+  breakaway" idea. Two Ø1.5 mm NPTH in the 5.0 mm rail let a pogo fixture register to the panel
+  and land on the B-side pads while the card is still attached — test as it arrives from PCBWay,
+  then depanel. Free to add: `scripts/panelize.py` generates the panel, so this is a constant and
+  an emitter, not a file edit.
+  **Signals must NOT cross the outline, and that is settled, not a preference.** `edge_fit = −0.05`
+  makes the board a *press fit* into the cavity, and all eight mount holes are plated **GND** with
+  brass M2 screws into tapped titanium — the shell is bonded to GND at eight points. Any non-GND
+  copper reaching the outline is a hard short once assembled. The design already made this call
+  once: the only two nets crossing today are the plating stubs, **both GND**, both sitting in DRC
+  as `copper_edge_clearance … actual 0.0000 mm`, *excluded*. Separately there is no room — the
+  5.0 mm tab's four Ø0.5 bites leave four 0.50 mm webs plus the 1.00 mm bus corridor, and at a
+  normal 0.2–0.25 mm hole-to-copper a 0.50 mm web has 0.0–0.1 mm left, under the board's own
+  0.152 mm clearance floor.
+
 - [x] **[SCH/PCB] U7 footprint identity — DISARMED; the two lands were the same land**
   _(2026-07-26; DONE.)_ The trap was real but the geometries were not actually in conflict. Comparing
   every stored coordinate, the board footprint was **exactly the library footprint, Y-mirrored (U7 is
@@ -332,10 +455,17 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   and must not trip the delete-warning. The checker now exempts by that flag and **prints the exempt
   list every run**, so if one ever loses the flag it reappears as a real error instead of vanishing.
   (`NPTH_mech` is board_only too but has no Reference property, so a refdes-keyed check cannot see it.)
-- [ ] **[COPPER] U1 has one decoupling cap for two VDD/GND pin pairs**
+- [ ] **[COPPER] U1 has one decoupling cap for two VDD/GND pin pairs** — ⚠️ **looks STALE, re-check
+  before spending effort on it**
   _(2026-07-26 copper audit; moderate effort.)_ Contrary to an explicit datasheet requirement, and it
   bears on the ADC noise floor — which now matters more than it used to, since the glow floor, the
   EEPROM floor and the caps-full gate are all decided from ADC reads. Worth pricing before fab.
+  **2026-07-30, measured off the current board:** U1 now has **two**. Pin pair 18/19 has **C29 at
+  1.46 mm**; pin pair 24/25 has **C1 at 2.42 mm**. C29 was added on 2026-07-26 (see the closed
+  "[SCH] C29 added to the schematic" item above), which is almost certainly the fix for this very
+  finding — the two items were never linked. Confirm the intent, then close this rather than adding
+  a third cap. Full VS-cap census by distance to the nearest U1 supply pin: C29 1.46, C1 2.42,
+  C23 14.94, C12 20.80, C28 23.01, C7 32.01, C4 33.87, C6 34.68 mm.
 
 - [ ] **[COPPER] Tag-Connect keep-out violated by the ground pour**
   _(2026-07-26 copper audit.)_ B.Cu ground comes within **0.127 mm** of every TC1 contact pad against a

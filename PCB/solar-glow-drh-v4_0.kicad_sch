@@ -7437,117 +7437,7 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "solarglow:SJ1"
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(in_pos_files yes)
-			(duplicate_pin_numbers_are_jumpers no)
-			(property "Reference" "SJ1"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value" "VDDIO2 jmp"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Footprint" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Datasheet" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Description" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(symbol "SJ1_1_1"
-				(rectangle
-					(start 2.54 2.54)
-					(end 20.32 -7.62)
-					(stroke
-						(width 0.2)
-						(type default)
-					)
-					(fill
-						(type background)
-					)
-				)
-				(pin passive line
-					(at 0 0 0)
-					(length 2.54)
-					(name "1"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 0 -5.08 0)
-					(length 2.54)
-					(name "2"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
-		(symbol "solarglow:SW2"
+				(symbol "solarglow:SW2"
 			(exclude_from_sim no)
 			(in_bom yes)
 			(on_board yes)
@@ -10822,17 +10712,7 @@
 		)
 		(uuid "12cdcc76-bd9c-4937-9fa7-38c59fadd0cf")
 	)
-	(wire
-		(pts
-			(xy 410.21 165.1) (xy 405.13 165.1)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "137e277a-9ac5-4a79-9806-5189f12826a0")
-	)
-	(wire
+		(wire
 		(pts
 			(xy 734.06 377.19) (xy 728.98 377.19)
 		)
@@ -11022,17 +10902,7 @@
 		)
 		(uuid "28a5e377-e230-4550-a2f6-50b18565a59c")
 	)
-	(wire
-		(pts
-			(xy 410.21 160.02) (xy 405.13 160.02)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "298b1392-bc7e-4967-bea1-fcd9aac7b027")
-	)
-	(wire
+		(wire
 		(pts
 			(xy 279.4 160.02) (xy 274.32 160.02)
 		)
@@ -15099,28 +14969,7 @@
 			)
 		)
 	)
-	(global_label "VS"
-		(shape bidirectional)
-		(at 405.13 160.02 0)
-		(effects
-			(font
-				(size 1 1)
-			)
-		)
-		(uuid "87a9561f-8537-48f2-a788-19046b49a8df")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 405.13 160.02 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-	)
-	(global_label "SCL"
+		(global_label "SCL"
 		(shape bidirectional)
 		(at 204.47 78.74 0)
 		(effects
@@ -17073,28 +16922,7 @@
 			)
 		)
 	)
-	(global_label "VDDIO2"
-		(shape bidirectional)
-		(at 405.13 165.1 0)
-		(effects
-			(font
-				(size 1 1)
-			)
-		)
-		(uuid "f5e9d014-b1d5-4a2a-9acc-5b79c1c009b3")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 405.13 165.1 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-	)
-	(global_label "GND"
+		(global_label "GND"
 		(shape bidirectional)
 		(at 680.72 74.93 0)
 		(effects
@@ -21622,115 +21450,7 @@
 			)
 		)
 	)
-	(symbol
-		(lib_id "solarglow:SJ1")
-		(at 410.21 160.02 0)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp yes)
-		(uuid "85387da4-cc38-4010-b8bc-82efe2eb37c1")
-		(property "Reference" "SJ1"
-			(at 421.21 165.1 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "DNP (was 0R VDDIO2 tie)"
-			(at 421.21 170.18 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "solarglow:SJ1"
-			(at 421.21 175.26 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 410.21 160.02 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "DNP for the AVR-EA U1: pin 10 is PD0 (GPIO), not VDDIO2 - leave unbridged so PD0 floats (firmware inits it input-disabled). Was the 0R MVIO tie for the DD28."
-			(at 410.21 160.02 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "MPN" "(DNP - not ordered)"
-			(at 410.21 160.02 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Supplier" "DigiKey"
-			(at 459.74 372.11 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Supplier P/N" ""
-			(at 459.74 372.11 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "af5d0089-f2c2-4332-9b8d-d4bb715c3d86")
-		)
-		(pin "2"
-			(uuid "bc6b72a1-7de4-41d8-8e52-093ac235af8d")
-		)
-		(instances
-			(project "solar-glow-drh-v4_0"
-				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
-					(reference "SJ1")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
+		(symbol
 		(lib_id "solarglow:U8")
 		(at 459.74 372.11 0)
 		(unit 1)
@@ -24269,7 +23989,7 @@
 				)
 			)
 		)
-		(property "Description" "MCU - 8-bit AVR-EA (PWM, I2C, charge/sleep logic); EXTENDED -40..125C. Diff 12-bit ADC+PGA, 512B EEPROM, 80nA base sleep. Pin-compatible with the DD28 copper except pin 10 (VDDIO2->PD0: SJ1 now DNP). FIRMWARE PORT REQUIRED - see TODO."
+		(property "Description" "MCU - 8-bit AVR-EA (PWM, I2C, charge/sleep logic); EXTENDED -40..125C. Diff 12-bit ADC+PGA, 512B EEPROM, 80nA base sleep. Pin-compatible with the DD28 copper except pin 10, which is PD0/AIN0 on the EA, not VDDIO2 (no MVIO: DS40002443A Table 3-1). The DD-era SJ1 strap is REMOVED from this schematic - bridging it would have tied a GPIO to VS. FIRMWARE PORT REQUIRED - see TODO."
 			(at 209.55 38.1 0)
 			(show_name no)
 			(do_not_autoplace no)
