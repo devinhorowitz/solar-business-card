@@ -150,10 +150,18 @@ from a generator CI runs** (check [9]), and that every 3D model carries its tabl
   **Do not treat the hit COUNT as a constant, and never gate on it.** It is not deterministic:
   two runs on byte-identical inputs (same board, `.kicad_pro`, `.kicad_dru` and the same pinned
   image digest) reported **222** and **208**, and a third after the coil landed reported 223
-  and 222 again after the coil aperture was reverted. KiCad pairs that aperture against the copper
+  and 222 again after the coil aperture was reverted. The published runs since have read **223,
+  200, 203**, so the observed spread is now **200–223** — a range of 23 on a board whose mask art
+  did not move. KiCad pairs that aperture against the copper
   items near it, and the set it finds varies run to run — most likely because `check_zone_fills` refills the pours first
   and the fill is not bit-reproducible. What IS stable, and what to assert if this ever gets a
-  gate: `Errors: 0 (+11 excluded)`, zero hits on F.Mask, and every hit citing that one aperture.
+  gate: `Errors: 0 (+10 excluded)`, zero hits on F.Mask, and every hit citing that one aperture.
+  _(Was `+11` until 2026-07-30. The 11th was a `courtyards_overlap` exclusion; the 2026-07-30 board
+  sync stopped that violation firing and KiCad pruned the now-dead exclusion, so the list is 13 →
+  the same 10 errors plus 3 `silk_over_copper` warnings. Live errors were 0 before and after — the
+  count moved because a finding went away, not because one stopped being reported. Verify the
+  number against `Generated/solar-glow-drh-v4_0-drc.html`, which CI writes, rather than trusting
+  this line.)_
 - **`mask_art.py`'s `generate()` is the single definition of what it writes** — and
   `generate()` is the single definition of what it writes. Check [6] calls that same function.
   It used to rebuild `emit(build(board))` itself, which was a quieter second copy: correct while
