@@ -1676,3 +1676,51 @@ Also confirmed against sources this pass: **CLK_ADC minimum is 300 kHz** (Table 
 300–2000 kHz with an internal reference), so DIV2 = 500 kHz is the *only* legal prescaler at
 1 MHz — the long-standing comment claiming "DIV4 also legal" would have been 250 kHz, out of
 spec, and is corrected.
+
+---
+
+## Addendum — TODO purge, 2026-07-30
+
+The tracker had grown to 1,604 lines with 29 checked-off items and a tail of audit-era entries
+overtaken by the July rework. Per the tracker's own convention (completed items are culled; the
+record lives here and in git history), this purge removed 54 blocks. The full text of every
+culled item is in git history at `TODO.md` prior to this date.
+
+**Culled as completed (29):** the C9 47 pF derivation chain, the C25/C26/C27 re-picks, both
+passive audits' records, the GND stitching via, the SJ1 cull, TC1's side move, C29, the U7/U9
+land fixes, the DNP/paste fab-correctness set, the LED land correction, the crosshatch, the
+GND_B refill, the plating-request rename, the panel stubs, the excluded-DRC audit, and the rest
+of the checked set.
+
+**Culled as verified-resolved (20)** — each checked against the current board/repo, not assumed:
+silk legend heights (severity-all DRC shows zero `text_height`), SC1/SC3 metadata (board reads
+SS17/`3-153-440`), U1's second decoupling pair (C29 exists at (11.58, 44.63)), the TC2030
+keep-out (mooted by TC1's deliberate move to F.Cu), the dual-fab re-space (0 clearance errors at
+the 0.152 floor — which also retires D2's 0.126 mm margin item), the 3D-model backlog (53/53
+resolve; every populated part carries a body), the PV teardrop regen (627 teardrop entities on
+the board; the standing README pre-order step covers regeneration), the enclosure-audit set
+(Detail B, retired pillars, silhouettes, STEP/STL currency, the 0.05 mm mating-wall disagreement,
+the U7 relief/model/repoint items — all rebuilt away by the 2026-07-29 fit_rules/part_heights
+respin and the CI chain that regenerates every artifact from the board), FB1's land, the
+machine-place BOM recount (assembly BOM rebuilt 2026-07-30), the DRC/ERC prose drift, and the
+side-notes U7 correction.
+
+**Declined (4):** the 46 `solarglow:` lib_ids without a backing `.pretty` (embedded footprints
+are self-sufficient; the lib_id is cosmetic), the copper/stencil cosmetics bundle (fab-owned
+stencil ratios, decorative cusps, degenerate segments already adjudicated — its one live
+fragment, the README via-in-pad list correction, was absorbed into the doc-debt item), teardrop
+completeness (covered by the README "Add Teardrops before plotting" pre-order step), and C13's
+`solarglow:C11` lib_id (cosmetic clone leftover, zero functional effect).
+
+**Moved to Locked:** the 2026-07-26 copper-audit judgement calls (analog net class, pour under
+L2/switching copper, LIN/LOUT width, CINT track length, STO neck) — the audit's own verdict was
+"defensible to leave," which is a lock with a re-open condition (a measurement), not an open item.
+
+What remains open after the purge: the bench/hardware-era backlog (which cannot close from a
+desk), the buy-early sourcing item (refreshed the same day from a dual-distributor sweep), five
+copper/fab items with real content (C9 pad toe + thermal relief, R1–R4 worst-corner note, the
+EP stencil aperture question for PCBWay, the R10↔C8 / C13-mask-sliver nudges, D2's window
+shadow), one tooling gap (nothing in CI notices a footprint changing sides), and the decision
+set: six B-side test pads, two panel tooling holes, the midnight hard-gold question, the
+frame/texture aesthetic, the maker's-mark orientation blocker, the engraving-study pick, and
+the PCBWay order-reply confirmations.
