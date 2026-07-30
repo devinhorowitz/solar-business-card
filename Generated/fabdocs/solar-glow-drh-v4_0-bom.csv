@@ -5,8 +5,8 @@ Row,Description,Part,References,Value,Footprint,Quantity Per PCB,Status,Datashee
 4,"1uF 25V 0603 X7R (GRT automotive), LDO input cap (STO_LDO island)",C22,C22,1uF,C_0603_1608Metric,1, ,,GRT188R71E105KE13D,DigiKey,490-GRT188R71E105KE13DCT-ND,SMD_2terminal_chip_molded,
 5,"2.2uF 25V 0603 X7R, LDO output (VS); TPS7A02 needs >=0.5uF effective - X7R holds it over temp/bias",C23,C23,2.2uF,C_0603_1608Metric,1, ,,GRM188Z71E225ME43D,DigiKey,490-GRM188Z71E225ME43DCT-ND,SMD_2terminal_chip_molded,
 6,"VS bulk 10uF 16V 0603 X5R (was 4.7uF 0402); more effective VS bulk for transients, 0603 land LED-anode bulk 10uF 16V 0603 X5R (was 4.7uF 0402); keeps glow transient off VS, 0603 land",C4,C4 C13,10uF,C_0603_1608Metric,2, ,,GRT188R61C106KE13D,DigiKey,490-12317-1-ND,SMD_2terminal_chip_molded,
-7,"10uF 10V 0805 X7R, AEM VINT buffer 10uF 10V 0805 X7R, STO local bulk/decoupling",C26,C26 C27,10uF,C_0805_2012Metric,2, ,,GRM21BR71A106KA73L,DigiKey,490-10516-1-ND,SMD_2terminal_chip_molded,
-8,"22uF 10V 0603 X5R, AEM SRC decoupling (aem10300.pdf Table 11 CSRC)",C25,C25,22uF,C_0603_1608Metric,1, ,,GRT188R61A226ME13D,DigiKey,490-GRT188R61A226ME13DCT-ND,SMD_2terminal_chip_molded,
+7,"10uF 16V 0805 X7R, AEM VINT buffer. Re-picked 2026-07-30 (audit #2): GRM21BR71A106KA73L went stock-zero at DigiKey AND Mouser, auto sibling NRND. 16V also margins the family. 1.40mm max -> part_heights C26/C27 = 1.45. 10uF 16V 0805 X7R, STO local bulk/decoupling. Re-picked 2026-07-30 (audit #2): GRM21BR71A106KA73L went stock-zero at DigiKey AND Mouser, auto sibling NRND. 16V halves the DC-bias loss at STO's 5.5V max (was 55% of a 10V rating). 1.40mm max -> part_heights 1.45.",C26,C26 C27,10uF,C_0805_2012Metric,2, ,,CL21B106KOQNNNG,Mouser,187-CL21B106KOQNNNG (Mouser),SMD_2terminal_chip_molded,
+8,"22uF 16V 0805 X5R, AEM CSRC buffer at BUFSRC (aem10300 Table 6: min 13uF EFFECTIVE - footnote 1 names DC-bias derating). Re-picked 2026-07-30 (audit #2) from 0603/10V GRT188R61A226ME13D, which held only ~9-12uF at the 3.1-4.15V MPP bias. 16V 0805 holds ~15-17uF. 1.25mm max. Fits in place (gaps SC3 0.529/L2 0.575/SB2 0.776mm); 1206 does NOT fit.",C25,C25,22uF,C_0805_2012Metric,1, ,,C2012X5R1C226M125AC,DigiKey,445-7647-1-ND,SMD_2terminal_chip_molded,
 9,Glow LED - reverse-mount amber,D2,D2 D3 D4 D5,LA P47F,D2,4, ,datasheets/D2-D5  LA P47F-V2BB-24-3B5A-30-R18-Z  $0.43.pdf,LA P47F-V2BB-24-3B5A-30-R18-Z,DigiKey,475-LAP47F-V2BB-24-3B5A-30-R18-ZCT-ND,,
 10,"Ferrite bead 0603, STO island feed filter",FB1,FB1,ferrite,L_0603_1608Metric,1, ,,BLM18PG221SN1D,DigiKey,490-5221-1-ND,SMD_2terminal_chip_molded,
 11,"10uH 1.76A power inductor, AEM10300 LDCDC (aem10300.pdf Table 11 = DFE252010F-100M); DFE252010 = 2.5x2.0mm on a 1008/2520 land (L_1008_2520Metric) - re-run Update-PCB then route",L2,L2,10uH,L_1008_2520Metric,1, ,,DFE252010F-100M,DigiKey,490-13039-1-ND,SMD_2terminal_chip_molded,
@@ -33,7 +33,7 @@ Project info:
 Schematic:,solar-glow-drh-v4_0
 Variant:,default
 Revision:,
-Date:,2026-07-30_13-28-33
+Date:,2026-07-30_16-01-34
 KiCad Version:,10.0.5-unknown-202607221313~667fa36054~ubuntu25.10.1
 Statistics:
 Component Groups:,25
