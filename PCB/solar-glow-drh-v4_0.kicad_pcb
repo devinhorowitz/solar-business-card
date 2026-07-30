@@ -8233,6 +8233,576 @@
 		)
 		(embedded_fonts no)
 	)
+	(footprint "solarglow:TPB"
+		(layer "B.Cu")
+		(uuid "c68da50b-198d-444d-b49c-f2c7e1bff6bb")
+		(at 5.07 14.32)
+		(property "Reference" "TP2"
+			(at 0 0 0)
+			(layer "F.SilkS")
+			(hide yes)
+			(uuid "427a1679-5f22-4cea-af17-4af39a49d50b")
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "VS"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "462786b1-d864-4965-aff9-3c7896e7342d")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "bf511c31-f2cb-4e09-bfa9-c9534302363c")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "VS test pad (logic rail)"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "4c36c7c8-84fa-4010-b199-aafa92aa984e")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "MPN" "(bare pad - no part)"
+			(at 0 0 0)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "9baf8236-cead-4519-9cee-80c895c722a3")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
+		(path "/d2fe4e23-3ca0-4bab-b257-c91ad2130067")
+		(sheetname "/")
+		(sheetfile "solar-glow-drh-v4_0.kicad_sch")
+		(units
+			(unit
+				(name "A")
+				(pins "1")
+			)
+		)
+		(attr smd exclude_from_pos_files exclude_from_bom dnp)
+		(duplicate_pad_numbers_are_jumpers no)
+		(pad "1" smd circle
+			(at 0 0)
+			(size 1 1)
+			(layers "B.Cu" "B.Mask")
+			(net "VS")
+			(pinfunction "1_1")
+			(pintype "passive")
+			(teardrops
+				(best_length_ratio 0.5)
+				(max_length 1)
+				(best_width_ratio 1)
+				(max_width 2)
+				(curved_edges yes)
+				(filter_ratio 0.9)
+				(enabled yes)
+				(allow_two_segments yes)
+				(prefer_zone_connections yes)
+			)
+			(uuid "bc2f32ed-474e-4fd9-830a-ff190ea92270")
+		)
+		(embedded_fonts no)
+	)
+	(footprint "solarglow:TPB"
+		(layer "B.Cu")
+		(uuid "5cc25f91-f33e-4aed-a17a-02e8ac89898a")
+		(at 25.4 11.1)
+		(property "Reference" "TP3"
+			(at 0 0 0)
+			(layer "F.SilkS")
+			(hide yes)
+			(uuid "d3b56272-b611-45f6-b783-0e21a919ce05")
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "MID"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "56e72a56-07f8-437e-bce1-24404edd8dbf")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "32dd9b19-d124-4a96-88b5-5a398c9d3a82")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "MID test pad (supercap stack midpoint)"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "1f75d899-4830-4af7-b149-06b0353015c6")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "MPN" "(bare pad - no part)"
+			(at 0 0 0)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "8661e734-a8ce-48d7-9ca4-341c7e3b62e0")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
+		(path "/02abacab-89ed-4a2d-87d8-6d7a0423dd16")
+		(sheetname "/")
+		(sheetfile "solar-glow-drh-v4_0.kicad_sch")
+		(units
+			(unit
+				(name "A")
+				(pins "1")
+			)
+		)
+		(attr smd exclude_from_pos_files exclude_from_bom dnp)
+		(duplicate_pad_numbers_are_jumpers no)
+		(pad "1" smd circle
+			(at 0 0)
+			(size 1 1)
+			(layers "B.Cu" "B.Mask")
+			(net "MID")
+			(pinfunction "1_1")
+			(pintype "passive")
+			(teardrops
+				(best_length_ratio 0.5)
+				(max_length 1)
+				(best_width_ratio 1)
+				(max_width 2)
+				(curved_edges yes)
+				(filter_ratio 0.9)
+				(enabled yes)
+				(allow_two_segments yes)
+				(prefer_zone_connections yes)
+			)
+			(uuid "bcdb2025-a303-4622-91dc-453db34528b8")
+		)
+		(embedded_fonts no)
+	)
+	(footprint "solarglow:TPB"
+		(layer "B.Cu")
+		(uuid "67cf483c-6d39-40d9-bc68-8eec81de6994")
+		(at 28.45 57.45)
+		(property "Reference" "TP4"
+			(at 0 0 0)
+			(layer "F.SilkS")
+			(hide yes)
+			(uuid "1fadaa52-bca2-46a0-ae2b-9b37878d2307")
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "LX_LOUT"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "8c6428ad-7a98-4fbf-83d4-e48d7a38f164")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "189be423-d5d1-405e-ae3d-55349235ea87")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "LX_LOUT test pad (AEM10300 switch node)"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "29679707-fb7e-4f9f-9655-bac360476b3d")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "MPN" "(bare pad - no part)"
+			(at 0 0 0)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "6df986ad-bf25-4067-b065-3336e79117e6")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
+		(path "/cf921a00-7522-4d65-863e-7b269bb5f720")
+		(sheetname "/")
+		(sheetfile "solar-glow-drh-v4_0.kicad_sch")
+		(units
+			(unit
+				(name "A")
+				(pins "1")
+			)
+		)
+		(attr smd exclude_from_pos_files exclude_from_bom dnp)
+		(duplicate_pad_numbers_are_jumpers no)
+		(pad "1" smd circle
+			(at 0 0)
+			(size 1 1)
+			(layers "B.Cu" "B.Mask")
+			(net "LX_LOUT")
+			(pinfunction "1_1")
+			(pintype "passive")
+			(teardrops
+				(best_length_ratio 0.5)
+				(max_length 1)
+				(best_width_ratio 1)
+				(max_width 2)
+				(curved_edges yes)
+				(filter_ratio 0.9)
+				(enabled yes)
+				(allow_two_segments yes)
+				(prefer_zone_connections yes)
+			)
+			(uuid "c136ebc7-343e-4817-9bc2-140d287e7f31")
+		)
+		(embedded_fonts no)
+	)
+	(footprint "solarglow:TPB"
+		(layer "B.Cu")
+		(uuid "37465175-8f1f-4247-ac59-2a8981102459")
+		(at 32.25 50.42)
+		(property "Reference" "TP5"
+			(at 0 0 0)
+			(layer "F.SilkS")
+			(hide yes)
+			(uuid "dca952d3-79cf-46ce-960e-d68eafaf380a")
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "VINT"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "585d1969-f542-4963-bf16-7234767d209a")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "2939f485-2b38-45c2-a119-6a3e9d894dfa")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "VINT test pad (AEM10300 internal rail)"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "b19eb3b0-08f5-4f3f-ad78-c13c4fa14778")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "MPN" "(bare pad - no part)"
+			(at 0 0 0)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "77564481-bd73-4b5b-aa7e-ccf6be5d3cf2")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
+		(path "/183405b0-3695-4fe3-afe5-aa4a0b7acbb7")
+		(sheetname "/")
+		(sheetfile "solar-glow-drh-v4_0.kicad_sch")
+		(units
+			(unit
+				(name "A")
+				(pins "1")
+			)
+		)
+		(attr smd exclude_from_pos_files exclude_from_bom dnp)
+		(duplicate_pad_numbers_are_jumpers no)
+		(pad "1" smd circle
+			(at 0 0)
+			(size 1 1)
+			(layers "B.Cu" "B.Mask")
+			(net "VINT")
+			(pinfunction "1_1")
+			(pintype "passive")
+			(teardrops
+				(best_length_ratio 0.5)
+				(max_length 1)
+				(best_width_ratio 1)
+				(max_width 2)
+				(curved_edges yes)
+				(filter_ratio 0.9)
+				(enabled yes)
+				(allow_two_segments yes)
+				(prefer_zone_connections yes)
+			)
+			(uuid "70bbe90e-cafa-40ec-be42-f97f471f5e39")
+		)
+		(embedded_fonts no)
+	)
+	(footprint "solarglow:TPB"
+		(layer "B.Cu")
+		(uuid "77c37645-8b22-4eff-9f3f-bcefbb93a9c7")
+		(at 29.9 57.55)
+		(property "Reference" "TP6"
+			(at 0 0 0)
+			(layer "F.SilkS")
+			(hide yes)
+			(uuid "efa66d45-cd29-4b04-a6c5-664fd914e65f")
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "BUFSRC"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "a039869e-2ecb-4d62-a2ab-eeba02eb44f9")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "75046156-4f7c-4140-aa9c-32fb3e07b561")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "BUFSRC test pad (CSRC buffered source)"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "2d13bc3d-fd8e-48e9-905c-160a96a63baa")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "MPN" "(bare pad - no part)"
+			(at 0 0 0)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "be21dce1-54a9-4a2a-98a3-c74882827722")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
+		(path "/f51ad97c-fa92-473b-8368-cb4c7b7e8803")
+		(sheetname "/")
+		(sheetfile "solar-glow-drh-v4_0.kicad_sch")
+		(units
+			(unit
+				(name "A")
+				(pins "1")
+			)
+		)
+		(attr smd exclude_from_pos_files exclude_from_bom dnp)
+		(duplicate_pad_numbers_are_jumpers no)
+		(pad "1" smd circle
+			(at 0 0)
+			(size 1 1)
+			(layers "B.Cu" "B.Mask")
+			(net "BUFSRC")
+			(pinfunction "1_1")
+			(pintype "passive")
+			(teardrops
+				(best_length_ratio 0.5)
+				(max_length 1)
+				(best_width_ratio 1)
+				(max_width 2)
+				(curved_edges yes)
+				(filter_ratio 0.9)
+				(enabled yes)
+				(allow_two_segments yes)
+				(prefer_zone_connections yes)
+			)
+			(uuid "f3628f72-1fb3-459f-b42a-584a923bb619")
+		)
+		(embedded_fonts no)
+	)
+	(footprint "solarglow:TPB"
+		(layer "B.Cu")
+		(uuid "c2a2d9c4-35ab-400b-88f4-7ca993336cc1")
+		(at 3.5 63.9)
+		(property "Reference" "TP7"
+			(at 0 0 0)
+			(layer "F.SilkS")
+			(hide yes)
+			(uuid "0d052ff5-d3ee-46c6-9b00-32d64a87ddb9")
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Value" "STO_LDO"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "5a49398c-b67f-4d0c-8049-6b76ac6d493d")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "6822a39a-c30a-4d99-8bca-e10b9de6a010")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "STO_LDO test pad (STO switch to LDO in)"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "2308c903-7044-4815-805d-ae2988af8006")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "MPN" "(bare pad - no part)"
+			(at 0 0 0)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "acb2eb6e-dbb8-4ac8-8f03-189fd5f6a7c1")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
+		(path "/afceeab9-7af4-4ed1-a7bd-006f45b45b14")
+		(sheetname "/")
+		(sheetfile "solar-glow-drh-v4_0.kicad_sch")
+		(units
+			(unit
+				(name "A")
+				(pins "1")
+			)
+		)
+		(attr smd exclude_from_pos_files exclude_from_bom dnp)
+		(duplicate_pad_numbers_are_jumpers no)
+		(pad "1" smd circle
+			(at 0 0)
+			(size 1 1)
+			(layers "B.Cu" "B.Mask")
+			(net "STO_LDO")
+			(pinfunction "1_1")
+			(pintype "passive")
+			(teardrops
+				(best_length_ratio 0.5)
+				(max_length 1)
+				(best_width_ratio 1)
+				(max_width 2)
+				(curved_edges yes)
+				(filter_ratio 0.9)
+				(enabled yes)
+				(allow_two_segments yes)
+				(prefer_zone_connections yes)
+			)
+			(uuid "841ee4a2-ddd3-4a26-bb20-72f45bb622ce")
+		)
+		(embedded_fonts no)
+	)
 	(footprint "solarglow:R14"
 		(layer "B.Cu")
 		(uuid "7714ae2c-a024-4e78-ac3e-044ea91424cd")
@@ -37673,6 +38243,102 @@
 		(layer "B.Cu")
 		(net "VREG")
 		(uuid "ff8ad428-2b93-4b8b-9003-8785486cee29")
+	)
+	(segment
+		(start 28.425 57.45)
+		(end 28.075 57.1)
+		(width 0.3)
+		(layer "B.Cu")
+		(net "LX_LOUT")
+		(uuid "e7a16b39-a272-4371-8c10-9021687ec2ba")
+	)
+	(segment
+		(start 32.25 50.424)
+		(end 32.2 51.224)
+		(width 0.3)
+		(layer "B.Cu")
+		(net "VINT")
+		(uuid "b4072fe3-b310-4d45-8df4-94ec6b724fff")
+	)
+	(segment
+		(start 29.9 57.55)
+		(end 27.4 60.6)
+		(width 0.3)
+		(layer "B.Cu")
+		(net "BUFSRC")
+		(uuid "ecdeec28-a734-41ba-aa09-0856a81c0fe9")
+	)
+	(segment
+		(start 27.4 60.6)
+		(end 27.2 60.7)
+		(width 0.3)
+		(layer "B.Cu")
+		(net "BUFSRC")
+		(uuid "c7744eab-3441-4d4c-8086-d3c73869bf17")
+	)
+	(segment
+		(start 27.2 60.7)
+		(end 25.25 60.7)
+		(width 0.3)
+		(layer "B.Cu")
+		(net "BUFSRC")
+		(uuid "6e75b421-f3e0-49ca-9fcd-d1fda4652741")
+	)
+	(segment
+		(start 25.25 60.7)
+		(end 25.05 60.6)
+		(width 0.3)
+		(layer "B.Cu")
+		(net "BUFSRC")
+		(uuid "2f721e43-0ea0-4a2d-a565-e4df71be2768")
+	)
+	(segment
+		(start 25.05 60.6)
+		(end 24.6 60.15)
+		(width 0.3)
+		(layer "B.Cu")
+		(net "BUFSRC")
+		(uuid "38347620-fa7b-433d-a548-4f57f54668c6")
+	)
+	(segment
+		(start 24.6 60.15)
+		(end 24.6 57.2)
+		(width 0.3)
+		(layer "B.Cu")
+		(net "BUFSRC")
+		(uuid "2850a1c4-5191-451c-9024-14b58fd34f19")
+	)
+	(segment
+		(start 24.6 57.2)
+		(end 25.35 56.45)
+		(width 0.3)
+		(layer "B.Cu")
+		(net "BUFSRC")
+		(uuid "abfdf1cd-ce62-4eb4-bdf8-fc6dcafda36c")
+	)
+	(segment
+		(start 3.5 63.9)
+		(end 0.7 61.1)
+		(width 0.3)
+		(layer "B.Cu")
+		(net "STO_LDO")
+		(uuid "a256fa83-041e-474c-ac81-ced94c7e995a")
+	)
+	(segment
+		(start 0.7 61.1)
+		(end 0.7 57.35)
+		(width 0.3)
+		(layer "B.Cu")
+		(net "STO_LDO")
+		(uuid "ac349f64-e92b-474e-9b03-efe11f012d25")
+	)
+	(segment
+		(start 0.7 57.35)
+		(end 1.4 56.65)
+		(width 0.3)
+		(layer "B.Cu")
+		(net "STO_LDO")
+		(uuid "c67088b8-4deb-498e-8549-b1d6bcc2842b")
 	)
 	(zone
 		(net "SRC")

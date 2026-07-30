@@ -1724,3 +1724,45 @@ shadow), one tooling gap (nothing in CI notices a footprint changing sides), and
 set: six B-side test pads, two panel tooling holes, the midnight hard-gold question, the
 frame/texture aesthetic, the maker's-mark orientation blocker, the engraving-study pick, and
 the PCBWay order-reply confirmations.
+
+## Addendum — B-side test pads + panel tooling holes, 2026-07-30
+
+The two "decision set" items above landed the same day, together, because they are one
+feature: the pads are what a fixture probes, the holes are how the fixture finds them.
+
+**TP2–TP7 (VS, MID, LX_LOUT, VINT, BUFSRC, STO_LDO), Ø1.0 mm bare pads on B.Cu.** The
+TODO's candidate zone (x 40–46, y 36–52) did not survive contact with the netlist: that
+rectangle is the NFC antenna keepout — component-free, but the only copper in it is the
+coil, and none of the six nets reach it. Pads went instead onto (or next to) their own
+nets' copper in the harvester core and its margins, chosen by exhaustive scan: pad centre
+on own-net B.Cu (or stub-fed within reach), ≥0.152 mm from all other copper *including the
+other five target nets*, outside every courtyard by ≥0.10 mm at pad edge (a pogo must
+land), outside the B.Cu rule areas, ≥0.30 mm from any drill edge, and ≥0.5 mm copper-to-
+edge (the board's own setup floor, stricter than the 0.381 DRU gate). VS and MID sit
+directly on their tracks in the open ((5.07, 14.32) and (25.4, 11.1) — MID has 5.5 mm of
+clear air, the best-probed node on the board, fitting for the safety-critical one). The
+harvester-core four are stub-fed 0.3 mm B.Cu tracks: LX_LOUT (28.45, 57.45) with the
+shortest stub of all, 0.49 mm — it is the switch node and the stub is an antenna;
+VINT (32.25, 50.42), 0.80 mm; BUFSRC (29.9, 57.55) via a 10.5 mm channel route south of
+L2 — DC cap-sense node, length is harmless; STO_LDO (3.5, 63.9) via 8.7 mm down the left
+edge channel at 0.55 mm from the outline. TP4–TP6 pitch bottoms out at 1.45 mm, above the
+1.27 mm P75-pogo floor. The first BUFSRC route taught the audit lesson of the day: the
+six target nets were absent from each other's obstacle maps, and DRC caught the pad
+sitting on a VINT track and the stub crossing LX_LOUT — the re-solve treats the other
+five nets plus all frozen new geometry as copper, which is what pushed BUFSRC off the
+2.0 mm separation target to 1.45 mm. Schematic: six `solarglow:TP1` instances (footprint
+`solarglow:TPB`, embedded like TP1 itself) stacked below TP1, wired 5.08 mm to `input`
+global labels, exactly the TP1/SRC pattern. The GND pour overlaps the new copper in the
+stored fills until the next KiCad save refills; CI DRC refills before checking (0 live
+errors, parity 0, unconnected 0; mask-bridge 202 — inside the 200–223 noise band).
+
+**TH1/TH2, two Ø1.5 mm NPTH in the panel side rails** (`scripts/panelize.py`, a constant
+and an emitter, as promised). Left rail at y = 20, right rail at y = 85 — 16.1 mm from
+180°-symmetric, so a backwards panel refuses the fixture pins, and main() asserts that
+asymmetry so nobody tidies the numbers later. The rail centreline is also the plating-bus
+ring line (BUS_INSET = RAIL_W/2), so the ring takes a rectangular jog outward around each
+hole: dodge 1.55 = hole r 0.75 + 0.30 hole-to-copper + ring half-width 0.50, leaving
+0.45 mm copper-to-panel-edge. Verified on the emitted panel: ring is one connected piece
+touching both spurs, hole-to-ring exactly 0.300 mm both sides. Signals still never cross
+the outline — the pads are all inboard, the holes are rail-only, and the only copper at
+the outline remains the two GND plating stubs.

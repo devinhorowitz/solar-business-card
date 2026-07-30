@@ -365,34 +365,6 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   into a pour is why an iron feels like it never wets. Four 0.4 mm spokes are nothing against the
   coil's own inductance.
 
-- [ ] **[PCB/BENCH] Six B-side test pads — the whole harvest chain is unprobeable**
-  _(2026-07-30.)_ Auditing every net for probe access turned up the gap: **`GND`, `SRC`, `STO`,
-  `SCL`, `SDA`, `UPDI` are reachable** (TP1, JP1, TC1, J1) and **nothing else is**. Missing, in
-  bring-up order: **`VS`** (is the logic rail up at all), **`MID`** (the SC1–SC4 stack midpoint —
-  if it drifts, a cell goes overvoltage, so this is a safety node, not a convenience one),
-  **`LX_LOUT`** (the AEM10300 switch node — the one scope point that answers "is the boost
-  running"), **`VINT`**, **`BUFSRC`**, **`STO_LDO`**. That is the entire harvester subsystem, which
-  is also the project's #1 open gate (energy budget). Put them on **B.Cu**, which is 100% inside
-  titanium and therefore costs nothing in artwork — the only reason the rail was ever considered.
-  Candidate zone from the free-space map: **x 40–46, y 36–52**, clear radius 5.5 mm, which is also
-  the hot-plate-safe band (see the C9 entry). Ø0.9–1.0 mm bare pads take a pogo or a probe tip.
-
-- [ ] **[PANEL] Two tooling holes in the rail, so the card can be tested IN the frame**
-  _(2026-07-30.)_ Pairs with the entry above and is the *safe* half of the "test points on the
-  breakaway" idea. Two Ø1.5 mm NPTH in the 5.0 mm rail let a pogo fixture register to the panel
-  and land on the B-side pads while the card is still attached — test as it arrives from PCBWay,
-  then depanel. Free to add: `scripts/panelize.py` generates the panel, so this is a constant and
-  an emitter, not a file edit.
-  **Signals must NOT cross the outline, and that is settled, not a preference.** `edge_fit = −0.05`
-  makes the board a *press fit* into the cavity, and all eight mount holes are plated **GND** with
-  brass M2 screws into tapped titanium — the shell is bonded to GND at eight points. Any non-GND
-  copper reaching the outline is a hard short once assembled. The design already made this call
-  once: the only two nets crossing today are the plating stubs, **both GND**, both sitting in DRC
-  as `copper_edge_clearance … actual 0.0000 mm`, *excluded*. Separately there is no room — the
-  5.0 mm tab's four Ø0.5 bites leave four 0.50 mm webs plus the 1.00 mm bus corridor, and at a
-  normal 0.2–0.25 mm hole-to-copper a 0.50 mm web has 0.0–0.1 mm left, under the board's own
-  0.152 mm clearance floor.
-
 - [ ] **[COPPER — yours] U1 / U8 exposed-pad stencil apertures are 1:1 with the copper**
   _(2026-07-26 copper audit.)_ U1's EP is 2.65 × 2.65 mm (7.02 mm²) and U8's is 2.3 × 2.3 mm
   (5.29 mm²), each with a single full-size B.Paste aperture. IPC-7093 practice is to window-pane a
