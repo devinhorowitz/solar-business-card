@@ -409,6 +409,21 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   _(2026-07-30; the footprint swap is DONE, the two follow-ons at the end of this item are not.)_
   The board now carries `Capacitor_SMD:C_0805_2012Metric` at (35.52, 37.88, 90°), the
   `footprint_symbol_mismatch` tripwire has cleared, and `part_heights.py` has its `"C9": 1.25`.
+  **The 3D side is verified and needs nothing** _(2026-07-30)_: the footprint references
+  `${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_0805_2012Metric.step`, the same string C26/C27
+  carry; that model is vendored, measures **2.00 × 1.25 × 1.25 mm**, and carries its colours
+  (#614537 body, #D2D1C7 terminations), so it is not the grey-block case `LA_P47F` was.
+  `render.py` reports **53/53 models resolve** and check [7] measures C9 among the 47 modelled
+  B-side parts.
+  **It is nonetheless absent from every populated render, and that is correct** — C9 is
+  `(attr smd dnp)`, so the assembled board will not have it. Proven rather than assumed: rendering
+  the board twice unchanged moves 2 px over ΔE 40, and re-rendering with only C9's `dnp` cleared
+  puts a single 528 px blob, **20 × 37 px**, on that land — an 0805 turned 90°, exactly where it
+  belongs. So the model is right and DNP is the whole reason.
+  The trap was that an empty land looks the same whether the part is DNP or its model silently
+  failed, and the resolve count cannot tell them apart. `render.py` now prints the DNP set beside
+  it, so the CI log reads *"DNP, so resolved but NOT drawn (1): C9"*. C9 is the only `dnp`
+  footprint on the board that carries a model; the other nine have none.
   Still to do: **the +0.4 mm pad toe and the thermal-relief spokes** described at the end of this
   item. Kept below, as written, because it is the record of why 0805 and why that part:
   the schematic said
