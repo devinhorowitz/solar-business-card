@@ -540,7 +540,7 @@ PRODUCERS = {
         "enclosure/solar-glow-drh-assembly*.gif",
         "enclosure/brace/*brace-render.png",
     ],
-    ".github/workflows/kibot.yml -> the two DRAWING generators": [
+    ".github/workflows/kibot.yml -> the DRAWING generators (brace, shell, pogo plate)": [
         "enclosure/*DRAWING.png", "enclosure/*DRAWING.pdf",
         "enclosure/brace/*DRAWING.png", "enclosure/brace/*DRAWING.pdf",
         "enclosure/brace/*pocket-map.png",

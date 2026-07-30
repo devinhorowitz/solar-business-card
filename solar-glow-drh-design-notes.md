@@ -1766,3 +1766,52 @@ hole: dodge 1.55 = hole r 0.75 + 0.30 hole-to-copper + ring half-width 0.50, lea
 touching both spurs, hole-to-ring exactly 0.300 mm both sides. Signals still never cross
 the outline — the pads are all inboard, the holes are rail-only, and the only copper at
 the outline remains the two GND plating stubs.
+
+**Follow-up, same day — the pogo test plate.** The pads-plus-holes feature answered "what
+do I probe"; the flaw caught in review was "which way is the light": every probe node is
+on the back and both cells are on the front, so face-down bench probing darkens the exact
+measurement the project is gated on. The standard answer is the standard bed-of-nails
+orientation — pins up, panel face-up — and the plate that does it is now a generator like
+the brace and shell: `enclosure/solar-glow-drh-pogo-testplate-cad.py` parses the probe
+positions and net labels from the board, imports the TH1/TH2 and rail geometry from
+`scripts/panelize.py`, takes the cavity depth from `part_heights.py`, and emits
+STEP/STL/drawing from CI on any board change. Rail test points were reconsidered and
+stay dead: the pads on a rail are free, but the six traces to them would cross the
+depanel line, and the −0.05 press fit into a titanium shell grounded at eight M2 screws
+makes any non-GND copper at the outline a hard short — the GND plating stubs remain the
+only crossing. Hardware is the generic 75-series (P75-E2 in R75-3W); the two numbers no
+vendor publishes reliably (resin bore fit, probe tip height over a seated collar) are
+deliberately tune-on-first-print parameters, backed by a five-bore fit coupon printed
+into the plate.
+
+**Same PR — the plate is also the programmer.** J1, the unpopulated UPDI backup header,
+turned out to be three bare B-side SMD pads (`UPDI`/`STO`/`GND` at x 4.55) — landable by
+the same E2 tips as everything else, so the plate grew from eleven receptacles to
+fourteen and the whole bring-up loop closes through one fixture: SNAP/PICkit on the J1
+tails with VTG referenced to the VS receptacle, I²C tapped at JP1's SCL/SDA (pull-ups
+on-board), power injected on STO — which lands twice, J1 and JP1, a free Kelvin
+force/sense pair — and the harvest chain on TP2–TP7. TC1 remains the top-side
+alternative, no longer a requirement.
+
+## Addendum — the bench monitor: the plate grows a UI, 2026-07-30
+
+The plate answered "where do the probes land"; the monitor answers "what do I see".
+`bench/monitor/` is a Pico + two ADS1115s + a quad buffer on the fourteen tails, a
+MicroPython firmware, and a host TUI: every harvest rail live with min/max, NFC field
+presence as it happens, accel g-vector and die temperature, and command-on-demand deep
+reads of the NDEF area (the vCard) and the 64 KB FRAM log. Full suite, zero board
+changes. The facts it stands on were verified against the datasheets before a line of
+driver code: NT3H2211 at 0x55 with session registers behind the atomic block-FEh read
+(NS_REG byte 6, RF_FIELD_PRESENT bit 0 — NFC activation without the FD net we never
+landed); ADXL367 at 0x1D (ASEL grounded), 0.25 mg/LSB at ±2 g, temp = (raw−165)/54+25;
+MB85RC512TY at 0x50 (A0–A2 grounded on the board), 64 KB, two-byte addressing — WP is
+grounded too, so the bench driver simply has no write method: policy where hardware
+declines to help. Three disciplines carried into the firmware: the monitor is a guest
+master on the AVR's bus (retry-and-count, never raise); telemetry never reads a
+register whose read has side effects (accel STATUS is a command with a warning, not a
+poll); deep reads are human-initiated. The channel map is emitted by the plate
+generator itself (`…-channels.json`, CI-owned) — front-end classes included, because
+they are placement decisions in disguise: SRC/VINT/BUFSRC/MID get buffers (a bare 2 MΩ
+divider on SRC is a real parasite at desk-light harvest currents), the stiff rails get
+1M:1M, MID gets no resistive path to ground at all, and LX_LOUT gets an RC average
+that the UI is forbidden to present as a voltage.
