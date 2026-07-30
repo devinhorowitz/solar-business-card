@@ -272,8 +272,26 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
 
 ## PCB — `PCB/solar-glow-drh-v4_0.kicad_pcb` / `.kicad_sch`
 
-- [ ] **[SCH/PCB] Cull SJ1 — CONFIRMED vestigial against the datasheet, not just the docs**
-  _(2026-07-30; verdict settled, deletion outstanding.)_ Asked to confirm rather than assume, so:
+- [ ] **[PCB] Cull SJ1 — ⚠️ SCHEMATIC HALF IS DONE; THE BOARD IS NOW DELIBERATELY RED**
+  _(2026-07-30.)_ **DRC and `check_consistency` are FAILING ON PURPOSE until SJ1 is deleted from the
+  board.** This is a tripwire, not a regression. SJ1 is gone from the `.kicad_sch`, so the board now
+  carries a footprint the schematic does not know about, and `extra_footprint` was raised from
+  `warning` to `error` in `.kicad_pro` so that shows up as a build failure rather than one line in a
+  217-warning list. It was safe to raise: DRC reported **0 footprint errors** before this change, so
+  SJ1 is the only extra footprint on the board — the board-only parts (MH1–4, MP1–4, TC1, …) carry
+  the `board_only` attribute and do not trip it.
+  **To clear it:** open the board, *Update PCB from Schematic* (SJ1 disappears), then *Cleanup
+  Tracks & Vias → remove dangling*. Expected after: `extra_footprint` 0, and DRC back to its usual
+  14 excluded errors. Both guards say the same thing today —
+  `check_consistency` → *"on the BOARD but not in the schematic (a sync will DELETE these): SJ1"*,
+  DRC → *"[extra_footprint] … error … @(13.3000 mm, 46.0000 mm): Footprint SJ1"*.
+  **What the schematic edit removed** (six blocks, LF endings preserved, 400,716 → 396,212 bytes):
+  the `SJ1` symbol instance, its two stub wires at (410.21,160.02)→(405.13,160.02) and
+  (410.21,165.1)→(405.13,165.1), the two `global_label`s those stubs landed on (`VS` and `VDDIO2`),
+  and the `solarglow:SJ1` lib_symbol. It was a self-contained island — nothing else touched it.
+  Verified: ERC **identical** before and after (3 pre-existing excluded warnings on BTN/PC0/PC1,
+  none introduced); netlist 67 → 66 components; `VDDIO2` is now exactly `C3.1 + U1.10`, as intended.
+  The former verdict, kept because it is the reason this happened:
   **AVR64EA28 datasheet DS40002443A §2.2, 28-pin VQFN — pin 10 is `PD0`.** There is no `VDDIO2` pin
   anywhere on the package; the only supply pins are 18/24 (VDD) and 19/25 (GND), and every I/O is
   marked *"Pin on VDD Power Domain"*. One domain, no MVIO. The board agrees and has already half
