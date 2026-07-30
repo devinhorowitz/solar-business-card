@@ -19,6 +19,10 @@ change to one that isn't mirrored in the others fails loudly (in CI or locally):
       for, measured against that part's own 3D model.         [ERROR on drift]
   [8] ENCLOSURE FIT -- the brace, the shell lip and all eight M2 bosses clear
       every B-side part in XY, and the bosses keep their thread. [ERROR on drift]
+  [9] DOC IMAGERY -- every image any .md displays must exist AND be produced by
+      a generator this repo runs, not committed by hand.       [ERROR on drift]
+  [10] PART COLOURS -- every project 3D model carries the colour scripts/part_colors.py
+      gives it; an uncoloured body renders default grey.       [ERROR on drift]
   [3] DOC FILE REFS -- every solar-glow-drh-*.kicad_* file named in board.h,
       README.md, or firmware/README.md must actually exist.    [WARN on drift]
 
@@ -521,6 +525,173 @@ def check_doc_file_refs():
               f"history on purpose (see PCB/README.md): {', '.join(retired)}")
 
 
+# --- [9] doc imagery ---------------------------------------------------------------
+#
+# Every producer this repo runs, and the paths it owns. A path is "automated" if some
+# entry here claims it. Kept as globs, matching kibot.yml's own $OUTS list, so a NEW
+# variant out of an existing generator is covered without editing anything.
+#
+# These are deliberately the same patterns kibot.yml commits back. If the two drift, the
+# check below says so rather than trusting this copy -- see _kibot_outs().
+PRODUCERS = {
+    ".github/workflows/kibot.yml -> scripts/render.py + kibot": ["Generated/docs/*", "Generated/*"],
+    ".github/workflows/kibot.yml -> enclosure/assembly_render.py": [
+        "enclosure/solar-glow-drh-assembly*.png",
+        "enclosure/solar-glow-drh-assembly*.gif",
+        "enclosure/brace/*brace-render.png",
+    ],
+    ".github/workflows/kibot.yml -> the two DRAWING generators": [
+        "enclosure/*DRAWING.png", "enclosure/*DRAWING.pdf",
+        "enclosure/brace/*DRAWING.png", "enclosure/brace/*DRAWING.pdf",
+        "enclosure/brace/*pocket-map.png",
+    ],
+}
+
+# Images a doc displays that NOTHING in this repo generates. Each needs a reason, and the
+# reason has to be why it CANNOT be generated -- not that nobody has got to it. Anything
+# listed here is reported on every run so it stays visible instead of becoming furniture.
+#
+# The eight below are analysis figures committed on 2026-07-22 with no generator anywhere in
+# the tree. They are not renders of the board -- they plot models and measurements (supercap
+# endurance vs float voltage, the v3/v4 energy comparison, the e-ink fit studies, the bench
+# fixture layout) whose INPUT DATA is not in the repo either. Regenerating them means first
+# writing down the parameters they encode; until that happens, a "generator" for them would
+# be a script that hard-codes numbers read off a PNG, which is worse than no generator.
+UNAUTOMATED = {
+    "images/managed-vs-unmanaged.png":
+        "v3-vs-v4 energy bar chart; the 2.7/7.8 J and 106/298-tap figures are not sourced in-tree",
+    "images/supercap-aging.png":
+        "SCHURTER SCPC endurance model; kV band and base life are not written down anywhere",
+    "images/eink-card-mockup.png": "e-ink variant study; speculative, no board behind it",
+    "images/eink-gap-fit.png": "e-ink variant study; speculative, no board behind it",
+    "images/eink-horizontal-fit.png": "e-ink variant study; speculative, no board behind it",
+    "images/eink-resolution-workup.png": "e-ink variant study; speculative, no board behind it",
+    "images/bench-fixture-floorplan.png": "harvest bench fixture layout; hand-drawn, no CAD source",
+    "images/bench-fixture-wiring.png": "harvest bench fixture wiring; hand-drawn, no CAD source",
+}
+
+RAW_PREFIX = "https://raw.githubusercontent.com/devinhorowitz/solar-business-card/main/"
+BLOB_PREFIX = "https://github.com/devinhorowitz/solar-business-card/blob/main/"
+
+
+def _kibot_outs():
+    """The $OUTS list kibot.yml actually commits, read out of the workflow.
+
+    Read rather than restated: PRODUCERS above is what this check believes is automated, and
+    if it claims a path the workflow never commits, the claim is empty -- CI would regenerate
+    the file and throw it away. Parsing the real list is what makes the two agree.
+    """
+    wf = os.path.join(ROOT, ".github", "workflows", "kibot.yml")
+    try:
+        txt = open(wf).read()
+    except OSError:
+        return None
+    m = re.search(r'^\s*OUTS="(.*?)"', txt, re.S | re.M)
+    return m.group(1).split() if m else None
+
+
+def check_doc_imagery():
+    print("[9] every image the docs display comes from a generator")
+    import fnmatch
+    claimed = [(g, who) for who, globs in PRODUCERS.items() for g in globs]
+
+    outs = _kibot_outs()
+    if outs is None:
+        warn("could not read the OUTS list from .github/workflows/kibot.yml")
+    else:
+        # A producer glob is only meaningful if CI commits what it makes. Compare by prefix:
+        # OUTS carries "Generated" (a directory) where PRODUCERS carries "Generated/docs/*".
+        loose = [g for g, _ in claimed
+                 if not any(g.startswith(o.rstrip("/*")) or fnmatch.fnmatch(g, o) for o in outs)]
+        if loose:
+            err("PRODUCERS claims path(s) that kibot.yml never commits, so CI would "
+                f"regenerate and discard them: {', '.join(loose)}")
+
+    refs = {}
+    for md in sorted(glob.glob(os.path.join(ROOT, "**", "*.md"), recursive=True)):
+        rel_md = os.path.relpath(md, ROOT)
+        if rel_md.startswith(".git"):
+            continue
+        try:
+            txt = open(md, errors="replace").read()
+        except OSError:
+            continue
+        # Strip fenced blocks and inline code first. A doc that DOCUMENTS this rule quotes
+        # image syntax as an example -- CLAUDE.md's own "add a `![](…)` to any .md" tripped
+        # this check the first time it ran -- and an example is not a displayed image.
+        txt = re.sub(r"```.*?```", "", txt, flags=re.S)
+        txt = re.sub(r"~~~.*?~~~", "", txt, flags=re.S)
+        txt = re.sub(r"`[^`\n]*`", "", txt)
+        for m in list(re.finditer(r'!\[[^\]]*\]\(([^)\s]+)', txt)) + \
+                 list(re.finditer(r'<img[^>]*src="([^"]+)"', txt)):
+            u = m.group(1)
+            if u.startswith(RAW_PREFIX):
+                p = u[len(RAW_PREFIX):]
+            elif u.startswith(BLOB_PREFIX):
+                p = u[len(BLOB_PREFIX):]
+            elif u.startswith(("http://", "https://", "data:")):
+                continue
+            else:
+                p = os.path.normpath(os.path.join(os.path.dirname(rel_md), u))
+            refs.setdefault(p.split("#")[0], set()).add(rel_md)
+
+    missing, orphan, auto = [], [], 0
+    for p, where in sorted(refs.items()):
+        if not os.path.exists(os.path.join(ROOT, p)):
+            missing.append(f"{p} (in {', '.join(sorted(where))})")
+            continue
+        if any(fnmatch.fnmatch(p, g) for g, _ in claimed):
+            auto += 1
+        elif p not in UNAUTOMATED:
+            orphan.append(f"{p} (in {', '.join(sorted(where))})")
+
+    if missing:
+        err(f"{len(missing)} image(s) referenced by a doc do not exist: " + "; ".join(missing))
+    if orphan:
+        err(f"{len(orphan)} image(s) are displayed by a doc but no generator produces them. "
+            "Either wire one up, or add the path to UNAUTOMATED in this file with the reason "
+            "it cannot be: " + "; ".join(orphan))
+    stale = sorted(set(UNAUTOMATED) - set(refs))
+    if stale:
+        warn(f"{len(stale)} UNAUTOMATED entr(y/ies) no longer referenced by any doc — "
+             f"drop them: {', '.join(stale)}")
+    if not missing and not orphan:
+        ok(f"{auto} of {len(refs)} doc image(s) come from a generator CI runs")
+    if UNAUTOMATED:
+        print(f"  note:   {len(UNAUTOMATED)} hand-made image(s) still displayed, each with a "
+              f"logged reason:")
+        for p, why in sorted(UNAUTOMATED.items()):
+            if p in refs:
+                print(f"            {p} — {why}")
+
+
+def check_part_colors():
+    print("[10] every 3D model carries the colour the parts table gives it")
+    sys.path.insert(0, os.path.join(ROOT, "scripts"))
+    try:
+        import part_colors
+    except Exception as e:
+        warn(f"not checked -- {type(e).__name__}: {e}")
+        return
+    stray = sorted({p.stem for p in part_colors.SHAPES.glob("*.step")} - set(part_colors.COLORS))
+    if stray:
+        err("3D model(s) with no entry in part_colors.COLORS — an uncoloured body renders as "
+            f"the renderer's default grey and no other check would notice: {', '.join(stray)}")
+        return
+    drift = []
+    for stem, (rgb, _why) in sorted(part_colors.COLORS.items()):
+        _p, src = part_colors.read(stem)
+        have = part_colors.current(src)
+        if have is None or not all(abs(a - b) < 5e-3 for a, b in zip(have, rgb)):
+            drift.append(f"{stem} ({'no colour' if have is None else part_colors.hexof(have)} "
+                         f"!= {part_colors.hexof(rgb)})")
+    if drift:
+        err("3D model colour(s) differ from part_colors.COLORS — run "
+            f"`python3 scripts/part_colors.py --apply`: {'; '.join(drift)}")
+    else:
+        ok(f"all {len(part_colors.COLORS)} project model(s) carry their table colour")
+
+
 def board_footprints():
     """Return {refdes: (lib_id, is_board_only)} for every footprint in the .kicad_pcb.
 
@@ -767,6 +938,8 @@ def main():
     check_mask_art()
     check_part_heights()
     check_enclosure_fit()
+    check_doc_imagery()
+    check_part_colors()
     check_doc_file_refs()
     print(f"\n== {len(errors)} error(s), {len(warnings)} warning(s) ==")
     sys.exit(1 if errors else 0)
