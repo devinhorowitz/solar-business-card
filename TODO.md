@@ -272,6 +272,72 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
 
 ## PCB — `PCB/solar-glow-drh-v4_0.kicad_pcb` / `.kicad_sch`
 
+- [ ] **[PCB/BOM] C25 is likely below the AEM10300's CSRC minimum at operating bias — re-pick to 0805/16 V**
+  _(2026-07-30, second full passive audit.)_ The AEM10300's Recommended Operation Conditions
+  table gives **CSRC min 13 µF, typ 22 µF**, and its footnote 1 is explicit: *"Consider all
+  component tolerance and deratings. Typically, DC-bias derating has a major impact on
+  capacitance on ceramic capacitors."* C25 is `GRT188R61A226ME13D` — 0603, 22 µF, X5R, **10 V**
+  — on BUFSRC (pin 4, "connection to an external capacitor buffering the DCDC converter
+  input"), which rides the source MPP at ~3.1–3.5 V and reaches V<sub>OC</sub> ≈ 4.15 V during
+  MPP evaluation. A 0603 22 µF/10 V X5R typically loses **45–60 %** of its capacitance at
+  3.3–4.15 V bias → **~9–12 µF effective, under the 13 µF minimum** the derating footnote is
+  about. (Estimate from family curves — a SimSurfing pull or bench C-V would firm the exact
+  number, but the margin sign is not in doubt.)
+  **Fix, verified in stock:** TDK **`C2012X5R1C226M125AC`** — 0805, 22 µF, X5R, **16 V**,
+  1.25 mm max, Active, 11,799 at DigiKey, $0.23@100. At 4.15 V an 0805/16 V part derates
+  ~20–30 % → **~15–17 µF effective** ≥ 13. **It fits in place:** measured neighbour gaps at
+  C25 are SC3 0.529 / L2 0.575 / SB2 0.776 mm; 0603→0805 growth (~0.25 mm per side wide,
+  ~0.22 long) leaves ≥ 0.28 mm everywhere. A 1206 does **not** fit (L2 gap would hit 0.02 mm).
+  With the swap: `part_heights.py` **"C25": 0.90 → 1.25** (the generic-0805 figure C26/C27/C9
+  use), same mechanism as C9's entry; the brace pocket regenerates from the footprint change.
+
+- [ ] **[BOM] C26/C27's part is stock-zero at BOTH distributors — re-pick, and take 16 V while at it**
+  _(2026-07-30, same audit.)_ `GRM21BR71A106KA73L` (0805, 10 µF, X7R, 10 V): **0 stock at
+  DigiKey across all three package types and no availability at Mouser**; the automotive
+  sibling `GRT21BR71A106KE13L` is stocked but **NRND**. Two live candidates:
+  Samsung **`CL21B106KOQNNNG`** — 16 V X7R, **4,292 in stock at Mouser**, $0.22 — and Yageo
+  `CC0805KKX7R7BB106` (16 V, 92,997 *on order* at Mouser, none in stock today).
+  16 V also fixes the quiet derating note: C27 sits on **STO, up to 5.5 V — 55 % of a 10 V
+  rating** — where a 10 V X7R gives up ~35–45 % of its capacitance (~5.5–6.5 µF effective; its
+  role is local decoupling next to a 1.3 F supercap, so functionally fine, but a 16 V part
+  halves the loss). C26 is on VINT (≤ 2.75 V), untroubled either way.
+  **The catch, so it does not become a brace defect:** `CL21B106KOQNNNG` is **1.40 mm max** —
+  taller than the 1.25 mm package-generic figure `part_heights.py` carries for C26/C27. Adopt
+  it and those two entries must go **1.25 → 1.45** in the same commit (check [7] accepts a
+  declared height above the generic model by up to 0.35, so 1.45 vs modelled 1.25 passes as
+  deliberate air). Same land, zero layout change.
+
+- [ ] **[PCB/FW] R1–R4 exceed their 62.5 mW rating only at the worst corner — note, and one cheap guard**
+  _(2026-07-30, same audit.)_ The LED ballasts are `AC0402FR-07150RL` (0402, **1/16 W**). Worst
+  DC corner: full tank STO = 5.5 V through SW2, min-bin V<sub>f</sub> 1.9 V (LA P47F 3B bin),
+  AVR V<sub>OL</sub> ≈ 0.4 V ⇒ I ≈ 21 mA ⇒ **~68–70 mW ≈ 110 % of rating** at 100 % duty.
+  Typical operation (STO 4.5, V<sub>f</sub> 2.2) is ~22 mW. PWM breathing keeps the average
+  far below the peak, so this only bites if firmware ever holds 100 % duty with a full tank
+  and a low-bin LED. Cheapest guard: clamp duty when STO > ~5.2 V in the glow constants
+  (which are provisional pending the energy budget anyway). Alternative if the board is ever
+  re-laid: 0402 → 0603 (0.1 W) on the four ballasts. No action on the copper today.
+
+- [x] **[PCB] Second full passive audit — the passes, recorded so the next audit starts from here**
+  _(2026-07-30; all 35 passives, sch + board + BOM + datasheets + live sourcing.)_
+  **Zero drift** sch↔board on value/MPN/supplier-P/N/footprint/dnp across all 35.
+  **AEM10300:** L2 `DFE252010F-100M` I<sub>sat</sub> **1.3 A ≥ the required 1 A** (rated
+  900 mA, DCR 600 mΩ), 10 µH ✓; CINT C26 ~9 µF effective at ≤2.75 V ≥ min 5 ✓; CSTO n/a (the
+  requirement is for removable storage; ours is a soldered 1.3 F tank, C27 is extra local
+  decoupling). **TPS7A02:** C22 1 µF ✓ (25 V part, ~0.9 µF at 5.5 V bias); V<sub>S</sub> rail
+  total ≈ 12.8 µF nominal — inside the datasheet's **1–22 µF COUT window**, ≥ 0.5 µF effective ✓.
+  **ADXL367:** C11 220 nF = exactly the "external 0.2 µF needed" on VREG_OUT ✓ (its
+  `GRT155R71C224KE01D` has only **2,527 in stock** — order with the build). **NT3H2211:** VOUT
+  (pad 7) is unconnected, so the 150–220 nF energy-harvest C<sub>load</sub> requirement does
+  not apply; C8 100 nF is plain VCC decoupling ✓. **Voltage ratings:** every cap ≥ its node
+  max; the tightest is C27 at 55 % (see its item above). **Power:** R12 TINY worst-case 28 mW
+  of 62.5 ✓ (the 220 Ω feed is the dimmer by design); dividers are µW. **Lands:** the
+  generator-era shared `solarglow:C1` land (C24/C29/R17/R18) measures 0.59×0.66 pads at
+  ±0.51 — a hair more generous than the stock 0402's 0.56×0.62 at ±0.48, fine. The refless
+  `solarglow:NPTH_mech` at (0,0) (kibot W147) is the deliberate board-only container for the
+  7 NPTH holes — benign. **Sourcing:** every MPN Active; the one stock-zero is C26/C27's
+  (its own item above). Fixed in this pass: C9's Value `"47pF-NP0"` → `"47pF"` (the suffix
+  broke kibot's value parser — W020 on every CI run; NP0 lives in the Description).
+
 - [x] **[PCB] TC1 moved to the front — deliberate, and the docs now say so**
   _(2026-07-30; CONFIRMED deliberate by DRH. Found while checking whether the v4 changes had
   propagated to the READMEs.)_ In `5934b7d` the Tag-Connect programming cluster went **`B.Cu` →

@@ -21868,7 +21868,7 @@
 				)
 			)
 		)
-		(property "Value" "47pF-NP0"
+		(property "Value" "47pF"
 			(at 571.5 124.46 0)
 			(show_name no)
 			(do_not_autoplace no)

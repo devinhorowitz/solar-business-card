@@ -12119,7 +12119,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "47pF-NP0"
+		(property "Value" "47pF"
 			(at 0 -1.68 90)
 			(layer "B.Fab")
 			(hide yes)
