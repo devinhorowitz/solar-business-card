@@ -272,7 +272,16 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
 
 ## PCB — `PCB/solar-glow-drh-v4_0.kicad_pcb` / `.kicad_sch`
 
-- [ ] **[PCB/BOM] C25 is likely below the AEM10300's CSRC minimum at operating bias — re-pick to 0805/16 V**
+- [ ] **[PCB/BOM] C25 re-pick LANDED in sch/BOM — ⚠ THE BOARD IS DELIBERATELY RED until the 0805 land is synced**
+  _(Re-pick landed 2026-07-30; only the LAND sync remains, and the tripwire enforces it.)_ The schematic
+  now says `Capacitor_SMD:C_0805_2012Metric` + TDK `C2012X5R1C226M125AC` (16 V, DK `445-7647-1-ND`,
+  11,799 in stock, $0.56 q1) while the board still carries the 0603 land, so `footprint_symbol_mismatch`
+  (error since the C9 episode) and consistency check [1]'s footprint comparison both FAIL ON PURPOSE.
+  **To clear:** open the board, *Update PCB from Schematic* (C25 keeps its centroid at (25.15, 55.0) r90;
+  verify pad 1 = BUFSRC, pad 2 = GND), re-run DRC, and **in the same commit flip `part_heights.py`
+  `"C25": 0.90 → 1.25`** — the file's comment explains why it must wait for the sync (declaring 1.25
+  against the 0603 model is a 0.45 overshoot and check [7] would rightly error). The finding it fixes,
+  kept for the record:
   _(2026-07-30, second full passive audit.)_ The AEM10300's Recommended Operation Conditions
   table gives **CSRC min 13 µF, typ 22 µF**, and its footnote 1 is explicit: *"Consider all
   component tolerance and deratings. Typically, DC-bias derating has a major impact on
@@ -291,7 +300,10 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   With the swap: `part_heights.py` **"C25": 0.90 → 1.25** (the generic-0805 figure C26/C27/C9
   use), same mechanism as C9's entry; the brace pocket regenerates from the footprint change.
 
-- [ ] **[BOM] C26/C27's part is stock-zero at BOTH distributors — re-pick, and take 16 V while at it**
+- [x] **[BOM] C26/C27 re-picked to Samsung `CL21B106KOQNNNG` (16 V) — complete, zero layout change**
+  _(Landed 2026-07-30: sch + board metadata + both BOM files + `part_heights` 1.25 → 1.45, all in one
+  commit — same 0805 land, so no tripwire needed. Mouser `187-CL21B106KOQNNNG`, 4,292 in stock, $0.22 q1,
+  verified live.)_ The finding it fixes, kept for the record:
   _(2026-07-30, same audit.)_ `GRM21BR71A106KA73L` (0805, 10 µF, X7R, 10 V): **0 stock at
   DigiKey across all three package types and no availability at Mouser**; the automotive
   sibling `GRT21BR71A106KE13L` is stocked but **NRND**. Two live candidates:
