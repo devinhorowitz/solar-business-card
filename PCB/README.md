@@ -477,7 +477,7 @@ Summary of the **orderable** lines:
 | MH1–MH4 | 4 | M2 | 2.2 mm plated | **(no part — drill)** |
 | U5 | 1 | NTAG I²C plus, 2 KB, I²C 0x55 | XQFN8 (SOT902-3, 1.6×1.6×0.5 mm) | `NT3H2211W0FHKH` |
 | C8 | 1 | 100 nF, X7R, 50 V | 0402 | `GRT155R71H104KE01D` |
-| C9 | 1 | DNP (NP0/C0G land) | 0402 (NP0/C0G land) | **(DNP — not ordered)** |
+| C9 | 1 | 47 pF, C0G/NP0, ±2 %, 250 V, High-Q | 0805 | `QSCT251Q470G1GV001E` |
 | C13 | 1 | 10 µF, X5R, 16 V | 0603 | `GRT188R61C106KE13D` |
 | L1 | 1 | 2.76 µH design value | PCB copper — no package | **(no part — PCB feature)** |
 | U6 | 1 | Ultra-low-leakage load switch | SOT-23-6 (DBV) | `TPS22917DBVT` |
@@ -528,9 +528,12 @@ Summary of the **orderable** lines:
   the peak is (STO−Vf)/150 ≈ **14–18 mA** near the 4.65 V VOVCH ceiling — the LA P47F's Vf
   is itself unbinned across the 3B–5A groups, 1.95–2.55 V at 30 mA. The firmware
   (board.h/led.h) already assumes the v4 number; this line did not.)*
-- **C9 stays DNP** until the coil is trimmed on the bench (resonance target 13.56 MHz with
-  the NT3H2211's internal capacitance; the Ti shell behind the coil moves it — measure with
-  the shell fitted).
+- **C9 is placed, at 47 pF** (changed 2026-07-30 — it was DNP pending a bench trim). The value
+  is derived rather than measured: coil L = 0.958 µH by Greenhouse on the board's own rails,
+  ferrite-loaded +10–36 %, NT3H2211 Ci = 50 pF, antenna Cc = 6 pF, targeting AN11276 §4.2.1's
+  **14.5 MHz** single-tag nominal rather than 13.56. Full derivation in
+  `PCB-side-notes-brace-direction.md` §5. **Measure enclosed, not bare** — bare reads ~16.7 MHz
+  and the ferrite is what brings it down.
 - **SC1–SC4 are the dominant cost** (well over half the BOM). Confirm live pricing.
 
 ---
@@ -556,7 +559,8 @@ types by hand afterward.
   **off** the PCBA BOM on purpose — the supercaps are manual-solder only (SCHURTER SCPC),
   and the cells are heat-sensitive.
 - **Not placed:** SW2, SB1–SB4 (solder bridges you set), TC1 (Tag-Connect pad), J1
-  (optional header), MH1–MH4 (mounting holes), C9 (DNP).
+  (optional header), MH1–MH4 (mounting holes). *(C9 was on this list until 2026-07-30; it is now
+  a placed 47 pF part.)*
 
 **Sourcing:** turnkey, with the standing instruction that anything PCBWay can't source they
 flag and you consign from DigiKey — **no substitutes without approval**. The likeliest to
@@ -566,7 +570,8 @@ the exact reverse-mount P/N, OSRAM sells top-emit lookalikes).
 
 **Files handed to PCBWay:** the trimmed assembly BOM, the **centroid / pick-and-place**
 (KiCad → Fabrication Outputs → Component Placement; **CSV, mm, exclude-DNP** after marking
-SC1–SC4 / PV1–PV2 / J1 / C9 / JP1 / TP1 as DNP; **Absolute origin** to match the drills), and
+SC1–SC4 / PV1–PV2 / J1 / JP1 / TP1 as DNP — **not C9 any more**; **Absolute origin** to match
+the drills), and
 `led-orientation-D2-D5.png`.
 
 **Order-form settings that matter:** bottom side, qty 5, ENIG **+ selective hard gold (special request above)** / matte-black / white silk,

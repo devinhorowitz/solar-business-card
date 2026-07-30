@@ -21856,7 +21856,7 @@
 		(in_bom yes)
 		(on_board yes)
 		(in_pos_files yes)
-		(dnp yes)
+		(dnp no)
 		(uuid "953b03c9-9796-4f1f-9739-ed95cca1dcce")
 		(property "Reference" "C9"
 			(at 571.5 119.38 0)
@@ -21868,7 +21868,7 @@
 				)
 			)
 		)
-		(property "Value" "82pF-NP0-trim"
+		(property "Value" "47pF-NP0"
 			(at 571.5 124.46 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -21900,7 +21900,7 @@
 				)
 			)
 		)
-		(property "Description" "NFC tank trim, 0805 high-Q C0G +/-2% (Johanson S-series). DNP at assembly - hand-fit on the bench to land resonance at 13.56 MHz; U5 carries ~50 pF internally. Value is a STARTING POINT, trim 68-100 pF."
+		(property "Description" "NFC tank trim, 0805 high-Q C0G +/-2% (Johanson S-series, ultra-low ESR). PLACED at assembly as of 2026-07-30 - value derived, not trimmed: coil L = 0.958 uH by Greenhouse on the board's 7 rails, ferrite-loaded 1.05-1.30 uH, tag Ci = 50 pF (NT3H2211 Table 42), antenna Cc = 6 pF (AN11276 Table 2). 47 pF lands the enclosed resonance at 14.45 MHz against AN11276 4.2.1's 14.5 MHz single-tag target and stays above the 13.56 carrier across the whole ferrite range. Was 82 pF + DNP, which sat at 12.5 MHz enclosed - under the carrier, the wrong side to miss on."
 			(at 560.07 119.38 0)
 			(hide yes)
 			(show_name no)
@@ -21911,7 +21911,7 @@
 				)
 			)
 		)
-		(property "MPN" "QSCT251Q820G1GV001E"
+		(property "MPN" "QSCT251Q470G1GV001E"
 			(at 560.07 119.38 0)
 			(hide yes)
 			(show_name no)
@@ -21933,7 +21933,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "712-QSCT251Q820G1GV001ETR-ND"
+		(property "Supplier P/N" "712-QSCT251Q470G1GV001ETR-ND"
 			(at 560.07 119.38 0)
 			(hide yes)
 			(show_name no)
