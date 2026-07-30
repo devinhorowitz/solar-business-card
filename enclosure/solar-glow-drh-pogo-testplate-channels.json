@@ -1,0 +1,171 @@
+{
+ "source": "enclosure/solar-glow-drh-pogo-testplate-cad.py -- generated, do not edit",
+ "board": "PCB/solar-glow-drh-v4_0.kicad_pcb",
+ "adc": {
+  "chip": "ADS1115",
+  "fsr_volts": 4.096,
+  "bus": "Pico I2C0 GP4/GP5",
+  "rows": [
+   {
+    "net": "SRC",
+    "tail": [
+     48.4,
+     12.0
+    ],
+    "ads": "0x48",
+    "ch": 0,
+    "frontend": "buffer+div2",
+    "scale": 2.0,
+    "signal": "rail"
+   },
+   {
+    "net": "VS",
+    "tail": [
+     5.07,
+     14.32
+    ],
+    "ads": "0x48",
+    "ch": 1,
+    "frontend": "div2",
+    "scale": 2.0,
+    "signal": "rail"
+   },
+   {
+    "net": "STO",
+    "tail": [
+     48.4,
+     17.08
+    ],
+    "ads": "0x48",
+    "ch": 2,
+    "frontend": "div2",
+    "scale": 2.0,
+    "signal": "rail"
+   },
+   {
+    "net": "STO_LDO",
+    "tail": [
+     3.5,
+     63.9
+    ],
+    "ads": "0x48",
+    "ch": 3,
+    "frontend": "div2",
+    "scale": 2.0,
+    "signal": "rail"
+   },
+   {
+    "net": "VINT",
+    "tail": [
+     32.25,
+     50.42
+    ],
+    "ads": "0x49",
+    "ch": 0,
+    "frontend": "buffer+div2",
+    "scale": 2.0,
+    "signal": "rail"
+   },
+   {
+    "net": "BUFSRC",
+    "tail": [
+     29.9,
+     57.55
+    ],
+    "ads": "0x49",
+    "ch": 1,
+    "frontend": "buffer+div2",
+    "scale": 2.0,
+    "signal": "rail"
+   },
+   {
+    "net": "MID",
+    "tail": [
+     25.4,
+     11.1
+    ],
+    "ads": "0x49",
+    "ch": 2,
+    "frontend": "direct",
+    "scale": 1.0,
+    "signal": "rail"
+   },
+   {
+    "net": "LX_LOUT",
+    "tail": [
+     28.45,
+     57.45
+    ],
+    "ads": "0x49",
+    "ch": 3,
+    "frontend": "rc-div2",
+    "scale": 2.0,
+    "signal": "duty-average, not a rail"
+   }
+  ]
+ },
+ "i2c_card_bus": {
+  "bus": "Pico I2C1 GP2/GP3, via the JP1 SCL/SDA tails",
+  "pullups": "on-board R10/R11 4.7k to VS -- add none",
+  "devices": [
+   {
+    "name": "NT3H2211 NFC tag",
+    "addr": "0x55",
+    "notes": "session regs via block 0xFE; NS_REG byte 6; read must be atomic"
+   },
+   {
+    "name": "ADXL367 accel",
+    "addr": "0x1D",
+    "notes": "read-only from the bench; STATUS read can eat latched bits"
+   },
+   {
+    "name": "MB85RC512TY FRAM",
+    "addr": "0x50",
+    "notes": "A0-A2 grounded; 64 KB, 2-byte addressing; WP grounded so bench policy, not hardware, is what keeps this read-only"
+   }
+  ]
+ },
+ "power": {
+  "force": {
+   "net": "STO",
+   "tail": [
+    4.55,
+    38.4
+   ]
+  },
+  "sense": {
+   "net": "STO",
+   "tail": [
+    48.4,
+    17.08
+   ]
+  },
+  "returns": [
+   [
+    4.55,
+    40.94
+   ],
+   [
+    48.4,
+    14.54
+   ]
+  ]
+ },
+ "updi": {
+  "updi": [
+   4.55,
+   35.86
+  ],
+  "gnd": [
+   4.55,
+   40.94
+  ],
+  "vtg_ref": {
+   "net": "VS",
+   "tail": [
+    5.07,
+    14.32
+   ]
+  }
+ }
+}
