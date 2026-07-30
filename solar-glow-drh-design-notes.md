@@ -1766,3 +1766,20 @@ hole: dodge 1.55 = hole r 0.75 + 0.30 hole-to-copper + ring half-width 0.50, lea
 touching both spurs, hole-to-ring exactly 0.300 mm both sides. Signals still never cross
 the outline — the pads are all inboard, the holes are rail-only, and the only copper at
 the outline remains the two GND plating stubs.
+
+**Follow-up, same day — the pogo test plate.** The pads-plus-holes feature answered "what
+do I probe"; the flaw caught in review was "which way is the light": every probe node is
+on the back and both cells are on the front, so face-down bench probing darkens the exact
+measurement the project is gated on. The standard answer is the standard bed-of-nails
+orientation — pins up, panel face-up — and the plate that does it is now a generator like
+the brace and shell: `enclosure/solar-glow-drh-pogo-testplate-cad.py` parses the probe
+positions and net labels from the board, imports the TH1/TH2 and rail geometry from
+`scripts/panelize.py`, takes the cavity depth from `part_heights.py`, and emits
+STEP/STL/drawing from CI on any board change. Rail test points were reconsidered and
+stay dead: the pads on a rail are free, but the six traces to them would cross the
+depanel line, and the −0.05 press fit into a titanium shell grounded at eight M2 screws
+makes any non-GND copper at the outline a hard short — the GND plating stubs remain the
+only crossing. Hardware is the generic 75-series (P75-E2 in R75-3W); the two numbers no
+vendor publishes reliably (resin bore fit, probe tip height over a seated collar) are
+deliberately tune-on-first-print parameters, backed by a five-bore fit coupon printed
+into the plate.

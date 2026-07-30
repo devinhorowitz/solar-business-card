@@ -32,6 +32,9 @@ on:
       - 'enclosure/assembly_render.py'
       - 'enclosure/fit_rules.py'
       - 'enclosure/board_parts.py'
+      # The pogo test plate has no other trigger: it is not consumed by the assembly
+      # render, so an edit to its generator alone must regenerate its STEP/STL/drawing.
+      - 'enclosure/solar-glow-drh-pogo-testplate-cad.py'
       - 'enclosure/**.stl'
       - '.github/workflows/kibot.yml'
 
@@ -148,6 +151,7 @@ jobs:
           python3 enclosure/solar-glow-drh-v3_0-backshell-0p6b-brace-cad.py
           python3 enclosure/brace/solar-glow-drh-diffuser-brace-DRAWING-gen.py
           python3 enclosure/solar-glow-drh-v3_0-backshell-0p6b-brace-DRAWING-gen.py
+          python3 enclosure/solar-glow-drh-pogo-testplate-cad.py
 
       # THE HERO IS DOWNSTREAM OF THE ARTWORK, so it is regenerated here rather than by hand.
       # enclosure/assembly_render.py textures the assembled card with the raytraced card-face

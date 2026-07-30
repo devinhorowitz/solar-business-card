@@ -165,6 +165,32 @@ without complaint. Verified falsifiable by injection: those two now raise 2 and 
 
 The mating PCB, the resin brace, and the eight M2 screws are separate parts, not part of this CNC order.
 
+## The pogo test plate — face-up, in-frame bring-up
+
+| File | Purpose |
+|---|---|
+| `solar-glow-drh-pogo-testplate-cad.py` | Parametric CadQuery generator. **Source of truth** — probe positions and net labels are parsed from the committed board, tooling-hole/rail geometry imported from `scripts/panelize.py`, cavity depth from `part_heights.py`. CI regenerates the STEP/STL/drawing on any board change. |
+| `solar-glow-drh-pogo-testplate.stl` / `.step` | Print the STL (resin). CI-owned — don't commit a local run. |
+| `solar-glow-drh-pogo-testplate-DRAWING.pdf` / `.png` | Top view + Z stack + build notes. |
+
+All seven test pads and the JP1 bench strip are on the **back** of the card, and the solar
+cells are on the front — probing face-down would leave the cells in the dark, and the one
+measurement the project is gated on (harvest under real indoor light) needs light on the
+cells *while* the harvest chain is probed. So the plate holds P75 pogo pins pointing **up**:
+the PCBWay panel drops on face-up, registered by two Ø1.5 dowels through its asymmetric
+TH1/TH2 tooling holes (a backwards panel refuses the pins), the rails rest on the plate's
+ledge, the B-side parts hang into a cavity sized off `part_heights.py`, and eleven
+receptacles land on TP1–TP7 + JP1. The card face — cells included — looks at the ceiling;
+TC1 programs from the top at the same time. Test as delivered, then depanel.
+
+Hardware: generic **P75-E2** probes in **R75-3W** wire-wrap receptacles, both parametrised
+at the top of the generator. Two numbers must be tuned per printer/parts batch before the
+first real print, and the plate is built to make that cheap: `RECEPT_BORE` is set from the
+five-bore **fit coupon** (Ø1.25–1.45) printed into the plate's front band, and
+`EXPOSED_FREE` (probe tip above the seated receptacle collar — no vendor publishes it) is
+measured on one real probe+receptacle pair and typed in. Set **SW2** before seating the
+panel; the switch faces the plate.
+
 ## What changed from the earlier shells
 
 - **Floor 0.75 → 0.95 → 1.00 (true 1 mm)**, on a **0.60 mm board** (was 0.80). Same 3.55 overall. The final 0.95 → 1.00 step comes from trimming the cavity 1.85 → 1.80 (cap air 0.15 → 0.10): the brace and the solar-cell sandwiches carry the board, and the WS17 datasheet confirms 1.70 mm is the cap **max** height (worst-case gap 0.05 mm). A true 1.00 floor also clears aluminium / copper / stainless, not just Ti.
