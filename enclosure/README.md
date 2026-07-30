@@ -172,6 +172,7 @@ The mating PCB, the resin brace, and the eight M2 screws are separate parts, not
 | `solar-glow-drh-pogo-testplate-cad.py` | Parametric CadQuery generator. **Source of truth** — probe positions and net labels are parsed from the committed board, tooling-hole/rail geometry imported from `scripts/panelize.py`, cavity depth from `part_heights.py`. CI regenerates the STEP/STL/drawing on any board change. |
 | `solar-glow-drh-pogo-testplate.stl` / `.step` | Print the STL (resin). CI-owned — don't commit a local run. |
 | `solar-glow-drh-pogo-testplate-DRAWING.pdf` / `.png` | Top view + Z stack + build notes. |
+| `solar-glow-drh-pogo-testplate-channels.json` | Generated monitor channel map (tail → ADC channel / front-end / scale + the I²C device roster). Consumed by `bench/monitor/` — the live dashboard that turns the plate into a UI. |
 
 All seven test pads and the JP1 bench strip are on the **back** of the card, and the solar
 cells are on the front — probing face-down would leave the cells in the dark, and the one

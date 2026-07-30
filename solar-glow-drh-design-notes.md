@@ -1792,3 +1792,26 @@ tails with VTG referenced to the VS receptacle, I²C tapped at JP1's SCL/SDA (pu
 on-board), power injected on STO — which lands twice, J1 and JP1, a free Kelvin
 force/sense pair — and the harvest chain on TP2–TP7. TC1 remains the top-side
 alternative, no longer a requirement.
+
+## Addendum — the bench monitor: the plate grows a UI, 2026-07-30
+
+The plate answered "where do the probes land"; the monitor answers "what do I see".
+`bench/monitor/` is a Pico + two ADS1115s + a quad buffer on the fourteen tails, a
+MicroPython firmware, and a host TUI: every harvest rail live with min/max, NFC field
+presence as it happens, accel g-vector and die temperature, and command-on-demand deep
+reads of the NDEF area (the vCard) and the 64 KB FRAM log. Full suite, zero board
+changes. The facts it stands on were verified against the datasheets before a line of
+driver code: NT3H2211 at 0x55 with session registers behind the atomic block-FEh read
+(NS_REG byte 6, RF_FIELD_PRESENT bit 0 — NFC activation without the FD net we never
+landed); ADXL367 at 0x1D (ASEL grounded), 0.25 mg/LSB at ±2 g, temp = (raw−165)/54+25;
+MB85RC512TY at 0x50 (A0–A2 grounded on the board), 64 KB, two-byte addressing — WP is
+grounded too, so the bench driver simply has no write method: policy where hardware
+declines to help. Three disciplines carried into the firmware: the monitor is a guest
+master on the AVR's bus (retry-and-count, never raise); telemetry never reads a
+register whose read has side effects (accel STATUS is a command with a warning, not a
+poll); deep reads are human-initiated. The channel map is emitted by the plate
+generator itself (`…-channels.json`, CI-owned) — front-end classes included, because
+they are placement decisions in disguise: SRC/VINT/BUFSRC/MID get buffers (a bare 2 MΩ
+divider on SRC is a real parasite at desk-light harvest currents), the stiff rails get
+1M:1M, MID gets no resistive path to ground at all, and LX_LOUT gets an RC average
+that the UI is forbidden to present as a voltage.

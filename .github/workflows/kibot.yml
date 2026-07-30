@@ -189,6 +189,7 @@ jobs:
           # and the globs cannot disagree silently again.) See enclosure/README.md.
           OUTS="Generated
                 enclosure/*.step enclosure/*.stl
+                enclosure/*-channels.json
                 enclosure/*DRAWING.pdf enclosure/*DRAWING.png
                 enclosure/solar-glow-drh-assembly*.gif
                 enclosure/solar-glow-drh-assembly*.png

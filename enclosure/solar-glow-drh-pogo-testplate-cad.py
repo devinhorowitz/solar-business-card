@@ -239,6 +239,69 @@ export_step_stable(plate, OUT + BASE + ".step")
 cq.exporters.export(plate, OUT + BASE + ".stl", tolerance=0.03, angularTolerance=0.2)
 print(f"wrote {BASE}.step / .stl")
 
+# ---- bench-monitor channel map -------------------------------------------------------
+# The monitor (bench/monitor/) must not restate which tail is which: THIS file already
+# knows every tail's net and position, so it emits the channel map and the monitor
+# firmware loads it. Front-end classes are design decisions and live here with the tails
+# they govern:
+#   buffer+div2  MCP6004 unity buffer (5 V rail) then 1M:1M -- nodes whose source
+#                impedance or harvest current a bare divider would corrupt
+#   div2         1M:1M direct -- stiff low-Z rails; ~1.7 uA load at 3.3 V
+#   direct       straight to the ADS1115 pin, no divider -- MID only (<=2.75 V, and it
+#                must not see a resistive path to GND at all)
+#   rc-div2      1M series + 1M||100nF to GND -- LX_LOUT duty average, NOT a voltage
+# ADS1115 pair on the Pico's I2C0 (GP4/GP5) at 0x48/0x49, FSR 4.096 V; the card bus
+# rides I2C1 (GP2/GP3) so a card-bus lockup never blinds the rail telemetry.
+import json as _json  # noqa: E402
+
+_FRONTEND = {  # net -> (frontend, scale to real volts)
+    "SRC": ("buffer+div2", 2.0), "VS": ("div2", 2.0), "STO": ("div2", 2.0),
+    "STO_LDO": ("div2", 2.0), "VINT": ("buffer+div2", 2.0),
+    "BUFSRC": ("buffer+div2", 2.0), "MID": ("direct", 1.0),
+    "LX_LOUT": ("rc-div2", 2.0),
+}
+_ADS = [("0x48", 0), ("0x48", 1), ("0x48", 2), ("0x48", 3),
+        ("0x49", 0), ("0x49", 1), ("0x49", 2), ("0x49", 3)]
+_ADC_ORDER = ["SRC", "VS", "STO", "STO_LDO", "VINT", "BUFSRC", "MID", "LX_LOUT"]
+
+def _tail(net, prefer_x=None):
+    cands = [(x, y) for lab, x, y in PROBES if lab == net]
+    if prefer_x is not None:
+        cands.sort(key=lambda p: abs(p[0] - prefer_x))
+    return cands[0]
+
+adc_rows = []
+for (ads, ch), net in zip(_ADS, _ADC_ORDER):
+    fe, sc = _FRONTEND[net]
+    x, y = _tail(net, prefer_x=48.4 if net == "STO" else None)   # STO sense = the JP1 tail
+    adc_rows.append(dict(net=net, tail=[x, y], ads=ads, ch=ch, frontend=fe, scale=sc,
+                         signal="duty-average, not a rail" if net == "LX_LOUT" else "rail"))
+channels = dict(
+    source="enclosure/solar-glow-drh-pogo-testplate-cad.py -- generated, do not edit",
+    board="PCB/solar-glow-drh-v4_0.kicad_pcb",
+    adc=dict(chip="ADS1115", fsr_volts=4.096, bus="Pico I2C0 GP4/GP5", rows=adc_rows),
+    i2c_card_bus=dict(
+        bus="Pico I2C1 GP2/GP3, via the JP1 SCL/SDA tails",
+        pullups="on-board R10/R11 4.7k to VS -- add none",
+        devices=[
+            dict(name="NT3H2211 NFC tag", addr="0x55",
+                 notes="session regs via block 0xFE; NS_REG byte 6; read must be atomic"),
+            dict(name="ADXL367 accel", addr="0x1D",
+                 notes="read-only from the bench; STATUS read can eat latched bits"),
+            dict(name="MB85RC512TY FRAM", addr="0x50",
+                 notes="A0-A2 grounded; 64 KB, 2-byte addressing; WP grounded so bench "
+                       "policy, not hardware, is what keeps this read-only"),
+        ]),
+    power=dict(force=dict(net="STO", tail=list(_tail("STO", prefer_x=4.55))),
+               sense=dict(net="STO", tail=list(_tail("STO", prefer_x=48.4))),
+               returns=[list(_tail("GND", prefer_x=4.55)), list(_tail("GND", prefer_x=48.4))]),
+    updi=dict(updi=list(_tail("UPDI")), gnd=list(_tail("GND", prefer_x=4.55)),
+              vtg_ref=dict(net="VS", tail=list(_tail("VS")))),
+)
+with open(OUT + BASE + "-channels.json", "w") as f:
+    _json.dump(channels, f, indent=1)
+print(f"wrote {BASE}-channels.json ({len(adc_rows)} ADC channels)")
+
 # ---- drawing -------------------------------------------------------------------------
 fig, (ax, axz) = plt.subplots(1, 2, figsize=(16, 10), width_ratios=[2.1, 1])
 ax.add_patch(Rectangle((PLATE_X0, PLATE_Y0), W, H, fill=False, ec="#111", lw=1.4))
