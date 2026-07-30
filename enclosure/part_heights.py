@@ -52,6 +52,14 @@ HEIGHTS = {
     # these. Each is set to cover its modelled body with a little air.
     "C4":  0.90, "C13": 0.90, "C22": 0.90, "C23": 0.90, "C25": 0.90,   # 0603 (0.80)
     "C26": 1.25, "C27": 1.25,                                          # 0805 (1.25)
+    # C9, the NFC tank trim, went 0402 -> 0805 on 2026-07-30 for hand-rework and Q. 1.25 is the
+    # PACKAGE-GENERIC 0805 number C26/C27 already use, deliberately NOT the chosen part's own
+    # 1.17 max (Johanson QSCT251Q820G1GV001E): check [7] measures this against the generic
+    # C_0805_2012Metric model, so a part-specific figure would fail against a body it does not
+    # describe. Until this line existed C9 fell through the "C" prefix default of 0.55 and the
+    # check said so -- "the enclosure pocket interferes with the part by 0.70 mm", which is
+    # exactly the silent-undershoot failure the module docstring above was written about.
+    "C9":  1.25,                                                       # 0805 (1.25)
 }
 
 # ---- by refdes prefix -------------------------------------------------------------
