@@ -593,9 +593,13 @@ needs translucent FR4, the black look comes from the soldermask.
 > re-program after SC1 is on, your options are the optional **J1** UPDI header or removing the
 > cell. Worth loading J1 on any board you expect to iterate firmware on.
 >
-> This is the assembly consequence of the `courtyards_overlap` + 7 × `npth_inside_courtyard`
-> DRC exclusions. Those were accepted as a *geometry* decision; the ordering constraint they
-> imply was never written down until the 2026-07-28 exclusion audit.
+> This is the assembly consequence of the 7 × `npth_inside_courtyard` DRC exclusions. Those were
+> accepted as a *geometry* decision; the ordering constraint they imply was never written down
+> until the 2026-07-28 exclusion audit.
+> _(This also named a `courtyards_overlap` exclusion until 2026-07-30. That violation stopped
+> firing in the 2026-07-30 board sync and KiCad pruned the dead exclusion — 14 → 13. **The
+> geometry did not change and neither does this warning:** TC1 is still 100% under SC1, which is
+> a measurement of the two footprints, not a DRC finding. Nothing here was relaxed.)_
 
 Work outside-in by heat sensitivity:
 
