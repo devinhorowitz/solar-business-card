@@ -272,6 +272,96 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
 
 ## PCB — `PCB/solar-glow-drh-v4_0.kicad_pcb` / `.kicad_sch`
 
+- [ ] **[SCH/PCB] Cull SJ1 — CONFIRMED vestigial against the datasheet, not just the docs**
+  _(2026-07-30; verdict settled, deletion outstanding.)_ Asked to confirm rather than assume, so:
+  **AVR64EA28 datasheet DS40002443A §2.2, 28-pin VQFN — pin 10 is `PD0`.** There is no `VDDIO2` pin
+  anywhere on the package; the only supply pins are 18/24 (VDD) and 19/25 (GND), and every I/O is
+  marked *"Pin on VDD Power Domain"*. One domain, no MVIO. The board agrees and has already half
+  admitted it: `U1` pad 10 carries `pinfunction='PD0_10'` while the **net is still named
+  `VDDIO2`** — the pin function was updated in the AVR-EA swap and the net name is a fossil.
+  `firmware/board.h` line 27 says the same: *"10 PD0 (n/c) EA GPIO on the old VDDIO2 pad; SJ1 = DNP
+  so it floats -> held by internal pull-up"*.
+  So SJ1 is not merely unused — **bridging it shorts a GPIO to VS**, which is a footgun sitting
+  0.26 mm from SC3 (a 1.8 F supercap) and 0.30 mm from D2. Cull it.
+  **What the deletion actually is, measured:** SJ1.1 = `VS` @ (13.30, 45.05), SJ1.2 = `VDDIO2` @
+  (13.30, 46.95). On the `VDDIO2` side it is a pure **spur** — C3.1 reaches U1.10 directly along
+  y = 48.50 and up x = 7.83, and SJ1 hangs off that run via 7 segments back to the branch at
+  (7.83, 48.50). Deleting the footprint cannot break C3↔U1.10. The **`VS` side is not a spur**:
+  the B.Cu run (13.16,45.37)→(13.16,45.77)→(12.47,46.46)→(12.47,46.75)→(12.12,47.10)→(10.89,47.10)
+  reads as a through-route that merely passes SJ1.1, and there are 41 VS zones besides. **Do this
+  in KiCad, not by text surgery** — delete the symbol, Update PCB from Schematic, then
+  *Cleanup Tracks & Vias → remove dangling*, and let the connectivity engine decide which copper
+  was only ever SJ1's. Text-editing it risks orphaning VS copper that is carrying current elsewhere.
+  **Also decide, separately:** `C3` (100 nF, @ 5.7/48.0) is the other half of the same fossil — a
+  decoupling cap on what is now a plain GPIO. It is not dangerous, but it is a permanently charged
+  100 nF on a pin held by an internal pull-up, on a card whose #1 open gate is the energy budget.
+  And the net name `VDDIO2` should become `PD0` (or `NC_PD0`) so the next reader is not misled.
+  Files to follow: `PCB/README.md` (§5 do-not-get-wrong list, the BOM table row, the machine-place
+  list), `README.md` (two mentions), `solar-glow-drh-design-notes.md` (three), `firmware/board.h`
+  line 27, and U1's own schematic Description string, which still reads *"pin 10 (VDDIO2->PD0: SJ1
+  now DNP)"*.
+
+- [ ] **[SCH/PCB/BOM] C9 0402 → 0805, and buy it as a trim KIT not a part**
+  _(2026-07-30; part chosen, layout edit outstanding.)_ C9 is the NFC tank trim across the coil
+  terminals (`LA`/`LB`) and the one part that gets reworked *repeatedly* — you tune resonance by
+  fitting a value, measuring, and fitting another. On an 0402 that is miserable.
+  **It must not move.** Its position and the loop area of its connection are part of the tank being
+  trimmed. It does not need to: measured clearances are C28 1.17 mm to the left, U5 3.64 mm below,
+  D5 3.41 mm above, so **rotating it 90° and growing vertically** takes 0805 with 2.4/2.1 mm clear
+  (1206 would fit too, at 2.0/1.7). C9 already sits inside the hot-plate-safe band **x 26–46,
+  y 31.5–58** — the only region with no supercap on the back and no PV cell on the front — 7.4 mm
+  clear of SC2.
+  **Part (DigiKey, live 2026-07-30): `C0805C820G5GACTU`** — KEMET, 82 pF, **C0G/NP0**, **±2%**,
+  50 V, 0805, body 2.00 × 1.25 mm, **thickness 0.88 mm max**, 6,616 in stock, $0.70 @1,
+  DK `399-C0805C820G5GACTUTR-ND`. C0G is not negotiable (a tuned tank cannot use a dielectric that
+  drifts with temperature or bias); ±2% vs the current ±5% land is the real performance win, since
+  it halves how far off 13.56 MHz the first fit lands.
+  **Buy the spread, not the value** — 68/75/82/91/100 pF, ~$3.90 total: `C0805C680G5GACTU` (6,779),
+  `C0805C750G5GACTU` (3,220), `C0805C820G5GACTU` (6,616), `C0805C910G5GACTU` (2,349),
+  `C0805C101G1GACTU` (3,956, 100 V). **This KEMET line is why it is the pick**: the higher-Q RF
+  series (Murata GQM, Kyocera KGQ) are genuinely better parts but are *not stocked across the trim
+  range* — KGQ 75 pF and 91 pF are at zero and 100 pF had 3 pieces — and their advantage is
+  second-order anyway, because tank Q is dominated by the coil's ESR (~1–3 Ω at 13.56 MHz) against
+  an 0805 C0G's ~0.05–0.2 Ω. Going 0402 → 0805 already lowers ESR; paying 4× for an RF series that
+  cannot be trimmed with is the wrong trade.
+  **Two things that must land with the footprint swap, or the enclosure is cut wrong:**
+  (1) `enclosure/part_heights.py` needs an explicit **`"C9": 1.25`** — the package-generic 0805
+  number that C26/C27 already use, not the part's own 0.88, because check [7] measures the declared
+  height against the generic `C_0805_2012Metric` model and a 0.88 declaration would fail it. Leaving
+  C9 on the `"C"` prefix default of 0.55 is the exact failure the file's own docstring warns about —
+  the brace would be cut 0.70 mm too shallow. (2) Extend each pad's outer toe by **+0.4 mm** and put
+  **thermal-relief spokes** on both pads: they land in the `LA`/`LB` pours, and a pad tied straight
+  into a pour is why an iron feels like it never wets. Four 0.4 mm spokes are nothing against the
+  coil's own inductance.
+
+- [ ] **[PCB/BENCH] Six B-side test pads — the whole harvest chain is unprobeable**
+  _(2026-07-30.)_ Auditing every net for probe access turned up the gap: **`GND`, `SRC`, `STO`,
+  `SCL`, `SDA`, `UPDI` are reachable** (TP1, JP1, TC1, J1) and **nothing else is**. Missing, in
+  bring-up order: **`VS`** (is the logic rail up at all), **`MID`** (the SC1–SC4 stack midpoint —
+  if it drifts, a cell goes overvoltage, so this is a safety node, not a convenience one),
+  **`LX_LOUT`** (the AEM10300 switch node — the one scope point that answers "is the boost
+  running"), **`VINT`**, **`BUFSRC`**, **`STO_LDO`**. That is the entire harvester subsystem, which
+  is also the project's #1 open gate (energy budget). Put them on **B.Cu**, which is 100% inside
+  titanium and therefore costs nothing in artwork — the only reason the rail was ever considered.
+  Candidate zone from the free-space map: **x 40–46, y 36–52**, clear radius 5.5 mm, which is also
+  the hot-plate-safe band (see the C9 entry). Ø0.9–1.0 mm bare pads take a pogo or a probe tip.
+
+- [ ] **[PANEL] Two tooling holes in the rail, so the card can be tested IN the frame**
+  _(2026-07-30.)_ Pairs with the entry above and is the *safe* half of the "test points on the
+  breakaway" idea. Two Ø1.5 mm NPTH in the 5.0 mm rail let a pogo fixture register to the panel
+  and land on the B-side pads while the card is still attached — test as it arrives from PCBWay,
+  then depanel. Free to add: `scripts/panelize.py` generates the panel, so this is a constant and
+  an emitter, not a file edit.
+  **Signals must NOT cross the outline, and that is settled, not a preference.** `edge_fit = −0.05`
+  makes the board a *press fit* into the cavity, and all eight mount holes are plated **GND** with
+  brass M2 screws into tapped titanium — the shell is bonded to GND at eight points. Any non-GND
+  copper reaching the outline is a hard short once assembled. The design already made this call
+  once: the only two nets crossing today are the plating stubs, **both GND**, both sitting in DRC
+  as `copper_edge_clearance … actual 0.0000 mm`, *excluded*. Separately there is no room — the
+  5.0 mm tab's four Ø0.5 bites leave four 0.50 mm webs plus the 1.00 mm bus corridor, and at a
+  normal 0.2–0.25 mm hole-to-copper a 0.50 mm web has 0.0–0.1 mm left, under the board's own
+  0.152 mm clearance floor.
+
 - [x] **[SCH/PCB] U7 footprint identity — DISARMED; the two lands were the same land**
   _(2026-07-26; DONE.)_ The trap was real but the geometries were not actually in conflict. Comparing
   every stored coordinate, the board footprint was **exactly the library footprint, Y-mirrored (U7 is
