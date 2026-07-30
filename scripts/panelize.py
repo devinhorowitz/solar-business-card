@@ -80,6 +80,21 @@ BUS_W_SPUR = 0.4    # across tab and rail -- matches the board-side stub width e
 BUS_W_RAIL = 1.0    # the ring the plating rack clips onto
 BUS_INSET = 2.5     # ring centreline inset from the panel edge (rail is RAIL_W wide)
 
+# Two 1.5 mm NPTH tooling holes in the side rails let a pogo fixture register to the
+# panel and land on the board's B-side test pads (TP2-TP7) while the card is still
+# attached -- test as delivered, then depanel. The rail centreline is where a tooling
+# hole wants to be, but it is also exactly where the plating-bus ring runs (BUS_INSET
+# = RAIL_W/2), so the ring takes a rectangular jog around each hole -- outward, where
+# the rail has 0.45 mm to spare -- rather than the hole squeezing beside the ring.
+# The y positions are DELIBERATELY not 180-degree symmetric about the panel centre:
+# two symmetric holes would let the panel drop onto the fixture backwards. main()
+# asserts the asymmetry so nobody "tidies" these into symmetry later.
+TH_D = 1.5          # NPTH drill
+TH_LEFT_Y = 20.0    # hole centre on the left rail's ring line, board-frame y
+TH_RIGHT_Y = 85.0   # hole centre on the right rail's ring line, board-frame y
+TH_DODGE = 1.55     # jog offset and half-height: hole r 0.75 + 0.30 hole-to-copper
+                    # + ring half-width 0.50; leaves 0.45 mm copper-to-panel-edge
+
 # The ring is useless buried under soldermask -- a plating rack needs bare copper to clip. So the
 # ring gets an F.Mask opening along its whole length, which also lets the fab pick its own contact
 # point. Exposing all of it does risk the gold bath reaching it, but that is ~319 mm^2 at ~1 um,
@@ -225,11 +240,12 @@ def text(s, x, y, tag):
     )
 
 
-def bite_footprint(ref, cx, cy, xs, tag):
+def bite_footprint(ref, cx, cy, xs, tag, d=MB_D, value="MouseBites"):
     """Mirrors the shape of the board's own MP1-MP4 mechanical footprints exactly:
     empty lib_id, all four properties present, board_only, (embedded_fonts no) last.
     KiCad's parser is strict about the member order, and .kicad_pcb has no comment
-    syntax -- nothing here may be annotated in-band."""
+    syntax -- nothing here may be annotated in-band. The tooling holes reuse this
+    emitter with a single pad, a bigger drill and their own Value."""
 
     def prop(name, value, layer, tag2):
         return (
@@ -240,7 +256,7 @@ def bite_footprint(ref, cx, cy, xs, tag):
 
     pads = "".join(
         f'\t\t(pad "" np_thru_hole circle\n\t\t\t(at {n(x - cx)} 0)\n'
-        f"\t\t\t(size {n(MB_D)} {n(MB_D)})\n\t\t\t(drill {n(MB_D)})\n"
+        f"\t\t\t(size {n(d)} {n(d)})\n\t\t\t(drill {n(d)})\n"
         f"\t\t\t(property pad_prop_mechanical)\n"
         f'\t\t\t(layers "*.Cu" "*.Mask")\n\t\t\t(uuid "{uid(f"{tag}-p{k}")}")\n\t\t)\n'
         for k, x in enumerate(xs)
@@ -249,7 +265,7 @@ def bite_footprint(ref, cx, cy, xs, tag):
         f'\t(footprint ""\n\t\t(layer "F.Cu")\n\t\t(uuid "{uid(tag)}")\n'
         f"\t\t(at {n(cx)} {n(cy)})\n"
         + prop("Reference", ref, "F.SilkS", tag + "-ref")
-        + prop("Value", "MouseBites", "F.Fab", tag + "-val")
+        + prop("Value", value, "F.Fab", tag + "-val")
         + prop("Datasheet", "", "F.Fab", tag + "-ds")
         + prop("Description", "", "F.Fab", tag + "-de")
         + "\t\t(attr board_only exclude_from_pos_files exclude_from_bom)\n"
@@ -257,6 +273,30 @@ def bite_footprint(ref, cx, cy, xs, tag):
         + pads
         + "\t\t(embedded_fonts no)\n\t)\n"
     )
+
+
+def ring_run_with_dodge(a, b, holes):
+    """Points of one straight bus-ring run from a to b, jogging OUTWARD around each
+    tooling hole whose centre sits on the run. Vertical runs only -- the holes live
+    on the side rails. The jog is rectangular so every emitted segment stays
+    axis-aligned and mask_open()'s bounding-box expansion stays exact."""
+    (x0, y0), (x1, y1) = a, b
+    if not holes:
+        return [a, b]
+    assert x0 == x1, "tooling-hole dodge is only implemented for vertical ring runs"
+    sgn = 1 if y1 > y0 else -1                    # travel direction along the run
+    out = 1 if x0 > TAB_X else -1                 # outward = away from the panel centre
+    pts = [a]
+    for hx, hy in sorted(holes, key=lambda h: sgn * h[1]):
+        assert hx == x0 and min(y0, y1) < hy < max(y0, y1)
+        pts += [
+            (x0, hy - sgn * TH_DODGE),
+            (x0 + out * TH_DODGE, hy - sgn * TH_DODGE),
+            (x0 + out * TH_DODGE, hy + sgn * TH_DODGE),
+            (x0, hy + sgn * TH_DODGE),
+        ]
+    pts.append(b)
+    return pts
 
 
 # ------------------------------------------------------------------------------- main
@@ -277,12 +317,29 @@ def main() -> int:
     px0, py0, px1, py1 = frame.bounds
     xs = mousebite_x()
 
+    ring_x0, ring_x1 = px0 + BUS_INSET, px1 - BUS_INSET
+    ring_y0, ring_y1 = py0 + BUS_INSET, py1 - BUS_INSET
+    th = [(ring_x0, TH_LEFT_Y), (ring_x1, TH_RIGHT_Y)]
+    # Rotating one hole 180 degrees about the panel centre must NOT land on the other,
+    # or a backwards panel seats on the fixture pins. Guarded here because the y values
+    # up top LOOK arbitrary and a symmetric "cleanup" would break this silently.
+    rot = (px0 + px1 - th[0][0], py0 + py1 - th[0][1])
+    mis = math.hypot(rot[0] - th[1][0], rot[1] - th[1][1])
+    if mis < 5.0:
+        sys.exit(f"panelize: tooling holes are {mis:.1f} mm from 180-degree symmetric "
+                 "-- a backwards panel would seat on the fixture")
+
     print(f"card   {bx1 - bx0:.1f} x {by1 - by0:.1f} mm   ({bx0:g},{by0:g})-({bx1:g},{by1:g})")
     print(f"panel  {px1 - px0:.1f} x {py1 - py0:.1f} mm   ({px0:g},{py0:g})-({px1:g},{py1:g})")
     print(f"moat {MOAT_W} / rail {RAIL_W} / tab {TAB_W} at x={TAB_X}")
     print(f"mouse bites per tab: {len(xs)} x d{MB_D} at x = " + ", ".join(f"{x:g}" for x in xs))
     web = (xs[MB_PER_SIDE] - MB_D / 2) - (xs[MB_PER_SIDE - 1] + MB_D / 2)
     print(f"hole-free bus web: {web:.2f} mm centred on x={TAB_X} (bus {BUS_W_SPUR} mm)")
+    print(f"tooling holes d{TH_D}: left rail ({th[0][0]:g},{th[0][1]:g}), "
+          f"right rail ({th[1][0]:g},{th[1][1]:g}); 180-degree mismatch {mis:.1f} mm; "
+          f"ring dodge +-{TH_DODGE} -> hole-to-ring "
+          f"{TH_DODGE - TH_D / 2 - BUS_W_RAIL / 2:.2f}, "
+          f"ring-to-edge {BUS_INSET - TH_DODGE - BUS_W_RAIL / 2:.2f}")
     if args.check:
         return 0
 
@@ -305,9 +362,11 @@ def main() -> int:
     for k, y in enumerate((by0, by1)):
         add.append(bite_footprint(f"MB{k + 1}", TAB_X, y, xs, f"mb{k}"))
 
+    # ---- tooling holes, on the ring line in each side rail (the ring jogs around them)
+    for ref, (hx, hy) in zip(("TH1", "TH2"), th):
+        add.append(bite_footprint(ref, hx, hy, [hx], f"th-{ref}", d=TH_D, value="ToolingHole"))
+
     # ---- plating bus: stub -> across tab and rail -> ring around the frame
-    ring_x0, ring_x1 = px0 + BUS_INSET, px1 - BUS_INSET
-    ring_y0, ring_y1 = py0 + BUS_INSET, py1 - BUS_INSET
     add.append(track((TAB_X, by0), (TAB_X, ring_y0), BUS_W_SPUR, "spur-b"))
     add.append(track((TAB_X, by1), (TAB_X, ring_y1), BUS_W_SPUR, "spur-t"))
     for k, (a, b) in enumerate(
@@ -318,8 +377,14 @@ def main() -> int:
             ((ring_x0, ring_y1), (ring_x0, ring_y0)),
         ]
     ):
-        add.append(track(a, b, BUS_W_RAIL, f"ring{k}"))
-        add.append(mask_open(a, b, BUS_W_RAIL, f"ringmask{k}"))
+        run_holes = [h for h in th if a[0] == b[0] == h[0]]
+        pts = ring_run_with_dodge(a, b, run_holes)
+        for i in range(len(pts) - 1):
+            plain = len(pts) == 2          # undodged runs keep their original tags/uuids
+            add.append(track(pts[i], pts[i + 1], BUS_W_RAIL,
+                             f"ring{k}" if plain else f"ring{k}-{i}"))
+            add.append(mask_open(pts[i], pts[i + 1], BUS_W_RAIL,
+                                 f"ringmask{k}" if plain else f"ringmask{k}-{i}"))
 
     # ---- panel silkscreen, both rails, clear of the bus ring
     add.append(text("SOLAR-GLOW DRH v4.0 - PCBWay 1-up panel", TAB_X, ring_y0 + 1.5, "t0"))
