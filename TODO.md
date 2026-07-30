@@ -292,10 +292,25 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   in KiCad, not by text surgery** — delete the symbol, Update PCB from Schematic, then
   *Cleanup Tracks & Vias → remove dangling*, and let the connectivity engine decide which copper
   was only ever SJ1's. Text-editing it risks orphaning VS copper that is carrying current elsewhere.
-  **Also decide, separately:** `C3` (100 nF, @ 5.7/48.0) is the other half of the same fossil — a
-  decoupling cap on what is now a plain GPIO. It is not dangerous, but it is a permanently charged
-  100 nF on a pin held by an internal pull-up, on a card whose #1 open gate is the energy budget.
-  And the net name `VDDIO2` should become `PD0` (or `NC_PD0`) so the next reader is not misled.
+  **`C3` is NOT the other half of this fossil — keep it.** An earlier draft of this entry said it
+  was, on the assumption that a 100 nF held charged on a pulled-up pin was costing meaningful
+  energy. Computed rather than assumed, it is not: the part is `GRT155R71H104KE01D` (X7R 0402), and
+  the MLCC insulation-resistance floor of 500 Ω·F ÷ 100 nF = 5 GΩ gives **0.66 nA at VS = 3.3 V**,
+  ~0.8% of the documented 80 nA sleep *at the spec floor* and typically 10–100× better than that;
+  the one-time cold-start charge is C·V² = **1.09 µJ** against a 2.7–7.8 J budget. Negligible.
+  And PD0 is not a bare GPIO. **Datasheet Table 3-1, VQFN-28 column: pin 10 / PD0 = `AIN0`**, plus
+  `AINN1` (AC1 negative input) and the alternate `TCA0 WO0`. `C24` on AIN1 (STO_SNS) is the
+  **identical part number**, so AIN0/AIN1 already carry a matched 100 nF pair — the free adjacent
+  ADC channel, pre-filtered. That is latent value, not dead weight; deleting it is a sch+board+BOM
+  churn to reclaim one 0402 land and 0.66 nA.
+  **Fix the NAME, not the part:** rename net `VDDIO2` → `PD0_AIN0`, and re-annotate C3 in the
+  schematic as an AIN0 input filter rather than supply decoupling. That removes the actual cost,
+  which is that the schematic currently asserts "supply pin needing decoupling" about an ADC input.
+  **And record the gotcha, which is currently written down nowhere:** PD0 is the alternate
+  `TCA0 WO0`, so **PD0 must never be driven as an output** — each full cycle into that 100 nF costs
+  C·V² ≈ 1.09 µJ, i.e. ~1.1 mW at 1 kHz, which would swamp the entire energy budget. Firmware is
+  correct today (`PORTD.PIN0CTRL = PORT_PULLUPEN_bm`, held as a pulled-up input) but `board.h`
+  line 27 says only "(n/c) … held by internal pull-up" and does not say why that is mandatory.
   Files to follow: `PCB/README.md` (§5 do-not-get-wrong list, the BOM table row, the machine-place
   list), `README.md` (two mentions), `solar-glow-drh-design-notes.md` (three), `firmware/board.h`
   line 27, and U1's own schematic Description string, which still reads *"pin 10 (VDDIO2->PD0: SJ1
@@ -422,10 +437,17 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   and must not trip the delete-warning. The checker now exempts by that flag and **prints the exempt
   list every run**, so if one ever loses the flag it reappears as a real error instead of vanishing.
   (`NPTH_mech` is board_only too but has no Reference property, so a refdes-keyed check cannot see it.)
-- [ ] **[COPPER] U1 has one decoupling cap for two VDD/GND pin pairs**
+- [ ] **[COPPER] U1 has one decoupling cap for two VDD/GND pin pairs** — ⚠️ **looks STALE, re-check
+  before spending effort on it**
   _(2026-07-26 copper audit; moderate effort.)_ Contrary to an explicit datasheet requirement, and it
   bears on the ADC noise floor — which now matters more than it used to, since the glow floor, the
   EEPROM floor and the caps-full gate are all decided from ADC reads. Worth pricing before fab.
+  **2026-07-30, measured off the current board:** U1 now has **two**. Pin pair 18/19 has **C29 at
+  1.46 mm**; pin pair 24/25 has **C1 at 2.42 mm**. C29 was added on 2026-07-26 (see the closed
+  "[SCH] C29 added to the schematic" item above), which is almost certainly the fix for this very
+  finding — the two items were never linked. Confirm the intent, then close this rather than adding
+  a third cap. Full VS-cap census by distance to the nearest U1 supply pin: C29 1.46, C1 2.42,
+  C23 14.94, C12 20.80, C28 23.01, C7 32.01, C4 33.87, C6 34.68 mm.
 
 - [ ] **[COPPER] Tag-Connect keep-out violated by the ground pour**
   _(2026-07-26 copper audit.)_ B.Cu ground comes within **0.127 mm** of every TC1 contact pad against a
