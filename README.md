@@ -220,9 +220,11 @@ The board is a KiCad project — open it, run DRC, and export the fab set:
 2. **Reflow the SMD parts** — the QFN MCU and the LGA accelerometer need hot air / a hotplate;
    the EP and the accel pad reflow to their planes.
 3. **Flash firmware** over UPDI — the Tag-Connect pad (`TC1`) is the no-header path; `J1` is the
-   backup header. **This step moved ahead of the cells on 2026-07-30**, when the board sync put
-   TC1 on `F.Cu`: PV1's body now covers the pad cluster, so a pogo cable cannot reach it once the
-   cell is on. See the warning box in [`PCB/README.md`](PCB/README.md).
+   backup header. **This step moved ahead of the cells on 2026-07-30**, when TC1 was deliberately
+   moved to `F.Cu`: PV1's body covers the pad cluster, so a pogo cable cannot reach it once the
+   cell is on. The trade is a good one — the old position was under `SC1`, which is *reflowed*, so
+   the window used to close before the board was even finished. See the warning box in
+   [`PCB/README.md`](PCB/README.md).
 4. **Hand-solder last** — the solar cells (heat-sensitive: ≤ 260 °C / 2 s, no IPA), and set the
    **SW2** bridge for OFF / ON / TINY.
 

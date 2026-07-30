@@ -584,10 +584,15 @@ needs translucent FR4, the black look comes from the soldermask.
 
 > ### ⚠ Program the MCU BEFORE fitting the SOLAR CELLS
 >
-> **TC1 moved to the FRONT in the 2026-07-30 board sync** (`5934b7d`): the footprint went
-> `B.Cu` → `F.Cu`, pads and mask with it, plus a 180° rotation. **Confirm that was deliberate** —
-> nothing in CI catches a footprint changing sides. DRC has no opinion, schematic parity has no
-> layer concept, and `check_consistency` compares refdes and footprint assignment, not side.
+> **TC1 moved to the FRONT in the 2026-07-30 board sync** (`5934b7d`), deliberately: the footprint
+> went `B.Cu` → `F.Cu`, pads and mask with it, plus a 180° rotation. XY did not move (13.3, 16.9).
+> The point of it is the programming window — see below.
+>
+> Worth knowing regardless: **nothing in CI catches a footprint changing sides.** DRC has no
+> opinion, schematic parity has no layer concept, and `check_consistency` compares refdes and
+> footprint assignment, not side. This one surfaced only because `board_parts("B")` stopped
+> returning TC1 and the brace's pocket list changed with it. A side flip that *isn't* intended
+> would arrive just as quietly.
 >
 > What it changes: **SC1 no longer blocks TC1.** The supercap is on `B.Cu` and the Tag-Connect
 > pads are now on `F.Cu`, so a TC2030-MCP pogo cable reaches them with SC1 fitted. What blocks
@@ -601,10 +606,11 @@ needs translucent FR4, the black look comes from the soldermask.
 > worse trade than removing a supercap was. Worth loading J1 on any board you expect to iterate
 > firmware on.
 >
-> **This is now the tighter constraint, not the looser one.** SC1 is reflowed with the rest of
-> the SMD parts, so the old rule cost you the programming window at reflow; the cells go on last,
-> so the window is later — but the root README's assembly order still reads *hand-solder the
-> cells (3) → flash over UPDI (4)*, which this makes impossible. **Flash between 2 and 3.**
+> **The window got LATER, and that is the point of the move.** SC1 is reflowed with the rest of
+> the SMD parts, so the old rule closed the programming window at reflow — you had to flash a
+> board with no energy storage on it. The cells are hand-soldered last, so now you can reflow
+> everything, flash a board that is otherwise complete, and only then fit PV1/PV2. The root
+> README's assembly order was reordered to match: **flash is step 3, the cells are step 4.**
 >
 > _(Until 2026-07-30 this box read "before fitting SC1" and said both parts were on B.Cu, which
 > was true of the board it was written against. TC1's XY position did not move — 100% of its pads
