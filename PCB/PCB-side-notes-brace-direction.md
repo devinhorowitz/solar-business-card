@@ -168,6 +168,37 @@ C0G/NP0, ±2 %, 250 V, High-Q / Ultra-Low-ESR, 1.17 mm max, Active, **10,809 in 
 (the 82 pF it replaces had 3,522). Cut-tape **712-QSCT251Q470G1GV001ECT-ND** is MOQ 1 if the
 4,000-piece reel is wrong for the run.
 
+**Validation (2026-07-30, second pass).** The 47 pF derivation was re-checked against
+NXP's own hardware and against other vendors before trusting it:
+
+- **The Greenhouse code reproduces NXP's Class 5 reference antenna.** The AN11276 package
+  ships the Gerbers of the reference coil NXP designed for exactly this 50 pF chip family
+  with **no external capacitor** (the demo board is titled "Class 5 Antenna – 50 pF #01",
+  one part on LA–LB). Parsing that Gerber — 6 turns, 0.30 mm trace, 0.75 mm pitch,
+  39.25 × 24.00 mm outer — and running it through the same code used on our coil gives
+  **L = 2.24 µH**, which with Ci = 50 pF and NXP's own 2.5–6 pF parasitic range resonates at
+  **14.22–14.69 MHz**: centered on the 14.5 MHz their app note names. The methodology
+  reproduces NXP's design intent on NXP's board to a quarter of a megahertz.
+- **The NXP Class Design Guide calculator agrees on every input.** Its sheet takes a
+  threshold-frequency target, chip capacitance "(17pF or 50pF)", connection capacitance
+  0.5–2 pF, etched coil capacitance 2–4 pF — and has an explicit **"Parallel Cap"** input
+  row, so an added tuning capacitor is part of NXP's own flow, not a workaround. Our
+  Cc = 6 pF sits at the top of their 2.5–6 pF total; using 4 pF instead moves the mid
+  scenario 14.45 → 14.59 MHz, which changes nothing.
+- **Cross-vendor and measured practice agree on the direction.** ST's guidance for the
+  ST25 family is to tune above 13.56 to compensate reader-proximity coupling, and surveys
+  of real cards and readers measure resonances of ~13.5–15 MHz with the majority near
+  14 MHz. Our enclosed span (13.74–15.28 MHz across the ferrite scenarios) sits inside
+  that band, and its two ends land respectively on ST's mild figure and the top of
+  measured practice.
+- **The old numbers weren't wrong — they had a different target.** The retired 52–77 pF
+  window solves this same tank for **13.56 exactly** (so does the old 82 pF part, bare:
+  0.958 µH + 138 pF = 13.8 MHz). The whole delta between that window and 47 pF is the
+  target frequency, and the target is the sourced part: AN11276 §4.2.1, ST, and practice
+  all say above the carrier, never below.
+- **The ladder is real.** Same Johanson S-series, ±2 % C0G 0805, all Active at DigiKey:
+  39 pF (808), **47 pF (10,809)**, 56 pF (11,258), 68 pF (17,236).
+
 **Measure ENCLOSED.** Bare on the bench this reads ~16.7 MHz and that is not a fault — the
 ferrite is what brings it down. A bare-board measurement will look alarming and mean nothing.
 
