@@ -334,8 +334,25 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   line 27, and U1's own schematic Description string, which still reads *"pin 10 (VDDIO2->PD0: SJ1
   now DNP)"*.
 
-- [ ] **[SCH/PCB/BOM] C9 0402 → 0805, and buy it as a trim KIT not a part**
-  _(2026-07-30; part chosen, layout edit outstanding.)_ C9 is the NFC tank trim across the coil
+- [ ] **[PCB] C9 0402 → 0805 — ⚠️ SCHEMATIC HALF IS DONE; THE BOARD IS DELIBERATELY RED**
+  _(2026-07-30.)_ **DRC fails on purpose until the board carries the 0805 land.** The schematic now
+  says `Capacitor_SMD:C_0805_2012Metric` (the same stock land C26/C27 already use) while the board
+  still has `solarglow:C9`, and `footprint_symbol_mismatch` was raised `warning` → `error` in
+  `.kicad_pro` so that is a build failure rather than one line in a 237-warning report. Targeted,
+  not blanket: C9 is its only instance. `footprint_symbol_field_mismatch` was deliberately **left
+  at warning** — it fires on any text difference (Description, MPN, Datasheet), which is
+  documentation drift; a wrong *footprint* is a manufacturing fault.
+  DRC now reads *"[footprint_symbol_mismatch]: solarglow:C9 doesn't match footprint given by symbol
+  (Capacitor_SMD:C_0805_2012Metric) … error … @(35.6600 mm, 39.1400 mm)"*.
+  **To clear it:** place the 0805 land (rotate 90°, grow vertically — see the clearances below),
+  re-route the two short stubs to the coil, and re-run. Still outstanding with it: the
+  `part_heights.py` entry and the pad toe/thermal-relief work, both below.
+  Schematic side already carries `MPN QSCT251Q820G1GV001E`, `Supplier DigiKey`,
+  `Supplier P/N 712-QSCT251Q820G1GV001ETR-ND`, and a Description that says DNP means *hand-fit at
+  bench trim*, not unused. ERC unchanged (3 pre-existing excluded warnings, none introduced).
+
+  The reasoning, kept because it is what the board edit has to satisfy:
+  C9 is the NFC tank trim across the coil
   terminals (`LA`/`LB`) and the one part that gets reworked *repeatedly* — you tune resonance by
   fitting a value, measuring, and fitting another. On an 0402 that is miserable.
   **It must not move.** Its position and the loop area of its connection are part of the tank being
@@ -344,19 +361,41 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   (1206 would fit too, at 2.0/1.7). C9 already sits inside the hot-plate-safe band **x 26–46,
   y 31.5–58** — the only region with no supercap on the back and no PV cell on the front — 7.4 mm
   clear of SC2.
-  **Part (DigiKey, live 2026-07-30): `C0805C820G5GACTU`** — KEMET, 82 pF, **C0G/NP0**, **±2%**,
-  50 V, 0805, body 2.00 × 1.25 mm, **thickness 0.88 mm max**, 6,616 in stock, $0.70 @1,
-  DK `399-C0805C820G5GACTUTR-ND`. C0G is not negotiable (a tuned tank cannot use a dielectric that
-  drifts with temperature or bias); ±2% vs the current ±5% land is the real performance win, since
-  it halves how far off 13.56 MHz the first fit lands.
-  **Buy the spread, not the value** — 68/75/82/91/100 pF, ~$3.90 total: `C0805C680G5GACTU` (6,779),
-  `C0805C750G5GACTU` (3,220), `C0805C820G5GACTU` (6,616), `C0805C910G5GACTU` (2,349),
-  `C0805C101G1GACTU` (3,956, 100 V). **This KEMET line is why it is the pick**: the higher-Q RF
-  series (Murata GQM, Kyocera KGQ) are genuinely better parts but are *not stocked across the trim
-  range* — KGQ 75 pF and 91 pF are at zero and 100 pF had 3 pieces — and their advantage is
-  second-order anyway, because tank Q is dominated by the coil's ESR (~1–3 Ω at 13.56 MHz) against
-  an 0805 C0G's ~0.05–0.2 Ω. Going 0402 → 0805 already lowers ESR; paying 4× for an RF series that
-  cannot be trimmed with is the wrong trade.
+  **Part (DigiKey, live 2026-07-30): `QSCT251Q820G1GV001E`** — **Johanson Technology S-series**,
+  82 pF, **C0G/NP0**, **±2%**, 250 V, 0805, body 2.03 × 1.27 mm, **thickness 1.17 mm max**,
+  −55…+150 °C, DigiKey Features *"High Q, Low Loss, **Ultra Low ESR**"*, 3,522 in stock, $1.49 @1,
+  DK `712-QSCT251Q820G1GV001ETR-ND`. Johanson's S-series is the family built for 13.56 MHz
+  RFID/NFC tank tuning — this is the part for the job, not a general-purpose cap that fits.
+  **Buy the spread, not the value** — 68 (±1%, 9,901) / 75 (±2%, 7,815) / 82 (±2%, 3,522) /
+  91 (±2%, 3,543) / 100 pF (±1%, 5,160), **$8.65** for one of each, all in stock:
+  `QSCT251Q680F1GV001E`, `QSCT251Q750G1GV001E`, `QSCT251Q820G1GV001E`, `QSCT251Q910G1GV001E`,
+  `QSCT251Q101F1GV001E`.
+  **SUPERSEDES an earlier pick of KEMET `C0805C820G5GACTU`, which rested on a wrong claim.** That
+  entry said the high-Q RF families "are not stocked across the trim range". They are — the check
+  behind that claim only queried Kyocera's `KGQ21` line, found gaps at 75/91/100 pF, and
+  generalised from one family to all of them. Re-checked properly: Johanson S, Murata GQM and
+  Kyocera AVX 600F are **each** stocked across all five values in 0805.
+  **What the upgrade is actually worth, computed not asserted.** At 13.56 MHz an 82 pF tank has
+  Xc = 143.1 Ω against a resonant L of 1.68 µH, and the PCB spiral's ~2 Ω ESR is ~93% of the loss:
+  | | cap ESR | unloaded Q | loaded Q (IC ≈ 30) |
+  | --- | --- | --- | --- |
+  | 0402 C0G (today) | 0.20 Ω | 65.0 | 20.53 |
+  | 0805 standard C0G | 0.10 Ω | 68.1 | 20.83 |
+  | **0805 premium RF** | 0.030 Ω | **70.5** | **21.04** |
+  | 1206 premium RF | 0.020 Ω | 70.8 | 21.08 |
+  So the move is **+8.4% unloaded Q, +2.5% loaded** — real, worth $1.49, and *not* a step change in
+  read range. Anyone expecting more should be told the coil is the limit.
+  **0805 is the knee — do NOT go to 1206.** It buys +0.6% unloaded Q and costs more ESL, more stray
+  capacitance to the pour beneath it (which shifts the tune), and clearance margin (1.7 mm vs
+  0805's 2.1 mm). There is no rework benefit past 0805 either.
+  **Non-magnetic terminations were considered and are not available.** Ni-barrier terminations sit
+  in the tank's magnetic circuit — the same objection that killed exposing the coil to ENIG. A
+  search of 0603/0805/1206 high-Q parts returned **zero** non-mag options in stock at any value, so
+  this is closed, not ignored. The effect is in any case inside the part's measured ESR spec.
+  Kyocera AVX **600F** (porcelain, the best ESR available) was the runner-up at $2.45–3.54 — 2× the
+  price for the last +0.6% of unloaded Q, and its in-stock 75/91 pF are only ±5%, so the spread's
+  tolerance would be inconsistent. Murata **GQM** is cheapest ($0.84–1.51, full ±2% spread) but is
+  not flagged Ultra-Low-ESR.
   **Two things that must land with the footprint swap, or the enclosure is cut wrong:**
   (1) `enclosure/part_heights.py` needs an explicit **`"C9": 1.25`** — the package-generic 0805
   number that C26/C27 already use, not the part's own 0.88, because check [7] measures the declared
