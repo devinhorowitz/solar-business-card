@@ -15,7 +15,7 @@ monogram window, the ENIG, the contactless mark and the contact line are the rea
 Re-route the front and this picture follows. Stills, the exploded and reverse views, and the full
 respin are in [`enclosure/README.md`](enclosure/README.md).</sub>
 
-![SOLAR-GLOW · DRH — front and back, gold ENIG on black soldermask](https://github.com/devinhorowitz/solar-business-card/blob/main/Generated/docs/solar-glow-drh-v4_0-top.png)
+![SOLAR-GLOW · DRH — front and back, gold ENIG on black soldermask](https://raw.githubusercontent.com/devinhorowitz/solar-business-card/main/Generated/docs/solar-glow-drh-v4_0-top.png)
 
 > **Status: v4.0 (managed-solar redesign) in progress** -- working files are `v4_0`, currently the v3.0
 > baseline being reworked to the AEM10300 active-harvest architecture (see the design-notes v4 addendum +
@@ -219,10 +219,14 @@ The board is a KiCad project — open it, run DRC, and export the fab set:
 1. **Validate the energy budget first** — harvest vs. LED draw under real lighting (above).
 2. **Reflow the SMD parts** — the QFN MCU and the LGA accelerometer need hot air / a hotplate;
    the EP and the accel pad reflow to their planes.
-3. **Hand-solder last** — the solar cells (heat-sensitive: ≤ 260 °C / 2 s, no IPA), and set the
+3. **Flash firmware** over UPDI — the Tag-Connect pad (`TC1`) is the no-header path; `J1` is the
+   backup header. **This step moved ahead of the cells on 2026-07-30**, when TC1 was deliberately
+   moved to `F.Cu`: PV1's body covers the pad cluster, so a pogo cable cannot reach it once the
+   cell is on. The trade is a good one — the old position was under `SC1`, which is *reflowed*, so
+   the window used to close before the board was even finished. See the warning box in
+   [`PCB/README.md`](PCB/README.md).
+4. **Hand-solder last** — the solar cells (heat-sensitive: ≤ 260 °C / 2 s, no IPA), and set the
    **SW2** bridge for OFF / ON / TINY.
-4. **Flash firmware** over UPDI — the Tag-Connect pad (`TC1`) is the no-header path; `J1` is the
-   backup header.
 
 ---
 

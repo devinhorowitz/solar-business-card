@@ -272,6 +272,40 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
 
 ## PCB — `PCB/solar-glow-drh-v4_0.kicad_pcb` / `.kicad_sch`
 
+- [x] **[PCB] TC1 moved to the front — deliberate, and the docs now say so**
+  _(2026-07-30; CONFIRMED deliberate by DRH. Found while checking whether the v4 changes had
+  propagated to the READMEs.)_ In `5934b7d` the Tag-Connect programming cluster went **`B.Cu` →
+  `F.Cu`** — footprint layer, all five pads, and their mask apertures — plus a 180° rotation. XY
+  did not move (13.3, 16.9). At `8e5090ec` it was `B.Cu`; from `5934b7d` on it is `F.Cu`.
+  **What it buys.** The blocker used to be **SC1**, a *reflowed* SMD supercap, so the programming
+  window closed before the board was finished — you flashed a card with no energy storage on it.
+  The blocker is now **PV1**, whose body spans (2.3, 4.25)–(48.5, 27.25) over the pad cluster at
+  (12.219, 15.184)–(14.381, 18.616), and the cells are hand-soldered *last*. So the window moved
+  to "everything reflowed, cells not yet on", which is the right place for it. PV1's own pads do
+  not touch TC1's — 0.0% overlap — so the obstruction is mechanical, not electrical.
+  **What it costs.** Five bare ENIG pads on the show face. PV1 covers them in a finished card, so
+  they only read on a bare or unpopulated board and in the midnight-variant renders. And lifting a
+  heat-sensitive cell (≤ 260 °C / 2 s) to re-program is a worse recovery than lifting a supercap
+  was — which is the argument for loading **J1** on any board you expect to iterate firmware on.
+  **Docs updated to match:** `PCB/README.md`'s warning box names PV1, and the root README's
+  assembly order flashes at step 3 and solders the cells at step 4. It read "cells (3) → flash (4)"
+  before, which TC1's new position makes impossible.
+
+- [ ] **[TOOLING] Nothing in CI notices a footprint changing SIDES**
+  _(2026-07-30; surfaced by the TC1 move above, which was intended — the point is that an
+  unintended one would arrive just as quietly.)_ DRC has no opinion on which side a footprint sits,
+  schematic parity has no layer concept, and `check_consistency` **[1]** compares refdes and
+  footprint assignment but not side. TC1's flip was caught only as a side effect: `board_parts("B")`
+  stopped returning it and the brace's pocket list changed underneath.
+  A side flip is a one-keystroke edit in KiCad (`F` on a selected footprint) and it moves every pad
+  and mask aperture to the other face — for a B-side part it also silently deletes that part's
+  brace pocket, which is the enclosure failure mode `part_heights.py` exists to prevent from the
+  other direction.
+  There is no schematic-side source of truth to check against, so this cannot be a *comparison*
+  the way check [1] is; it has to be a **snapshot**: record refdes → side, fail on any change, and
+  update the snapshot in the same commit that makes the move. That is the same shape as the DRC
+  exclusion list — deliberate changes stay cheap, undeliberate ones stop being invisible.
+
 - [x] **[PCB] Stitch the stranded GND lobe under C13 / SB2 — one via at (24.707, 49.702)**
   _(2026-07-30; DONE. DRC `unconnected_items` 1 → 0.)_ The board picked up a stranded GND island in
   the 2026-07-30 sync. It was **8.20 mm² of B.Cu**, x[23.33, 28.37] y[47.20, 53.17], and it carried

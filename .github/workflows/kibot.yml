@@ -13,6 +13,15 @@ on:
   push:
     paths:
       - 'PCB/**'
+      # ...but not the prose in there. PCB/README.md and PCB/PCB-side-notes-brace-direction.md
+      # are documentation that happens to live beside the board, and `PCB/**` was matching them:
+      # merging #117, which changed CLAUDE.md and PCB/README.md and nothing else, kicked off the
+      # full ~16 min pipeline and committed d570a72 -- 49 files whose entire content was plot
+      # timestamps, re-zipped fab archives byte-identical in size, and one more roll of the
+      # raytracer. No gerber geometry moved. That is CI cost and binary churn bought with a
+      # sentence of prose, and it also falsely dates Generated/ to a run that regenerated nothing.
+      # Negation must come AFTER the pattern it narrows; GitHub takes the last match.
+      - '!PCB/**.md'
       - 'scripts/panelize.py'
       - 'scripts/render.py'
       # The assembly views are textured with the raytraced card face and read the board's
