@@ -195,10 +195,31 @@ def _frames_of(path):
         return []
 
 
-def save_png_stable(img, path):
-    """Same noise gate as the GIFs, for the textured stills."""
+def save_png_stable(img, path, gate=True):
+    """Same noise gate as the GIFs, for the textured stills.
+
+    `gate=False` for an output with NO raytraced texture. The gate exists because the card-face
+    plot comes back a few hundred bytes different every run, so every view wearing it as a
+    texture inherits a wobble that is not a change. An UNTEXTURED view has no such wobble: render
+    the same STL twice and the PNG is byte-identical (measured -- 0.0000 % of pixels past ΔE 12,
+    0.0000 mean). For those the gate has no upside and one downside, because git already
+    suppresses a byte-identical write; all the gate can add is the power to suppress a REAL one.
+
+    It did exactly that. The 2026-07-30 respin cut SJ1's pocket out of the brace and grew C9's
+    to the 0805 land, CI committed the new .stl -- and kept the old …-brace-render.png, because
+    rendering the two STLs in one process moves 0.4333 % of pixels at max ΔE 89, and the gate
+    fires below NOISE_FRAC = 0.5 %. A pocket appearing or vanishing is small in area and huge in
+    contrast, which is the one signature a fraction-of-frame test cannot see. So the brace shipped
+    a portrait of a brace that no longer existed -- the same failure the comment at BRACE_PNG
+    describes from before there was a generator at all, arriving this time through the gate.
+
+    Raising NOISE_FRAC is not the fix: cross-runner noise on the TEXTURED views has been measured
+    at 1.4189 %, above this 0.5 % as it stands, so the noise and real-change populations already
+    overlap and no single threshold separates them. What separates them is whether the view
+    carries the texture, and that is known per call site.
+    """
     img = present(img)
-    if _is_noise(_frames_of(path), [img]):
+    if gate and _is_noise(_frames_of(path), [img]):
         print(f"kept {os.path.basename(path)}  (re-render differs only by raytracer noise)")
         return False
     img.save(path)
@@ -677,7 +698,10 @@ _p4 = 24
 _img4 = _img4[max(0, _ys4.min() - _p4):min(BRACE_SIZE, _ys4.max() + _p4 + 1),
               max(0, _xs4.min() - _p4):min(BRACE_SIZE, _xs4.max() + _p4 + 1)]
 _fg4 = np.abs(_img4.astype(np.int16) - _BG.astype(np.int16)).max(axis=2) > 6
-_wrote4 = save_png_stable(Image.fromarray(_img4), BRACE_PNG)
+# gate=False: this is the ONE output with no raytraced texture, so it is bit-reproducible and
+# the noise gate can only ever hide a real respin from it. See save_png_stable's docstring for
+# the run where it did.
+_wrote4 = save_png_stable(Image.fromarray(_img4), BRACE_PNG, gate=False)
 if _wrote4:
     print(f"wrote brace/{os.path.basename(BRACE_PNG)}  {_img4.shape[1]}x{_img4.shape[0]}  "
           f"zoom {_z4:.2f}, margin {_m4}px, fills {100.0 * _fg4.sum() / _fg4.size:.1f}% of frame")

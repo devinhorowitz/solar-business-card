@@ -272,6 +272,31 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
 
 ## PCB — `PCB/solar-glow-drh-v4_0.kicad_pcb` / `.kicad_sch`
 
+- [ ] **[PCB] ⚠ CONFIRM: TC1 changed SIDES in the 2026-07-30 board sync — was that deliberate?**
+  _(2026-07-30; found while checking whether the v4 changes had propagated to the READMEs.)_
+  In `5934b7d` the Tag-Connect programming cluster went **`B.Cu` → `F.Cu`** — footprint layer, all
+  five pads, and their mask apertures — plus a 180° rotation. XY did not move (13.3, 16.9). At
+  `8e5090ec` it was `B.Cu`; from `5934b7d` on it is `F.Cu`.
+  **Nothing in CI can see this.** DRC has no opinion on which side a footprint sits, schematic
+  parity has no layer concept, and `check_consistency` compares refdes and footprint assignment,
+  not side. It surfaced only because `board_parts("B")` stopped returning TC1 and the brace's
+  pocket list changed.
+  **It is not obviously wrong — it may be an improvement.** The blocker used to be **SC1**, a
+  reflowed SMD supercap, so the programming window closed at reflow. Now the blocker is **PV1**,
+  whose body spans (2.3, 4.25)–(48.5, 27.25) and covers the pad cluster (12.219, 15.184)–(14.381,
+  18.616); the cells are hand-soldered last, so the window is *later*. PV1's own pads do not touch
+  TC1's — 0.0% overlap — so this is mechanical, not electrical.
+  **Against it:** five bare ENIG pads now sit on the **show face**, and the front is the face that
+  is seen (the shell is back-only). PV1 covers them, so they are hidden in the finished card — but
+  they are exposed on a bare or unpopulated board, and on the OSH Park midnight variant.
+  Also, lifting a heat-sensitive cell (≤ 260 °C / 2 s) to re-program is a worse recovery than
+  lifting a supercap was.
+  **Already done either way, because the docs had to match the board:** `PCB/README.md`'s warning
+  box now names PV1 rather than SC1, and the root README's assembly order now flashes *before* the
+  cells go on — it read "hand-solder the cells → flash over UPDI", which this makes impossible.
+  **If it was accidental** (an `F` keypress on a selected footprint does exactly this), flip it
+  back and both doc edits revert with it.
+
 - [x] **[PCB] Stitch the stranded GND lobe under C13 / SB2 — one via at (24.707, 49.702)**
   _(2026-07-30; DONE. DRC `unconnected_items` 1 → 0.)_ The board picked up a stranded GND island in
   the 2026-07-30 sync. It was **8.20 mm² of B.Cu**, x[23.33, 28.37] y[47.20, 53.17], and it carried

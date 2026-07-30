@@ -582,16 +582,34 @@ needs translucent FR4, the black look comes from the soldermask.
 
 ### Finishing the board by hand (after PCBWay returns it)
 
-> ### ⚠ Program the MCU BEFORE fitting SC1
+> ### ⚠ Program the MCU BEFORE fitting the SOLAR CELLS
 >
-> **TC1 sits entirely underneath SC1.** Both are on B.Cu, and the Tag-Connect pad cluster
-> (12.215, 15.18)–(14.385, 18.62) is **5.465 mm inside** SC1's outline — 100% covered, not a
-> near miss. Once the supercap is soldered down, a TC2030-MCP pogo cable physically cannot
-> reach the pads, and TC1 is *the primary programming path* (see the parts notes above).
+> **TC1 moved to the FRONT in the 2026-07-30 board sync** (`5934b7d`): the footprint went
+> `B.Cu` → `F.Cu`, pads and mask with it, plus a 180° rotation. **Confirm that was deliberate** —
+> nothing in CI catches a footprint changing sides. DRC has no opinion, schematic parity has no
+> layer concept, and `check_consistency` compares refdes and footprint assignment, not side.
 >
-> So: **flash and verify the firmware first, then fit the supercaps.** If you need to
-> re-program after SC1 is on, your options are the optional **J1** UPDI header or removing the
-> cell. Worth loading J1 on any board you expect to iterate firmware on.
+> What it changes: **SC1 no longer blocks TC1.** The supercap is on `B.Cu` and the Tag-Connect
+> pads are now on `F.Cu`, so a TC2030-MCP pogo cable reaches them with SC1 fitted. What blocks
+> them now is **PV1**: the cell's body spans (2.3, 4.25)–(48.5, 27.25) and the pad cluster
+> (12.219, 15.184)–(14.381, 18.616) sits well inside it. PV1's *solder pads* do not touch TC1's
+> — the overlap is 0.0% — so this is a mechanical obstruction, not an electrical one.
+>
+> So: **flash and verify the firmware first, then hand-solder the cells.** If you need to
+> re-program after PV1 is on, your options are the optional **J1** UPDI header or lifting the
+> cell — and the cell is the heat-sensitive part (≤ 260 °C / 2 s), which makes removing it a
+> worse trade than removing a supercap was. Worth loading J1 on any board you expect to iterate
+> firmware on.
+>
+> **This is now the tighter constraint, not the looser one.** SC1 is reflowed with the rest of
+> the SMD parts, so the old rule cost you the programming window at reflow; the cells go on last,
+> so the window is later — but the root README's assembly order still reads *hand-solder the
+> cells (3) → flash over UPDI (4)*, which this makes impossible. **Flash between 2 and 3.**
+>
+> _(Until 2026-07-30 this box read "before fitting SC1" and said both parts were on B.Cu, which
+> was true of the board it was written against. TC1's XY position did not move — 100% of its pads
+> are still inside SC1's outline, 5.464 mm in — only its side did, and that is the whole
+> difference.)_
 >
 > This is the assembly consequence of the 7 × `npth_inside_courtyard` DRC exclusions. Those were
 > accepted as a *geometry* decision; the ordering constraint they imply was never written down
