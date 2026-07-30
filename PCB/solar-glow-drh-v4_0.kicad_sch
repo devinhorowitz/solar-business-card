@@ -17475,7 +17475,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
+		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
 			(at 592.66 387.35 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -17495,7 +17495,7 @@
 				)
 			)
 		)
-		(property "Description" "22uF 10V 0603 X5R, AEM SRC decoupling (aem10300.pdf Table 11 CSRC)"
+		(property "Description" "22uF 16V 0805 X5R, AEM CSRC buffer at BUFSRC (aem10300 Table 6: min 13uF EFFECTIVE - footnote 1 names DC-bias derating). Re-picked 2026-07-30 (audit #2) from 0603/10V GRT188R61A226ME13D, which held only ~9-12uF at the 3.1-4.15V MPP bias. 16V 0805 holds ~15-17uF. 1.25mm max. Fits in place (gaps SC3 0.529/L2 0.575/SB2 0.776mm); 1206 does NOT fit."
 			(at 581.66 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -17505,7 +17505,7 @@
 				)
 			)
 		)
-		(property "MPN" "GRT188R61A226ME13D"
+		(property "MPN" "C2012X5R1C226M125AC"
 			(at 581.66 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -17526,7 +17526,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "490-GRT188R61A226ME13DCT-ND"
+		(property "Supplier P/N" "445-7647-1-ND"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -18123,7 +18123,7 @@
 				)
 			)
 		)
-		(property "Description" "10uF 10V 0805 X7R, AEM VINT buffer"
+		(property "Description" "10uF 16V 0805 X7R, AEM VINT buffer. Re-picked 2026-07-30 (audit #2): GRM21BR71A106KA73L went stock-zero at DigiKey AND Mouser, auto sibling NRND. 16V also margins the family. 1.40mm max -> part_heights C26/C27 = 1.45."
 			(at 612.14 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -18133,7 +18133,7 @@
 				)
 			)
 		)
-		(property "MPN" "GRM21BR71A106KA73L"
+		(property "MPN" "CL21B106KOQNNNG"
 			(at 612.14 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -18143,7 +18143,7 @@
 				)
 			)
 		)
-		(property "Supplier" "DigiKey"
+		(property "Supplier" "Mouser"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -18154,7 +18154,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "490-10516-1-ND"
+		(property "Supplier P/N" "187-CL21B106KOQNNNG (Mouser)"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -20425,7 +20425,7 @@
 				)
 			)
 		)
-		(property "Description" "10uF 10V 0805 X7R, STO local bulk/decoupling"
+		(property "Description" "10uF 16V 0805 X7R, STO local bulk/decoupling. Re-picked 2026-07-30 (audit #2): GRM21BR71A106KA73L went stock-zero at DigiKey AND Mouser, auto sibling NRND. 16V halves the DC-bias loss at STO's 5.5V max (was 55% of a 10V rating). 1.40mm max -> part_heights 1.45."
 			(at 642.62 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -20435,7 +20435,7 @@
 				)
 			)
 		)
-		(property "MPN" "GRM21BR71A106KA73L"
+		(property "MPN" "CL21B106KOQNNNG"
 			(at 642.62 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -20445,7 +20445,7 @@
 				)
 			)
 		)
-		(property "Supplier" "DigiKey"
+		(property "Supplier" "Mouser"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -20456,7 +20456,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "490-10516-1-ND"
+		(property "Supplier P/N" "187-CL21B106KOQNNNG (Mouser)"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)

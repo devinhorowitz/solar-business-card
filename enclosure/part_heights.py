@@ -50,8 +50,22 @@ HEIGHTS = {
     "FB1": 0.80,   # 0603 ferrite bead. Was falling through to the 0.60 default.
     # Capacitors above 0402 -- the prefix rule below is the 0402 number and undershoots
     # these. Each is set to cover its modelled body with a little air.
-    "C4":  0.90, "C13": 0.90, "C22": 0.90, "C23": 0.90, "C25": 0.90,   # 0603 (0.80)
-    "C26": 1.25, "C27": 1.25,                                          # 0805 (1.25)
+    "C4":  0.90, "C13": 0.90, "C22": 0.90, "C23": 0.90,                # 0603 (0.80)
+    # C25 re-picked 2026-07-30 (audit #2) to an 0805/16V part (TDK C2012X5R1C226M125AC,
+    # 1.25 max) because the 0603/10V one derated under the AEM's CSRC minimum -- but the
+    # BOARD still carries the 0603 land until the KiCad sync clears the tripwire, and
+    # check [7] measures THIS number against the model on the board. Declaring 1.25 now,
+    # against the 0603 body, is a 0.45 overshoot > OVERSHOOT_MAX and check [7] rightly
+    # calls that a mistake. So: 0.90 today, -> 1.25 IN THE SAME COMMIT as the land sync.
+    # (Same sequencing C9 used: its height entry landed after its board sync, not with
+    # the schematic half.)
+    "C25": 0.90,                                                       # 0603 TODAY (see above)
+    # C26/C27 re-picked 2026-07-30 (audit #2): Samsung CL21B106KOQNNNG, 10uF 16V X7R --
+    # the old Murata went stock-zero at both distributors. The Samsung body is 1.40 max,
+    # taller than the 1.25 package-generic figure these carried, so the declared height
+    # rises with the re-pick (pocket deepens: safe direction, air). Against the generic
+    # 1.25 model this is a 0.20 overshoot, inside OVERSHOOT_MAX -- deliberate air.
+    "C26": 1.45, "C27": 1.45,                                          # 0805, 1.40 part max
     # C9, the NFC tank trim, went 0402 -> 0805 on 2026-07-30 for hand-rework and Q. 1.25 is the
     # PACKAGE-GENERIC 0805 number C26/C27 already use, deliberately NOT the chosen part's own
     # 1.17 max (Johanson QSCT251Q820G1GV001E): check [7] measures this against the generic
