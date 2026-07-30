@@ -21878,7 +21878,7 @@
 				)
 			)
 		)
-		(property "Footprint" "solarglow:C9"
+		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
 			(at 571.5 129.54 0)
 			(hide yes)
 			(show_name no)
@@ -21900,7 +21900,7 @@
 				)
 			)
 		)
-		(property "Description" "NFC antenna trim - DNP (chip internal ~50 pF)"
+		(property "Description" "NFC tank trim, 0805 high-Q C0G +/-2% (Johanson S-series). DNP at assembly - hand-fit on the bench to land resonance at 13.56 MHz; U5 carries ~50 pF internally. Value is a STARTING POINT, trim 68-100 pF."
 			(at 560.07 119.38 0)
 			(hide yes)
 			(show_name no)
@@ -21911,7 +21911,29 @@
 				)
 			)
 		)
-		(property "MPN" "(DNP)"
+		(property "MPN" "QSCT251Q820G1GV001E"
+			(at 560.07 119.38 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Supplier" "DigiKey"
+			(at 560.07 119.38 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Supplier P/N" "712-QSCT251Q820G1GV001ETR-ND"
 			(at 560.07 119.38 0)
 			(hide yes)
 			(show_name no)

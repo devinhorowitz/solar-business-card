@@ -334,8 +334,25 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   line 27, and U1's own schematic Description string, which still reads *"pin 10 (VDDIO2->PD0: SJ1
   now DNP)"*.
 
-- [ ] **[SCH/PCB/BOM] C9 0402 → 0805, and buy it as a trim KIT not a part**
-  _(2026-07-30; part chosen, layout edit outstanding.)_ C9 is the NFC tank trim across the coil
+- [ ] **[PCB] C9 0402 → 0805 — ⚠️ SCHEMATIC HALF IS DONE; THE BOARD IS DELIBERATELY RED**
+  _(2026-07-30.)_ **DRC fails on purpose until the board carries the 0805 land.** The schematic now
+  says `Capacitor_SMD:C_0805_2012Metric` (the same stock land C26/C27 already use) while the board
+  still has `solarglow:C9`, and `footprint_symbol_mismatch` was raised `warning` → `error` in
+  `.kicad_pro` so that is a build failure rather than one line in a 237-warning report. Targeted,
+  not blanket: C9 is its only instance. `footprint_symbol_field_mismatch` was deliberately **left
+  at warning** — it fires on any text difference (Description, MPN, Datasheet), which is
+  documentation drift; a wrong *footprint* is a manufacturing fault.
+  DRC now reads *"[footprint_symbol_mismatch]: solarglow:C9 doesn't match footprint given by symbol
+  (Capacitor_SMD:C_0805_2012Metric) … error … @(35.6600 mm, 39.1400 mm)"*.
+  **To clear it:** place the 0805 land (rotate 90°, grow vertically — see the clearances below),
+  re-route the two short stubs to the coil, and re-run. Still outstanding with it: the
+  `part_heights.py` entry and the pad toe/thermal-relief work, both below.
+  Schematic side already carries `MPN QSCT251Q820G1GV001E`, `Supplier DigiKey`,
+  `Supplier P/N 712-QSCT251Q820G1GV001ETR-ND`, and a Description that says DNP means *hand-fit at
+  bench trim*, not unused. ERC unchanged (3 pre-existing excluded warnings, none introduced).
+
+  The reasoning, kept because it is what the board edit has to satisfy:
+  C9 is the NFC tank trim across the coil
   terminals (`LA`/`LB`) and the one part that gets reworked *repeatedly* — you tune resonance by
   fitting a value, measuring, and fitting another. On an 0402 that is miserable.
   **It must not move.** Its position and the loop area of its connection are part of the tank being
