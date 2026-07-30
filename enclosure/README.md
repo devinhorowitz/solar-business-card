@@ -179,9 +179,19 @@ measurement the project is gated on (harvest under real indoor light) needs ligh
 cells *while* the harvest chain is probed. So the plate holds P75 pogo pins pointing **up**:
 the PCBWay panel drops on face-up, registered by two Ø1.5 dowels through its asymmetric
 TH1/TH2 tooling holes (a backwards panel refuses the pins), the rails rest on the plate's
-ledge, the B-side parts hang into a cavity sized off `part_heights.py`, and eleven
-receptacles land on TP1–TP7 + JP1. The card face — cells included — looks at the ceiling;
-TC1 programs from the top at the same time. Test as delivered, then depanel.
+ledge, the B-side parts hang into a cavity sized off `part_heights.py`, and fourteen
+receptacles land on TP1–TP7, the JP1 strip, **and the J1 UPDI column** — three more bare
+B-side pads (`UPDI`/`STO`/`GND`), so programming comes through the plate too. The card
+face — cells included — looks at the ceiling. Test as delivered, then depanel.
+
+Hookup, from the wire-wrap tails below the plate:
+
+| Function | Tails | Notes |
+|---|---|---|
+| UPDI programming | `UPDI` + `GND` (J1 column), VTG ref → `VS` | SNAP / PICkit / Atmel-ICE; TC1 from the top stays the alternative |
+| I²C tap | `SCL` / `SDA` / `GND` (JP1 column) | bus pull-ups (R10/R11, 4.7 k → VS) are on-board |
+| Bench power injection | `STO` (either column) + `GND` return | two STO landings = a free Kelvin pair (force one, sense the other) |
+| Harvest chain scope | `SRC`, `MID`, `LX_LOUT`, `VINT`, `BUFSRC`, `STO_LDO`, `VS` | the bring-up order from the test-pad audit |
 
 Hardware: generic **P75-E2** probes in **R75-3W** wire-wrap receptacles, both parametrised
 at the top of the generator. Two numbers must be tuned per printer/parts batch before the

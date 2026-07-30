@@ -100,12 +100,18 @@ def _blocks(src, opener):
 
 
 def probe_points(src):
-    """[(label, x, y)] for every pad of TP1-TP7 and JP1, in board coordinates."""
+    """[(label, x, y)] for every pad of TP1-TP7, JP1 and J1, in board coordinates.
+
+    J1 is the UPDI header -- three bare B-side SMD pads (UPDI / STO / GND), dnp like
+    the rest. Landing it makes the plate the complete programming dock: a SNAP/PICkit
+    hooks UPDI + GND here, takes its VTG reference from the VS receptacle (TP2), and
+    bench power injects on STO; the I2C tap is JP1's SCL/SDA (pull-ups are on-board).
+    No top-side Tag-Connect needed -- TC1 stays as the alternative from above."""
     import math
     pts = []
     for b in _blocks(src, r'\n\t\(footprint "'):
         mref = re.search(r'\(property "Reference" "([^"]+)"', b)
-        if not mref or not re.match(r"^(TP[1-7]|JP1)$", mref.group(1)):
+        if not mref or not re.match(r"^(TP[1-7]|JP1|J1)$", mref.group(1)):
             continue
         at = re.search(r'\n\t\t\(at ([-\d.]+) ([-\d.]+)(?: ([-\d.]+))?\)', b).groups()
         fx, fy, frot = float(at[0]), float(at[1]), float(at[2] or 0)
@@ -121,7 +127,7 @@ def probe_points(src):
 
 board_src = open(os.path.join(ROOT, "PCB", "solar-glow-drh-v4_0.kicad_pcb")).read()
 PROBES = probe_points(board_src)
-assert len(PROBES) == 11, f"expected 11 probe pads (TP1-TP7 + JP1 x4), found {len(PROBES)}"
+assert len(PROBES) == 14, f"expected 14 probe pads (TP1-TP7 + JP1 x4 + J1 x3), found {len(PROBES)}"
 
 card = panelize.card_polygon(board_src.replace("\r\n", "\n"))
 frame, _slots, (bx0, by0, bx1, by1) = panelize.build(card)
@@ -273,7 +279,14 @@ txt = "\n".join(f"{n:26} {z:7.2f}" for n, z in rows) + (
     f"\n\nhardware: P75-E2 probes (stroke 2.50 full),"
     f"\nR75-3W wire-wrap receptacles (OD 1.32,"
     f"\ncollar 5.0, ~26.5 long). Set SW2 before"
-    f"\nseating the panel; TC1 connects from the top.")
+    f"\nseating the panel."
+    f"\n\nhookup (tails, below the plate):"
+    f"\n  UPDI prog   SNAP/PICkit: UPDI+GND at the"
+    f"\n              J1 column, VTG ref -> VS"
+    f"\n  I2C tap     SCL / SDA / GND (JP1 column;"
+    f"\n              4.7k pull-ups to VS on-board)"
+    f"\n  power in    STO (J1 or JP1), return GND"
+    f"\n  (TC1 from the top stays the alternative)")
 axz.text(0.02, 0.96, txt, va="top", family="monospace", fontsize=9)
 fig.tight_layout()
 fig.savefig(OUT + BASE + "-DRAWING.png", dpi=160)

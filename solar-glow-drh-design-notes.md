@@ -1783,3 +1783,12 @@ only crossing. Hardware is the generic 75-series (P75-E2 in R75-3W); the two num
 vendor publishes reliably (resin bore fit, probe tip height over a seated collar) are
 deliberately tune-on-first-print parameters, backed by a five-bore fit coupon printed
 into the plate.
+
+**Same PR — the plate is also the programmer.** J1, the unpopulated UPDI backup header,
+turned out to be three bare B-side SMD pads (`UPDI`/`STO`/`GND` at x 4.55) — landable by
+the same E2 tips as everything else, so the plate grew from eleven receptacles to
+fourteen and the whole bring-up loop closes through one fixture: SNAP/PICkit on the J1
+tails with VTG referenced to the VS receptacle, I²C tapped at JP1's SCL/SDA (pull-ups
+on-board), power injected on STO — which lands twice, J1 and JP1, a free Kelvin
+force/sense pair — and the harvest chain on TP2–TP7. TC1 remains the top-side
+alternative, no longer a requirement.
