@@ -46,11 +46,28 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   own 3D model so neither direction of drift can go quiet again. The brace STEP/STL and both
   drawing sheets are regenerated; `through-holes: ['U6']` is now the complete list.
 
-- [ ] **[BOM] Buy the low-stock / long-lead parts early** _(2026-07-23)._ Thin at audit: **supercaps**
-  SC1–4 (~195–200), **FER1** ferrite (41), **U3** accel (731), **U1** MCU (608), **PV** cells (423).
-  Supercaps + ferrite are the historical long-lead items — order with the first cut. Also grab a
-  **spare NT3H2211 or two**: NXP steers new designs to NTAG 5, so NTAG I²C plus carries EOL risk on a
-  years horizon (the U5 NFC audit (now in git history / design-notes) kept it as best-fit, but flagged this).
+- [ ] **[BOM] Buy the low-stock / long-lead parts early** _(2026-07-23; numbers refreshed 2026-07-30
+  from a live DUAL-distributor sweep of all 31 orderable MPNs — DigiKey and Mouser, exact-MPN matched.)_
+  - **U3 accel `ADXL367BCCZ-RL7` — the new alarm: DigiKey went 731 → 0 in seven days.** Mouser holds
+    2,601 ($7.80). The card's only actuator is now single-distributor. Buy from Mouser, early.
+  - **Supercaps are the global chokepoint:** SS17 ≈ 400 and WS17 ≈ 393 **combined across both
+    distributors** — at 2/board, ~200 boards of world-visible stock per type. SS17 is $0.66 cheaper
+    at Mouser. Order with the first cut, from both carts if batching.
+  - **FER1 was a false scarcity:** the "41 in stock, 24-week lead" figure was DigiKey's; **Mouser has
+    119 at $13.18 vs DK's $17.43**. Buy there.
+  - **U1 MCU recovered:** DK 608 → 1,365 (Mouser only 269 — buy DK). **PV cells** 423, DK-only
+    (Mouser doesn't list ANYSOLAR). **C11** (mandatory ADXL VREG cap) ~5.1 k combined — fine, order
+    with build.
+  - **A single-distributor order is impossible:** DK-only = PV, LEDs (`LA P47F`, 11.3 k), U7 FRAM
+    `…AWEWE1` (1.5 k), R10/R11, C22. Mouser-only = U3, U8 AEM10300 (553, listed as `AEM10300-QFN`),
+    C26/C27 Samsung, PRG1 UPDI Friend (56). Split is forced; assign by depth.
+  - **CBL1 trap:** DigiKey's in-stock Tag-Connect item is `TC2030-MCP-NL` (no legs); the legged
+    `TC2030-MCP` the BOM specifies is Restricted/zero at Mouser — check Tag-Connect direct at order.
+  - Also grab a **spare NT3H2211 or two**: NXP steers new designs to NTAG 5, so NTAG I²C plus carries
+    EOL risk on a years horizon (the U5 NFC audit kept it as best-fit, but flagged this).
+  - _LCSC pending as a third source (API hookup TBD). Expectation to verify: strong on the Yageo /
+    Samsung / TDK passives, useless for the actual chokepoints (SCHURTER, ANYSOLAR, e-peas, RAMXEED,
+    Würth FSFS, likely ADXL367)._
 
 - [ ] **[PCB] Silk legend height on the STO_LDO upload** _(2026-07-21)._ Two B.Silk legends
   (`TINY MODE` @ (31.75, 50.95), `ENABLE` @ (27.5, 49.63)) sit at 0.5 mm and trip the 0.8 mm
@@ -272,7 +289,18 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
 
 ## PCB — `PCB/solar-glow-drh-v4_0.kicad_pcb` / `.kicad_sch`
 
-- [ ] **[PCB/BOM] C25 re-pick LANDED in sch/BOM — ⚠ THE BOARD IS DELIBERATELY RED until the 0805 land is synced**
+- [x] **[PCB/BOM] C25 re-pick COMPLETE — land synced, tripwire cleared, and the sync itself was audited**
+  _(Closed 2026-07-30. The land sync landed in `87f7af1`; DRH moved C25 east to **(25.875, y)** while
+  syncing, which bought SC3 a full 1.0 mm.)_ Closing the loop found **two grazes at the landed
+  position that the committed `DRC.rpt` did not show** (it predates the final placement):
+  C25's GND pad sat **0.149 mm** from the LDRV3 track — 3 µm under the 0.152 dual-fab hard floor —
+  and the first fix attempt (+0.05 mm south) ran the courtyard 0.015 mm into L2's. The feasible
+  band was y ∈ [55.003, 55.035]; **final y = 55.02** gives LDRV3 0.169 mm (+17 µm over the floor,
+  out of the coin-flip band) and 15 µm of courtyard air. DRC after: 0 unconnected, 0 parity,
+  0 clearance, 0 courtyard — the baseline 10 excluded + 3 silk + mask noise, nothing else.
+  `part_heights` "C25": 0.90 → 1.25 flipped with it, and the user's KiCad save re-serialized the
+  four NFC-mark polygons, so `mask_art --apply` regenerated them (same art, MATCH after).
+  The original finding, kept for the record:
   _(Re-pick landed 2026-07-30; only the LAND sync remains, and the tripwire enforces it.)_ The schematic
   now says `Capacitor_SMD:C_0805_2012Metric` + TDK `C2012X5R1C226M125AC` (16 V, DK `445-7647-1-ND`,
   11,799 in stock, $0.56 q1) while the board still carries the 0603 land, so `footprint_symbol_mismatch`

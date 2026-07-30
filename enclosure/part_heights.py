@@ -52,14 +52,12 @@ HEIGHTS = {
     # these. Each is set to cover its modelled body with a little air.
     "C4":  0.90, "C13": 0.90, "C22": 0.90, "C23": 0.90,                # 0603 (0.80)
     # C25 re-picked 2026-07-30 (audit #2) to an 0805/16V part (TDK C2012X5R1C226M125AC,
-    # 1.25 max) because the 0603/10V one derated under the AEM's CSRC minimum -- but the
-    # BOARD still carries the 0603 land until the KiCad sync clears the tripwire, and
-    # check [7] measures THIS number against the model on the board. Declaring 1.25 now,
-    # against the 0603 body, is a 0.45 overshoot > OVERSHOOT_MAX and check [7] rightly
-    # calls that a mistake. So: 0.90 today, -> 1.25 IN THE SAME COMMIT as the land sync.
-    # (Same sequencing C9 used: its height entry landed after its board sync, not with
-    # the schematic half.)
-    "C25": 0.90,                                                       # 0603 TODAY (see above)
+    # 1.25 max) because the 0603/10V one derated under the AEM's CSRC minimum. The land
+    # sync landed 2026-07-30 (87f7af1, moved to x 25.875 -- every neighbour gap >=0.525);
+    # this entry flipped 0.90 -> 1.25 in the same change, the sequencing C9 established:
+    # check [7] measures this number against the model on the board, so the height had to
+    # wait for the 0805 body to actually be there.
+    "C25": 1.25,                                                       # 0805 (1.25)
     # C26/C27 re-picked 2026-07-30 (audit #2): Samsung CL21B106KOQNNNG, 10uF 16V X7R --
     # the old Murata went stock-zero at both distributors. The Samsung body is 1.40 max,
     # taller than the 1.25 package-generic figure these carried, so the declared height
