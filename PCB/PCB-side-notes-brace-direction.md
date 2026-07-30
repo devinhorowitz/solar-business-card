@@ -113,16 +113,72 @@ no ferrite). Resin RF loss over the coil stops mattering; the ferrite sits betwe
   shift the tank; the C9 trim ladder covers the whole family of builds. Consequence: final
   trim happens with the full stack installed — see §5.
 
-## 5. C9 trim workflow — brace must be removable
+## 5. C9 is now a derived value, reflowed — not a trim
 
-The NFC tank is trimmed iteratively: fit C9, assemble, measure, refit. Computed/estimated
-trim windows: **~90 pF** bare; **up to ~150 pF** enclosed with no ferrite; **~52–77 pF**
-enclosed with the 0.3 mm ferrite (inductance rises above bare, so the trim drops). One
-stocked C0G ladder (68/82/100/120/150 pF) covers all three. Two asks:
+**Changed 2026-07-30.** C9 was DNP and hand-fitted against a measurement. It is now **47 pF,
+placed by the assembler**, because the value can be computed and the computation lands well
+inside the window a trim would have searched.
+
+**Coil.** L is not estimated from a spiral fit — every closed form (Wheeler, Mohan,
+Jenei) is fitted to square spirals and this coil is 11.0 × 24.6 mm outer, aspect 2.2. It is
+computed by **Greenhouse** on the board's own rails (7 turns at x 37.4–41.0 / 44.8–48.4 and
+y 32.2–35.8 / 53.2–56.8, 0.30 mm trace on 0.60 mm pitch): self-inductance of all 28 straight
+segments plus the signed mutual inductance of every parallel pair, GMD-corrected for strip
+width, 45° corners taken off first order.
+
+> **L = 0.958 µH** bare — 404 nH of self, 606 nH of mutual, so 60 % of this coil's
+> inductance is turn-to-turn coupling.
+
+Two independent checks: the same code agrees with Mohan's current-sheet fit to within 2–6 %
+on square spirals, and the **"~90 pF bare"** figure this section used to quote implies
+L = 0.957 µH at 13.56 MHz — the same coil to three digits, arrived at by whoever wrote that
+line without this calculation.
+
+**The rest of the tank.** Tag Ci = **50 pF** (NT3H2211 datasheet Table 42, LA–LB on-chip,
+13.56 MHz, V<sub>LA-LB</sub> = 2.4 V<sub>RMS</sub>, min 44 / max 56). Antenna Cc ≈ **6 pF**
+(AN11276 Table 2: etched inter-turn 2–4 pF, plus 1–5 pF for the bridge — this coil's inner
+end does return across the front on LB, which is that bridge).
+
+**Target frequency, and why it is not 13.56.** AN11276 §4.2.1, verbatim: *"For single tag
+operation, a tuning slightly above 13.56 MHz would lead to maximum read-/write distance. Due
+to manufacturing tolerances, a nominal frequency of 14.5 MHz for single tag operation is
+recommended."* The asymmetry behind that: presenting the card couples the two antennas and
+pulls the tag's resonance **down**, so a tag already under the carrier gets worse as it
+approaches, while one above it moves toward the carrier.
+
+**The ferrite is a scenario, not a tolerance.** The old 52–77 pF enclosed window is an
+inductance window in disguise: 77 pF ⇒ 1.052 µH, 52 pF ⇒ 1.300 µH, i.e. **+10 % to +36 %**.
+Every board shares whichever multiplier is real, so it is spanned, not stacked in quadrature
+with the component spreads.
+
+| C9 | ferrite +10 % | +23 % | +36 % | verdict |
+| --- | --- | --- | --- | --- |
+| 39 pF | 15.91 | 15.05 | 14.31 MHz | safe, but 2.2 bandwidths above the carrier |
+| **47 pF** | **15.28** | **14.45** | **13.74 MHz** | **+0.05 MHz off AN11276's target; never under the carrier** |
+| 56 pF | 14.65 | 13.86 | 13.18 MHz | high-ferrite case falls under the carrier |
+| 82 pF *(old)* | 13.20 | 12.48 | 11.87 MHz | under the carrier in every scenario |
+
+Loaded Q is ~15–30 (R<sub>p</sub> 1.5–3 kΩ), so the −3 dB bandwidth is 0.45–0.91 MHz. 47 pF
+sits **1.3 bandwidths** above the carrier; 39 pF sits 2.2, which is real range given away for
+a corner case. The only way 47 pF goes under is ferrite at its maximum estimate *and*
+components at 2σ together — 13.31 MHz.
+
+**Part:** Johanson **QSCT251Q470G1GV001E**, DigiKey **712-QSCT251Q470G1GV001ETR-ND** — 0805
+C0G/NP0, ±2 %, 250 V, High-Q / Ultra-Low-ESR, 1.17 mm max, Active, **10,809 in stock**
+(the 82 pF it replaces had 3,522). Cut-tape **712-QSCT251Q470G1GV001ECT-ND** is MOQ 1 if the
+4,000-piece reel is wrong for the run.
+
+**Measure ENCLOSED.** Bare on the bench this reads ~16.7 MHz and that is not a fault — the
+ferrite is what brings it down. A bare-board measurement will look alarming and mean nothing.
+
+**Still worth keeping, now as insurance rather than workflow:**
 
 1. The brace is **seated, not bonded** to the board — removable and reseatable. (PSA-ing
    the ferrite into the brace pocket per §3 keeps this true.)
 2. C9's cutout allows tweezers-and-iron access with the brace out.
+
+If the first assembled card measures outside ~13.6–15.3 MHz, the ferrite multiplier is
+outside the assumed range and the neighbours on the C0G ladder are 39 and 56 pF.
 
 ## 6. Window bay decision needed — reflector strategy
 

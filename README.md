@@ -118,7 +118,7 @@ TPS22917DBVT** (ultra-low-leakage dark-current swap) with **R14 (1 M `NFC_EN` pu
 JP1/JP2 rows are dropped (the `JP1` designator is reused in v3.0 for the bench pad strip - bare pads,
 no BOM part). Passives are X7R / AEC-Q200 / precision grade: most on **0402** lands, with the
 stability upsizes on 0603 (C22/C23, R5/R6, R15/R16, plus the bulk caps C4/C13/C25) and 0805
-(C26/C27); SJ1 is DNP. Lineage: v2.2 added the NFC parts (U5 / C8 / C9 / R13); the `v2 2` and older
+(C26/C27, and C9's NFC tank trim). SJ1 is culled. Lineage: v2.2 added the NFC parts (U5 / C8 / C9 / R13); the `v2 2` and older
 BOM files stay in the repo as history.
 
 ---

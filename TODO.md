@@ -415,15 +415,18 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   (#614537 body, #D2D1C7 terminations), so it is not the grey-block case `LA_P47F` was.
   `render.py` reports **53/53 models resolve** and check [7] measures C9 among the 47 modelled
   B-side parts.
-  **It is nonetheless absent from every populated render, and that is correct** — C9 is
-  `(attr smd dnp)`, so the assembled board will not have it. Proven rather than assumed: rendering
-  the board twice unchanged moves 2 px over ΔE 40, and re-rendering with only C9's `dnp` cleared
-  puts a single 528 px blob, **20 × 37 px**, on that land — an 0805 turned 90°, exactly where it
-  belongs. So the model is right and DNP is the whole reason.
-  The trap was that an empty land looks the same whether the part is DNP or its model silently
-  failed, and the resolve count cannot tell them apart. `render.py` now prints the DNP set beside
-  it, so the CI log reads *"DNP, so resolved but NOT drawn (1): C9"*. C9 is the only `dnp`
-  footprint on the board that carries a model; the other nine have none.
+  **C9 is no longer DNP** _(2026-07-30)_: it is **47 pF**, `QSCT251Q470G1GV001E`, placed by the
+  assembler. The value is derived rather than trimmed — the full derivation is in
+  `PCB/PCB-side-notes-brace-direction.md` §5, and the short version is L = 0.958 µH by Greenhouse
+  on the board's own 7 rails, +10–36 % from the ferrite, Ci = 50 pF, Cc = 6 pF, targeting
+  AN11276 §4.2.1's 14.5 MHz single-tag nominal. 47 pF lands 14.45 MHz and never drops under the
+  13.56 carrier anywhere in the ferrite range; the old 82 pF sat at 12.48 MHz enclosed, under the
+  carrier in every scenario. It now appears in the populated renders, which is how it should read.
+  _(While it was DNP it was correctly absent, and proving that took a controlled render pair: the
+  board rendered twice unchanged moves 2 px over ΔE 40, and clearing only `dnp` put a single
+  528 px blob, 20 × 37, on that land. That measurement is what confirmed the 0805 model was
+  right, and it is why `render.py` now names the DNP set beside the resolve count — an empty land
+  reads the same whether a part is DNP or its model silently failed.)_
   Still to do: **the +0.4 mm pad toe and the thermal-relief spokes** described at the end of this
   item. Kept below, as written, because it is the record of why 0805 and why that part:
   the schematic said
