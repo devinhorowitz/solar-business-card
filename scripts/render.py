@@ -250,6 +250,48 @@ def stock_model_dir() -> str:
     return str(VENDORED_3D)
 
 
+def _dnp_with_models(src: str) -> list[str]:
+    """Refdes of every `dnp` footprint that still carries a model — resolved, never drawn.
+
+    Paren-balanced rather than regex-per-footprint, because a footprint block contains nested
+    pads, models and properties and a lazy match would run past its own end into the next part's
+    attributes and mislabel it.
+    """
+    out = []
+    for m in re.finditer(r'\n\t\(footprint "', src):
+        i = m.start() + 1
+        d = 0
+        j = i
+        instr = False
+        while j < len(src):
+            c = src[j]
+            if instr:
+                if c == "\\":
+                    j += 2
+                    continue
+                if c == '"':
+                    instr = False
+            elif c == '"':
+                instr = True
+            elif c == "(":
+                d += 1
+            elif c == ")":
+                d -= 1
+                if d == 0:
+                    break
+            j += 1
+        b = src[i:j + 1]
+        attr = re.search(r'\n\t\t\(attr ([^)]*)\)', b)
+        if not attr or "dnp" not in attr.group(1).split():
+            continue
+        if "(model " not in b:
+            continue
+        ref = re.search(r'\(property "Reference"\s+"([^"]+)"', b)
+        if ref:
+            out.append(ref.group(1))
+    return sorted(out)
+
+
 def _report_model_resolution(src: str) -> None:
     """Say out loud how many component bodies this machine can actually draw.
 
@@ -262,6 +304,15 @@ def _report_model_resolution(src: str) -> None:
     So before rendering, resolve every path the same way kicad-cli will and print the
     result. If the render host is missing model files, the CI log says which ones
     instead of quietly publishing a half-populated board.
+
+    RESOLVING IS NOT THE SAME AS BEING DRAWN. A footprint marked `dnp` keeps its model
+    reference, resolves perfectly, and is still not drawn -- correctly, because the
+    assembled board will not have the part on it. But the picture of "resolved and drawn"
+    and the picture of "resolved and deliberately absent" are the same empty land, and the
+    line above cannot tell them apart. C9 is the live case: it went 0402 -> 0805 on
+    2026-07-30 for hand-rework, and the only way to confirm the bigger body landed was to
+    re-render with its `dnp` cleared and diff (528 px, 20x37 -- an 0805 turned 90 degrees).
+    Nobody should have to do that to read a render, so the DNP set is named here too.
     """
     import os
     stock = stock_model_dir()
@@ -285,6 +336,10 @@ def _report_model_resolution(src: str) -> None:
             f"render: {len(missing)} model file(s) missing — an assembled render with absent "
             f"bodies is worse than none, so this is a hard stop. Vendor them into "
             f"{VENDORED_3D.relative_to(ROOT)}/ or fix the path in the board.")
+    dnp = _dnp_with_models(src)
+    if dnp:
+        print(f"    DNP, so resolved but NOT drawn ({len(dnp)}): {', '.join(dnp)}"
+              f"  — an empty land under these is correct, not a missing model")
 
 
 

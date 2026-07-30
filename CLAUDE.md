@@ -141,6 +141,13 @@ from a generator CI runs** (check [9]), and that every 3D model carries its tabl
   and shipped as a grey block in every assembled render for months. Check [5] counts models that
   *resolve*, and an uncoloured model resolves perfectly. Colours live once, in
   `scripts/part_colors.py`; check [10] gates them, and a new model with no entry is an error.
+- **A `dnp` part's model resolves too — and is still not drawn.** Same blind spot, opposite cause:
+  the body is absent from every populated render *correctly*, because the assembled board will not
+  have the part, but "resolved and drawn" and "resolved and deliberately absent" look identical —
+  an empty land. **C9** is the only one on this board (the other nine `dnp` footprints carry no
+  model at all), and confirming its 0402→0805 upsize had landed meant re-rendering with `dnp`
+  cleared and diffing: 528 px, 20×37, an 0805 turned 90°. `render.py` now names the DNP set beside
+  the resolve count so nobody has to do that again.
 - **The front mask art is generated from the routing.** Every opening is `shape − live copper`,
   so moving a front trace can put a signal under an aperture — re-run `scripts/mask_art.py
   --apply`. Consistency check [6] errors if you forget. It is the one artwork here that goes
