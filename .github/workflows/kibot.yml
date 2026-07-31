@@ -32,6 +32,18 @@ on:
       - 'enclosure/assembly_render.py'
       - 'enclosure/fit_rules.py'
       - 'enclosure/board_parts.py'
+      # The CAD/drawing GENERATORS THEMSELVES, and medallion.py (the back medallion's
+      # geometry + parameters, an input to the shell generator). These were missing until
+      # 2026-07-31, and PR #129 (the medallion graduation) only regenerated because
+      # fit_rules.py happened to be in the same diff. The concrete failure the gap
+      # invited: bump medallion.SERIAL to "002" -- a one-line edit, the exact workflow
+      # the parameter exists for -- and nothing regenerates, so the committed STEP
+      # silently ships unit 001's number.
+      - 'enclosure/medallion.py'
+      - 'enclosure/solar-glow-drh-v3_0-backshell-0p6b-brace-cad.py'
+      - 'enclosure/solar-glow-drh-v3_0-backshell-0p6b-brace-DRAWING-gen.py'
+      - 'enclosure/brace/solar-glow-drh-diffuser-brace-cad.py'
+      - 'enclosure/brace/solar-glow-drh-diffuser-brace-DRAWING-gen.py'
       # The pogo test plate has no other trigger: it is not consumed by the assembly
       # render, so an edit to its generator alone must regenerate its STEP/STL/drawing.
       - 'enclosure/solar-glow-drh-pogo-testplate-cad.py'
