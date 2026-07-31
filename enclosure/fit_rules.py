@@ -266,8 +266,19 @@ def boss_island(mx, my):
 #     network is that tool's work alone, roughly +30-60 min of spindle time on the Ti
 #     quote. The G engraving study aligned its baselines to FIN_PITCH; it re-derives
 #     from these constants when it is picked.
-FIN_PITCH  = 1.4           # centre-to-centre: rib + groove
-FIN_RIB_W  = 0.6           # rib width; groove = pitch - rib = 0.8 (O0.6 tool + 0.2)
+# The pitch is DERIVED, not declared. A declared pitch leaves a remainder, and the
+# remainder pools at the outer edge as a gutter wider than every other gap -- 2.05
+# against 0.8 at the last sizing, reviewer-visible as "room for one more fin". So the
+# layout closes exactly instead: from the boss-line anchor to the field edge, N ribs
+# and N equal gaps consume the span completely, N maximised subject to the groove
+# floor. The derived gap lands at 0.792: 8 um under the 0.80 target, 0.192 of side
+# clearance for the O0.6 (16% of diameter, comfortably normal practice), floored at
+# FIN_GROOVE_MIN with the DRU's hair-under philosophy so at-spec geometry cannot
+# coin-flip. Result: EVERY gap on the back -- grooves, outer gutter, boss-line gutter
+# -- is the same number. FIN_PITCH / FIN_GROOVE / FIN_ROWS are computed at the bottom
+# of this section and stay importable (the G engraving study reads FIN_PITCH).
+FIN_RIB_W  = 0.6           # rib width: tolerance + refinish floor (see commit trail)
+FIN_GROOVE_MIN = 0.78      # groove floor: O0.6 tool + 0.18 clearance floor (target 0.2)
 FIN_PROUD  = 0.10          # rib tops stand this proud of the art field...
 FIN_VALLEY = 0.30          # ...and valleys are cut this far into the 1.00 floor -> 0.40 relief
 FIN_BOSS_CLR = 0.40        # rib to back boss annulus
@@ -347,72 +358,82 @@ def fin_band():
     return pv[0][3], pv[1][1]
 
 
-def fin_runs(pitch=FIN_PITCH, rib_w=FIN_RIB_W):
-    """Per-field rib centrelines and the ENVELOPE the valley cut may occupy.
+def _fin_layout(rib_w=FIN_RIB_W, groove_min=FIN_GROOVE_MIN):
+    """(rows, groove, pitch): the exact-closure layout, one derivation for everything.
 
-    The rib grid is centred in each field (off = remainder/2) and that is unchanged --
-    the G engraving variant's baseline grid and every fin position stay put. What the
-    envelope fixes is where the remainder GOES. It used to be cut: the valley field ran
-    to the band edge, so each field started and ended with a PARTIAL groove -- 1.175 mm
-    against the 1.500 of every interior valley -- and four narrower grooves at the field
-    boundaries read as uneven machining (measured on the committed STL by ray-cast, and
-    exactly what a reviewer flagged on the elevation render). The cut is now clipped to
-    the rib envelope, so every groove that exists is a full 1.500 and the remainder is
-    FLUSH art-field margin instead of a squeezed groove.
+    From the boss-line anchor to the field edge the span is consumed COMPLETELY by
+    N ribs and N equal gaps (N-1 grooves + the outer gutter), N maximised subject to
+    the groove floor. Both fields have the same span by symmetry -- asserted, because
+    the whole point is that no gap anywhere is different from any other.
     """
+    f = _back_field()
+    ys = sorted({my for _mx, my in MOUNTS})
+    s_bot = ys[1] - f.bounds[1]
+    s_top = f.bounds[3] - ys[2]
+    assert abs(s_bot - s_top) < 1e-9, "fields lost their symmetry"
+    n = int(s_bot // (rib_w + groove_min))
+    g = (s_bot - n * rib_w) / n
+    return n, g, rib_w + g
+
+
+FIN_ROWS, FIN_GROOVE, FIN_PITCH = _fin_layout()   # 19 / 0.792 / 1.392 today; derived,
+                                                  # so a field or rib change re-closes
+                                                  # the layout instead of pooling a
+                                                  # remainder at the outer edge
+
+
+def fin_runs(rib_w=FIN_RIB_W):
+    """Per-field rib centrelines and the pour zone.
+
+    The grid anchors on the MID-BOSS LINES: the innermost rib's flank sits exactly ON
+    the boss centreline -- as close to the card's centre as a row can get without
+    crossing the bosses -- and walks outward at the DERIVED pitch, which closes the
+    span exactly (see _fin_layout): the outer gutter equals the grooves equals the
+    boss-line gutter. (fin_band(), the PV-gap reference, still defines the clear
+    centre for the engraving studies; the mark at y 51.5/54.1 and the ART rect
+    y 30.8..58.1 stay clear of the zones by >= 1.1.)
+    """
+    n, g, pitch = _fin_layout(rib_w)
     field = _back_field()
     fx0, fy0, fx1, fy1 = field.bounds
-    moat = pitch - rib_w
     blockers = unary_union([Point(mx, my).buffer(BOSS_R + FIN_BOSS_CLR, resolution=48)
                             for mx, my in MOUNTS])
-    # The rib grid anchors on the MID-BOSS LINES, not the PV-cell gap: the innermost
-    # rib's flank sits exactly ON the boss centreline -- as close to the card's centre
-    # as a row can get without crossing the bosses -- and the grid walks outward at
-    # pitch from there. The zone's gutter continues one moat past the line, wrapping
-    # the mid bosses exactly like the corner ones. (fin_band(), the PV-gap reference,
-    # still defines the clear centre for the engraving studies; the mark at y 51.5/54.1
-    # and the ART rect y 30.8..58.1 stay clear of the extended zones by >= 1.1.)
     ys = sorted({my for _mx, my in MOUNTS})
     inner_bot, inner_top = ys[1], ys[2]               # 28.5 / 60.4: the mid-boss lines
     runs = []
     for outer, inner, sgn in [(fy0, inner_bot, 1), (fy1, inner_top, -1)]:
-        cys = []
-        c = inner - sgn * rib_w / 2                   # flank tangent to the boss line
-        while sgn * (c - sgn * rib_w / 2 - outer) >= moat - 1e-9:
-            cys.append(c)
-            c -= sgn * pitch
-        cys.sort()
-        z0, z1 = (outer, inner + sgn * moat) if sgn > 0 else (inner + sgn * moat, outer)
+        cys = sorted(inner - sgn * (rib_w / 2 + i * pitch) for i in range(n))
+        z0, z1 = (outer, inner + sgn * g) if sgn > 0 else (inner + sgn * g, outer)
         zone = field.intersection(box(fx0 - 1, z0, fx1 + 1, z1)).difference(blockers)
         runs.append((zone, cys))
     return runs
 
 
-def fin_region(pitch=FIN_PITCH, rib_w=FIN_RIB_W):
+def fin_region(rib_w=FIN_RIB_W):
     """The valley cut: the pour zone itself, opened at the cutter radius so the cut is
-    what the O1.0 tool can actually make -- narrower nooks stay flush, the fill's
+    what the O0.6 tool can actually make -- narrower nooks stay flush, the fill's
     minimum-width rule."""
-    reg = unary_union([z for z, _cys in fin_runs(pitch, rib_w)])
+    reg = unary_union([z for z, _cys in fin_runs(rib_w)])
     reg = (reg.buffer(-_BACK_CUT_R, join_style=1, resolution=32)
               .buffer(_BACK_CUT_R, join_style=1, resolution=32))
     return unary_union([_dedupe(g) for g in
                         (reg.geoms if reg.geom_type == "MultiPolygon" else [reg])])
 
 
-def fin_ribs(pitch=FIN_PITCH, rib_w=FIN_RIB_W):
+def fin_ribs(rib_w=FIN_RIB_W):
     """Stadium ribs in the pour: each rib is its centreline clipped to the moat-eroded
     zone and buffered back with round caps, so every tip is full-radius and keeps the
-    same MOAT (pitch - rib_w) to every boundary it approaches -- frame base, boss-wrap
-    arc, gutter edge. The pour still floods the whole band; the ribs float in it. The
+    same DERIVED groove to every boundary it approaches -- frame base, boss-wrap arc,
+    gutter edge. The pour still floods the whole band; the ribs float in it. The
     erosion is backed off by EPS because the innermost row's flank sits exactly ON the
     boss line, i.e. exactly on the eroded boundary, and an exact-boundary intersection
     is numerically empty -- the row would vanish."""
     from shapely.geometry import LineString
-    moat = pitch - rib_w
+    _n, moat, _pitch = _fin_layout(rib_w)
     EPS = 0.01
-    region = fin_region(pitch, rib_w)
+    region = fin_region(rib_w)
     out = []
-    for zone, cys in fin_runs(pitch, rib_w):
+    for zone, cys in fin_runs(rib_w):
         ero = zone.buffer(-(rib_w / 2 + moat - EPS), join_style=1, resolution=48)
         zx0, _zy0, zx1, _zy1 = zone.bounds
         for cy in cys:
