@@ -1,6 +1,6 @@
 # Back-shell engraving studies
 
-Twenty-two ways to mark the titanium back, parked here so the reasoning survives the
+Twenty-five ways to mark the titanium back, parked here so the reasoning survives the
 conversation that produced it. **Nothing here ships.** The committed shell still
 carries `MAKER_LINES` from `solar-glow-drh-v3_0-backshell-0p6b-brace-cad.py`; when one of
 these is chosen it replaces that, and only then does it become part of the CAD chain.
@@ -13,6 +13,7 @@ python3 enclosure/engraving-studies/spin4_provenance.py     # what the back SAYS
 python3 enclosure/engraving-studies/spin5_t_relief.py       # T's ring, set in relief
 python3 enclosure/engraving-studies/spin6_finish.py         # the single-finish reality
 python3 enclosure/engraving-studies/spin7_lapped.py         # blast + home-lapped crests
+python3 enclosure/engraving-studies/spin8_plane.py          # the gameplan: bearing plane
 python3 enclosure/engraving-studies/all_studies.py          # every variant on one sheet
 # renders + numbers land in $ENGRAVE_OUT (default: $TMPDIR/engraving-studies)
 ```
@@ -206,10 +207,40 @@ only on flush cells *inside* the lap footprint, because a hand block does not br
 what it never touches. If a lap jig is ever wanted, a resin ring that registers on the
 frame and exposes only the medallion is a trivial addition to the enclosure generators.
 
+## Spin 8 — the gameplan: every bright feature lives on the bearing plane
+
+The decision spin (2026-07-31). The medallion's crests — ring text, rim, hoop, serial —
+rise to the frame's own **+0.15 bearing plane**, so the finishing operation becomes the
+simplest one that exists: the whole part, face-down, on a lapping plate. The plate
+touches frame + crests and *nothing else, by geometry* — the field is 0.15 below it, the
+fin ribs 0.05 below, the coin floor deeper still. No jig, no hand block, no way to scuff
+what the plate cannot reach, and re-lapping is the same operation forever. The bright
+area is small on purpose (~130 mm² + frame): scuffs land only where the part already
+bears, and a minute on the plate restores them — the reasoning that picked this over
+spin 7's large lapped dial.
+
+"Raised" is the wrong word for how it is machined: the crests are **left**, exactly as
+the frame is left — stock-plane islands the facing op steers around before the coin
+sinks around them. And the tool is a straight end mill, *not* the tapered relief cutter:
+at these wall heights the 15° taper would flare 0.11–0.16 into each side of a ~0.30
+stroke and knife-edge the letters below the plane, where the plate could never find
+them. Vertical walls keep the full stroke as lap contact.
+
+| | idea |
+| --- | --- |
+| **W** SUNKEN COIN | coin floor 0.25 into the field → 0.40 walls; rim + ring + hoop + serial on the plane. 129 mm² of lap contact; Ø0.3 finisher at 1.3×D; 3.5 mm² of counter webs lap bright (tight digits read solid). |
+| **X** DEEP COIN | coin floor 0.45 → 0.60 walls, the full budget as shadow under the bright plane. The Ø0.3 would run 2×D, so the finisher steps to Ø0.4 and the webs grow to 5.5 mm² — X pays for its shadow in counter legibility. |
+| **Y** BARE COIN | W's depths, no rim, no hoop — 45 mm² of lap contact, the recess wall is the only circle. The quietest of the three. |
+
+**One law amended, loudly:** the frame stops being the *sole* bearing surface — the
+crests join it, coplanar, finished by the same pass. (Ribs stay 0.05 under the plane and
+stay dark.) This lands in `fit_rules` and the shell generator when a variant ships, not
+before.
+
 `all_studies.py` composes every variant's diffuse-light render into one sheet
 (`all_studies.png`), one spin per row, titles pulled from each spin's own `VARIANTS` list
 so the sheet cannot drift from the scripts. (Rows before spin 6 still render two-tone
-there — they are comparative aids; spins 6 and 7 are the finish truth.)
+there — they are comparative aids; spins 6–8 are the finish truth.)
 
 ## Standing recommendation
 
@@ -235,7 +266,9 @@ Spin 6 adds the finish-robustness lens: under the one uniform finish the shop ap
 two-texture contrast no shop can order and go quiet in diffuse light.
 
 Spin 7 restores that contrast at the bench — one blast, then hand-lapped crests — and
-with it the full menu: **U/V as the coin** (bright crests, dark floor) if ten minutes of
-film per unit is acceptable, **T + a lapped dial** for the inverse (dark sunk letters in
-a bright disc) with the v-carve's zero-risk cut underneath, and **T un-lapped** as the
-no-labor floor that still reads. The cut no longer has to hedge against the finish.
+spin 8 turns that insight into the architecture: crests on the bearing plane, whole-part
+plate lap, self-limiting by geometry. **The gameplan is spin 8's sunken coin.** The
+remaining pick is W vs X vs Y — walls (0.40 vs 0.60, shadow vs counter legibility) and
+furniture (rim + hoop vs bare). Next step once picked: land it in the shell generator as
+CAD (replacing `MAKER_LINES`) and amend the bearing rule in `fit_rules` — at that point
+it leaves this directory and joins the part.

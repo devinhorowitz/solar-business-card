@@ -29,19 +29,22 @@ import spin2_composition as C
 import spin3_reeded as R3
 import spin4_provenance as R4
 import spin5_t_relief as R5
+import spin8_plane as R8
 
 OUT = E.OUT
 
 ROWS = [
     ("SPIN 1 -- WHICH CUTTER", "spin1", [(v["key"], v["title"]) for v in E.VARIANTS]),
     ("SPIN 2 -- COMPOSITION, HIERARCHY, REGISTRATION", "spin2",
-     [(k, t) for k, t, _s, _f, _w in C.VARIANTS]),
+     [(k, t) for k, t, *_ in C.VARIANTS]),
     ("SPIN 3 -- MEETING THE FINE REEDING", "spin3",
-     [(k, t) for k, t, _s, _f, _w in R3.VARIANTS]),
+     [(k, t) for k, t, *_ in R3.VARIANTS]),
     ("SPIN 4 -- PROVENANCE: WHAT THE BACK SAYS", "spin4",
-     [(k, t) for k, t, _s, _f, _w in R4.VARIANTS]),
+     [(k, t) for k, t, *_ in R4.VARIANTS]),
     ("SPIN 5 -- T IN RELIEF", "spin5",
-     [(k, t) for k, t, _s, _f, _w in R5.VARIANTS]),
+     [(k, t) for k, t, *_ in R5.VARIANTS]),
+    ("SPIN 8 -- THE BEARING PLANE (the gameplan; 6-7 are finish states, not variants)",
+     "spin8", [(k, t) for k, t, *_ in R8.VARIANTS]),
 ]
 
 TH = 620            # uniform thumbnail height
