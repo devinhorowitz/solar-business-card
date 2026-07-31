@@ -283,9 +283,33 @@ def _dedupe(poly):
 
 
 def _back_field():
-    """The recessed back art field: the cavity rect inset by the proud border, own fillet."""
-    c = cavity_rect()
-    return c.buffer(-BACK_BORDER, join_style=1, resolution=64)
+    """The recessed back art field AS THE GENERATOR MACHINES IT: a CARD-CENTRED rectangle.
+
+    This used to be cavity_rect().buffer(-2.0) -- the LIP MOUTH inset by the border. The
+    mouth is deliberately x-asymmetric (W lip 2.5, E lip 1.0 for the NFC coil), so the fin
+    fields inherited a 0.75 mm x-offset onto the card's EXTERIOR: flush side margins of
+    2.45 vs 0.95 mm inside an art field the generator cuts dead-centred ("SYMMETRIC proud
+    back-frame border, equal on all 4 sides (decoupled from the asymmetric front lip)" --
+    the generator's own back_border comment). Reviewer-visible as uneven side spacing.
+    Now mirrors the generator's art-field rect exactly: centred, cavW-2*border wide,
+    fillet concentric with the frame fillet.
+    """
+    W, H, EF, CAVR = 50.80, 88.90, -0.05, 2.95      # board + edge_fit, as the generator uses
+    hw, hh = (W + 2 * EF) / 2 - BACK_BORDER, (H + 2 * EF) / 2 - BACK_BORDER
+    cx, cy = W / 2, H / 2
+    r = max(CAVR - BACK_BORDER, 0.3)
+    c = box(cx - hw, cy - hh, cx + hw, cy + hh)
+    return c.buffer(-r, join_style=1, resolution=64).buffer(r, join_style=1, resolution=64)
+
+
+def _fin_x_envelope():
+    """Straight rib ends, one x per side, derived from the boss columns: every rib runs
+    boss-keepout to boss-keepout. Rows near a boss used to be clipped by the keepout ARC
+    while middle rows ran to the field edge -- wavy terminations, the other half of the
+    uneven-spacing review. The boss columns are card-symmetric and the field now is too,
+    so the flush side margins come out equal by construction."""
+    xs = sorted({mx for mx, _my in MOUNTS})
+    return xs[0] + BOSS_R + FIN_BOSS_CLR, xs[-1] - (BOSS_R + FIN_BOSS_CLR)
 
 
 def fin_band():
@@ -331,12 +355,13 @@ def fin_runs(pitch=FIN_PITCH, rib_w=FIN_RIB_W):
 
 def fin_region(pitch=FIN_PITCH, rib_w=FIN_RIB_W):
     """Everything the valley cut may occupy: both rib ENVELOPES, minus the boss annuli.
-    Clipped to the envelopes rather than the full bands -- see fin_runs()."""
+    Clipped to the rib envelope in y (see fin_runs) and the boss-column envelope in x
+    (see _fin_x_envelope), so every groove is full-length and full-width."""
     field = _back_field()
-    fx0, _fy0, fx1, _fy1 = field.bounds
+    ex0, ex1 = _fin_x_envelope()
     blockers = unary_union([Point(mx, my).buffer(BOSS_R + FIN_BOSS_CLR, resolution=48)
                             for mx, my in MOUNTS])
-    bands = [box(fx0, env0, fx1, env1) for _a, _b, _cys, env0, env1 in fin_runs(pitch, rib_w)]
+    bands = [box(ex0, env0, ex1, env1) for _a, _b, _cys, env0, env1 in fin_runs(pitch, rib_w)]
     reg = unary_union([field.intersection(b) for b in bands]).difference(blockers)
     return unary_union([_dedupe(g) for g in
                         (reg.geoms if reg.geom_type == "MultiPolygon" else [reg])])
@@ -346,12 +371,11 @@ def fin_ribs(pitch=FIN_PITCH, rib_w=FIN_RIB_W):
     """The rib polygons themselves, opened at the tool radius so nothing survives that a Ø1.0
     cutter could not actually leave standing."""
     region = fin_region(pitch, rib_w)
-    field = _back_field()
-    fx0, fy0, fx1, fy1 = field.bounds
+    ex0, ex1 = _fin_x_envelope()
     out = []
     for _a, _b, cys, _e0, _e1 in fin_runs(pitch, rib_w):
         for cy in cys:
-            r = region.intersection(box(fx0, cy - rib_w / 2, fx1, cy + rib_w / 2))
+            r = region.intersection(box(ex0, cy - rib_w / 2, ex1, cy + rib_w / 2))
             if r.is_empty:
                 continue
             # Open at the tool radius to kill slivers, THEN clip back to the region. The dilate
