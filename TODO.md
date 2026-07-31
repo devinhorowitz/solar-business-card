@@ -435,9 +435,13 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   mask colour, thickness, and whether the Ti shell is fitted. So this one decision is the whole
   remaining gap.
 
-- [ ] **PCBWay orders** — confirm both replies sent (`W567099ASH69` bare fab, `T-H70W567099A` PCBA);
+- ~~**PCBWay orders** — confirm both replies sent (`W567099ASH69` bare fab, `T-H70W567099A` PCBA);
   get the LED package dimension answer (1.25 vs 1.9 mm) and the merged PCB+PCBA total; ensure the PO
-  uses the confirmed MPNs.
+  uses the confirmed MPNs.~~ **Struck 2026-07-31: that submission and its order are long abandoned**
+  (pre-dates the v4 rework, the panel, the B-side test pads and the hard-gold net rule). The next
+  order is a fresh one, placed from `PCB/README.md`'s Step-3 guide against the current `Generated/`
+  set — nothing from the `W567099` thread carries over, including its LED-dimension question, which
+  dissolved with the confirmed LA_P47F package in the BOM master.
 
 - [ ] _(Low)_ **`PCB/README.md`'s parts table is a hand-maintained duplicate of the BOM master** and has
   now drifted twice (it was still listing `AVR64DD28-I/STX`, `TPS22918DBVR`, the SOIC-8 FRAM and
@@ -451,11 +455,15 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   _(Absorbed from the culled cosmetic item, 2026-07-30 purge: the same README's via-in-pad list
   is v3-era — two new via-touching-pad cases exist and zero true via-in-pad remain; correct it
   in the same pass.)_
-- [ ] **[BLOCKER before machining] Human-verify the rear maker's-mark orientation.** Render committed
-  at `docs/solar-glow-drh-maker-mark-preview.png`. Numeric checks can't catch a mirror/flip error.
-  First-pass read: right-side-up + horizontally mirrored (consistent with the intended left-to-right
-  flip); still needs the real physical/STEP flip confirmed. Knob: maker-mark
-  `aff.scale(xfact=-1, yfact=1, …)` (set `yfact=-1` for a top-bottom flip).
+- [ ] **[BLOCKER before machining] Human-verify the rear MEDALLION orientation.** _(Retargeted
+  2026-07-31: the two-line maker's mark this item was written for was replaced by the Z9F
+  medallion — `enclosure/medallion.py`, cut by the shell generator. The gate itself stands:
+  numeric checks cannot catch a mirror/flip error, only a human reading the STEP/physical part
+  can.)_ The medallion carries the same per-glyph Y-flip + whole-group X-mirror convention the
+  mark used, verified in renders (ring reads clockwise, SOLAR·NFC at 12, MMXXVI inverted at 6 —
+  caseback style, correct); the machining mirror lives in `medallion._mirror()`. Before the Ti
+  order: open the committed STEP in a viewer, view the back from OUTSIDE the part, and confirm
+  DRH / No 001 read correctly and the ring runs clockwise.
 
 - [ ] **Front solar-panel fence** — concept only. Panel height known (**cell 1.2 mm ± 0.3 mm**,
   SM141K06TF datasheet p.1 + p.3 drawing — caliper-check the actual cells before cutting fence height;
