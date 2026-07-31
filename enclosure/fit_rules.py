@@ -248,11 +248,56 @@ def boss_island(mx, my):
 # and ridges perpendicular to that slide are the ones that stop it. The trade is real: ribs across
 # the short axis do NOT stiffen the card against its dominant flex, which is curling along its
 # length -- lengthwise ribs would. Grip wins because the plate is screwed to a PCB at eight points,
-# not carried bare, and 0.70 mm of floor survives under the valleys.
-FIN_PITCH  = 3.2           # centre-to-centre; coarser reads as fins, finer reads as knurl
-FIN_RIB_W  = 1.7           # rib width; the rest of the pitch is valley
-FIN_PROUD  = 0.10          # rib tops stand this proud of the art field...
-FIN_VALLEY = 0.30          # ...and valleys are cut this far into the 1.00 floor -> 0.40 relief
+# not carried bare, and 0.40 mm of waffle-backed floor survives under the valleys.
+# AS FINE AS THE MACHINING HONESTLY GOES (2026-07-30, on request). Every number below
+# is a floor with an owner:
+#   groove 0.8 = O0.6 tool + 0.2 side clearance. O0.6 solid carbide slotting 0.30 deep
+#     (0.5xD) across ~40 mm runs in Ti-6Al-4V is routine engraving-grade work; O0.5
+#     would buy 0.1 mm of fineness at real breakage-and-cycle risk over ~36 long slots,
+#     and zero-clearance slotting stays banned (burnishes in Ti, undersizes with wear
+#     -- the same rejection recorded when the O1.0 groove was sized).
+#   rib 0.6 = tolerance + refinish. +-0.05 per wall puts +-0.1 on a rib: at 0.6 that is
+#     +-17%, the finest width where row-to-row variation stays invisible and a bead
+#     blast does not knife-edge the top. Relief 0.40 on 0.6 wide = 0.67 aspect: rigid.
+#   pitch 1.4 = the sum. 2.3x finer than the 3.2 it replaces; 18 rows per field. The
+#     old note said "finer reads as knurl" -- at 1.4 it reads as reeding, and that is
+#     now the point. Coarser fallbacks if the shop balks, in order: groove 1.0 (O0.8),
+#     groove 1.2 (O1.0, the previous sizing). Cycle-time cost of O0.6: the groove
+#     network is that tool's work alone, roughly +30-60 min of spindle time on the Ti
+#     quote. The G engraving study aligned its baselines to FIN_PITCH; it re-derives
+#     from these constants when it is picked.
+# The pitch is DERIVED, not declared. A declared pitch leaves a remainder, and the
+# remainder pools at the outer edge as a gutter wider than every other gap -- 2.05
+# against 0.8 at the last sizing, reviewer-visible as "room for one more fin". So the
+# layout closes exactly instead: from the boss-line anchor to the field edge, N ribs
+# and N equal gaps consume the span completely, N maximised subject to the groove
+# floor. The derived gap lands at 0.792: 8 um under the 0.80 target, 0.192 of side
+# clearance for the O0.6 (16% of diameter, comfortably normal practice), floored at
+# FIN_GROOVE_MIN with the DRU's hair-under philosophy so at-spec geometry cannot
+# coin-flip. Result: EVERY gap on the back -- grooves, outer gutter, boss-line gutter
+# -- is the same number. FIN_PITCH / FIN_GROOVE / FIN_ROWS are computed at the bottom
+# of this section and stay importable (the G engraving study reads FIN_PITCH).
+FIN_RIB_W  = 0.6           # rib width: tolerance + refinish floor (see commit trail)
+FIN_GROOVE_MIN = 0.78      # groove floor: O0.6 tool + 0.18 clearance floor (target 0.2)
+FIN_PROUD  = 0.10          # rib tops stand this proud of the art field. CAPPED here by
+                           # law: the 0.15 frame stays the sole bearing surface (tops
+                           # 0.05 under it), so extra relief goes DOWN, never up.
+FIN_VALLEY = 0.60          # ...and valleys cut this far into the 1.00 floor -> 0.70 felt
+                           # relief, 0.40 web. Was 0.30/0.70-web; deepened 2026-07-30
+                           # after a depth-budget analysis. The 0.40 web is the honest
+                           # maximum, each line item owned: it matches SLA_WEB = 0.40
+                           # (the resin floor -- Ti at 0.40 is enormously stronger than
+                           # resin at 0.40); the web is a WAFFLE strip 0.79 wide between
+                           # ribs backed by the brace-filled cavity (t/span 0.5), not a
+                           # membrane; and the fins are machined BEFORE the cavity is
+                           # hollowed, so cutting never happens on a diaphragm (op-order
+                           # callout in enclosure/README). Costs accepted: two O0.6
+                           # passes (1xD) instead of one, and residual-stress bow risk
+                           # on the 43 mm field -- countered by the stress-relieved
+                           # stock callout. Below a 0.40 web there is no precedent floor
+                           # left to stand on: do not go deeper without a new analysis.
+                           # Bonus this buys: the engraving depth ceiling (any cut <=
+                           # FIN_VALLEY adds no new thinnest section) rises with it.
 FIN_BOSS_CLR = 0.40        # rib to back boss annulus
 BACK_BORDER = 2.0          # the proud back frame's width (mirrors the generator's own constant)
 
@@ -277,9 +322,42 @@ def _dedupe(poly):
 
 
 def _back_field():
-    """The recessed back art field: the cavity rect inset by the proud border, own fillet."""
-    c = cavity_rect()
-    return c.buffer(-BACK_BORDER, join_style=1, resolution=64)
+    """The recessed back art field AS THE GENERATOR MACHINES IT: a CARD-CENTRED rectangle.
+
+    This used to be cavity_rect().buffer(-2.0) -- the LIP MOUTH inset by the border. The
+    mouth is deliberately x-asymmetric (W lip 2.5, E lip 1.0 for the NFC coil), so the fin
+    fields inherited a 0.75 mm x-offset onto the card's EXTERIOR: flush side margins of
+    2.45 vs 0.95 mm inside an art field the generator cuts dead-centred ("SYMMETRIC proud
+    back-frame border, equal on all 4 sides (decoupled from the asymmetric front lip)" --
+    the generator's own back_border comment). Reviewer-visible as uneven side spacing.
+    Now mirrors the generator's art-field rect exactly: centred, cavW-2*border wide,
+    fillet concentric with the frame fillet.
+    """
+    W, H, EF, CAVR = 50.80, 88.90, -0.05, 2.95      # board + edge_fit, as the generator uses
+    hw, hh = (W + 2 * EF) / 2 - BACK_BORDER, (H + 2 * EF) / 2 - BACK_BORDER
+    cx, cy = W / 2, H / 2
+    r = max(CAVR - BACK_BORDER, 0.3)
+    c = box(cx - hw, cy - hh, cx + hw, cy + hh)
+    return c.buffer(-r, join_style=1, resolution=64).buffer(r, join_style=1, resolution=64)
+
+
+# ---- fin fields as a POUR: the texture floods the band, edge to edge -----------------
+# The model is a copper fill. The zone is the ENTIRE art-field band -- ribs run from the
+# frame base on one side to the frame base on the other, and the field's own rounded
+# corners clip them -- and the boss keepouts are the pads: the texture wraps each one at
+# the uniform BOSS_R + FIN_BOSS_CLR clearance arc, as far in as the tool can reach.
+# What makes this read designed rather than accidental is that ONE rule governs every
+# boundary interaction: same clearance at every boss, same termination at every edge,
+# and the pour's min-width discipline (the O1.0 back cutter's opening) decides what is
+# too narrow to exist, exactly like a fill's minimum width. Ribs stand 0.10 proud and
+# die into the frame base 0.05 below the frame top, so the fins grow out of the border
+# instead of stopping short of it. The rib grid's remainder is NOT flush: the whole zone
+# is cut, so the remainder becomes a valley-depth GUTTER above and below each rib run --
+# continuous with the boss-wrap arcs, so a perimeter channel frames the stack and the
+# wider edge channel reads as that frame, not as an uneven groove.
+_BACK_CUT_R = 0.3          # O0.6 fin finisher: the pour's minimum-width rule. The O1.0
+                           # stays for the art field / border; the groove network is the
+                           # O0.6's work alone (nothing else fits a 0.8 slot).
 
 
 def fin_band():
@@ -297,45 +375,96 @@ def fin_band():
     return pv[0][3], pv[1][1]
 
 
-def fin_region():
-    """Everything the fin field may occupy: both bands, minus the boss annuli."""
+def _fin_layout(rib_w=FIN_RIB_W, groove_min=FIN_GROOVE_MIN):
+    """(rows, groove, pitch): the exact-closure layout, one derivation for everything.
+
+    From the boss-line anchor to the field edge the span is consumed COMPLETELY by
+    N ribs and N equal gaps (N-1 grooves + the outer gutter), N maximised subject to
+    the groove floor. Both fields have the same span by symmetry -- asserted, because
+    the whole point is that no gap anywhere is different from any other.
+    """
+    f = _back_field()
+    ys = sorted({my for _mx, my in MOUNTS})
+    s_bot = ys[1] - f.bounds[1]
+    s_top = f.bounds[3] - ys[2]
+    assert abs(s_bot - s_top) < 1e-9, "fields lost their symmetry"
+    n = int(s_bot // (rib_w + groove_min))
+    g = (s_bot - n * rib_w) / n
+    return n, g, rib_w + g
+
+
+FIN_ROWS, FIN_GROOVE, FIN_PITCH = _fin_layout()   # 19 / 0.792 / 1.392 today; derived,
+                                                  # so a field or rib change re-closes
+                                                  # the layout instead of pooling a
+                                                  # remainder at the outer edge
+
+
+def fin_runs(rib_w=FIN_RIB_W):
+    """Per-field rib centrelines and the pour zone.
+
+    The grid anchors on the MID-BOSS LINES: the innermost rib's flank sits exactly ON
+    the boss centreline -- as close to the card's centre as a row can get without
+    crossing the bosses -- and walks outward at the DERIVED pitch, which closes the
+    span exactly (see _fin_layout): the outer gutter equals the grooves equals the
+    boss-line gutter. (fin_band(), the PV-gap reference, still defines the clear
+    centre for the engraving studies; the mark at y 51.5/54.1 and the ART rect
+    y 30.8..58.1 stay clear of the zones by >= 1.1.)
+    """
+    n, g, pitch = _fin_layout(rib_w)
     field = _back_field()
-    y0, y1 = fin_band()
     fx0, fy0, fx1, fy1 = field.bounds
     blockers = unary_union([Point(mx, my).buffer(BOSS_R + FIN_BOSS_CLR, resolution=48)
                             for mx, my in MOUNTS])
-    bands = [box(fx0, fy0, fx1, y0), box(fx0, y1, fx1, fy1)]
-    reg = unary_union([field.intersection(b) for b in bands]).difference(blockers)
+    ys = sorted({my for _mx, my in MOUNTS})
+    inner_bot, inner_top = ys[1], ys[2]               # 28.5 / 60.4: the mid-boss lines
+    runs = []
+    for outer, inner, sgn in [(fy0, inner_bot, 1), (fy1, inner_top, -1)]:
+        cys = sorted(inner - sgn * (rib_w / 2 + i * pitch) for i in range(n))
+        z0, z1 = (outer, inner + sgn * g) if sgn > 0 else (inner + sgn * g, outer)
+        zone = field.intersection(box(fx0 - 1, z0, fx1 + 1, z1)).difference(blockers)
+        runs.append((zone, cys))
+    return runs
+
+
+def fin_region(rib_w=FIN_RIB_W):
+    """The valley cut: the pour zone itself, opened at the cutter radius so the cut is
+    what the O0.6 tool can actually make -- narrower nooks stay flush, the fill's
+    minimum-width rule."""
+    reg = unary_union([z for z, _cys in fin_runs(rib_w)])
+    reg = (reg.buffer(-_BACK_CUT_R, join_style=1, resolution=32)
+              .buffer(_BACK_CUT_R, join_style=1, resolution=32))
     return unary_union([_dedupe(g) for g in
                         (reg.geoms if reg.geom_type == "MultiPolygon" else [reg])])
 
 
-def fin_ribs(pitch=FIN_PITCH, rib_w=FIN_RIB_W):
-    """The rib polygons themselves, opened at the tool radius so nothing survives that a Ø1.0
-    cutter could not actually leave standing."""
-    region = fin_region()
-    field = _back_field()
-    fx0, fy0, fx1, fy1 = field.bounds
-    y0, y1 = fin_band()
+def fin_ribs(rib_w=FIN_RIB_W):
+    """Stadium ribs in the pour: each rib is its centreline clipped to the moat-eroded
+    zone and buffered back with round caps, so every tip is full-radius and keeps the
+    same DERIVED groove to every boundary it approaches -- frame base, boss-wrap arc,
+    gutter edge. The pour still floods the whole band; the ribs float in it. The
+    erosion is backed off by EPS because the innermost row's flank sits exactly ON the
+    boss line, i.e. exactly on the eroded boundary, and an exact-boundary intersection
+    is numerically empty -- the row would vanish."""
+    from shapely.geometry import LineString
+    _n, moat, _pitch = _fin_layout(rib_w)
+    EPS = 0.01
+    region = fin_region(rib_w)
     out = []
-    for a, b in [(fy0, y0), (y1, fy1)]:
-        span = b - a
-        n = max(1, int(span // pitch))
-        off = (span - (n - 1) * pitch) / 2.0          # centre the run inside its own field
-        for i in range(n):
-            cy = a + off + i * pitch
-            r = region.intersection(box(fx0, cy - rib_w / 2, fx1, cy + rib_w / 2))
-            if r.is_empty:
+    for zone, cys in fin_runs(rib_w):
+        ero = zone.buffer(-(rib_w / 2 + moat - EPS), join_style=1, resolution=48)
+        zx0, _zy0, zx1, _zy1 = zone.bounds
+        for cy in cys:
+            seg = ero.intersection(LineString([(zx0 - 1, cy), (zx1 + 1, cy)]))
+            if seg.is_empty:
                 continue
-            # Open at the tool radius to kill slivers, THEN clip back to the region. The dilate
-            # half of an opening overshoots outward wherever the boundary is concave -- which
-            # here is every boss cutout -- and without the clip four ribs escaped the field and
-            # one closed to 2.851 mm of a boss centre against a required 3.00.
-            r = (r.buffer(-TOOL_R / 2, join_style=2).buffer(TOOL_R / 2, join_style=2)
-                  .intersection(region))
-            for g in (r.geoms if r.geom_type == "MultiPolygon" else [r]):
-                if g.area > 0.8:
-                    out.append(_dedupe(g))
+            segs = seg.geoms if seg.geom_type in ("MultiLineString", "GeometryCollection") else [seg]
+            for s in segs:
+                if s.length < rib_w:              # a stub shorter than it is wide is debris
+                    continue
+                g = s.buffer(rib_w / 2, resolution=32).intersection(region)
+                for gg in (g.geoms if g.geom_type == "MultiPolygon" else [g]):
+                    if gg.area > 0.8:
+                        out.append(_dedupe(gg))
     return out
 
 

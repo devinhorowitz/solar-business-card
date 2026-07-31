@@ -503,7 +503,7 @@ jobs = [
 print(f"cavity={cavity} general (cap {cap_H}+air {cav_margin}; kapton {kapton_th}); U7 pocket {U7_POCKET} deep "
       f"({'NO POCKET -- uniform floor' if U7_POCKET == 0 else 'local relief'})  lip PER-BAND from the board (W {_LIPSUM['W']} / E {_LIPSUM['E']} / S {_LIPSUM['S']} / N {_LIPSUM['N']} bands)  "
       f"braces=OFF (removed; {len(BRACE)} defs retained) ribs={len(RIBS)}  border=0.15  "
-      f"cavity tool R{TOOL_R} (Ø{2*TOOL_R}) / back tool R{BACK_TOOL_R} (Ø{2*BACK_TOOL_R})  "
+      f"cavity tool R{TOOL_R} (Ø{2*TOOL_R}) / back tool R{BACK_TOOL_R} (Ø{2*BACK_TOOL_R}) / fin groove tool Ø0.6 (grooves 0.8, its work alone)  "
       f"deburr: outer rim {edge_ease}, ends {EDGE_BREAK}  reflector-frame {GLOW_WIN[2]-GLOW_WIN[0]:.1f}x{GLOW_WIN[3]-GLOW_WIN[1]:.1f} laser-marked (full floor under it)  "
       f"relief: OFF (concave junctions left sharp -> clean analytic STEP; round tool leaves its radius)")
 for name_suf, fl, wl, bd, rb, pw, note in jobs:

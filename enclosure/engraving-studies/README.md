@@ -28,9 +28,13 @@ it cannot be felt, and the first refinish takes it off. Everything here removes 
 ## The depth budget is fixed by the part, not by taste
 
 The back field has 1.00 mm of floor under it. The fin fields already cut
-`FIN_VALLEY = 0.30 mm` into it, so **0.70 mm is already this part's thinnest section by
-design** — an engraving ≤ 0.30 mm deep adds no new thin section and is free. That is the
-ceiling every variant respects. It is also well past "easily felt": a fingernail resolves a
+`FIN_VALLEY = 0.60 mm` into it (deepened from 0.30 on 2026-07-30 after a depth-budget
+analysis — the web is a waffle strip backed by the brace, not a membrane), so **0.40 mm is
+already this part's thinnest section by design** — an engraving ≤ 0.60 mm deep adds no new
+thin section and is free. That is the ceiling every variant respects, and it doubled when
+the fins deepened: the two-depth variant H in particular gains real room. The numbers below
+were computed against the old 0.30 ceiling and remain valid (they are all ≤ 0.30); a chosen
+variant may now go deeper. Depth is also well past "easily felt": a fingernail resolves a
 0.05 mm step, and refinishing (bead blast, brush, stonewash) removes order 0.01 mm, so a
 0.25 mm cut survives many refinishes.
 
