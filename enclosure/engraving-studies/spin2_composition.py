@@ -23,8 +23,14 @@ and REGISTRATION, and it settles the one loose end spin 1 left:
   J FRAMED       A machined groove frame around a left-aligned block, echoing the front's
                  own perimeter frame. Frame and text cut with the same bit in one setup.
 
-Everything else -- the tool models, the 25 um depth field, the 0.30 mm budget set by the fin
+Everything else -- the tool models, the 25 um depth field, the budget set by the fin
 valleys, the art rect clear of all four in-band bosses -- is imported from spin 1 unchanged.
+
+(2026-07-31: the 2026-07-30 fine-reeding rework moved FIN_PITCH 3.20 -> 1.392 and
+FIN_VALLEY 0.30 -> 0.60 under these studies. The numbers above are the era they were
+computed in. G's premise no longer closes -- 1.392 is below every cap in the block, so
+baseline_grid at the live pitch overlaps its lines -- and it is re-founded on a 2-unit
+grid, along with the doubled ceiling, in spin3_reeded.py.)
 """
 from __future__ import annotations
 

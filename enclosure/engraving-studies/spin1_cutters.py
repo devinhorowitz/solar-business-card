@@ -27,11 +27,14 @@ not an impression of it:
 THE DEPTH BUDGET, WHICH IS FIXED BY THE PART AND NOT BY TASTE
 
 The back field has 1.00 mm of floor under it (fit_rules: floor=1.00). The fin fields already
-cut FIN_VALLEY = 0.30 mm into that floor, so 0.70 mm is ALREADY the thinnest section of this
-part by design. Any engraving <= 0.30 mm deep therefore adds no new thin section -- it is
-free. That is the ceiling every variant here respects, and it is also comfortably past
-"easily felt": a fingernail reads a 0.05 mm step, and refinishing (bead blast, brush,
-stonewash) takes off order 0.01 mm, so a 0.25 mm cut survives many refinishes.
+cut FIN_VALLEY into that floor (0.30 when this spin ran; 0.60 since the 2026-07-30 fine-
+reeding rework -- BUDGET below tracks fit_rules live), so the web under the valleys is
+ALREADY the thinnest section of this part by design. Any engraving <= FIN_VALLEY deep
+therefore adds no new thin section -- it is free. That is the ceiling every variant here
+respects (all of these were computed at, and stay under, the 0.30 of their era; spin 3
+spends the doubled ceiling), and it is also comfortably past "easily felt": a fingernail
+reads a 0.05 mm step, and refinishing (bead blast, brush, stonewash) takes off order
+0.01 mm, so a 0.25 mm cut survives many refinishes.
 
 The text sits in the CLEAR BAND the two fin fields leave open (fit_rules.fin_band()), so it
 never lands on a rib and the floor under it is the full 1.00 mm.
@@ -70,7 +73,8 @@ SHELL_STL = os.path.join(OUT, "shell_nomark.stl")
 
 PX = 0.025                       # depth-field sample pitch, mm
 FLOOR = 1.00                     # fit_rules floor under the back field
-BUDGET = fr.FIN_VALLEY           # 0.30 -- the depth the part already has elsewhere
+BUDGET = fr.FIN_VALLEY           # tracks fit_rules live (0.30 then, 0.60 now) -- the
+                                 # depth the part already has elsewhere
 
 
 # --- the generator's own text machinery, so the engraved outlines are the committed ones ---
@@ -167,18 +171,27 @@ class Field:
         self.z = np.zeros((self.ny, self.nx), np.float32)
 
     def raster(self, geom):
-        """Fill a shapely geometry into a boolean array on this grid."""
-        img = Image.new("1", (self.nx, self.ny), 0)
-        d = ImageDraw.Draw(img)
+        """Fill a shapely geometry into a boolean array on this grid.
+
+        Each polygon is rasterised alone (exterior minus its own holes) and OR-ed in.
+        NOT one shared canvas: there, a later polygon's hole erases any earlier
+        polygon's ink that lies inside it -- union-order roulette, found when a ring
+        variant's separator hoop (an annulus) swallowed the serial digits sitting in
+        its hole. OR of per-polygon masks is what union actually means.
+        """
+        out = np.zeros((self.ny, self.nx), bool)
         polys = list(geom.geoms) if geom.geom_type.startswith("Multi") else [geom]
         for p in polys:
             if p.is_empty:
                 continue
+            img = Image.new("1", (self.nx, self.ny), 0)
+            d = ImageDraw.Draw(img)
             d.polygon([((x - self.x0) / PX, (y - self.y0) / PX) for x, y in p.exterior.coords],
                       fill=1)
             for r in p.interiors:
                 d.polygon([((x - self.x0) / PX, (y - self.y0) / PX) for x, y in r.coords], fill=0)
-        return np.array(img, bool)
+            out |= np.array(img, bool)
+        return out
 
     # -- the three real tool models --------------------------------------------
 
@@ -536,7 +549,13 @@ def mat(pd, rgb=TI_BLAST, diff=0.66, spec=0.50, pw=44, amb=0.13):
     return a
 
 
-def shot(surfaces, path, size=1500, az=5.0, el=13.0, dist=232.0, grazing=False, crop=None):
+def shot(surfaces, path, size=1500, az=5.0, el=13.0, dist=232.0, grazing=False, crop=None,
+         uniform=False):
+    """uniform=True renders every surface in the blasted material -- the SINGLE-FINISH
+    reality of a prototype shop: the part is machined, then bead blast (or brush, or
+    polish) is applied ONCE, over everything. Floors, crests and grooves come out the
+    same texture, and nothing brings the mill back after the finish. The two-material
+    default shows the as-cut contrast, which is real only until the finisher's cabinet."""
     ren = vtk.vtkRenderer()
     ren.SetBackground(*BG)
     rw = vtk.vtkRenderWindow()
@@ -546,7 +565,10 @@ def shot(surfaces, path, size=1500, az=5.0, el=13.0, dist=232.0, grazing=False, 
     face, cut = surfaces
     ren.AddActor(mat(SHELL, TI_BLAST, diff=0.88, spec=0.13, pw=16, amb=0.07))
     ren.AddActor(mat(face, TI_BLAST, diff=0.90, spec=0.04, pw=12, amb=0.07))
-    ren.AddActor(mat(cut,  TI_CUT,   diff=0.60, spec=0.78, pw=40, amb=0.05))
+    if uniform:
+        ren.AddActor(mat(cut, TI_BLAST, diff=0.90, spec=0.04, pw=12, amb=0.07))
+    else:
+        ren.AddActor(mat(cut, TI_CUT, diff=0.60, spec=0.78, pw=40, amb=0.05))
     lights = ([((fr.W / 2 - 900, CY - 250, -150), 1.25),         # hard raking, ~9 deg in-plane
                ((fr.W / 2 + 500, CY + 300, -700), 0.26),
                ((fr.W / 2, CY, -900), 0.20)] if grazing else
