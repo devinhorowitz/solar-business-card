@@ -15,6 +15,7 @@ python3 enclosure/engraving-studies/spin6_finish.py         # the single-finish 
 python3 enclosure/engraving-studies/spin7_lapped.py         # blast + home-lapped crests
 python3 enclosure/engraving-studies/spin8_plane.py          # the gameplan: bearing plane
 python3 enclosure/engraving-studies/spin9_words.py          # Z's words
+python3 enclosure/engraving-studies/spin10_material.py      # the material, named
 python3 enclosure/engraving-studies/all_studies.py          # every variant on one sheet
 # renders + numbers land in $ENGRAVE_OUT (default: $TMPDIR/engraving-studies)
 ```
@@ -293,6 +294,34 @@ density is part of each candidate:
 
 Webs after the tool cascade run 1.75–2.67 mm² across the four (all below Z's 3.0).
 
-The pick that remains is **words only**. Next step once called: land the winner in the
-shell generator as CAD (replacing `MAKER_LINES`) and amend the bearing rule in
-`fit_rules` — at that point it leaves this directory and joins the part.
+The dial was called first: **Z4's — DRH over Nº 001** (the back answers the front's glow
+letters), with the frequency removed after it failed the test every other cut passed —
+NFC is a single-frequency standard, so 13.56 carried no information the word did not.
+Rings gained a **phase anchor** (`ring_anchor`): anchored on a phrase, the separators
+fall symmetric — `SOLAR · NFC` crowns the top arc and the year lands dead-centre at six.
+
+## Spin 10 — the material, named; the ring, agnostic
+
+Two rulings folded together (2026-07-31). **Call out the material** — watches do, and
+here it is the whole story: this run happens in titanium exactly once. And **stay
+agnostic**: the next person should drop in their own facts and have them neatly fit.
+The ring machinery already guarantees the second — tracking is derived, any string
+re-closes the circle — and this spin turns the promise into a measured contract:
+
+> At R 10.8 / cap 1.80 the ring accepts **~20 to 47 characters** before adjacent
+> letters choke the Ø0.4 (cell ≥ 1.02 glyph + 0.40 tool). `ATL GA` fits, `NY NY` fits,
+> and `SAN FRANCISCO CA` in Z8's wording lands at 47 exactly. The dial takes 2–4
+> initials at cap ≤ 13/(0.822·n); the serial is one substitution per unit. When this
+> graduates, `RING_TEXT` / `RING_ANCHOR` / `DIAL_MONOGRAM` / `SERIAL` become generator
+> parameters.
+
+| | ring (dial locked: DRH / Nº 001) |
+| --- | --- |
+| **Z6** MATERIAL, SPELLED | `SOLAR · NFC · TITANIUM · MMXXVI` (34 ch, 2.00 cells) — the watch move at full length |
+| **Z7** MATERIAL, SYMBOL | `SOLAR · NFC · Ti · MMXXVI` (28 ch, 2.42 — airiest) — the chemist's shorthand, quietly correct |
+| **Z8** FULL EPITAPH | `SOLAR · NFC · Ti · ATL GA · MMXXVI` (37 ch, 1.83) — power, radio, metal, place, year in one orbit; the symbol keeps room for the city |
+| **Z9** SPELLED + PLACE | `SOLAR · NFC · TITANIUM · ATL GA · MMXXVI` (43 ch, 1.58) — the dense limit |
+
+The pick that remains is **the ring only**. Next step once called: land the winner in
+the shell generator as CAD (replacing `MAKER_LINES`, parameters as above) and amend the
+bearing rule in `fit_rules` — at that point it leaves this directory and joins the part.

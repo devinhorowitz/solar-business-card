@@ -52,36 +52,44 @@ PX = E.PX
 
 COIN_D, REST_D = 0.45, 0.25          # Z's cascade, locked
 
-VARIANTS = [
+VARIANTS = [                     # (key, title, ring text, ring anchor, dial, why)
     ("Z1-mint", "MINT",
-     "SOLAR · NFC 13.56 MHz · ATLANTA GEORGIA · ",
+     "SOLAR · NFC 13.56 MHz · ATLANTA GEORGIA · ", "SOLAR",
      [("Nº 001", 2.40, -1.2, "b"), ("MMXXVI", 1.60, 2.6, "r")],
      "claim, radio and place around; serial and year minted in the middle -- the full "
      "caseback grammar"),
     ("Z2-maker", "MAKER",
-     "SOLAR · NFC 13.56 MHz · DEVIN HOROWITZ · ",
+     "SOLAR · NFC 13.56 MHz · DEVIN HOROWITZ · ", "SOLAR",
      [("Nº 001", 2.40, -1.2, "b"), ("MMXXVI", 1.60, 2.6, "r")],
      "the medallion replaces the committed maker's mark, so the name takes the ring -- "
      "a signature you can feel"),
     ("Z3-pure", "PURE",
-     "SOLAR · NFC 13.56 MHz · MMXXVI · ",
+     "SOLAR · NFC 13.56 MHz · MMXXVI · ", "SOLAR",
      [("Nº 001", 2.60, 0.6, "b")],
      "the airiest ring, the strongest object statement: the one line that differs on "
      "every card, alone in the dial"),
     ("Z4-monogram", "MONOGRAM",
-     "SOLAR · NFC 13.56 MHz · MMXXVI · ",
+     "SOLAR · NFC 13.56 MHz · MMXXVI · ", "SOLAR",
      [("DRH", 4.80, -1.6, "b"), ("Nº 001", 1.80, 3.0, "r")],
      "the back answers the front: the glow letters and the struck letters are the same "
      "three, serial beneath"),
+    ("Z5-final", "Z4, SANS FREQUENCY",
+     "SOLAR · NFC · MMXXVI · ", "SOLAR · NFC",
+     [("DRH", 4.80, -1.6, "b"), ("Nº 001", 1.80, 3.0, "r")],
+     "the frequency failed the test every other cut passed: NFC is a single-frequency "
+     "standard, so 13.56 carried no information the word did not. Anchored on the "
+     "PHRASE, the separators fall symmetric: SOLAR · NFC crowns the top arc and MMXXVI "
+     "lands dead-centre at six o'clock"),
 ]
 
 if __name__ == "__main__":
     E.ensure_shell()
     E.SHELL = E.clip_back_face(E.shell_actor(), E.ART)
     made = []
-    for key, title, ring_txt, centre, why in VARIANTS:
+    for key, title, ring_txt, anchor, centre, why in VARIANTS:
         f, gm, tops, webs, tool_r, rest_a = Z.build_plane(
-            COIN_D, True, True, rest_d=REST_D, centre=centre, ring_txt=ring_txt)
+            COIN_D, True, True, rest_d=REST_D, centre=centre, ring_txt=ring_txt,
+            ring_anchor=anchor)
         n = len(ring_txt)
         arc = 2 * 3.141592653589793 * Z.R_TEXT / n
         crest_a = float(tops.sum()) * PX * PX
