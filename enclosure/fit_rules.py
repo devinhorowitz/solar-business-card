@@ -280,8 +280,13 @@ def boss_island(mx, my):
 FIN_RIB_W  = 0.6           # rib width: tolerance + refinish floor (see commit trail)
 FIN_GROOVE_MIN = 0.78      # groove floor: O0.6 tool + 0.18 clearance floor (target 0.2)
 FIN_PROUD  = 0.10          # rib tops stand this proud of the art field. CAPPED here by
-                           # law: the 0.15 frame stays the sole bearing surface (tops
-                           # 0.05 under it), so extra relief goes DOWN, never up.
+                           # law: the +0.15 BEARING PLANE stays above them (tops 0.05
+                           # under it), so extra relief goes DOWN, never up. The law was
+                           # AMENDED 2026-07-31: the bearing plane is the frame PLUS the
+                           # medallion crests (medallion.py), coplanar by a shared
+                           # finishing pass and lapped together after the blast -- the
+                           # crests wear only where the part already bears, and a
+                           # minute on the plate restores them. Ribs stay under it.
 FIN_VALLEY = 0.60          # ...and valleys cut this far into the 1.00 floor -> 0.70 felt
                            # relief, 0.40 web. Was 0.30/0.70-web; deepened 2026-07-30
                            # after a depth-budget analysis. The 0.40 web is the honest
@@ -406,9 +411,9 @@ def fin_runs(rib_w=FIN_RIB_W):
     the boss centreline -- as close to the card's centre as a row can get without
     crossing the bosses -- and walks outward at the DERIVED pitch, which closes the
     span exactly (see _fin_layout): the outer gutter equals the grooves equals the
-    boss-line gutter. (fin_band(), the PV-gap reference, still defines the clear
-    centre for the engraving studies; the mark at y 51.5/54.1 and the ART rect
-    y 30.8..58.1 stay clear of the zones by >= 1.1.)
+    boss-line gutter. (fin_band(), the PV-gap reference, defines the clear centre;
+    the medallion -- Ø25.7 on that centre, medallion.py -- spans y 31.6..57.3 and
+    stays clear of the zones' inner edges at 29.29/59.61 by >= 1.7.)
     """
     n, g, pitch = _fin_layout(rib_w)
     field = _back_field()
