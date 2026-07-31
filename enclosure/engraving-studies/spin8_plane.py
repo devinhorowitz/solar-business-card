@@ -88,8 +88,8 @@ def _annulus(r0, r1):
         Point(CX, CY).buffer(r0, resolution=128))
 
 
-def crest_glyphs(rim, hoop, coin_r, centre=CENTRE):
-    ring, _ = P4.ring_text(TXT, R_TEXT, CAP)
+def crest_glyphs(rim, hoop, coin_r, centre=CENTRE, ring_txt=TXT):
+    ring, _ = P4.ring_text(ring_txt, R_TEXT, CAP)
     parts = [ring] + [E.line_geom(t, CX, CY + dy, cap, w) for t, cap, dy, w in centre]
     if hoop:
         parts.append(_annulus(8.75, 9.25))
@@ -98,7 +98,7 @@ def crest_glyphs(rim, hoop, coin_r, centre=CENTRE):
     return unary_union(parts)
 
 
-def build_plane(coin_d, rim, hoop, coin_r=12.15, rest_d=None, centre=CENTRE):
+def build_plane(coin_d, rim, hoop, coin_r=12.15, rest_d=None, centre=CENTRE, ring_txt=TXT):
     """Depth field with z = 0 AT THE BEARING PLANE (the stock the frame is left from).
 
     field cells -> PLANE (the facing op), coin cells -> PLANE + coin_d, crest cells -> 0.
@@ -115,7 +115,7 @@ def build_plane(coin_d, rim, hoop, coin_r=12.15, rest_d=None, centre=CENTRE):
     """
     tool_r = 0.15 if coin_d <= 0.30 else 0.20
     f = E.Field(E.ART, pad=0.0)
-    gm = f.raster(crest_glyphs(rim, hoop, coin_r, centre))
+    gm = f.raster(crest_glyphs(rim, hoop, coin_r, centre, ring_txt))
     coin = f.raster(Point(CX, CY).buffer(coin_r + (0.70 if rim else 0.0), resolution=128))
     field = np.ones_like(gm)
     reach_coin = E.Field.opening(coin & ~gm, tool_r)

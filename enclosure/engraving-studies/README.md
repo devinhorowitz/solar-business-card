@@ -14,6 +14,7 @@ python3 enclosure/engraving-studies/spin5_t_relief.py       # T's ring, set in r
 python3 enclosure/engraving-studies/spin6_finish.py         # the single-finish reality
 python3 enclosure/engraving-studies/spin7_lapped.py         # blast + home-lapped crests
 python3 enclosure/engraving-studies/spin8_plane.py          # the gameplan: bearing plane
+python3 enclosure/engraving-studies/spin9_words.py          # Z's words
 python3 enclosure/engraving-studies/all_studies.py          # every variant on one sheet
 # renders + numbers land in $ENGRAVE_OUT (default: $TMPDIR/engraving-studies)
 ```
@@ -271,7 +272,27 @@ spin 8 turns that insight into the architecture: crests on the bearing plane, wh
 plate lap, self-limiting by geometry. **The gameplan is spin 8's sunken coin, and Z is
 its resolution of the W-vs-X trade**: the full 0.60 walls everywhere the eye can see,
 W-clean counters via the Ø0.3 rest pass, at the cost of one extra tool in a cascade any
-CNC shop runs daily. Remaining picks: Z's furniture (rim + hoop, as rendered) and the
-serial policy. Next step once confirmed: land it in the shell generator as CAD
-(replacing `MAKER_LINES`) and amend the bearing rule in `fit_rules` — at that point it
-leaves this directory and joins the part.
+CNC shop runs daily.
+
+## Spin 9 — Z's words (architecture locked, only the text moves)
+
+Three editorial rulings applied (2026-07-31): the **year appears once** (Z said MMXXVI
+twice); **SOLAR, not SOLAR POWERED** (the claim is the word; the 13.56 MHz stays — the
+one strictly useful number on the back); **the version number goes** (REV 4.0 beside
+Nº 001 mixed two counting systems — the board is the fourth revision but the object is
+the first one made; the board wears its rev in copper, the shell counts in serials).
+Because the ring's tracking is derived, shorter strings letterspace themselves — the
+density is part of each candidate:
+
+| | ring | dial | character |
+| --- | --- | --- | --- |
+| **Z1** MINT | `SOLAR · NFC 13.56 MHz · ATLANTA GEORGIA` (42 ch, 1.62 cells) | Nº 001 / MMXXVI | the full caseback grammar: claim, radio, place around; serial and year minted in the middle |
+| **Z2** MAKER | `SOLAR · NFC 13.56 MHz · DEVIN HOROWITZ` (41 ch, 1.66) | Nº 001 / MMXXVI | the medallion replaces the maker's mark, so the name takes the ring — a signature you can feel |
+| **Z3** PURE | `SOLAR · NFC 13.56 MHz · MMXXVI` (33 ch, 2.06 — airy) | Nº 001 | the strongest object statement: the one line that differs per card, alone in the dial |
+| **Z4** MONOGRAM | same ring as Z3 | DRH / Nº 001 | the back answers the front — the glow letters and the struck letters are the same three |
+
+Webs after the tool cascade run 1.75–2.67 mm² across the four (all below Z's 3.0).
+
+The pick that remains is **words only**. Next step once called: land the winner in the
+shell generator as CAD (replacing `MAKER_LINES`) and amend the bearing rule in
+`fit_rules` — at that point it leaves this directory and joins the part.

@@ -30,6 +30,7 @@ import spin3_reeded as R3
 import spin4_provenance as R4
 import spin5_t_relief as R5
 import spin8_plane as R8
+import spin9_words as R9
 
 OUT = E.OUT
 
@@ -45,6 +46,7 @@ ROWS = [
      [(k, t) for k, t, *_ in R5.VARIANTS]),
     ("SPIN 8 -- THE BEARING PLANE (the gameplan; 6-7 are finish states, not variants)",
      "spin8", [(k, t) for k, t, *_ in R8.VARIANTS]),
+    ("SPIN 9 -- Z'S WORDS", "spin9", [(k, t) for k, t, *_ in R9.VARIANTS]),
 ]
 
 TH = 620            # uniform thumbnail height
