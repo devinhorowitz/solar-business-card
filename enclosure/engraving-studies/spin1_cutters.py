@@ -549,7 +549,13 @@ def mat(pd, rgb=TI_BLAST, diff=0.66, spec=0.50, pw=44, amb=0.13):
     return a
 
 
-def shot(surfaces, path, size=1500, az=5.0, el=13.0, dist=232.0, grazing=False, crop=None):
+def shot(surfaces, path, size=1500, az=5.0, el=13.0, dist=232.0, grazing=False, crop=None,
+         uniform=False):
+    """uniform=True renders every surface in the blasted material -- the SINGLE-FINISH
+    reality of a prototype shop: the part is machined, then bead blast (or brush, or
+    polish) is applied ONCE, over everything. Floors, crests and grooves come out the
+    same texture, and nothing brings the mill back after the finish. The two-material
+    default shows the as-cut contrast, which is real only until the finisher's cabinet."""
     ren = vtk.vtkRenderer()
     ren.SetBackground(*BG)
     rw = vtk.vtkRenderWindow()
@@ -559,7 +565,10 @@ def shot(surfaces, path, size=1500, az=5.0, el=13.0, dist=232.0, grazing=False, 
     face, cut = surfaces
     ren.AddActor(mat(SHELL, TI_BLAST, diff=0.88, spec=0.13, pw=16, amb=0.07))
     ren.AddActor(mat(face, TI_BLAST, diff=0.90, spec=0.04, pw=12, amb=0.07))
-    ren.AddActor(mat(cut,  TI_CUT,   diff=0.60, spec=0.78, pw=40, amb=0.05))
+    if uniform:
+        ren.AddActor(mat(cut, TI_BLAST, diff=0.90, spec=0.04, pw=12, amb=0.07))
+    else:
+        ren.AddActor(mat(cut, TI_CUT, diff=0.60, spec=0.78, pw=40, amb=0.05))
     lights = ([((fr.W / 2 - 900, CY - 250, -150), 1.25),         # hard raking, ~9 deg in-plane
                ((fr.W / 2 + 500, CY + 300, -700), 0.26),
                ((fr.W / 2, CY, -900), 0.20)] if grazing else

@@ -11,6 +11,8 @@ python3 enclosure/engraving-studies/spin2_composition.py    # which composition
 python3 enclosure/engraving-studies/spin3_reeded.py         # after the fine reeding
 python3 enclosure/engraving-studies/spin4_provenance.py     # what the back SAYS
 python3 enclosure/engraving-studies/spin5_t_relief.py       # T's ring, set in relief
+python3 enclosure/engraving-studies/spin6_finish.py         # the single-finish reality
+python3 enclosure/engraving-studies/spin7_lapped.py         # blast + home-lapped crests
 python3 enclosure/engraving-studies/all_studies.py          # every variant on one sheet
 # renders + numbers land in $ENGRAVE_OUT (default: $TMPDIR/engraving-studies)
 ```
@@ -152,9 +154,62 @@ sitting in its hole. It now ORs per-polygon rasters, which is what union means. 
 variant had a holed polygon overlapping other geometry in the same raster call, so every
 previously quoted number stands.
 
+## Spin 6 — one finish only (2026-07-31)
+
+Every render before spin 6 shaded the machined floors bright against the blasted face:
+**two textures**. That is real geometry but an unbuildable *order* at a prototype shop.
+The actual flow is machine → deburr → **one terminal finish over the whole part** —
+PCBWay's Ti menu is bead blast / brushed / polish / anodize / their fixed
+bead-blast-then-anodize combo, and none of it returns the part to the mill afterward.
+Blast media (100–250 µm) reaches every 0.25–0.60 mm recess on this back, so floors,
+crests and grooves come out **one texture**, and the engraving must read by geometry —
+depth, walls, shadow — not by surface contrast.
+
+No **shop** workaround exists on this part: selective masking at 0.8 mm scale is not a
+prototype service, and a full-part lap on a plate is blocked by the part's own bearing
+rule — the frame stands 0.15 proud of everything, so a flat plate touches only the frame.
+(The same fact that protects the crests from wear.) The workaround that does exist is the
+bench — see spin 7.
+
+`spin1_cutters.shot()` grew a `uniform=True` mode that shades every surface in the
+blasted material, and `spin6_finish.py` re-renders the four leaders (M, T, U, V) three
+ways: the as-cut two-tone (real only until the finisher's cabinet), uniform blast under
+diffuse light, and uniform blast under raking light. What the sheet shows: **T's
+v-grooves and M's 0.60 walls survive one finish best** — v-carving is engraving's native
+single-finish form, and depth buys shadow; the 0.25 relief variants (U/V) go quiet in
+diffuse light and come back under raking light. The still-uniform options that remain
+real: blast (recommended — hides tool marks), brushed/as-machined (bright), or blast +
+Ti-anodize for colour (uniform colour; the cut and the crest anodize alike).
+
+## Spin 7 — blast + home lap: the two-texture finish, recovered by hand
+
+The finish spin 6 said no shop can order is a ten-minute bench operation: after the
+uniform blast, a **small hand block with fine-grit lapping film, worked inside the clear
+band**, re-brightens the flat crests against the dark blasted field — the classic
+caseback/coin finish. This part is unusually well built for it:
+
+- **The proud features are lap stops.** The frame (+0.15) and the fin ribs (+0.10) are
+  both *higher* than the engraving crests (0.00, the art-field plane). A block that
+  strays off the band rides up and lifts clear of the crests — the medallion can't be
+  scratched by a wandering block, only abandoned. The failure mode is bright rib tops,
+  which is a look, not a defect.
+- **Depth is not at risk.** Film removes microns per session; crests stand 0.25 mm above
+  their floors. The contrast survives hundreds of touch-ups, and re-blast + re-lap
+  resets it entirely.
+- **It is not only for relief.** U/V get bright standing letters on the dark floor; M
+  gets bright DRH crests in the dark 0.60 window; and T gets the *inverse* — lap the
+  flat dial and the v-carved letters stay dark in a bright disc. Dark-on-bright vs
+  bright-on-dark, same one blast.
+
+`spin7_lapped.py` renders it as a third finish state via `lapped_surfaces()` — bright
+only on flush cells *inside* the lap footprint, because a hand block does not brighten
+what it never touches. If a lap jig is ever wanted, a resin ring that registers on the
+frame and exposes only the medallion is a trivial addition to the enclosure generators.
+
 `all_studies.py` composes every variant's diffuse-light render into one sheet
 (`all_studies.png`), one spin per row, titles pulled from each spin's own `VARIANTS` list
-so the sheet cannot drift from the scripts.
+so the sheet cannot drift from the scripts. (Rows before spin 6 still render two-tone
+there — they are comparative aids; spins 6 and 7 are the finish truth.)
 
 ## Standing recommendation
 
@@ -174,3 +229,13 @@ the contact data, which is the strongest argument that the back doesn't have to.
 If the ring is the direction, spin 5 is its finished form: **V** if machinability and
 refinish-proofness lead (nothing thin stands alone), **U** if the object-quality of a
 single struck coin is worth two thin standing rings.
+
+Spin 6 adds the finish-robustness lens: under the one uniform finish the shop applies,
+**T (v-carved) and M (0.60 walls) read strongest**; the 0.25 relief variants lean on a
+two-texture contrast no shop can order and go quiet in diffuse light.
+
+Spin 7 restores that contrast at the bench — one blast, then hand-lapped crests — and
+with it the full menu: **U/V as the coin** (bright crests, dark floor) if ten minutes of
+film per unit is acceptable, **T + a lapped dial** for the inverse (dark sunk letters in
+a bright disc) with the v-carve's zero-risk cut underneath, and **T un-lapped** as the
+no-labor floor that still reads. The cut no longer has to hedge against the finish.
