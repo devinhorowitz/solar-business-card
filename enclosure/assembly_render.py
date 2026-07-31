@@ -425,6 +425,14 @@ light = vtk.vtkLight(); light.SetPosition(-60, -120, 150); light.SetIntensity(0.
 light.SetLightTypeToSceneLight(); ren.AddLight(light)
 l2 = vtk.vtkLight(); l2.SetPosition(90, 40, 70); l2.SetIntensity(0.45)
 l2.SetLightTypeToSceneLight(); ren.AddLight(l2)
+# Below-side lights (2026-07-31): the camera moved under the horizon, and with both lights
+# on the front side the shell's back rendered in flat ambient -- 0.15-0.6 mm of fins and
+# medallion, invisible. A low raking key plus a soft fill from below make the relief read;
+# the two front lights stay, they carry the board/brace faces the explode gap exposes.
+l3 = vtk.vtkLight(); l3.SetPosition(-70, -50, -170); l3.SetIntensity(0.85)
+l3.SetLightTypeToSceneLight(); ren.AddLight(l3)
+l4 = vtk.vtkLight(); l4.SetPosition(130, 110, -90); l4.SetIntensity(0.30)
+l4.SetLightTypeToSceneLight(); ren.AddLight(l4)
 
 cam = ren.GetActiveCamera()
 cam.SetFocalPoint(W / 2, H / 2, Z_FRONT / 2)
@@ -444,17 +452,25 @@ for i in range(FRAMES):
         e = u * u * (3 - 2 * u)          # smoothstep in
     else:
         e = 0.0
-    ang = 208 + 26 * math.sin(2 * math.pi * t)
     for name, acts in groups.items():
         dz = EXPL[name] * e
         for a in acts:
             a.SetPosition(0, 0, dz)
-    rad = math.radians(ang)
-    dist, elev = 235.0, math.radians(58.0)
-    cam.SetPosition(W / 2 + dist * math.sin(elev) * math.cos(rad),
-                    H / 2 + dist * math.sin(elev) * math.sin(rad),
-                    Z_FRONT / 2 + dist * math.cos(elev) + 14 * e)
-    cam.SetFocalPoint(W / 2, H / 2, Z_FRONT / 2 + 3 * e)
+    # STILL CAMERA, ANGLED FROM BELOW (2026-07-31). Two findings, one fix: the old view
+    # swung +-26 deg and dollied while the parts translated, so the whole assembly seemed
+    # to float and wander; and it looked DOWN from the screw side, so the shell's back --
+    # the medallion -- was never in frame, and neither was the interface this animation
+    # exists to show: the brace's pockets meeting the PCB's B-side parts. Now the camera
+    # holds one position and one focal point for the whole sequence -- the PARTS do the
+    # moving -- pitched 22 deg BELOW the horizon, so the explode gap opens straight onto
+    # the board's underside components over the brace, and the closed hold presents the
+    # medallion face.
+    rad = math.radians(208.0)
+    dist, pitch = 252.0, math.radians(22.0)
+    cam.SetPosition(W / 2 + dist * math.cos(pitch) * math.cos(rad),
+                    H / 2 + dist * math.cos(pitch) * math.sin(rad),
+                    Z_FRONT / 2 - dist * math.sin(pitch))
+    cam.SetFocalPoint(W / 2, H / 2, Z_FRONT / 2)
     cam.SetViewUp(0, 0, 1)
     cam.SetViewAngle(26)
     ren.ResetCameraClippingRange()
