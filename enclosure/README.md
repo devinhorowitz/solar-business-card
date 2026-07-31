@@ -103,7 +103,10 @@ part positions from `enclosure/board_parts.py` (true 3D body ∪ pads, with the 
 <sub>One seamless revolution of the closed assembly, turned about its long axis the way a hand turns a
 card over — front, edge, back, edge, front — 96 frames, 552×954. This is the root README's hero.
 `solar-glow-drh-assembly-hero.png` is a still from the *exploded* sequence's camera, not this one, and
-`solar-glow-drh-assembly.gif` is the exploded-to-closed sequence. The show face is
+`solar-glow-drh-assembly.gif` is the exploded-to-closed sequence — since 2026-07-31 it holds **one
+fixed camera, pitched below the horizon**: the parts do the moving, the explode gap opens straight
+onto the brace's pockets meeting the PCB's B-side parts, and the closed hold presents the medallion
+face. The show face is
 `Generated/docs/…-card-face.png` textured on, so the monogram, cartouche and contact line are the
 board's real artwork.</sub>
 
