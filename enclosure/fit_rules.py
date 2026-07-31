@@ -302,14 +302,35 @@ def _back_field():
     return c.buffer(-r, join_style=1, resolution=64).buffer(r, join_style=1, resolution=64)
 
 
-def _fin_x_envelope():
-    """Straight rib ends, one x per side, derived from the boss columns: every rib runs
-    boss-keepout to boss-keepout. Rows near a boss used to be clipped by the keepout ARC
-    while middle rows ran to the field edge -- wavy terminations, the other half of the
-    uneven-spacing review. The boss columns are card-symmetric and the field now is too,
-    so the flush side margins come out equal by construction."""
-    xs = sorted({mx for mx, _my in MOUNTS})
-    return xs[0] + BOSS_R + FIN_BOSS_CLR, xs[-1] - (BOSS_R + FIN_BOSS_CLR)
+# ---- fin ISLAND: the fins as a designed shape, not a box that fit --------------------
+# Each fin field is a soft-cornered island floating in the flush art field, and every
+# groove is one constant-width channel: MOAT (= FIN_PITCH - FIN_RIB_W = 1.2) wraps rib
+# flanks, rib TIPS and the island boundary identically -- the width one O1.0 pass plus
+# finish leaves, so the geometry is what the tool wants to make. Rib ends are full-round
+# (stadium) because they are the round-capped buffer of their own centreline. The island
+# corner radius is picked so the boss keepouts clear BY CONSTRUCTION (min centre distance
+# 3.47 against the required 3.00) -- the corner sweep curves away from each boss instead
+# of the keepout arc nibbling the corner rib, which is what read as "a box that fit".
+# The price of the uniform channel is one rib row per field (the tip moat consumes what
+# the old flush-tangent ends did not); FIN_MARGIN 0.8 would buy the row back at the cost
+# of the uniform 2.0 reveal -- recorded here so the trade stays a decision, not a dig.
+FIN_MARGIN = 2.0           # flush reveal between island and field edge / clear band --
+                           # the same 2.0 as the proud frame border: one rhythm everywhere
+FIN_CORNER_R = 4.8         # island corner radius; >= 3.66 clears the corner bosses, 4.8
+                           # gives 0.47 spare and sweeps ~1.5 rib rows -- reads designed
+
+
+def _fin_islands():
+    """One rounded-rect island per field, in the true (centred) art field."""
+    field = _back_field()
+    fx0, fy0, fx1, fy1 = field.bounds
+    y0, y1 = fin_band()
+    out = []
+    for a, b in [(fy0, y0), (y1, fy1)]:
+        c = box(fx0 + FIN_MARGIN, a + FIN_MARGIN, fx1 - FIN_MARGIN, b - FIN_MARGIN)
+        out.append(c.buffer(-FIN_CORNER_R, join_style=1, resolution=64)
+                    .buffer(FIN_CORNER_R, join_style=1, resolution=64))
+    return out
 
 
 def fin_band():
@@ -340,50 +361,47 @@ def fin_runs(pitch=FIN_PITCH, rib_w=FIN_RIB_W):
     the rib envelope, so every groove that exists is a full 1.500 and the remainder is
     FLUSH art-field margin instead of a squeezed groove.
     """
-    field = _back_field()
-    fx0, fy0, fx1, fy1 = field.bounds
-    y0, y1 = fin_band()
+    moat = pitch - rib_w
     runs = []
-    for a, b in [(fy0, y0), (y1, fy1)]:
-        span = b - a
-        n = max(1, int(span // pitch))
-        off = (span - (n - 1) * pitch) / 2.0          # centre the run inside its own field
-        cys = [a + off + i * pitch for i in range(n)]
-        runs.append((a, b, cys, cys[0] - rib_w / 2, cys[-1] + rib_w / 2))
+    for isl in _fin_islands():
+        ero = isl.buffer(-(rib_w / 2 + moat), join_style=1, resolution=64)
+        ey0, ey1 = ero.bounds[1], ero.bounds[3]
+        span = ey1 - ey0
+        n = max(1, int(span / pitch) + 1)
+        while (n - 1) * pitch > span:
+            n -= 1
+        off = (span - (n - 1) * pitch) / 2.0          # centre the run inside its own island
+        cys = [ey0 + off + i * pitch for i in range(n)]
+        runs.append((isl, ero, cys))
     return runs
 
 
 def fin_region(pitch=FIN_PITCH, rib_w=FIN_RIB_W):
-    """Everything the valley cut may occupy: both rib ENVELOPES, minus the boss annuli.
-    Clipped to the rib envelope in y (see fin_runs) and the boss-column envelope in x
-    (see _fin_x_envelope), so every groove is full-length and full-width."""
-    field = _back_field()
-    ex0, ex1 = _fin_x_envelope()
+    """Everything the valley cut may occupy: the islands themselves. The boss annuli are
+    outside every island by construction (FIN_CORNER_R); the subtraction stays as a
+    tripwire for any future geometry change."""
     blockers = unary_union([Point(mx, my).buffer(BOSS_R + FIN_BOSS_CLR, resolution=48)
                             for mx, my in MOUNTS])
-    bands = [box(ex0, env0, ex1, env1) for _a, _b, _cys, env0, env1 in fin_runs(pitch, rib_w)]
-    reg = unary_union([field.intersection(b) for b in bands]).difference(blockers)
+    reg = unary_union(_fin_islands()).difference(blockers)
     return unary_union([_dedupe(g) for g in
                         (reg.geoms if reg.geom_type == "MultiPolygon" else [reg])])
 
 
 def fin_ribs(pitch=FIN_PITCH, rib_w=FIN_RIB_W):
-    """The rib polygons themselves, opened at the tool radius so nothing survives that a Ø1.0
-    cutter could not actually leave standing."""
+    """Stadium ribs: each rib is its own centreline clipped to the moat-eroded island and
+    buffered back with round caps, so the tips are full-radius and every clearance --
+    flank, tip, corner sweep -- is the same MOAT. Nothing here is narrower than the O1.0
+    cutter plus finish allowance, so no separate sliver opening is needed."""
+    from shapely.geometry import LineString
     region = fin_region(pitch, rib_w)
-    ex0, ex1 = _fin_x_envelope()
     out = []
-    for _a, _b, cys, _e0, _e1 in fin_runs(pitch, rib_w):
+    for isl, ero, cys in fin_runs(pitch, rib_w):
+        x0, x1 = isl.bounds[0] - 5, isl.bounds[2] + 5
         for cy in cys:
-            r = region.intersection(box(ex0, cy - rib_w / 2, ex1, cy + rib_w / 2))
-            if r.is_empty:
+            seg = ero.intersection(LineString([(x0, cy), (x1, cy)]))
+            if seg.is_empty:
                 continue
-            # Open at the tool radius to kill slivers, THEN clip back to the region. The dilate
-            # half of an opening overshoots outward wherever the boundary is concave -- which
-            # here is every boss cutout -- and without the clip four ribs escaped the field and
-            # one closed to 2.851 mm of a boss centre against a required 3.00.
-            r = (r.buffer(-TOOL_R / 2, join_style=2).buffer(TOOL_R / 2, join_style=2)
-                  .intersection(region))
+            r = seg.buffer(rib_w / 2, resolution=32).intersection(region)
             for g in (r.geoms if r.geom_type == "MultiPolygon" else [r]):
                 if g.area > 0.8:
                     out.append(_dedupe(g))
