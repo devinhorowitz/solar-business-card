@@ -79,6 +79,8 @@ R_TEXT, CAP = 10.8, 1.80
 TXT = "SOLAR POWERED · NFC 13.56 MHz · MMXXVI · "
 
 CENTRE = [("Nº 001", 2.40, -1.6, "b"), ("REV 4.0", 1.40, 2.0, "r"), ("MMXXVI", 1.40, 4.4, "r")]
+# Z's centre: the small lines up 1.40 -> 1.60 so their counters clear the O0.3 rest pass
+CENTRE_Z = [("Nº 001", 2.40, -1.6, "b"), ("REV 4.0", 1.60, 2.0, "r"), ("MMXXVI", 1.60, 4.4, "r")]
 
 
 def _annulus(r0, r1):
@@ -86,9 +88,9 @@ def _annulus(r0, r1):
         Point(CX, CY).buffer(r0, resolution=128))
 
 
-def crest_glyphs(rim, hoop, coin_r):
+def crest_glyphs(rim, hoop, coin_r, centre=CENTRE):
     ring, _ = P4.ring_text(TXT, R_TEXT, CAP)
-    parts = [ring] + [E.line_geom(t, CX, CY + dy, cap, w) for t, cap, dy, w in CENTRE]
+    parts = [ring] + [E.line_geom(t, CX, CY + dy, cap, w) for t, cap, dy, w in centre]
     if hoop:
         parts.append(_annulus(8.75, 9.25))
     if rim:
@@ -96,7 +98,7 @@ def crest_glyphs(rim, hoop, coin_r):
     return unary_union(parts)
 
 
-def build_plane(coin_d, rim, hoop, coin_r=12.15):
+def build_plane(coin_d, rim, hoop, coin_r=12.15, rest_d=None, centre=CENTRE):
     """Depth field with z = 0 AT THE BEARING PLANE (the stock the frame is left from).
 
     field cells -> PLANE (the facing op), coin cells -> PLANE + coin_d, crest cells -> 0.
@@ -105,18 +107,33 @@ def build_plane(coin_d, rim, hoop, coin_r=12.15):
     islands cleared by a straight end mill, not tapered relief -- so the crest top IS
     the full stroke, and the tool radius is set by the wall height: dia 0.3 at 0.40
     walls (1.3xD), dia 0.4 at 0.60 (the dia 0.3 would run 2xD in Ti).
+
+    rest_d enables the two-tool cascade (variant Z): the primary tool takes the open
+    coin to coin_d, then the O0.3 rest-machines ONLY what the primary could not enter,
+    stopping at rest_d -- counters open at 0.40-wall depth while every visible edge
+    keeps the full-depth shadow.
     """
     tool_r = 0.15 if coin_d <= 0.30 else 0.20
     f = E.Field(E.ART, pad=0.0)
-    gm = f.raster(crest_glyphs(rim, hoop, coin_r))
+    gm = f.raster(crest_glyphs(rim, hoop, coin_r, centre))
     coin = f.raster(Point(CX, CY).buffer(coin_r + (0.70 if rim else 0.0), resolution=128))
     field = np.ones_like(gm)
     reach_coin = E.Field.opening(coin & ~gm, tool_r)
-    reach_step = E.Field.opening(field & ~gm & ~coin, tool_r)
+    reach_step = E.Field.opening(field & ~gm & ~coin, 0.15)
     f.z = np.where(reach_coin, PLANE + coin_d, np.where(reach_step, PLANE, 0.0)).astype(np.float32)
+    rest_a = 0.0
+    if rest_d is not None:
+        # rest machining: the O0.3 goes back ONLY where the primary tool could not,
+        # and stops at its own 1.3xD wall (rest_d into the field). Confined by
+        # construction to counters and sub-O0.4 channels -- invisible from outside
+        # the letterforms, and exactly what turns 'solid marks' back into digits.
+        rest = E.Field.opening(coin & ~gm, 0.15) & ~reach_coin
+        f.z = np.maximum(f.z, np.where(rest, PLANE + rest_d, 0.0).astype(np.float32))
+        reach_coin = reach_coin | rest
+        rest_a = float(rest.sum()) * PX * PX
     webs = (field & ~gm) & ~reach_coin & ~reach_step        # uncut metal AT THE PLANE
     tops = (f.z < 0.015)
-    return f, gm, tops, webs, tool_r
+    return f, gm, tops, webs, tool_r, rest_a
 
 
 def plane_surfaces(f, tops, thr=0.015):
@@ -215,20 +232,23 @@ def shot_plane(surfaces, path, size=1500, az=5.0, el=13.0, dist=232.0, grazing=F
 
 
 VARIANTS = [
-    ("W-sunken-coin", "SUNKEN COIN", 0.25, True, True,
+    ("W-sunken-coin", "SUNKEN COIN", 0.25, True, True, None, CENTRE,
      "coin floor 0.25 into the field -> 0.40 walls; rim + ring + hoop + serial on the plane"),
-    ("X-deep-coin", "DEEP COIN", 0.45, True, True,
+    ("X-deep-coin", "DEEP COIN", 0.45, True, True, None, CENTRE,
      "coin floor 0.45 -> 0.60 walls, the full budget as shadow under the bright plane"),
-    ("Y-bare-coin", "BARE COIN", 0.25, False, False,
+    ("Y-bare-coin", "BARE COIN", 0.25, False, False, None, CENTRE,
      "no rim, no hoop -- text and serial alone; the recess wall is the only circle"),
+    ("Z-rest-machined", "REST-MACHINED COIN", 0.45, True, True, 0.25, CENTRE_Z,
+     "X's 0.60 field, W's counters: O0.4 to 0.45, then O0.3 ONLY where it couldn't go"),
 ]
 
 if __name__ == "__main__":
     E.ensure_shell()
     E.SHELL = E.clip_back_face(E.shell_actor(), E.ART)
     made = []
-    for key, title, coin_d, rim, hoop, sub in VARIANTS:
-        f, gm, tops, webs, tool_r = build_plane(coin_d, rim, hoop)
+    for key, title, coin_d, rim, hoop, rest_d, centre, sub in VARIANTS:
+        f, gm, tops, webs, tool_r, rest_a = build_plane(coin_d, rim, hoop,
+                                                        rest_d=rest_d, centre=centre)
         crest_a = float(tops.sum()) * PX * PX
         webs_a = float(webs.sum()) * PX * PX
         notes = [
@@ -239,12 +259,21 @@ if __name__ == "__main__":
             f"left); crest walls {PLANE + coin_d:.2f} from plane to floor, VERTICAL -- "
             f"milled islands, dia {2*tool_r:.1f} finisher at "
             f"{(PLANE + coin_d) / (2 * tool_r):.1f}xD",
-            f"metal left AT THE PLANE the dia {2*tool_r:.1f} cannot enter (laps bright "
-            f"with the crests): {webs_a:.2f} mm2 -- the tightest counters read as "
-            f"solid marks",
-            "machined as the frame is machined: crests are LEFT from stock while the "
-            "facing op cuts the field 0.15 and the coin sinks around them",
         ]
+        if rest_d is not None:
+            notes.append(f"then the O0.3 rest-machines the {rest_a:.2f} mm2 the O0.4 "
+                         f"could not enter, stopping at its own 1.3xD ({rest_d:.2f} "
+                         f"into the field) -- counter floors sit {coin_d - rest_d:.2f} "
+                         f"above the coin floor, HIDDEN inside the letterforms")
+            notes.append(f"small caps up 1.40 -> 1.60 so their counters clear the O0.3; "
+                         f"webs left at the plane after the cascade: {webs_a:.2f} mm2")
+        else:
+            notes.append(f"metal left AT THE PLANE the dia {2*tool_r:.1f} cannot enter "
+                         f"(laps bright with the crests): {webs_a:.2f} mm2 -- the "
+                         f"tightest counters read as solid marks")
+        notes.append("machined as the frame is machined: crests are LEFT from stock "
+                     "while the facing op cuts the field 0.15 and the coin sinks "
+                     "around them")
         notes.append(f"DEEPEST CUT {PLANE + coin_d:.3f} below the plane -> coin floor "
                      f"{coin_d:.2f} below the field ({'within' if coin_d <= E.BUDGET + 1e-9 else 'PAST'} "
                      f"the {E.BUDGET:.2f} ceiling)")

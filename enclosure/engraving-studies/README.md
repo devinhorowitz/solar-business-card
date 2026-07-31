@@ -231,6 +231,7 @@ them. Vertical walls keep the full stroke as lap contact.
 | **W** SUNKEN COIN | coin floor 0.25 into the field → 0.40 walls; rim + ring + hoop + serial on the plane. 129 mm² of lap contact; Ø0.3 finisher at 1.3×D; 3.5 mm² of counter webs lap bright (tight digits read solid). |
 | **X** DEEP COIN | coin floor 0.45 → 0.60 walls, the full budget as shadow under the bright plane. The Ø0.3 would run 2×D, so the finisher steps to Ø0.4 and the webs grow to 5.5 mm² — X pays for its shadow in counter legibility. |
 | **Y** BARE COIN | W's depths, no rim, no hoop — 45 mm² of lap contact, the recess wall is the only circle. The quietest of the three. |
+| **Z** REST-MACHINED COIN | X's drama **and** W's text, by the machinist's standard move: the Ø0.4 takes the open coin to the full 0.45 (0.60 walls at every visible edge), then the Ø0.3 **rest-machines only what the Ø0.4 could not enter** — 2.4 mm² of counters — stopping at its own 1.3×D (0.25 into the field). Counter floors sit 0.20 above the coin floor, hidden *inside* the letterforms where absolute depth is imperceptible; open-vs-solid is what the eye checks, and they come out open. Small caps up 1.40 → 1.60 so their counters clear the Ø0.3; residue after the cascade is 3.0 mm² — *less than W's* 3.5. |
 
 **One law amended, loudly:** the frame stops being the *sole* bearing surface — the
 crests join it, coplanar, finished by the same pass. (Ribs stay 0.05 under the plane and
@@ -267,8 +268,10 @@ two-texture contrast no shop can order and go quiet in diffuse light.
 
 Spin 7 restores that contrast at the bench — one blast, then hand-lapped crests — and
 spin 8 turns that insight into the architecture: crests on the bearing plane, whole-part
-plate lap, self-limiting by geometry. **The gameplan is spin 8's sunken coin.** The
-remaining pick is W vs X vs Y — walls (0.40 vs 0.60, shadow vs counter legibility) and
-furniture (rim + hoop vs bare). Next step once picked: land it in the shell generator as
-CAD (replacing `MAKER_LINES`) and amend the bearing rule in `fit_rules` — at that point
-it leaves this directory and joins the part.
+plate lap, self-limiting by geometry. **The gameplan is spin 8's sunken coin, and Z is
+its resolution of the W-vs-X trade**: the full 0.60 walls everywhere the eye can see,
+W-clean counters via the Ø0.3 rest pass, at the cost of one extra tool in a cascade any
+CNC shop runs daily. Remaining picks: Z's furniture (rim + hoop, as rendered) and the
+serial policy. Next step once confirmed: land it in the shell generator as CAD
+(replacing `MAKER_LINES`) and amend the bearing rule in `fit_rules` — at that point it
+leaves this directory and joins the part.
