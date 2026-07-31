@@ -249,14 +249,25 @@ def boss_island(mx, my):
 # the short axis do NOT stiffen the card against its dominant flex, which is curling along its
 # length -- lengthwise ribs would. Grip wins because the plate is screwed to a PCB at eight points,
 # not carried bare, and 0.70 mm of floor survives under the valleys.
-FIN_PITCH  = 3.2           # centre-to-centre; coarser reads as fins, finer reads as knurl
-FIN_RIB_W  = 2.0           # rib width; the rest of the pitch is valley. Was 1.7 -- widened
-                           # 2026-07-30 on request for more rib surface (grip): rib-top area
-                           # 1026 -> 1207 mm^2 (+18%) with pitch, rib POSITIONS and the boss
-                           # keepouts all unchanged. The floor of this number is the VALLEY:
-                           # 3.2 - 2.0 = 1.2 leaves the O1.0 back cutter 0.2 of side clearance;
-                           # 2.2 would make the valley exactly cutter-width -- zero-clearance
-                           # slotting that burnishes in Ti and goes undersize with tool wear.
+# AS FINE AS THE MACHINING HONESTLY GOES (2026-07-30, on request). Every number below
+# is a floor with an owner:
+#   groove 0.8 = O0.6 tool + 0.2 side clearance. O0.6 solid carbide slotting 0.30 deep
+#     (0.5xD) across ~40 mm runs in Ti-6Al-4V is routine engraving-grade work; O0.5
+#     would buy 0.1 mm of fineness at real breakage-and-cycle risk over ~36 long slots,
+#     and zero-clearance slotting stays banned (burnishes in Ti, undersizes with wear
+#     -- the same rejection recorded when the O1.0 groove was sized).
+#   rib 0.6 = tolerance + refinish. +-0.05 per wall puts +-0.1 on a rib: at 0.6 that is
+#     +-17%, the finest width where row-to-row variation stays invisible and a bead
+#     blast does not knife-edge the top. Relief 0.40 on 0.6 wide = 0.67 aspect: rigid.
+#   pitch 1.4 = the sum. 2.3x finer than the 3.2 it replaces; 18 rows per field. The
+#     old note said "finer reads as knurl" -- at 1.4 it reads as reeding, and that is
+#     now the point. Coarser fallbacks if the shop balks, in order: groove 1.0 (O0.8),
+#     groove 1.2 (O1.0, the previous sizing). Cycle-time cost of O0.6: the groove
+#     network is that tool's work alone, roughly +30-60 min of spindle time on the Ti
+#     quote. The G engraving study aligned its baselines to FIN_PITCH; it re-derives
+#     from these constants when it is picked.
+FIN_PITCH  = 1.4           # centre-to-centre: rib + groove
+FIN_RIB_W  = 0.6           # rib width; groove = pitch - rib = 0.8 (O0.6 tool + 0.2)
 FIN_PROUD  = 0.10          # rib tops stand this proud of the art field...
 FIN_VALLEY = 0.30          # ...and valleys are cut this far into the 1.00 floor -> 0.40 relief
 FIN_BOSS_CLR = 0.40        # rib to back boss annulus
@@ -316,7 +327,9 @@ def _back_field():
 # is cut, so the remainder becomes a valley-depth GUTTER above and below each rib run --
 # continuous with the boss-wrap arcs, so a perimeter channel frames the stack and the
 # wider edge channel reads as that frame, not as an uneven groove.
-_BACK_CUT_R = 0.5          # O1.0 back finisher: the pour's minimum-width rule
+_BACK_CUT_R = 0.3          # O0.6 fin finisher: the pour's minimum-width rule. The O1.0
+                           # stays for the art field / border; the groove network is the
+                           # O0.6's work alone (nothing else fits a 0.8 slot).
 
 
 def fin_band():
