@@ -209,7 +209,21 @@ def geometry(text_fn, font_r, font_b):
     disc = Point(CX, cy).buffer(COIN_R + RIM_W, resolution=64)
     region = disc.difference(glyphs)
     reach_main = _opening(region, TOOL_MAIN_R)
-    reach_rest = _opening(region, TOOL_REST_R).difference(reach_main)
+    rest_raw = _opening(region, TOOL_REST_R).difference(reach_main)
+
+    # The exact reach difference between the two tools is a SLIVER FACTORY: the O0.3
+    # hugs every wall ~0.05 closer than the O0.4, so rest_raw fragments into ~900
+    # hair-thin arcs around every letter -- unbuildable booleans and a STEP no CAM
+    # seat wants. Wall-hug slivers (inscribed width < 0.10: they vanish under a 0.05
+    # erosion) are MERGED INTO THE DEEP CUT instead: that claims <= 0.05 mm of extra
+    # O0.4 reach at wall bases -- inside ISO 2768 medium and the shop's +-0.05, and it
+    # errs toward CLEARANCE, never phantom metal. Real rest features (counters,
+    # channels the O0.4 cannot enter at all) keep their own 0.25 floor.
+    slivers, rest_keep = [], []
+    for p in _parts(rest_raw):
+        (slivers if p.buffer(-0.05).is_empty else rest_keep).append(p)
+    reach_main = unary_union([reach_main] + slivers)
+    reach_rest = unary_union(rest_keep) if rest_keep else Polygon()
     standing = disc.difference(unary_union([reach_main, reach_rest]))
     standing = unary_union([p for p in _parts(standing) if p.area > _DUST])
 
