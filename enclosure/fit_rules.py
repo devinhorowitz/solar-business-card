@@ -297,14 +297,40 @@ def fin_band():
     return pv[0][3], pv[1][1]
 
 
-def fin_region():
-    """Everything the fin field may occupy: both bands, minus the boss annuli."""
+def fin_runs(pitch=FIN_PITCH, rib_w=FIN_RIB_W):
+    """Per-field rib centrelines and the ENVELOPE the valley cut may occupy.
+
+    The rib grid is centred in each field (off = remainder/2) and that is unchanged --
+    the G engraving variant's baseline grid and every fin position stay put. What the
+    envelope fixes is where the remainder GOES. It used to be cut: the valley field ran
+    to the band edge, so each field started and ended with a PARTIAL groove -- 1.175 mm
+    against the 1.500 of every interior valley -- and four narrower grooves at the field
+    boundaries read as uneven machining (measured on the committed STL by ray-cast, and
+    exactly what a reviewer flagged on the elevation render). The cut is now clipped to
+    the rib envelope, so every groove that exists is a full 1.500 and the remainder is
+    FLUSH art-field margin instead of a squeezed groove.
+    """
     field = _back_field()
-    y0, y1 = fin_band()
     fx0, fy0, fx1, fy1 = field.bounds
+    y0, y1 = fin_band()
+    runs = []
+    for a, b in [(fy0, y0), (y1, fy1)]:
+        span = b - a
+        n = max(1, int(span // pitch))
+        off = (span - (n - 1) * pitch) / 2.0          # centre the run inside its own field
+        cys = [a + off + i * pitch for i in range(n)]
+        runs.append((a, b, cys, cys[0] - rib_w / 2, cys[-1] + rib_w / 2))
+    return runs
+
+
+def fin_region(pitch=FIN_PITCH, rib_w=FIN_RIB_W):
+    """Everything the valley cut may occupy: both rib ENVELOPES, minus the boss annuli.
+    Clipped to the envelopes rather than the full bands -- see fin_runs()."""
+    field = _back_field()
+    fx0, _fy0, fx1, _fy1 = field.bounds
     blockers = unary_union([Point(mx, my).buffer(BOSS_R + FIN_BOSS_CLR, resolution=48)
                             for mx, my in MOUNTS])
-    bands = [box(fx0, fy0, fx1, y0), box(fx0, y1, fx1, fy1)]
+    bands = [box(fx0, env0, fx1, env1) for _a, _b, _cys, env0, env1 in fin_runs(pitch, rib_w)]
     reg = unary_union([field.intersection(b) for b in bands]).difference(blockers)
     return unary_union([_dedupe(g) for g in
                         (reg.geoms if reg.geom_type == "MultiPolygon" else [reg])])
@@ -313,17 +339,12 @@ def fin_region():
 def fin_ribs(pitch=FIN_PITCH, rib_w=FIN_RIB_W):
     """The rib polygons themselves, opened at the tool radius so nothing survives that a Ø1.0
     cutter could not actually leave standing."""
-    region = fin_region()
+    region = fin_region(pitch, rib_w)
     field = _back_field()
     fx0, fy0, fx1, fy1 = field.bounds
-    y0, y1 = fin_band()
     out = []
-    for a, b in [(fy0, y0), (y1, fy1)]:
-        span = b - a
-        n = max(1, int(span // pitch))
-        off = (span - (n - 1) * pitch) / 2.0          # centre the run inside its own field
-        for i in range(n):
-            cy = a + off + i * pitch
+    for _a, _b, cys, _e0, _e1 in fin_runs(pitch, rib_w):
+        for cy in cys:
             r = region.intersection(box(fx0, cy - rib_w / 2, fx1, cy + rib_w / 2))
             if r.is_empty:
                 continue
