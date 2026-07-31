@@ -239,11 +239,11 @@ Form settings on the CNC quote page (the on-screen selections override the drawi
 - **Technical drawing:** attach `...-0p6b-brace-DRAWING.pdf`; do not attach the stale v2.1 file.
 - **Threads / tapped holes: Yes** — `8× M2×0.4 tapped through, from the back face`.
 - **Tolerance: leave on standard / ISO 2768** — do **not** enable "Tighter tolerances required." That toggle trips an automated review gate that rejects the order with a templated "tighter tolerance not specified at position" message even though the drawing marks it. Marked callouts govern regardless of the toggle. Two dims are marked **±0.05**: **C1 cavity depth 1.80 ±0.05** (Section A-A) and **C3 mounting-hole pattern pitch (x 44.80; y rows 3.0/28.5/60.4/85.9) ±0.05** (plan, 8 holes). **C1 is the non-negotiable one.** Flatness C2 = 0.05 rides along as a form callout. Paste into the notes box: *"Two dimensions are marked ±0.05 and must be held as marked: cavity depth 1.80 ±0.05 (Section A-A), and the 8-hole mounting pattern pitch x 44.80 / y rows 3.0/28.5/60.4/85.9 ±0.05 (plan). All other dimensions per ISO 2768-1 medium."*
-- **Surface finish: Bead blasting** (matte, uniform on the stepped back face) — **not Brushed.** The back face is stepped (recessed art field, raised frame and boss annuli), so a brushed grain cannot run continuously; bead-blast covers into the corners and gives better laser-mark contrast.
+- **Surface finish: Bead blasting** (matte, uniform on the stepped back face) — **not Brushed.** The back face is stepped (recessed art field, raised frame, boss annuli and the medallion crests), so a brushed grain cannot run continuously; bead-blast covers into every recess. The two-texture finish is **not** ordered from the shop: after the blast, the bearing plane (frame + medallion crests, coplanar at −0.15) is hand-lapped bright on a plate at the bench — the plate cannot touch anything else, by geometry (engraving-studies spins 6–8).
 - **Surface roughness:** 250 µin / 6.3 µm Ra (default).
 - **Finished appearance: Standard** for the first article.
 - **Inspection: Standard Inspection with Formal Report** (you want the measured cavity depth and floor thickness back). CMM-with-report if you also want flatness and hole position verified.
-- **Part marking:** none (rear branding/art is a later laser step).
+- **Part marking:** none to order — the rear medallion (ring text, monogram, serial) is **machined geometry in the model**, not a marking service. (The laser-step plan was retired 2026-07-31 when the Z9F medallion graduated into the CAD.)
 - **Product description:** DIY / Demonstration model.
 
 Paste into **Other special request**:
@@ -274,7 +274,7 @@ Expect the instant price to move: the thin floor routes this to manual engineeri
 | Revision | v3.0 (0.6-board dumb box: 1.00 floor, 1.80 cavity, no ribs, no locator pillars) |
 | Material | **Titanium Gr5 (TC4) = Ti-6Al-4V Grade 5** (PCBWay stock) |
 | Process | 3-axis CNC milling, 2 setups (cavity face + back face) |
-| Finish | Bead-blast matte. Rear art laser-marked in the recessed field after finishing. |
+| Finish | Bead-blast matte; bearing plane (frame + medallion crests) hand-lapped bright at the bench afterward. Rear art is machined-in (the medallion), not marked. |
 | Source model | `solar-glow-drh-v3_0-backshell-0p6b-brace-Ti-max.step` |
 | Units | mm |
 
@@ -283,9 +283,12 @@ Expect the instant price to move: the thin floor routes this to manual engineeri
 - Bounding box: **52.70 × 90.80 × 3.55 mm**.
 - Datum **Z0 = outer back face**. +Z is into the part toward the PCB.
 - Z stack from the back face:
-  - back frame and 4 boss annuli: **proud 0.15 mm** (to Z −0.15)
+  - back frame, 4 boss annuli **and the medallion crests**: **proud 0.15 mm** (to Z −0.15
+    — the bearing plane; `medallion.py`)
   - recessed rear art field: at Z 0; fin rib tops proud 0.10 (Z −0.10), fin groove
     floors at **Z +0.60** (`FIN_VALLEY` — 0.40 web under each groove, see §3 addendum)
+  - medallion coin floor **Z +0.45** (Ø0.4 end mill), counter/rest floors **Z +0.25**
+    (Ø0.3 rest pass) — both within the 0.60 fin-valley ceiling, no new thin section
   - cavity floor: at **Z +1.00**, uniform (the 0.95 local U7 pocket was removed 2026-07-28)
   - boss / lip tops (the PCB rest plane): **Z +2.80**
   - PCB recess: Z +2.80 to +3.40 (receives the 0.60 mm board)
@@ -328,10 +331,10 @@ not present during machining). Please proceed one of two ways and note which on 
 into the 1.00 floor, leaving a **0.40 mm web under each groove**. Three conditions make
 this sound, and all three are requests to the shop, not hopes:
 
-1. **Operation order: cut all back-face features (fins, mark, frame) BEFORE hollowing the
-   cavity.** On solid stock the grooves machine on 3.4 mm of metal; after hollowing, the
-   floor is a diaphragm and the fine grooves will chatter. This ordering is load-bearing,
-   not stylistic.
+1. **Operation order: cut all back-face features (fins, medallion, frame) BEFORE hollowing
+   the cavity.** On solid stock the grooves machine on 3.4 mm of metal; after hollowing,
+   the floor is a diaphragm and the fine grooves will chatter. This ordering is
+   load-bearing, not stylistic.
 2. **Stress-relieved Ti-6Al-4V stock.** The fin pass removes ~2 g asymmetrically from one
    face of a 43 mm field; unrelieved plate can bow. Mill-annealed / stress-relieved
    condition, please state on the quote.
@@ -339,6 +342,13 @@ this sound, and all three are requests to the shop, not hopes:
    nothing larger enters). Depth 0.60 = 1×D — expect **two passes**. The web is a waffle
    (0.79 spans between 0.6 ribs, brace-backed in service), so 0.40 local web is stout;
    the risks are the two named above, and they are handled by 1 and 2.
+4. **The medallion is island work: Ø0.4 + Ø0.3, vertical walls** (`medallion.py`). The
+   Ø0.4 clears the open coin to 0.45 below the field; the Ø0.3 rest-machines only what
+   the Ø0.4 cannot enter, stopping at 0.25. The crests (ring text, rim, hoop, monogram,
+   serial) are left standing to the **frame's own −0.15 plane** — they are made exactly
+   the way the frame is made, and the generator **asserts** no detached island under
+   0.55 mm exists before it will emit a STEP. Serial (`No 001`) is variable data: one
+   text substitution per unit in `medallion.SERIAL`.
 
 ### 4. Brace registration (no locator pillars)
 

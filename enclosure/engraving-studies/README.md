@@ -1,9 +1,11 @@
 # Back-shell engraving studies
 
 Twenty-five ways to mark the titanium back, parked here so the reasoning survives the
-conversation that produced it. **Nothing here ships.** The committed shell still
-carries `MAKER_LINES` from `solar-glow-drh-v3_0-backshell-0p6b-brace-cad.py`; when one of
-these is chosen it replaces that, and only then does it become part of the CAD chain.
+conversation that produced it. **GRADUATED 2026-07-31: the winner shipped.** Z9F — the
+rest-machined bearing-plane coin with the ensured ring — now lives in the CAD chain as
+`enclosure/medallion.py` (parameters + geometry + the asserting island audit) cut by the
+shell generator, replacing the old two-line `MAKER_LINES` mark. These studies remain as
+the decision record: every number in the medallion was measured here first.
 
 ```sh
 python3 enclosure/engraving-studies/spin1_cutters.py        # which cutter
@@ -350,6 +352,7 @@ the class, both fixed structurally in **Z9F**:
 Z9F's island audit runs in-script and **asserts**: no standing island under 0.55 mm
 anywhere on the coin. That is the shippable claim.
 
-Next step: land Z9F in the shell generator as CAD (replacing `MAKER_LINES`, parameters
-`RING_TEXT` / `RING_ANCHOR` / `DIAL_MONOGRAM` / `SERIAL`) and amend the bearing rule in
-`fit_rules` — at that point it leaves this directory and joins the part.
+**Done (2026-07-31): Z9F graduated.** It lives in `enclosure/medallion.py` (the four
+parameters, the geometry, and the island audit as a build-time assert), is cut by the
+shell generator in place of `MAKER_LINES`, and the bearing-rule amendment is recorded at
+`fit_rules.FIN_PROUD`. This directory is now the decision record.

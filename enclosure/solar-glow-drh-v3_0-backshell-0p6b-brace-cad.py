@@ -119,15 +119,19 @@ CBORE_D    = 3.0                   # back spotface dia at each hole; depth auto-
 GLOW_WIN   = (14.95, 40.8, 35.85, 47.0)   # board coords (x0,y0,x1,y1); 20.9 x 6.2 mm, centered (25.4,43.9)
 MARK_W     = 0.25                  # frame outline width (in-plane), hairline -- laser-marked, no material removed
 MARK_DEPTH = 0.00                  # 0 = laser mark (no cut). >0 would engrave a groove (thins the floor); kept off.
-# ---- rear MAKER'S MARK: hard-engraved into the recessed back field (tucked lower-left, asymmetric). Cut
-# 0.20mm into the 1.0mm floor stock -> a real machined mark, not a surface etch. Mirrored about the board
-# center X so it reads correctly when the card is turned over. Name in Bold, the line above it in Regular. ----
-MAKER_DEPTH  = 0.20
-# Back-engraved maker text. The exact glyph outlines end up cut into the titanium, so the font is
-# part of the deliverable, not a styling choice -- it is vendored in enclosure/fonts/ (JetBrains Mono,
-# SIL OFL 1.1, license bundled alongside as the OFL requires). These paths used to point at
-# /home/claude/fonts/, which exists on nobody's checkout, so the generator could not regenerate its
-# own STEP. Set MAKER_FONT_DIR to override.
+# ---- rear MEDALLION (replaced the two-line maker's mark, 2026-07-31): the Z9F coin from the
+# engraving studies. A sunken disc in the clear band; ring text, rim, hoop, monogram and serial
+# stand as stock-plane ISLANDS on the same +0.15 bearing plane as the frame, so the whole part
+# laps face-down on a plate (frame + crests take the film; nothing else can be touched). All
+# geometry, the four agnostic parameters (RING_TEXT / RING_ANCHOR / DIAL_MONOGRAM / SERIAL) and
+# the machining contract (min-island audit, tool cascade) live in medallion.py -- it ASSERTS at
+# build time, so an unmachinable parameter refuses to generate. Decision trail with every number:
+# enclosure/engraving-studies/. ----
+# The exact glyph outlines end up cut into the titanium, so the font is part of the deliverable,
+# not a styling choice -- it is vendored in enclosure/fonts/ (JetBrains Mono, SIL OFL 1.1,
+# license bundled alongside as the OFL requires). These paths used to point at /home/claude/fonts/,
+# which exists on nobody's checkout, so the generator could not regenerate its own STEP. Set
+# MAKER_FONT_DIR to override.
 _FONT_DIR = os.environ.get("MAKER_FONT_DIR") or os.path.join(os.path.dirname(os.path.abspath(__file__)), "fonts")
 MAKER_FONT_R = os.path.join(_FONT_DIR, "JetBrainsMono-Regular.ttf")
 MAKER_FONT_B = os.path.join(_FONT_DIR, "JetBrainsMono-Bold.ttf")
@@ -136,10 +140,6 @@ for _f in (MAKER_FONT_R, MAKER_FONT_B):
         raise SystemExit(f"maker font missing: {_f}\n"
                          "  the engraved text is part of the machined part, so this is not "
                          "substitutable -- set MAKER_FONT_DIR to a directory holding JetBrains Mono.")
-MAKER_LINES  = [                       # (text, LEFT-edge x, centerline y, cap height, font)  board coords, readable
-    ("DESIGNED & MADE BY", 7.0, 51.5, 1.20, MAKER_FONT_R),
-    ("DEVIN HOROWITZ",     7.0, 54.1, 1.65, MAKER_FONT_B),
-]
 
 # round-tool relief: a spinning end mill cannot cut a sharp INTERNAL (concave) corner -- it always
 # leaves its own radius. Convex features (the bosses, brace posts, rib ends) are fine; the tool just
@@ -395,10 +395,11 @@ def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pill
                 res = res.union(_poly_solid(poly, -border_h, border_h))
     # BACK FIN FIELDS: two fields with a clear band between them, texture rather than cooling.
     # Cut the whole field VALLEY deep into the floor, then stand the ribs back up PROUD of it --
-    # 0.40 mm peak-to-valley while the thinnest floor is 0.70, and the rib tops stay 0.05 under
-    # the frame plane so the frame remains the sole bearing surface and the texture never scuffs
-    # on a desk. Geometry is computed in fit_rules from the board: the clear band IS the gap the
-    # two solar cells leave on the show face, so it tracks the board rather than being drawn.
+    # the rib tops stay 0.05 UNDER the bearing plane, so the texture never scuffs on a desk and
+    # never meets the lapping plate. (The bearing plane is the frame PLUS, since 2026-07-31, the
+    # medallion crests -- coplanar at +0.15, finished by the same lap; the amendment is recorded
+    # in fit_rules at FIN_PROUD.) Geometry is computed in fit_rules from the board: the clear
+    # band IS the gap the two solar cells leave on the show face, so it tracks the board.
     if fins and border_h > 0:
         for _p in _fin_region().geoms if _fin_region().geom_type == "MultiPolygon" else [_fin_region()]:
             res = res.cut(_poly_solid(_p, 0.0, FIN_VALLEY))
@@ -436,35 +437,6 @@ def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pill
         inner = (cq.Workplane("XY").workplane(offset=floor - MARK_DEPTH - 0.01)
                    .moveTo(wx(cx), wy(cy)).rect(iwd, ihd).extrude(MARK_DEPTH + 0.04))
         res = res.cut(outer.cut(inner))
-    # rear MAKER'S MARK: engrave into the recessed back field, mirrored about board center X so it reads
-    # right when the card is turned over to the back. Lower-left, clear of the bottom boss annuli (y<83.3).
-    if maker_mark:
-        import shapely.affinity as _aff
-        from shapely.ops import unary_union as _uu
-        # EACH LINE IS MIRRORED ABOUT ITS OWN CENTRELINE FIRST. Glyph outlines come out of the
-        # font in Y-UP space; board space is Y-DOWN, so dropping them in as-is engraves every
-        # letter UPSIDE DOWN while leaving the letter order and the line order correct -- which
-        # is exactly why it survived: it reads as text, just inverted. Rasterising the cut
-        # geometry is what caught it, and the tell is that V comes out as a lambda and W as an M.
-        # Those two letters are horizontally symmetric, so no left-right mirror can touch them;
-        # only a vertical flip does that.
-        #
-        # NOT a 180 deg rotation. That also rights the letters, but it reverses the reading order
-        # with them -- verified, it renders "ZTIWOROH NIVED". Per-line about its own cy rights the
-        # glyphs and leaves the two lines where they belong.
-        _mk=[]
-        for _t,_lx,_cy,_cH,_fp in MAKER_LINES:
-            _g=_maker_text(_t,_lx,_cy,_cH,_fp)
-            if _g is not None: _mk.append(_aff.scale(_g, xfact=1, yfact=-1, origin=(0,_cy)))
-        if _mk:
-            _mg=_aff.scale(_uu(_mk), xfact=-1, yfact=1, origin=(25.4,44.45))
-            for _p in (_mg.geoms if _mg.geom_type=="MultiPolygon" else [_mg]):
-                _cut=(cq.Workplane("XY").workplane(offset=-0.05)
-                        .polyline([(wx(x),wy(y)) for x,y in list(_p.exterior.coords)]).close().extrude(MAKER_DEPTH+0.05))
-                for _r in _p.interiors:
-                    _cut=_cut.cut(cq.Workplane("XY").workplane(offset=-0.10)
-                            .polyline([(wx(x),wy(y)) for x,y in list(_r.coords)]).close().extrude(MAKER_DEPTH+0.20))
-                res=res.cut(_cut)
     # U7 relief pocket: a local 0.05 mm-deeper cavity floor under U7 (28.1,37.3) so U7 keeps a
     # 0.10 mm air gap (same as the caps) while the GENERAL floor is `floor` mm of back-engraving stock. 0.05 = U7_H-cap_H;
     # the caps (1.70) are the next-tallest, so the general cavity is cap-limited and only U7 needs relief.
@@ -486,6 +458,68 @@ def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pill
                 res = res.faces(sel).edges().chamfer(EDGE_BREAK)
             except Exception as e:
                 print(f"  [deburr] faces('{sel}') skipped: {type(e).__name__}")
+    # rear MEDALLION (Z9F, replaced the engraved maker's mark 2026-07-31): the coin. Cut
+    # AFTER the deburr, deliberately: the 0.1 edge-break must never see the crest edges --
+    # on a 0.30 letter stroke it would eat two-thirds of the lap face, and walking OCC
+    # through hundreds of glyph edges is also what a 20-minute build looks like. The
+    # crests' edge treatment IS the finishing: bead blast, then the plate lap.
+    # medallion.py owns the geometry, the four parameters, the per-glyph Y-flip, the
+    # machining mirror AND the island audit (it asserts, so an unmachinable RING_TEXT
+    # refuses to build). What arrives here is final machining geometry, cut verbatim:
+    #   cut_rest -> REST_D  (the O0.3's floors: counters + sub-O0.4 channels)
+    #   cut_main -> COIN_D  (the O0.4's open coin floor)
+    #   standing -> bearing-plane islands, unioned exactly the way the frame is made --
+    #               EXTERIOR MINUS INTERIORS, or the union would fill back the counters
+    #               the rest pass just cut.
+    if maker_mark and border_h > 0:
+        import time as _time
+        import medallion as _md
+        _t0 = _time.time()
+        _mg = _md.geometry(_maker_text, MAKER_FONT_R, MAKER_FONT_B)
+        print(f"  [medallion] geometry+audit {_time.time()-_t0:.1f}s")
+        # Assemble each family as an OCC COMPOUND (no pre-fusing) so the shell sees
+        # exactly two booleans; medallion.py already simplified the outlines to 8 um,
+        # which is what keeps those two booleans from being a 20-minute build.
+        _cutsol, _islsol = [], []
+        for _geo, _d in ((_mg["cut_rest"], _md.REST_D), (_mg["cut_main"], _md.COIN_D)):
+            for _p in (_geo.geoms if _geo.geom_type == "MultiPolygon" else [_geo]):
+                if _p.is_empty:
+                    continue
+                _cut = (cq.Workplane("XY").workplane(offset=-0.02)
+                        .polyline([(wx(x), wy(y)) for x, y in list(_p.exterior.coords)])
+                        .close().extrude(_d + 0.02))
+                for _r in _p.interiors:
+                    _cut = _cut.cut(cq.Workplane("XY").workplane(offset=-0.04)
+                                    .polyline([(wx(x), wy(y)) for x, y in list(_r.coords)])
+                                    .close().extrude(_d + 0.08))
+                _cutsol.append(_cut.val())
+        _sg = _mg["standing"]
+        for _p in (_sg.geoms if _sg.geom_type == "MultiPolygon" else [_sg]):
+            _isl = (cq.Workplane("XY").workplane(offset=-border_h)
+                    .polyline([(wx(x), wy(y)) for x, y in list(_p.exterior.coords)])
+                    .close().extrude(border_h + 0.02))
+            for _r in _p.interiors:
+                _isl = _isl.cut(cq.Workplane("XY").workplane(offset=-border_h - 0.02)
+                                .polyline([(wx(x), wy(y)) for x, y in list(_r.coords)])
+                                .close().extrude(border_h + 0.06))
+            _islsol.append(_isl.val())
+        print(f"  [medallion] {len(_cutsol)} cut + {len(_islsol)} island prisms "
+              f"{_time.time()-_t0:.1f}s")
+        if _cutsol:
+            # FUSE the cut family into one tool before cutting. rest and main were
+            # simplified independently, so their shared boundaries drift a few um and
+            # the solids micro-overlap -- and an OCC cut with self-intersecting
+            # compound tools fails SILENTLY and partially (found as a coin floor that
+            # never got cut while the counters did). The fuse resolves the overlaps;
+            # the single cut is then clean.
+            _tool = _cutsol[0]
+            for _s in _cutsol[1:]:
+                _tool = _tool.fuse(_s)
+            res = res.cut(_tool)
+            print(f"  [medallion] coin cut done {_time.time()-_t0:.1f}s")
+        if _islsol:
+            res = res.union(cq.Compound.makeCompound(_islsol))
+            print(f"  [medallion] crests unioned {_time.time()-_t0:.1f}s")
     return res
 
 # ===== variants (titanium only; 7075 retired -- final part is Ti) =====
@@ -503,7 +537,8 @@ jobs = [
 print(f"cavity={cavity} general (cap {cap_H}+air {cav_margin}; kapton {kapton_th}); U7 pocket {U7_POCKET} deep "
       f"({'NO POCKET -- uniform floor' if U7_POCKET == 0 else 'local relief'})  lip PER-BAND from the board (W {_LIPSUM['W']} / E {_LIPSUM['E']} / S {_LIPSUM['S']} / N {_LIPSUM['N']} bands)  "
       f"braces=OFF (removed; {len(BRACE)} defs retained) ribs={len(RIBS)}  border=0.15  "
-      f"cavity tool R{TOOL_R} (Ø{2*TOOL_R}) / back tool R{BACK_TOOL_R} (Ø{2*BACK_TOOL_R}) / fin groove tool Ø0.6 (grooves 0.8, its work alone)  "
+      f"cavity tool R{TOOL_R} (Ø{2*TOOL_R}) / back tool R{BACK_TOOL_R} (Ø{2*BACK_TOOL_R}) / fin groove tool Ø0.6 (grooves 0.8, its work alone) / "
+      f"medallion Ø0.4 coin + Ø0.3 rest (islands, vertical walls; crests ON the bearing plane -- lap after blast)  "
       f"deburr: outer rim {edge_ease}, ends {EDGE_BREAK}  reflector-frame {GLOW_WIN[2]-GLOW_WIN[0]:.1f}x{GLOW_WIN[3]-GLOW_WIN[1]:.1f} laser-marked (full floor under it)  "
       f"relief: OFF (concave junctions left sharp -> clean analytic STEP; round tool leaves its radius)")
 for name_suf, fl, wl, bd, rb, pw, note in jobs:
