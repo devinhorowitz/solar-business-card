@@ -387,24 +387,33 @@ def fin_region(pitch=FIN_PITCH, rib_w=FIN_RIB_W):
 
 
 def fin_ribs(pitch=FIN_PITCH, rib_w=FIN_RIB_W):
-    """Rib strips clipped by the zone: edge to edge, wrapped around each boss keepout at
-    the uniform clearance arc. Opened at the tool radius so nothing survives that a O1.0
-    cutter could not leave standing, then clipped back -- the dilate half of an opening
-    overshoots outward at every concave boundary (each boss wrap), and without the clip
-    ribs escape the zone."""
+    """Stadium ribs in the pour: each rib is its centreline clipped to the moat-eroded
+    zone and buffered back with round caps, so every tip is full-radius and keeps the
+    same MOAT (pitch - rib_w) to every boundary it approaches -- frame base, boss-wrap
+    arc, gutter edge. The pour still floods the whole band; the ribs float in it. The
+    erosion is backed off by EPS because the innermost row's flank sits exactly ON the
+    boss line, i.e. exactly on the eroded boundary, and an exact-boundary intersection
+    is numerically empty -- the row would vanish."""
+    from shapely.geometry import LineString
+    moat = pitch - rib_w
+    EPS = 0.01
     region = fin_region(pitch, rib_w)
     out = []
     for zone, cys in fin_runs(pitch, rib_w):
+        ero = zone.buffer(-(rib_w / 2 + moat - EPS), join_style=1, resolution=48)
         zx0, _zy0, zx1, _zy1 = zone.bounds
         for cy in cys:
-            r = zone.intersection(box(zx0 - 1, cy - rib_w / 2, zx1 + 1, cy + rib_w / 2))
-            if r.is_empty:
+            seg = ero.intersection(LineString([(zx0 - 1, cy), (zx1 + 1, cy)]))
+            if seg.is_empty:
                 continue
-            r = (r.buffer(-_BACK_CUT_R, join_style=2).buffer(_BACK_CUT_R, join_style=2)
-                  .intersection(region))
-            for g in (r.geoms if r.geom_type == "MultiPolygon" else [r]):
-                if g.area > 0.8:
-                    out.append(_dedupe(g))
+            segs = seg.geoms if seg.geom_type in ("MultiLineString", "GeometryCollection") else [seg]
+            for s in segs:
+                if s.length < rib_w:              # a stub shorter than it is wide is debris
+                    continue
+                g = s.buffer(rib_w / 2, resolution=32).intersection(region)
+                for gg in (g.geoms if g.geom_type == "MultiPolygon" else [g]):
+                    if gg.area > 0.8:
+                        out.append(_dedupe(gg))
     return out
 
 
