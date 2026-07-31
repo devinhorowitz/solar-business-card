@@ -448,6 +448,15 @@ corners, and the **same BOM**. It is now frozen as the final unmanaged-solar rev
   (N/S)** to the panel rail and are milled at depanel. The gold set is **GND-referenced** (the four M2
   GND pads overlap the frame at the corners) — consistent with the grounded Ti shell, not floating
   copper. PCBWay special-request text is in `PCB/README.md`.
+  **Ruled 2026-07-31 — the spec is now a NET RULE, and the midnight question is closed:** every
+  top-side GND exposure gets hard gold *except solder lands* — the PV1/PV2 N/Nt cell lands stay
+  base finish with their SRC neighbours, because thick electrolytic gold embrittles solder joints.
+  The net rule adds the TC2030 GND pad (spring-contact surface — hard gold's own use case) and the
+  contactless-mark arcs to the old enumerated set; TC2030's non-GND pads *cannot* be plated (no
+  bus path — physics, not preference) and stay base finish. Base finish: **ENIG, with ENEPIG as
+  the accepted alternate** at quote time. The midnight variant is unchanged and its question
+  retired: OSH Park offers no electrolytic gold, so midnight's monogram is ENIG by fab constraint,
+  and the bus has no job there.
 - **Two real defects found and fixed** in the final audit: an **NFC_EN 0.27 mm open at U6.3** (the
   4→2 conversion dropped an inner link; the kept B stub ended short of the pad — bridged
   (4.7,33.588)→(5.25,33.588) w0.25), and a **VS feed crossing U6's true bottom-row pads** (ripped and
