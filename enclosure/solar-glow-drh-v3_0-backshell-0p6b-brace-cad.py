@@ -506,7 +506,16 @@ def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pill
         print(f"  [medallion] {len(_cutsol)} cut + {len(_islsol)} island prisms "
               f"{_time.time()-_t0:.1f}s")
         if _cutsol:
-            res = res.cut(cq.Compound.makeCompound(_cutsol))
+            # FUSE the cut family into one tool before cutting. rest and main were
+            # simplified independently, so their shared boundaries drift a few um and
+            # the solids micro-overlap -- and an OCC cut with self-intersecting
+            # compound tools fails SILENTLY and partially (found as a coin floor that
+            # never got cut while the counters did). The fuse resolves the overlaps;
+            # the single cut is then clean.
+            _tool = _cutsol[0]
+            for _s in _cutsol[1:]:
+                _tool = _tool.fuse(_s)
+            res = res.cut(_tool)
             print(f"  [medallion] coin cut done {_time.time()-_t0:.1f}s")
         if _islsol:
             res = res.union(cq.Compound.makeCompound(_islsol))
