@@ -95,8 +95,11 @@ from a generator CI runs** (check [9]), and that every 3D model carries its tabl
   variant out of a generator is picked up without editing the workflow.
   Triggers are `PCB/**` **minus `PCB/**.md`**, `scripts/panelize.py`, `scripts/render.py`, the
   generators' own non-board inputs (`enclosure/assembly_render.py`, `fit_rules.py`,
-  `board_parts.py`, `enclosure/**.stl`) and the workflow itself — **not** all of `scripts/` or all
-  of `enclosure/`, so editing an unrelated script or doc regenerates nothing. The `.md` exclusion
+  `board_parts.py`, `medallion.py`, `enclosure/**.stl`) **and, since 2026-07-31, the CAD/drawing
+  generators themselves** (shell, brace, both DRAWING-gens — before that, a generator-only edit
+  regenerated nothing, and PR #129 only rebuilt because `fit_rules.py` shared the diff) and the
+  workflow itself — **not** all of `scripts/` or all of `enclosure/`, so editing an unrelated
+  script or doc regenerates nothing. The `.md` exclusion
   is new on 2026-07-30 and this sentence was false without it: `PCB/README.md` is prose that lives
   beside the board, `PCB/**` matched it, and merging a docs-only PR ran the full ~16 min pipeline
   and committed 49 files of plot timestamps and one more roll of the raytracer.
