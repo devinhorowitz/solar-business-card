@@ -1,0 +1,39 @@
+Row,Description,Part,References,Value,Footprint,Quantity Per PCB,Status,Datasheet,MPN
+1,100 nF X7R decoupling VSENSE filter 100 nF,C1,C1 C2 C3 C5 C6 C7 C8 C12,100nF,C1,8, ,,GRM155R71C104KA88D
+2,Accelerometer VREG_OUT decoupling 0.22 uF,C11,C11,220nF,C11,1, ,,GRM155R71C224KA12D
+3,VS bulk 4.7 uF LED-anode bulk 4.7 uF,C4,C4 C13,4.7uF,C4,2, ,,GRM155R61A475MEAAD
+4,Glow LED - reverse-mount amber,D2,D2 D3 D4 D5,LA P47F,D2,4, ,datasheets/D2-D5  LA P47F-V2BB-24-3B5A-30-R18-Z  $0.43.pdf,LA P47F-V2BB-24-3B5A-30-R18-Z
+5,Schottky (blocking / comparator-supply OR),D1,D1 D9 D10 D11,MMSD301T1G,D1,4, ,"datasheets/D1,D9,D10,D11  MMSD301T1G  $0.37.pdf",MMSD301T1G
+6,NFC antenna - PCB coil (LA/LB),L1,L1,1.0uH,,1, ,,(PCB feature - no part)
+7,Rail-clamp pass PNP,Q1,Q1,BCP5316MTWG,Q1,1, ,datasheets/Q1  BCP5316MTWG  $0.79.pdf,BCP5316MTWG
+8,LED ballast 150 ohm,R1,R1 R2 R3 R4,150R,R1,4, ,,RC0402FR-07150RL
+9,TINY-mode ballast 220 ohm,R12,R12,220R,R12,1, ,,RC0402FR-07220RL
+10,Clamp base pull-up 1 kohm,R9,R9,1k,R9,1, ,,RC0402FR-071KL
+11,I2C pull-up 4.7 kohm,R10,R10 R11,4.7k,R10,2, ,,RC0402FR-074K7L
+12,VSENSE divider 1 Mohm NFC_EN pulldown 1 Mohm,R5,R5 R6 R14,1M,R5,3, ,,RC0402FR-071ML
+13,Clamp divider bottom 3.74 Mohm,R8,R8,3.74M,R8,1, ,,RC0402FR-073M74L
+14,Clamp divider top 6.81 Mohm,R7,R7,6.81M,R7,1, ,,RC0402FR-076M81L
+15,VDDIO2 tie - 0 ohm jumper,SJ1,SJ1,0R,SJ1,1, ,,RC0805JR-070RL
+16,3-axis accelerometer (tap/double-tap wake),U3,U3,ADXL367,ADXL367 CC-12-4_ADI,1, ,datasheets/adxl367.pdf,ADXL367BCCZ-RL7
+17,Supercap balancer - dual SAB MOSFET,U2,U2,ALD910025SALI,U2,1, ,datasheets/U2  ALD910025SALI  $7.68.pdf,ALD910025SALI
+18,"MCU - 8-bit AVR (PWM, I2C, charge/sleep logic)",U1,U1,AVR64DD28 (VQFN28),U1,1, ,datasheets/U1  AVR64DD28-I-STX  $1.17.pdf,AVR64DD28-I/STX
+19,NFC tag - NTAG I2C plus 2K,U5,U5,NT3H2211,U5,1, ,datasheets/U5  NT3H2211W0FHKH  $1.38.pdf,NT3H2211W0FHKH
+20,Comparator + 1.242 V ref (rail clamp),U4,U4,TLV3011BIDBVR,SOT-23-6,1, ,datasheets/U4  TLV3011BIDBVR  $2.78.pdf,TLV3011BIDBVR
+21,NFC VNFC high-side load switch,U6,U6,TPS22918,SOT-23-6,1, ,datasheets/U6  TPS22918DBVR  $0.55.pdf,TPS22918DBVR
+
+
+
+
+
+Project info:
+Schematic:,solar-glow-drh-v3_0
+Variant:,default
+Revision:,
+Date:,2026-07-13_10-49-23
+KiCad Version:,10.0.4-10.0.4~ubuntu25.10.1
+Statistics:
+Component Groups:,24
+Component Count:,44
+Fitted Components:,41
+Number of PCBs:,1
+Total Components:,41
