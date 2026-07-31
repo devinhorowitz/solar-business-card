@@ -1,6 +1,6 @@
 # Back-shell engraving studies
 
-Twenty ways to mark the titanium back, parked here so the reasoning survives the
+Twenty-two ways to mark the titanium back, parked here so the reasoning survives the
 conversation that produced it. **Nothing here ships.** The committed shell still
 carries `MAKER_LINES` from `solar-glow-drh-v3_0-backshell-0p6b-brace-cad.py`; when one of
 these is chosen it replaces that, and only then does it become part of the CAD chain.
@@ -10,7 +10,8 @@ python3 enclosure/engraving-studies/spin1_cutters.py        # which cutter
 python3 enclosure/engraving-studies/spin2_composition.py    # which composition
 python3 enclosure/engraving-studies/spin3_reeded.py         # after the fine reeding
 python3 enclosure/engraving-studies/spin4_provenance.py     # what the back SAYS
-python3 enclosure/engraving-studies/all_studies.py          # all twenty on one sheet
+python3 enclosure/engraving-studies/spin5_t_relief.py       # T's ring, set in relief
+python3 enclosure/engraving-studies/all_studies.py          # every variant on one sheet
 # renders + numbers land in $ENGRAVE_OUT (default: $TMPDIR/engraving-studies)
 ```
 
@@ -125,9 +126,35 @@ shared across the run.
 | **S** PROVENANCE LINE | restraint: the committed `MAKER_LINES` slot, caps and bold name kept verbatim — only "DESIGNED & MADE BY" swaps for `SOLAR POWERED · NFC · Nº 001 · MMXXVI`. A one-list edit in the shell generator, cuttable today. |
 | **T** RING | the caseback ring: 41 characters into 360° (tracking **derived**, the ring closes exactly — the fins' own move) around a serial-number centre. The unit number holds the middle of the dial like a watch serial. |
 
-`all_studies.py` composes the twenty diffuse-light renders into one 4 × 5 sheet
-(`all_studies.png`), titles pulled from each spin's own `VARIANTS` list so the sheet
-cannot drift from the scripts.
+## Spin 5 — T's ring, set in relief
+
+T v-carved the ring; spin 5 leaves the letters standing while the metal around them comes
+out — relief is where the studies keep converging (C → I → M), cut with I's tapered Ø0.2
+tool. Two honest readings, built side by side:
+
+| | idea |
+| --- | --- |
+| **U** RING RELIEF / MEDALLION | one Ø25.7 disc down 0.25 over ~453 mm²; rim shoulder, ring text, a Ø18.0–18.5 separator hoop and the serial stack all stand from **one floor**. The whole medallion is a coin; crests keep the bead-blast while the floor mills bright — C's two-texture contrast. |
+| **V** RING RELIEF / SUNKEN BAND | the watch answer: raised lettering in a sunken band (Ø18.3–25.1) and a sunken dial (Ø17.3), with the rings between them **flush** — not features, just the metal the pockets didn't take. No free-standing thin feature anywhere; the kindest relief geometry to machine and refinish. |
+
+**The depth is 0.25 and the ring's own geometry says so.** The taper flares
+depth × tan 15° into every standing edge; at cap 1.80 the ring letters stand 0.63 mm
+apart, and at 0.60 deep the two facing flares take 0.32 of that — the letters fuse at the
+base. At 0.25 they take 0.13 and the gaps survive. The doubled budget is real, but
+cap-1.8 relief cannot spend it (M spends it at cap 4.4, where the flare is noise).
+Webs the Ø0.2 tip cannot clear: 1.39 mm², widest 0.158 — the 0/6/R counters at
+cap 1.4–1.8 read as solid digits.
+
+This spin also found and fixed a latent bug in the house rasteriser: `Field.raster` drew
+every polygon into one shared canvas, so a later polygon's **hole** erased any earlier
+polygon's ink inside it — U's separator hoop (an annulus) swallowed the serial digits
+sitting in its hole. It now ORs per-polygon rasters, which is what union means. No earlier
+variant had a holed polygon overlapping other geometry in the same raster call, so every
+previously quoted number stands.
+
+`all_studies.py` composes every variant's diffuse-light render into one sheet
+(`all_studies.png`), one spin per row, titles pulled from each spin's own `VARIANTS` list
+so the sheet cannot drift from the scripts.
 
 ## Standing recommendation
 
@@ -143,3 +170,7 @@ Spin 4 picks **words**, not cuts, so it composes with the above rather than comp
 else is decided); **P or T** replace the contact-block idiom entirely if the back should
 say what the object *is* rather than who made it — the tap-served vCard already carries
 the contact data, which is the strongest argument that the back doesn't have to.
+
+If the ring is the direction, spin 5 is its finished form: **V** if machinability and
+refinish-proofness lead (nothing thin stands alone), **U** if the object-quality of a
+single struck coin is worth two thin standing rings.

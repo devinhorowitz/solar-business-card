@@ -28,6 +28,7 @@ import spin1_cutters as E
 import spin2_composition as C
 import spin3_reeded as R3
 import spin4_provenance as R4
+import spin5_t_relief as R5
 
 OUT = E.OUT
 
@@ -39,6 +40,8 @@ ROWS = [
      [(k, t) for k, t, _s, _f, _w in R3.VARIANTS]),
     ("SPIN 4 -- PROVENANCE: WHAT THE BACK SAYS", "spin4",
      [(k, t) for k, t, _s, _f, _w in R4.VARIANTS]),
+    ("SPIN 5 -- T IN RELIEF", "spin5",
+     [(k, t) for k, t, _s, _f, _w in R5.VARIANTS]),
 ]
 
 TH = 620            # uniform thumbnail height

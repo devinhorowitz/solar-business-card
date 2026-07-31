@@ -171,18 +171,27 @@ class Field:
         self.z = np.zeros((self.ny, self.nx), np.float32)
 
     def raster(self, geom):
-        """Fill a shapely geometry into a boolean array on this grid."""
-        img = Image.new("1", (self.nx, self.ny), 0)
-        d = ImageDraw.Draw(img)
+        """Fill a shapely geometry into a boolean array on this grid.
+
+        Each polygon is rasterised alone (exterior minus its own holes) and OR-ed in.
+        NOT one shared canvas: there, a later polygon's hole erases any earlier
+        polygon's ink that lies inside it -- union-order roulette, found when a ring
+        variant's separator hoop (an annulus) swallowed the serial digits sitting in
+        its hole. OR of per-polygon masks is what union actually means.
+        """
+        out = np.zeros((self.ny, self.nx), bool)
         polys = list(geom.geoms) if geom.geom_type.startswith("Multi") else [geom]
         for p in polys:
             if p.is_empty:
                 continue
+            img = Image.new("1", (self.nx, self.ny), 0)
+            d = ImageDraw.Draw(img)
             d.polygon([((x - self.x0) / PX, (y - self.y0) / PX) for x, y in p.exterior.coords],
                       fill=1)
             for r in p.interiors:
                 d.polygon([((x - self.x0) / PX, (y - self.y0) / PX) for x, y in r.coords], fill=0)
-        return np.array(img, bool)
+            out |= np.array(img, bool)
+        return out
 
     # -- the three real tool models --------------------------------------------
 
