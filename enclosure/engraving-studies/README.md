@@ -1,7 +1,7 @@
 # Back-shell engraving studies
 
-Fifteen ways to put the contact block into the titanium back, parked here so the reasoning
-survives the conversation that produced it. **Nothing here ships.** The committed shell still
+Twenty ways to mark the titanium back, parked here so the reasoning survives the
+conversation that produced it. **Nothing here ships.** The committed shell still
 carries `MAKER_LINES` from `solar-glow-drh-v3_0-backshell-0p6b-brace-cad.py`; when one of
 these is chosen it replaces that, and only then does it become part of the CAD chain.
 
@@ -9,6 +9,8 @@ these is chosen it replaces that, and only then does it become part of the CAD c
 python3 enclosure/engraving-studies/spin1_cutters.py        # which cutter
 python3 enclosure/engraving-studies/spin2_composition.py    # which composition
 python3 enclosure/engraving-studies/spin3_reeded.py         # after the fine reeding
+python3 enclosure/engraving-studies/spin4_provenance.py     # what the back SAYS
+python3 enclosure/engraving-studies/all_studies.py          # all twenty on one sheet
 # renders + numbers land in $ENGRAVE_OUT (default: $TMPDIR/engraving-studies)
 ```
 
@@ -104,11 +106,40 @@ the band joins the generator's CAD and can go proud to match.)
 | **N** PLAQUE IN THE POUR | Reeding floods the band except a flush 31.8 × 17.1 plaque carrying the V-carved contact block — to the pour the plaque is just another pad. Its 2.2 mm side corridors sit a hair under rib + 2 grooves (2.21), so they carry clean valley channel instead of stub rows, which is what the pour does at a boss wrap. |
 | **O** UNIT GRID | G re-founded: type takes **2 units** of the fine pitch (2.784 mm leading, 1.39× the email cap — tight, but set by the part, which was G's whole argument). Six rows at −5u…+5u from centre, the rule on the grid like any line. |
 
+## Spin 4 — provenance: what the back says
+
+Spins 1–3 all engraved the contact block; spin 4 asks about the *other* candidate content —
+what a maker puts on a caseback: what powers it, what it speaks, which revision, which
+unit, which year. Content is orthogonal to technique (any of these cuts with any spin-1
+cutter at any spin-3 depth), and the facts are pulled from the part where possible: the
+contactless waves in R are `scripts/mask_art.py`'s own glyph, imported, so front mask and
+back engraving carry the same mark from the same generator. Serial numbers are **variable
+data** — `Nº 001` is one text substitution per unit in the cut file; every other stroke is
+shared across the run.
+
+| | idea |
+| --- | --- |
+| **P** CASEBACK | the watch idiom: a centred epitaph. `SOLAR-GLOW · DRH / INDOOR SOLAR · 1 F 5.5 V / NFC 13.56 MHz · TAP TO WAKE / REV 4.0 · Nº 001 · MMXXVI / ATLANTA, GEORGIA` — six facts, one V-bit, no ornament. |
+| **Q** SPEC PLATE | the industrial idiom: a 28.8 × 18.6 data plate, MODEL / REV / SER / PWR / RF / YEAR label-value rows. Frame, rules and type are the same 60° bit in one setup — J's economy, different words. |
+| **R** MARKS | the icon idiom: a sun beside the front mask's own contactless waves (imported, not redrawn), two short lines under. Says solar + NFC with no sentence; language-independent at arm's length. |
+| **S** PROVENANCE LINE | restraint: the committed `MAKER_LINES` slot, caps and bold name kept verbatim — only "DESIGNED & MADE BY" swaps for `SOLAR POWERED · NFC · Nº 001 · MMXXVI`. A one-list edit in the shell generator, cuttable today. |
+| **T** RING | the caseback ring: 41 characters into 360° (tracking **derived**, the ring closes exactly — the fins' own move) around a serial-number centre. The unit number holds the middle of the dial like a watch serial. |
+
+`all_studies.py` composes the twenty diffuse-light renders into one 4 × 5 sheet
+(`all_studies.png`), titles pulled from each spin's own `VARIANTS` list so the sheet
+cannot drift from the scripts.
+
 ## Standing recommendation
 
 **M.** It is F's registration argument — still the only fact-about-this-object in the set —
 plus I's tooling, plus the depth the 2026-07-30 rework paid for: the glow window becomes a
 real 0.60 recess you find with your thumb, standing on exactly the section the rest of the
 part already accepts. If the back should instead read as **one texture**, N is the strongest
-"designed, not placed" argument of the fifteen; K is its monogram-only reduction. **O**
+"designed, not placed" argument of the twenty; K is its monogram-only reduction. **O**
 replaces G as the purely typographic pick — G's grid no longer exists on the part.
+
+Spin 4 picks **words**, not cuts, so it composes with the above rather than competing:
+**S** is the zero-cost move (a one-line edit to the committed mark, worth doing whatever
+else is decided); **P or T** replace the contact-block idiom entirely if the back should
+say what the object *is* rather than who made it — the tap-served vCard already carries
+the contact data, which is the strongest argument that the back doesn't have to.
