@@ -154,8 +154,8 @@ def _dial(text_fn, fonts, cy):
 
 
 def _annulus(cy, r0, r1):
-    return (Point(CX, cy).buffer(r1, resolution=128)
-            .difference(Point(CX, cy).buffer(r0, resolution=128)))
+    return (Point(CX, cy).buffer(r1, resolution=64)
+            .difference(Point(CX, cy).buffer(r0, resolution=64)))
 
 
 def _opening(g, r):
@@ -206,12 +206,20 @@ def geometry(text_fn, font_r, font_b):
         f"DIAL_MONOGRAM/SERIAL escape the hoop: corner radius {corner:.2f} vs "
         f"{HOOP[0] - 0.4:.2f} allowed -- shrink the caps or the text")
 
-    disc = Point(CX, cy).buffer(COIN_R + RIM_W, resolution=128)
+    disc = Point(CX, cy).buffer(COIN_R + RIM_W, resolution=64)
     region = disc.difference(glyphs)
     reach_main = _opening(region, TOOL_MAIN_R)
     reach_rest = _opening(region, TOOL_REST_R).difference(reach_main)
     standing = disc.difference(unary_union([reach_main, reach_rest]))
     standing = unary_union([p for p in _parts(standing) if p.area > _DUST])
+
+    # OCC pays per vertex, and the font outlines + two buffer rounds mint thousands of
+    # them: one un-simplified coin boolean is a 20-minute build. 8 um is invisible
+    # against the shop's +-0.05 and none of this is fit-critical geometry (the
+    # fit_rules no-simplify law protects BOSS clearances, which live elsewhere).
+    reach_main = reach_main.simplify(0.008)
+    reach_rest = reach_rest.simplify(0.008)
+    standing = standing.simplify(0.008)
 
     # THE AUDIT: no detached standing island below MIN_ISLAND, anywhere, ever.
     small = [p for p in _parts(standing)

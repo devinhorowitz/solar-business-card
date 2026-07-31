@@ -472,12 +472,15 @@ def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pill
     #               EXTERIOR MINUS INTERIORS, or the union would fill back the counters
     #               the rest pass just cut.
     if maker_mark and border_h > 0:
+        import time as _time
         import medallion as _md
+        _t0 = _time.time()
         _mg = _md.geometry(_maker_text, MAKER_FONT_R, MAKER_FONT_B)
-        # ~40 cut prisms and ~42 island prisms: accumulate each family into ONE solid
-        # first (booleans between small prisms are cheap), so the expensive shell sees
-        # exactly two operations instead of eighty.
-        _cutacc, _islacc = None, None
+        print(f"  [medallion] geometry+audit {_time.time()-_t0:.1f}s")
+        # Assemble each family as an OCC COMPOUND (no pre-fusing) so the shell sees
+        # exactly two booleans; medallion.py already simplified the outlines to 8 um,
+        # which is what keeps those two booleans from being a 20-minute build.
+        _cutsol, _islsol = [], []
         for _geo, _d in ((_mg["cut_rest"], _md.REST_D), (_mg["cut_main"], _md.COIN_D)):
             for _p in (_geo.geoms if _geo.geom_type == "MultiPolygon" else [_geo]):
                 if _p.is_empty:
@@ -489,7 +492,7 @@ def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pill
                     _cut = _cut.cut(cq.Workplane("XY").workplane(offset=-0.04)
                                     .polyline([(wx(x), wy(y)) for x, y in list(_r.coords)])
                                     .close().extrude(_d + 0.08))
-                _cutacc = _cut if _cutacc is None else _cutacc.union(_cut)
+                _cutsol.append(_cut.val())
         _sg = _mg["standing"]
         for _p in (_sg.geoms if _sg.geom_type == "MultiPolygon" else [_sg]):
             _isl = (cq.Workplane("XY").workplane(offset=-border_h)
@@ -499,11 +502,15 @@ def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pill
                 _isl = _isl.cut(cq.Workplane("XY").workplane(offset=-border_h - 0.02)
                                 .polyline([(wx(x), wy(y)) for x, y in list(_r.coords)])
                                 .close().extrude(border_h + 0.06))
-            _islacc = _isl if _islacc is None else _islacc.union(_isl)
-        if _cutacc is not None:
-            res = res.cut(_cutacc)
-        if _islacc is not None:
-            res = res.union(_islacc)
+            _islsol.append(_isl.val())
+        print(f"  [medallion] {len(_cutsol)} cut + {len(_islsol)} island prisms "
+              f"{_time.time()-_t0:.1f}s")
+        if _cutsol:
+            res = res.cut(cq.Compound.makeCompound(_cutsol))
+            print(f"  [medallion] coin cut done {_time.time()-_t0:.1f}s")
+        if _islsol:
+            res = res.union(cq.Compound.makeCompound(_islsol))
+            print(f"  [medallion] crests unioned {_time.time()-_t0:.1f}s")
     return res
 
 # ===== variants (titanium only; 7075 retired -- final part is Ti) =====
