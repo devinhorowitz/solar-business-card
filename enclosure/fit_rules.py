@@ -349,16 +349,28 @@ def fin_runs(pitch=FIN_PITCH, rib_w=FIN_RIB_W):
     """
     field = _back_field()
     fx0, fy0, fx1, fy1 = field.bounds
-    y0, y1 = fin_band()
+    moat = pitch - rib_w
     blockers = unary_union([Point(mx, my).buffer(BOSS_R + FIN_BOSS_CLR, resolution=48)
                             for mx, my in MOUNTS])
+    # The rib grid anchors on the MID-BOSS LINES, not the PV-cell gap: the innermost
+    # rib's flank sits exactly ON the boss centreline -- as close to the card's centre
+    # as a row can get without crossing the bosses -- and the grid walks outward at
+    # pitch from there. The zone's gutter continues one moat past the line, wrapping
+    # the mid bosses exactly like the corner ones. (fin_band(), the PV-gap reference,
+    # still defines the clear centre for the engraving studies; the mark at y 51.5/54.1
+    # and the ART rect y 30.8..58.1 stay clear of the extended zones by >= 1.1.)
+    ys = sorted({my for _mx, my in MOUNTS})
+    inner_bot, inner_top = ys[1], ys[2]               # 28.5 / 60.4: the mid-boss lines
     runs = []
-    for a, b in [(fy0, y0), (y1, fy1)]:
-        zone = field.intersection(box(fx0 - 1, a, fx1 + 1, b)).difference(blockers)
-        span = b - a
-        n = max(1, int(span // pitch))
-        off = (span - (n - 1) * pitch) / 2.0          # centre the run; remainder = flush hatch margin
-        cys = [a + off + i * pitch for i in range(n)]
+    for outer, inner, sgn in [(fy0, inner_bot, 1), (fy1, inner_top, -1)]:
+        cys = []
+        c = inner - sgn * rib_w / 2                   # flank tangent to the boss line
+        while sgn * (c - sgn * rib_w / 2 - outer) >= moat - 1e-9:
+            cys.append(c)
+            c -= sgn * pitch
+        cys.sort()
+        z0, z1 = (outer, inner + sgn * moat) if sgn > 0 else (inner + sgn * moat, outer)
+        zone = field.intersection(box(fx0 - 1, z0, fx1 + 1, z1)).difference(blockers)
         runs.append((zone, cys))
     return runs
 
