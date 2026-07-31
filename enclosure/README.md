@@ -284,7 +284,8 @@ Expect the instant price to move: the thin floor routes this to manual engineeri
 - Datum **Z0 = outer back face**. +Z is into the part toward the PCB.
 - Z stack from the back face:
   - back frame and 4 boss annuli: **proud 0.15 mm** (to Z −0.15)
-  - recessed rear art field: at Z 0
+  - recessed rear art field: at Z 0; fin rib tops proud 0.10 (Z −0.10), fin groove
+    floors at **Z +0.60** (`FIN_VALLEY` — 0.40 web under each groove, see §3 addendum)
   - cavity floor: at **Z +1.00**, uniform (the 0.95 local U7 pocket was removed 2026-07-28)
   - boss / lip tops (the PCB rest plane): **Z +2.80**
   - PCB recess: Z +2.80 to +3.40 (receives the 0.60 mm board)
@@ -322,6 +323,22 @@ not present during machining). Please proceed one of two ways and note which on 
 
 - **(A)** Machine the uniform 1.00 mm floor **as-is**; or
 - **(B)** If you cannot reliably hold 1.00 mm, advise the **minimum floor you will hold** in Ti-6Al-4V for this ~48 × 86 mm pocket, and we will re-issue the model.
+
+**Fin-relief addendum (2026-07-30).** The back's two reeded fields cut `FIN_VALLEY = 0.60`
+into the 1.00 floor, leaving a **0.40 mm web under each groove**. Three conditions make
+this sound, and all three are requests to the shop, not hopes:
+
+1. **Operation order: cut all back-face features (fins, mark, frame) BEFORE hollowing the
+   cavity.** On solid stock the grooves machine on 3.4 mm of metal; after hollowing, the
+   floor is a diaphragm and the fine grooves will chatter. This ordering is load-bearing,
+   not stylistic.
+2. **Stress-relieved Ti-6Al-4V stock.** The fin pass removes ~2 g asymmetrically from one
+   face of a 43 mm field; unrelieved plate can bow. Mill-annealed / stress-relieved
+   condition, please state on the quote.
+3. **The groove network is Ø0.6 end-mill work exclusively** (grooves are 0.79 wide;
+   nothing larger enters). Depth 0.60 = 1×D — expect **two passes**. The web is a waffle
+   (0.79 spans between 0.6 ribs, brace-backed in service), so 0.40 local web is stout;
+   the risks are the two named above, and they are handled by 1 and 2.
 
 ### 4. Brace registration (no locator pillars)
 

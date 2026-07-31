@@ -248,7 +248,7 @@ def boss_island(mx, my):
 # and ridges perpendicular to that slide are the ones that stop it. The trade is real: ribs across
 # the short axis do NOT stiffen the card against its dominant flex, which is curling along its
 # length -- lengthwise ribs would. Grip wins because the plate is screwed to a PCB at eight points,
-# not carried bare, and 0.70 mm of floor survives under the valleys.
+# not carried bare, and 0.40 mm of waffle-backed floor survives under the valleys.
 # AS FINE AS THE MACHINING HONESTLY GOES (2026-07-30, on request). Every number below
 # is a floor with an owner:
 #   groove 0.8 = O0.6 tool + 0.2 side clearance. O0.6 solid carbide slotting 0.30 deep
@@ -279,8 +279,25 @@ def boss_island(mx, my):
 # of this section and stay importable (the G engraving study reads FIN_PITCH).
 FIN_RIB_W  = 0.6           # rib width: tolerance + refinish floor (see commit trail)
 FIN_GROOVE_MIN = 0.78      # groove floor: O0.6 tool + 0.18 clearance floor (target 0.2)
-FIN_PROUD  = 0.10          # rib tops stand this proud of the art field...
-FIN_VALLEY = 0.30          # ...and valleys are cut this far into the 1.00 floor -> 0.40 relief
+FIN_PROUD  = 0.10          # rib tops stand this proud of the art field. CAPPED here by
+                           # law: the 0.15 frame stays the sole bearing surface (tops
+                           # 0.05 under it), so extra relief goes DOWN, never up.
+FIN_VALLEY = 0.60          # ...and valleys cut this far into the 1.00 floor -> 0.70 felt
+                           # relief, 0.40 web. Was 0.30/0.70-web; deepened 2026-07-30
+                           # after a depth-budget analysis. The 0.40 web is the honest
+                           # maximum, each line item owned: it matches SLA_WEB = 0.40
+                           # (the resin floor -- Ti at 0.40 is enormously stronger than
+                           # resin at 0.40); the web is a WAFFLE strip 0.79 wide between
+                           # ribs backed by the brace-filled cavity (t/span 0.5), not a
+                           # membrane; and the fins are machined BEFORE the cavity is
+                           # hollowed, so cutting never happens on a diaphragm (op-order
+                           # callout in enclosure/README). Costs accepted: two O0.6
+                           # passes (1xD) instead of one, and residual-stress bow risk
+                           # on the 43 mm field -- countered by the stress-relieved
+                           # stock callout. Below a 0.40 web there is no precedent floor
+                           # left to stand on: do not go deeper without a new analysis.
+                           # Bonus this buys: the engraving depth ceiling (any cut <=
+                           # FIN_VALLEY adds no new thinnest section) rises with it.
 FIN_BOSS_CLR = 0.40        # rib to back boss annulus
 BACK_BORDER = 2.0          # the proud back frame's width (mirrors the generator's own constant)
 
