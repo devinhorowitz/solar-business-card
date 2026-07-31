@@ -540,8 +540,12 @@ FLIP_PAD = 20                          # px of background kept around the swept 
 _BG = np.array([0.965, 0.963, 0.955]) * 255
 
 
-def card_flip(actor_list, path, label, frames=FLIP_FRAMES, ms=FLIP_MS, size=FLIP_SIZE):
-    """One seamless revolution about the long axis, held upright. Returns nothing; writes a GIF."""
+def card_flip(actor_list, path, label, frames=FLIP_FRAMES, ms=FLIP_MS, size=FLIP_SIZE,
+              animate=None):
+    """One seamless revolution about the long axis, held upright. Returns nothing; writes a GIF.
+
+    animate = (actor, [vtkTexture per frame]) swaps the actor's texture before each frame --
+    how the hero's LEDs breathe. The list is indexed by frame and may reuse texture objects."""
     ren = vtk.vtkRenderer(); ren.SetBackground(0.965, 0.963, 0.955)
     rw = vtk.vtkRenderWindow(); rw.SetOffScreenRendering(1); rw.AddRenderer(ren)
     rw.SetSize(size, size)
@@ -613,6 +617,8 @@ def card_flip(actor_list, path, label, frames=FLIP_FRAMES, ms=FLIP_MS, size=FLIP
     imgs, boxes = [], []
     for i in range(frames):
         _t = i / frames                               # exclusive of 1.0 -> seamless loop
+        if animate is not None:
+            animate[0].SetTexture(animate[1][i])
         place(2.0 * math.pi * _t - FLIP_EASE * math.sin(2.0 * 2.0 * math.pi * _t), dist)
         arr, fg = shoot()
         if not fg.any():
@@ -634,15 +640,74 @@ def card_flip(actor_list, path, label, frames=FLIP_FRAMES, ms=FLIP_MS, size=FLIP
     encode_gif([im.crop((x0, y0, x1, y1)) for im in imgs], path, ms, label)
 
 
+# ---- THE LEDS BREATHE IN THE HERO (2026-07-31). The card's whole point is four amber LEDs
+# glowing through the DRH cut in the front copper, and the hero never showed it. The glow is
+# painted into the TEXTURE per frame: inside GLOW_WIN the monogram's letter cutouts are told
+# apart from the gold plate by the window's own pixels (see the yellowness note below), so
+# there is no second source of truth about where the letters are -- the card-face plot the
+# board is textured with IS the mask. Amber is added through it with a two-stage bloom (tight core
+# + wide halo), on a cosine eased with gamma 1.6 -- an approximation of led.c's PWM ramp, by
+# eye, not a claim about the firmware. FOUR full breaths per revolution, an integer, so the
+# loop still hands off seamlessly; 16 quantised levels keep it to 16 textures instead of 160.
+GLOW_WIN_FRONT = (14.95, 40.8, 35.85, 47.0)      # the monogram window, board coords
+HERO_FRAMES, HERO_MS, BREATHS = 160, 80, 4       # 12.8 s/rev, 3.2 s/breath (was 96 x 70ms)
+AMBER = np.array([255.0, 168.0, 38.0])
+
+_base = np.asarray(Image.open(TEX).convert("RGB")).astype(np.float32)
+_th, _tw = _base.shape[:2]
+_sx, _sy = _tw / W, _th / H                      # plot row 0 = board y 0 (top of artwork)
+_wx0, _wy0 = int(GLOW_WIN_FRONT[0] * _sx), int(GLOW_WIN_FRONT[1] * _sy)
+_wx1, _wy1 = int(GLOW_WIN_FRONT[2] * _sx), int(GLOW_WIN_FRONT[3] * _sy)
+_win = _base[_wy0:_wy1, _wx0:_wx1]
+# The letters are NOT the dark pixels -- a luminance threshold catches only their outline
+# shadows (verified against the plot: interiors are mid-bright gray-green laminate). What
+# separates cutout from plate is YELLOWNESS: the gold plate runs (R+G)/2 - B ~ 185, the
+# bare-laminate letters ~ 30. A 0.5 mm margin keeps the dark board slivers at the window
+# corners -- outside the plate, where no light exits -- from leaking.
+_yel = (_win[..., 0] + _win[..., 1]) / 2.0 - _win[..., 2]
+_letters = (_yel < 90.0).astype(np.float32)
+_m = max(4, int(0.5 * _sx))
+_letters[:_m, :] = 0; _letters[-_m:, :] = 0; _letters[:, :_m] = 0; _letters[:, -_m:] = 0
+
+def _blur(m, r):
+    k = np.exp(-0.5 * (np.arange(-3 * r, 3 * r + 1) / r) ** 2); k /= k.sum()
+    m = np.apply_along_axis(lambda v: np.convolve(v, k, "same"), 0, m)
+    return np.apply_along_axis(lambda v: np.convolve(v, k, "same"), 1, m)
+
+_glow_mask = np.clip(_blur(_letters, max(2, int(0.12 * _sx))) * 1.0
+                     + _blur(_letters, max(4, int(0.55 * _sx))) * 0.55, 0.0, 1.4)
+
+def _breath_texture(level):
+    img = _base.copy()
+    img[_wy0:_wy1, _wx0:_wx1] = np.clip(
+        _win + _glow_mask[..., None] * AMBER[None, None, :] * level, 0, 255)
+    vi = vtk.vtkImageData()
+    vi.SetDimensions(_tw, _th, 1)
+    arr = np.ascontiguousarray(img[::-1].reshape(-1, 3).astype(np.uint8))
+    from vtk.util.numpy_support import numpy_to_vtk as _n2v
+    va = _n2v(arr, deep=1, array_type=vtk.VTK_UNSIGNED_CHAR); va.SetNumberOfComponents(3)
+    vi.GetPointData().SetScalars(va)
+    tx = vtk.vtkTexture(); tx.SetInputData(vi); tx.InterpolateOn()
+    return tx
+
+_LEVELS = 16
+_breath_tex = [_breath_texture(q / (_LEVELS - 1)) for q in range(_LEVELS)]
+_tex_seq = []
+for _i in range(HERO_FRAMES):
+    _b = (0.5 - 0.5 * math.cos(2 * math.pi * BREATHS * _i / HERO_FRAMES)) ** 1.6
+    _tex_seq.append(_breath_tex[min(_LEVELS - 1, int(round(_b * (_LEVELS - 1))))])
+
+_board_actor = textured(_mat(board_pd, MASK, 0.85, 0.30, 26, 0.16))
 card_flip([_mat(shell_pd, TI, 0.85, 0.55, 42, 0.16), _mat(brace_pd, RESIN, 0.85, 0.12, 8, 0.16),
-           textured(_mat(board_pd, MASK, 0.85, 0.30, 26, 0.16))]
+           _board_actor]
           + [_mat(p, SOLAR, 0.85, 0.42, 48, 0.16) for p in solar_pds]
           + [_mat(p, SILVER, 0.85, 0.75, 60, 0.16) for p in cap_pds]
           + [_mat(p, IC, 0.85, 0.22, 18, 0.16) for p in ic_pds]
           + [_mat(pd, (0.22, 0.16, 0.07) if k == "slot" else BRASS, 0.85,
                   0.20 if k == "slot" else 0.70, 12 if k == "slot" else 55, 0.16)
              for k, pd in screws],
-          os.path.join(HERE, f"{STEM}-spin.gif"), "card flip")
+          os.path.join(HERE, f"{STEM}-spin.gif"), "card flip",
+          frames=HERO_FRAMES, ms=HERO_MS, animate=(_board_actor, _tex_seq))
 
 # ---- the bare shell, same motion: the hero of enclosure/README.md ------------------------
 # Naked titanium, nothing in it. The same rotation shows what a still cannot: the machined
