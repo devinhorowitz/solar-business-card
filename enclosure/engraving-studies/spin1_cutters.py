@@ -27,11 +27,14 @@ not an impression of it:
 THE DEPTH BUDGET, WHICH IS FIXED BY THE PART AND NOT BY TASTE
 
 The back field has 1.00 mm of floor under it (fit_rules: floor=1.00). The fin fields already
-cut FIN_VALLEY = 0.30 mm into that floor, so 0.70 mm is ALREADY the thinnest section of this
-part by design. Any engraving <= 0.30 mm deep therefore adds no new thin section -- it is
-free. That is the ceiling every variant here respects, and it is also comfortably past
-"easily felt": a fingernail reads a 0.05 mm step, and refinishing (bead blast, brush,
-stonewash) takes off order 0.01 mm, so a 0.25 mm cut survives many refinishes.
+cut FIN_VALLEY into that floor (0.30 when this spin ran; 0.60 since the 2026-07-30 fine-
+reeding rework -- BUDGET below tracks fit_rules live), so the web under the valleys is
+ALREADY the thinnest section of this part by design. Any engraving <= FIN_VALLEY deep
+therefore adds no new thin section -- it is free. That is the ceiling every variant here
+respects (all of these were computed at, and stay under, the 0.30 of their era; spin 3
+spends the doubled ceiling), and it is also comfortably past "easily felt": a fingernail
+reads a 0.05 mm step, and refinishing (bead blast, brush, stonewash) takes off order
+0.01 mm, so a 0.25 mm cut survives many refinishes.
 
 The text sits in the CLEAR BAND the two fin fields leave open (fit_rules.fin_band()), so it
 never lands on a rib and the floor under it is the full 1.00 mm.
@@ -70,7 +73,8 @@ SHELL_STL = os.path.join(OUT, "shell_nomark.stl")
 
 PX = 0.025                       # depth-field sample pitch, mm
 FLOOR = 1.00                     # fit_rules floor under the back field
-BUDGET = fr.FIN_VALLEY           # 0.30 -- the depth the part already has elsewhere
+BUDGET = fr.FIN_VALLEY           # tracks fit_rules live (0.30 then, 0.60 now) -- the
+                                 # depth the part already has elsewhere
 
 
 # --- the generator's own text machinery, so the engraved outlines are the committed ones ---
