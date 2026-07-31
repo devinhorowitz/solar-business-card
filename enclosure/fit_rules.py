@@ -250,7 +250,13 @@ def boss_island(mx, my):
 # length -- lengthwise ribs would. Grip wins because the plate is screwed to a PCB at eight points,
 # not carried bare, and 0.70 mm of floor survives under the valleys.
 FIN_PITCH  = 3.2           # centre-to-centre; coarser reads as fins, finer reads as knurl
-FIN_RIB_W  = 1.7           # rib width; the rest of the pitch is valley
+FIN_RIB_W  = 2.0           # rib width; the rest of the pitch is valley. Was 1.7 -- widened
+                           # 2026-07-30 on request for more rib surface (grip): rib-top area
+                           # 1026 -> 1207 mm^2 (+18%) with pitch, rib POSITIONS and the boss
+                           # keepouts all unchanged. The floor of this number is the VALLEY:
+                           # 3.2 - 2.0 = 1.2 leaves the O1.0 back cutter 0.2 of side clearance;
+                           # 2.2 would make the valley exactly cutter-width -- zero-clearance
+                           # slotting that burnishes in Ti and goes undersize with tool wear.
 FIN_PROUD  = 0.10          # rib tops stand this proud of the art field...
 FIN_VALLEY = 0.30          # ...and valleys are cut this far into the 1.00 floor -> 0.40 relief
 FIN_BOSS_CLR = 0.40        # rib to back boss annulus
