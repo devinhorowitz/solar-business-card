@@ -206,7 +206,7 @@ Order parameters, from the committed board:
 |---|---|
 | Layers | **2** |
 | Material / thickness | FR4, **0.6 mm** finished |
-| Surface finish | **ENIG**, plus **selective hard gold** per the special request below |
+| Surface finish | **ENIG** (**ENEPIG accepted alternate** — decide at quote; either satisfies the rule below), plus **selective hard gold** per the special request below |
 | Soldermask color | **Matte black** |
 | Silkscreen | White |
 | Min track / spacing used | **0.15 mm track / 0.127 mm spacing** (the marginal-band corridors) |
@@ -340,11 +340,18 @@ a PCBWay DFM reviewer asks — their absence is a decision, not an oversight.
 - **Selective hard gold (the reason the plating bus exists):** paste this verbatim into the
   special-request box —
 
-  > *"Selective hard gold plating on top side: gold **every copper surface exposed by an F.Mask
-  > opening in the DRH monogram field, the perimeter frame, and the six edge ornament shapes**. The
-  > top-side mask openings define the gold area — where the crosshatched ground pour shows inside one
+  > *"Selective hard gold plating on top side, defined **by net**: gold **every top-side copper
+  > surface exposed by an F.Mask opening that belongs to the GND net**, with one exception — the
+  > four solar-cell N-side solder lands (PV1/PV2 pads N and Nt) stay with the base finish, because
+  > they are soldered and thick electrolytic gold embrittles solder joints. Concretely the gold set
+  > is: the DRH monogram field and letter rims, the perimeter frame, the six edge ornament shapes,
+  > the four corner M2 mounting-hole annuli, the TC2030 GND pad, and the small contactless-mark
+  > arcs right of the monogram. Where the crosshatched ground pour shows inside one
   > of those openings, plate it with them; that is intended, not a defect. All other exposed top-side
-  > copper (the solar-cell lands PV1/PV2 and the component pads) stays ENIG. The crosshatched pour
+  > copper stays with the base finish: the eight solar-cell lands PV1/PV2 (four SRC + the four
+  > excepted GND solder lands) and TC2030 pads 1/2/4/5/6 (not on GND, so they have no electrical
+  > path to the plating bus and cannot be electrolytically plated; they are spring-contact
+  > programming pads and the base finish is acceptable there). The crosshatched pour
   > itself is under solder mask across ~90% of its area and is not a plating surface — it is a
   > decorative texture meant to be read THROUGH the mask, so please do not open mask over it or add
   > extra mask thickness to 'even it out'. The two 0.4 mm traces crossing the board outline at
@@ -356,11 +363,17 @@ a PCBWay DFM reviewer asks — their absence is a decision, not an oversight.
   > frame at all four corners); not floating copper, not a defect. All in-pad vias: resin-filled and
   > copper-capped (POFV, IPC-4761 Type VII)."*
 
-  A DFM reviewer will flag copper-to-edge = 0 at the two stubs; that is by design. (Geometry
-  re-verified against the committed board 2026-07-02: the gold set is a single connected F.Cu
-  component, both stubs + all four corner M2 GND pads on it (the 4 panel-corner MP1-4 holes are GND but not on the front gold set); everything else exposed on F is the solar
-  lands, which stay ENIG.) Ordering plain ENIG without this request leaves the bus as dead
-  copper and no wear surface on the face — do not ship without it.
+  A DFM reviewer will flag copper-to-edge = 0 at the two stubs; that is by design. (Net inventory
+  re-verified against the committed board 2026-07-31, when the request moved from an enumerated
+  area list to the **net rule** above: the front's F.Mask-opened pads are exactly PV1/PV2 ×8
+  (4 SRC + the 4 GND solder lands the rule excepts) and TC2030 ×6 (1 GND, in the gold set; 2
+  signal + 3 unconnected, unplateable — no bus path); every graphic opening exposes GND pour or
+  bare laminate only, which `scripts/mask_art.py`'s guard enforces for its own art. The gold set
+  stays a single connected F.Cu group fed by the pour — the net rule *adds* the TC2030 GND pad
+  (a spring-contact surface, which is what hard gold is for) and the contactless-mark arcs
+  relative to the old enumeration; same look, better wear, one sentence of spec.) Ordering plain
+  ENIG without this request leaves the bus as dead copper and no wear surface on the face — do
+  not ship without it.
 
   > **Why the wording changed (2026-07-27, the crosshatch upload).** The request used to say the
   > gold set was "**all connected copper on F.Cu**." The crosshatch rework enlarged the F.Cu pour
@@ -574,7 +587,7 @@ SC1–SC4 / PV1–PV2 / J1 / JP1 / TP1 as DNP — **not C9 any more**; **Absolut
 the drills), and
 `led-orientation-D2-D5.png`.
 
-**Order-form settings that matter:** bottom side, qty 5, ENIG **+ selective hard gold (special request above)** / matte-black / white silk,
+**Order-form settings that matter:** bottom side, qty 5, ENIG (or ENEPIG, whichever quotes cleaner) **+ selective hard gold (special request above)** / matte-black / white silk,
 **resin-fill + via-in-pad** (cleans the 10 via-in-pad joints and keeps the TC1 pogo pad
 flat), **moisture-sensitive = U1 / U3 / U5** (U3 is a MEMS part - observe peak reflow
 temp, no ultrasonic clean), no China substitutes. **Black-FR4 core stays OFF** — the glow
