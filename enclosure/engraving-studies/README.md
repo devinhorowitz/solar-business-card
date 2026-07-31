@@ -321,7 +321,35 @@ re-closes the circle — and this spin turns the promise into a measured contrac
 | **Z7** MATERIAL, SYMBOL | `SOLAR · NFC · Ti · MMXXVI` (28 ch, 2.42 — airiest) — the chemist's shorthand, quietly correct |
 | **Z8** FULL EPITAPH | `SOLAR · NFC · Ti · ATL GA · MMXXVI` (37 ch, 1.83) — power, radio, metal, place, year in one orbit; the symbol keeps room for the city |
 | **Z9** SPELLED + PLACE | `SOLAR · NFC · TITANIUM · ATL GA · MMXXVI` (43 ch, 1.58) — the dense limit |
+| **Z9F** THE RING, CALLED | Z9's wording, **ensured** — see below |
 
-The pick that remains is **the ring only**. Next step once called: land the winner in
-the shell generator as CAD (replacing `MAKER_LINES`, parameters as above) and amend the
-bearing rule in `fit_rules` — at that point it leaves this directory and joins the part.
+## The call (2026-07-31): Z9F — because the metal, not the taste, decided
+
+The user wanted Z8 (`Ti`), and the render "botching" its lowercase i turned out to be the
+render being *honest*: measured, the tittle is a 0.33 island floating over a **0.229 mm
+gap** — under both the Ø0.4 primary and the Ø0.3 rest tool, so the gap stays at the
+plane, laps bright, and welds the dot to the stem. Rescuing it means lifting the dot
+*and* growing it to Ø0.55 (67 % wider than its own stem) — deformed twice and still the
+smallest orphan post on a one-shot titanium run. **Z9 spells TITANIUM in caps and the
+problem class vanishes**, so by the ensure-at-PCBWay criterion Z9 wins.
+
+The same audit then swept every detached mark on the part and found two more members of
+the class, both fixed structurally in **Z9F**:
+
+- **The interpunct separators** measured Ø0.41 — orphan posts under the shop's ~0.5
+  floor. `char_cell`/`ring_text` grew a **`min_island` rule**: any detached mark under
+  0.55 in both dimensions regrows as a Ø0.55 round at its own centroid. Same dots,
+  legal posts. Letters are connected forms and pass untouched.
+- **The zeros were booby-trapped**: JetBrains Mono is a coding font with a *dotted
+  zero* — a Ø0.29 ornament floating in every 0's counter, meaning **every serial ever
+  cut** would carry orphan micro-posts. `crest_glyphs` grew `dial_min_mark`, which
+  *deletes* them (growing would fill the counter): the plain oval zero, the classical
+  engraving form. And the dial's `º` (0.2 mm loop walls, thinner than any stroke)
+  became the full-`o` **"No 001"** — the traditional numero.
+
+Z9F's island audit runs in-script and **asserts**: no standing island under 0.55 mm
+anywhere on the coin. That is the shippable claim.
+
+Next step: land Z9F in the shell generator as CAD (replacing `MAKER_LINES`, parameters
+`RING_TEXT` / `RING_ANCHOR` / `DIAL_MONOGRAM` / `SERIAL`) and amend the bearing rule in
+`fit_rules` — at that point it leaves this directory and joins the part.

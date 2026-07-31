@@ -79,13 +79,19 @@ def _advance(cap, weight):
     return (w3[2] - w3[0]) - (w2[2] - w2[0])
 
 
-def char_cell(ch, cap, weight="r"):
+def char_cell(ch, cap, weight="r", min_island=None):
     """One character, upright in board coords, centred on the origin, at true cap scale.
 
     Built as the pair "H"+ch so the H pins the scale (the generator's _maker_text
     normalises the string bounds to the cap height -- alone, a mid-dot becomes a
     boulder) and pins the vertical frame (the dot stays at mid-x-height instead of
     being re-centred). Only the second cell's ink is returned.
+
+    min_island is the BEARING-PLANE machining rule (spin 10): a detached island
+    smaller than this in both dimensions -- an interpunct, a tittle -- would stand as
+    an orphan post 0.60 tall, under the shop's ~0.5 min-feature floor. Any such part
+    is regrown as a round of exactly min_island at its own centroid: same mark, legal
+    post. Letters are connected forms and pass untouched.
     """
     if ch == " ":
         return None
@@ -100,12 +106,18 @@ def char_cell(ch, cap, weight="r"):
     keep = [p for p in polys if p.centroid.x > x_split]
     if not keep:
         return None
+    if min_island:
+        from shapely.geometry import Point as _Pt
+        keep = [(_Pt(p.centroid).buffer(min_island / 2.0, resolution=32)
+                 if (p.bounds[2] - p.bounds[0]) < min_island
+                 and (p.bounds[3] - p.bounds[1]) < min_island else p)
+                for p in keep]
     gk = unary_union(keep)
     kb = gk.bounds
     return aff.translate(gk, -(kb[0] + kb[2]) / 2.0, -(b[1] + b[3]) / 2.0)
 
 
-def ring_text(txt, R, cap, weight="r", word_top="SOLAR POWERED"):
+def ring_text(txt, R, cap, weight="r", word_top="SOLAR POWERED", min_island=None):
     """Text on a closed circle: n characters into 360 deg, tracking derived not chosen.
 
     Clockwise reading, each character upright on its own radial (top of the letter
@@ -117,7 +129,7 @@ def ring_text(txt, R, cap, weight="r", word_top="SOLAR POWERED"):
     i0 = txt.index(word_top) + (len(word_top) - 1) / 2.0 if word_top in txt else 0.0
     parts = []
     for i, ch in enumerate(txt):
-        c = char_cell(ch, cap, weight)
+        c = char_cell(ch, cap, weight, min_island)
         if c is None:
             continue
         phi = (i - i0) * dphi

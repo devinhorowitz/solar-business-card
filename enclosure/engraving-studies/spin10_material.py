@@ -49,6 +49,10 @@ PX = E.PX
 
 COIN_D, REST_D = 0.45, 0.25
 DIAL = [("DRH", 4.80, -1.6, "b"), ("Nº 001", 1.80, 3.0, "r")]
+# The FINAL dial: "No" with a full o (the traditional numero) -- the º's loop walls run
+# ~0.2 at this cap, thinner than any letter stroke; and the serial's zeros shed their
+# coding-font counter dots via dial_min_mark. Every stroke that remains is legal.
+DIAL_F = [("DRH", 4.80, -1.6, "b"), ("No 001", 1.80, 3.0, "r")]
 
 VARIANTS = [
     ("Z6-ti-spelled", "MATERIAL, SPELLED",
@@ -66,7 +70,16 @@ VARIANTS = [
      "SOLAR · NFC · TITANIUM · ATL GA · MMXXVI · ", "SOLAR · NFC",
      "the dense limit: TITANIUM and the city both spelled into a 43-character ring, "
      "Z1's density with better words"),
+    ("Z9F-final", "Z9, ENSURED -- THE RING",
+     "SOLAR · NFC · TITANIUM · ATL GA · MMXXVI · ", "SOLAR · NFC",
+     "THE WINNER, by the ensure-at-PCBWay criterion. Z8's lowercase i measured out: a "
+     "0.33 tittle over a 0.229 gap -- below both tools, so it WELDS to its stem (the "
+     "'botched i' was the render being honest). Z9 has no lowercase; the same audit "
+     "caught the interpunct separators at O0.41, and the min-island rule regrows every "
+     "detached mark under 0.55 to a O0.55 round -- same dots, legal posts."),
 ]
+
+MIN_ISLAND = 0.55                    # the shop's ~0.5 min-feature floor, plus margin
 
 if __name__ == "__main__":
     E.ensure_shell()
@@ -75,9 +88,12 @@ if __name__ == "__main__":
     n_max = int((2 * math.pi * Z.R_TEXT) // (adv + 2 * 0.20))
     made = []
     for key, title, ring_txt, anchor, why in VARIANTS:
+        final = key.endswith("final")
         f, gm, tops, webs, tool_r, rest_a = Z.build_plane(
-            COIN_D, True, True, rest_d=REST_D, centre=DIAL, ring_txt=ring_txt,
-            ring_anchor=anchor)
+            COIN_D, True, True, rest_d=REST_D,
+            centre=DIAL_F if final else DIAL, ring_txt=ring_txt,
+            ring_anchor=anchor, min_island=MIN_ISLAND if final else None,
+            dial_min_mark=0.35 if final else None)
         n = len(ring_txt)
         arc = 2 * math.pi * Z.R_TEXT / n
         crest_a = float(tops.sum()) * PX * PX
@@ -91,6 +107,22 @@ if __name__ == "__main__":
             "agnostic by construction: ring text, anchor, dial initials and serial are "
             "the four parameters; any string re-closes the circle at its own tracking",
         ]
+        if final:
+            from scipy import ndimage as _ndi
+            lbl, k = _ndi.label(gm)
+            sizes = []
+            for sl in _ndi.find_objects(lbl):
+                w = (sl[1].stop - sl[1].start) * PX
+                h = (sl[0].stop - sl[0].start) * PX
+                sizes.append(max(w, h))
+            small = sorted(sizes)[:3]
+            notes.insert(3, f"island audit: {k} standing islands; the three smallest "
+                            f"span {', '.join(f'{s:.2f}' for s in small)} mm against the "
+                            f"{MIN_ISLAND:.2f} floor -- separators regrown from O0.41, "
+                            f"the zeros' O0.29 coding-font counter dots deleted (plain "
+                            f"oval zero), No with a full o (the º ran 0.2 walls)")
+            assert min(sizes) >= MIN_ISLAND - 0.02, \
+                f"an orphan island survived the rules: {min(sizes):.3f} mm"
         surf = Z.plane_surfaces(f, tops)
         p1, p2 = f"{OUT}/spin10_{key}.png", f"{OUT}/spin10_{key}_graze.png"
         Z.shot_plane(surf, p1)

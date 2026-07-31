@@ -88,10 +88,24 @@ def _annulus(r0, r1):
         Point(CX, CY).buffer(r0, resolution=128))
 
 
-def crest_glyphs(rim, hoop, coin_r, centre=CENTRE, ring_txt=TXT, ring_anchor=None):
+def crest_glyphs(rim, hoop, coin_r, centre=CENTRE, ring_txt=TXT, ring_anchor=None,
+                 min_island=None, dial_min_mark=None):
+    """dial_min_mark drops detached marks under that span from the dial text -- found
+    for JetBrains Mono's DOTTED ZERO, whose counter ornament is a O0.29 orphan island
+    inside every 0. Deleting (not growing -- a grown dot fills the counter) yields the
+    plain oval zero, the classical engraving form; the dot exists to tell 0 from O on
+    screens, which titanium does not need."""
     ring, _ = P4.ring_text(ring_txt, R_TEXT, CAP,
-                           word_top=ring_anchor if ring_anchor else "SOLAR POWERED")
-    parts = [ring] + [E.line_geom(t, CX, CY + dy, cap, w) for t, cap, dy, w in centre]
+                           word_top=ring_anchor if ring_anchor else "SOLAR POWERED",
+                           min_island=min_island)
+    dial = [E.line_geom(t, CX, CY + dy, cap, w) for t, cap, dy, w in centre]
+    if dial_min_mark:
+        dial = [unary_union([p for p in
+                             (list(g.geoms) if g.geom_type.startswith("Multi") else [g])
+                             if max(p.bounds[2] - p.bounds[0],
+                                    p.bounds[3] - p.bounds[1]) >= dial_min_mark])
+                for g in dial]
+    parts = [ring] + dial
     if hoop:
         parts.append(_annulus(8.75, 9.25))
     if rim:
@@ -100,7 +114,7 @@ def crest_glyphs(rim, hoop, coin_r, centre=CENTRE, ring_txt=TXT, ring_anchor=Non
 
 
 def build_plane(coin_d, rim, hoop, coin_r=12.15, rest_d=None, centre=CENTRE, ring_txt=TXT,
-                ring_anchor=None):
+                ring_anchor=None, min_island=None, dial_min_mark=None):
     """Depth field with z = 0 AT THE BEARING PLANE (the stock the frame is left from).
 
     field cells -> PLANE (the facing op), coin cells -> PLANE + coin_d, crest cells -> 0.
@@ -117,7 +131,8 @@ def build_plane(coin_d, rim, hoop, coin_r=12.15, rest_d=None, centre=CENTRE, rin
     """
     tool_r = 0.15 if coin_d <= 0.30 else 0.20
     f = E.Field(E.ART, pad=0.0)
-    gm = f.raster(crest_glyphs(rim, hoop, coin_r, centre, ring_txt, ring_anchor))
+    gm = f.raster(crest_glyphs(rim, hoop, coin_r, centre, ring_txt, ring_anchor,
+                               min_island, dial_min_mark))
     coin = f.raster(Point(CX, CY).buffer(coin_r + (0.70 if rim else 0.0), resolution=128))
     field = np.ones_like(gm)
     reach_coin = E.Field.opening(coin & ~gm, tool_r)
