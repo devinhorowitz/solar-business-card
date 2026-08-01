@@ -7437,7 +7437,7 @@
 			)
 			(embedded_fonts no)
 		)
-				(symbol "solarglow:SW2"
+		(symbol "solarglow:SW2"
 			(exclude_from_sim no)
 			(in_bom yes)
 			(on_board yes)
@@ -10509,10 +10509,6 @@
 		(uuid "0a4c937d-6165-4219-8426-7c9a5acbc380")
 	)
 	(no_connect
-		(at 410.21 171.45)
-		(uuid "ee775f49-53f7-4015-ad8d-ca7f047137e7")
-	)
-	(no_connect
 		(at 650.24 91.44)
 		(uuid "1b71bf97-47bb-4569-bf97-efa4cc4fa66b")
 	)
@@ -10529,12 +10525,12 @@
 		(uuid "3c0c5f69-bb2d-4ec5-8cd5-fdc4a94a4f29")
 	)
 	(no_connect
-		(at 410.21 134.62)
-		(uuid "47fb82dc-ff3d-4c2a-8f93-cea3b362c797")
+		(at 410.21 176.53)
+		(uuid "421e0730-ad19-4ffa-92ca-eb3a9954f4d2")
 	)
 	(no_connect
-		(at 410.21 166.37)
-		(uuid "cca2369e-5bbf-494b-a016-0f6b142d6db8")
+		(at 410.21 134.62)
+		(uuid "47fb82dc-ff3d-4c2a-8f93-cea3b362c797")
 	)
 	(no_connect
 		(at 490.22 387.35)
@@ -10565,10 +10561,6 @@
 		(uuid "b18dddca-953e-468d-8480-5b31684a0328")
 	)
 	(no_connect
-		(at 410.21 176.53)
-		(uuid "421e0730-ad19-4ffa-92ca-eb3a9954f4d2")
-	)
-	(no_connect
 		(at 209.55 104.14)
 		(uuid "bf787d9c-a398-4482-823c-ac8ecbb70058")
 	)
@@ -10577,12 +10569,20 @@
 		(uuid "ca83d8a0-0096-4e14-ab7a-18197687adc3")
 	)
 	(no_connect
+		(at 410.21 166.37)
+		(uuid "cca2369e-5bbf-494b-a016-0f6b142d6db8")
+	)
+	(no_connect
 		(at 459.74 448.31)
 		(uuid "d49093b3-181d-4300-ab13-e1fb433b49f7")
 	)
 	(no_connect
 		(at 604.52 100.33)
 		(uuid "e044131d-4203-4642-b390-b4f77d86bbf6")
+	)
+	(no_connect
+		(at 410.21 171.45)
+		(uuid "ee775f49-53f7-4015-ad8d-ca7f047137e7")
 	)
 	(wire
 		(pts
@@ -10724,7 +10724,7 @@
 		)
 		(uuid "12cdcc76-bd9c-4937-9fa7-38c59fadd0cf")
 	)
-		(wire
+	(wire
 		(pts
 			(xy 734.06 377.19) (xy 728.98 377.19)
 		)
@@ -10914,7 +10914,7 @@
 		)
 		(uuid "28a5e377-e230-4550-a2f6-50b18565a59c")
 	)
-		(wire
+	(wire
 		(pts
 			(xy 279.4 160.02) (xy 274.32 160.02)
 		)
@@ -10943,6 +10943,16 @@
 			(type default)
 		)
 		(uuid "306cca1a-2de6-4361-98d1-926af9849141")
+	)
+	(wire
+		(pts
+			(xy 410.21 392.43) (xy 405.13 392.43)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "311e3315-fc70-442d-896a-73788ac04b96")
 	)
 	(wire
 		(pts
@@ -11326,6 +11336,16 @@
 	)
 	(wire
 		(pts
+			(xy 410.21 151.13) (xy 405.13 151.13)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "6a89eda2-90ea-404b-a040-bd4fbe95742a")
+	)
+	(wire
+		(pts
 			(xy 795.02 377.19) (xy 789.94 377.19)
 		)
 		(stroke
@@ -11363,6 +11383,16 @@
 			(type default)
 		)
 		(uuid "6d9d1114-e138-4fc8-b835-9255e27c7202")
+	)
+	(wire
+		(pts
+			(xy 410.21 156.21) (xy 405.13 156.21)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "6ee96444-be1e-4c3d-8f64-821bf6998533")
 	)
 	(wire
 		(pts
@@ -11453,16 +11483,6 @@
 			(type default)
 		)
 		(uuid "765622a2-f4ba-4b97-bc20-85a8342797e7")
-	)
-	(wire
-		(pts
-			(xy 410.21 151.13) (xy 405.13 151.13)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "6a89eda2-90ea-404b-a040-bd4fbe95742a")
 	)
 	(wire
 		(pts
@@ -11566,6 +11586,16 @@
 	)
 	(wire
 		(pts
+			(xy 410.21 372.11) (xy 405.13 372.11)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "7ed7356b-194f-4e1b-926a-7e8d40199f98")
+	)
+	(wire
+		(pts
 			(xy 490.22 392.43) (xy 485.14 392.43)
 		)
 		(stroke
@@ -11583,66 +11613,6 @@
 			(type default)
 		)
 		(uuid "7f1749d0-284d-4a00-bb54-400819f972fc")
-	)
-	(wire
-		(pts
-			(xy 410.21 372.11) (xy 405.13 372.11)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "7ed7356b-194f-4e1b-926a-7e8d40199f98")
-	)
-	(wire
-		(pts
-			(xy 410.21 382.27) (xy 405.13 382.27)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "ee7c4ba4-1fbc-46d4-afb0-cec78678b0c5")
-	)
-	(wire
-		(pts
-			(xy 410.21 392.43) (xy 405.13 392.43)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "311e3315-fc70-442d-896a-73788ac04b96")
-	)
-	(wire
-		(pts
-			(xy 410.21 402.59) (xy 405.13 402.59)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "94b536a0-a10c-46f0-97e0-a144f6534ff9")
-	)
-	(wire
-		(pts
-			(xy 410.21 412.75) (xy 405.13 412.75)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "87b6943a-d56c-4f62-bb1b-2dc9e45272ed")
-	)
-	(wire
-		(pts
-			(xy 410.21 422.91) (xy 405.13 422.91)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "aefe9917-624b-4464-9841-fea63f076112")
 	)
 	(wire
 		(pts
@@ -11753,6 +11723,16 @@
 			(type default)
 		)
 		(uuid "877aca14-b69e-4898-ac3f-613d8207ffbb")
+	)
+	(wire
+		(pts
+			(xy 410.21 412.75) (xy 405.13 412.75)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "87b6943a-d56c-4f62-bb1b-2dc9e45272ed")
 	)
 	(wire
 		(pts
@@ -11876,6 +11856,16 @@
 	)
 	(wire
 		(pts
+			(xy 410.21 402.59) (xy 405.13 402.59)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "94b536a0-a10c-46f0-97e0-a144f6534ff9")
+	)
+	(wire
+		(pts
 			(xy 650.24 81.28) (xy 645.16 81.28)
 		)
 		(stroke
@@ -11903,16 +11893,6 @@
 			(type default)
 		)
 		(uuid "95d236ed-ab6d-4a4a-bd5c-0c74018bcc16")
-	)
-	(wire
-		(pts
-			(xy 410.21 156.21) (xy 405.13 156.21)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "6ee96444-be1e-4c3d-8f64-821bf6998533")
 	)
 	(wire
 		(pts
@@ -12053,6 +12033,16 @@
 			(type default)
 		)
 		(uuid "ae898689-e6eb-4130-8c90-c5593682f988")
+	)
+	(wire
+		(pts
+			(xy 410.21 422.91) (xy 405.13 422.91)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "aefe9917-624b-4464-9841-fea63f076112")
 	)
 	(wire
 		(pts
@@ -12203,16 +12193,6 @@
 			(type default)
 		)
 		(uuid "bdbf744f-bcda-4db3-8105-843c2fe32d14")
-	)
-	(wire
-		(pts
-			(xy 410.21 161.29) (xy 405.13 161.29)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "d5966882-a72b-4b82-ba5b-ceb00c4b9135")
 	)
 	(wire
 		(pts
@@ -12436,6 +12416,16 @@
 	)
 	(wire
 		(pts
+			(xy 410.21 161.29) (xy 405.13 161.29)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "d5966882-a72b-4b82-ba5b-ceb00c4b9135")
+	)
+	(wire
+		(pts
 			(xy 139.7 149.86) (xy 134.62 149.86)
 		)
 		(stroke
@@ -12583,6 +12573,16 @@
 			(type default)
 		)
 		(uuid "eb6b7f7d-23b5-42f4-9613-8264bbc559ad")
+	)
+	(wire
+		(pts
+			(xy 410.21 382.27) (xy 405.13 382.27)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "ee7c4ba4-1fbc-46d4-afb0-cec78678b0c5")
 	)
 	(wire
 		(pts
@@ -12797,6 +12797,28 @@
 			)
 		)
 	)
+	(global_label "VINT"
+		(shape input)
+		(at 405.13 402.59 180)
+		(effects
+			(font
+				(size 1 1)
+			)
+			(justify right)
+		)
+		(uuid "01d778bb-4da5-4a68-b351-8e44317e8e79")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 405.13 402.59 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
 	(global_label "SRC"
 		(shape bidirectional)
 		(at 20.32 78.74 0)
@@ -12829,27 +12851,6 @@
 		(uuid "03065131-60b4-47e9-a4af-5e0f4c44faae")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 405.13 129.54 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-	)
-	(global_label "GND"
-		(shape bidirectional)
-		(at 405.13 161.29 0)
-		(effects
-			(font
-				(size 1 1)
-			)
-		)
-		(uuid "6e853614-ffe9-4dd2-974b-f170ba0b7937")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 405.13 161.29 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -13285,27 +13286,6 @@
 			)
 		)
 	)
-	(global_label "UPDI"
-		(shape bidirectional)
-		(at 405.13 151.13 0)
-		(effects
-			(font
-				(size 1 1)
-			)
-		)
-		(uuid "b84247bf-4fb9-4788-9193-5783c1adb773")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 405.13 151.13 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-	)
 	(global_label "SRC"
 		(shape bidirectional)
 		(at 405.13 351.79 0)
@@ -13317,138 +13297,6 @@
 		(uuid "23d974ce-d2f8-4571-82ef-cfb70169da0e")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 405.13 351.79 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-	)
-	(global_label "VS"
-		(shape input)
-		(at 405.13 372.11 0)
-		(effects
-			(font
-				(size 1 1)
-			)
-			(justify right)
-		)
-		(uuid "beaea2b8-8b95-4138-9059-8ad807ab824f")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 405.13 372.11 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-	)
-	(global_label "MID"
-		(shape input)
-		(at 405.13 382.27 0)
-		(effects
-			(font
-				(size 1 1)
-			)
-			(justify right)
-		)
-		(uuid "4747ad3e-912b-4a90-b17b-b9c3c9734111")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 405.13 382.27 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-	)
-	(global_label "LX_LOUT"
-		(shape input)
-		(at 405.13 392.43 0)
-		(effects
-			(font
-				(size 1 1)
-			)
-			(justify right)
-		)
-		(uuid "87a7d986-c9b6-4add-88ea-32957f6323ed")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 405.13 392.43 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-	)
-	(global_label "VINT"
-		(shape input)
-		(at 405.13 402.59 0)
-		(effects
-			(font
-				(size 1 1)
-			)
-			(justify right)
-		)
-		(uuid "01d778bb-4da5-4a68-b351-8e44317e8e79")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 405.13 402.59 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-	)
-	(global_label "BUFSRC"
-		(shape input)
-		(at 405.13 412.75 0)
-		(effects
-			(font
-				(size 1 1)
-			)
-			(justify right)
-		)
-		(uuid "aee94711-b613-47d5-ad50-81436b9600df")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 405.13 412.75 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-	)
-	(global_label "STO_LDO"
-		(shape input)
-		(at 405.13 422.91 0)
-		(effects
-			(font
-				(size 1 1)
-			)
-			(justify right)
-		)
-		(uuid "6083e5bb-7c1b-4b27-b1f6-1aee62758a03")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 405.13 422.91 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -13990,6 +13838,28 @@
 			)
 		)
 	)
+	(global_label "MID"
+		(shape input)
+		(at 405.13 382.27 180)
+		(effects
+			(font
+				(size 1 1)
+			)
+			(justify right)
+		)
+		(uuid "4747ad3e-912b-4a90-b17b-b9c3c9734111")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 405.13 382.27 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
 	(global_label "GND"
 		(shape input)
 		(at 698.5 377.19 0)
@@ -14479,6 +14349,28 @@
 			)
 		)
 	)
+	(global_label "STO_LDO"
+		(shape input)
+		(at 405.13 422.91 180)
+		(effects
+			(font
+				(size 1 1)
+			)
+			(justify right)
+		)
+		(uuid "6083e5bb-7c1b-4b27-b1f6-1aee62758a03")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 405.13 422.91 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
 	(global_label "GND"
 		(shape input)
 		(at 454.66 412.75 0)
@@ -14716,17 +14608,17 @@
 			)
 		)
 	)
-	(global_label "STO"
+	(global_label "GND"
 		(shape bidirectional)
-		(at 405.13 124.46 0)
+		(at 405.13 161.29 0)
 		(effects
 			(font
 				(size 1 1)
 			)
 		)
-		(uuid "6f41c383-5ce1-4d31-8dd0-f6cfc83347e7")
+		(uuid "6e853614-ffe9-4dd2-974b-f170ba0b7937")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 405.13 124.46 0)
+			(at 405.13 161.29 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -14739,15 +14631,15 @@
 	)
 	(global_label "STO"
 		(shape bidirectional)
-		(at 405.13 156.21 0)
+		(at 405.13 124.46 0)
 		(effects
 			(font
 				(size 1 1)
 			)
 		)
-		(uuid "e1f5c90c-5662-4c56-ab27-b59ba03867e2")
+		(uuid "6f41c383-5ce1-4d31-8dd0-f6cfc83347e7")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 405.13 156.21 0)
+			(at 405.13 124.46 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -15266,7 +15158,29 @@
 			)
 		)
 	)
-		(global_label "SCL"
+	(global_label "LX_LOUT"
+		(shape input)
+		(at 405.13 392.43 180)
+		(effects
+			(font
+				(size 1 1)
+			)
+			(justify right)
+		)
+		(uuid "87a7d986-c9b6-4add-88ea-32957f6323ed")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 405.13 392.43 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
+	(global_label "SCL"
 		(shape bidirectional)
 		(at 204.47 78.74 0)
 		(effects
@@ -16115,6 +16029,28 @@
 			)
 		)
 	)
+	(global_label "BUFSRC"
+		(shape input)
+		(at 405.13 412.75 180)
+		(effects
+			(font
+				(size 1 1)
+			)
+			(justify right)
+		)
+		(uuid "aee94711-b613-47d5-ad50-81436b9600df")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 405.13 412.75 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
 	(global_label "GND"
 		(shape bidirectional)
 		(at 405.13 322.58 0)
@@ -16158,6 +16094,27 @@
 			)
 		)
 	)
+	(global_label "UPDI"
+		(shape bidirectional)
+		(at 405.13 151.13 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "b84247bf-4fb9-4788-9193-5783c1adb773")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 405.13 151.13 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
 	(global_label "SDA"
 		(shape bidirectional)
 		(at 405.13 337.82 0)
@@ -16190,6 +16147,28 @@
 		(uuid "bd2d47a7-faa1-4517-9554-2e2f1d7a43cc")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 345.44 48.26 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
+	(global_label "VS"
+		(shape input)
+		(at 405.13 372.11 180)
+		(effects
+			(font
+				(size 1 1)
+			)
+			(justify right)
+		)
+		(uuid "beaea2b8-8b95-4138-9059-8ad807ab824f")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 405.13 372.11 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -16964,6 +16943,27 @@
 			)
 		)
 	)
+	(global_label "STO"
+		(shape bidirectional)
+		(at 405.13 156.21 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "e1f5c90c-5662-4c56-ab27-b59ba03867e2")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 405.13 156.21 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
 	(global_label "MID"
 		(shape bidirectional)
 		(at 74.93 104.14 0)
@@ -17219,7 +17219,7 @@
 			)
 		)
 	)
-		(global_label "GND"
+	(global_label "GND"
 		(shape bidirectional)
 		(at 680.72 74.93 0)
 		(effects
@@ -17493,6 +17493,93 @@
 			(project "solar-glow-drh-v4_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "C23")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "solarglow:TP1")
+		(at 410.21 382.27 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp yes)
+		(uuid "02abacab-89ed-4a2d-87d8-6d7a0423dd16")
+		(property "Reference" "TP3"
+			(at 412.75 387.35 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "MID"
+			(at 421.21 387.35 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "solarglow:TPB"
+			(at 410.21 382.27 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 410.21 382.27 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "MID test pad (supercap stack midpoint)"
+			(at 410.21 382.27 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "MPN" "(bare pad - no part)"
+			(at 410.21 382.27 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "d30f21e6-582b-462f-9727-65eea8ac9faa")
+		)
+		(instances
+			(project "solar-glow-drh-v4_0"
+				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
+					(reference "TP3")
 					(unit 1)
 				)
 			)
@@ -18067,18 +18154,18 @@
 		)
 	)
 	(symbol
-		(lib_id "solarglow:TC1")
-		(at 410.21 151.13 0)
+		(lib_id "solarglow:TP1")
+		(at 410.21 402.59 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
 		(in_bom no)
 		(on_board yes)
-		(in_pos_files no)
+		(in_pos_files yes)
 		(dnp yes)
-		(uuid "bf6bff44-ff0e-4da4-a524-e16c986d6212")
-		(property "Reference" "TC1/b"
-			(at 421.21 156.21 0)
+		(uuid "183405b0-3695-4fe3-afe5-aa4a0b7acbb7")
+		(property "Reference" "TP5"
+			(at 412.75 407.67 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -18087,8 +18174,8 @@
 				)
 			)
 		)
-		(property "Value" "Tag-Connect"
-			(at 421.21 161.29 0)
+		(property "Value" "VINT"
+			(at 421.21 407.67 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -18097,8 +18184,9 @@
 				)
 			)
 		)
-		(property "Footprint" "solarglow:TC1"
-			(at 421.21 166.37 0)
+		(property "Footprint" "solarglow:TPB"
+			(at 410.21 402.59 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -18107,8 +18195,9 @@
 				)
 			)
 		)
-		(property "Datasheet" "datasheets/TC1  Tag-Connect TC2030-MCP  $0.pdf"
-			(at 410.21 151.13 0)
+		(property "Datasheet" ""
+			(at 410.21 402.59 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -18117,8 +18206,9 @@
 				)
 			)
 		)
-		(property "Description" "Tag-Connect TC2030 UPDI programming footprint - B-side mirror of TC1, same nets; the plug works from either side of the board"
-			(at 410.21 151.13 0)
+		(property "Description" "VINT test pad (AEM10300 internal rail)"
+			(at 410.21 402.59 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -18127,8 +18217,9 @@
 				)
 			)
 		)
-		(property "MPN" "(no part - pogo footprint)"
-			(at 410.21 151.13 0)
+		(property "MPN" "(bare pad - no part)"
+			(at 410.21 402.59 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -18136,29 +18227,14 @@
 					(size 1.27 1.27)
 				)
 			)
-		)
-		(pin "4"
-			(uuid "a3659ddd-3d57-4f03-a27f-2347777858a6")
 		)
 		(pin "1"
-			(uuid "882b0f18-c3b2-4136-98ca-76a0d7fdba31")
-		)
-		(pin "3"
-			(uuid "8e006c51-be12-4832-9090-01c73849f17c")
-		)
-		(pin "2"
-			(uuid "543eac54-2243-487e-baec-4aa984f375e4")
-		)
-		(pin "5"
-			(uuid "d4a44259-cbe3-4a90-9bad-9cde3198647e")
-		)
-		(pin "6"
-			(uuid "c9ad9425-d409-4aba-b58e-c18e29436bcc")
+			(uuid "68de141b-bf6f-4cfe-b852-cb81faf48207")
 		)
 		(instances
 			(project "solar-glow-drh-v4_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
-					(reference "TC1/b")
+					(reference "TP5")
 					(unit 1)
 				)
 			)
@@ -20770,528 +20846,6 @@
 		)
 	)
 	(symbol
-		(lib_id "solarglow:TP1")
-		(at 410.21 372.11 0)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom no)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp yes)
-		(uuid "d2fe4e23-3ca0-4bab-b257-c91ad2130067")
-		(property "Reference" "TP2"
-			(at 412.75 377.19 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "VS"
-			(at 421.21 377.19 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "solarglow:TPB"
-			(at 410.21 372.11 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 410.21 372.11 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "VS test pad (logic rail)"
-			(at 410.21 372.11 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "MPN" "(bare pad - no part)"
-			(at 410.21 372.11 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "71188fa8-5749-494b-9750-a76a9667919d")
-		)
-		(instances
-			(project "solar-glow-drh-v4_0"
-				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
-					(reference "TP2")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "solarglow:TP1")
-		(at 410.21 382.27 0)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom no)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp yes)
-		(uuid "02abacab-89ed-4a2d-87d8-6d7a0423dd16")
-		(property "Reference" "TP3"
-			(at 412.75 387.35 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "MID"
-			(at 421.21 387.35 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "solarglow:TPB"
-			(at 410.21 382.27 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 410.21 382.27 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "MID test pad (supercap stack midpoint)"
-			(at 410.21 382.27 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "MPN" "(bare pad - no part)"
-			(at 410.21 382.27 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "d30f21e6-582b-462f-9727-65eea8ac9faa")
-		)
-		(instances
-			(project "solar-glow-drh-v4_0"
-				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
-					(reference "TP3")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "solarglow:TP1")
-		(at 410.21 392.43 0)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom no)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp yes)
-		(uuid "cf921a00-7522-4d65-863e-7b269bb5f720")
-		(property "Reference" "TP4"
-			(at 412.75 397.51 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "LX_LOUT"
-			(at 421.21 397.51 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "solarglow:TPB"
-			(at 410.21 392.43 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 410.21 392.43 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "LX_LOUT test pad (AEM10300 switch node)"
-			(at 410.21 392.43 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "MPN" "(bare pad - no part)"
-			(at 410.21 392.43 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "6f29de88-c791-4ff5-9fb2-58e24baa1e11")
-		)
-		(instances
-			(project "solar-glow-drh-v4_0"
-				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
-					(reference "TP4")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "solarglow:TP1")
-		(at 410.21 402.59 0)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom no)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp yes)
-		(uuid "183405b0-3695-4fe3-afe5-aa4a0b7acbb7")
-		(property "Reference" "TP5"
-			(at 412.75 407.67 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "VINT"
-			(at 421.21 407.67 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "solarglow:TPB"
-			(at 410.21 402.59 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 410.21 402.59 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "VINT test pad (AEM10300 internal rail)"
-			(at 410.21 402.59 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "MPN" "(bare pad - no part)"
-			(at 410.21 402.59 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "68de141b-bf6f-4cfe-b852-cb81faf48207")
-		)
-		(instances
-			(project "solar-glow-drh-v4_0"
-				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
-					(reference "TP5")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "solarglow:TP1")
-		(at 410.21 412.75 0)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom no)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp yes)
-		(uuid "f51ad97c-fa92-473b-8368-cb4c7b7e8803")
-		(property "Reference" "TP6"
-			(at 412.75 417.83 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "BUFSRC"
-			(at 421.21 417.83 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "solarglow:TPB"
-			(at 410.21 412.75 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 410.21 412.75 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "BUFSRC test pad (CSRC buffered source)"
-			(at 410.21 412.75 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "MPN" "(bare pad - no part)"
-			(at 410.21 412.75 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "b68c4e6d-a991-4c48-be6c-06ef4dcfd81b")
-		)
-		(instances
-			(project "solar-glow-drh-v4_0"
-				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
-					(reference "TP6")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "solarglow:TP1")
-		(at 410.21 422.91 0)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom no)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp yes)
-		(uuid "afceeab9-7af4-4ed1-a7bd-006f45b45b14")
-		(property "Reference" "TP7"
-			(at 412.75 427.99 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "STO_LDO"
-			(at 421.21 427.99 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "solarglow:TPB"
-			(at 410.21 422.91 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 410.21 422.91 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "STO_LDO test pad (STO switch to LDO in)"
-			(at 410.21 422.91 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "MPN" "(bare pad - no part)"
-			(at 410.21 422.91 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "4b9fa7d8-d1e7-4510-bfd5-15b0c3d0fa2b")
-		)
-		(instances
-			(project "solar-glow-drh-v4_0"
-				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
-					(reference "TP7")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "solarglow:C27")
 		(at 642.62 372.11 0)
 		(unit 1)
@@ -22367,7 +21921,7 @@
 			)
 		)
 	)
-		(symbol
+	(symbol
 		(lib_id "solarglow:U8")
 		(at 459.74 372.11 0)
 		(unit 1)
@@ -23201,6 +22755,93 @@
 		)
 	)
 	(symbol
+		(lib_id "solarglow:TP1")
+		(at 410.21 422.91 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp yes)
+		(uuid "afceeab9-7af4-4ed1-a7bd-006f45b45b14")
+		(property "Reference" "TP7"
+			(at 412.75 427.99 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "STO_LDO"
+			(at 421.21 427.99 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "solarglow:TPB"
+			(at 410.21 422.91 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 410.21 422.91 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "STO_LDO test pad (STO switch to LDO in)"
+			(at 410.21 422.91 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "MPN" "(bare pad - no part)"
+			(at 410.21 422.91 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "4b9fa7d8-d1e7-4510-bfd5-15b0c3d0fa2b")
+		)
+		(instances
+			(project "solar-glow-drh-v4_0"
+				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
+					(reference "TP7")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "solarglow:C22")
 		(at 673.1 372.11 0)
 		(unit 1)
@@ -23411,6 +23052,104 @@
 			(project "solar-glow-drh-v4_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "C1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "solarglow:TC1")
+		(at 410.21 151.13 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board yes)
+		(in_pos_files no)
+		(dnp yes)
+		(uuid "bf6bff44-ff0e-4da4-a524-e16c986d6212")
+		(property "Reference" "TC1/b1"
+			(at 421.21 156.21 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "Tag-Connect"
+			(at 421.21 161.29 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "solarglow:TC1"
+			(at 421.21 166.37 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" "datasheets/TC1  Tag-Connect TC2030-MCP  $0.pdf"
+			(at 410.21 151.13 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Tag-Connect TC2030 UPDI programming footprint - B-side mirror of TC1, same nets; the plug works from either side of the board"
+			(at 410.21 151.13 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "MPN" "(no part - pogo footprint)"
+			(at 410.21 151.13 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "4"
+			(uuid "a3659ddd-3d57-4f03-a27f-2347777858a6")
+		)
+		(pin "1"
+			(uuid "882b0f18-c3b2-4136-98ca-76a0d7fdba31")
+		)
+		(pin "3"
+			(uuid "8e006c51-be12-4832-9090-01c73849f17c")
+		)
+		(pin "2"
+			(uuid "543eac54-2243-487e-baec-4aa984f375e4")
+		)
+		(pin "5"
+			(uuid "d4a44259-cbe3-4a90-9bad-9cde3198647e")
+		)
+		(pin "6"
+			(uuid "c9ad9425-d409-4aba-b58e-c18e29436bcc")
+		)
+		(instances
+			(project "solar-glow-drh-v4_0"
+				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
+					(reference "TC1/b1")
 					(unit 1)
 				)
 			)
@@ -23998,6 +23737,93 @@
 		)
 	)
 	(symbol
+		(lib_id "solarglow:TP1")
+		(at 410.21 392.43 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp yes)
+		(uuid "cf921a00-7522-4d65-863e-7b269bb5f720")
+		(property "Reference" "TP4"
+			(at 412.75 397.51 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "LX_LOUT"
+			(at 421.21 397.51 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "solarglow:TPB"
+			(at 410.21 392.43 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 410.21 392.43 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "LX_LOUT test pad (AEM10300 switch node)"
+			(at 410.21 392.43 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "MPN" "(bare pad - no part)"
+			(at 410.21 392.43 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "6f29de88-c791-4ff5-9fb2-58e24baa1e11")
+		)
+		(instances
+			(project "solar-glow-drh-v4_0"
+				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
+					(reference "TP4")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "solarglow:SB2")
 		(at 279.4 139.7 0)
 		(unit 1)
@@ -24078,6 +23904,93 @@
 			(project "solar-glow-drh-v4_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "SB2")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "solarglow:TP1")
+		(at 410.21 372.11 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp yes)
+		(uuid "d2fe4e23-3ca0-4bab-b257-c91ad2130067")
+		(property "Reference" "TP2"
+			(at 412.75 377.19 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "VS"
+			(at 421.21 377.19 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "solarglow:TPB"
+			(at 410.21 372.11 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 410.21 372.11 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "VS test pad (logic rail)"
+			(at 410.21 372.11 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "MPN" "(bare pad - no part)"
+			(at 410.21 372.11 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "71188fa8-5749-494b-9750-a76a9667919d")
+		)
+		(instances
+			(project "solar-glow-drh-v4_0"
+				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
+					(reference "TP2")
 					(unit 1)
 				)
 			)
@@ -25175,6 +25088,93 @@
 			(project "solar-glow-drh-v4_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "PV2")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "solarglow:TP1")
+		(at 410.21 412.75 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp yes)
+		(uuid "f51ad97c-fa92-473b-8368-cb4c7b7e8803")
+		(property "Reference" "TP6"
+			(at 412.75 417.83 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "BUFSRC"
+			(at 421.21 417.83 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "solarglow:TPB"
+			(at 410.21 412.75 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 410.21 412.75 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "BUFSRC test pad (CSRC buffered source)"
+			(at 410.21 412.75 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "MPN" "(bare pad - no part)"
+			(at 410.21 412.75 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "b68c4e6d-a991-4c48-be6c-06ef4dcfd81b")
+		)
+		(instances
+			(project "solar-glow-drh-v4_0"
+				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
+					(reference "TP6")
 					(unit 1)
 				)
 			)
