@@ -3,7 +3,8 @@
 From the PCB side, responding to "Coordination items for the PCB side", the pivot from four
 Ti pillars to a resin sandwich brace, and the ferrite-backing addition. The committed
 `PCB/solar-glow-drh-v4_0.kicad_pcb` remains the source of truth; nothing below changes the
-board. Sections 1–2 close out your items; 3 is the new ferrite pocket spec (build this);
+board. Sections 1–2 close out your items; 3 is the ferrite pocket spec (since built — the brace
+carries the 12-wide × 0.33 channel and its drawing calls it out);
 4–8 are supporting notes.
 
 ---
@@ -57,7 +58,9 @@ Outside the brace zone (top third): TC1 land, JP1/TP1 bench strip (x 47.55–49.
 JP1 y 14.54–22.16 — the 0.50 mm shell clearance already agreed for the lip still applies),
 and the supercap bays. Keep the brace clear of all of these.
 
-## 3. Ferrite pocket over the antenna — spec (new; build this)
+## 3. Ferrite pocket over the antenna — spec _(BUILT: the brace generator carries the open-ended
+12-wide × 0.33-deep channel and the DRAWING dimensions it; this section stays as the spec's
+rationale record)_
 
 A flexible sintered-ferrite patch between the coil and everything behind it gives the flux
 a low-reluctance return path: the floor stops seeing the field, the eddy detune and the
