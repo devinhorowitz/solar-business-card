@@ -480,7 +480,7 @@ corners, and the **same BOM**. It is now frozen as the final unmanaged-solar rev
   (42.9, 38); east L-tie crossing the coil on F. Plus benign `lib_footprint_issues` + the reserved
   `BTN` `track_dangling`.
 - **Carried bench items** (not resolved here): NFC coil L + C9 trim (~100 pF; now includes the F L-tie
-  crossing and the Ti-shell proximity); scope PA6/FD on a real tap with VCC gated off; **NFC_EN pulldown — resolved this session (R14; see the addendum below)**; LED PWM INVEN polarity in `led.c`; `twi.c` presence; plastic dry-fit;
+  crossing and the Ti-shell proximity); scope PA6/FD on a real tap with VCC gated off; **NFC_EN pulldown — resolved this session (R14; see the addendum below)**; LED PWM INVEN polarity in `led.c`; TWI presence (settled: `twi.h`, header-only by design — there is no `twi.c`); plastic dry-fit;
   **Ti-shell-behind-coil L/Q** — enclosure-relevant: metal behind the NFC coil pulls its inductance
   and Q, and could force a local change over the coil area if it detunes (measurement, not a CAD
   change yet).
