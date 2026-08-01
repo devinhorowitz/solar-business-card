@@ -406,7 +406,16 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   moves — which is exactly what just happened. Adds one file to the fab package, so it needs a
   deliberate yes before the order goes out.
 
-- [ ] **[MIDNIGHT — THE DECISION THAT GATES THE REST] Hard gold, or one truly identical file?**
+- [x] **[MIDNIGHT — decided 2026-07-31] Hard gold, or one truly identical file?** **Resolved as
+  (a) in net-rule form** (recorded in `solar-glow-drh-design-notes.md` and `PCB/README.md`): all
+  top-side F.Mask-exposed GND gets hard gold at PCBWay (solder-land exception for the PV pads),
+  base finish ENIG with ENEPIG as the accepted alternate — and the midnight question retired
+  itself: OSH Park offers no electrolytic gold, so midnight's monogram is ENIG **by fab
+  constraint** and the plating bus has no job there. The one residual mechanical note from
+  option (a) survives below as history: an OSH Park upload still needs the two stub objects
+  deleted (or a `--variant oshpark` automation, still unbuilt). The quoted `PCB/README` line
+  "do not ship without it" no longer exists — that file now states the net rule.
+  _(Original text kept as the decision record:)_
   _(2026-07-27; revised 2026-07-28 — the panel changed the price of option (a).)_
   The compliance audit above found exactly one hard failure: the two 0.4 mm plating-bus stubs
   crossing the outline at x = 25.4. They are **required at PCBWay** (electrolytic hard gold needs a

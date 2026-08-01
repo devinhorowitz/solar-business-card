@@ -94,8 +94,9 @@ light-sense divider once characterised. That single measurement sizes the whole 
   the LED is buried under copper and that window dies). The initials are track-widened
   (~0.12 → ~0.23, ~2.5 mm inter-letter gaps) to put a stroke edge at each fixed window.
 - **The keepaway is a single letter-agnostic box → the design is a TEMPLATE.** Anyone can drop their
-  own initials into the box and keep the four fixed centreline windows. (See
-  `docs/solar-glow-drh-glow-window.png`.)
+  own initials into the box and keep the four fixed centreline windows. (The old
+  `docs/solar-glow-drh-glow-window.png` mock-up was culled 2026-08-01 — git history only; the live
+  geometry is the board itself, rendered in `Generated/docs/solar-glow-drh-v4_0-card-face.png`.)
 - **FR4 thickness drives the look.** Thinner FR4 spreads light *less* → a crisper, more edge-lit
   monogram (brightest at the strokes nearest each window); thicker diffuses more. **Validate the
   *look* on a coupon of the ACTUAL board thickness** — a coupon of a different thickness will not
