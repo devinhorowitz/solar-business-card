@@ -178,6 +178,11 @@ def _is_noise(old_frames, new_frames):
         moved += int((d.max(axis=2) > NOISE_DE).sum())
         total += float(d.mean())
     frac = 100.0 * moved / (len(new_frames) * new_frames[0].width * new_frames[0].height)
+    # Always show the numbers behind a keep/write decision. The 2026-08-01 shell-spin hunt
+    # burned a full instrumented re-render to learn that the medallion had measured 0.4751%
+    # against the 0.5% threshold; with this line, the CI log would have said so at the time.
+    print(f"  [gate] {len(new_frames)} frame(s) {new_frames[0].size}: "
+          f"{frac:.4f}% past dE{NOISE_DE} (limit {NOISE_FRAC}%), mean {total / len(new_frames):.4f}")
     return frac <= NOISE_FRAC and total / len(new_frames) <= NOISE_MEAN
 
 
@@ -218,6 +223,15 @@ def save_png_stable(img, path, gate=True):
     at 1.4189 %, above this 0.5 % as it stands, so the noise and real-change populations already
     overlap and no single threshold separates them. What separates them is whether the view
     carries the texture, and that is known per call site.
+
+    IT HAPPENED A SECOND TIME before that rule reached the GIFs (2026-08-01): the whole rear
+    MEDALLION -- 25.7 mm of new engraving, ring text, monogram, serial -- measured 0.4751 %
+    against the 0.5 % limit on the shell-spin sequence, and the pre-medallion gif survived
+    four CI runs as "raytracer noise". Flat-shaded relief moves only its EDGE pixels (the
+    crest tops and coin floor shade almost exactly like the flat back they replaced), and the
+    back faces the camera for only half the revolution -- big change, thin footprint, exactly
+    the brace-pocket signature again. encode_gif() now takes the same gate switch, and the
+    bare-shell flip -- untextured, so its re-render is deterministic -- passes gate=False.
     """
     img = present(img)
     if gate and _is_noise(_frames_of(path), [img]):
@@ -227,8 +241,13 @@ def save_png_stable(img, path, gate=True):
     return True
 
 
-def encode_gif(imgs, path, ms, label):
+def encode_gif(imgs, path, ms, label, gate=True):
     """Write an animation as ONE palette sampled across the WHOLE sequence, and prove it landed.
+
+    `gate=False` for a sequence with NO raytraced texture, same rule as save_png_stable and for
+    the same reason -- see the second-occurrence note there: the untextured shell flip re-renders
+    deterministically, so the noise gate had nothing to suppress and used its one power to keep
+    a pre-medallion shell for four CI runs (0.4751 % measured vs the 0.5 % limit).
 
     Per-frame ADAPTIVE palettes -- PIL's default when handed RGB frames, and what this script
     used to do at 192 colours -- cost a colour table per frame and make flat areas shimmer,
@@ -284,7 +303,7 @@ def encode_gif(imgs, path, ms, label):
         raise SystemExit(f"{label}: palette is starved -- {frac:.3f}% of the sequence shifts more "
                          f"than {GIF_DE}/255 (limit {GIF_DE_FRAC}%) at {colors} colours. Widen the "
                          f"palette sample; an undithered dark neutral lands on the brass ramp.")
-    if _is_noise(_frames_of(path), [q.convert("RGB") for q in qs]):
+    if gate and _is_noise(_frames_of(path), [q.convert("RGB") for q in qs]):
         print(f"kept {os.path.basename(path)}  (re-render differs only by raytracer noise)")
         return frac
     qs[0].save(path, save_all=True, append_images=qs[1:], duration=ms, loop=0, optimize=True)
@@ -519,7 +538,11 @@ ren2.ResetCameraClippingRange(); rw2.Render()
 _w = vtk.vtkWindowToImageFilter(); _w.SetInput(rw2); _w.Update()
 _rv = vtk_to_numpy(_w.GetOutput().GetPointData().GetScalars())
 _rv = _rv.reshape(rw2.GetSize()[1], rw2.GetSize()[0], -1)[::-1, :, :3]
-save_png_stable(Image.fromarray(_rv), os.path.join(HERE, f"{STEM}-reverse.png"))
+# gate=False: the textured board actor is in this scene but fully occluded by the closed
+# shell, so no raytraced pixel reaches the frame and the render is deterministic (measured:
+# byte-stable across runs). Gated, this view would silently keep a SERIAL bump -- "No 001" ->
+# "No 002" moves a few hundred pixels on a 940x1040 still, far under the 0.5 % limit.
+save_png_stable(Image.fromarray(_rv), os.path.join(HERE, f"{STEM}-reverse.png"), gate=False)
 # ---- card flip: upright, front -> back -> front ------------------------------------------
 #
 # NOT a turntable. Spinning the card flat about its thickness axis is the pizza view: it never
@@ -542,11 +565,12 @@ _BG = np.array([0.965, 0.963, 0.955]) * 255
 
 
 def card_flip(actor_list, path, label, frames=FLIP_FRAMES, ms=FLIP_MS, size=FLIP_SIZE,
-              animate=None):
+              animate=None, gate=True):
     """One seamless revolution about the long axis, held upright. Returns nothing; writes a GIF.
 
     animate = (actor, [vtkTexture per frame]) swaps the actor's texture before each frame --
-    how the hero's LEDs breathe. The list is indexed by frame and may reuse texture objects."""
+    how the hero's LEDs breathe. The list is indexed by frame and may reuse texture objects.
+    gate=False when nothing in actor_list wears the raytraced texture (see encode_gif)."""
     ren = vtk.vtkRenderer(); ren.SetBackground(0.965, 0.963, 0.955)
     rw = vtk.vtkRenderWindow(); rw.SetOffScreenRendering(1); rw.AddRenderer(ren)
     rw.SetSize(size, size)
@@ -638,7 +662,7 @@ def card_flip(actor_list, path, label, frames=FLIP_FRAMES, ms=FLIP_MS, size=FLIP
     y1 = min(size, max(v[3] for v in boxes) + FLIP_PAD + 1)
     x1 += (x1 - x0) & 1                               # even dimensions, for the video encoders
     y1 += (y1 - y0) & 1
-    encode_gif([im.crop((x0, y0, x1, y1)) for im in imgs], path, ms, label)
+    encode_gif([im.crop((x0, y0, x1, y1)) for im in imgs], path, ms, label, gate=gate)
 
 
 # ---- THE LEDS BREATHE IN THE HERO (2026-07-31). The card's whole point is four amber LEDs
@@ -712,9 +736,12 @@ card_flip([_mat(shell_pd, TI, 0.85, 0.55, 42, 0.16), _mat(brace_pd, RESIN, 0.85,
 
 # ---- the bare shell, same motion: the hero of enclosure/README.md ------------------------
 # Naked titanium, nothing in it. The same rotation shows what a still cannot: the machined
-# cavity with its bosses and lip on the way round, and the plain bead-blast back coming after.
+# cavity with its bosses and lip on the way round, and the medallion back coming after.
+# gate=False: no texture in this scene, so the re-render is deterministic and the noise gate
+# has nothing to do here but harm -- it sat on the pre-medallion gif for four CI runs at a
+# measured 0.4751 % vs the 0.5 % limit (the brace-pocket failure shape, second occurrence).
 card_flip([_mat(shell_pd, TI, 0.82, 0.60, 46, 0.15)],
-          os.path.join(HERE, f"{STEM}-shell-spin.gif"), "shell flip")
+          os.path.join(HERE, f"{STEM}-shell-spin.gif"), "shell flip", gate=False)
 
 # ---- the brace alone: the hero of enclosure/brace/README.md ------------------------------
 # That image shipped in the repo's initial import with NO generator behind it, so while the
