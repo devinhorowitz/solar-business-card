@@ -22,7 +22,9 @@ is the "Where the truth lives" table in `README.md`. In short:
 - Board copper / geometry → `PCB/solar-glow-drh-v4_0.kicad_pcb` / `.kicad_sch`
 - Back-shell medallion (ring text, monogram, serial) → `enclosure/medallion.py`
 - Firmware pin map + tunables → `firmware/board.h` and `firmware/README.md`
-- BOM master → `PCB/solar-glow-drh-v4_0-BOM.xlsx`
+- BOM master → `BOM/solar-glow-drh-v4_0-BOM.xlsx` (`BOM/README.md` is **derived** — a live
+  availability table written by `BOM/check_stock.py`, manual-apply like the mask art since it
+  needs distributor API keys; regenerate it, never edit it)
 - Design reasoning / lineage → `solar-glow-drh-design-notes.md`
 
 When a doc disagrees with a source file, **the source file wins** and the doc is

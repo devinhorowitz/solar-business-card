@@ -946,14 +946,14 @@ def board_footprints():
 
 
 def bom_packages():
-    """{refdes: package string} from the BOM master xlsx (PCB/*-BOM.xlsx).
+    """{refdes: package string} from the BOM master xlsx (BOM/*-BOM.xlsx).
 
     stdlib only: an .xlsx is a zip of XML, and all we want is column 4 of each
     row. Cells arrive either as inline strings (<is><t>) or via the shared-string
     table, so both are handled. A row's first cell may list several refs
     ("R17, R18"), which is why it is split.
     """
-    path = os.path.join(ROOT, "PCB", "solar-glow-drh-v4_0-BOM.xlsx")
+    path = os.path.join(ROOT, "BOM", "solar-glow-drh-v4_0-BOM.xlsx")
     if not os.path.exists(path):
         return {}
     import zipfile
