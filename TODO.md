@@ -278,10 +278,23 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   the verified 0.6 board before first-article optical + energy data. 0.2 mm assessed and advised
   against (depanel fragility + show-through for an imperceptible gain).
 
-- [ ] **[PCB/EMC] EMC pre-compliance pass** _(2026-08-01.)_ Never done; this board carries a
-  13.56 MHz coil, a ≥10 MHz DCDC and 3.9 kHz LED PWM in one hand-held card. kicad-happy's `emc`
-  skill consumes the two analyzer JSONs (`docs/kicad-happy.md` has the pinned run recipe) — run
-  it once the first-article exists so measured numbers can anchor the paper review.
+- [ ] **[PCB/EMC] EMC pre-compliance — paper half DONE 2026-08-01, measured half open.**
+  kicad-happy's `emc` skill ran in full mode (risk score 64.0, 37 findings — every one triaged
+  in `docs/kicad-happy.md` → "Deep analysis"): no new real board defect; the plane-gap errors
+  are the coil and the glow window measuring as what they are, and the one genuine hygiene item
+  (GND stitching vias) is the next bullet. What remains is the **measured** half once the
+  first-article exists: near-field probe over the AEM10300 hot loop and the LED string under
+  PWM, and a reader-coupling check that the NFC coil's Q survived assembly (Ti shell + ferrite).
+
+- [ ] **[PCB — next respin, ride-along] GND return-path stitching vias** _(2026-08-01, from the
+  kicad-happy full-mode EMC pass; measured independently from the board file.)_ 28 GND vias vs
+  82 signal vias; only 2/82 signal vias have a GND via within 1.0 mm (median nearest 2.75 mm,
+  worst 19.25 mm — SRC at (46.5, 69.5); then VNFC (7.0, 8.0), CHG_DIS_G (43.8, 63.0), MID
+  (39.7, 64.0), STO (12.4, 13.0)). Not a compliance risk for a cable-less, harvest-powered card
+  in a grounded Ti shell whose fastest nets never change layers (LX_LIN/LX_LOUT: zero vias) —
+  so **no standalone respin**; add a handful of GND vias beside those clusters whenever the
+  copper next opens for a real reason. The coil crossover via at (42.9, 38.0) stays unstitched
+  — it is inside the coil keepout deliberately.
 
 - [ ] **[PCB/FW] R1–R4 exceed their 62.5 mW rating only at the worst corner — note, and one cheap guard**
   _(2026-07-30, same audit.)_ The LED ballasts are `AC0402FR-07150RL` (0402, **1/16 W**). Worst
