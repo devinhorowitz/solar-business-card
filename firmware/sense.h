@@ -6,11 +6,12 @@
  * sits near 0 V in the dark and rises with light. PD2 is ADC AIN2.
  *
  * Light is read by the ADC on the ~1 s PIT poll: a dark->light rise drives the
- * glow. (There is deliberately NO AC0-comparator "instant" light wake: on this
- * part the AC interrupt/flags do not update with CLK_PER stopped, so an AC
- * interrupt cannot wake from Standby or Power-Down -- see datasheet 32.3.5 vs.
- * the AC.CTRLA.RUNSTDBY bit description and the Table 13-4 wake-source list,
- * which omits the AC. Instant interaction-wake is covered by the accelerometer
+ * glow. (There is deliberately NO AC0-comparator "instant" light wake: the
+ * Table 13-3 wake-source list gives the AC a wake role only in Idle and -- with
+ * RUNSTDBY -- Standby; it cannot wake Power-Down, this firmware's baseline
+ * sleep. (Cited as "Table 13-4, which omits the AC" until the 2026-08-01 audit
+ * -- wrong table number, and the AC is listed, just not for Power-Down.)
+ * Instant interaction-wake is covered by the accelerometer
  * motion interrupt instead. See README.)
  *
  * STO (the supercap tank) is read on PD1/AIN1 through the R15/R16 (2M/1M)
@@ -105,8 +106,8 @@ int8_t   sense_temp_max_get(void);
  * write to a healthy rail (>= EE_WRITE_FLOOR_MV) so a write never lands on a collapsing rail (the
  * corruption window, DS40002443 sec 11.3.3): the min-rail is tracked in RAM and committed on recovery,
  * and the power-cycle count is flagged at boot and committed once the rail has charged.
- *   sense_vmin_tick()      : call every poll; samples VS every VMIN_SAMPLE_POLLS, keeps the RAM min, commits when safe.
- *   sense_vmin_get()       : lowest rail mV ever seen (0xFFFF = never sampled).
+ *   sense_vmin_tick()      : call every poll; samples STO every VMIN_SAMPLE_POLLS, keeps the RAM min, commits when safe.
+ *   sense_vmin_get()       : lowest tank (STO) mV ever seen (0xFFFF = never sampled).
  *   sense_boot_log()       : call once at boot; flags a power-on reset (POR) for a deferred +1 to the power-cycle count.
  *   sense_boot_commit()    : call every poll; writes the flagged power cycle once the rail is safe.
  *   sense_boot_count_get() : power-cycle (full-drain) count (erased EEPROM = 0).

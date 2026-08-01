@@ -42,6 +42,13 @@ CFLAGS   = -mmcu=$(MCU) -DF_CPU=$(F_CPU)UL -Os -std=gnu11 \
            -Wall -Wextra -Wundef \
            -ffunction-sections -fdata-sections \
            -B $(DFP_SPEC) -I $(DFP_INC)
+
+# WERROR=1 promotes warnings to errors. CI passes it (firmware.yml), turning the
+# README's standing "compiles warning-free" claim into an enforced gate; local
+# builds stay lenient so an in-progress edit still links for a quick size check.
+ifdef WERROR
+CFLAGS  += -Werror
+endif
 LDFLAGS  = -mmcu=$(MCU) -B $(DFP_SPEC) -Wl,--gc-sections
 
 SRC      = main.c led.c adxl367.c nfc.c fram.c sense.c

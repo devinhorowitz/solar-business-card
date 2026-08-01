@@ -22,6 +22,23 @@ card's largest idle load. See **NFC contact card** below.
 > (`-Wall -Wextra -Wundef`) with Ubuntu's `gcc-avr` 7.3.0+Atmel against the
 > AVR-Ex DFP. Not yet run on hardware.
 >
+> **Deep audit 2026-08-01** — the full tree re-verified against the source documents, several
+> to the instruction level: the avr-libc `eeprom_*` path was **disassembled** and traced to
+> Microchip's own per-device DFP library (`libavr64ea28.a` — the generic toolchain libc carries
+> none), and its sequence checked word-for-word against the EA NVMCTRL chapter (STATUS@0x06
+> EEBUSY spin → page-buffer fill at mapped 0x1400 → CCP SPM key → CTRLA=0x15 EEPERW, the
+> datasheet's own §11.3.2.3 Option-1 procedure); the temp-sensor math matches the datasheet's
+> reference code line for line (signed TEMPSENSE1 offset + signed TEMPSENSE0 slope, +2048, ÷4096);
+> BODCFG 0x4A / OSCCFG 0x08 / SYSCFG0 0xD1 re-derived bit-for-bit from the fuse chapter; the
+> Table 13-3 wake list, WDT 8KCLK = 8.0 s, and Table 35-17's 2.048 V-reference VDD range all
+> confirm the code's claims; errata 2.2.1/2.2.2/2.2.3 re-read against usage (guards correct and
+> complete); the ADXL367 register map, `TAP_AXIS 10b = Z`, and the 7.5 ms reset latency verified
+> against its datasheet; the NDEF array machine-parsed (TLV/record/vCard framing byte-exact,
+> 19 blocks); and the load-bearing LED `INVEN` invariant is now **datasheet-proven**, not merely
+> analyzed — split mode's "CMPn = BOTTOM ... produces a static low on WOn" inverts to
+> pad-high = dark at compare 0. Findings were prose-level only (the black-box "VS"→STO naming,
+> a wrong wake-table number, stale size figures — all fixed in this pass); no functional defect.
+>
 > The **NFC** firmware is verified against the NTAG I2C plus datasheet
 > (NT3H2111_2211 Rev 3.6), and the whole front-end is on the committed
 > `solar-glow-drh-v4_0.kicad_pcb`, verified from its copper: tag `U5`, the `U6`
@@ -76,7 +93,8 @@ cd firmware
 make DFP=/path/to/Microchip/AVR-Ex_DFP/<version>
 ```
 Produces `solar-glow.hex`; the `avr-size` line reports usage (the part has 64 KB
-flash / 6 KB RAM, so this firmware — ~4 KB flash, ~23 B RAM — leaves room to spare).
+flash / 6 KB RAM, so this firmware — 4,490 B flash, 25 B RAM (4482 text + 8 data +
+17 bss, measured 2026-08-01 on the pinned CI toolchain) — leaves room to spare).
 
 ### 3. Wire UPDI and power the board
 UPDI is a single wire on **pin 23**, broken out to the **TC2030 pad (TC1)** (a
@@ -503,8 +521,9 @@ the sensor.
   it essentially never writes after the first warm spell. Runs even while face-down dormant.
   Read it back with `sense_temp_max_get()` over UPDI.
 - **`USE_HEALTH_LOG`** (0/1, default 1) **/ `VMIN_SAMPLE_POLLS`** (16): the field **black box** —
-  the *lowest rail (VS) ever* (2-byte cell, offset 7; sampled every `VMIN_SAMPLE_POLLS`, written only
-  on a new low) and the *power-cycle / full-drain count* (2-byte cell, offset 9; +1 per cold power-on
+  the *lowest tank voltage (STO) ever* (2-byte cell, offset 7; sampled every `VMIN_SAMPLE_POLLS`, written
+  only on a new low — said "VS" here until the 2026-08-01 audit, a v3 leftover: the code has always read
+  STO, the node that actually sags) and the *power-cycle / full-drain count* (2-byte cell, offset 9; +1 per cold power-on
   reset, gated on `RSTCTRL.RSTFR` PORF so watchdog/UPDI resets don't count). With max-temp, that's the
   four-way forensic — heat vs. starvation vs. shipped-dark vs. overuse — from one UPDI scan
   (`sense_vmin_get()` / `sense_boot_count_get()`). Both near-free and run even while dormant.

@@ -46,7 +46,9 @@ jobs:
         run: |
           set -euo pipefail
           avr-gcc --version | head -1
-          make -C firmware DFP="$HOME/avr/AVR-Ex_DFP"
+          # WERROR=1: warnings fail the build here (the README's "warning-free"
+          # claim is a gate in CI, advisory locally -- see the Makefile knob).
+          make -C firmware DFP="$HOME/avr/AVR-Ex_DFP" WERROR=1
           echo "----- size -----"
           avr-size firmware/solar-glow.elf
 
