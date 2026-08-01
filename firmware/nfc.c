@@ -26,18 +26,27 @@
 #define NFC_BOOT_POLL_US     250   /* spacing between ACK-poll attempts                   */
 #define NFC_BOOT_POLL_TRIES  20    /* ~5 ms total budget for the tag to answer its addr   */
 
-/* ---- block READ: START, AA, MEMA, STOP, START, AB, D0..D15(NACK last), STOP ---- */
+/* ---- block READ: START, AA, MEMA, STOP, START, AB, D0..D15 (ACK all, incl. the
+ * last, then STOP -- Figure 18 draws the host ACKing the FINAL byte too, and the
+ * prose is explicit: "the bus master/host will acknowledge it and issue a Stop
+ * condition". Until 2026-08-01 this NACKed the last byte -- the FRAM's convention,
+ * not this tag's -- on exactly the sequence whose WARNING says it must be executed
+ * completely or the tag "stretches the clock infinitely". Safe to ACK-then-STOP
+ * because the read is fixed-length: the tag ends on its own 16-byte count.) ---- */
 uint8_t nfc_read_block(uint8_t blk, uint8_t *dst16)
 {
     if (twi_start(NT3H_ADDR, 0)) { twi_stop(); return 1; }   /* SA + write   */
     if (twi_write(blk))          { twi_stop(); return 1; }   /* MEMA         */
     twi_stop();                                              /* end addr phase (Fig 18) */
     if (twi_start(NT3H_ADDR, 1)) { twi_stop(); return 1; }   /* START + read */
-    for (uint8_t i = 0; i < NFC_BLOCK_SZ; i++)
-        if (twi_read((uint8_t)(i < (NFC_BLOCK_SZ - 1)), &dst16[i])) { /* ACK all but last */
-            twi_stop();                                              /* bus fault: STOP so the tag can't clock-stretch forever */
+    for (uint8_t i = 0; i < NFC_BLOCK_SZ; i++) {
+        uint8_t rc = (i < NFC_BLOCK_SZ - 1) ? twi_read(1, &dst16[i])
+                                            : twi_read_last_ack(&dst16[i]);
+        if (rc) {
+            twi_stop();       /* bus fault: STOP so the tag can't clock-stretch forever */
             return 1;
         }
+    }
     return 0;
 }
 
@@ -59,7 +68,9 @@ uint8_t nfc_write_block(uint8_t blk, const uint8_t *src16)
  * Kept for config/diagnostic use; --gc-sections drops whatever stays uncalled.
  * Intentional, not dead code. */
 
-/* ---- sec 9.8 register READ: START, AA, FEh, REGA, STOP, START, AB, DAT(NACK), STOP ---- */
+/* ---- sec 9.8 register READ: START, AA, FEh, REGA, STOP, START, AB, DAT(ACK), STOP
+ * (Figure 19's host ACKs the single data byte before the STOP, same as the block
+ * read -- was NACK here until 2026-08-01, see nfc_read_block) ---- */
 uint8_t nfc_read_reg(uint8_t reg, uint8_t *val)
 {
     if (twi_start(NT3H_ADDR, 0))      { twi_stop(); return 1; }
@@ -67,9 +78,9 @@ uint8_t nfc_read_reg(uint8_t reg, uint8_t *val)
     if (twi_write(reg))               { twi_stop(); return 1; }   /* REGA       */
     twi_stop();                                                   /* end addr phase (Fig 19) */
     if (twi_start(NT3H_ADDR, 1))      { twi_stop(); return 1; }   /* START + read */
-    if (twi_read(0, val))             { twi_stop(); return 1; }   /* fault mid-read: force the
+    if (twi_read_last_ack(val))       { twi_stop(); return 1; }   /* fault mid-read: force the
                                                                    * STOP ourselves (success
-                                                                   * already NACKed + STOPped) */
+                                                                   * already ACKed + STOPped) */
     return 0;
 }
 
@@ -229,20 +240,23 @@ static const uint8_t ndef_default[] = {
  *    byte 0. WARNING: When configuring Static lock bytes and Capability
  *    container, Address byte gets updated, too." (sec 8.3.2)
  *
- * So a naive write-back of what we read (04h) would, by that same normative
- * sentence, re-address the tag to 04h>>1 = 0x02 and lose I2C access to it. The
- * datasheet's trailing REMARK does recommend 04h "for convenience", which
- * contradicts the rule directly above it. We write (NT3H_ADDR << 1) = 0xAA
- * instead: it is the ONLY value that is correct under BOTH readings -- its top
- * 7 bits ARE 0x55, so the address is preserved literally, and no reading of the
- * datasheet has it meaning anything else. Bytes 1..11 (UID, internal, lock
- * bytes) are written back exactly as read.
+ * Section 9.6 ("Addressing") resolves this AUTHORITATIVELY in favour of what we
+ * write (comment corrected 2026-08-01 -- the old text here treated it as an
+ * unresolved datasheet self-contradiction needing a bench ruling; it is not):
+ * "Byte 0 of block 0 is used to configure the device address. The 7-bit device
+ * address needs to be programmed in the 7 most significant bits ... E.g. to keep
+ * default device address of 55h, byte 0 of block 0 needs to be set to AAh." And
+ * 9.6 decodes the 04h recommendation as a deliberate ADDRESS CHANGE, not a no-op:
+ * "it is recommended to use 04h as I2C write address (02h device address)" --
+ * i.e. NXP's suggestion is to accept relocating to 0x02 so that read-back-and-
+ * rewrite (which reads 04h) is idempotent. We keep 0x55 instead, by the book:
+ * (NT3H_ADDR << 1) = 0xAA. Bytes 1..11 (UID, internal, lock bytes) are written
+ * back exactly as read.
  *
- * BENCH: confirm on the first tag before provisioning a keepsake card -- after
- * this write the tag must still ACK at 0x55 (nfc_present()). If it does not,
- * the "04h" reading was the operative one and the tag now lives at 0x02; that
- * is recoverable (point NT3H_ADDR there), not fatal, and RF/vCard is unaffected
- * either way since the RF side never uses the I2C address. */
+ * BENCH (demoted to a routine post-write check, not a semantics question): after
+ * this write the tag must still ACK at 0x55 (nfc_present()); a NACK would mean a
+ * garbled write, not an ambiguity -- re-read block 0 and re-provision. RF/vCard
+ * is unaffected either way; the RF side never uses the I2C address. */
 static uint8_t nfc_write_cc(void)
 {
     uint8_t b0[NFC_BLOCK_SZ];

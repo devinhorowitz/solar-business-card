@@ -9,10 +9,13 @@
  * read_tap() return the "absent / no bits" value rather than blocking).
  */
 #include <avr/io.h>
+#include "board.h"          /* ADXL367_ADDR; MUST precede util/delay.h so this TU's
+                             * delays calibrate from the same F_CPU as every other
+                             * (it was the one file including delay.h first, which
+                             * split calibration when -DF_CPU overrode; 2026-08-01) */
 #include <util/delay.h>
 #include "adxl367.h"
 #include "twi.h"
-#include "board.h"          /* ADXL367_ADDR */
 
 uint8_t adxl367_present(void)
 {

@@ -46,7 +46,9 @@ CFLAGS   = -mmcu=$(MCU) -DF_CPU=$(F_CPU)UL -Os -std=gnu11 \
 # WERROR=1 promotes warnings to errors. CI passes it (firmware.yml), turning the
 # README's standing "compiles warning-free" claim into an enforced gate; local
 # builds stay lenient so an in-progress edit still links for a quick size check.
-ifdef WERROR
+# Value-tested, not ifdef: `make WERROR=0` must mean OFF (the first knob shipped
+# as `ifdef`, under which WERROR=0 still armed -Werror; 2026-08-01 pressure test).
+ifeq ($(WERROR),1)
 CFLAGS  += -Werror
 endif
 LDFLAGS  = -mmcu=$(MCU) -B $(DFP_SPEC) -Wl,--gc-sections

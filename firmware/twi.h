@@ -7,8 +7,10 @@
  * internal pull-ups are left off.
  *
  * Bus timing: F_CPU = 1 MHz, target ~100 kHz. The SCL divider has a floor of
- * 10 CLK_PER, so MBAUD = 0 gives 1 MHz / 10 = 100 kHz exactly (same bus speed
- * as the old 4 MHz build, which used MBAUD = 15). 100 kHz is therefore also the
+ * 10 CLK_PER, so MBAUD = 0 gives 1 MHz / 10 = ~100 kHz (the datasheet's SCL
+ * equation carries a rise-time term, so the real bus runs a few percent under
+ * that with the 4.7k pulls -- "exactly" here until 2026-08-01 overstated; same
+ * bus speed as the old 4 MHz build, which used MBAUD = 15). ~100 kHz is also the
  * ceiling at this clock; 400 kHz fast-mode would need a faster CLK_PER. All
  * transactions are polled; every wait is DOUBLY bounded -- a bus-error /
  * arbitration escape for flagged faults, and a spin budget (TWI_SPIN_MAX) for
@@ -171,6 +173,22 @@ static inline uint8_t twi_read(uint8_t ack, uint8_t *out)
     *out = TWI0.MDATA;
     if (ack) TWI0.MCTRLB = TWI_MCMD_RECVTRANS_gc;                 /* ACK, go again */
     else     TWI0.MCTRLB = TWI_ACKACT_bm | TWI_MCMD_STOP_gc;      /* NACK + STOP   */
+    return 0;
+}
+
+/* read the FINAL data byte with an ACK, then STOP -- the NT3H2211's drawn last-byte
+ * handshake (its Figures 18/19 and their prose have the host ACK the last byte:
+ * "the bus master/host will acknowledge it and issue a Stop condition"), which is a
+ * PER-DEVICE convention, not the universal NACK-last: the FRAM's own figures draw
+ * NACK-last, so fram.c keeps twi_read(0,..). Safe only for fixed-length reads where
+ * the target ends transmission on its own count. ACKACT=0 (ACK) + MCMD_STOP sends
+ * the ACK and then the STOP in one command. returns 0 ok, 1 fault. */
+static inline uint8_t twi_read_last_ack(uint8_t *out)
+{
+    uint8_t st = twi_wait(TWI_RIF_bm | TWI_BUSERR_bm | TWI_ARBLOST_bm);
+    if (!(st & TWI_RIF_bm) || (st & (TWI_BUSERR_bm | TWI_ARBLOST_bm))) return 1;
+    *out = TWI0.MDATA;
+    TWI0.MCTRLB = TWI_MCMD_STOP_gc;               /* ACK (ACKACT=0) + STOP */
     return 0;
 }
 

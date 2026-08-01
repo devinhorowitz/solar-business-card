@@ -51,6 +51,12 @@ static volatile uint8_t f_tap;     /* PF0 click   */
 static volatile uint8_t f_motion;  /* PF1 activity */
 static volatile uint8_t f_tick;    /* RTC PIT     */
 static volatile uint8_t f_nfc;     /* PA6 NFC field-detect (FD, field-powered) */
+static volatile uint8_t f_fd_arrived;  /* FD fell since the last poll tick -- the held-field
+                                        * backstop's arrival record (2026-08-01 pressure-test
+                                        * fix): without it, a tick landing mid-read re-enabled
+                                        * the DCDC the FD ISR had just quieted, because the
+                                        * backstop tested only the instantaneous level while
+                                        * its own comment promised "a full poll later". */
 
 #if USE_FACEDOWN_DORMANT
 /* face-down dormant state (main-context only, not shared with any ISR -> no volatile).
@@ -116,10 +122,14 @@ static void gpio_init(void)
      * is also the useful resting state). The pins configured above (PA6/PA7/PD2/PF0/
      * PF1) and the LED pins (PA0-3, in led_init) are left alone; a pull-up bit on a
      * driven output is ignored anyway. On the AVR-EA, PD0 IS bonded (pin 10 -- the
-     * pad that was VDDIO2 on the DD28) and floats: the DD-era SJ1 strap is gone
-     * outright (deleted from schematic and board 2026-07-30; was DNP before that),
-     * so the pad has no external connection and the pull-up
-     * below is its required hold. PD3..PD7 exist on the 28-pin EA and are unused. */
+     * pad that was VDDIO2 on the DD28). The DD-era SJ1 strap is gone outright
+     * (deleted from schematic and board 2026-07-30; was DNP before that), but the
+     * pad is NOT bare: C3 (100 nF to GND, the DD-era VDDIO2 decoupler) still hangs
+     * on its net. A capacitor defines no DC level, so the pull-up below is still
+     * the required hold -- it just also charges C3 once at boot (~3.5 ms through
+     * the ~26k pull). ("Floats / no external connection" here until the 2026-08-01
+     * pressure test; C3 is a cull candidate for the next passives pass.)
+     * PD3..PD7 exist on the 28-pin EA and are unused. */
     /* EN_STO_CH gate (PA4): push-pull drive of Q2, the low-side charge-disable buffer
      * (cold-start-deadlock fix -- board.h has the full story). Gate LOW at init = Q2 off =
      * AEM charging ENABLED (also the R18-pulled dead-MCU state, so init changes nothing
@@ -181,7 +191,9 @@ static void go_to_sleep(void)
 /* ---------------- FRAM archival hook (default OFF; see USE_FRAM_LOG) ---------------- */
 
 #if USE_FRAM_LOG
-/* Cold-boot counter in the FRAM "black box" (U7, 64 KB on VNFC). FeRAM has ~1e13
+/* Cold-boot counter in the FRAM "black box" (U7, 64 KB on always-on VS -- this
+ * line said VNFC, the pre-2026-07-23 rail, until the 2026-08-01 pressure test;
+ * the same paragraph already had it right below). FeRAM has ~1e13
  * write endurance and commits with no settle delay, so -- unlike the 512 B internal-
  * EEPROM loggers -- a plain read-modify-write needs no wear or corruption-window
  * guard. Record layout at addr 0: [0..3] magic 'DRHb', [4..7] big-endian boot count;
@@ -308,10 +320,16 @@ int main(void)
 #else
             adxl367_clear_tap();                 /* drop the tap latch */
 #endif
-            uint8_t peak = sense_glow_peak(dbl ? DTAP_PEAK : GLOW_PEAK);
+            /* free gate BEFORE the rail read (2026-08-01 pressure-test fix, all three
+             * event branches): sense_glow_peak costs a full ADC + reference cold-start
+             * per call, and paying it just to zero the result afterwards made every
+             * muted event ~0.1 uC -- in exactly the repeat-event scenarios the mutes
+             * exist to cheapen. Gate first, convert only if a glow can still fire. */
+            uint8_t peak = 0;
 #if USE_FACEDOWN_DORMANT
-            if (dormant) peak = 0;   /* face-down: suppress the glow + tally (latches still acked below) */
+            if (!dormant)            /* face-down: suppress the glow + tally (latches still acked below) */
 #endif
+                peak = sense_glow_peak(dbl ? DTAP_PEAK : GLOW_PEAK);
             if (peak) {
                 /* tally BEFORE the glow: the EEPROM write then happens at the
                  * higher pre-glow rail, not after the glow has sagged it. The
@@ -344,16 +362,22 @@ int main(void)
              * so the accel motion int likely set f_motion too -- clear it after so we
              * don't chase this with a soft breath. (Deliberately NOT counted by
              * sense_count_inc(): that tracks physical taps; move it here to count reads.) */
-            uint8_t peak = sense_glow_peak(GLOW_PEAK);
+            /* free gates BEFORE the rail read (see the tap branch): a parked, re-polling
+             * phone lands here ~4x a second, and the whole point of the cooldown is that
+             * the muted path costs one byte-compare -- not an ADC conversion each time. */
+            uint8_t peak = 0;
+            uint8_t mute = 0;
 #if USE_FACEDOWN_DORMANT
-            if (dormant) peak = 0;   /* face-down: no acknowledge glow */
+            if (dormant) mute = 1;   /* face-down: no acknowledge glow */
 #endif
 #if USE_NFC_ACK_COOLDOWN
             /* rate-limit: a phone parked in-field keeps polling and re-toggling FD; ack at most
              * once per NFC_ACK_COOLDOWN_S so a stowed re-poll can't bleed the reserve breath by
              * breath. The cooldown is armed only on an ack that actually fired (below). */
-            if (nfc_cooldown) peak = 0;
+            if (nfc_cooldown) mute = 1;
 #endif
+            if (!mute)
+                peak = sense_glow_peak(GLOW_PEAK);
             if (peak) {
                 led_breathe(GLOW_CYCLES, GLOW_BREATH_MS, peak);
 #if USE_NFC_ACK_COOLDOWN
@@ -365,14 +389,18 @@ int main(void)
         }
         else if (f_motion) {
             f_motion = 0;
-            uint8_t peak = sense_glow_peak((uint8_t)(GLOW_PEAK / 2));
+            /* free gates BEFORE the rail read (see the tap branch): the pocket-walk case
+             * this mute exists for fires an activity trip per jostle, and each muted trip
+             * must cost a compare, not a conversion. */
+            uint8_t peak = 0;
+            uint8_t mute = 0;
 #if USE_FACEDOWN_DORMANT
             if (dormant) {
                 /* motion while dormant may be the flip back face-up: re-check Z now for an
                  * instant wake (the ~1 s poll is only a backstop). No glow on the wake
                  * motion itself either way. */
                 if (adxl367_read_z() >= FACEDOWN_Z_THRESH) { dormant = 0; facedown_polls = 0; }
-                peak = 0;
+                mute = 1;
             }
 #endif
 #if USE_DARK_MOTION_MUTE
@@ -381,8 +409,10 @@ int main(void)
              * reserve. A deliberate TAP is untouched (its branch never checks light), so the monogram
              * still lights when tapped in a dark room -- the marquee moment stays. */
             if (!prev_light)
-                peak = 0;
+                mute = 1;
 #endif
+            if (!mute)
+                peak = sense_glow_peak((uint8_t)(GLOW_PEAK / 2));
             if (peak)
                 led_breathe(1, GLOW_BREATH_MS, peak);
             adxl367_clear_activity();   /* ADXL367 activity latches; read STATUS to ack INT2 */
@@ -412,9 +442,21 @@ int main(void)
              * still present a full poll later is furniture, not a transaction, so
              * stop paying for it and resume charging. If it is genuinely still
              * reading, the only cost is DCDC noise during an exchange the phone
-             * will retry anyway -- strictly better than never charging again. */
-            if (!(FD_PORT.IN & FD_PIN_bm))
-                ENSTOCH_PORT.OUTCLR = ENSTOCH_PIN_bm;   /* field still held -> re-enable charging */
+             * will retry anyway -- strictly better than never charging again.
+             *
+             * "A full poll later" is now actually ENFORCED (2026-08-01 pressure-test
+             * fix): the PIT free-runs, so its phase is random against a phone landing
+             * on the card, and the old level-only test let a tick firing ~1 ms into a
+             * 100-300 ms vCard read force the DCDC back on for the rest of the
+             * exchange (~1 read in 5) -- no new falling edge ever came to re-quiet it.
+             * f_fd_arrived records the arrival edge; a low FD only counts as furniture
+             * on a tick with NO arrival since the previous tick, guaranteeing at least
+             * one full poll period of quiet before charging is forced back on. */
+            if (!(FD_PORT.IN & FD_PIN_bm)) {
+                if (!f_fd_arrived)
+                    ENSTOCH_PORT.OUTCLR = ENSTOCH_PIN_bm;   /* held a full poll -> re-enable charging */
+            }
+            f_fd_arrived = 0;                                /* arm the next tick's arrival window */
 #if USE_NFC_ACK_COOLDOWN
             if (nfc_cooldown) nfc_cooldown--;   /* age the NFC-ack rate-limit on the poll tick (~1 s) */
 #endif
@@ -530,6 +572,9 @@ ISR(PORTA_PORT_vect)
         ENSTOCH_PORT.OUTCLR = ENSTOCH_PIN_bm;   /* gate low -> Q2 off -> AEM charge resumes */
     } else {
         ENSTOCH_PORT.OUTSET = ENSTOCH_PIN_bm;   /* field present -> Q2 on -> quiet the DCDC */
+        f_fd_arrived = 1;                       /* arrival record for the tick backstop: a low
+                                                 * FD is only "furniture" once it has been held
+                                                 * across a whole poll with no fresh arrival */
     }
 }
 

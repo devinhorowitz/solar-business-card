@@ -45,8 +45,18 @@
  * -- so the brownout guard was inverted and a glow could drive the part into a
  * reset mid-animation, precisely the failure VS_GLOW_FLOOR_MV exists to prevent.
  * The 2.048 V reference is specified for "2.55V <= VDD <= 5.5V" at a TIGHTER
- * +/-2%, i.e. valid across this card's entire operating range (it stays in spec
- * below the BOD trip), and it still clears every divider's full swing:
+ * +/-2% -- in spec across effectively the whole operating range, with one honest
+ * corner (corrected 2026-08-01, pressure test; "stays in spec below the BOD trip"
+ * was overstated): BODLEVEL2's falling trip is 2.43 V MIN / 2.60 V typ
+ * (DS80001048C clarification), and the ADC chapter's own rule is stricter than
+ * the VREF table's VDD-0.4 -- "An internal reference can be used only if it is
+ * below VDD - 0.5V" -- so a min-corner part can run VDD 2.43-2.55 V where the
+ * 2.048 V reference is out of spec on both counts, and a sagging reference reads
+ * a LOW rail HIGH. The exposure is narrow (an LDO-dropout rail inside a 120 mV
+ * band on a worst-case BOD part, vs the 450 mV always-on inversion the 2.500 V
+ * pick had) and every floor in this file sits at STO >= 2.75 V, comfortably
+ * above the band -- but it is a corner, not zero, and it belongs on the page.
+ * The reference still clears every divider's full swing:
  *   STO  4.65 V (VOVCH) / 3 = 1.55 V  <  2.048 V   -- no clipping
  *   VIN  4.096 V         / 2 = 2.048 V             -- see the caveat below
  * CAVEAT: VSENSE (VIN/2) now saturates above VIN = 4.096 V, just under the
@@ -360,12 +370,21 @@ void sense_sun_tick(void)
     if (!sense_ee_safe())
         return;                              /* hours stay banked -- retry next rollover */
     uint16_t h = sense_sun_hours_get();
-    uint16_t add = hours_pending;
-    if (h + add > 0xFFFEu) add = (uint16_t)(0xFFFEu - h);   /* saturate; never store 0xFFFF (reads as 0) */
-    if (add) {
+    uint16_t room = (uint16_t)(0xFFFEu - h);   /* headroom to the ceiling; h <= 0xFFFE always
+                                                * (the getter maps erased 0xFFFF to 0), so this
+                                                * never underflows */
+    uint16_t add = (hours_pending < room) ? hours_pending : room;
+    /* WRAP-FREE saturation (2026-08-01 pressure test; found independently by two
+     * lenses, confirmed by disassembly). The old form `if (h + add > 0xFFFEu)`
+     * computed h+add in 16-bit unsigned, so at the ceiling it wrapped instead of
+     * clamping: h=0xFFFE with two banked hours summed to 0 -- the guard passed and
+     * the diary was OVERWRITTEN WITH ZERO, the one outcome the clamp exists to
+     * prevent. sense_boot_commit below always had the wrap-free idiom; now both do.
+     * Pending hours are dropped once consumed OR unrecordable-at-ceiling, so a
+     * permanently saturated diary stops paying the ee-safe ADC read every hour. */
+    if (add)
         eeprom_update_word(EE_SUN_HOURS_ADDR, (uint16_t)(h + add));
-        hours_pending = 0;
-    }
+    hours_pending = 0;
 }
 
 /* ---------- MCU internal die temperature + lifetime-max log ---------- */

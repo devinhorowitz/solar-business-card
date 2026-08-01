@@ -22,6 +22,29 @@ card's largest idle load. See **NFC contact card** below.
 > (`-Wall -Wextra -Wundef`) with Ubuntu's `gcc-avr` 7.3.0+Atmel against the
 > AVR-Ex DFP. Not yet run on hardware.
 >
+> **Adversarial pressure test 2026-08-01 (same day, second pass)** — 8 hostile review lenses
+> + a 3-judge verification panel per finding (65 agents; every line presumed wrong until
+> proven). 20 raw findings, 18 confirmed, 1 killed, all 18 fixed in-tree: two logic bugs
+> (the sun-diary saturation clamp wrapped at its own ceiling and could zero the diary —
+> confirmed by disassembly; the held-field charge backstop tested the instantaneous FD
+> level, so a poll tick landing mid-read re-enabled the DCDC it existed to quiet — now
+> latched on an arrival flag), one protocol deviation (NT3H block/register reads NACKed
+> the final byte where Figures 18/19 and their prose ACK it — the FRAM convention, not
+> this tag's; reads now ACK-then-STOP via `twi_read_last_ack`), two build-system defects
+> (`F_CPU` defined unguarded in board.h made the Makefile knob a build-breaker and split
+> delay calibration by include order; the CI `WERROR` knob was `ifdef`, so `WERROR=0`
+> still armed `-Werror`), one energy regression fixed by reordering (all three event
+> branches paid a full ADC+VREF conversion before consulting their zero-cost mutes), one
+> honest budget correction (the NFC tag's FD-pin leakage — 1.5 µA typ / 10 µA max, Table
+> 42 — flows through PA6's pull-up whenever FD idles high and was unbudgeted; the ~2.7 µA
+> standby sum is a 2.0 V-referenced lower bound), one narrowed safety claim (the 2.048 V
+> reference is NOT in spec across the entire BOD band — a 2.43 V min-corner part has a
+> 120 mV window below the 2.55 V reference floor), and nine doc-vs-truth corrections
+> (Q2 is a BSS138 not a 2N7002; C9 is fitted 47 pF, not DNP; PD0 carries C3, it does not
+> float; sec 9.6 settles the block-0 address-byte question in the code's favour; FRAM
+> commits per byte at ACK; F8h is reserved but 86h is ordinary address 0x43; MBAUD's
+> ~100 kHz carries a rise-time term; U7 rides VS, not VNFC).
+>
 > **Deep audit 2026-08-01** — the full tree re-verified against the source documents, several
 > to the instruction level: the avr-libc `eeprom_*` path was **disassembled** and traced to
 > Microchip's own per-device DFP library (`libavr64ea28.a` — the generic toolchain libc carries
@@ -93,8 +116,9 @@ cd firmware
 make DFP=/path/to/Microchip/AVR-Ex_DFP/<version>
 ```
 Produces `solar-glow.hex`; the `avr-size` line reports usage (the part has 64 KB
-flash / 6 KB RAM, so this firmware — 4,490 B flash, 25 B RAM (4482 text + 8 data +
-17 bss, measured 2026-08-01 on the pinned CI toolchain) — leaves room to spare).
+flash / 6 KB RAM, so this firmware — 4,514 B flash, 26 B RAM (4506 text + 8 data +
+18 bss, measured 2026-08-01 on the pinned CI toolchain after the pressure-test
+fixes) — leaves room to spare).
 
 ### 3. Wire UPDI and power the board
 UPDI is a single wire on **pin 23**, broken out to the **TC2030 pad (TC1)** (a
@@ -175,7 +199,7 @@ AVR64EA28, VQFN-28, on the **back** of the board.
 | 5 | PA7 | NFC_EN | Enables the NFC VCC load switch (`U6`, TPS22917), **active-HIGH**; init LOW = NFC off. (`R14`, 1 M, holds `U6` off while PA7 tristates during reset/UPDI/brown-out -- at (5.35, 4.92) on the board. Firmware also drives PA7 low-before-output and low-before-sleep, so the window is covered both ends.) |
 | 8 | PC2 | SDA | TWI0 host (PORTMUX **ALT2**), ext 4.7k → VS |
 | 9 | PC3 | SCL | TWI0 host (ALT2), ext 4.7k → VS |
-| 10 | PD0 | n/c | plain EA GPIO on the DD's old VDDIO2 pad; `SJ1` = DNP, so the pin floats — held by an internal pull-up in `gpio_init` |
+| 10 | PD0 | VDDIO2 | plain EA GPIO on the DD's old VDDIO2 pad; `SJ1` deleted outright 2026-07-30, but `C3` (100 nF → GND, the DD-era decoupler) still hangs on the net — no DC hold, so the internal pull-up in `gpio_init` still does that job (and charges C3 once at boot). *(This row said "SJ1 = DNP, so the pin floats" until the 2026-08-01 pressure test — doubly stale.)* |
 | 11 | PD1 | STO_SNS | supercap sense: STO/3 (R15/R16) into ADC AIN1 |
 | 12 | PD2 | VSENSE | light/rail sense: ADC AIN2 + AC0 AINP0 |
 | 20 | PF0 | INT1 | accel tap in (rising) |
@@ -268,7 +292,9 @@ cost is one accel Z read per poll.
 `U5` is an NXP **NT3H2211** (NTAG I2C plus, 2 KB) — an NFC Forum Type-2 tag on the
 **same TWI0 bus** as the accel, 7-bit address **0x55** (no clash with the accel's
 0x1D or the FRAM's 0x50). Its antenna is a PCB coil on `LA`/`LB` tuned to 13.56 MHz by the chip's
-internal 50 pF (`C9` is a do-not-populate trim); the radio is invisible to firmware.
+internal 50 pF plus `C9`, **fitted at 47 pF since 2026-07-30** (value derived from the
+coil model, not bench-trimmed; this line called C9 "a do-not-populate trim" until the
+2026-08-01 pressure test); the radio is invisible to firmware.
 **Power-gate (`NFC_EN`, PA7).** The chip has no sleep state and draws ~195 µA from
 VCC continuously (datasheet Table 42, 3.3 V idle) — the card's largest idle load. A
 high-side load switch gates its VCC; enable is `NFC_EN` (PA7, **active-HIGH**), held
@@ -337,9 +363,18 @@ things here diverge from the hardware doc's §6:
 
 - **The accelerometer is no longer the sleep floor.** The board now carries an ADI
   **ADXL367** (the LIS2DH12 went to backorder). In always-measurement at 100 Hz it
-  draws **0.89 µA** (datasheet), against **~10 µA** for a click-armed LIS2DH12 at the
-  same rate. That one swap drops dark standby from ~11.8 µA to **~2.7 µA**, and now
-  *no single part dominates*: the accel (0.89 µA), the MCU power-down (sub-µA — the
+  draws **0.89 µA typ — specified at VS = 2.0 V** (Table 1; this board runs it from
+  3.3 V, so treat 0.89 as a floor, as `adxl367.h` already says — the unqualified
+  figure sat in this sum until the 2026-08-01 pressure test), against **~10 µA**
+  for a click-armed LIS2DH12 at the same rate. That one swap drops dark standby
+  from ~11.8 µA to **~2.7 µA — a 2.0 V-referenced lower bound, not a measurement**,
+  and the same pressure test surfaced an unbudgeted line item beside it: the NFC
+  tag's FD pin specs **IL 1.5 µA typ / 10 µA max** (NT3H2211 Table 42) flowing
+  from VS through PA6's pull-up whenever FD idles high — i.e. essentially always
+  (+56% typ on the sum; board.h's FD block carries the bench item), plus up to
+  10 µA/pin spec'd on gated-VCC SDA/SCL through R10/R11. After the swap
+  *no single part dominates*: the accel (≥0.89 µA), the FD leakage (~1.5 µA typ),
+  the MCU power-down (sub-µA — the
   EA's base power-down is spec'd at 0.08 µA before the WDT/PIT/sampled-BOD adders), and the
   rest of the board leakage are all the same order. Because the ADXL367's floor is
   already this low, we run it **always-on in measurement** — there is no ODR-drop /
