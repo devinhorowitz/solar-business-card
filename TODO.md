@@ -283,6 +283,8 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   (GND stitching vias) is the next bullet. What remains is the **measured** half once the
   first-article exists: near-field probe over the AEM10300 hot loop and the LED string under
   PWM, and a reader-coupling check that the NFC coil's Q survived assembly (Ti shell + ferrite).
+  Start the probe at **L2 (26.2, 58.7)** — the tool's own test plan names it the highest-dI/dt
+  point on the board; its four FCC Part 15 B radiated bands all rate "risk: none" on paper.
 
 - [x] **[PCB — ride-along] GND return-path stitching vias — CLOSED 2026-08-01, same day** _(from
   the kicad-happy full-mode EMC pass; measured independently from the board file.)_ The trigger
