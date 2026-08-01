@@ -294,6 +294,9 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   PWM, and a reader-coupling check that the NFC coil's Q survived assembly (Ti shell + ferrite).
   Start the probe at **L2 (26.2, 58.7)** — the tool's own test plan names it the highest-dI/dt
   point on the board; its four FCC Part 15 B radiated bands all rate "risk: none" on paper.
+  For the coil check, the paper baseline to measure against (2026-08-01, `scripts/nfc_coil.py`):
+  **L ≈ 1.09 µH bare copper, f0 = 15.47 MHz at the placed C9 47 pF** — the ferrite-loaded tank
+  should land near 13.56; how far it lands from the bare number IS the measured ferrite factor.
 
 - [x] **[PCB — ride-along] GND return-path stitching vias — CLOSED 2026-08-01, same day** _(from
   the kicad-happy full-mode EMC pass; measured independently from the board file.)_ The trigger
