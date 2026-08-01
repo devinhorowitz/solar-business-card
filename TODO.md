@@ -270,8 +270,13 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   update the snapshot in the same commit that makes the move. That is the same shape as the DRC
   exclusion list — deliberate changes stay cheap, undeliberate ones stop being invisible.
 
-- [ ] **[PCB] C9 0402 → 0805 — LAND IS PLACED; the pad toe + thermal relief are still open**
-  _(2026-07-30; the footprint swap is DONE, the two follow-ons at the end of this item are not.)_
+- [x] **[PCB] C9 0402 → 0805 — COMPLETE 2026-08-01: land placed, and the pad toe + thermal
+  relief landed too.** Each pad grew +0.4 mm on its outer toe (1 × 1.45 → 1.4 × 1.45 at ±1.15,
+  growing along board-Y where the TODO's own clearance survey showed 3.4/3.6 mm of air), and
+  both pads now carry per-pad thermal relief into the LA/LB pours — `zone_connect 1`, four
+  0.4 mm spokes, 0.4 mm gap — so the iron heats a pad, not the tank pours. Front mask art
+  untouched (B-side edit; check [6] MATCH). CI's refill + DRC on this push is the copper gate.
+  _(2026-07-30; the footprint swap was DONE first, the two follow-ons landed 2026-08-01.)_
   The board now carries `Capacitor_SMD:C_0805_2012Metric` at (35.52, 37.88, 90°), the
   `footprint_symbol_mismatch` tripwire has cleared, and `part_heights.py` has its `"C9": 1.25`.
   **The 3D side is verified and needs nothing** _(2026-07-30)_: the footprint references
@@ -380,8 +385,16 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   against the glow-window opening, below a typical 0.1 mm (4 mil) dam minimum, so the web there will
   likely not survive. Both want a small component move, which is why they are yours and not mine.
 
-- [ ] **[PCB, PRE-FAB] D2's ANODE trace still crosses D2's own light window — the reroute fixed
-  only the short** _(2026-07-25 LED audit; re-verified against the 2026-07-27 crosshatch upload.)_
+- [x] **[PCB, PRE-FAB] D2's ANODE out of its own light window — CLOSED 2026-08-01, in two
+  stages.** Stage 1 (a board upload after this item was written): the 0.536 mm diagonal this
+  item describes was already gone — the anode now exits the pad at x = 14.8, *outside* the
+  window's x-range, sibling-style. What remained was subtler: its east-bound run sat at
+  y = 42.85, **exactly tangent** to the Ø2.1 aperture (centerline at r = 1.05), so 76 µm of
+  copper edge still clipped the rim. Stage 2 (2026-08-01): that run lifted to y = 42.7 — the
+  copper edge now clears the aperture by 74 µm — with one 0.15 mm stitch at x = 17.904 (outside
+  the window) so nothing else moved. Headroom verified before the lift: nearest foreign copper
+  above is VSENSE at ~1.9 mm. D2 now leaves its window untouched, the way D3–D5 always did.
+  _(Original item kept as the record:)_ _(2026-07-25 LED audit; re-verified against the 2026-07-27 crosshatch upload.)_
   The 2026-07-27 reroute added a detour at x = 18.201 that cleared the `shorting_items (K2/ANODE)`
   error — **that half is done**. But it only touched the run east of D2. The diagonal off D2's A pad,
   `(14.8, 44.3) → (16.176, 42.924)`, is untouched and still passes **0.536 mm** (copper edge) /
