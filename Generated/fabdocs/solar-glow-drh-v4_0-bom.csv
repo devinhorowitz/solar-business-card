@@ -18,10 +18,10 @@ Row,Description,Part,References,Value,Footprint,Quantity Per PCB,Status,Datashee
 17,"VSENSE divider 1 Mohm - 0603 thin film 0.1% 25ppm (matched with R6) VSENSE divider 1 Mohm - 0603 thin film 0.1% 25ppm (matched with R5) 1M 0603 thin film 0.1% 25ppm, STO sense divider bottom (STO_SNS->GND)",R5,R5 R6 R16,1M,R_0603_1608Metric,3, ,,RT0603BRD071ML,DigiKey,YAG4498CT-ND,SMD_2terminal_chip_molded,
 18,"2M 0603 thin film 0.1% 25ppm, STO sense divider top (STO->STO_SNS)",R15,R15,2M,R_0603_1608Metric,1, ,,MCT0603MD2004BP500,DigiKey,541-MCT0603MD2004BP500CT-ND,SMD_2terminal_chip_molded,
 19,3-axis accelerometer (tap/double-tap wake),U3,U3,ADXL367,ADXL367 CC-12-4_ADI,1, ,datasheets/U3  ADXL367BCCZ-RL7  $7.50.pdf,ADXL367BCCZ-RL7,DigiKey,505-ADXL367BCCZ-RL7CT-ND,,
-20,"AEM10300 buck-boost ambient energy harvester PMIC (MPPT), QFN-28 4x4",U8,U8,AEM10300,U8_QFN28,1, ,datasheets/aem10300.pdf,10AEM10300C0000,Mouser,120-AEM10300-QFN,,
+20,"AEM10300 buck-boost ambient energy harvester PMIC (MPPT), QFN-28 4x4",U8,U8,AEM10300,U8_QFN28,1, ,datasheets/U8  10AEM10300C0000  $3.77.pdf,10AEM10300C0000,Mouser,120-AEM10300-QFN,,
 21,"MCU - 8-bit AVR-EA (PWM, I2C, charge/sleep logic); EXTENDED -40..125C. Diff 12-bit ADC+PGA, 512B EEPROM, 80nA base sleep. Pin-compatible with the DD28 copper except pin 10, which is PD0/AIN0 on the EA, not VDDIO2 (no MVIO: DS40002443A Table 3-1). The DD-era SJ1 strap is REMOVED from this schematic - bridging it would have tied a GPIO to VS. FIRMWARE PORT REQUIRED - see TODO.",U1,U1,AVR64EA28 (VQFN28),U1,1, ,datasheets/U1  AVR64EA28-E-STX  $1.23.pdf,AVR64EA28-E/STX,DigiKey,150-AVR64EA28-E/STX-ND,,
-22,"512kbit I2C FeRAM 0x50, on always-on VS and parked in I2C Sleep (2026-07-23 back-power fix; VNFC now gates the tag alone); DFN LCC-8P-M05 5.0x6.0mm, 0.90mm MAX (was SOP-8 1.75mm)",U7,U7,MB85RC512TY,U7_DFN8,1, ,datasheets/U7  MB85RC512TYPNF-GS-BCERE1  $10.19.pdf,MB85RC512TYPN-GS-AWEWE1,DigiKey,865-MB85RC512TYPN-GS-AWEWE1CT-ND,package/gullwing,.\
-23,NFC tag - NTAG I2C plus 2K,U5,U5,NT3H2211,U5,1, ,datasheets/U5  NT3H2211W0FHKH  $1.38.pdf,NT3H2211W0FHKH,DigiKey,568-12901-1-ND,,
+22,"512kbit I2C FeRAM 0x50, on always-on VS and parked in I2C Sleep (2026-07-23 back-power fix; VNFC now gates the tag alone); DFN LCC-8P-M05 5.0x6.0mm, 0.90mm MAX (was SOP-8 1.75mm)",U7,U7,MB85RC512TY,U7_DFN8,1, ,datasheets/U7  MB85RC512TYPN-GS-AWEWE1  $10.19.pdf,MB85RC512TYPN-GS-AWEWE1,DigiKey,865-MB85RC512TYPN-GS-AWEWE1CT-ND,package/gullwing,.\
+23,NFC tag - NTAG I2C plus 2K,U5,U5,NT3H2211,U5,1, ,datasheets/U5  NT3H2211W0FHKH  $1.56.pdf,NT3H2211W0FHKH,DigiKey,568-12901-1-ND,,
 24,"NFC VNFC high-side load switch - TPS22917 ultra-low leakage (ISD 10nA typ vs 918's 0.5uA/3.5uA max); pin-identical to TPS22918, CT float + QOD->VOUT sanctioned; active-HIGH ON (NOT the 917L)",U6,U6,TPS22917,SOT-23-6,1, ,datasheets/U6  TPS22917DBVT  $1.14.pdf,TPS22917DBVT,DigiKey,296-48370-1-ND,package/gullwing,
 25,"TPS7A0233 nanopower LDO, 3.3V fixed, ~25nA Iq (VS rail)",U9,U9,TPS7A0233 (SOT23-5*),U9_SOT23_5,1, ,,TPS7A0233PDBVR,DigiKey,296-TPS7A0233PDBVRCT-ND,package/gullwing,
 
@@ -33,7 +33,7 @@ Project info:
 Schematic:,solar-glow-drh-v4_0
 Variant:,default
 Revision:,
-Date:,2026-08-01_12-35-30
+Date:,2026-08-01_13-20-01
 KiCad Version:,10.0.5-unknown-202607221313~667fa36054~ubuntu25.10.1
 Statistics:
 Component Groups:,25
