@@ -116,7 +116,9 @@ static void gpio_init(void)
      * is also the useful resting state). The pins configured above (PA6/PA7/PD2/PF0/
      * PF1) and the LED pins (PA0-3, in led_init) are left alone; a pull-up bit on a
      * driven output is ignored anyway. On the AVR-EA, PD0 IS bonded (pin 10 -- the
-     * pad that was VDDIO2 on the DD28) and floats because SJ1 is DNP: the pull-up
+     * pad that was VDDIO2 on the DD28) and floats: the DD-era SJ1 strap is gone
+     * outright (deleted from schematic and board 2026-07-30; was DNP before that),
+     * so the pad has no external connection and the pull-up
      * below is its required hold. PD3..PD7 exist on the 28-pin EA and are unused. */
     /* EN_STO_CH gate (PA4): push-pull drive of Q2, the low-side charge-disable buffer
      * (cold-start-deadlock fix -- board.h has the full story). Gate LOW at init = Q2 off =

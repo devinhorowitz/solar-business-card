@@ -24,7 +24,7 @@
  *     7 PC1      PC1      spare GPIO  (JP2.3)
  *     8 PC2      SDA      TWI0 host SDA  (TWIROUTEA=ALT2)  ext 4.7k to VS
  *     9 PC3      SCL      TWI0 host SCL  (TWIROUTEA=ALT2)  ext 4.7k to VS
- *    10 PD0      (n/c)    EA GPIO on the old VDDIO2 pad; SJ1 = DNP so it floats -> held by internal pull-up (gpio_init)
+ *    10 PD0      (n/c)    EA GPIO on the old VDDIO2 pad; the SJ1 strap is gone (deleted 2026-07-30, DNP before that) so it floats -> held by internal pull-up (gpio_init)
  *    11 PD1      STO_SNS    supercap-state sense  AIN1 (STO via R15/R16 divide-by-3)
  *    12 PD2      VSENSE   light sense (now SRC) + rail  AIN2 (ADC) + AINP0 (AC0+)
  *    18 VDD      VS       regulated 3.3 V LDO output (U9 TPS7A0233, STO->VS)

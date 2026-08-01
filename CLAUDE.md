@@ -20,6 +20,7 @@ reworked from there. **`PCB/` holds exactly one board revision — do not add an
 Each fact has exactly one home; everything else points at it. The canonical map
 is the "Where the truth lives" table in `README.md`. In short:
 - Board copper / geometry → `PCB/solar-glow-drh-v4_0.kicad_pcb` / `.kicad_sch`
+- Back-shell medallion (ring text, monogram, serial) → `enclosure/medallion.py`
 - Firmware pin map + tunables → `firmware/board.h` and `firmware/README.md`
 - BOM master → `PCB/solar-glow-drh-v4_0-BOM.xlsx`
 - Design reasoning / lineage → `solar-glow-drh-design-notes.md`
@@ -34,7 +35,9 @@ top) — read them for lineage, not for current values.
 ```sh
 make -C firmware DFP=/path/to/Microchip/AVR-Dx_DFP      # -> firmware/solar-glow.hex
 ```
-Should compile **warning-free** (`-Wall -Wextra -Wundef`); ~2.4 KB flash, 6 B RAM.
+Should compile **warning-free** (`-Wall -Wextra -Wundef`); size/RAM figures live in
+`firmware/README.md` — the "~2.4 KB flash, 6 B RAM" that used to sit here had quietly gone
+stale against the EA port's ~4 KB / ~23 B, which is why the numbers now have one home.
 
 **PCB** (KiCad 10 `kicad-cli`):
 ```sh
