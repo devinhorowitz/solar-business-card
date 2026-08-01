@@ -181,7 +181,7 @@ solar-business-card/
 ├── solar-glow-drh-design-notes.md  # design rationale, energy model, lineage (incl. the v3.0 chapter)
 ├── firmware/                       # bare-metal C (AVR64EA28); compile-verified, see firmware/README.md
 ├── datasheets/                     # every component's datasheet
-├── docs/                           # renders and figures
+├── docs/                           # the LED sweep tuner (interactive HTML); renders live in Generated/docs/ since the 2026-07-31 cull
 ├── enclosure/                      # Ti back-shell + resin brace: CAD / STEP / STL / drawings / assembly views
 │                                   #   fit_rules.py + board_parts.py = the geometry both generators derive from
 └── v0 prototype/                   # the original prototype, kept for posterity
