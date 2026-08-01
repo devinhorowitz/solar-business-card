@@ -133,7 +133,8 @@ def actor(pd, rgb, spec=0.25, power=20, opacity=1.0):
 # axis and stands the card on its head.
 #
 # It hid for so long because the shell is X-symmetric -- outline, eight bosses, both cell cutouts.
-# The only tells are the engraved maker's mark, which read backwards in every hero we shipped, and
+# The only tells are the rear engraving (the maker's-mark lines of the day; the medallion has
+# since replaced them), which read backwards in every hero we shipped, and
 # the asymmetric support lip (2.5 west against 1.0 east), which sat on the wrong side in every
 # cavity view.
 #
