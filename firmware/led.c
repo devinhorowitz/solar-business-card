@@ -205,8 +205,11 @@ void led_breathe(uint8_t cycles, uint16_t breath_ms, uint8_t peak)
 /* Sequential "loading" chase for the in-sun tell.
  *
  * WIRED: main.c's ~1 s poll calls this when sense_vin_flags() reports strong sun
- * (VIN >= SWEEP_SUN_VIN_MV) with the caps full (sense_caps_full()). The VIN-at-clamp
- * threshold was derived on the PCB side and lives in board.h SWEEP_SUN_VIN_MV. With
+ * (VIN >= SWEEP_SUN_VIN_MV) with the caps full (sense_caps_full()). The threshold
+ * lives in board.h SWEEP_SUN_VIN_MV; "VIN" is the firmware's name for the sensed
+ * input node -- since the v4 rework the R5/R6 divider hangs on SRC, the AEM's merged
+ * panel input (the v3 clamp this tell was originally derived at is gone, and like
+ * every glow constant the number is provisional until the harvest bench run). With
  * USE_SUN_SWEEP 0 the call compiles out but this stays linked as library code, so do
  * not remove it as unused.
  *

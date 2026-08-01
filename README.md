@@ -43,6 +43,7 @@ Each fact has exactly one home; everything else points at it rather than restati
 | Domain | Source of truth |
 |---|---|
 | Board copper / geometry / holes | `PCB/solar-glow-drh-v4_0.kicad_pcb` + `.kicad_sch` |
+| Back-shell medallion (ring text, monogram, serial №) | `enclosure/medallion.py` — the shell generator and its drawing both import it; bump `SERIAL` there and CI regenerates the STEP/STL/drawing (a kibot trigger since 2026-07-31) |
 | Fabrication panel (PCBWay) | `scripts/panelize.py` — derived from the board on every CI run into `Generated/panel/`; never hand-maintained |
 | README renders | `scripts/render.py` — raytraced from the board/panel on every CI run into `Generated/docs/`; add a target there rather than committing a hand-made image |
 | Enclosure **fit rules** | `enclosure/fit_rules.py` — one home for the brace footprint, the lip bands and the boss scallops; both generators import it and check [8] asserts it |
