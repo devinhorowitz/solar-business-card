@@ -8,7 +8,7 @@
 > Refresh: `python3 BOM/check_stock.py` (needs `DIGIKEY_CLIENT_ID`,
 > `DIGIKEY_CLIENT_SECRET`, `MOUSER_PART_API_KEY` in the environment; ~1 min).
 
-**Checked: 2026-08-01 12:13 UTC** · DigiKey Product Information v4 + Mouser Search API, queried by MPN (stored distributor P/Ns are shown as found live, not trusted from the sheet).
+**Checked: 2026-08-01 13:15 UTC** · DigiKey Product Information v4 + Mouser Search API, queried by MPN (stored distributor P/Ns are shown as found live, not trusted from the sheet).
 
 **43 of 44 lines fully available** · 0 on substitute only · **0 dead (❌)** · 0 unverifiable this run · 1 manual-order.
 
@@ -75,6 +75,32 @@ Transcribed from the master's own sourcing notes — availability shown live. Th
 | C23 | `GRT188R61E225KE13D` | Active (DigiKey) | 20,397 | $0.31 | AEC-Q200 alternate; X5R, the dielectric trade the master documents (C23 row note) |
 | FER1 | `3641014` | Active (DigiKey) | 304 | $4.19 | 0.14 mm sheet -- stack 3x for equivalent ferrite thickness (FER1 row note) |
 | FER1 | `MHLL6060-300` | Active (DigiKey) | 4,733 | $6.40 | Laird 0.09 mm -- weakest shielding, last resort (FER1 row note) |
+
+## Datasheet filename prices
+
+The `datasheets/` naming convention embeds a `$price` — a copy of a live number, so it rots. Audited here against the same fetch as the tables above (±5% tolerance); `python3 BOM/check_stock.py --fix-names` renames drifted files **and rewrites every citation** (board/schematic Datasheet fields, the master's cells, tracked docs) in one act. A `$0` name is a deliberate no-ordered-part marker; price-less names (errata, the TIM pad) are informational.
+
+| | File | Maps to | $ in name | $ live |
+|---|---|---|---|---|
+| ✅ | `D2-D5  LA P47F-V2BB-24-3B5A-30-R18-Z  $0.43.pdf` | D2–D5 | $0.43 | $0.43 |
+| ✅ | `FER1  Wurth WE-FSFS 364006  $17.43.pdf` | FER1 | $17.43 | $17.43 |
+| ✅ | `FER1-alt  Laird MHLL6060-300  $6.40.pdf` | FER1 sub | $6.40 | $6.40 |
+| ✅ | `FER1-alt  Wurth WE-FSFS 3641014  $4.19.pdf` | FER1 sub | $4.19 | $4.19 |
+| ✅ | `PV1,PV2  SM141K06TF  $7.61.pdf` | PV1, PV2 | $7.61 | $7.61 |
+| ✅ | `SC1-SC4  SCHURTER 3-153-438  $16.69.pdf` | SC2, SC4 | $16.69 | $16.69 |
+| — | `TC1  Tag-Connect TC2030-MCP  $0.pdf` | CBL1 ($0 marker) | $0.00 | $36.00 |
+| — | `TIM (SC1-SC4)  t-Global T62-1 graphite  0.16mm.pdf` | (secondary/reference doc) (no price segment) | — | — |
+| — | `U1  AVR64EA28 errata DS80001048C.pdf` | (secondary/reference doc) (no price segment) | — | — |
+| ✅ | `U1  AVR64EA28-E-STX  $1.23.pdf` | U1 | $1.23 | $1.23 |
+| ✅ | `U3  ADXL367BCCZ-RL7  $7.50.pdf` | U3 | $7.50 | $7.80 |
+| ✅ | `U5  NT3H2211W0FHKH  $1.56.pdf` | U5 | $1.56 | $1.56 |
+| ✅ | `U6  TPS22917DBVT  $1.14.pdf` | U6 | $1.14 | $1.14 |
+| — | `U6-alt  TPS22918TDBVRQ1  (AEC-Q100).pdf` | U6 sub (no price segment) | — | $0.75 |
+| ✅ | `U7  MB85RC512TYPN-GS-AWEWE1  $10.19.pdf` | U7 | $10.19 | $10.19 |
+| ✅ | `U8  10AEM10300C0000  $3.77.pdf` | U8 | $3.77 | $3.77 |
+| ✅ | `U9  TPS7A0233PDBVR  $0.84.pdf` | U9 | $0.84 | $0.84 |
+
+All priced names within ±5% of live.
 
 ## Lines with no ordered part
 

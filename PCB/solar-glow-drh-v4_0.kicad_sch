@@ -20422,7 +20422,7 @@
 				)
 			)
 		)
-		(property "Datasheet" "datasheets/SC1-SC4  SCHURTER 3-153-438  $15.48.pdf"
+		(property "Datasheet" "datasheets/SC1-SC4  SCHURTER 3-153-438  $16.69.pdf"
 			(at 80.01 58.42 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -21534,7 +21534,7 @@
 				)
 			)
 		)
-		(property "Datasheet" "datasheets/SC1-SC4  SCHURTER 3-153-438  $15.48.pdf"
+		(property "Datasheet" "datasheets/SC1-SC4  SCHURTER 3-153-438  $16.69.pdf"
 			(at 80.01 78.74 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -21841,7 +21841,7 @@
 				)
 			)
 		)
-		(property "Datasheet" "datasheets/U5  NT3H2211W0FHKH  $1.38.pdf"
+		(property "Datasheet" "datasheets/U5  NT3H2211W0FHKH  $1.56.pdf"
 			(at 604.52 69.85 0)
 			(hide yes)
 			(show_name no)
@@ -22294,7 +22294,7 @@
 				)
 			)
 		)
-		(property "Datasheet" "datasheets/PV1,PV2  SM141K06TF  $6.98.pdf"
+		(property "Datasheet" "datasheets/PV1,PV2  SM141K06TF  $7.61.pdf"
 			(at 25.4 38.1 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -22917,7 +22917,7 @@
 				)
 			)
 		)
-		(property "Datasheet" "datasheets/SC1-SC4  SCHURTER 3-153-438  $15.48.pdf"
+		(property "Datasheet" "datasheets/SC1-SC4  SCHURTER 3-153-438  $16.69.pdf"
 			(at 80.01 38.1 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -25107,7 +25107,7 @@
 				)
 			)
 		)
-		(property "Datasheet" "datasheets/PV1,PV2  SM141K06TF  $6.98.pdf"
+		(property "Datasheet" "datasheets/PV1,PV2  SM141K06TF  $7.61.pdf"
 			(at 25.4 68.58 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -25488,7 +25488,7 @@
 				)
 			)
 		)
-		(property "Datasheet" "datasheets/SC1-SC4  SCHURTER 3-153-438  $15.48.pdf"
+		(property "Datasheet" "datasheets/SC1-SC4  SCHURTER 3-153-438  $16.69.pdf"
 			(at 80.01 99.06 0)
 			(show_name no)
 			(do_not_autoplace no)
