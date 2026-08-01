@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
-"""Reference figures for PCB/README.md's assembly steps, drawn FROM the board file.
+"""Reference figures drawn FROM the board file and the committed enclosure artifact.
 
-Two figures, both consumed by the PCBA instructions:
+Three figures:
 
   Generated/docs/<stem>-led-orientation.png   D2-D5 reverse-mount polarity (the check the
                                               assembler runs before reflow: anode side,
                                               cathode side, rotation, board side)
   Generated/docs/<stem>-sw2-selector.png      the SW2 LED master bridge: which pad pair is
                                               ON, which is TINY, and through what
+  Generated/docs/<stem>-thickness-scale.png   the assembled 3.55 mm at hand scale, next to
+                                              3 pennies / 10 business cards / an iPhone 17
+                                              Pro -- the card's own number MEASURED from the
+                                              back-shell STL (so kibot must run this step
+                                              AFTER the enclosure CAD regen; see kibot.yml)
 
 They replaced two hand-uploaded v2-era PNGs (PCB/led-orientation-D2-D5.png,
 PCB/sw2-anode-selector.png, culled 2026-08-01) that had gone stale three ways at once with
@@ -259,6 +264,125 @@ def sw2_selector():
     _save(fig, f"{STEM}-sw2-selector.png")
 
 
+# ---- figure 3: thickness at hand scale ------------------------------------------------------
+def _shell_thickness_mm():
+    """Assembled overall thickness, MEASURED from the committed back-shell STL.
+
+    The check-[7] philosophy: measure the artifact, never restate the number. The
+    shell solid spans the whole assembled stack (floor + cavity + board recess +
+    the 0.15 back frame), so its smallest bounding-box axis IS the card's overall
+    thickness -- the smallest because the STL is committed in print orientation,
+    where Z is the card's width. Re-deriving it from the CAD generator's constants
+    would be a second home for the same fact; the STL is the generator's output.
+    (kibot runs this AFTER the enclosure CAD step for exactly this reason -- else a
+    shell-height edit would be figured at the previous revision for one push.)"""
+    import struct
+    stls = sorted(glob.glob(os.path.join(ROOT, "enclosure", "*backshell*.stl")))
+    assert len(stls) == 1, f"expected exactly one back-shell STL, found {stls}"
+    with open(stls[0], "rb") as f:
+        f.read(80)
+        n = struct.unpack("<I", f.read(4))[0]
+        lo, hi = [1e9] * 3, [-1e9] * 3
+        for _ in range(n):
+            rec = f.read(50)
+            for v in range(3):
+                for ax in range(3):
+                    c = struct.unpack_from("<f", rec, 12 + v * 12 + ax * 4)[0]
+                    if c < lo[ax]:
+                        lo[ax] = c
+                    if c > hi[ax]:
+                        hi[ax] = c
+    t = min(h - l for h, l in zip(hi, lo))
+    assert 3.0 < t < 4.5, f"back-shell thickness measured {t:.3f} mm -- outside sanity band"
+    return round(t, 3)
+
+
+def thickness_scale():
+    """The 3.55 mm, next to things a hand already knows.
+
+    The card's thickness is measured (STL above); the three comparators are
+    external facts, cited here the way the BOM master cites prices -- constants
+    with their source and date, since no repo file can generate them:
+      - US one-cent coin: 1.52 mm thick, 19.05 mm dia (US Mint coin specifications)
+      - iPhone 17 Pro: 8.75 mm (apple.com/iphone-17-pro/specs, read 2026-08-01)
+      - US business card stock: 14 pt = 0.014 in = 0.3556 mm (standard trade weight)
+    The figure is drawn at TRUE relative scale on a shared baseline."""
+    CARD_T = _shell_thickness_mm()
+    PENNY_T, PENNY_D, PENNIES = 1.52, 19.05, 3
+    IPHONE_T = 8.75
+    BIZCARD_T, BIZCARDS = 0.3556, 10
+
+    TI, TI_EDGE = "#8a8d91", "#5a5d61"
+    AMBER = "#f5a623"
+    COPPER, COPPER_EDGE = "#b87333", "#8a5626"
+    PAPER, PAPER_EDGE = "#f4f1e8", "#b8b2a0"
+    PHONE, PHONE_EDGE = "#3c3c3e", "#1d1d1f"
+
+    fig, ax = plt.subplots(figsize=(11.5, 4.6))
+    ax.set_aspect("equal")
+    ax.axis("off")
+
+    W = 22.0          # slab width for the non-penny objects, mm
+    GAP = 12.0
+    x = 0.0
+    tops = []
+
+    def dim(xc, w, h, label):
+        ax.plot([xc + w / 2 + 1.6] * 2, [0, h], color="#444", lw=1.0)
+        ax.plot([xc + w / 2 + 1.1, xc + w / 2 + 2.1], [0, 0], color="#444", lw=1.0)
+        ax.plot([xc + w / 2 + 1.1, xc + w / 2 + 2.1], [h, h], color="#444", lw=1.0)
+        ax.text(xc + w / 2 + 2.5, h / 2, label, ha="left", va="center", fontsize=11.5)
+
+    # 1. the assembled card: Ti slab, amber face line (the side that glows)
+    ax.add_patch(Rectangle((x, 0), W, CARD_T, facecolor=TI, edgecolor=TI_EDGE, lw=1.0))
+    ax.plot([x, x + W], [CARD_T, CARD_T], color=AMBER, lw=2.4, solid_capstyle="butt")
+    dim(x + W / 2, W, CARD_T, f"{CARD_T:g} mm")
+    ax.text(x + W / 2, -1.0, "SOLAR-GLOW DRH\nassembled (Ti shell)", ha="center", va="top",
+            fontsize=11, fontweight="bold")
+    tops.append(CARD_T)
+    x += W + GAP + 3
+
+    # 2. three pennies, side profile at true diameter
+    for i in range(PENNIES):
+        ax.add_patch(Rectangle((x, i * PENNY_T), PENNY_D, PENNY_T * 0.92,
+                               facecolor=COPPER, edgecolor=COPPER_EDGE, lw=0.8))
+    dim(x + PENNY_D / 2, PENNY_D, PENNIES * PENNY_T, f"{PENNIES * PENNY_T:g} mm")
+    ax.text(x + PENNY_D / 2, -1.0, f"{PENNIES} US pennies\n(1.52 mm each)", ha="center",
+            va="top", fontsize=11)
+    tops.append(PENNIES * PENNY_T)
+    x += PENNY_D + GAP + 3
+
+    # 3. ten business cards
+    for i in range(BIZCARDS):
+        ax.add_patch(Rectangle((x, i * BIZCARD_T), W, BIZCARD_T * 0.82,
+                               facecolor=PAPER, edgecolor=PAPER_EDGE, lw=0.5))
+    dim(x + W / 2, W, BIZCARDS * BIZCARD_T, f"{BIZCARDS * BIZCARD_T:.2f} mm")
+    ax.text(x + W / 2, -1.0, f"{BIZCARDS} business cards\n(14 pt stock)", ha="center",
+            va="top", fontsize=11)
+    tops.append(BIZCARDS * BIZCARD_T)
+    x += W + GAP + 3
+
+    # 4. iPhone 17 Pro
+    ax.add_patch(Rectangle((x, 0), W, IPHONE_T, facecolor=PHONE, edgecolor=PHONE_EDGE, lw=1.0))
+    dim(x + W / 2, W, IPHONE_T, f"{IPHONE_T:g} mm")
+    ax.text(x + W / 2, -1.0, "iPhone 17 Pro", ha="center", va="top", fontsize=11)
+    tops.append(IPHONE_T)
+    x += W
+
+    ax.plot([-3, x + 8], [0, 0], color="#222", lw=1.4, solid_capstyle="butt", zorder=0)
+    ax.text((x) / 2, max(tops) + 2.2,
+            f"{STEM}  —  {CARD_T:g} mm overall, at hand scale (all profiles true relative size)",
+            ha="center", va="bottom", fontsize=12.5)
+    ax.text((x) / 2, -7.2,
+            f"thinner than {PENNIES} stacked pennies  •  a {BIZCARDS}-card stack of standard "
+            f"business cards  •  {CARD_T / IPHONE_T:.0%} the thickness of an iPhone 17 Pro",
+            ha="center", va="top", fontsize=10.5)
+    ax.set_xlim(-4, x + 9)
+    ax.set_ylim(-10.4, max(tops) + 4.2)
+    _save(fig, f"{STEM}-thickness-scale.png")
+
+
 if __name__ == "__main__":
     led_orientation()
     sw2_selector()
+    thickness_scale()
