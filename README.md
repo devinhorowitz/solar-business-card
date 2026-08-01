@@ -36,6 +36,10 @@ respin are in [`enclosure/README.md`](enclosure/README.md).</sub>
 | BOM | **v4_0 master** - fully live-priced (2026-07-23 sourcing pass, ≈ $140); most passives 0402 with the precision/bulk set on **0603** (C4/C13/C25/C22/C23/R5/R6/R15/R16) and **0805** (C26/C27); **SJ1 removed outright 2026-07-30** (lineage row only); Q2 + R18 added by the cold-start-deadlock fix | master is `BOM/solar-glow-drh-v4_0-BOM.xlsx`; placed set in `-BOM-assembly.xlsx`; live availability table in `BOM/README.md` (`python3 BOM/check_stock.py`) |
 | Firmware | AVR64EA28 C, register-verified **and compile-verified in CI**; not yet on hardware | LED pin map re-mapped in v3.0 (see `firmware/README.md`) |
 
+![3.55 mm at hand scale: thinner than 3 stacked pennies, a 10-card stack of business cards, 41% of an iPhone 17 Pro](Generated/docs/solar-glow-drh-v4_0-thickness-scale.png)
+
+*How thin 3.55 mm is, in things a hand already knows — thinner than three stacked pennies, almost exactly a ten-card stack of standard business cards, 41% of an iPhone 17 Pro. True relative scale; the card's number is measured from the committed back-shell STL by `scripts/ref_figures.py`, so the figure follows the artifact.*
+
 ### Where the truth lives — how these docs stay from drifting
 
 Each fact has exactly one home; everything else points at it rather than restating it.

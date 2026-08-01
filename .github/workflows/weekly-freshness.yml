@@ -1,0 +1,191 @@
+# .github/workflows/weekly-freshness.yml — the weekly canary + drift report.
+#
+# Everything CI runs here is pinned ON PURPOSE (CLAUDE.md: DRC is a merge gate and
+# Generated/ goes to a fab), and pins have two failure modes that a push-triggered
+# CI can never see, because a repo nobody pushes to runs no CI at all:
+#   1. ROT — the pinned artifact stops being fetchable (the KiCad container digest
+#      unpullable, Microchip's WAF-guarded toolchain URL dead, a pack withdrawn),
+#      discovered months later on the first innocent push, which then fails for
+#      reasons that have nothing to do with the change being pushed.
+#   2. DRIFT — upstream moves on (new KiCad image, new AVR-Ex DFP, new pip
+#      releases) and the gap between pinned and current silently widens until an
+#      upgrade becomes an event instead of a chore.
+# This workflow runs WEEKLY regardless of pushes: it re-proves the pinned world
+# still builds (canary), measures how far upstream has moved (sweep), and writes
+# the result to a single standing issue ("Weekly freshness report") that gets
+# UPDATED in place — one issue, current state, not a weekly pile.
+#
+# THE DOCTRINE HOLDS: nothing here ever moves a pin automatically. Rot fails the
+# job loudly (red = broken world, act now); drift is report-only (the pin is a
+# decision, not an oversight). The one bridge to action is deliberate: dispatch
+# this workflow with bump_kicad=true and it opens a DRAFT PR moving the KiCad
+# digest in both workflows (they must stay in step) — merging that PR triggers
+# the full kibot regen, and the merge run's Generated/ diff IS the upgrade's
+# blast radius, exactly as CLAUDE.md prescribes. NOTE: PRs opened with the
+# workflow token don't start their own CI (a GitHub guard against workflow
+# loops) — close/reopen the PR or push an empty commit to it to run checks
+# pre-merge, or read the blast radius off the merge run.
+name: Weekly freshness
+
+on:
+  schedule:
+    - cron: '17 6 * * 1'   # Mondays 06:17 UTC — off the top-of-hour stampede
+  workflow_dispatch:
+    inputs:
+      bump_kicad:
+        description: 'Open a draft PR bumping the pinned KiCad digest to current :latest'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  # ---- canary 1: the firmware world still exists and still builds ----
+  firmware-canary:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # v4
+      - name: Fetch the PINNED toolchain + DFP (rot check is the point)
+        run: |
+          set -euo pipefail
+          UA='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36'
+          mkdir -p "$HOME/avr" && cd "$HOME/avr"
+          curl -fsSL --retry 3 --retry-delay 5 -A "$UA" -H 'Referer: https://www.microchip.com/' \
+            -o tc.tar.gz \
+            'https://ww1.microchip.com/downloads/aemDocuments/documents/DEV/ProductDocuments/SoftwareTools/avr8-gnu-toolchain-3.7.0.1796-linux.any.x86_64.tar.gz'
+          tar xzf tc.tar.gz
+          curl -fsSL --retry 3 --retry-delay 5 -o dfp.atpack \
+            'https://packs.download.microchip.com/Microchip.AVR-Ex_DFP.2.12.239.atpack'
+          mkdir -p AVR-Ex_DFP && (cd AVR-Ex_DFP && unzip -oq ../dfp.atpack)
+          echo "$HOME/avr/$(ls -d avr8-gnu-toolchain-*/ | head -1)bin" >> "$GITHUB_PATH"
+      - name: Build warning-free + gate the README size figures
+        run: |
+          set -euo pipefail
+          make -C firmware DFP="$HOME/avr/AVR-Ex_DFP" WERROR=1
+          python3 scripts/check_fw_size.py firmware/solar-glow.elf
+
+  # ---- canary 2: the pinned KiCad container still pulls and the tree is still consistent ----
+  consistency-canary:
+    runs-on: ubuntu-latest
+    # Keep this digest in step with kibot.yml / consistency.yml (the sweep below flags a mismatch).
+    container: ghcr.io/inti-cmnb/kicad10_auto_full@sha256:dd3b846da945f204fa7b61916df34a99170b2a2095b49c3879cd96d414b8a7b8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # v4
+      - name: Run the consistency suite on the unchanged tree
+        run: python3 scripts/check_consistency.py
+
+  # ---- the sweep: measure pin-vs-upstream drift, report to the standing issue ----
+  sweep:
+    runs-on: ubuntu-latest
+    needs: [firmware-canary, consistency-canary]
+    if: always()   # a red canary is exactly when the report matters most
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # v4
+      - name: Compose the drift report
+        id: report
+        run: |
+          set -uo pipefail   # deliberately no -e: every probe is best-effort, failures become report lines
+          R=report.md
+          {
+            echo "# Weekly freshness report"
+            echo
+            echo "_Updated $(date -u +'%Y-%m-%d %H:%M UTC') by \`.github/workflows/weekly-freshness.yml\` run [${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})._"
+            echo
+            echo "**Canaries this run:** firmware-canary = **${{ needs.firmware-canary.result }}**, consistency-canary = **${{ needs.consistency-canary.result }}** (failure = the pinned world broke: act now, that is rot, not drift)."
+            echo
+            echo "| component | pinned | upstream now | verdict |"
+            echo "|---|---|---|---|"
+          } > "$R"
+
+          # KiCad container digest (pinned in kibot.yml + consistency.yml, kept in step)
+          PIN_KICAD=$(grep -oh 'kicad10_auto_full@sha256:[0-9a-f]*' .github/workflows/kibot.yml | head -1 | cut -d@ -f2)
+          PIN_KICAD2=$(grep -oh 'kicad10_auto_full@sha256:[0-9a-f]*' .github/workflows/consistency.yml | head -1 | cut -d@ -f2)
+          LATEST_KICAD=$(docker buildx imagetools inspect ghcr.io/inti-cmnb/kicad10_auto_full:latest 2>/dev/null | awk '/^Digest:/{print $2; exit}')
+          if [ -z "$LATEST_KICAD" ]; then
+            echo "| KiCad container (\`kicad10_auto_full\`) | \`${PIN_KICAD:0:19}…\` | probe failed | ⚠️ could not inspect :latest |" >> "$R"
+          elif [ "$PIN_KICAD" = "$LATEST_KICAD" ]; then
+            echo "| KiCad container (\`kicad10_auto_full\`) | \`${PIN_KICAD:0:19}…\` | same | ✅ current |" >> "$R"
+          else
+            echo "| KiCad container (\`kicad10_auto_full\`) | \`${PIN_KICAD:0:19}…\` | \`${LATEST_KICAD:0:19}…\` | 🔻 drifted — dispatch this workflow with \`bump_kicad=true\` for a draft respin PR |" >> "$R"
+          fi
+          if [ "$PIN_KICAD" != "$PIN_KICAD2" ]; then
+            echo "| KiCad digest parity (kibot vs consistency) | — | — | ❌ THE TWO WORKFLOWS DISAGREE — fix before anything else |" >> "$R"
+          fi
+          echo "kicad_pin=$PIN_KICAD"     >> "$GITHUB_OUTPUT"
+          echo "kicad_latest=$LATEST_KICAD" >> "$GITHUB_OUTPUT"
+
+          # AVR-Ex DFP (pinned by version in firmware.yml + this file)
+          PIN_DFP=$(grep -oh 'AVR-Ex_DFP\.[0-9.]*\.atpack' .github/workflows/firmware.yml | head -1 | sed 's/AVR-Ex_DFP\.//;s/\.atpack//')
+          LATEST_DFP=$(curl -fsSL https://packs.download.microchip.com/index.idx 2>/dev/null | grep -o 'AVR-Ex_DFP[^>]*version="[0-9.]*"' | grep -o '[0-9][0-9.]*' | sort -uV | tail -1)
+          if [ -z "$LATEST_DFP" ]; then
+            echo "| AVR-Ex DFP | $PIN_DFP | probe failed | ⚠️ pack index unreachable/format changed |" >> "$R"
+          elif [ "$PIN_DFP" = "$LATEST_DFP" ]; then
+            echo "| AVR-Ex DFP | $PIN_DFP | same | ✅ current |" >> "$R"
+          else
+            echo "| AVR-Ex DFP | $PIN_DFP | $LATEST_DFP | 🔻 drifted — bump the URL in firmware.yml + weekly-freshness.yml, rebuild proves it |" >> "$R"
+          fi
+
+          # avr8 toolchain: no version feed exists; the firmware-canary already proved the URL alive
+          echo "| avr8-gnu-toolchain | 3.7.0.1796 | (no upstream feed) | ℹ️ URL-alive is proven by firmware-canary |" >> "$R"
+
+          # pip pins (self-discovered from the workflows, so a new pin joins automatically)
+          for spec in $(grep -rhoE "[a-zA-Z0-9_-]+==[0-9][0-9.]*" .github/workflows/*.yml | sort -u); do
+            pkg=${spec%%==*}; pin=${spec##*==}
+            latest=$(curl -fsSL "https://pypi.org/pypi/$pkg/json" 2>/dev/null | python3 -c "import json,sys; print(json.load(sys.stdin)['info']['version'])" 2>/dev/null)
+            if [ -z "$latest" ]; then
+              echo "| pip \`$pkg\` | $pin | probe failed | ⚠️ PyPI unreachable |" >> "$R"
+            elif [ "$pin" = "$latest" ]; then
+              echo "| pip \`$pkg\` | $pin | same | ✅ current |" >> "$R"
+            else
+              echo "| pip \`$pkg\` | $pin | $latest | 🔻 drifted (render pins: remember VTK pixels differ across versions — a bump churns Generated/) |" >> "$R"
+            fi
+          done
+
+          # pinned action SHAs: report the latest release tag beside each pin's comment
+          for act in $(grep -rhoE "uses: [A-Za-z0-9_./-]+@[0-9a-f]{40}" .github/workflows/*.yml | awk '{print $2}' | sort -u); do
+            repo=${act%%@*}; sha=${act##*@}
+            latest=$(gh api "repos/$repo/releases/latest" --jq .tag_name 2>/dev/null)
+            echo "| action \`$repo\` | \`${sha:0:12}…\` | ${latest:-probe failed} | ℹ️ compare against the \`# vN\` comment in the workflow |" >> "$R"
+          done
+
+          {
+            echo
+            echo "**Doctrine reminder:** pins move only by deliberate commit. Rot (red canary) = act now."
+            echo "Drift (🔻) = schedule a bump whose CI diff you actually read — for KiCad, the merge run's"
+            echo "\`Generated/\` diff is the blast radius."
+          } >> "$R"
+          cat "$R"
+
+      - name: Upsert the standing issue
+        run: |
+          set -euo pipefail
+          TITLE="Weekly freshness report"
+          NUM=$(gh issue list --state open --search "in:title \"$TITLE\"" --json number,title \
+                --jq "[.[] | select(.title == \"$TITLE\")][0].number // empty")
+          if [ -n "$NUM" ]; then
+            gh issue edit "$NUM" --body-file report.md
+            echo "updated issue #$NUM"
+          else
+            gh issue create --title "$TITLE" --body-file report.md
+          fi
+
+      - name: Open the draft KiCad-bump PR (dispatch-only, deliberate)
+        if: github.event_name == 'workflow_dispatch' && inputs.bump_kicad && steps.report.outputs.kicad_latest != '' && steps.report.outputs.kicad_pin != steps.report.outputs.kicad_latest
+        run: |
+          set -euo pipefail
+          PIN='${{ steps.report.outputs.kicad_pin }}'
+          NEW='${{ steps.report.outputs.kicad_latest }}'
+          BR="chore/kicad-digest-bump-${NEW:7:12}"
+          git config user.name kibot-ci && git config user.email kibot-ci@users.noreply.github.com
+          git checkout -b "$BR"
+          # both workflows move together — the keep-in-step rule
+          sed -i "s|$PIN|$NEW|g" .github/workflows/kibot.yml .github/workflows/consistency.yml .github/workflows/weekly-freshness.yml
+          git commit -am "CI: bump pinned KiCad image digest (weekly-freshness dispatch)"
+          git push -u origin "$BR"
+          gh pr create --draft --title "CI: bump pinned KiCad image digest" --body \
+            "Opened by weekly-freshness (dispatched with bump_kicad=true). Moves the pinned \`kicad10_auto_full\` digest in kibot.yml, consistency.yml and weekly-freshness.yml together (the keep-in-step rule). **The merge run's \`Generated/\` diff is this upgrade's blast radius — read it.** Note: this PR was opened with the workflow token, so its own CI will not start automatically; close/reopen it or push an empty commit to run checks pre-merge."
