@@ -22408,7 +22408,7 @@
 				)
 			)
 		)
-		(property "Datasheet" "datasheets/aem10300.pdf"
+		(property "Datasheet" "datasheets/U8  10AEM10300C0000  $3.77.pdf"
 			(at 459.74 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -24648,7 +24648,7 @@
 				)
 			)
 		)
-		(property "Datasheet" "datasheets/U7  MB85RC512TYPNF-GS-BCERE1  $10.19.pdf"
+		(property "Datasheet" "datasheets/U7  MB85RC512TYPN-GS-AWEWE1  $10.19.pdf"
 			(at 855.98 372.11 0)
 			(hide yes)
 			(show_name no)

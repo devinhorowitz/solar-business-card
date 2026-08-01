@@ -3927,7 +3927,7 @@
 				)
 			)
 		)
-		(property "Datasheet" "datasheets/aem10300.pdf"
+		(property "Datasheet" "datasheets/U8  10AEM10300C0000  $3.77.pdf"
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
@@ -5774,7 +5774,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Datasheet" "datasheets/U7  MB85RC512TYPNF-GS-BCERE1  $10.19.pdf"
+		(property "Datasheet" "datasheets/U7  MB85RC512TYPN-GS-AWEWE1  $10.19.pdf"
 			(at 0 0 180)
 			(unlocked yes)
 			(layer "B.Fab")

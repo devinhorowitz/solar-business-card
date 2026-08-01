@@ -46,7 +46,7 @@ WHERE THE NUMBERS COME FROM — every dimension below is traceable, none invente
                    D and E are 4.00 BSC, "Overall Height A" is 0.80 / 0.90 / **1.00
                    MAX**. Modelled at the max, and independently corroborated by
                    PCB-side-notes-brace-direction.md §2, which budgets U1 at 1.0.
-  AEM10300_QFN28   `datasheets/aem10300.pdf` (DS-AEM10300-v1.4) §15.1 Figure 17, the
+  AEM10300_QFN28   `datasheets/U8  10AEM10300C0000  $3.77.pdf` (DS-AEM10300-v1.4) §15.1 Figure 17, the
                    QFN 28-pin 4x4 package drawing: body 4.000 +/- 0.05 square,
                    thickness **0.800 +/- 0.05**. Modelled at the max, 0.85.
 
