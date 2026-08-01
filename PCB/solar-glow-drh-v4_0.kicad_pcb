@@ -29507,6 +29507,18 @@
 			(justify left bottom mirror)
 		)
 	)
+	(gr_text "DRH v4.0"
+		(at 37.9 75.4 0)
+		(layer "B.SilkS")
+		(uuid "f32e781c-e959-4fc8-9551-38a728c60501")
+		(effects
+			(font
+				(size 0.8 0.8)
+				(thickness 0.125)
+			)
+			(justify left bottom mirror)
+		)
+	)
 	(gr_text "STO"
 		(at 46.925 17.65 0)
 		(layer "B.SilkS")
