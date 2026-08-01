@@ -182,7 +182,7 @@ a deliberate move updates the snapshot in the same commit, the exclusion-ledger 
   the body is absent from every populated render *correctly*, because the assembled board will not
   have the part, but "resolved and drawn" and "resolved and deliberately absent" look identical —
   an empty land. The class is currently EMPTY on this board (2026-08-01 sift: 16 `dnp`
-  footprints — TC1, TC1/b, SW2, J1, JP1, SB1–4, TP1–7 — and none carries a model), but it was
+  footprints — TC1, TC1/b1, SW2, J1, JP1, SB1–4, TP1–7 — and none carries a model), but it was
   not always: **C9** was the dnp-with-a-model until it was placed at 47 pF on 2026-07-30, and
   confirming its 0402→0805 upsize had landed meant re-rendering with `dnp` cleared and diffing:
   528 px, 20×37, an 0805 turned 90°. `render.py` names the DNP set beside the resolve count so
@@ -207,11 +207,14 @@ a deliberate move updates the snapshot in the same commit, the exclusion-ledger 
   gate: `Errors: 0 (+11 excluded)`, zero hits on F.Mask, and every hit citing that one aperture.
   _(Was `+11` until 2026-07-30, `+10` until 2026-08-01. The old 11th was a `courtyards_overlap`
   exclusion the 2026-07-30 board sync made dead, and KiCad pruned it; the new 11th is another
-  `courtyards_overlap` — `TC1/b`, the B-side programming mirror added 2026-08-01, sits inside SC1's
-  courtyard by design (bare pads under a part body, nothing fitted while programming). The
-  `extra_footprint` parity exclusion added in the same GUI session was deliberately NOT kept — the
-  schematic gained a real `TC1/b` symbol instead, so a future sync that loses it goes red rather
-  than silent. The list is 14 → 11 errors plus 3 `silk_over_copper` warnings. Verify the
+  `courtyards_overlap` — `TC1/b1` (né `TC1/b`; the 2026-08-01 GUI session re-annotated it, and the
+  exclusion survived because KiCad keys exclusions by UUID, not refdes), the B-side programming
+  mirror added 2026-08-01, sits inside SC1's courtyard by design (bare pads under a part body,
+  nothing fitted while programming). The `extra_footprint` parity exclusion added in the same GUI
+  session was deliberately NOT kept — the schematic gained a real `TC1/b1` symbol instead, so a
+  future sync that loses it goes red rather than silent. The list is 14 → 11 errors plus 5
+  `silk_over_copper` warnings (was 3; two new hits arrived with the same GUI session — one B-silk
+  segment at (22.93, 48.62) clipping both C13 pads. Cosmetic, ledgered 2026-08-01). Verify the
   number against `Generated/solar-glow-drh-v4_0-drc.html`, which CI writes, rather than trusting
   this line.)_
 - **`mask_art.py`'s `generate()` is the single definition of what it writes** — and

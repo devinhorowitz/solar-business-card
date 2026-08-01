@@ -54,8 +54,9 @@ is a real find.**
 **Known-intentional (matches this repo's own exclusion ledger / design intent):**
 - D2–D5 centers inside `optical_window` / `KO_WIN_B` keepouts — the reverse-mount LEDs *live in*
   the glow window by design; the keepouts exist to keep copper/vias out, not the LEDs.
-- SC1 ↔ TC1/b courtyard overlap (10.52 mm²) — the ledgered DRC exclusion: bare programming pads
-  under the supercap body, nothing fitted while programming.
+- SC1 ↔ TC1/b1 courtyard overlap (10.52 mm²) — the ledgered DRC exclusion: bare programming pads
+  under the supercap body, nothing fitted while programming. (Named `TC1/b` when this baseline
+  was taken; the 2026-08-01 GUI session re-annotated it to `TC1/b1`.)
 - Via at (42.9, 38.0) inside the NFC coil keepouts — the coil's own crossover via; KiCad's zone
   settings permit it (DRC: 0 errors), the analyzer's bbox check is coarser.
 - U9/C22, U9/FB1, U7/U3 courtyard grazes (≤0.014 mm²) — known, sub-threshold in KiCad.
@@ -173,3 +174,30 @@ production run.
 **Baseline statement:** with the 100 basic-mode findings above and the 37+5 full-mode findings
 here triaged, a future run of the full battery diffs against a fully-classified baseline.
 **Any finding not on these lists is a real find.**
+
+## Integrated — 2026-08-01 (both actionable findings are now in the copper)
+
+The user's same-day GUI edits opened the board, so both real finds rode along:
+
+- **Nine GND stitching vias** (the RP-001 item), each landed on a hatch-stroke crossing of both
+  GND lattices beside a worst-offender cluster: SRC (45.4, 70.14), VNFC (6.51, 9.17),
+  CHG_DIS_G (44.07, 61.78), MID (39.29, 65.19), STO (11.89, 11.86), NFC_EN (3.28, 30.04),
+  VSENSE (24.41, 37.41), SDA-side (40.97, 30.1), VS (1.67, 39.87). The coil crossover via
+  stays unstitched, as specified.
+- **Three panel fiducials** (the `analyze_fiducials` item): Ø 1.0 mm copper / Ø 2.0 mm mask,
+  both faces, three corners of four on the rails' outer band — built into `scripts/panelize.py`
+  with the clearance and 180°-asymmetry guards asserted in code, per the TODO derivation.
+
+Two placement lessons, recorded because the *first* via placement drew 3 DRC errors:
+- **Both GND pours are hatched** (0.2 mm strokes / 0.5 mm gaps — the card-face texture), so
+  "inside the pour" is meaningless for a via: it must land ON a stroke crossing of both layers'
+  lattices or it connects nothing.
+- **Tracks cross the hatch corridors.** A placement model that only checks pour membership puts
+  vias on top of tracks (first attempt: one clearance hit on SCL, one genuine GND–UPDI short).
+  The full model checks every other-net track/pad/via on both layers; `kicad-cli pcb drc` is the
+  ground truth that gates the result.
+
+Verification after integration: DRC `Errors: 0 (+11 excluded)`, **zero F.Mask hits**, mask art
+regenerated through `generate()` and `--check` = MATCH. After-census (37 GND vias): worst
+nearest-GND-via distance fell **19.25 → 8.13 mm**, and the 8.13 IS the coil crossover; every
+non-coil signal via is now within 5.1 mm (median 2.38, 80/82 within 5).

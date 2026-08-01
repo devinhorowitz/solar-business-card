@@ -95,6 +95,22 @@ TH_RIGHT_Y = 85.0   # hole centre on the right rail's ring line, board-frame y
 TH_DODGE = 1.55     # jog offset and half-height: hole r 0.75 + 0.30 hole-to-copper
                     # + ring half-width 0.50; leaves 0.45 mm copper-to-panel-edge
 
+# Three fiducials for the pick-and-place vision system -- the panel had NONE, and PCBWay
+# machine-places 47 parts including two 0.4 mm-pitch QFNs (U1, U8); the gap was found by the
+# kicad-happy fiducial audit (docs/kicad-happy.md, 2026-08-01). Each is a 1.0 mm bare copper
+# dot with a 2.0 mm mask opening (solder_mask_margin carries the difference), at the same X/Y
+# on BOTH faces because both sides carry placed parts. They live in the rail's OUTER band,
+# outside the plating-bus ring: dot centre FID_INSET from the panel edge puts the dot edge
+# (BUS_INSET - BUS_W_RAIL/2 - FID_INSET - FID_D/2) = 0.5 mm clear of the ring copper, and
+# main() asserts that so a constant "tidy" cannot silently close the gap. Three corners of
+# four, so a rotated panel cannot fool the vision system -- the tooling holes' asymmetry
+# doctrine, guarded the same way. Kept clear of the tooling-hole ring dodges, which jog
+# OUTWARD into this same band (TH_DODGE).
+FID_D = 1.0         # bare copper dot
+FID_MASK_D = 2.0    # mask opening -- IPC-ish 2:1 keeps mask registration out of the vision fit
+FID_INSET = 1.0     # dot centre from the panel edge
+FID_SETBACK = 6.0   # dot centre from the panel corner, along the rail
+
 # The ring is useless buried under soldermask -- a plating rack needs bare copper to clip. So the
 # ring gets an F.Mask opening along its whole length, which also lets the fab pick its own contact
 # point. Exposing all of it does risk the gold bath reaching it, but that is ~319 mm^2 at ~1 um,
@@ -275,6 +291,43 @@ def bite_footprint(ref, cx, cy, xs, tag, d=MB_D, value="MouseBites"):
     )
 
 
+def fid_footprint(ref, cx, cy, tag):
+    """Same skeleton as bite_footprint (empty lib_id, four properties, board_only,
+    strict member order): one SMD circle pad per face, bare FID_D copper with a
+    FID_MASK_D mask opening via solder_mask_margin, flagged pad_prop_fiducial_glob
+    so the fab's vision system finds them in the drill/placement data."""
+
+    def prop(name, value, layer, tag2):
+        return (
+            f'\t\t(property "{name}" "{value}"\n\t\t\t(at 0 0 0)\n\t\t\t(layer "{layer}")\n'
+            f'\t\t\t(hide yes)\n\t\t\t(uuid "{uid(tag2)}")\n'
+            f"\t\t\t(effects\n\t\t\t\t(font\n\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t)\n\t\t\t)\n\t\t)\n"
+        )
+
+    margin = (FID_MASK_D - FID_D) / 2
+    pads = "".join(
+        f'\t\t(pad "" smd circle\n\t\t\t(at 0 0)\n'
+        f"\t\t\t(size {n(FID_D)} {n(FID_D)})\n"
+        f"\t\t\t(property pad_prop_fiducial_glob)\n"
+        f'\t\t\t(layers "{side}.Cu" "{side}.Mask")\n'
+        f"\t\t\t(solder_mask_margin {n(margin)})\n"
+        f'\t\t\t(uuid "{uid(f"{tag}-p{side}")}")\n\t\t)\n'
+        for side in ("F", "B")
+    )
+    return (
+        f'\t(footprint ""\n\t\t(layer "F.Cu")\n\t\t(uuid "{uid(tag)}")\n'
+        f"\t\t(at {n(cx)} {n(cy)})\n"
+        + prop("Reference", ref, "F.SilkS", tag + "-ref")
+        + prop("Value", "Fiducial", "F.Fab", tag + "-val")
+        + prop("Datasheet", "", "F.Fab", tag + "-ds")
+        + prop("Description", "", "F.Fab", tag + "-de")
+        + "\t\t(attr board_only exclude_from_pos_files exclude_from_bom)\n"
+        + "\t\t(duplicate_pad_numbers_are_jumpers no)\n"
+        + pads
+        + "\t\t(embedded_fonts no)\n\t)\n"
+    )
+
+
 def ring_run_with_dodge(a, b, holes):
     """Points of one straight bus-ring run from a to b, jogging OUTWARD around each
     tooling hole whose centre sits on the run. Vertical runs only -- the holes live
@@ -329,6 +382,28 @@ def main() -> int:
         sys.exit(f"panelize: tooling holes are {mis:.1f} mm from 180-degree symmetric "
                  "-- a backwards panel would seat on the fixture")
 
+    # ---- fiducials: three corners of four, in the rails' outer band
+    fids = [
+        (px0 + FID_INSET, py0 + FID_SETBACK),   # left rail, top corner
+        (px0 + FID_INSET, py1 - FID_SETBACK),   # left rail, bottom corner
+        (px1 - FID_INSET, py0 + FID_SETBACK),   # right rail, top corner
+    ]
+    fid_clear = BUS_INSET - BUS_W_RAIL / 2 - FID_INSET - FID_D / 2
+    if fid_clear < 0.5:
+        sys.exit(f"panelize: fiducial-to-ring clearance {fid_clear:.2f} < 0.5 mm "
+                 "-- the vision system needs bare board around the dot")
+    # a 180-degree rotation must NOT map the fiducial set onto itself (same doctrine
+    # as the tooling holes: the pattern is what makes panel orientation unambiguous)
+    rot_fids = {(round(px0 + px1 - x, 1), round(py0 + py1 - y, 1)) for x, y in fids}
+    if rot_fids == {(round(x, 1), round(y, 1)) for x, y in fids}:
+        sys.exit("panelize: fiducial pattern is 180-degree symmetric -- a rotated "
+                 "panel would pass vision alignment")
+    for fx, fy in fids:
+        for hx, hy in th:
+            if abs(fx - hx) < RAIL_W and abs(fy - hy) < TH_DODGE + FID_D / 2 + 1.0:
+                sys.exit(f"panelize: fiducial ({fx:g},{fy:g}) collides with the "
+                         f"tooling-hole ring dodge at ({hx:g},{hy:g})")
+
     print(f"card   {bx1 - bx0:.1f} x {by1 - by0:.1f} mm   ({bx0:g},{by0:g})-({bx1:g},{by1:g})")
     print(f"panel  {px1 - px0:.1f} x {py1 - py0:.1f} mm   ({px0:g},{py0:g})-({px1:g},{py1:g})")
     print(f"moat {MOAT_W} / rail {RAIL_W} / tab {TAB_W} at x={TAB_X}")
@@ -340,6 +415,9 @@ def main() -> int:
           f"ring dodge +-{TH_DODGE} -> hole-to-ring "
           f"{TH_DODGE - TH_D / 2 - BUS_W_RAIL / 2:.2f}, "
           f"ring-to-edge {BUS_INSET - TH_DODGE - BUS_W_RAIL / 2:.2f}")
+    print(f"fiducials d{FID_D} cu / d{FID_MASK_D} mask, both faces, at "
+          + ", ".join(f"({x:g},{y:g})" for x, y in fids)
+          + f"; dot-to-ring {fid_clear:.2f} mm")
     if args.check:
         return 0
 
@@ -365,6 +443,10 @@ def main() -> int:
     # ---- tooling holes, on the ring line in each side rail (the ring jogs around them)
     for ref, (hx, hy) in zip(("TH1", "TH2"), th):
         add.append(bite_footprint(ref, hx, hy, [hx], f"th-{ref}", d=TH_D, value="ToolingHole"))
+
+    # ---- fiducials, outer band of the rails, three corners of four
+    for k, (fx, fy) in enumerate(fids):
+        add.append(fid_footprint(f"FID{k + 1}", fx, fy, f"fid{k}"))
 
     # ---- plating bus: stub -> across tab and rail -> ring around the frame
     add.append(track((TAB_X, by0), (TAB_X, ring_y0), BUS_W_SPUR, "spur-b"))
