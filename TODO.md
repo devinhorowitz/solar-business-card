@@ -370,14 +370,16 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   into a pour is why an iron feels like it never wets. Four 0.4 mm spokes are nothing against the
   coil's own inductance.
 
-- [ ] **[COPPER — yours] U1 / U8 exposed-pad stencil apertures are 1:1 with the copper**
-  _(2026-07-26 copper audit.)_ U1's EP is 2.65 × 2.65 mm (7.02 mm²) and U8's is 2.3 × 2.3 mm
-  (5.29 mm²), each with a single full-size B.Paste aperture. IPC-7093 practice is to window-pane a
-  thermal pad to ~50–80 % paste coverage in an array, so the part does not float on excess solder and
-  outgassing has a path. **Deliberately not changed by me**: the right percentage depends on the
-  stencil foil thickness the assembler actually uses (the audit separately flagged apertures falling
-  under the 0.66 area-ratio floor at 0.125 mm foil), and PCBWay often supplies its own stencil data.
-  Worth one question to them before editing the footprints.
+- [x] **[COPPER] U1 / U8 exposed-pad stencil apertures — CLOSED 2026-08-01: PCBWay's assembly
+  service owns the stencil.** DRH's ruling: with turnkey assembly there is no stencil to order or
+  tune on our side — PCBWay's engineering generates their own paste tooling from the B.Paste
+  plot and window-panes exposed pads per their process as standard DFM; the board's 1:1
+  apertures are their *input*, not the final tooling. No footprint edit, no question needed —
+  their DFM round flags it if their process wants something else, which is the check this item
+  was fishing for anyway.
+  _(Original item kept as the record — 2026-07-26 copper audit: U1 EP 2.65 × 2.65 / U8 2.3 × 2.3,
+  single full-size B.Paste apertures; IPC-7093 window-paning to ~50–80 %; the deliberate
+  non-edit because coverage depends on the assembler's foil.)_
 
 - [x] **[COPPER] Two tight spots — CLOSED 2026-08-01, one by measurement, one by a 0.1 mm nudge.**
   **R10↔C8 needed nothing**: re-measured against the committed board, the pads sit **0.310 mm**
