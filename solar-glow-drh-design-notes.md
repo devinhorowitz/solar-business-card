@@ -1735,6 +1735,15 @@ set: six B-side test pads, two panel tooling holes, the midnight hard-gold quest
 frame/texture aesthetic, the maker's-mark orientation blocker, the engraving-study pick, and
 the PCBWay order-reply confirmations.
 
+_(Update 2026-08-01 — most of that decision set has since closed: the test pads and tooling
+holes landed 2026-07-30 (addendum below); the midnight hard-gold question resolved 2026-07-31
+as the front-GND net rule (ENIG base, midnight ENIG by OSH Park constraint); the frame/texture
+aesthetic, orientation blocker and engraving-study pick all converged in the Z9F rear medallion,
+graduated into the shell generator 2026-07-31 — TODO's machining blocker now targets medallion
+orientation; and the order-reply item was struck 2026-07-31 as an abandoned submission. Still
+genuinely open from this list: the bench backlog, the buy-early sourcing item, the five
+copper/fab items, and the side-flip tooling gap.)_
+
 ## Addendum — B-side test pads + panel tooling holes, 2026-07-30
 
 The two "decision set" items above landed the same day, together, because they are one
