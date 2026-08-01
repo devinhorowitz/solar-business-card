@@ -31,7 +31,7 @@ way to retire the open gate before committing the v4 respin.
 
 ## 2. Panel under test -- ANYSOLAR SM141K06TF (IXOLAR SolarMD)
 
-From `datasheets/PV1,PV2  SM141K06TF  $6.98.pdf`, at 1 sun (1000 W/m^2, AM1.5, 25 C):
+From `datasheets/PV1,PV2  SM141K06TF  $7.61.pdf`, at 1 sun (1000 W/m^2, AM1.5, 25 C):
 
 | Symbol | Parameter | Typ |
 |---|---|---|

@@ -17,7 +17,7 @@ are v2-era; their v3.0 deltas are banner-noted at their tops.)
 3.5 × 3.5 mm pads on a diagonal (36.5 × 16 pattern, centres ±16.5 / ±6.25) that land on the cell's
 folded **end tabs**. Those tabs are coated, **non-solderable** mechanical locators, so a board built
 to that land makes **zero electrical contact**. The root cause: the datasheet's single generic
-"Soldering pads to Case WS10/13/17" diagram (`datasheets/SC1-SC4  SCHURTER 3-153-438  $15.48.pdf`) was misread as the WS17
+"Soldering pads to Case WS10/13/17" diagram (`datasheets/SC1-SC4  SCHURTER 3-153-438  $16.69.pdf`) was misread as the WS17
 land.
 
 **The correct land (LOCKED).** The real solderable terminals are flat pads **under the body**:

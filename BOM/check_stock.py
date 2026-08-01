@@ -24,6 +24,16 @@ Verdicts:
   DEAD primary unavailable and no substitute available either (the red X)
   ?    a query failed -- "could not check" is reported as itself, never as DEAD
 
+The datasheets/ filenames carry a "$price" segment (the convention is
+"REF  MPN  $price.pdf") that is a copy of a live number and therefore rots.
+Every run audits those names against the same live data and reports drift in
+its own README section;  --fix-names  renames the drifted files AND rewrites
+every citation of them -- the schematic and board Datasheet properties
+(byte-safe, CRLF preserved), the BOM master's cells, and any tracked .md --
+in one act, the same manual-apply shape as scripts/mask_art.py --apply.
+A $0 price in a name is a deliberate no-ordered-part marker and is skipped;
+names with no price segment (errata, the TIM pad) are listed, not judged.
+
 Credentials come from the environment and are never printed or written:
   DIGIKEY_CLIENT_ID / DIGIKEY_CLIENT_SECRET   (OAuth2 client-credentials)
   MOUSER_PART_API_KEY
@@ -46,8 +56,14 @@ except ImportError:
     sys.exit("openpyxl is required: pip install openpyxl")
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.dirname(HERE)
 MASTER = os.path.join(HERE, "solar-glow-drh-v4_0-BOM.xlsx")
 OUT = os.path.join(HERE, "README.md")
+DATASHEETS = os.path.join(ROOT, "datasheets")
+
+# Datasheet-name price drift beyond this fraction gets the DRIFT verdict
+# (under it, the name is "close enough for the magnitude it exists to give").
+NAME_PRICE_TOL = 0.05
 
 DK_TOKEN_URL = "https://api.digikey.com/v1/oauth2/token"
 DK_SEARCH_URL = "https://api.digikey.com/products/v4/search/keyword"
@@ -347,6 +363,115 @@ def fmt_qty(q):
     return f"{q:,}"
 
 
+def _compact(s):
+    return re.sub(r"[^A-Za-z0-9]", "", s).upper()
+
+
+_NAME_PRICE_RE = re.compile(r"\$(\d+(?:\.\d+)?)\.pdf$")
+
+
+def audit_datasheet_names(results):
+    """Check every datasheets/ filename's $price segment against the live
+    numbers just fetched. Returns rows of
+    (filename, label, name_price|None, live_price|None, verdict) where
+    verdict is 'ok' | 'drift' | 'zero' ($0 marker) | 'noprice' | 'unmapped'."""
+    live = {}  # compacted MPN -> (label, live q1 price)
+    for entry, hit, _err, _verdict, sub_hits in results:
+        live[_compact(entry["mpn"])] = (entry["refs"], hit["price"] if hit else None)
+        for smpn, _note, shit, _serr in sub_hits:
+            live.setdefault(_compact(smpn), (f"{entry['refs']} sub",
+                                             shit["price"] if shit else None))
+    rows = []
+    for fn in sorted(os.listdir(DATASHEETS)):
+        if not fn.lower().endswith(".pdf"):
+            continue
+        cfn = _compact(fn)
+        # longest live MPN that appears in the compacted filename wins
+        best = max((m for m in live if m in cfn), key=len, default=None)
+        m = _NAME_PRICE_RE.search(fn)
+        name_price = float(m.group(1)) if m else None
+        if best is None:
+            # price-less and unmapped = a secondary/reference doc (errata,
+            # the TIM pad) -- informational, not a mapping failure
+            verdict = "noprice" if name_price is None else "unmapped"
+            rows.append((fn, "(secondary/reference doc)", name_price, None, verdict))
+            continue
+        label, live_price = live[best]
+        if name_price is None:
+            rows.append((fn, label, None, live_price, "noprice"))
+        elif name_price == 0:
+            rows.append((fn, label, 0.0, live_price, "zero"))
+        elif live_price is None:
+            rows.append((fn, label, name_price, None, "unmapped"))
+        else:
+            drift = abs(live_price - name_price) / name_price
+            rows.append((fn, label, name_price, live_price,
+                         "ok" if drift <= NAME_PRICE_TOL else "drift"))
+    return rows
+
+
+def fix_datasheet_names(name_rows):
+    """Rename DRIFTed datasheets to their live price and rewrite every
+    citation: sch (LF) and pcb (CRLF) byte-safely, the BOM master's string
+    cells, and any tracked .md. git-mv keeps the renames tracked."""
+    import subprocess
+    renames = []
+    for fn, _label, name_price, live_price, verdict in name_rows:
+        if verdict != "drift":
+            continue
+        new_fn = _NAME_PRICE_RE.sub(f"${live_price:.2f}.pdf", fn)
+        renames.append((fn, new_fn))
+    if not renames:
+        print("--fix-names: nothing drifted, nothing to do")
+        return
+    for old, new in renames:
+        subprocess.run(["git", "mv", os.path.join("datasheets", old),
+                        os.path.join("datasheets", new)], cwd=ROOT, check=True)
+        print(f"renamed: {old} -> {new}")
+    # citations: board/sch as bytes (the pcb is CRLF and must stay CRLF --
+    # the swap is within a line, so EOLs are untouched by construction)
+    kicad = [os.path.join(ROOT, "PCB", f) for f in os.listdir(os.path.join(ROOT, "PCB"))
+             if f.endswith((".kicad_sch", ".kicad_pcb"))]
+    for path in kicad:
+        b = open(path, "rb").read()
+        n0 = b
+        for old, new in renames:
+            b = b.replace(old.encode(), new.encode())
+        if b != n0:
+            open(path, "wb").write(b)
+            print(f"citations updated: {os.path.relpath(path, ROOT)}")
+    # the BOM master's string cells
+    wb = openpyxl.load_workbook(MASTER)
+    ws = wb.active
+    touched = 0
+    for row in ws.iter_rows():
+        for c in row:
+            if isinstance(c.value, str):
+                v = c.value
+                for old, new in renames:
+                    v = v.replace(old, new)
+                if v != c.value:
+                    c.value = v
+                    touched += 1
+    if touched:
+        wb.save(MASTER)
+        print(f"citations updated: {os.path.relpath(MASTER, ROOT)} ({touched} cell(s))")
+    # tracked markdown
+    ls = subprocess.run(["git", "ls-files", "*.md"], cwd=ROOT,
+                        capture_output=True, text=True, check=True)
+    for rel in ls.stdout.split():
+        path = os.path.join(ROOT, rel)
+        t = open(path, encoding="utf-8").read()
+        t0 = t
+        for old, new in renames:
+            t = t.replace(old, new)
+        if t != t0:
+            open(path, "w", encoding="utf-8").write(t)
+            print(f"citations updated: {rel}")
+    print(f"--fix-names: {len(renames)} file(s) renamed; re-run this script "
+          "so README reflects the new names, then run scripts/check_consistency.py")
+
+
 def main():
     ordered, unordered = load_master()
     dk = DigiKey()
@@ -382,6 +507,12 @@ def main():
         stat = (f"{hit['source']}: {hit['status']}, {hit['qty']:,} in stock, "
                 f"{fmt_price(hit['price'])}") if hit else f"NOT FOUND ({err or 'no exact match'})"
         print(f"  {refs:10s} {mpn:32s} {stat}")
+
+    name_rows = audit_datasheet_names(results)
+    if "--fix-names" in sys.argv:
+        fix_datasheet_names(name_rows)
+        name_rows = audit_datasheet_names(results)
+    n_drift = sum(1 for *_x, v in name_rows if v == "drift")
 
     now = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     icon = {"ok": "✅", "sub": "⚠️", "dead": "❌",
@@ -451,6 +582,31 @@ def main():
             else:
                 a(f"| {entry['refs']} | `{smpn}` | not found | 0 | — | {snote} |")
     a("")
+    a("## Datasheet filename prices")
+    a("")
+    a("The `datasheets/` naming convention embeds a `$price` — a copy of a live number, "
+      "so it rots. Audited here against the same fetch as the tables above "
+      f"(±{NAME_PRICE_TOL:.0%} tolerance); `python3 BOM/check_stock.py --fix-names` renames "
+      "drifted files **and rewrites every citation** (board/schematic Datasheet fields, "
+      "the master's cells, tracked docs) in one act. A `$0` name is a deliberate "
+      "no-ordered-part marker; price-less names (errata, the TIM pad) are informational.")
+    a("")
+    a("| | File | Maps to | $ in name | $ live |")
+    a("|---|---|---|---|---|")
+    NAME_ICON = {"ok": "✅", "drift": "🔻", "zero": "—", "noprice": "—", "unmapped": "❓"}
+    for fn, label, name_price, live_price, verdict in name_rows:
+        note = {"zero": " ($0 marker)", "noprice": " (no price segment)",
+                "unmapped": " (no live match)"}.get(verdict, "")
+        a(f"| {NAME_ICON[verdict]} | `{fn}` | {label}{note} | "
+          f"{fmt_price(name_price) if name_price is not None else '—'} | "
+          f"{fmt_price(live_price) if live_price is not None else '—'} |")
+    a("")
+    if n_drift:
+        a(f"**{n_drift} name(s) drifted past ±{NAME_PRICE_TOL:.0%}** — refresh with "
+          "`python3 BOM/check_stock.py --fix-names`, re-run the consistency check, commit.")
+    else:
+        a(f"All priced names within ±{NAME_PRICE_TOL:.0%} of live.")
+    a("")
     a("## Lines with no ordered part")
     a("")
     a("Straight from the master — PCB features, bare pads and drills, plus the "
@@ -469,7 +625,8 @@ def main():
     with open(OUT, "w", encoding="utf-8") as f:
         f.write("\n".join(lines) + "\n")
     print(f"\nwrote {os.path.relpath(OUT)}: "
-          f"{n_ok} ok / {n_sub} sub / {n_dead} dead / {n_unk} unknown / {n_man} manual")
+          f"{n_ok} ok / {n_sub} sub / {n_dead} dead / {n_unk} unknown / {n_man} manual; "
+          f"datasheet names: {n_drift} drifted")
     return 1 if n_dead else 0
 
 
