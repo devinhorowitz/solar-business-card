@@ -10509,6 +10509,10 @@
 		(uuid "0a4c937d-6165-4219-8426-7c9a5acbc380")
 	)
 	(no_connect
+		(at 410.21 171.45)
+		(uuid "ee775f49-53f7-4015-ad8d-ca7f047137e7")
+	)
+	(no_connect
 		(at 650.24 91.44)
 		(uuid "1b71bf97-47bb-4569-bf97-efa4cc4fa66b")
 	)
@@ -10527,6 +10531,10 @@
 	(no_connect
 		(at 410.21 134.62)
 		(uuid "47fb82dc-ff3d-4c2a-8f93-cea3b362c797")
+	)
+	(no_connect
+		(at 410.21 166.37)
+		(uuid "cca2369e-5bbf-494b-a016-0f6b142d6db8")
 	)
 	(no_connect
 		(at 490.22 387.35)
@@ -10555,6 +10563,10 @@
 	(no_connect
 		(at 410.21 144.78)
 		(uuid "b18dddca-953e-468d-8480-5b31684a0328")
+	)
+	(no_connect
+		(at 410.21 176.53)
+		(uuid "421e0730-ad19-4ffa-92ca-eb3a9954f4d2")
 	)
 	(no_connect
 		(at 209.55 104.14)
@@ -11444,6 +11456,16 @@
 	)
 	(wire
 		(pts
+			(xy 410.21 151.13) (xy 405.13 151.13)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "6a89eda2-90ea-404b-a040-bd4fbe95742a")
+	)
+	(wire
+		(pts
 			(xy 25.4 68.58) (xy 20.32 68.58)
 		)
 		(stroke
@@ -11884,6 +11906,16 @@
 	)
 	(wire
 		(pts
+			(xy 410.21 156.21) (xy 405.13 156.21)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "6ee96444-be1e-4c3d-8f64-821bf6998533")
+	)
+	(wire
+		(pts
 			(xy 209.55 149.86) (xy 204.47 149.86)
 		)
 		(stroke
@@ -12171,6 +12203,16 @@
 			(type default)
 		)
 		(uuid "bdbf744f-bcda-4db3-8105-843c2fe32d14")
+	)
+	(wire
+		(pts
+			(xy 410.21 161.29) (xy 405.13 161.29)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "d5966882-a72b-4b82-ba5b-ceb00c4b9135")
 	)
 	(wire
 		(pts
@@ -12797,6 +12839,27 @@
 			)
 		)
 	)
+	(global_label "GND"
+		(shape bidirectional)
+		(at 405.13 161.29 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "6e853614-ffe9-4dd2-974b-f170ba0b7937")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 405.13 161.29 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
 	(global_label "LA"
 		(shape bidirectional)
 		(at 599.44 69.85 0)
@@ -13212,6 +13275,27 @@
 		(uuid "1fabe76b-5345-4920-92bb-41a79634a325")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 405.13 119.38 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
+	(global_label "UPDI"
+		(shape bidirectional)
+		(at 405.13 151.13 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "b84247bf-4fb9-4788-9193-5783c1adb773")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 405.13 151.13 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -14643,6 +14727,27 @@
 		(uuid "6f41c383-5ce1-4d31-8dd0-f6cfc83347e7")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 405.13 124.46 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
+	(global_label "STO"
+		(shape bidirectional)
+		(at 405.13 156.21 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "e1f5c90c-5662-4c56-ab27-b59ba03867e2")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 405.13 156.21 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -17956,6 +18061,104 @@
 			(project "solar-glow-drh-v4_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "TC1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "solarglow:TC1")
+		(at 410.21 151.13 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board yes)
+		(in_pos_files no)
+		(dnp yes)
+		(uuid "bf6bff44-ff0e-4da4-a524-e16c986d6212")
+		(property "Reference" "TC1/b"
+			(at 421.21 156.21 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "Tag-Connect"
+			(at 421.21 161.29 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "solarglow:TC1"
+			(at 421.21 166.37 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" "datasheets/TC1  Tag-Connect TC2030-MCP  $0.pdf"
+			(at 410.21 151.13 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Tag-Connect TC2030 UPDI programming footprint - B-side mirror of TC1, same nets; the plug works from either side of the board"
+			(at 410.21 151.13 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "MPN" "(no part - pogo footprint)"
+			(at 410.21 151.13 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "4"
+			(uuid "a3659ddd-3d57-4f03-a27f-2347777858a6")
+		)
+		(pin "1"
+			(uuid "882b0f18-c3b2-4136-98ca-76a0d7fdba31")
+		)
+		(pin "3"
+			(uuid "8e006c51-be12-4832-9090-01c73849f17c")
+		)
+		(pin "2"
+			(uuid "543eac54-2243-487e-baec-4aa984f375e4")
+		)
+		(pin "5"
+			(uuid "d4a44259-cbe3-4a90-9bad-9cde3198647e")
+		)
+		(pin "6"
+			(uuid "c9ad9425-d409-4aba-b58e-c18e29436bcc")
+		)
+		(instances
+			(project "solar-glow-drh-v4_0"
+				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
+					(reference "TC1/b")
 					(unit 1)
 				)
 			)

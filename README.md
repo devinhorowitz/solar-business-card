@@ -33,7 +33,7 @@ respin are in [`enclosure/README.md`](enclosure/README.md).</sub>
 | Board | 50.80 × 88.90 mm, r3.0 corners, **0.60 mm** FR4, ENIG, matte-black mask | 0.6 mm — committed in the board stackup (frees the shell floor to 1.0 mm) |
 | Mounting holes | **8× M2, GND** -- 4 corner (MH1-4) at **(3.0, 3.0) / (47.8, 3.0) / (3.0, 85.9) / (47.8, 85.9)** (pitch **44.80 × 82.90 mm**) + 4 panel-corner (MP1-4) at **(3.0, 28.5) / (47.8, 28.5) / (3.0, 60.4) / (47.8, 60.4)** | corners concentric with the r3.0 fillets; MP1-4 at the E/W mid-edges for the shell clamp |
 | **Enclosure** | **Ti back-shell** - 1.00 floor, 1.80 cavity, overall **3.55 mm**; center support via the single-piece resin diffuser brace. **Respun 2026-07-29 against the real board** — the brace had 593 mm³ of resin inside three supercaps and the shell lip sat on 4.17 mm² of live pad; both geometries are now computed from the board and gated by `check_consistency` **[8]**. | 8-hole pattern (4 corner + 4 panel-corner); see [`enclosure/README.md`](enclosure/README.md) |
-| BOM | **v4_0 master** - fully live-priced (2026-07-23 sourcing pass, ≈ $140); most passives 0402 with the precision/bulk set on **0603** (C4/C13/C25/C22/C23/R5/R6/R15/R16) and **0805** (C26/C27); **SJ1 is DNP**; Q2 + R18 added by the cold-start-deadlock fix | master is `PCB/solar-glow-drh-v4_0-BOM.xlsx`; placed set in `-BOM-assembly.xlsx` |
+| BOM | **v4_0 master** - fully live-priced (2026-07-23 sourcing pass, ≈ $140); most passives 0402 with the precision/bulk set on **0603** (C4/C13/C25/C22/C23/R5/R6/R15/R16) and **0805** (C26/C27); **SJ1 removed outright 2026-07-30** (lineage row only); Q2 + R18 added by the cold-start-deadlock fix | master is `PCB/solar-glow-drh-v4_0-BOM.xlsx`; placed set in `-BOM-assembly.xlsx` |
 | Firmware | AVR64EA28 C, register-verified **and compile-verified in CI**; not yet on hardware | LED pin map re-mapped in v3.0 (see `firmware/README.md`) |
 
 ### Where the truth lives — how these docs stay from drifting
@@ -92,7 +92,7 @@ all lives on the back, ready for an optional machined-metal back-shell.
 
 | Block | Part | Notes |
 |---|---|---|
-| MCU | **AVR64EA28** (28-VQFN) | TCA0 hardware PWM, I²C to the accel, charge/sleep logic; 2026-07 family swap from the AVR64DD28 (12-bit diff ADC + PGA; no MVIO on the EA, so SJ1 is DNP) |
+| MCU | **AVR64EA28** (28-VQFN) | TCA0 hardware PWM, I²C to the accel, charge/sleep logic; 2026-07 family swap from the AVR64DD28 (12-bit diff ADC + PGA; no MVIO on the EA, so the DD-era SJ1 strap was deleted outright, 2026-07-30) |
 | Solar | **2× ANYSOLAR SM141K06TF** | monocrystalline indoor cells (Voc 4.15 V), in parallel — two panels ≈ 2× the harvest |
 | Harvest PMIC | **e-peas AEM10300** (U8, QFN-28 4×4) | MPPT buck-boost that merges both panels at SRC and charges the supercap tank (STO) - replaces the v3 per-panel blocking diodes |
 | Storage | **2× SCHURTER 3-153-440** (SS17, 1.8 F) + **2× 3-153-438** (WS17, 1.0 F) | hybrid tank, 2.75 V/cell, wired 2S2P → **~1.3 F @ 5.5 V ≈ 21 J** on one balanced node (AEM holds MID so the smaller WS pair can't over-volt) |
@@ -107,8 +107,8 @@ all lives on the back, ready for an optional machined-metal back-shell.
 **Breakouts and features:** a **TC2030** Tag-Connect pad (`TC1`) for hands-free UPDI
 programming, a backup UPDI header (`J1`), a **5-pad bench strip** on the back east edge
 (`TP1` SRC + `JP1` GND/STO/SCL/SDA - bare SMD probe pads for bench power injection and an I²C
-tap; pinout in `solar-glow-drh-v2-hardware.md`), per-LED disable jumpers (`SB1–4`), the retired VDDIO2
-tie jumper (`SJ1`, DNP since the AVR-EA swap), and **eight grounded M2 mounting holes** (four corners + four panel-corner at the E/W mid-edges). (The v2-era
+tap; pinout in `solar-glow-drh-v2-hardware.md`), per-LED disable jumpers (`SB1–4`), and **eight grounded M2 mounting holes** (four corners + four panel-corner at the E/W mid-edges). (The DD-era
+VDDIO2 tie jumper `SJ1` is gone — DNP'd at the AVR-EA swap, deleted from the schematic and board outright on 2026-07-30. The v2-era
 `JP1`/`JP2` 2.54 mm breakout headers are gone; the `JP1` name is reused for the strip.)
 
 Full part numbers, pricing, and per-part datasheet links are in
