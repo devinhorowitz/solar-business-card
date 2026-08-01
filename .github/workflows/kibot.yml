@@ -54,6 +54,8 @@ on:
       # The pogo test plate has no other trigger: it is not consumed by the assembly
       # render, so an edit to its generator alone must regenerate its STEP/STL/drawing.
       - 'enclosure/solar-glow-drh-pogo-testplate-cad.py'
+      # the mesh gate's ledger -- editing a baseline must re-prove it against the artifacts
+      - 'scripts/check_mesh.py'
       - 'enclosure/**.stl'
       - '.github/workflows/kibot.yml'
 
@@ -172,6 +174,19 @@ jobs:
           python3 enclosure/brace/solar-glow-drh-diffuser-brace-DRAWING-gen.py
           python3 enclosure/solar-glow-drh-v3_0-backshell-0p6b-brace-DRAWING-gen.py
           python3 enclosure/solar-glow-drh-pogo-testplate-cad.py
+
+      # Mesh validity gate (2026-08-01): the STLs the step above just wrote go to
+      # FABRICATION, and a cadquery/OCC bump can emit a broken tessellation that every
+      # downstream consumer (drawings, renders, the thickness figure) would swallow
+      # silently. Gate BEFORE the commit-back: a broken mesh must fail this job, not
+      # land on main. STEP validity is gated upstream at the B-rep level inside
+      # export_step_stable (OCC BRepCheck -- the choke point all three generators use).
+      # scripts/check_mesh.py carries the per-file ledger, incl. the shell's known
+      # zero-length rim pinch; triangle count is deliberately not gated (not bit-stable).
+      - name: Gate the generated meshes
+        run: |
+          python3 -m pip install --quiet 'trimesh==5.0.0'
+          python3 scripts/check_mesh.py
 
       # Reference figures for PCB/README.md's assembly steps (D2-D5 LED polarity, the SW2
       # master bridge) plus the thickness-at-hand-scale figure, drawn FROM the board file
