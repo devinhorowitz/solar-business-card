@@ -194,7 +194,8 @@ solar-business-card/
 │   └── led-sweep-tuner.html             # interactive LED-constant sandbox (firmware/README links it)
 ├── firmware/                       # bare-metal C (AVR64EA28); compile-verified, see firmware/README.md
 ├── bench/                          # pogo-plate bench monitor: Pico firmware + host dashboard (see bench/monitor)
-├── datasheets/                     # every component's datasheet
+├── datasheets/                     # fitted parts + documented substitutes, named "REF  MPN  $price.pdf"
+│                                   #   (survey sheets and replaced-part docs culled 2026-08-01 — git history)
 ├── enclosure/                      # Ti back-shell + resin brace: CAD / STEP / STL / drawings / assembly views
 │                                   #   fit_rules.py + board_parts.py = the geometry both generators derive from
 └── v0-prototype/                   # the original prototype, kept for posterity (renamed from "v0 prototype" 2026-08-01)

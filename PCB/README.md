@@ -727,7 +727,8 @@ and the glow-window mask staying open (Step 3) — a tented window kills the opt
    > **Programming caution:** `NFC_EN` (PA7) now has a **1 MΩ pulldown (`R14`)** — U6
    > defaults hard-off while PA7 floats during reset / UPDI. Still drive PA7 low early in
    > init as belt-and-suspenders. The **U6 pin-map check is done** — TI SLVSD76C
-   > (`../datasheets/U6  TPS22918DBVR  $0.55.pdf` — the *then*-fitted part; U6 is now the
+   > (`../datasheets/U6  TPS22918DBVR  $0.55.pdf` — the *then*-fitted part, its sheet culled
+   > 2026-08-01 with the other replaced-part datasheets, git history; U6 is now the
    > pin-identical `TPS22917DBVT`, see `../datasheets/U6  TPS22917DBVT  $1.14.pdf`) showed the symbol had **VIN/VOUT and GND/QOD
    > transposed**; the board was **fixed 2026-07-02** (pads renetted to TI truth, schematic
    > pin numbers corrected, local copper reworked). Details in

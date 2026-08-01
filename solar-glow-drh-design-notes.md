@@ -548,9 +548,12 @@ corners, and the **same BOM**. It is now frozen as the final unmanaged-solar rev
 ## Addendum — U6 pin-map defect + fix (2026-07-02)
 
 **The check that had been open since U6 landed is closed, and it caught a fabrication-fatal
-defect.** The citation of record is TI **SLVSD76C** (`datasheets/U6  TPS22918DBVR  $0.55.pdf` —
-TPS22918 Rev C, the doc for the ordered `TPS22918DBVR`). The **SLVSCZ8B** -Q1 automotive twin has an
-identical pin table and every §6.5 number (compared and verified at the time); it is not kept in the repo. The DBV pin table reads: **1 = VIN, 2 = GND, 3 = ON, 4 = CT, 5 = QOD, 6 = VOUT.** The board's
+defect.** The citation of record is TI **SLVSD76C** (`datasheets/U6  TPS22918DBVR  $0.55.pdf` — culled 2026-08-01, git history;
+TPS22918 Rev C, the doc for the ordered `TPS22918DBVR`, its sheet retired with the
+other replaced-part datasheets). The **SLVSCZ8B** -Q1 automotive twin has an
+identical pin table and every §6.5 number (compared and verified at the time); it was later filed
+in the repo and lives on as `datasheets/U6-alt  TPS22918TDBVRQ1  (AEC-Q100).pdf`, since the -Q1
+part is U6's documented last-resort substitute. The DBV pin table reads: **1 = VIN, 2 = GND, 3 = ON, 4 = CT, 5 = QOD, 6 = VOUT.** The board's
 symbol had **1 = VOUT, 2 = QOD, 5 = GND, 6 = VIN** — VIN/VOUT and GND/QOD transposed across
 the package; only ON (3) and CT (4) were right. As routed, the chip would have had **no
 ground** and VS driven into VOUT. Two design choices survived the check unchanged: **CT may
@@ -712,7 +715,8 @@ brace channel -- see `PCB/PCB-side-notes-brace-direction.md` §3.)*
 ## Addendum (2026-07-12) -- BOD level + EEPROM-write safety (firmware review, verified against source)
 
 A second-team firmware review found two datasheet-grounded issues in the brown-out / EEPROM story,
-both confirmed against the committed `datasheets/U1 AVR64DD28...pdf` (DS40002315C) and both catchable
+both confirmed against the then-committed `datasheets/U1 AVR64DD28...pdf` (DS40002315C; the DD28
+sheet was culled 2026-08-01 with the other pre-swap datasheets — git history) and both catchable
 before fuses are burned. This note is the source-of-truth home for the corrected reasoning; the fuse
 bytes live in `firmware/Makefile` + `firmware/README.md`, the write-guard code in `firmware/sense.c`.
 
@@ -781,7 +785,10 @@ prioritization rather than a blanket "everything AEC-Q100" sweep.
     always powered, so it should not be the first thing to give out at the cap's limit.
   - **FRAM: `MB85RC512TY` (AEC-Q100, 125 °C)** -- see the note above; taken for the retention win
     independent of the ceiling (the archive should survive heat even after the cap has degraded).
-  - **Load switch U6: `TPS22918` -> `TPS22918-Q1`** (AEC-Q100; orderable `TPS22918QDBVRQ1`, same
+  - **Load switch U6: `TPS22918` -> `TPS22918-Q1`** (AEC-Q100; orderable `TPS22918TDBVRQ1` —
+    *corrected 2026-08-01: this line originally said `TPS22918QDBVRQ1`, a code TI's own SLVSCZ8B
+    orderable addendum does not list; the addendum's large-reel code is TDBVRQ1, which the BOM
+    master's 07-23 note used and DigiKey resolves live* — same
     SOT-23-6 / DBV footprint -- the base datasheet cross-references the -Q1 directly). It only gates the
     NFC/FRAM VCC, so thermal stress is low, but it is a zero-cost drop-in, so taken. _(Superseded
     2026-07-23: executed instead as **`TPS22917DBVT`** — the ultra-low-leakage sibling, 10 nA I_SD,
@@ -804,13 +811,15 @@ prioritization rather than a blanket "everything AEC-Q100" sweep.
   is the exact headroom the 85 °C supercap makes unusable. So **U3 stays the ADXL367**: best-in-role, and
   no automotive accel is worth the swap *even with the respin free*. That makes the accel a *second*
   immovable 85 °C part alongside the supercap -- which again points the whole thermal problem at
-  abatement (§7 TIM), not a hotter part. (`datasheets/FXLS8961AFR1.pdf` filed for reference.)
+  abatement (§7 TIM), not a hotter part. (`datasheets/FXLS8961AFR1.pdf` was filed for reference;
+  culled 2026-08-01 once the decision was long settled — git history.)
 
 - **Left alone (already fine):** the LEDs are already **AEC-Q102**; the clamp comparator (TLV3011B) and
   U2 (ALD910025) are already **125 °C**; the NFC tag is RF-powered (no standing heat) and the discretes
   (Q1 / diodes) are robust -- no upgrade needed. Datasheets for parts new to the project are filed in
   `datasheets/` per house practice: the `MB85RC512TY` FRAM (tentative refdes **U7**) and the
-  `TPS22918QDBVRQ1` -Q1 load switch (under **U6**); the MCU-E reuses the existing U1 datasheet, which
+  `TPS22918TDBVRQ1` -Q1 load switch (under **U6**; code corrected 2026-08-01 — see the survey
+  line above); the MCU-E reuses the existing U1 datasheet, which
   covers the -I / -E grade variants.
 
 ## Addendum (2026-07-15) -- v4 active-harvest option: AEM10300 PMIC (field survey + firmware feasibility)
@@ -854,8 +863,10 @@ design calls for: **supercap management, depth of charge, dark power, NFC noise*
   balancer exists nowhere except e-peas** -- exactly priority #1 for a 2S stack. The survey reinforces
   rather than dethrones the front-runner.
 
-Datasheets for the evaluated shortlist (`aem10300.pdf`, `bq25570.pdf`, `neh7100.pdf`, `em8504.pdf`) are
-filed in `datasheets/` per house practice.
+Datasheets for the evaluated shortlist were filed in `datasheets/` per house practice; on
+2026-08-01, with the decision long shipped, the winner's sheet was renamed into the refdes
+convention (`datasheets/U8  10AEM10300C0000  $3.77.pdf`, was `aem10300.pdf`) and the three
+losers (`bq25570.pdf`, `neh7100.pdf`, `em8504.pdf`) were culled — git history.
 
 Three genuine contenders, each winning a different axis:
 
@@ -1071,7 +1082,8 @@ chemistry -- does that with no cycle-life hit; but per point 1 it would not shri
 
 The 2026-07-15 survey above chose the AEM10300 from a 3-part shortlist found by web search, never a walk
 of e-peas's own QFN line. To close that gap, the whole QFN e-peas AEM line -- **16 datasheets** -- was
-pulled into `datasheets/DS-AEM*.pdf` and read: the 13 QFN28/40 parts in full, plus 3 compact **QFN24** parts (AEM00920 /
+pulled into `datasheets/DS-AEM*.pdf` (the survey set; culled 2026-08-01 once nothing dislodged the
+10300 — git history) and read: the 13 QFN28/40 parts in full, plus 3 compact **QFN24** parts (AEM00920 /
 AEM10920 / AEM11900) by feature page -- all three lack the 2S balancer and are ruled out on that alone.
 Result: nothing dislodges the AEM10300.
 
@@ -1124,7 +1136,8 @@ so it recovers usable tank energy and adds load-status pins. Price: the same ~10
 QFN40. If the harvest bench ever shows comfortable margin and deeper extraction + no LDO is judged worth it,
 that is the specific part -- but for a dark-idle card the 10300's 6 nA still wins.
 
-Datasheets filed under `datasheets/DS-AEM*.pdf`; sibling specs are from those sheets, the AEM10300 baseline
+Datasheets were filed under `datasheets/DS-AEM*.pdf` (culled 2026-08-01 — git history; the kept
+winner is `datasheets/U8  10AEM10300C0000  $3.77.pdf`); sibling specs are from those sheets, the AEM10300 baseline
 from `DS-AEM10300-v1.4` + the prewiring pin map (STO_RDY / STO_OVDIS / STO_OVCH / ST_STO are the 10300's four
 status pins, all NC on our board). *AEM30330 quiescent now confirmed at **875 nA typ** (V_STO 3.7 V, Table 6
 of DS-AEM30330-v1.5) -- exactly the AEM10330 / AEM00330 figure, as its identical architecture predicted. n/r = not read;

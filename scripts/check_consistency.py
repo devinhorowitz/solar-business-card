@@ -707,6 +707,9 @@ EXPECTED_ABSENT = {
     # rule that keeps engraving-study renders out — see their README).
     "all_studies.png": "engraving-study sheet — scratch output, out-of-repo by rule",
     "shell_nomark.stl": "engraving-study base solid — scratch output, out-of-repo by rule",
+    # Not a file at all: the datasheets/ naming-convention pattern in README's tree
+    # ("REF  MPN  $price.pdf") tokenizes to this placeholder.
+    "price.pdf": "the datasheets/ naming-convention placeholder, not a path",
 }
 
 _CITE_EXTS = ("png gif jpg jpeg svg pdf step stl zip html json csv xlsx md py yml yaml "
