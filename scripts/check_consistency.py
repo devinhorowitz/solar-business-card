@@ -704,6 +704,11 @@ EXPECTED_ABSENT = {
     "ioavr64ea28.h": "AVR-Dx DFP header — part of the toolchain pack, not the repo",
     ".mcp.json": "local config mcp-setup.md instructs the user to create",
     "digikey_mcp_server.py": "external MCP server on the user's machine (mcp-setup.md registration command)",
+    # kicad-happy runs from a pinned OUT-OF-REPO clone by rule (docs/kicad-happy.md) — these
+    # are its files, cited by the run recipe there.
+    "analyze_schematic.py": "kicad-happy analyzer — lives in the pinned external clone (docs/kicad-happy.md)",
+    "analyze_pcb.py": "kicad-happy analyzer — lives in the pinned external clone (docs/kicad-happy.md)",
+    "install-guidance.md": "kicad-happy doc — lives in the pinned external clone (docs/kicad-happy.md)",
     # On-demand analysis outputs that deliberately live OUTSIDE the repo (the same
     # rule that keeps engraving-study renders out — see their README).
     "all_studies.png": "engraving-study sheet — scratch output, out-of-repo by rule",

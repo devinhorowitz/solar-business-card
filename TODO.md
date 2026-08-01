@@ -255,6 +255,34 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
 
 ## PCB — `PCB/solar-glow-drh-v4_0.kicad_pcb` / `.kicad_sch`
 
+- [ ] **[PCB/FAB] Panel fiducials — the panel has NONE, and PCBWay machine-places 47 parts**
+  _(2026-08-01, found by the kicad-happy second-opinion analyzer on its first run — see
+  `docs/kicad-happy.md`.)_ The card carries no fiducials (fine — it's a business card face) and
+  `scripts/panelize.py` adds only the two 1.5 mm NPTH tooling holes; optical registration for
+  turnkey assembly has nothing to lock onto, and U1/U8 are 0.4 mm-pitch QFNs. Fix in
+  `panelize.py` (derived, never hand-drawn, like everything else in the panel): **three Ø1.0 mm
+  bare-copper fiducials with Ø2.0 mm mask openings on the frame rails, placed asymmetrically**
+  (so the panel is orientation-unambiguous), clear of the plating-bus ring (BUS_INSET 2.5 ring on
+  the rail — fiducials want ≥0.5 mm to any copper) and the tooling holes. Consider two local
+  fiducials near U1 on the card's B side only if PCBWay asks — the panel set usually suffices.
+  The merge run's panel-gerber diff is the verification.
+
+- [ ] **[PCB — PARKED, decision pending external research] 0.4 mm board thickness (3.55 → 3.35 mm)**
+  _(2026-08-01.)_ Held deliberately while the thinness tradeoff is researched. The engineering
+  picture as assessed: mechanics fine in-assembly (Ti + brace + 8 screws carry the card; screw
+  flushness is already parametric — the shell's `sf_bottom` spotface derives from `board_th`, so
+  the same DIN 84 M2×3 stays flush with +0.2 mm MORE Ti engagement); the REAL open questions are
+  daylight show-through of B-side copper through the bare-FR4 windows (flagged at 0.6 already),
+  panel break-tab redesign for thin FR4, reflow warpage/assembly handling, and the optics/energy
+  re-tune (thinner FR4 = brighter glow — possibly the bigger prize than the feel). Do NOT respin
+  the verified 0.6 board before first-article optical + energy data. 0.2 mm assessed and advised
+  against (depanel fragility + show-through for an imperceptible gain).
+
+- [ ] **[PCB/EMC] EMC pre-compliance pass** _(2026-08-01.)_ Never done; this board carries a
+  13.56 MHz coil, a ≥10 MHz DCDC and 3.9 kHz LED PWM in one hand-held card. kicad-happy's `emc`
+  skill consumes the two analyzer JSONs (`docs/kicad-happy.md` has the pinned run recipe) — run
+  it once the first-article exists so measured numbers can anchor the paper review.
+
 - [ ] **[PCB/FW] R1–R4 exceed their 62.5 mW rating only at the worst corner — note, and one cheap guard**
   _(2026-07-30, same audit.)_ The LED ballasts are `AC0402FR-07150RL` (0402, **1/16 W**). Worst
   DC corner: full tank STO = 5.5 V through SW2, min-bin V<sub>f</sub> 1.9 V (LA P47F 3B bin),
