@@ -9,7 +9,7 @@ Row,Description,Part,References,Value,Footprint,Quantity Per PCB,Status,Datashee
 8,"22uF 16V 0805 X5R, AEM CSRC buffer at BUFSRC (aem10300 Table 6: min 13uF EFFECTIVE - footnote 1 names DC-bias derating). Re-picked 2026-07-30 (audit #2) from 0603/10V GRT188R61A226ME13D, which held only ~9-12uF at the 3.1-4.15V MPP bias. 16V 0805 holds ~15-17uF. 1.25mm max. Fits in place (gaps SC3 0.529/L2 0.575/SB2 0.776mm); 1206 does NOT fit.",C25,C25,22uF,C_0805_2012Metric,1, ,,C2012X5R1C226M125AC,DigiKey,445-7647-1-ND,SMD_2terminal_chip_molded,
 9,Glow LED - reverse-mount amber,D2,D2 D3 D4 D5,LA P47F,D2,4, ,datasheets/D2-D5  LA P47F-V2BB-24-3B5A-30-R18-Z  $0.43.pdf,LA P47F-V2BB-24-3B5A-30-R18-Z,DigiKey,475-LAP47F-V2BB-24-3B5A-30-R18-ZCT-ND,,
 10,"Ferrite bead 0603, STO island feed filter",FB1,FB1,ferrite,L_0603_1608Metric,1, ,,BLM18PG221SN1D,DigiKey,490-5221-1-ND,SMD_2terminal_chip_molded,
-11,"10uH 1.76A power inductor, AEM10300 LDCDC (aem10300.pdf Table 11 = DFE252010F-100M); DFE252010 = 2.5x2.0mm on a 1008/2520 land (L_1008_2520Metric) - re-run Update-PCB then route",L2,L2,10uH,L_1008_2520Metric,1, ,,DFE252010F-100M,DigiKey,490-13039-1-ND,SMD_2terminal_chip_molded,
+11,"10uH 1.76A power inductor, AEM10300 LDCDC ('U8  10AEM10300C0000  $3.77.pdf' Table 11 = DFE252010F-100M); DFE252010 = 2.5x2.0mm on a 1008/2520 land (L_1008_2520Metric) - re-run Update-PCB then route",L2,L2,10uH,L_1008_2520Metric,1, ,,DFE252010F-100M,DigiKey,490-13039-1-ND,SMD_2terminal_chip_molded,
 12,"N-ch MOSFET SOT-23 -- EN_STO_CH low-side charge-disable buffer: gate<-PA4 (CHG_DIS_G), drain->EN_STO_CH, source->GND (cold-start-deadlock fix)",Q2,Q2,BSS138LT1G,SOT-23,1, ,,BSS138LT1G,DigiKey,BSS138LT1GOSCT-ND,package/gullwing,
 13,LED ballast 150 ohm,R1,R1 R2 R3 R4,150R,R1,4, ,,AC0402FR-07150RL,DigiKey,YAG3443CT-ND,,
 14,TINY-mode ballast 220 ohm,R12,R12,220R,R12,1, ,,AC0402FR-07220RL,DigiKey,YAG3456CT-ND,,
@@ -33,7 +33,7 @@ Project info:
 Schematic:,solar-glow-drh-v4_0
 Variant:,default
 Revision:,
-Date:,2026-08-01_13-20-01
+Date:,2026-08-01_14-11-18
 KiCad Version:,10.0.5-unknown-202607221313~667fa36054~ubuntu25.10.1
 Statistics:
 Component Groups:,25
