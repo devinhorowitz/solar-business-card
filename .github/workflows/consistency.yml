@@ -28,6 +28,9 @@ on:
       - 'scripts/mask_art.py'
       # check [10] imports this table and compares it against the STEP files.
       - 'scripts/part_colors.py'
+      # check [13] imports this module and re-derives the coil's paper tune from the
+      # routing — an edit to the coil math must re-gate the unchanged board.
+      - 'scripts/nfc_coil.py'
       # check [9] parses the OUTS list out of kibot.yml to confirm that everything it calls
       # "automated" is something CI actually commits.
       - '.github/workflows/kibot.yml'
@@ -46,6 +49,7 @@ on:
       - 'scripts/check_consistency.py'
       - 'scripts/mask_art.py'
       - 'scripts/part_colors.py'
+      - 'scripts/nfc_coil.py'
       - '.github/workflows/kibot.yml'
       - 'enclosure/**'
       - 'BOM/**'

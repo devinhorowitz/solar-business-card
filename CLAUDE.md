@@ -69,6 +69,16 @@ python3 scripts/part_colors.py --apply    # write the table into them
 ```
 Colour patch only — never geometry, so check [7] stays an independent measurement of height.
 
+**NFC coil paper tune** (the antenna's L and resonance are re-derived from the routing —
+the one subsystem neither external reviewer can see as a designed object):
+```sh
+python3 scripts/nfc_coil.py --check     # geometry, L (two formulas), bare f0 vs the C9 ladder
+```
+Outputs are **bare-copper units**: the ferrite sheet raises L ~1.3–1.5×, pulling the physical
+tank toward 13.56 MHz — load-bearing for tune, not just shielding. Check [13] gates the
+geometry (a re-route that loses a turn or severs the spiral goes red); the C9 ladder and the
+bench own the real number.
+
 **Consistency** (drift guard — also runs in CI):
 ```sh
 python3 scripts/check_consistency.py

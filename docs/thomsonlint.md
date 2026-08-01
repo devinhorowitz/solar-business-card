@@ -76,3 +76,17 @@ MID, LX_LOUT, VINT, BUFSRC, STO_LDO; SDA/SCL on silk-labeled straps; TC1 GND pad
 ground), and the CI gates as DFT_DRC_002/DFT_CONN_001 compliance.
 
 **A future ThomsonLint run diffs against this table — a finding not on it is a real find.**
+
+## The shared blind spot, closed — 2026-08-01
+
+Neither reviewer has any provision for an **intentional antenna**: kicad-happy's geometry
+checks report the coil as a plane-gap defect and a keepout violation (triaged as the tool
+measuring an antenna and calling it one), and this ontology's three "antenna" mentions are all
+`antenna_effect` failure-mode tags — unintentional-radiator language. The coil was the one
+subsystem no tool could check. `scripts/nfc_coil.py` now closes the paper half in-repo:
+deterministic geometry extraction from the routing (6.5 turns, run-pairing + winding-angle
+cross-check), two independent inductance formulas agreeing to 3% (~1.09 µH bare), the
+resonance table across the C9 ladder (bare 15.47 MHz at the placed 47 pF — the ferrite's
+~1.3–1.5× L pulls the physical tank to ≈13.56, which is why the ferrite is load-bearing for
+*tune*), and consistency check [13] gates it on every board edit. The bench reader-coupling
+TODO still owns the measured half.

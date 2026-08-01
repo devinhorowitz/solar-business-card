@@ -889,6 +889,53 @@ def check_footprint_sides():
         ok(f"all {len(seen)} footprints on their snapshotted side ({len(FRONT_SIDE)} front)")
 
 
+# --- [13] NFC coil paper tune -------------------------------------------------------
+#
+# The antenna is the one subsystem NEITHER external reviewer can see as a designed
+# object (docs/thomsonlint.md): kicad-happy reports the coil as a plane-gap defect,
+# ThomsonLint's ontology only knows antennas as accidents. Until 2026-08-01 the coil's
+# electrical identity was hand math done once, off-board -- a re-route could lose a
+# turn and nothing would say so. scripts/nfc_coil.py re-derives L and the paper
+# resonance FROM THE ROUTING; evaluate() is the single definition, this check calls it.
+# The gate is a CATASTROPHE gate in bare-copper units (the ferrite pulls the physical
+# tank down toward 13.56 MHz; the C9 ladder and the bench own the real tune).
+def check_nfc_coil():
+    print("[13] NFC coil geometry and paper tune (bare-copper catastrophe gate)")
+    sys.path.insert(0, os.path.join(ROOT, "scripts"))
+    try:
+        import nfc_coil
+    except Exception as e:
+        warn(f"not checked -- {type(e).__name__}: {e}")
+        return
+    try:
+        r = nfc_coil.evaluate()
+    except ValueError as e:
+        err(f"coil extraction failed: {e}")
+        return
+    probs = []
+    if not (nfc_coil.GATE_TURNS[0] <= r["turns"] <= nfc_coil.GATE_TURNS[1]):
+        probs.append(f"turns {r['turns']:.2f} outside {nfc_coil.GATE_TURNS}")
+    if abs(r["turns"] - r["turns_winding"]) > 1.2:
+        probs.append(f"turn counts disagree ({r['turns']:.2f} runs vs "
+                     f"{r['turns_winding']:.2f} winding)")
+    if r["C9_dnp"]:
+        probs.append("C9 is dnp -- no placed tune")
+    if r["L_spread"] > nfc_coil.GATE_L_SPREAD:
+        probs.append(f"L formulas disagree by {r['L_spread'] * 100:.0f}%")
+    f_placed = r["f0_MHz"].get(r["C9_placed_pF"])
+    if f_placed is None:
+        probs.append(f"placed C9 {r['C9_placed_pF']:g} pF is not a ladder value")
+    elif not (nfc_coil.GATE_F_MHZ[0] <= f_placed <= nfc_coil.GATE_F_MHZ[1]):
+        probs.append(f"paper f0 {f_placed:.2f} MHz outside {nfc_coil.GATE_F_MHZ}")
+    if probs:
+        err("the coil no longer matches its baseline: " + "; ".join(probs) +
+            " -- run `python3 scripts/nfc_coil.py` for the full table")
+    else:
+        ok(f"{r['turns']:.1f} turns, L ~{r['L_mean_uH']:.2f} uH (formulas agree to "
+           f"{r['L_spread'] * 100:.0f}%), bare f0 {f_placed:.2f} MHz at the placed "
+           f"C9 {r['C9_placed_pF']:g} pF")
+
+
 def check_part_colors():
     print("[10] every 3D model carries the colour the parts table gives it")
     sys.path.insert(0, os.path.join(ROOT, "scripts"))
@@ -1167,6 +1214,7 @@ def main():
     check_doc_file_refs()
     check_doc_cited_paths()
     check_footprint_sides()
+    check_nfc_coil()
     print(f"\n== {len(errors)} error(s), {len(warnings)} warning(s) ==")
     sys.exit(1 if errors else 0)
 
