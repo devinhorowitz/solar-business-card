@@ -426,9 +426,11 @@ a PCBWay DFM reviewer asks — their absence is a decision, not an oversight.
 > prototype; entered at v2.1 inside an anonymous `NPTH_mech` footprint; never appeared in the fab
 > hole table; the enclosure generator places nothing there. Orphan confirmed — deletion stands.)*
 
-A **frameless solder-paste stencil** (from the F.Paste / B.Paste plot) is strongly
-recommended — the QFN EP and the LGA accelerometer reflow far more reliably with paste than
-hand-tinning. Order it alongside the board.
+**No stencil to order (2026-08-01):** PCBWay's assembly service makes and owns its own paste
+tooling from the B.Paste plot — window-paning the U1/U8 exposed pads per their process is
+their standard DFM, with the board's 1:1 apertures as the input. A separate frameless stencil
+is only worth adding to the order if you ever plan to re-run reflow yourself (rework or a
+spare-board build); the hand-soldered parts (supercaps, cells) never need one.
 
 > **What the stencil deliberately does NOT open (2026-07-26).** Paste has been removed from the
 > pads of every part that is not reflowed, so the stencil only opens where paste is wanted:
