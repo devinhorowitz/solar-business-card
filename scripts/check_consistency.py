@@ -714,6 +714,13 @@ EXPECTED_ABSENT = {
     "schematic.json": "kicad-happy analyzer output — scratch, out-of-repo by rule (docs/kicad-happy.md)",
     "pcb.json": "kicad-happy analyzer output — scratch, out-of-repo by rule (docs/kicad-happy.md)",
     "install-guidance.md": "kicad-happy doc — lives in the pinned external clone (docs/kicad-happy.md)",
+    # ThomsonLint runs from a pinned OUT-OF-REPO clone by the same rule (docs/thomsonlint.md).
+    "tools/kicad-export.py": "ThomsonLint exporter — lives in the pinned external clone (docs/thomsonlint.md)",
+    "ontology/ontology.json": "ThomsonLint rule ontology — lives in the pinned external clone (docs/thomsonlint.md)",
+    "tools/validate_findings.py": "ThomsonLint coverage validator — lives in the pinned external clone (docs/thomsonlint.md)",
+    "tools/gen_report.py": "ThomsonLint report generator — lives in the pinned external clone (docs/thomsonlint.md)",
+    "docs/REVIEWER_INSTRUCTIONS.md": "ThomsonLint review contract — lives in the pinned external clone (docs/thomsonlint.md)",
+    "-findings.json": "ThomsonLint review output — scratch, out-of-repo by rule (docs/thomsonlint.md)",
     # On-demand analysis outputs that deliberately live OUTSIDE the repo (the same
     # rule that keeps engraving-study renders out — see their README).
     "all_studies.png": "engraving-study sheet — scratch output, out-of-repo by rule",

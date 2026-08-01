@@ -196,6 +196,7 @@ solar-business-card/
 │   ├── firmware-to-pcb-open-items.md    # v3-era cross-team memo (SUPERSEDED; record only)
 │   ├── mcp-setup.md                     # sourcing MCP servers setup (DigiKey/Mouser)
 │   ├── kicad-happy.md                   # the external second-opinion analyzer: pinned run recipe + the 2026-08-01 baseline triage
+│   ├── thomsonlint.md                   # the ontology-guided second reviewer: pinned run recipe + the 2026-08-01 review record
 │   └── led-sweep-tuner.html             # interactive LED-constant sandbox (firmware/README links it)
 ├── firmware/                       # bare-metal C (AVR64EA28); compile-verified, see firmware/README.md
 ├── bench/                          # pogo-plate bench monitor: Pico firmware + host dashboard (see bench/monitor)

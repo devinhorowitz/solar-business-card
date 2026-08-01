@@ -153,6 +153,15 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   extrapolation. This must be **measured**, not derived, before the energy budget is called
   closed — and re-checked against a non-preliminary datasheet revision if one ships.
 
+- [ ] **[BENCH] Tank ceiling and midpoint balance — log STO and MID across full charge cycles**
+  _(2026-08-01, ThomsonLint review COMP_CAP_004 — see `docs/thomsonlint.md`.)_ The repo's own
+  worst-case math assumes a full tank at 5.5 V, which is the cells' rated voltage with zero
+  headroom; EDLC life derates steeply near rating. What actually bounds it is the AEM10300's
+  configured storage ceiling — never measured on hardware. During the energy-budget pass, log
+  STO and MID (TP3) across full charge cycles: confirm the enforced ceiling and the top-of-charge
+  cell balance. If the ceiling lands at rating, consider configuring the harvester one step down
+  for cell life.
+
 - [ ] **[EFFICIENCY] Quantified idle-draw levers, if the bench budget comes in tight**
   _(2026-07-26 deep audit; all measured-on-paper, none applied.)_ Ranked: `POLL_PERIOD_S` 1 -> 2
   halves the ~1 Hz housekeeping cost; `FRAM_RESLEEP_EVERY_POLL` -> 0 removes the defensive re-park
