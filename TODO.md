@@ -479,7 +479,11 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   the ± 0.3 mm spread is wide for a melted-in fit). Still blocked on attachment (M2 screws / adhesive /
   snap-fit) and direction A (full-perimeter, recommended) vs B (per-panel rings).
 
-- [ ] Add the maker's mark to `enclosure/README.md` once the wording is locked.
+- [x] ~~Add the maker's mark to `enclosure/README.md` once the wording is locked.~~ **Overtaken
+  2026-07-31 and closed 2026-08-01:** the two-line mark was replaced by the Z9F medallion, whose
+  wording is locked in `enclosure/medallion.py` (the truth home — ring text, monogram, serial)
+  and documented in `enclosure/README.md`'s finish/bearing-plane sections and the root README's
+  truth table. There is no maker's mark to add.
 
 ## Locked — do NOT re-open
 
