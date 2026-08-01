@@ -708,6 +708,11 @@ EXPECTED_ABSENT = {
     # are its files, cited by the run recipe there.
     "analyze_schematic.py": "kicad-happy analyzer — lives in the pinned external clone (docs/kicad-happy.md)",
     "analyze_pcb.py": "kicad-happy analyzer — lives in the pinned external clone (docs/kicad-happy.md)",
+    "cross_analysis.py": "kicad-happy cross-tool — lives in the pinned external clone (docs/kicad-happy.md)",
+    "cross_verify.py": "kicad-happy cross-tool — lives in the pinned external clone (docs/kicad-happy.md)",
+    "analyze_emc.py": "kicad-happy EMC skill — lives in the pinned external clone (docs/kicad-happy.md)",
+    "schematic.json": "kicad-happy analyzer output — scratch, out-of-repo by rule (docs/kicad-happy.md)",
+    "pcb.json": "kicad-happy analyzer output — scratch, out-of-repo by rule (docs/kicad-happy.md)",
     "install-guidance.md": "kicad-happy doc — lives in the pinned external clone (docs/kicad-happy.md)",
     # On-demand analysis outputs that deliberately live OUTSIDE the repo (the same
     # rule that keeps engraving-study renders out — see their README).
