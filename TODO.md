@@ -464,14 +464,19 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   _(Absorbed from the culled cosmetic item, 2026-07-30 purge: the same README's via-in-pad list
   is v3-era — two new via-touching-pad cases exist and zero true via-in-pad remain; correct it
   in the same pass.)_
-- [ ] **[BLOCKER before machining] Human-verify the rear MEDALLION orientation.** _(Retargeted
+- [x] **[BLOCKER before machining] Human-verify the rear MEDALLION orientation — CLEARED
+  2026-08-01: verified correct by DRH** (human read of the committed STEP, the check numeric
+  gates cannot perform). The machining gate on the medallion is open; the Ti order's remaining
+  gate is the energy-budget bench (README → "The open question"). _(Retargeted
   2026-07-31: the two-line maker's mark this item was written for was replaced by the Z9F
-  medallion — `enclosure/medallion.py`, cut by the shell generator. The gate itself stands:
-  numeric checks cannot catch a mirror/flip error, only a human reading the STEP/physical part
-  can.)_ The medallion carries the same per-glyph Y-flip + whole-group X-mirror convention the
-  mark used, verified in renders (ring reads clockwise, SOLAR·NFC at 12, MMXXVI inverted at 6 —
-  caseback style, correct); the machining mirror lives in `medallion._mirror()`. Before the Ti
-  order: open the committed STEP in a viewer, view the back from OUTSIDE the part, and confirm
+  medallion — `enclosure/medallion.py`, cut by the shell generator. The gate itself stands for
+  any future medallion EDIT: numeric checks cannot catch a mirror/flip error, only a human
+  reading the STEP/physical part can — re-run this check after any change to
+  `medallion.py`'s text, serial or mirror convention.)_ The medallion carries the same
+  per-glyph Y-flip + whole-group X-mirror convention the
+  mark used (ring reads clockwise, SOLAR·NFC at 12, MMXXVI inverted at 6 —
+  caseback style, correct); the machining mirror lives in `medallion._mirror()`. The check as
+  performed: open the committed STEP in a viewer, view the back from OUTSIDE the part, confirm
   DRH / No 001 read correctly and the ring runs clockwise.
 
 - [ ] **Front solar-panel fence** — concept only. Panel height known (**cell 1.2 mm ± 0.3 mm**,
