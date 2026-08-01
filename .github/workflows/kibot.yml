@@ -145,18 +145,6 @@ jobs:
           docker run --rm -u "$(id -u):$(id -g)" -e HOME=/tmp -v "$PWD":/wk -w /wk \
             "$KICAD_IMAGE" python3 scripts/render.py
 
-      # Reference figures for PCB/README.md's assembly steps (D2-D5 LED polarity, the SW2
-      # master bridge), drawn FROM the board file so they cannot silently disagree with it.
-      # They replaced two hand-uploaded v2-era PNGs (culled 2026-08-01) that had gone stale
-      # three ways at once -- a ghost SJ1, pre-move SW2/R12 positions, dead net names -- with
-      # nothing to notice. The script asserts the electrical story it tells (common anode
-      # rail, R12 dim path) and fails this job if the board stops matching it. Runner-side:
-      # matplotlib only, nothing KiCad. ~2 s.
-      - name: Draw the board reference figures
-        run: |
-          python3 -m pip install --quiet 'matplotlib==3.10.7'
-          python3 scripts/ref_figures.py
-
       # THE ENCLOSURE IS DOWNSTREAM OF THE BOARD, and until now nothing rebuilt it.
       #
       # Both bodies are COMPUTED from the board: fit_rules.py subtracts every part the brace
@@ -184,6 +172,24 @@ jobs:
           python3 enclosure/brace/solar-glow-drh-diffuser-brace-DRAWING-gen.py
           python3 enclosure/solar-glow-drh-v3_0-backshell-0p6b-brace-DRAWING-gen.py
           python3 enclosure/solar-glow-drh-pogo-testplate-cad.py
+
+      # Reference figures for PCB/README.md's assembly steps (D2-D5 LED polarity, the SW2
+      # master bridge) plus the thickness-at-hand-scale figure, drawn FROM the board file
+      # and the back-shell STL so they cannot silently disagree with either. The first two
+      # replaced hand-uploaded v2-era PNGs (culled 2026-08-01) that had gone stale three
+      # ways at once -- a ghost SJ1, pre-move SW2/R12 positions, dead net names -- with
+      # nothing to notice. The script asserts the electrical story it tells (common anode
+      # rail, R12 dim path) and fails this job if the board stops matching it. Runner-side:
+      # matplotlib only, nothing KiCad. ~2 s.
+      # ORDER IS LOAD-BEARING: this step sits AFTER the enclosure CAD step because the
+      # thickness figure MEASURES the back-shell STL the step above just wrote (the
+      # check-[7] philosophy -- measure the artifact, never restate the number). Before
+      # the CAD and a shell-height edit would be figured at the previous revision for one
+      # push -- the same one-revision lag the assembly-views ordering note below guards.
+      - name: Draw the board reference figures
+        run: |
+          python3 -m pip install --quiet 'matplotlib==3.10.7'
+          python3 scripts/ref_figures.py
 
       # THE HERO IS DOWNSTREAM OF THE ARTWORK, so it is regenerated here rather than by hand.
       # enclosure/assembly_render.py textures the assembled card with the raytraced card-face

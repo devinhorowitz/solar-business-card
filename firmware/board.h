@@ -24,7 +24,7 @@
  *     7 PC1      PC1      spare GPIO  (JP2.3)
  *     8 PC2      SDA      TWI0 host SDA  (TWIROUTEA=ALT2)  ext 4.7k to VS
  *     9 PC3      SCL      TWI0 host SCL  (TWIROUTEA=ALT2)  ext 4.7k to VS
- *    10 PD0      (n/c)    EA GPIO on the old VDDIO2 pad; the SJ1 strap is gone (deleted 2026-07-30, DNP before that) so it floats -> held by internal pull-up (gpio_init)
+ *    10 PD0      VDDIO2   EA GPIO on the old VDDIO2 pad; SJ1 deleted 2026-07-30 (DNP before that), but C3 (100 nF -> GND, the DD-era decoupler) still hangs on the net -- no DC hold, so the internal pull-up (gpio_init) is still required; it just also charges C3 at boot
  *    11 PD1      STO_SNS    supercap-state sense  AIN1 (STO via R15/R16 divide-by-3)
  *    12 PD2      VSENSE   light sense (now SRC) + rail  AIN2 (ADC) + AINP0 (AC0+)
  *    18 VDD      VS       regulated 3.3 V LDO output (U9 TPS7A0233, STO->VS)
@@ -46,7 +46,12 @@
 #include <avr/io.h>
 
 /* ---- main clock: internal OSCHF at 1 MHz, no crystal fitted ---- */
+#ifndef F_CPU             /* the Makefile passes -DF_CPU; guarded so that knob actually
+                           * works (unguarded, overriding it warned in every TU -- a hard
+                           * FAIL under CI's -Werror -- and split delay calibration across
+                           * files by include order; 2026-08-01 pressure test) */
 #define F_CPU 1000000UL   /* OSCHF run frequency; see clocks_init in main.c */
+#endif
 
 /* ---- LEDs (low-side sink) on PORTA PA0..PA3 = TCA0 WO0..WO3 ----
  * TCA0 split: WO0..WO2 driven by LCMP0..2 (low timer), WO3 by HCMP0 (high timer).
@@ -77,8 +82,10 @@
 #define STO_DIVIDER     3                       /* R15 / R16 = 2 M / 1 M */
 
 /* ---- AEM10300 charge-disable via Q2 buffer, gate on PA4 (net CHG_DIS_G), ACTIVE-HIGH ----
- * Since the 2026-07-23 cold-start-deadlock fix, PA4 drives the GATE of Q2 (2N7002 low-side
- * buffer) -- not the AEM pin directly. Gate HIGH = Q2 on = EN_STO_CH pulled to GND = charging
+ * Since the 2026-07-23 cold-start-deadlock fix, PA4 drives the GATE of Q2 (BSS138LT1G
+ * low-side buffer -- "2N7002" here until 2026-08-01; the BOM master and board fit the
+ * BSS138, an equivalent logic-level NFET, and this file claims to be the as-built map)
+ * -- not the AEM pin directly. Gate HIGH = Q2 on = EN_STO_CH pulled to GND = charging
  * DISABLED (quiets the >=10 MHz DCDC for an NFC read); gate LOW = Q2 off = EN_STO_CH floats to
  * its internal pull-up + R17/VINT = charging ENABLED. R18 (1 M gate pulldown) holds Q2 off --
  * charging ON -- whenever the MCU is dead/resetting/UPDI-parked, so a fully discharged card
@@ -95,7 +102,9 @@
 /* ---- I2C device: NXP NT3H2211 (NTAG I2C plus 2K), v2.2 NFC addition ----
  * 7-bit address 0x55 (write 0xAA / read 0xAB); shares TWI0 with the accel @0x1D,
  * no clash. Antenna is the PCB coil on LA/LB, tuned by the chip's internal 50pF
- * (C9 = DNP trim) -- no firmware involvement in the radio.
+ * plus C9 -- FITTED at 47 pF since 2026-07-30 (value derived, not trimmed; "C9 =
+ * DNP trim" here until 2026-08-01 was two board revisions stale) -- no firmware
+ * involvement in the radio.
  *
  * POWER-GATED: the chip draws ~195 uA continuously from VCC (datasheet Table 42,
  * 3.3V idle) with NO sleep state -- the dominant idle drain on the supercaps. A
@@ -120,8 +129,16 @@
  * wakes the core to blank the LEDs for the read, and the rising edge (field leaves)
  * fires the acknowledge glow (see NFC_BLANK_ON_FIELD below). No I2C setup is needed
  * -- the field-present default does it. Firmware enables PA6's
- * internal pull-up, the SOLE FD pull-up (no external FD resistor in the design); it
- * only sinks current while FD is held low. */
+ * internal pull-up, the SOLE FD pull-up (no external FD resistor in the design).
+ * STANDING COST, corrected 2026-08-01 (pressure test; "only sinks current while FD
+ * is held low" was wrong): the tag's own FD pin specs IL leakage 1.5 uA typ /
+ * 10 uA MAX (NT3H2211 Table 42) with FD HIGH -- the card's dominant state -- so
+ * that leakage flows from VS through the pull-up essentially always, independent
+ * of the pull-up's value. Unbudgeted, it is +56% typ / +370% max against the
+ * README's ~2.7 uA dark-standby sum; the same table specs SDA/SCL IL at 10 uA max
+ * each through R10/R11 while VCC is gated. BENCH (beside the FRAM back-power
+ * item): meter VS with FD pulled up vs grounded (VCC off, no field) to pin the
+ * real leakage, and re-check FD's VIH margin at measured IL x pull-up R. */
 #define FD_PORT         PORTA
 #define FD_PIN_bm       PIN6_bm
 
@@ -132,8 +149,9 @@
  * bus idled high -- see the design-notes deep-dive addendum; VNFC now gates the
  * tag alone). Standing cost parked at the part's own I2C SLEEP mode, IZZ 0.20 uA
  * typ / 10 uA max hot (fram_sleep / fram_wake in fram.c; wake costs ~450 us).
- * 64 KB linear space, 16-bit address; FeRAM commits at the STOP (no settle delay,
- * ~1e13 endurance). Runtime archival use stays gated by USE_FRAM_LOG below
+ * 64 KB linear space, 16-bit address; FeRAM commits each byte at its ACK (no
+ * settle delay, ~1e13 endurance; "commits at the STOP" here until 2026-08-01
+ * contradicted fram.c's own header). Runtime archival use stays gated by USE_FRAM_LOG below
  * (headless by default -- but boot ALWAYS parks it; see main.c). */
 #define FRAM_ADDR       0x50
 

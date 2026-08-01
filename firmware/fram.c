@@ -51,9 +51,12 @@ void fram_sleep(void)
      * is address-selective) NACKs the F8h frame and simply stays asleep, while a
      * part our own F8h frame just woke (if wake is address-indiscriminate) NACKs
      * until its regulator recovers -- so one retry after tREC puts it back down.
-     * Every path leaves a STOP on the wire; nothing here can hang. (F8h/86h are
-     * reserved-address frames: 0x7C<<1|W and 0x43<<1|W -- no clash with the
-     * accel @0x1D or tag @0x55, which simply don't ACK them.) */
+     * Every path leaves a STOP on the wire; nothing here can hang. (Only F8h is
+     * a genuinely RESERVED address frame -- 0x7C sits in I2C's 11111xx reserved
+     * group; 86h is ordinary assignable address 0x43+W, safe here only because
+     * nothing on THIS bus lives at 0x43 -- accel 0x1D, tag 0x55, FRAM 0x50 --
+     * so re-check this line if a bus device is ever added. The old comment
+     * called both frames "reserved", which was category-wrong for 0x43.) */
     for (uint8_t t = 0; t < 2; t++) {
         if (twi_start(0x7C, 0) == 0 &&                      /* F8h frame        */
             twi_write((uint8_t)(FRAM_ADDR << 1)) == 0 &&    /* device addr word */
@@ -104,7 +107,9 @@ uint8_t fram_write(uint16_t addr, const uint8_t *src, uint16_t len)
     if (fram_setaddr(addr)) { twi_stop(); return 1; }
     for (uint16_t i = 0; i < len; i++)
         if (twi_write(src[i])) { twi_stop(); return 1; }
-    twi_stop();                 /* FeRAM commits at STOP -- no settle delay to wait out */
+    twi_stop();                 /* no settle delay to wait out -- each byte already
+                                 * committed at its ACK (see the header; "commits at
+                                 * STOP" here until 2026-08-01 contradicted it) */
     return 0;
 }
 
