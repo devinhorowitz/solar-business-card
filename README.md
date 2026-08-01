@@ -177,15 +177,24 @@ solar-business-card/
 │   ├── solar-glow-drh-v4_0-BOM.xlsx    # bill of materials -- v4.0 master (mostly 0402; 0603 and 0805 sets per the table above)
 │   ├── solar-glow-drh-v4_0-BOM-assembly.xlsx  # placed-parts BOM for PCBA (machine-place count pending recount/xlsx regen against the v4 net)
 │   └── README.md                       # order & build guide
-├── solar-glow-drh-v2-hardware.md   # as-built wiring & pin map (v2-era; v3.0 LED-map delta noted at top)
-├── solar-glow-drh-v2-mechanical.md # board mechanics, keepouts, access (v2-era; v3.0 hole/enclosure deltas at top)
-├── solar-glow-drh-design-notes.md  # design rationale, energy model, lineage (incl. the v3.0 chapter)
+├── solar-glow-drh-design-notes.md  # design rationale, energy model, lineage (incl. the v3.0 chapter) — the one prose file that stays at root, beside this README
+├── docs/                           # project notes & records (moved from root 2026-08-01) + the LED sweep tuner
+│   ├── solar-glow-drh-v2-hardware.md    # as-built wiring & pin map (v2-era lineage; banner at top)
+│   ├── solar-glow-drh-v2-mechanical.md  # board mechanics, keepouts, access (v2-era lineage; banner at top)
+│   ├── v4-aem10300-prewiring.md         # the v4 net/pin plan — applied 2026-07-30, kept as the record
+│   ├── v4-schematic-sync-checklist.md   # the sch→board sync procedure — DONE, kept as the record
+│   ├── harvest-bench-fixture-handoff.md # the energy-budget bench fixture (the #1 open gate's rig)
+│   ├── harvest-budget-test-board.md     # the harvest test-board concept
+│   ├── eink-display-variant-notes.md    # e-ink variant study (concept, not adopted)
+│   ├── firmware-to-pcb-open-items.md    # v3-era cross-team memo (SUPERSEDED; record only)
+│   ├── mcp-setup.md                     # sourcing MCP servers setup (DigiKey/Mouser)
+│   └── led-sweep-tuner.html             # interactive LED-constant sandbox (firmware/README links it)
 ├── firmware/                       # bare-metal C (AVR64EA28); compile-verified, see firmware/README.md
+├── bench/                          # pogo-plate bench monitor: Pico firmware + host dashboard (see bench/monitor)
 ├── datasheets/                     # every component's datasheet
-├── docs/                           # the LED sweep tuner (interactive HTML); renders live in Generated/docs/ since the 2026-07-31 cull
 ├── enclosure/                      # Ti back-shell + resin brace: CAD / STEP / STL / drawings / assembly views
 │                                   #   fit_rules.py + board_parts.py = the geometry both generators derive from
-└── v0 prototype/                   # the original prototype, kept for posterity
+└── v0-prototype/                   # the original prototype, kept for posterity (renamed from "v0 prototype" 2026-08-01)
 ```
 
 ---

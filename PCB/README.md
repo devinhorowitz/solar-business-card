@@ -95,8 +95,8 @@ PCB/
 
 > **The board is the source of truth.** `solar-glow-drh-v4_0.kicad_pcb` / `.kicad_sch`
 > govern. The design *reasoning* lives one level up:
-> - `../firmware/board.h` + `../firmware/README.md` - as-built pin map and net list (the firmware target); `../solar-glow-drh-v2-hardware.md` is frozen v2 lineage only.
-> - `../solar-glow-drh-v2-mechanical.md` — board envelope, heights, mount holes, keepouts.
+> - `../firmware/board.h` + `../firmware/README.md` - as-built pin map and net list (the firmware target); `../docs/solar-glow-drh-v2-hardware.md` is frozen v2 lineage only.
+> - `../docs/solar-glow-drh-v2-mechanical.md` — board envelope, heights, mount holes, keepouts.
 > - `../solar-glow-drh-design-notes.md` — why each decision was made; the landmines.
 > - `../README.md` — the project overview and the standing open question (energy budget).
 >
@@ -727,7 +727,7 @@ and the glow-window mask staying open (Step 3) — a tented window kills the opt
 ## Enclosure note
 
 An optional machined-titanium back-shell lives in `../enclosure/` (v3.0 shell committed; see
-its README and `../solar-glow-drh-v2-mechanical.md`). It is **on ice until the board is
+its README and `../docs/solar-glow-drh-v2-mechanical.md`). It is **on ice until the board is
 validated** — and note the shell interacts with the electronics twice: it kills capacitive
 sensing (why the actuator is the accelerometer) and it sits behind the NFC coil (why C9 is
 trimmed with the shell fitted). Nothing about ordering or building the bare board depends

@@ -115,7 +115,7 @@ optional shunt and filter cap. Nothing else.
 
 ### 5.1 Simplified wiring
 
-![Bench fixture wiring diagram](images/bench-fixture-wiring.png)
+![Bench fixture wiring diagram](../images/bench-fixture-wiring.png)
 
 *Panels -> A/B/C/D/S config jumpers -> BUS_P/BUS_N -> the 4-wire Kelvin measurement block
 (SENSE = voltmeter, FORCE = load/SMU, Rs shunt with SH_HI/SH_LO taps).*
@@ -214,7 +214,7 @@ No active components. No backside components.
 
 ## 7. Layout constraints and floorplan
 
-![Bench fixture floorplan on a business-card outline](images/bench-fixture-floorplan.png)
+![Bench fixture floorplan on a business-card outline](../images/bench-fixture-floorplan.png)
 
 *Floorplan: PV1/PV2 stacked (top-solder, face up), the test-pad field below, single-sided
 assembly with a flat back (routing/vias only).*
