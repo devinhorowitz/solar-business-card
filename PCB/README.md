@@ -87,7 +87,9 @@ PCB/
 │                                     #   library layout (CC-BY-SA 4.0, licence bundled). CI's render
 │                                     #   image ships NO 3D library, so without these the assembled
 │                                     #   render silently loses 38 of 53 component bodies.
-└── DRC.rpt / ERC.rpt                 # last GUI report exports (CI keeps live copies in ../Generated/)
+└── DRC.rpt                           # last GUI DRC export (user-refreshed at board edits; CI keeps the live
+                                      #   reports in ../Generated/. ERC.rpt was culled 2026-08-01 — its 07-27
+                                      #   export had outlived two schematic generations; read Generated/…-erc.html)
                                       # (v2_1 / v2_2 / v2_3 / v3_0 revisions live in git history, not this folder)
 ```
 

@@ -13,6 +13,10 @@ Geometry from the committed sources:
   mounts (3,3)(47.8,3)(3,85.9)(47.8,85.9); M2 head Ø3.8 (DIN 84, enclosure cad.py)
 
 Run from the repo root:  python3 scripts/gen_panel_overlay.py
+Writes beside the CWD (or $OUT_DIR) -- ON-DEMAND analysis output, not repo content. It used
+to write into docs/, but its two PNGs were culled as unreferenced on 2026-07-31 and writing
+there again would just recreate files nothing displays; check [9] guards displayed images
+only, so they would rot silently a second time.
 """
 import os
 from PIL import Image, ImageDraw, ImageFont
@@ -84,7 +88,8 @@ def make(render_path, out_path, mirrored, side_label):
 if __name__ == "__main__":
     root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     g = lambda p: os.path.join(root, p)
+    out = os.environ.get("OUT_DIR") or os.getcwd()
     make(g("Generated/docs/solar-glow-drh-v4_0-top.png"),
-         g("docs/solar-glow-drh-panel-outline-top.png"), False, "F.Cu (front)")
+         os.path.join(out, "solar-glow-drh-panel-outline-top.png"), False, "F.Cu (front)")
     make(g("Generated/docs/solar-glow-drh-v4_0-bottom.png"),
-         g("docs/solar-glow-drh-panel-outline-bottom.png"), True, "B.Cu (back, mirrored)")
+         os.path.join(out, "solar-glow-drh-panel-outline-bottom.png"), True, "B.Cu (back, mirrored)")
