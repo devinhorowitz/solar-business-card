@@ -379,11 +379,19 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   under the 0.66 area-ratio floor at 0.125 mm foil), and PCBWay often supplies its own stencil data.
   Worth one question to them before editing the footprints.
 
-- [ ] **[COPPER — yours] Two tight spots, each needing a part nudge rather than a reroute**
-  _(2026-07-26 copper audit.)_ R10 and C8 pads sit **0.159 mm** apart on different nets — the
-  tightest inter-component gap on the board. C13's pads leave a **0.075 mm** solder-mask sliver
-  against the glow-window opening, below a typical 0.1 mm (4 mil) dam minimum, so the web there will
-  likely not survive. Both want a small component move, which is why they are yours and not mine.
+- [x] **[COPPER] Two tight spots — CLOSED 2026-08-01, one by measurement, one by a 0.1 mm nudge.**
+  **R10↔C8 needed nothing**: re-measured against the committed board, the pads sit **0.310 mm**
+  apart (nearest foreign track 0.329) — a post-audit upload had already spread the pair, and the
+  0.159 belonged to a dead board state. Mask dams ≥0.21; both figures ≥2× the 0.152 floor. Left
+  alone on purpose — a nudge would spend clearance elsewhere for nothing.
+  **C13 moved (0, +0.100)**: anchor (26, 48.05) → (26, 48.15). The rear glow window's bottom edge
+  is dead straight at y = 47.500 across both pads; pad tops move 47.575 → 47.675, sliver
+  **0.075 → 0.175 mm**. Zero track edits: the ANODE feed crosses *through* pad 1 on the 45° line
+  x + y = 74.825 (chord verified post-move: enters the top edge at x 27.15, exits the bottom at
+  x 26.2), and GND is pour-connected — the refill follows. South clearances verified before the
+  move: same-net ANODE vertical 0.414 x-gap to the GND pad, K4 0.60, TINY 0.72, STO 0.70.
+  _(Original item, 2026-07-26 copper audit: R10/C8 "0.159 mm", C13 "0.075 mm sliver … below a
+  typical 0.1 mm dam minimum" — kept as the record of what was measured then.)_
 
 - [x] **[PCB, PRE-FAB] D2's ANODE out of its own light window — CLOSED 2026-08-01, in two
   stages.** Stage 1 (a board upload after this item was written): the 0.536 mm diagonal this
