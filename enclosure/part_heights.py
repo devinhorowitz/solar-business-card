@@ -128,7 +128,12 @@ def part_height(ref):
     """
     if ref in HEIGHTS:
         return HEIGHTS[ref]
-    prefix = ref.rstrip("0123456789")
+    # "TC1/b"-style MIRROR refs (since 2026-08-01 the TC2030 land is double-sided; the /b
+    # is the B-side twin of an existing land). Height-wise a mirror IS its family: strip
+    # the /suffix so "TC1/b" resolves through the same "TC" rule as TC1, instead of
+    # raising. This is the documented mirror grammar only -- an entirely new family still
+    # has no path around the raise below.
+    prefix = ref.split("/", 1)[0].rstrip("0123456789")
     if prefix in SKIP:
         return None
     if prefix in PREFIX:
