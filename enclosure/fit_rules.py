@@ -484,6 +484,17 @@ def export_step_stable(solid, path, **kw):
     """
     import os as _os, re as _re
     import cadquery as _cq
+    # STEP validity gate (2026-08-01): every solid this repo ships passes through this one
+    # function, so this is the single place OCC's own B-rep checker runs. An invalid shape
+    # (self-intersecting shell, bad orientation, corrupt topology) out of a cadquery/OCC
+    # version bump would otherwise flow silently into the STEP the fab receives -- the STL
+    # mesh gate (scripts/check_mesh.py) sees only the tessellation, not the B-rep.
+    from OCP.BRepCheck import BRepCheck_Analyzer as _BCA
+    for _obj in (solid.vals() if hasattr(solid, "vals") else [solid]):
+        _shape = getattr(_obj, "wrapped", _obj)
+        if not _BCA(_shape).IsValid():
+            raise SystemExit(f"export_step_stable: OCC BRepCheck says the solid bound for "
+                             f"{path} is INVALID -- refusing to export")
     strip = lambda s: _re.sub(r"(?m)^FILE_NAME\('[^']*','[^']*'", "FILE_NAME(", s)
     tmp = path + ".tmp"
     # exportType is REQUIRED here and was the bug that kept this function from ever running:

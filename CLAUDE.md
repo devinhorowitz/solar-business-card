@@ -69,6 +69,16 @@ python3 scripts/part_colors.py --apply    # write the table into them
 ```
 Colour patch only — never geometry, so check [7] stays an independent measurement of height.
 
+**Generated solids** (the STEP/STL that go to fabrication):
+```sh
+python3 scripts/check_mesh.py          # STL validity + volume/bbox ledger (needs trimesh)
+```
+STEP validity is gated at export time — OCC `BRepCheck` inside `fit_rules.export_step_stable`,
+the one choke point all three CAD generators use. The mesh gate also runs in `kibot.yml`
+**before** the commit-back, so a cadquery/OCC bump that breaks a tessellation fails the job
+instead of landing. The shell STL carries one ledgered zero-length rim pinch; a real hole
+(nonzero open length) goes red. Triangle count is deliberately ungated — it is not bit-stable.
+
 **NFC coil paper tune** (the antenna's L and resonance are re-derived from the routing —
 the one subsystem neither external reviewer can see as a designed object):
 ```sh

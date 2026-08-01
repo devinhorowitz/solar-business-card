@@ -552,6 +552,32 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
 
 ## Enclosure — `enclosure/…-backshell-…-cad.py`, `enclosure/brace/`
 
+- [ ] **[ENCLOSURE/TOOLING] The 3D interference DRC — boolean the assembly, gate the overlap**
+  _(2026-08-01, the tier the new mesh gate deliberately parked.)_ `check_mesh.py` gates mesh
+  validity and `export_step_stable` gates B-rep validity, but nothing computes the assembled
+  boolean truth: shell cavity ∩ brace ∩ populated-board solid (part models + `part_heights.py`)
+  must be empty outside the documented TIM compression. Check [7] gates heights one part at a
+  time; only the boolean catches a *combination* error. The plumbing half-exists —
+  `assembly_render.py` already loads the STLs and every part position; OCC (already pinned via
+  cadquery) does the boolean. Gate shape: intersection volume = 0 ± ledgered TIM allowance.
+
+- [ ] **[ENCLOSURE] Rename the `v3_0-backshell-0p6b` fossil — a coordinated 10-file unit**
+  _(2026-08-01, found while building the mesh gate.)_ The shell generator, its DRAWING-gen, and
+  the STEP/STL they emit all still carry `v3_0` names although the geometry is the current v4
+  solid (the thickness figure measures 3.5500 from it). The rename touches, together, in one
+  commit: both generator filenames, `kibot.yml` trigger paths AND its CAD-step commands,
+  `assembly_render.py`, `scripts/ref_figures.py` (if it names the file), `check_mesh.py`'s
+  BASELINE keys, `engraving-studies/spin1_cutters.py`, README + PCB/README + enclosure/README
+  prose, and design-notes references (historical mentions keep their history markers). Do it
+  as its own PR — a miss anywhere breaks the CI chain silently.
+
+- [ ] **[ENCLOSURE, cosmetic] The shell STL's one tessellation pinch** _(2026-08-01, found and
+  ledgered by `scripts/check_mesh.py` on its first measurement.)_ One zero-length boundary edge
+  at a single rim point (24.4, −34.45, 2.7) plus 3 zero-area facets — a cadquery boolean seam
+  artifact, invisible to slicers (open length 0.000 mm). Ledgered in the mesh gate so anything
+  worse goes red; chase only if a cadquery bump changes the count, and fix belongs in the
+  shell generator's tessellation parameters, not the mesh.
+
   _(Absorbed from the culled cosmetic item, 2026-07-30 purge: the same README's via-in-pad list
   is v3-era — two new via-touching-pad cases exist and zero true via-in-pad remain; correct it
   in the same pass.)_
