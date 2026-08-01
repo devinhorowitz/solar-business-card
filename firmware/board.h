@@ -297,8 +297,11 @@
 #define USE_TEMP_LOG       1
 #define TEMP_SAMPLE_POLLS  64   /* polls between temp samples (64 s at POLL_PERIOD_S=1) */
 
-/* Field "black box" -- the starvation companions to the max-temp heat log: the lowest rail (VS)
- * ever seen and the power-cycle (full-drain) count. Both near-free: vmin samples VS every
+/* Field "black box" -- the starvation companions to the max-temp heat log: the lowest TANK
+ * voltage (STO) ever seen and the power-cycle (full-drain) count. (This line said "VS" until
+ * the 2026-08-01 firmware audit -- a v3 leftover: on v4 VS is the constant LDO output, and the
+ * code has always read STO here via sense_vdd_mv(), which is also the informative node -- VS
+ * would log 3300 forever until terminal collapse.) Both near-free: vmin samples STO every
  * VMIN_SAMPLE_POLLS (the supercap sags over minutes) and writes EEPROM only on a new low; the
  * power-cycle count writes once per cold boot (POR). Together they answer "did this card fail from
  * heat, starvation, or overuse?" from one UPDI read. Runs even while face-down dormant. 1 = on. */

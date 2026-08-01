@@ -422,8 +422,10 @@ int8_t sense_temp_max_get(void)
 
 /* ---------- EEPROM "black box" -- lowest rail ever + power-cycle count ---------- */
 
-/* Lowest rail (VS, mV) ever seen -- the starvation half of the field black box (max-temp is the
- * heat half). Sampled sparsely (every VMIN_SAMPLE_POLLS; the supercap sags over minutes). The catch
+/* Lowest TANK voltage (STO, mV) ever seen -- the starvation half of the field black box (max-temp
+ * is the heat half). ("VS" here until the 2026-08-01 audit -- v3 prose; the read below has always
+ * been sense_vdd_mv() = STO, the informative node now that VS is the constant LDO rail.)
+ * Sampled sparsely (every VMIN_SAMPLE_POLLS; the supercap sags over minutes). The catch
  * is that a "new low" is by definition the WORST moment to write EEPROM -- a ~4 ms write on a
  * collapsing rail can corrupt (DS40002443 sec 11.3.3; the DD documents the same window). So the running low is tracked in RAM (vmin_ram,
  * wear-free and safe at any rail) and only COMMITTED to EEPROM from a healthy rail (>= EE_WRITE_FLOOR_MV).
