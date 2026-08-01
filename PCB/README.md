@@ -152,12 +152,17 @@ crossing or to flood the region gets declined.
    - **warning tier** = the *marginal band* [0.126, 0.1524): PCBWay-legal geometry that is
      tighter than 6 mil, flagged on purpose so the ledger stays visible.
 
-   **Expected result: 0 errors, ~61 warnings, 3 exclusions.** The exclusions are the two
-   gold-plating tie stubs crossing the outline and the LA↔LB coil junction — all intentional.
+   **Expected result: 0 errors, ~61 warnings, 11 exclusions** (verify the exclusion count against
+   `Generated/solar-glow-drh-v4_0-drc.html`, which CI writes — the catalogue's history lives in
+   `CLAUDE.md`). The excluded set is the two gold-plating tie stubs crossing the outline, the
+   LA↔LB coil junction, the seven supercap NPTHs inside courtyards, and the `TC1/b`↔SC1 courtyard
+   overlap — all intentional.
    The footprints that shipped without a courtyard (U1, U8, U5, U3, D2-D5, J1, TC1) now carry
-   courtyards + pin-1/cathode markers. The one accepted courtyard overlap (the TC1 Tag-Connect
-   over the SC1 supercap zone) is excluded in the KiCad DRC (`.kicad_pro`); courtyard-overlap is
-   otherwise a hard CI gate. The two proximities this exposed (U8/L2, U1/J1) were resolved in the layout.
+   courtyards + pin-1/cathode markers. The one accepted courtyard overlap is the **`TC1/b`
+   Tag-Connect mirror under the SC1 supercap** (its ancestor — the pre-2026-07-30 B-side TC1 over
+   the same can — died with the side flip and KiCad pruned the exclusion; the 2026-08-01 mirror
+   recreates it deliberately: bare pads under a part body, used only before SC1 is fitted);
+   courtyard-overlap is otherwise a hard CI gate. The two proximities this exposed (U8/L2, U1/J1) were resolved in the layout.
    The warnings are the marginal-band ledger (mostly the 0.127 mm parallel corridors of the
    west-side bus) plus fourteen 0.15 mm track-width notes. **Do not "fix" warnings blindly**,
    and do not be alarmed if the warning *count* differs slightly between runs — KiCad's
@@ -366,7 +371,9 @@ a PCBWay DFM reviewer asks — their absence is a decision, not an oversight.
   area list to the **net rule** above: the front's F.Mask-opened pads are exactly PV1/PV2 ×8
   (4 SRC + the 4 GND solder lands the rule excepts) and TC2030 ×6 (1 GND, in the gold set; 2
   signal + 3 unconnected, unplateable — no bus path); every graphic opening exposes GND pour or
-  bare laminate only, which `scripts/mask_art.py`'s guard enforces for its own art. The gold set
+  bare laminate only, which `scripts/mask_art.py`'s guard enforces for its own art. (`TC1/b`,
+  the 2026-08-01 B-side mirror, opens **B.Mask** only — it is outside the front gold set by
+  construction and takes the board-wide base finish like every other back pad.) The gold set
   stays a single connected F.Cu group fed by the pour — the net rule *adds* the TC2030 GND pad
   (a spring-contact surface, which is what hard gold is for) and the contactless-mark arcs
   relative to the old enumeration; same look, better wear, one sentence of spec.) Ordering plain
@@ -424,7 +431,7 @@ hand-tinning. Order it alongside the board.
 > |---|---|---|
 > | **PV1, PV2** (solar cells) | 8 | hand-soldered, consigned; **4 pads each** — a Ø3.5 mm terminal plus a 4 × 3 mm tab 3.1 mm outboard |
 > | **SC1–SC4** (supercaps) | 8 | hand-soldered to the under-body P/N pads |
-> | 10 DNP parts + **TC1** | 29 | not placed / pogo contacts must stay bare |
+> | 11 DNP parts (incl. **TC1/b**, the B-side mirror, 2026-08-01) + **TC1** | 35 | not placed / pogo contacts must stay bare |
 >
 > The PV and SC pads alone are **≈ 366 mm² of aperture** — the largest on the board by a wide
 > margin, equivalent to about 1,200 0402 pads. Reflowing that much paste under parts meant to be
@@ -526,7 +533,9 @@ Summary of the **orderable** lines:
   where there is no front pour, so it reads as **bare laminate like the monogram window**, not
   gold. Generic waves, not the NFC Forum N-Mark, which is licensed.
 - **TC1** is the **TC2030 footprint** — no soldered part; it mates with a TC2030-MCP pogo
-  cable. **Do not load.**
+  cable. **Do not load.** Since 2026-08-01 the land is **double-sided**: `TC1/b` mirrors the
+  same three nets (UPDI/STO/GND) onto `B.Cu` at the same XY, so the plug works from either
+  side of a board that does not yet carry SC1 (the back land sits under the supercap's can).
 - **J1** is an **optional** 0.1″ UPDI header — TC1 is the primary programming path.
 - **MH1–MH4** are plated drills — supply your own **M2 screws** if enclosing.
 
@@ -621,6 +630,14 @@ needs translucent FR4, the black look comes from the soldermask.
 > them now is **PV1**: the cell's body spans (2.3, 4.25)–(48.5, 27.25) and the pad cluster
 > (12.219, 15.184)–(14.381, 18.616) sits well inside it. PV1's *solder pads* do not touch TC1's
 > — the overlap is 0.0% — so this is a mechanical obstruction, not an electrical one.
+>
+> **2026-08-01: the land went double-sided.** `TC1/b` mirrors UPDI/STO/GND onto `B.Cu` at the
+> same XY, so on a board fresh from PCBWay (no supercaps, no cells) the plug seats from
+> **either side** — face-up or face-down on the bench, it does not care. The sequencing rule is
+> unchanged, it just gains a symmetric clock: **SC1 covers the back land** (that is the accepted
+> `TC1/b`↔SC1 courtyard exclusion), **PV1 covers the front land** — so hand-solder the supercaps
+> and cells only after firmware is flashed and verified, same as before. `TC1/b` is bare copper
+> on the B side: no paste, no part, nothing to place.
 >
 > So: **flash and verify the firmware first, then hand-solder the cells.** If you need to
 > re-program after PV1 is on, your options are the optional **J1** UPDI header or lifting the

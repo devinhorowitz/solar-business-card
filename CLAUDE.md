@@ -149,7 +149,8 @@ from a generator CI runs** (check [9]), and that every 3D model carries its tabl
 - **A `dnp` part's model resolves too — and is still not drawn.** Same blind spot, opposite cause:
   the body is absent from every populated render *correctly*, because the assembled board will not
   have the part, but "resolved and drawn" and "resolved and deliberately absent" look identical —
-  an empty land. **C9** is the only one on this board (the other nine `dnp` footprints carry no
+  an empty land. **C9** is the only one on this board (the other ten `dnp` footprints — `TC1/b`,
+  the B-side programming mirror, joined 2026-08-01 — carry no
   model at all), and confirming its 0402→0805 upsize had landed meant re-rendering with `dnp`
   cleared and diffing: 528 px, 20×37, an 0805 turned 90°. `render.py` now names the DNP set beside
   the resolve count so nobody has to do that again.
@@ -170,11 +171,14 @@ from a generator CI runs** (check [9]), and that every 3D model carries its tabl
   did not move. KiCad pairs that aperture against the copper
   items near it, and the set it finds varies run to run — most likely because `check_zone_fills` refills the pours first
   and the fill is not bit-reproducible. What IS stable, and what to assert if this ever gets a
-  gate: `Errors: 0 (+10 excluded)`, zero hits on F.Mask, and every hit citing that one aperture.
-  _(Was `+11` until 2026-07-30. The 11th was a `courtyards_overlap` exclusion; the 2026-07-30 board
-  sync stopped that violation firing and KiCad pruned the now-dead exclusion, so the list is 13 →
-  the same 10 errors plus 3 `silk_over_copper` warnings. Live errors were 0 before and after — the
-  count moved because a finding went away, not because one stopped being reported. Verify the
+  gate: `Errors: 0 (+11 excluded)`, zero hits on F.Mask, and every hit citing that one aperture.
+  _(Was `+11` until 2026-07-30, `+10` until 2026-08-01. The old 11th was a `courtyards_overlap`
+  exclusion the 2026-07-30 board sync made dead, and KiCad pruned it; the new 11th is another
+  `courtyards_overlap` — `TC1/b`, the B-side programming mirror added 2026-08-01, sits inside SC1's
+  courtyard by design (bare pads under a part body, nothing fitted while programming). The
+  `extra_footprint` parity exclusion added in the same GUI session was deliberately NOT kept — the
+  schematic gained a real `TC1/b` symbol instead, so a future sync that loses it goes red rather
+  than silent. The list is 14 → 11 errors plus 3 `silk_over_copper` warnings. Verify the
   number against `Generated/solar-glow-drh-v4_0-drc.html`, which CI writes, rather than trusting
   this line.)_
 - **`mask_art.py`'s `generate()` is the single definition of what it writes** — and
