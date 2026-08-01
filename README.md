@@ -123,7 +123,7 @@ TPS22917DBVT** (ultra-low-leakage dark-current swap) with **R14 (1 M `NFC_EN` pu
 JP1/JP2 rows are dropped (the `JP1` designator is reused in v3.0 for the bench pad strip - bare pads,
 no BOM part). Passives are X7R / AEC-Q200 / precision grade: most on **0402** lands, with the
 stability upsizes on 0603 (C22/C23, R5/R6, R15/R16, plus the bulk caps C4/C13/C25) and 0805
-(C26/C27, and C9's NFC tank trim). SJ1 is culled. Lineage: v2.2 added the NFC parts (U5 / C8 / C9 / R13); the `v2 2` and older
+(C26/C27, and C9's NFC tank cap — fitted 47 pF, derived not trimmed). SJ1 is culled. Lineage: v2.2 added the NFC parts (U5 / C8 / C9 / R13); the `v2 2` and older
 BOM files stay in the repo as history.
 
 ---
@@ -281,9 +281,12 @@ the board gives it:
   datasheet and found **non-viable on this part** — the AC interrupt doesn't update with the
   peripheral clock stopped, and the AC isn't a Standby/Power-Down wake source, so it would never
   fire. Instant response isn't lost: the accelerometer interrupt wakes from Power-Down, and
-  picking the card up to carry it into the light *is* that motion. (Standing current is ~2.7 µA total — the
-  always-on accelerometer (ADXL367, ~0.89 µA) no longer dominates it, and neither the poll nor the NFC tag do, the latter being
-  power-gated off by default — see `firmware/README.md`.)
+  picking the card up to carry it into the light *is* that motion. (Standing current: **≥ ~2.7 µA — a
+  2.0 V-referenced lower bound, not a measurement** (the 2026-08-01 pressure test found the NFC tag's
+  FD-pin leakage, 1.5 µA typ / 10 µA max, unbudgeted in that sum) — the always-on accelerometer
+  (ADXL367, 0.89 µA typ *at 2.0 V*) no longer dominates it, and neither the poll nor the NFC tag do,
+  the latter being power-gated off by default — see `firmware/README.md` "Power notes" for the honest
+  ledger and the bench item.)
 - **Low-power housekeeping** — `VREGCTRL.PMODE = AUTO` for sub-µA power-down; RTC/PIT off the
   internal ULP oscillator (no crystal); an EEPROM “times-activated” counter that survives a
   full supercap drain; and the core **IDLE-sleeps through the breathing glow** while TCA0 keeps
