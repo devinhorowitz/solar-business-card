@@ -12798,7 +12798,7 @@
 		)
 	)
 	(global_label "VINT"
-		(shape input)
+		(shape passive)
 		(at 405.13 402.59 180)
 		(effects
 			(font
@@ -12883,7 +12883,7 @@
 		)
 	)
 	(global_label "GND"
-		(shape input)
+		(shape bidirectional)
 		(at 454.66 463.55 0)
 		(effects
 			(font
@@ -12947,7 +12947,7 @@
 		)
 	)
 	(global_label "STO"
-		(shape input)
+		(shape bidirectional)
 		(at 546.1 372.11 0)
 		(effects
 			(font
@@ -13032,7 +13032,7 @@
 		)
 	)
 	(global_label "GND"
-		(shape input)
+		(shape bidirectional)
 		(at 607.06 377.19 0)
 		(effects
 			(font
@@ -13117,7 +13117,7 @@
 		)
 	)
 	(global_label "GND"
-		(shape input)
+		(shape bidirectional)
 		(at 668.02 377.19 0)
 		(effects
 			(font
@@ -13244,7 +13244,7 @@
 		)
 	)
 	(global_label "LX_LOUT"
-		(shape input)
+		(shape passive)
 		(at 454.66 397.51 0)
 		(effects
 			(font
@@ -13308,7 +13308,7 @@
 		)
 	)
 	(global_label "VINT"
-		(shape input)
+		(shape passive)
 		(at 454.66 407.67 0)
 		(effects
 			(font
@@ -13414,7 +13414,7 @@
 		)
 	)
 	(global_label "LX_LOUT"
-		(shape input)
+		(shape passive)
 		(at 515.62 377.19 0)
 		(effects
 			(font
@@ -13499,7 +13499,7 @@
 		)
 	)
 	(global_label "STO"
-		(shape input)
+		(shape bidirectional)
 		(at 637.54 372.11 0)
 		(effects
 			(font
@@ -13584,7 +13584,7 @@
 		)
 	)
 	(global_label "SRC"
-		(shape input)
+		(shape bidirectional)
 		(at 454.66 377.19 0)
 		(effects
 			(font
@@ -13627,7 +13627,7 @@
 		)
 	)
 	(global_label "GND"
-		(shape input)
+		(shape bidirectional)
 		(at 576.58 377.19 0)
 		(effects
 			(font
@@ -13775,7 +13775,7 @@
 		)
 	)
 	(global_label "STO_SNS"
-		(shape input)
+		(shape passive)
 		(at 728.98 372.11 0)
 		(effects
 			(font
@@ -13839,7 +13839,7 @@
 		)
 	)
 	(global_label "MID"
-		(shape input)
+		(shape bidirectional)
 		(at 405.13 382.27 180)
 		(effects
 			(font
@@ -13861,7 +13861,7 @@
 		)
 	)
 	(global_label "GND"
-		(shape input)
+		(shape bidirectional)
 		(at 698.5 377.19 0)
 		(effects
 			(font
@@ -13883,7 +13883,7 @@
 		)
 	)
 	(global_label "VINT"
-		(shape input)
+		(shape passive)
 		(at 454.66 417.83 0)
 		(effects
 			(font
@@ -13968,7 +13968,7 @@
 		)
 	)
 	(global_label "VINT"
-		(shape input)
+		(shape passive)
 		(at 820.42 372.11 0)
 		(effects
 			(font
@@ -14011,7 +14011,7 @@
 		)
 	)
 	(global_label "STO_LDO"
-		(shape input)
+		(shape passive)
 		(at 485.14 382.27 0)
 		(effects
 			(font
@@ -14201,7 +14201,7 @@
 		)
 	)
 	(global_label "GND"
-		(shape input)
+		(shape bidirectional)
 		(at 454.66 402.59 0)
 		(effects
 			(font
@@ -14244,7 +14244,7 @@
 		)
 	)
 	(global_label "GND"
-		(shape input)
+		(shape bidirectional)
 		(at 454.66 478.79 0)
 		(effects
 			(font
@@ -14350,7 +14350,7 @@
 		)
 	)
 	(global_label "STO_LDO"
-		(shape input)
+		(shape passive)
 		(at 405.13 422.91 180)
 		(effects
 			(font
@@ -14372,7 +14372,7 @@
 		)
 	)
 	(global_label "GND"
-		(shape input)
+		(shape bidirectional)
 		(at 454.66 412.75 0)
 		(effects
 			(font
@@ -14394,7 +14394,7 @@
 		)
 	)
 	(global_label "GND"
-		(shape input)
+		(shape bidirectional)
 		(at 454.66 514.35 0)
 		(effects
 			(font
@@ -14437,7 +14437,7 @@
 		)
 	)
 	(global_label "GND"
-		(shape input)
+		(shape bidirectional)
 		(at 454.66 504.19 0)
 		(effects
 			(font
@@ -14480,7 +14480,7 @@
 		)
 	)
 	(global_label "GND"
-		(shape input)
+		(shape bidirectional)
 		(at 728.98 377.19 0)
 		(effects
 			(font
@@ -14502,7 +14502,7 @@
 		)
 	)
 	(global_label "VS"
-		(shape input)
+		(shape bidirectional)
 		(at 698.5 372.11 0)
 		(effects
 			(font
@@ -14587,7 +14587,7 @@
 		)
 	)
 	(global_label "GND"
-		(shape input)
+		(shape bidirectional)
 		(at 485.14 377.19 0)
 		(effects
 			(font
@@ -14672,7 +14672,7 @@
 		)
 	)
 	(global_label "EN_STO_CH"
-		(shape input)
+		(shape bidirectional)
 		(at 454.66 427.99 0)
 		(effects
 			(font
@@ -14715,7 +14715,7 @@
 		)
 	)
 	(global_label "STO_LDO"
-		(shape input)
+		(shape passive)
 		(at 668.02 372.11 0)
 		(effects
 			(font
@@ -14884,7 +14884,7 @@
 		)
 	)
 	(global_label "STO"
-		(shape input)
+		(shape bidirectional)
 		(at 759.46 372.11 0)
 		(effects
 			(font
@@ -15053,7 +15053,7 @@
 		)
 	)
 	(global_label "GND"
-		(shape input)
+		(shape bidirectional)
 		(at 454.66 382.27 0)
 		(effects
 			(font
@@ -15159,7 +15159,7 @@
 		)
 	)
 	(global_label "LX_LOUT"
-		(shape input)
+		(shape passive)
 		(at 405.13 392.43 180)
 		(effects
 			(font
@@ -15202,7 +15202,7 @@
 		)
 	)
 	(global_label "GND"
-		(shape input)
+		(shape bidirectional)
 		(at 637.54 377.19 0)
 		(effects
 			(font
@@ -15245,7 +15245,7 @@
 		)
 	)
 	(global_label "EN_STO_CH"
-		(shape input)
+		(shape bidirectional)
 		(at 820.42 377.19 0)
 		(effects
 			(font
@@ -15330,7 +15330,7 @@
 		)
 	)
 	(global_label "STO_SNS"
-		(shape input)
+		(shape passive)
 		(at 759.46 377.19 0)
 		(effects
 			(font
@@ -15415,7 +15415,7 @@
 		)
 	)
 	(global_label "VINT"
-		(shape input)
+		(shape passive)
 		(at 607.06 372.11 0)
 		(effects
 			(font
@@ -15521,7 +15521,7 @@
 		)
 	)
 	(global_label "VINT"
-		(shape input)
+		(shape passive)
 		(at 454.66 468.63 0)
 		(effects
 			(font
@@ -15543,7 +15543,7 @@
 		)
 	)
 	(global_label "GND"
-		(shape input)
+		(shape bidirectional)
 		(at 454.66 494.03 0)
 		(effects
 			(font
@@ -15628,7 +15628,7 @@
 		)
 	)
 	(global_label "LX_LIN"
-		(shape input)
+		(shape passive)
 		(at 515.62 372.11 0)
 		(effects
 			(font
@@ -15650,7 +15650,7 @@
 		)
 	)
 	(global_label "VS"
-		(shape input)
+		(shape bidirectional)
 		(at 485.14 392.43 0)
 		(effects
 			(font
@@ -15819,7 +15819,7 @@
 		)
 	)
 	(global_label "STO_LDO"
-		(shape input)
+		(shape passive)
 		(at 485.14 372.11 0)
 		(effects
 			(font
@@ -16030,7 +16030,7 @@
 		)
 	)
 	(global_label "BUFSRC"
-		(shape input)
+		(shape passive)
 		(at 405.13 412.75 180)
 		(effects
 			(font
@@ -16073,7 +16073,7 @@
 		)
 	)
 	(global_label "BUFSRC"
-		(shape input)
+		(shape passive)
 		(at 454.66 387.35 0)
 		(effects
 			(font
@@ -16158,7 +16158,7 @@
 		)
 	)
 	(global_label "VS"
-		(shape input)
+		(shape bidirectional)
 		(at 405.13 372.11 180)
 		(effects
 			(font
@@ -16222,7 +16222,7 @@
 		)
 	)
 	(global_label "GND"
-		(shape input)
+		(shape bidirectional)
 		(at 454.66 473.71 0)
 		(effects
 			(font
@@ -16349,7 +16349,7 @@
 		)
 	)
 	(global_label "SRC"
-		(shape input)
+		(shape bidirectional)
 		(at 454.66 509.27 0)
 		(effects
 			(font
@@ -16413,7 +16413,7 @@
 		)
 	)
 	(global_label "LX_LIN"
-		(shape input)
+		(shape passive)
 		(at 454.66 392.43 0)
 		(effects
 			(font
@@ -16456,7 +16456,7 @@
 		)
 	)
 	(global_label "STO_SNS"
-		(shape input)
+		(shape passive)
 		(at 789.94 372.11 0)
 		(effects
 			(font
@@ -16604,7 +16604,7 @@
 		)
 	)
 	(global_label "VINT"
-		(shape input)
+		(shape passive)
 		(at 454.66 483.87 0)
 		(effects
 			(font
@@ -16626,7 +16626,7 @@
 		)
 	)
 	(global_label "GND"
-		(shape input)
+		(shape bidirectional)
 		(at 454.66 458.47 0)
 		(effects
 			(font
@@ -16816,7 +16816,7 @@
 		)
 	)
 	(global_label "STO_LDO"
-		(shape input)
+		(shape passive)
 		(at 546.1 377.19 0)
 		(effects
 			(font
@@ -16880,7 +16880,7 @@
 		)
 	)
 	(global_label "STO_SNS"
-		(shape input)
+		(shape passive)
 		(at 204.47 88.9 0)
 		(effects
 			(font
@@ -17028,7 +17028,7 @@
 		)
 	)
 	(global_label "STO"
-		(shape input)
+		(shape bidirectional)
 		(at 454.66 438.15 0)
 		(effects
 			(font
@@ -17155,7 +17155,7 @@
 		)
 	)
 	(global_label "BUFSRC"
-		(shape input)
+		(shape passive)
 		(at 576.58 372.11 0)
 		(effects
 			(font
@@ -17177,7 +17177,7 @@
 		)
 	)
 	(global_label "GND"
-		(shape input)
+		(shape bidirectional)
 		(at 789.94 377.19 0)
 		(effects
 			(font
@@ -17241,7 +17241,7 @@
 		)
 	)
 	(global_label "GND"
-		(shape input)
+		(shape bidirectional)
 		(at 454.66 422.91 0)
 		(effects
 			(font
@@ -17284,7 +17284,7 @@
 		)
 	)
 	(global_label "VINT"
-		(shape input)
+		(shape passive)
 		(at 454.66 488.95 0)
 		(effects
 			(font
@@ -17327,7 +17327,7 @@
 		)
 	)
 	(global_label "MID"
-		(shape input)
+		(shape bidirectional)
 		(at 454.66 433.07 0)
 		(effects
 			(font

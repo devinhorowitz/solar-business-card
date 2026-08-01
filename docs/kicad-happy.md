@@ -201,3 +201,37 @@ Verification after integration: DRC `Errors: 0 (+11 excluded)`, **zero F.Mask hi
 regenerated through `generate()` and `--check` = MATCH. After-census (37 GND vias): worst
 nearest-GND-via distance fell **19.25 → 8.13 mm**, and the 8.13 IS the coil crossover; every
 non-coil signal via is now within 5.1 mm (median 2.38, 80/82 within 5).
+
+## Second look — 2026-08-01 (the leftovers, swept)
+
+A post-integration re-run of both analyzers against the stitched board, plus a read of every
+JSON section the deep analysis never opened. What it yielded:
+
+- **Re-run deltas: none that matter.** The PCB finding set is byte-for-byte the baseline modulo
+  the TC1/b1 rename (test-point coverage now reads 7/58 nets — the three named
+  `unconnected-(TC1/b1-PadN)` nets joined the denominator). The nine new vias tripped nothing:
+  the keepout audit stays at its known-intentional set, so the placements respect the coil and
+  window keepouts by the tool's own measure too.
+- **Label glyphs fixed — the last cheap schematic item.** 57 global-label glyphs across 12 nets:
+  `input` → `bidirectional` on the six mixed-shape rails (GND, SRC, EN_STO_CH, STO, VS, MID —
+  each net now carries one shape), `input` → `passive` on the six passive-driven nets the tool
+  rightly called undriven (VINT, LX_LIN, LX_LOUT, BUFSRC, STO_LDO, STO_SNS — an inward arrow on
+  an inductor node was wrong documentation). Non-electrical by construction, and proven:
+  `kicad-cli sch erc --severity-all` before/after is **identical except the timestamp** (3
+  ledgered violations both sides). `label_shape_warnings`: 12 → **0**; the schematic's warning
+  set is now exactly the five documented-intentional PU-001/RS-001 entries.
+- **The lifecycle "1 unknown" is U8 itself:** Mouser returns no lifecycle-status field for
+  `10AEM10300C0000` (16-day lead time, not discontinued, no suggested replacement) — a data gap
+  on the distributor side, not a part risk. `BOM/README.md`'s live check is the working truth.
+- **The EMC test-plan section earns its keep:** all four FCC Part 15 B radiated bands rate
+  "risk: none" from the design data, and its probe list names **L2 at (26.2, 58.7)** as the
+  highest-dI/dt point — now recorded in TODO's measured-half item so the bench starts there.
+- **Decoupling-proximity table read in full:** every IC has its capacitor within 2.5 mm
+  (U1↔C29 1.42, U8↔C26 2.5, U7↔C28 2.34, U6↔C6 2.33); the table pairs by shared net, and the
+  one eyebrow-raiser (`C3` sharing "VDDIO2" with U1) is the documented DD-era pad-name history
+  (`firmware/board.h` line 27), not a find.
+
+**Still deliberately unactioned** (the declines stand): symbol pin-type retagging to silence
+PU-001, the B-side EP "thermal via" warnings (EPs land laterally on the B.Cu pour, mW-class),
+test-point coverage (pogo plate covers bring-up), and card-face fiducials (panel set carries
+assembly; local pair near U1 only if PCBWay asks).
