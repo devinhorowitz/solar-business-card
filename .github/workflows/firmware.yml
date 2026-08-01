@@ -13,10 +13,14 @@ on:
   push:
     paths:
       - 'firmware/**'
+      # the size gate reads the ELF this job builds; an edit to the gate must re-run it
+      # (the #132 gap class: a checker edit that triggers nothing checks nothing)
+      - 'scripts/check_fw_size.py'
       - '.github/workflows/firmware.yml'
   pull_request:
     paths:
       - 'firmware/**'
+      - 'scripts/check_fw_size.py'
       - '.github/workflows/firmware.yml'
 
 jobs:
@@ -51,6 +55,12 @@ jobs:
           make -C firmware DFP="$HOME/avr/AVR-Ex_DFP" WERROR=1
           echo "----- size -----"
           avr-size firmware/solar-glow.elf
+
+      # The README's measured size figure is GATED, not decorative: it went quietly
+      # stale once (the "~2.4 KB / 6 B" that outlived the EA port), so a size-changing
+      # edit must land with its README update in the same commit, or fail here.
+      - name: Gate the README size figures against the build
+        run: python3 scripts/check_fw_size.py firmware/solar-glow.elf
 
       - name: Upload firmware image
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02   # v4

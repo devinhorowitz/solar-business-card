@@ -124,7 +124,21 @@ a deliberate move updates the snapshot in the same commit, the exclusion-ledger 
   auto-applying it in CI would have the job editing a source of truth — and a `.kicad_pcb` whose
   line endings alternate between saves. It stays a guard (check [6]): re-route the front, run
   `--apply` yourself, push, and everything downstream regenerates from there.
-- `firmware.yml` — builds the firmware on `firmware/**` changes, uploads the hex.
+- `firmware.yml` — builds the firmware on `firmware/**` changes (warning-free is a GATE:
+  CI passes `WERROR=1`), uploads the hex, and gates the README's measured size figures
+  against the build (`scripts/check_fw_size.py` — a size-changing edit lands with its
+  README figure update in the same commit, or fails).
+- `weekly-freshness.yml` — the Monday canary + drift report. Pins have two failure modes
+  push-CI can't see: **rot** (the pinned artifact stops being fetchable) and **drift**
+  (upstream moves on). Weekly, pushes or not: re-fetches the pinned toolchain/DFP and
+  builds warning-free, pulls the pinned KiCad image and runs the consistency suite on the
+  unchanged tree, then sweeps upstream (KiCad `:latest` digest, the AVR-Ex pack index,
+  PyPI for every `pkg==ver` pin it finds in the workflows, latest release tags for pinned
+  action SHAs) and upserts one standing issue, "Weekly freshness report". **Nothing moves
+  a pin automatically** — rot fails the job red, drift is report-only; the deliberate
+  bridge is dispatching it with `bump_kicad=true`, which opens a DRAFT PR moving the KiCad
+  digest in all three workflows together, and the merge run's `Generated/` diff is the
+  upgrade's blast radius, per the pinning doctrine below.
 - `consistency.yml` — runs the drift guard on doc/board/firmware changes, plus
   `scripts/mask_art.py` (check [6] regenerates the mask art through it), `scripts/part_colors.py`
   (check [10]), `kibot.yml` (check [9] parses its `OUTS` list) and `enclosure/**`
