@@ -1,7 +1,10 @@
 # v4 AEM10300 pre-wiring plan (net + pin assignments)
 
 Companion to `solar-glow-drh-design-notes.md` -> "Addendum (2026-07-15) -- v4 active-harvest option".
-**Status: v4.0 ADOPTED -- the active revision.** This is the executable net/pin list for the manual KiCad respin: add the
+**Status: v4.0 ADOPTED — and the respin this plan drove is DONE.** The board is fully routed
+(0 unconnected) and the schematic was synced to it 2026-07-30 (`v4-schematic-sync-checklist.md`);
+this document is now the **record of what was applied**, kept for lineage — the `.kicad_pcb` and
+`.kicad_sch` are the truth. _(Original framing follows:)_ This is the executable net/pin list for the manual KiCad respin: add the
 new parts off to the side, wire each pin to the net named here (the ratsnest then guides placement), and
 delete the parts in section 4. Every net/refdes below was read from the committed
 `PCB/solar-glow-drh-v4_0.kicad_pcb`.

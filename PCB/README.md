@@ -449,7 +449,8 @@ hand-tinning. Order it alongside the board.
 (those headers left the board in v3.0), and **most passives converted to 0402** to match the board's placed lands — the v2.2 file still
 listed 0805 MPNs for most R/C. _(Updated 2026-07-25: the 2026-07-23 longevity/precision passes moved
 several off 0402 — **0603**: C4, C13, C25, C22, C23, R5, R6, R15, R16, **FB1**; **0805**: C26, C27.
-(FB1 is 0603 in the BOM and the schematic but the **board still draws its 0402 land** — see TODO.md.)
+(FB1's 0402-land lag is **resolved** — BOM, schematic and board all carry the 0603 land now,
+verified against the committed board 2026-08-01; the TODO item this note used to point at is gone.)
 SJ1 is **gone
 outright** — DNP'd 2026-07-23 with the AVR-EA swap, then symbol, land and strap deleted from the
 schematic and board on 2026-07-30 (PR #114 sch cull + the board sync); the BOM master keeps its
