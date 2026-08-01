@@ -93,7 +93,9 @@ from a generator CI runs** (check [9]), and that every 3D model carries its tabl
   locally to check a change, but don't commit the result: VTK's pixels differ across GL stacks and
   a hand-run render churns against CI's forever. The commit-back globs these by *kind*, so a new
   variant out of a generator is picked up without editing the workflow.
-  Triggers are `PCB/**` **minus `PCB/**.md`**, `scripts/panelize.py`, `scripts/render.py`, the
+  Triggers are `PCB/**` **minus `PCB/**.md`**, `scripts/panelize.py`, `scripts/render.py`,
+  `scripts/ref_figures.py` (the board reference figures — LED polarity, SW2 bridge — drawn from
+  the board into `Generated/docs/`), the
   generators' own non-board inputs (`enclosure/assembly_render.py`, `fit_rules.py`,
   `board_parts.py`, `medallion.py`, `enclosure/**.stl`) **and, since 2026-07-31, the CAD/drawing
   generators themselves** (shell, brace, both DRAWING-gens — before that, a generator-only edit

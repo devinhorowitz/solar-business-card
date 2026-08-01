@@ -7,6 +7,12 @@
 # Need the panel board itself? Rebuild it:  python3 scripts/panelize.py
 Generated/panel/*.kicad_pcb
 
+# kicad-cli drops a .kicad_prl (per-user VIEW STATE -- active layer, opacities) beside any
+# board it opens, including the uncommitted panel board above. The commit-back's
+# `git add -A Generated` swept one in once; it is not a fab artifact, and without this line
+# deleting it just resurrects on the next run (the bc50e41 lesson, in miniature).
+Generated/**/*.kicad_prl
+
 # KiCad's project lock file. Harmless, but it now appears in a plain checkout because CI
 # runs kicad-cli against PCB/ in-repo (scripts/render.py), and kicad-cli takes the lock the
 # same way the GUI does. Never worth committing.

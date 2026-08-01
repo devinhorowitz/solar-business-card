@@ -81,14 +81,12 @@ PCB/
 ├── solar-glow-drh-v4_0.kicad_prl     # local project state
 ├── solar-glow-drh-v4_0.kicad_dru     # two-tier design rules (PCBWay floor + marginal band)
 ├── solar-glow-drh.kibot.yaml         # CI recipe — regenerates ../Generated/ on every push
-├── solar-glow-drh-v4_0-BOM.xlsx      # bill of materials - v4.0 master (adds the AEM10300 harvest chain: U7 FRAM, U8 PMIC, U9 LDO, L2/FB1, C22–C28, R15–R17; mostly 0402, with C26/C27 on 0805 and ten more on 0603 — see the BOM table below — and SJ1 on its own 0R land)
+├── solar-glow-drh-v4_0-BOM.xlsx      # bill of materials - v4.0 master (adds the AEM10300 harvest chain: U7 FRAM, U8 PMIC, U9 LDO, L2/FB1, C22–C28, R15–R17; mostly 0402, with C26/C27 on 0805 and ten more on 0603 — see the BOM table below)
 ├── solar-glow-drh-v4_0-BOM-assembly.xlsx  # trimmed PCBA BOM (36 placed parts)
 ├── kicad-3dmodels/                   # the 9 stock KiCad .step bodies this board uses, mirroring the
 │                                     #   library layout (CC-BY-SA 4.0, licence bundled). CI's render
 │                                     #   image ships NO 3D library, so without these the assembled
 │                                     #   render silently loses 38 of 53 component bodies.
-├── sw2-anode-selector.png            # how to read/set the SW2 OFF/ON/TINY bridge
-├── led-orientation-D2-D5.png         # reverse-mount LED rotation reference for PCBA
 └── DRC.rpt / ERC.rpt                 # last GUI report exports (CI keeps live copies in ../Generated/)
                                       # (v2_1 / v2_2 / v2_3 / v3_0 revisions live in git history, not this folder)
 ```
@@ -445,8 +443,10 @@ hand-tinning. Order it alongside the board.
 listed 0805 MPNs for most R/C. _(Updated 2026-07-25: the 2026-07-23 longevity/precision passes moved
 several off 0402 — **0603**: C4, C13, C25, C22, C23, R5, R6, R15, R16, **FB1**; **0805**: C26, C27.
 (FB1 is 0603 in the BOM and the schematic but the **board still draws its 0402 land** — see TODO.md.)
-SJ1's 0R
-land is now **DNP**. New parts since: **Q2** (SOT-23) + **R18** (0402). The table below is the
+SJ1 is **gone
+outright** — DNP'd 2026-07-23 with the AVR-EA swap, then symbol, land and strap deleted from the
+schematic and board on 2026-07-30 (PR #114 sch cull + the board sync); the BOM master keeps its
+row as lineage. New parts since: **Q2** (SOT-23) + **R18** (0402). The table below is the
 current truth.)_ Converted and added
 lines had their prices blanked at the time; **that is no longer true — every ordered line is now
 live-priced** (full DigiKey/Mouser sourcing pass, 2026-07-23, subtotal ≈ $140). The `v2 2` and older
@@ -480,7 +480,6 @@ Summary of the **orderable** lines:
 | C11 | 1 | 0.22 µF (220 nF), X7R, 16 V | 0402 | `GRT155R71C224KE01D` |
 | C12 | 1 | 100 nF, X7R, 50 V | 0402 | `GRT155R71H104KE01D` |
 | C7 | 1 | 100 nF, X7R, 50 V | 0402 | `GRT155R71H104KE01D` |
-| SJ1 | 1 | DNP (was 0 Ω jumper) | 0805 | **(DNP - not ordered)** |
 | SW2 | 1 | 3-pad bridge | solder-bridge | **(none — PCB bridge)** |
 | SB1–SB4 | 4 | solder-bridge | solder-bridge | **(none — PCB bridge)** |
 | TC1 | 1 | TC2030-MCP-FP | TC2030 legged land | **(no part — pogo interface)** |
@@ -561,8 +560,9 @@ types by hand afterward.
 - **PCBWay machine-places** (reflow, bottom): U1, U3, U5–U9, Q2, D2–D5, R1–R6, R10–R12, R14–R18, L2, FB1,
   C1, C3–C8, C11–C13, C22–C28. (Recompute the placed count from the v4 board; the v3 clamp/comparator
   parts - U2, U4, Q1, D1, D9–D11, R7–R9, C2, C10 - are gone.)
-  *(Corrected 2026-07-26: **SJ1 removed** from this list — it is DNP/not-ordered and must be left open,
-  so it is never placed; the DNP attribute now says so in both the .kicad_sch and .kicad_pcb. **Q2 and
+  *(Corrected 2026-07-26: **SJ1 removed** from this list — it was then DNP/not-ordered and never
+  placed. Since 2026-07-30 the question is moot: SJ1's symbol, land and strap were deleted from the
+  schematic and board outright (PR #114 sch cull + the board sync). **Q2 and
   R18 added** — the charge-disable buffer from the cold-start-deadlock fix. **U7 is correctly in this
   list**: it carried a stray DNP attribute in the .kicad_pcb, now cleared so the board agrees with the
   schematic. That flag did not affect this project's fab output — the CI pick+place CSV is informational
@@ -585,7 +585,9 @@ the exact reverse-mount P/N, OSRAM sells top-emit lookalikes).
 (KiCad → Fabrication Outputs → Component Placement; **CSV, mm, exclude-DNP** after marking
 SC1–SC4 / PV1–PV2 / J1 / JP1 / TP1 as DNP — **not C9 any more**; **Absolute origin** to match
 the drills), and
-`led-orientation-D2-D5.png`.
+`../Generated/docs/solar-glow-drh-v4_0-led-orientation.png` (CI draws it from the board —
+`scripts/ref_figures.py` — so it cannot lag a re-route; it replaced the hand-made
+`led-orientation-D2-D5.png` on 2026-08-01).
 
 **Order-form settings that matter:** bottom side, qty 5, ENIG (or ENEPIG, whichever quotes cleaner) **+ selective hard gold (special request above)** / matte-black / white silk,
 **resin-fill + via-in-pad** (cleans the 10 via-in-pad joints and keeps the TC1 pogo pad
@@ -594,9 +596,9 @@ temp, no ultrasonic clean), no China substitutes. **Black-FR4 core stays OFF** �
 needs translucent FR4, the black look comes from the soldermask.
 
 > **LED polarity (reverse-mount `LA P47F`):** anode **A** on the left, cathode **K** on the
-> right, all four at **rotation 0** (see `led-orientation-D2-D5.png`). They emit *down* through
-> the FR4 to the front. A flipped LED will not glow — this is the single most common PCBA
-> defect on this board.
+> right, all four at **rotation 0** (see `../Generated/docs/solar-glow-drh-v4_0-led-orientation.png`).
+> They emit *down* through the FR4 to the front. A flipped LED will not glow — this is the
+> single most common PCBA defect on this board.
 
 ### Finishing the board by hand (after PCBWay returns it)
 
@@ -652,17 +654,20 @@ Work outside-in by heat sensitivity:
    the reflowed parts.
 2. **Solar cells PV1 / PV2 last (most fragile).** Iron **≤ 260 °C, ≤ 2 s per joint**, and
    **do not clean with IPA**. Mind cell polarity to the custom land.
-3. **Set the LED master switch SW2** (3-pad bridge — see `sw2-anode-selector.png`): center–left
-   = **ON**, center–right = **TINY** (dim via R12), unbridged = **OFF** (a true hardware off —
-   supercap-safe for storage).
+3. **Set the LED master switch SW2** (3-pad bridge — see
+   `../Generated/docs/solar-glow-drh-v4_0-sw2-selector.png`, drawn from the board by
+   `scripts/ref_figures.py`): center–left = **ON** (`ANODE` straight to `STO`), center–right
+   = **TINY** (dim: `ANODE` → `TINY` → R12 220 Ω → `STO`), unbridged = **OFF** (a true
+   hardware off — supercap-safe for storage).
 4. **SB1–SB4: leave open.** Each is a per-LED *force-on* bridge that shorts that LED's drive
    node (LDRVn) to GND. Open is the normal state (the MCU drives the LED); bridge one only to
    force that LED hard-on without firmware.
-5. **SJ1 must be LEFT OPEN (DNP).** ⚠️ This reversed in the 2026-07 AVR-EA swap: SJ1 was the
-   VDDIO2→VS tie for the AVR64DD28, but on the **AVR64EA28 pin 10 is plain `PD0`**, not VDDIO2 —
-   there is no MVIO and no I/O-supply pin to feed. Bridging SJ1 would tie a GPIO to VS. The land
-   stays on the board as a spare only if the DD is ever reinstated. (PORTC needs no separate
-   supply on the EA; it runs off the main rail.)
+5. **SJ1 no longer exists — nothing to set.** (Historical: SJ1 was the DD-era VDDIO2→VS tie.
+   On the **AVR64EA28 pin 10 is plain `PD0`**, not VDDIO2 — no MVIO, no I/O-supply pin to feed —
+   so bridging it would have tied a GPIO to VS. It was DNP'd with the 2026-07 EA swap and the
+   symbol, land and strap were deleted from the schematic and board on 2026-07-30; U1's schematic
+   note records the removal. If you find an SJ1 land, you are holding a pre-v4 board — leave it
+   open.)
 
 **Critical, do-not-get-wrong** (full rationale in `../solar-glow-drh-design-notes.md`): the
 supercap under-body land and its asymmetric-width polarity key; reverse-mount LED orientation;
