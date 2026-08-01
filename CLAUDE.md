@@ -73,6 +73,9 @@ Colour patch only — never geometry, so check [7] stays an independent measurem
 ```sh
 python3 scripts/check_mesh.py          # STL validity + volume/bbox ledger (needs trimesh)
 ```
+```sh
+python3 scripts/interference_drc.py    # 3D interference DRC: brace STL ray-cast vs every B-side body
+```
 STEP validity is gated at export time — OCC `BRepCheck` inside `fit_rules.export_step_stable`,
 the one choke point all three CAD generators use. The mesh gate also runs in `kibot.yml`
 **before** the commit-back, so a cadquery/OCC bump that breaks a tessellation fails the job

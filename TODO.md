@@ -552,14 +552,16 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
 
 ## Enclosure — `enclosure/…-backshell-…-cad.py`, `enclosure/brace/`
 
-- [ ] **[ENCLOSURE/TOOLING] The 3D interference DRC — boolean the assembly, gate the overlap**
-  _(2026-08-01, the tier the new mesh gate deliberately parked.)_ `check_mesh.py` gates mesh
-  validity and `export_step_stable` gates B-rep validity, but nothing computes the assembled
-  boolean truth: shell cavity ∩ brace ∩ populated-board solid (part models + `part_heights.py`)
-  must be empty outside the documented TIM compression. Check [7] gates heights one part at a
-  time; only the boolean catches a *combination* error. The plumbing half-exists —
-  `assembly_render.py` already loads the STLs and every part position; OCC (already pinned via
-  cadquery) does the boolean. Gate shape: intersection volume = 0 ± ledgered TIM allowance.
+- [x] **[ENCLOSURE/TOOLING] The 3D interference DRC — CLOSED 2026-08-01, built as
+  `scripts/interference_drc.py`** _(the tier the mesh gate parked, built the same day.)_
+  Ray-casts the emitted brace STL against every B-side body polygon (`board_parts.parts`) +
+  ledgered height: 62 bodies measured, worst margin **+0.12 mm on D2–D5** (0.95 mm window
+  pockets over 0.83 mm reverse-mount LEDs — tight by design), frame offset derived not
+  hard-coded, east-lip six ledgered (a NEW rect escapee still fails), negative-tested via
+  `INTERFERENCE_TEST_INFLATE`. Runs in kibot after the CAD step, before the commit-back.
+  The supercaps are skipped BY DESIGN and stated loudly: they are height-None in the table
+  (unbraced, TIM-coupled) and the CAVITY is *defined* around them (1.80 = 1.70 + 0.10 air);
+  if that derivation ever moves into `part_heights.py`, the DRC picks them up automatically.
 
 - [ ] **[ENCLOSURE] Rename the `v3_0-backshell-0p6b` fossil — a coordinated 10-file unit**
   _(2026-08-01, found while building the mesh gate.)_ The shell generator, its DRAWING-gen, and
