@@ -166,7 +166,7 @@ jobs:
       # breakage was in the export helper, not the parts.)
       - name: Regenerate the enclosure CAD and drawings
         run: |
-          python3 -m pip install --quiet 'cadquery==2.8.0' 'matplotlib==3.10.7' 'shapely==2.1.2'
+          python3 -m pip install --quiet 'cadquery==2.8.0' 'matplotlib==3.11.1' 'shapely==2.1.2'
           python3 enclosure/brace/solar-glow-drh-diffuser-brace-cad.py
           python3 enclosure/solar-glow-drh-v3_0-backshell-0p6b-brace-cad.py
           python3 enclosure/brace/solar-glow-drh-diffuser-brace-DRAWING-gen.py
@@ -188,7 +188,7 @@ jobs:
       # push -- the same one-revision lag the assembly-views ordering note below guards.
       - name: Draw the board reference figures
         run: |
-          python3 -m pip install --quiet 'matplotlib==3.10.7'
+          python3 -m pip install --quiet 'matplotlib==3.11.1'
           python3 scripts/ref_figures.py
 
       # THE HERO IS DOWNSTREAM OF THE ARTWORK, so it is regenerated here rather than by hand.
@@ -206,7 +206,7 @@ jobs:
       - name: Render the enclosure assembly views
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq xvfb
-          python3 -m pip install --quiet 'vtk==9.6.2' 'pillow==12.3.0' 'numpy==2.4.6' 'shapely==2.1.2'
+          python3 -m pip install --quiet 'vtk==9.6.2' 'pillow==12.3.0' 'numpy==2.5.1' 'shapely==2.1.2'
           xvfb-run -a python3 enclosure/assembly_render.py
 
       - name: Commit generated outputs
