@@ -164,7 +164,8 @@ jobs:
       #
       # This runs BEFORE the assembly views on purpose -- those views load these exact STLs, so
       # rebuilding them afterwards would render the previous enclosure onto the current board.
-      # ~40 s for both bodies plus both drawings.
+      # ~6.7 min for both bodies plus both drawings and the pogo plate (was ~40 s until the
+      # medallion graduated 2026-07-31; its boolean work dominates -- 6 m 42 s measured 2026-08-01).
       #
       # Both generators are also the reason to run this in CI at all: neither of them WORKED
       # until now. export_step_stable() handed cadquery a path ending ".tmp", which cannot infer
