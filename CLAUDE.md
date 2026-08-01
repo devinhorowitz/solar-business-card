@@ -90,7 +90,9 @@ from a generator CI runs** (check [9]), and that every 3D model carries its tabl
   load-bearing — render before the CAD and you photograph the previous enclosure onto the current
   board. One job produces all of it, in one commit, so no two artifacts can be a revision apart.
   Moving a part on the PCB therefore lands as: new gerbers → new brace and shell → new drawings →
-  new imagery, with no human step. ~40 s of CAD on top of the ~12 min raytrace.
+  new imagery, with no human step. ~6.7 min of CAD on top of the ~12 min raytrace (the CAD was
+  ~40 s until the medallion graduated 2026-07-31 — its boolean work dominates the step now;
+  measured 6 m 42 s on the 2026-08-01 run).
   **Everything it writes outside `Generated/` is just as CI-owned** — the STEP/STL, both drawings,
   the six renders — despite living beside the hand-maintained enclosure sources. Run any of them
   locally to check a change, but don't commit the result: VTK's pixels differ across GL stacks and

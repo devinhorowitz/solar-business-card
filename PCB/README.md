@@ -154,9 +154,13 @@ crossing or to flood the region gets declined.
    - **warning tier** = the *marginal band* [0.126, 0.1524): PCBWay-legal geometry that is
      tighter than 6 mil, flagged on purpose so the ledger stays visible.
 
-   **Expected result: 0 errors, ~61 warnings, 11 exclusions** (verify the exclusion count against
+   **Expected result: 0 errors, 11 exclusions** (verify the exclusion count against
    `Generated/solar-glow-drh-v4_0-drc.html`, which CI writes — the catalogue's history lives in
-   `CLAUDE.md`). The excluded set is the two gold-plating tie stubs crossing the outline, the
+   `CLAUDE.md`). The warning count depends on which severities the run reports: the fresh GUI
+   export (`DRC.rpt`, 2026-08-01) reads **3** (the silk-over-copper trio), while CI's
+   severity-all html carries the full marginal-band ledger (~61 at last count — the 0.127 mm
+   west-bus corridors plus fourteen 0.15 mm track notes). This line used to promise "~61
+   warnings" flatly, which only a severity-all run reproduces. The excluded set is the two gold-plating tie stubs crossing the outline, the
    LA↔LB coil junction, the seven supercap NPTHs inside courtyards, and the `TC1/b`↔SC1 courtyard
    overlap — all intentional.
    The footprints that shipped without a courtyard (U1, U8, U5, U3, D2-D5, J1, TC1) now carry
