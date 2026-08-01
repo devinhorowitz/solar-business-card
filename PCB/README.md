@@ -599,6 +599,8 @@ needs translucent FR4, the black look comes from the soldermask.
 > right, all four at **rotation 0** (see `../Generated/docs/solar-glow-drh-v4_0-led-orientation.png`).
 > They emit *down* through the FR4 to the front. A flipped LED will not glow — this is the
 > single most common PCBA defect on this board.
+>
+> ![D2–D5 reverse-mount LED polarity, drawn from the board by scripts/ref_figures.py](../Generated/docs/solar-glow-drh-v4_0-led-orientation.png)
 
 ### Finishing the board by hand (after PCBWay returns it)
 
@@ -654,11 +656,11 @@ Work outside-in by heat sensitivity:
    the reflowed parts.
 2. **Solar cells PV1 / PV2 last (most fragile).** Iron **≤ 260 °C, ≤ 2 s per joint**, and
    **do not clean with IPA**. Mind cell polarity to the custom land.
-3. **Set the LED master switch SW2** (3-pad bridge — see
-   `../Generated/docs/solar-glow-drh-v4_0-sw2-selector.png`, drawn from the board by
-   `scripts/ref_figures.py`): center–left = **ON** (`ANODE` straight to `STO`), center–right
-   = **TINY** (dim: `ANODE` → `TINY` → R12 220 Ω → `STO`), unbridged = **OFF** (a true
-   hardware off — supercap-safe for storage).
+3. **Set the LED master switch SW2** (3-pad bridge): center–left = **ON** (`ANODE` straight
+   to `STO`), center–right = **TINY** (dim: `ANODE` → `TINY` → R12 220 Ω → `STO`),
+   unbridged = **OFF** (a true hardware off — supercap-safe for storage).
+
+   ![SW2 LED master selector, drawn from the board by scripts/ref_figures.py](../Generated/docs/solar-glow-drh-v4_0-sw2-selector.png)
 4. **SB1–SB4: leave open.** Each is a per-LED *force-on* bridge that shorts that LED's drive
    node (LDRVn) to GND. Open is the normal state (the MCU drives the LED); bridge one only to
    force that LED hard-on without firmware.
