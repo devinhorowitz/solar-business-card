@@ -25,6 +25,10 @@ change to one that isn't mirrored in the others fails loudly (in CI or locally):
       gives it; an uncoloured body renders default grey.       [ERROR on drift]
   [3] DOC FILE REFS -- every solar-glow-drh-*.kicad_* file named in board.h,
       README.md, or firmware/README.md must actually exist.    [WARN on drift]
+  [11] CITED PATHS -- every path any .md cites must exist, be marked historical
+      in its own sentence, or carry a reason in EXPECTED_ABSENT. [ERROR on drift]
+  [12] FOOTPRINT SIDES -- every footprint sits on the side the FRONT_SIDE
+      snapshot records; a side flip must update the snapshot.  [ERROR on drift]
 
 Usage:   python3 scripts/check_consistency.py
 Exit:    nonzero if any ERROR-level check fails; warnings do not fail the build.
@@ -814,6 +818,56 @@ def check_doc_cited_paths():
             print(f"            {g} — {EXPECTED_ABSENT[g]}")
 
 
+# --- [12] footprint sides ----------------------------------------------------------
+#
+# Nothing else in CI notices a footprint changing SIDES: DRC has no opinion, schematic
+# parity has no layer concept, and check [1] compares refdes and footprint assignment,
+# not side. TC1's 2026-07-30 front-flip was caught only as a side effect (the brace's
+# pocket list changed underneath), and TODO's tooling item spells out the stakes: a side
+# flip is one keystroke in KiCad, it moves every pad and mask aperture to the other
+# face, and for a B-side part it silently deletes that part's brace pocket -- the
+# enclosure failure mode part_heights exists to prevent from the other direction.
+#
+# There is no source of truth to COMPARE against, so this is a SNAPSHOT, the exclusion-
+# ledger shape: deliberate moves update the dict in the same commit that makes the move,
+# undeliberate ones stop being invisible. Snapshot taken 2026-08-01 (post TC1/b).
+FRONT_SIDE = {
+    "?": 1, "MH1": 1, "MH2": 1, "MH3": 1, "MH4": 1, "MP1": 1, "MP2": 1, "MP3": 1, "MP4": 1, "PV1": 1, "PV2": 1, "TC1": 1
+}
+# everything else on the board is expected on B.Cu.
+
+
+def check_footprint_sides():
+    print("[12] every footprint sits on the side the snapshot says")
+    try:
+        board = glob.glob(os.path.join(ROOT, "PCB", "*.kicad_pcb"))[0]
+        b = open(board, newline="").read()
+    except (IndexError, OSError) as e:
+        warn(f"not checked -- {type(e).__name__}: {e}")
+        return
+    marks = [m.start() for m in re.finditer(r'\(footprint "', b)] + [len(b)]
+    moved, seen = [], set()
+    for i in range(len(marks) - 1):
+        fp = b[marks[i]:marks[i + 1]]
+        rm = re.search(r'\(property "Reference"\s+"([^"]+)"', fp)
+        lm = re.search(r'\(layer\s+"([^"]+)"\)', fp)
+        ref = rm.group(1) if rm else "?"
+        seen.add(ref)
+        want = "F.Cu" if ref in FRONT_SIDE else "B.Cu"
+        if lm and lm.group(1) != want:
+            moved.append(f"{ref} ({want} -> {lm.group(1)})")
+    ghosts = sorted(set(FRONT_SIDE) - seen)
+    if moved:
+        err("footprint(s) changed SIDES since the snapshot -- a deliberate move must "
+            "update FRONT_SIDE in this file in the same commit (and re-check the brace "
+            "pocket list); an undeliberate one just stopped being invisible: "
+            + ", ".join(sorted(moved)))
+    if ghosts:
+        warn(f"FRONT_SIDE lists refdes no longer on the board -- prune: {', '.join(ghosts)}")
+    if not moved and not ghosts:
+        ok(f"all {len(seen)} footprints on their snapshotted side ({len(FRONT_SIDE)} front)")
+
+
 def check_part_colors():
     print("[10] every 3D model carries the colour the parts table gives it")
     sys.path.insert(0, os.path.join(ROOT, "scripts"))
@@ -1091,6 +1145,7 @@ def main():
     check_part_colors()
     check_doc_file_refs()
     check_doc_cited_paths()
+    check_footprint_sides()
     print(f"\n== {len(errors)} error(s), {len(warnings)} warning(s) ==")
     sys.exit(1 if errors else 0)
 

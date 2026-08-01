@@ -26,16 +26,18 @@ fitted at this stage; that is the fab's deliverable, not an omission.
 <td width="50%"><img src="https://raw.githubusercontent.com/devinhorowitz/solar-business-card/main/Generated/docs/solar-glow-drh-v4_0-populated-face.png" alt="Assembled card, front — the two indoor solar cells over the monogram window"></td>
 </tr>
 <tr>
-<td align="center"><b>Back</b> — 51 fitted parts</td>
+<td align="center"><b>Back</b> — 53 fitted parts</td>
 <td align="center"><b>Front</b> — the two solar cells</td>
 </tr>
 </table>
 
 ![Assembled card, hero angle](https://raw.githubusercontent.com/devinhorowitz/solar-business-card/main/Generated/docs/solar-glow-drh-v4_0-populated-hero.png)
 
-The same board with its components on: 53 of the 72 footprints carry a 3D body, which is every part
-that actually gets populated. The other 19 are holes, solder-bridge pads, the `NPTH_mech` set, and
-**J1**, which is DNP.
+The same board with its components on: 53 of the 78 footprints carry a 3D body, which is every part
+that actually gets populated (recounted 2026-08-01 — the old "72/19" predated the six TP2–TP7
+test pads and `TC1/b`). The other 25 are the drill/mount set (MH1–4, MP1–4, `NPTH_mech`), the
+solder bridges (SW2, SB1–4), the bare programming and probe lands (TC1, `TC1/b`, TP1–TP7, JP1),
+and **J1**, which is DNP.
 
 > **Read the big grey slabs as ENVELOPES, not as photographs.** The four supercaps, the two solar
 > cells, the LEDs, both QFNs, the FRAM, the accelerometer and the NFC tag are **clearance solids**
@@ -78,11 +80,11 @@ PCB/
 ├── solar-glow-drh-v4_0.kicad_pro     # KiCad project (open this)
 ├── solar-glow-drh-v4_0.kicad_sch     # schematic
 ├── solar-glow-drh-v4_0.kicad_pcb     # board — 2-layer, routed, teardropped (source of truth)
-├── solar-glow-drh-v4_0.kicad_prl     # local project state
+├── solar-glow-drh-v4_0.kicad_prl     # local project state — versioned DELIBERATELY (the GUI layer setup travels with the project; unlike Generated/'s prl side-effect, which was culled 2026-08-01)
 ├── solar-glow-drh-v4_0.kicad_dru     # two-tier design rules (PCBWay floor + marginal band)
 ├── solar-glow-drh.kibot.yaml         # CI recipe — regenerates ../Generated/ on every push
 ├── solar-glow-drh-v4_0-BOM.xlsx      # bill of materials - v4.0 master (adds the AEM10300 harvest chain: U7 FRAM, U8 PMIC, U9 LDO, L2/FB1, C22–C28, R15–R17; mostly 0402, with C26/C27 on 0805 and ten more on 0603 — see the BOM table below)
-├── solar-glow-drh-v4_0-BOM-assembly.xlsx  # trimmed PCBA BOM (36 placed parts)
+├── solar-glow-drh-v4_0-BOM-assembly.xlsx  # trimmed PCBA BOM — STALE at its 36-row era; the v4 placed set is 47 (see "The split") and the regeneration is tracked with the BOM tooling
 ├── kicad-3dmodels/                   # the 9 stock KiCad .step bodies this board uses, mirroring the
 │                                     #   library layout (CC-BY-SA 4.0, licence bundled). CI's render
 │                                     #   image ships NO 3D library, so without these the assembled
@@ -575,9 +577,11 @@ them on the **back**; the front stays naked until you fit the cells. You finish 
 types by hand afterward.
 
 **The split**
-- **PCBWay machine-places** (reflow, bottom): U1, U3, U5–U9, Q2, D2–D5, R1–R6, R10–R12, R14–R18, L2, FB1,
-  C1, C3–C8, C11–C13, C22–C28. (Recompute the placed count from the v4 board; the v3 clamp/comparator
-  parts - U2, U4, Q1, D1, D9–D11, R7–R9, C2, C10 - are gone.)
+- **PCBWay machine-places** (reflow, bottom) — **47 parts, computed from the board 2026-08-01**
+  (smd, not DNP, not bare-land): U1, U3, U5–U9, Q2, D2–D5, R1–R6, R10–R12, R14–R18, L2, FB1,
+  C1, C3–C9, C11–C13, C22–C29. (The old list said "recompute from the v4 board" — done: it gained
+  **C9**, placed 2026-07-30, and **C29**, the 100 nF at (11.575, 44.625) from the 2026-08-01 board
+  sync. The v3 clamp/comparator parts - U2, U4, Q1, D1, D9–D11, R7–R9, C2, C10 - remain gone.)
   *(Corrected 2026-07-26: **SJ1 removed** from this list — it was then DNP/not-ordered and never
   placed. Since 2026-07-30 the question is moot: SJ1's symbol, land and strap were deleted from the
   schematic and board outright (PR #114 sch cull + the board sync). **Q2 and

@@ -75,7 +75,10 @@ from a generator CI runs** (check [9]), that every 3D model carries its table co
 itself says why it does not** (check [11], 2026-08-01: a history marker like "culled"/"git
 history" in the sentence, or a reasoned entry in the check's `EXPECTED_ABSENT` list; born
 from a night that found four silently-dead citations check [9] could not see, since it
-guards only displayed images).
+guards only displayed images), and that **no footprint has changed sides** against the
+`FRONT_SIDE` snapshot (check [12], 2026-08-01 — closing TODO's named tooling gap: DRC, parity
+and check [1] are all side-blind, and a B-side flip silently deletes that part's brace pocket;
+a deliberate move updates the snapshot in the same commit, the exclusion-ledger shape).
 
 ## CI
 - `kibot.yml` — regenerates `Generated/` (fab + docs) on `PCB/**` changes and commits
@@ -106,7 +109,8 @@ guards only displayed images).
   `scripts/ref_figures.py` (the board reference figures — LED polarity, SW2 bridge — drawn from
   the board into `Generated/docs/`), the
   generators' own non-board inputs (`enclosure/assembly_render.py`, `fit_rules.py`,
-  `board_parts.py`, `medallion.py`, `enclosure/**.stl`) **and, since 2026-07-31, the CAD/drawing
+  `board_parts.py`, `medallion.py`, `part_heights.py` — the last missing until 2026-08-01,
+  the #132 gap class again — and `enclosure/**.stl`) **and, since 2026-07-31, the CAD/drawing
   generators themselves** (shell, brace, both DRAWING-gens — before that, a generator-only edit
   regenerated nothing, and PR #129 only rebuilt because `fit_rules.py` shared the diff) and the
   workflow itself — **not** all of `scripts/` or all of `enclosure/`, so editing an unrelated

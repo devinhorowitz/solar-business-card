@@ -255,7 +255,12 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   (which are provisional pending the energy budget anyway). Alternative if the board is ever
   re-laid: 0402 → 0603 (0.1 W) on the four ballasts. No action on the copper today.
 
-- [ ] **[TOOLING] Nothing in CI notices a footprint changing SIDES**
+- [x] **[TOOLING] Nothing in CI notices a footprint changing SIDES — CLOSED 2026-08-01 as
+  consistency check [12]**, built to this item's own spec: a `FRONT_SIDE` refdes→side snapshot
+  in `check_consistency.py` (12 front footprints, everything else expected B.Cu; 78 verified
+  green at install), failing on any change, updated in the same commit as a deliberate move —
+  the exclusion-ledger shape this item asked for. TC1/b arrived one day before the guard.
+  _(Original item kept as the design record:)_
   _(2026-07-30; surfaced by the TC1 move above, which was intended — the point is that an
   unintended one would arrive just as quietly.)_ DRC has no opinion on which side a footprint sits,
   schematic parity has no layer concept, and `check_consistency` **[1]** compares refdes and

@@ -35,6 +35,10 @@ on:
       - 'enclosure/assembly_render.py'
       - 'enclosure/fit_rules.py'
       - 'enclosure/board_parts.py'
+      # part_heights feeds every brace pocket depth. It was missing here until 2026-08-01 --
+      # the same gap class #132 closed for the generators: edit a height and nothing
+      # regenerates, so the committed STL keeps cutting the old pocket.
+      - 'enclosure/part_heights.py'
       # The CAD/drawing GENERATORS THEMSELVES, and medallion.py (the back medallion's
       # geometry + parameters, an input to the shell generator). These were missing until
       # 2026-07-31, and PR #129 (the medallion graduation) only regenerated because
@@ -275,6 +279,29 @@ jobs:
             # re-push the identical rejected commit and burn a slot for nothing.
             git fetch origin main || { sleep 5; git fetch origin main || continue; }
             git reset --hard origin/main
+            # YIELD, don't replay, when the INPUTS moved underneath this run. The snapshot
+            # holds outputs computed from THIS run's checkout; if main now carries a
+            # different board or generator, a NEWER run owns these outputs, and restoring
+            # ours would regress main to a stale worldview. Not hypothetical: the replay
+            # resurrected 23 culled v3_0 files on 2026-07-31 (bc50e41 -- its snapshot
+            # carried checkout-inherited files main had deleted), and on 2026-08-01 the
+            # #149 run finished 27 s after #150's and replayed the C13 nudge OUT of the
+            # committed fab set. Diffing only the INPUT paths keeps docs-only merges
+            # replaying normally, mirroring the trigger list above (plus part_heights).
+            if ! git diff --quiet ${{ github.sha }} origin/main -- \
+                'PCB' ':(exclude)PCB/**.md' \
+                scripts/panelize.py scripts/render.py scripts/ref_figures.py \
+                enclosure/assembly_render.py enclosure/fit_rules.py enclosure/board_parts.py \
+                enclosure/medallion.py enclosure/part_heights.py \
+                enclosure/solar-glow-drh-v3_0-backshell-0p6b-brace-cad.py \
+                enclosure/solar-glow-drh-v3_0-backshell-0p6b-brace-DRAWING-gen.py \
+                enclosure/brace/solar-glow-drh-diffuser-brace-cad.py \
+                enclosure/brace/solar-glow-drh-diffuser-brace-DRAWING-gen.py \
+                enclosure/solar-glow-drh-pogo-testplate-cad.py \
+                'enclosure/**.stl'; then
+              echo "inputs moved under this run -- a newer run owns the outputs; yielding without committing"
+              exit 0
+            fi
             # rm Generated/ so a file this run deleted does not survive the restore; the five
             # assembly views are a fixed set, so extracting over them is enough.
             rm -rf Generated
