@@ -70,8 +70,12 @@ python3 scripts/check_consistency.py
 ```
 Verifies `board.h` pin map ↔ schematic netlist, CI-generated BOM ↔ netlist, that every
 `.kicad_*` file referenced in the docs exists, that **every image any `.md` displays comes
-from a generator CI runs** (check [9]), and that every 3D model carries its table colour
-(check [10]).
+from a generator CI runs** (check [9]), that every 3D model carries its table colour
+(check [10]), and that **every file path any `.md` cites exists — or the citing sentence
+itself says why it does not** (check [11], 2026-08-01: a history marker like "culled"/"git
+history" in the sentence, or a reasoned entry in the check's `EXPECTED_ABSENT` list; born
+from a night that found four silently-dead citations check [9] could not see, since it
+guards only displayed images).
 
 ## CI
 - `kibot.yml` — regenerates `Generated/` (fab + docs) on `PCB/**` changes and commits

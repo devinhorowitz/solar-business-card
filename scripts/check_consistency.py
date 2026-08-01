@@ -672,6 +672,148 @@ def check_doc_imagery():
                 print(f"            {p} — {why}")
 
 
+# --- [11] cited paths -------------------------------------------------------------
+#
+# Check [9] guards images a doc DISPLAYS. Paths a doc merely CITES — in backticks, in
+# tree listings, in build instructions — had no guard at all, and 2026-08-01's hunt
+# found the class four separate times: a v2-era drawing "kept as history; safe to
+# delete" that was already gone, a brace-fit photo named as present after its
+# deletion, a design-note pointing at a culled mock-up, and a README step citing a
+# TODO item that no longer existed. Each rotted silently because nothing renders a
+# citation.
+#
+# The rule this check enforces is a PROSE DISCIPLINE, not just an inventory: a doc may
+# name a file that does not exist only if (a) the sentence itself says so — a history
+# marker like "culled", "deleted", "git history" on the same or the previous line, the
+# way every closure tonight was written — or (b) the path carries a reason below.
+# Anything else is an error: either the file went missing, or the prose is claiming a
+# tree that is not there.
+EXPECTED_ABSENT = {
+    # Build outputs and CI intermediates — gitignored by design, cited as what a
+    # command WRITES rather than what the tree holds.
+    "firmware/solar-glow.hex": "firmware build output — gitignored (firmware/README `make`)",
+    "solar-glow.hex": "same file, cited by basename",
+    "Generated/panel/*.kicad_pcb": "CI-built panel intermediate — gitignored; rebuild with scripts/panelize.py",
+    # Files that live in the USER'S toolchain, not this repo.
+    "avrdude.conf": "ships with the user's avrdude install",
+    "ioavr64ea28.h": "AVR-Dx DFP header — part of the toolchain pack, not the repo",
+    ".mcp.json": "local config mcp-setup.md instructs the user to create",
+    "digikey_mcp_server.py": "external MCP server on the user's machine (mcp-setup.md registration command)",
+    # On-demand analysis outputs that deliberately live OUTSIDE the repo (the same
+    # rule that keeps engraving-study renders out — see their README).
+    "all_studies.png": "engraving-study sheet — scratch output, out-of-repo by rule",
+    "shell_nomark.stl": "engraving-study base solid — scratch output, out-of-repo by rule",
+}
+
+_CITE_EXTS = ("png gif jpg jpeg svg pdf step stl zip html json csv xlsx md py yml yaml "
+              "ttf txt c h rpt drl gbr hex conf "
+              "kicad_pcb kicad_sch kicad_pro kicad_prl kicad_mod kicad_dru").split()
+_HIST_RE = re.compile(
+    r"git history|culled|deleted|removed|replaced|superseded|retired|struck|"
+    r"no longer|history only|used to|abandoned|renamed|is gone|went stale|"
+    r"there is no|does not exist|never existed|"
+    r"\bwas\b|\bold\b|-era\b|until 20|pre-20", re.I)
+
+
+def check_doc_cited_paths():
+    print("[11] every path a doc cites exists — or the sentence says why it does not")
+    import fnmatch
+    ext_re = "|".join(_CITE_EXTS)
+    # a path-ish token: optional dirs, a basename, one of the known extensions
+    bare = re.compile(r"(?<![\w./-])((?:[\w.-]+/)*[\w.-]+\.(?:%s))(?![\w/])" % ext_re)
+    tick = re.compile(r"`([^`\n]+)`")
+    kicad_owned = re.compile(r"solar-glow-drh-v[0-9_]+\.kicad_")   # check [3]'s territory
+
+    # TRACKED files only. os.walk would also see gitignored local artifacts (a
+    # firmware/*.hex from a local build, a panel board from a panelize run) and
+    # silently pass here what would fail in CI's clean checkout.
+    import subprocess
+    all_files = subprocess.run(["git", "ls-files"], cwd=ROOT, capture_output=True,
+                               text=True).stdout.splitlines()
+    tracked = set(all_files)
+    basenames = {os.path.basename(p) for p in all_files}
+
+    def tokens(line):
+        out = []
+        for m in tick.finditer(line):
+            body = m.group(1).strip()
+            if re.search(r"\.(?:%s)$" % ext_re, body) and (
+                    " " not in body or body in tracked
+                    or any(f.endswith("/" + body) for f in tracked)):
+                out.append(body)          # whole backtick content (datasheet names with spaces)
+            else:
+                out.extend(t.group(1) for t in bare.finditer(body))
+        out.extend(t.group(1) for t in bare.finditer(tick.sub(" ", line)))
+        return out
+
+    def expand(tok):
+        """'sense.h/.c' and 'fram.c/fram.h' style pairs -> individual names.
+
+        Restricted to the .c/.h shorthand the docs actually use: a general dot-dir
+        split would butcher real paths like Capacitor_SMD.3dshapes/C_0805….step."""
+        if re.fullmatch(r"[\w.]+\.[ch](?:/(?:[\w.]+)?\.[ch])+", tok):
+            parts = tok.split("/")
+            outs, stem = [], None
+            for p in parts:
+                if p.startswith("."):
+                    outs.append((stem or "") + p)
+                else:
+                    outs.append(p)
+                    stem = os.path.splitext(p)[0]
+            return outs
+        return [tok]
+
+    problems, absences = [], {}
+    for md in sorted(glob.glob(os.path.join(ROOT, "**", "*.md"), recursive=True)):
+        rel_md = os.path.relpath(md, ROOT)
+        if rel_md.startswith(".git"):
+            continue
+        lines = open(md, errors="replace").read().splitlines()
+        for i, line in enumerate(lines):
+            for raw in tokens(line):
+                for tok in expand(raw):
+                    if any(c in tok for c in "<>$*{}|") or "…" in tok or "..." in tok \
+                       or tok.startswith(("http", "data:")) or kicad_owned.search(tok):
+                        continue
+                    cands = [os.path.normpath(os.path.join(os.path.dirname(rel_md), tok)),
+                             os.path.normpath(tok)]
+                    if any(c in tracked or os.path.isdir(os.path.join(ROOT, c))
+                           for c in cands):
+                        continue
+                    if "/" in tok:
+                        # partial-path shorthand: quoted relative to some inner dir
+                        # (e.g. Capacitor_SMD.3dshapes/C_0805….step under kicad-3dmodels/)
+                        if any(f.endswith("/" + tok) for f in tracked):
+                            continue
+                    elif tok in basenames or any(b.endswith(tok) for b in basenames):
+                        continue                      # basename / suffix shorthand
+                    hit = next((g for g in EXPECTED_ABSENT
+                                if fnmatch.fnmatch(tok, g)
+                                or fnmatch.fnmatch(os.path.basename(tok), g)), None)
+                    if hit:
+                        absences.setdefault(hit, set()).add(rel_md)
+                        continue
+                    window = line + " " + (lines[i - 1] if i else "")
+                    if _HIST_RE.search(window):
+                        continue                      # the sentence owns the absence
+                    problems.append(f"{tok} (in {rel_md}:{i + 1})")
+    if problems:
+        err(f"{len(problems)} cited path(s) do not exist and the prose does not say why. "
+            "Fix the citation, mark it historical in its own sentence, or add it to "
+            "EXPECTED_ABSENT in this file with the reason: " + "; ".join(sorted(set(problems))))
+    else:
+        ok("every cited path exists, is marked historical, or carries a reason")
+    stale_absent = sorted(set(EXPECTED_ABSENT) - set(absences))
+    if stale_absent:
+        warn(f"{len(stale_absent)} EXPECTED_ABSENT entr(y/ies) no longer cited by any doc — "
+             f"drop them: {', '.join(stale_absent)}")
+    if absences:
+        print(f"  note:   {sum(len(v) for v in absences.values())} citation(s) of "
+              f"deliberately-absent files, each with its reason on file:")
+        for g, wheres in sorted(absences.items()):
+            print(f"            {g} — {EXPECTED_ABSENT[g]}")
+
+
 def check_part_colors():
     print("[10] every 3D model carries the colour the parts table gives it")
     sys.path.insert(0, os.path.join(ROOT, "scripts"))
@@ -948,6 +1090,7 @@ def main():
     check_doc_imagery()
     check_part_colors()
     check_doc_file_refs()
+    check_doc_cited_paths()
     print(f"\n== {len(errors)} error(s), {len(warnings)} warning(s) ==")
     sys.exit(1 if errors else 0)
 
