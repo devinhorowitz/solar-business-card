@@ -61,9 +61,12 @@ rounded corners are **relieved** (cut clear — the brace need not fit them). It
 
 ## Removable — keep it that way during bring-up
 
-The brace must lift out for NFC **C9 trim** during bench bring-up (bare-card first, then re-trim after the
-titanium shell is on). Keep it a **dry fit** while iterating; add any optical gel only on the final card,
-and re-apply it on every removal.
+The brace must lift out for the NFC **C9 rework path** during bench bring-up. (Procedure updated
+2026-08-01: C9 is a **derived 47 pF, fitted at assembly** — not the bare-card-trim-then-re-trim of the
+old plan. The bring-up check is done ENCLOSED; only if the measured resonance lands outside the
+~13.6–15.3 MHz window does C9 get swapped along its same-series ladder — and that swap is what the
+brace must come out for.) Keep it a **dry fit** while iterating; add any optical gel only on the final
+card, and re-apply it on every removal.
 
 ---
 

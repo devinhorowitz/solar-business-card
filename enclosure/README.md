@@ -90,7 +90,8 @@ part positions from `enclosure/board_parts.py` (true 3D body ∪ pads, with the 
 
 - **Single piece.** The computation also yields an ~85 mm² island east of SC4 that cannot reach
   the main body without crossing SC4. Dropped: a loose part in an assembly that comes apart for
-  C9 NFC trim is a thing to lose. `fit_rules.DROPPED_AREA` records the 2.1 points of coverage
+  C9 NFC rework (the enclosed-check ladder swap; "trim" in the old plan) is a thing to lose.
+  `fit_rules.DROPPED_AREA` records the 2.1 points of coverage
   given up rather than hiding it.
 - **1.00 mm coil standoff.** Costs east lip width; the tradeoff is linear and on one line —
   `0.30 → 1.95 mm lip / 490 mm²`, `1.00 → 1.25 / 463`, `1.25 → 1.00 / 442`. At 1.00 the east lip

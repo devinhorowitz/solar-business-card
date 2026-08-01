@@ -32,14 +32,17 @@ what gets corrected. The `*-v2-*.md` docs are v2-era history (banner-marked at t
 top) — read them for lineage, not for current values.
 
 ## Build & verify
-**Firmware** (needs an AVR-Dx-capable `avr-gcc` + the AVR-Dx DFP — install per
-`firmware/README.md`):
+**Firmware** (needs a modern `avr-gcc` + the **AVR-Ex** DFP — the EA lives in AVR-Ex_DFP,
+NOT AVR-Dx (this paragraph said Dx until the 2026-08-01 sift — pre-EA-port text; firmware.yml
+had it right all along); install per `firmware/README.md`):
 ```sh
-make -C firmware DFP=/path/to/Microchip/AVR-Dx_DFP      # -> firmware/solar-glow.hex
+make -C firmware DFP=/path/to/Microchip/AVR-Ex_DFP      # -> firmware/solar-glow.hex
 ```
-Should compile **warning-free** (`-Wall -Wextra -Wundef`); size/RAM figures live in
-`firmware/README.md` — the "~2.4 KB flash, 6 B RAM" that used to sit here had quietly gone
-stale against the EA port's ~4 KB / ~23 B, which is why the numbers now have one home.
+Should compile **warning-free** (`-Wall -Wextra -Wundef` — a GATE in CI, which builds with
+`WERROR=1`); size/RAM figures live in `firmware/README.md` — the "~2.4 KB flash, 6 B RAM"
+that used to sit here had quietly gone stale against the EA port's figures, which is why the
+numbers now have one home, and since 2026-08-01 that home is GATED: `scripts/check_fw_size.py`
+fails the firmware build if the README figure stops matching the ELF.
 
 **PCB** (KiCad 10 `kicad-cli`):
 ```sh
@@ -178,11 +181,12 @@ a deliberate move updates the snapshot in the same commit, the exclusion-ledger 
 - **A `dnp` part's model resolves too — and is still not drawn.** Same blind spot, opposite cause:
   the body is absent from every populated render *correctly*, because the assembled board will not
   have the part, but "resolved and drawn" and "resolved and deliberately absent" look identical —
-  an empty land. **C9** is the only one on this board (the other ten `dnp` footprints — `TC1/b`,
-  the B-side programming mirror, joined 2026-08-01 — carry no
-  model at all), and confirming its 0402→0805 upsize had landed meant re-rendering with `dnp`
-  cleared and diffing: 528 px, 20×37, an 0805 turned 90°. `render.py` now names the DNP set beside
-  the resolve count so nobody has to do that again.
+  an empty land. The class is currently EMPTY on this board (2026-08-01 sift: 16 `dnp`
+  footprints — TC1, TC1/b, SW2, J1, JP1, SB1–4, TP1–7 — and none carries a model), but it was
+  not always: **C9** was the dnp-with-a-model until it was placed at 47 pF on 2026-07-30, and
+  confirming its 0402→0805 upsize had landed meant re-rendering with `dnp` cleared and diffing:
+  528 px, 20×37, an 0805 turned 90°. `render.py` names the DNP set beside the resolve count so
+  the next dnp-with-a-model is visible the day it appears.
 - **The front mask art is generated from the routing.** Every opening is `shape − live copper`,
   so moving a front trace can put a signal under an aperture — re-run `scripts/mask_art.py
   --apply`. Consistency check [6] errors if you forget. It is the one artwork here that goes

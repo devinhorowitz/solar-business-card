@@ -197,6 +197,16 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   (the defensive per-poll re-park is then unneeded). Full analysis in the design-notes deep-dive
   addendum.
 
+- [ ] **[BENCH] NFC FD-pin leakage — meter the real standby adder** _(2026-08-01 pressure test, the
+  panel's one major: NT3H2211 Table 42 specs FD IL at **1.5 µA typ / 10 µA MAX**, flowing from VS
+  through PA6's internal pull-up whenever FD idles high — the card's dominant state — independent of
+  pull-up value; unbudgeted in the ~2.7 µA standby sum, which is now labeled a 2.0 V-referenced lower
+  bound. board.h's FD block carries the full story.)_ Bench: meter VS with FD pulled up vs FD grounded
+  (tag VCC gated off, no field) to pin the real leakage; re-check FD's VIH margin at measured IL ×
+  measured pull-up R; and while there, meter the gated-VCC SDA/SCL leakage through R10/R11 (same
+  table, 10 µA max/pin spec). If the measured adder is real µA, the counter-moves are an external
+  weak pull-up on FD or accepting the line item — decide with the energy-budget numbers in hand.
+
 - [ ] **[BENCH RULES] Cross-domain bench-procedure set** _(2026-07-23 second-sift)._ (1) JP1 SCL/SDA:
   external I²C adapters only with the card powered and the adapter referenced to VS — the ADXL367 (and
   the FRAM) digital abs-max is a zero-headroom "−0.3 to VDDIO". (2) STO injection: SW2 OFF first (a lit

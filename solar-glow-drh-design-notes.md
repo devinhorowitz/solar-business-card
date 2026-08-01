@@ -61,8 +61,10 @@ The honest energy model, and the reason a bench bring-up gates any feature decis
 **Draw line items** (budget against harvest): accel ≈ **0.89 µA** (an ADI ADXL367, always-on at
 100 Hz for this figure — the LIS2DH12 it replaced drew ~10 µA click-armed); light-sense divider
 sub-µA; MCU sleep ≈ 0.65 µA (AVR-DD power-down, `PMODE=AUTO`). With the accel this low, dark
-standby is **~2.7 µA** and no single part dominates. The LEDs are the only mA-scale load. See
-`firmware/README.md` "Power notes" for the model.
+standby is **~2.7 µA — since the 2026-08-01 pressure test, read that as a 2.0 V-referenced lower
+bound: the accel's 0.89 µA is a 2.0 V spec and the NFC tag's FD-pin leakage (1.5 µA typ / 10 µA
+max through the PA6 pull-up) was unbudgeted; bench item filed** — and no single part dominates.
+The LEDs are the only mA-scale load. See `firmware/README.md` "Power notes" for the honest ledger.
 
 > **Ballast caveat — re-derive the LED numbers for v2.1.** The LED-draw figures used throughout the
 > old docs (≈5 mA for 4 LEDs full-on, ≈3 mA breathing, +1.25 mA per added LED) were computed at
@@ -938,7 +940,8 @@ architectural blocker.**
 - **Pin budget fits.** Spares today: PA4, PC0, PC1 (JP2.x), and only AIN2/PD2 of the ADC is used. Need one
   ADC input (STO divider) + one GPIO (EN_STO_CH); ST_STO status is optional (the STO reading already gives
   charge state). Comfortable, especially on a respin.
-- **Flash/RAM: trivial.** ~+150 B on a 64 KB part currently using ~2.4 KB; a few bytes RAM.
+- **Flash/RAM: trivial.** ~+150 B on a 64 KB part then using ~2.4 KB ("currently" as of this
+  DD-era addendum; the EA build sits near 4.5 KB today — the gated figure lives in `firmware/README.md`).
 - **Robustness bonus.** A regulated MCU rail removes the cold-start brown-out-stall risk flagged in §2 (the
   AVR POR-release-vs-harvest race): the AEM owns the boost and hands the core a clean rail once charged, so
   the stall-mitigation logic relaxes rather than grows.
