@@ -22,7 +22,9 @@ is the "Where the truth lives" table in `README.md`. In short:
 - Board copper / geometry → `PCB/solar-glow-drh-v4_0.kicad_pcb` / `.kicad_sch`
 - Back-shell medallion (ring text, monogram, serial) → `enclosure/medallion.py`
 - Firmware pin map + tunables → `firmware/board.h` and `firmware/README.md`
-- BOM master → `PCB/solar-glow-drh-v4_0-BOM.xlsx`
+- BOM master → `BOM/solar-glow-drh-v4_0-BOM.xlsx` (`BOM/README.md` is **derived** — a live
+  availability table written by `BOM/check_stock.py`, manual-apply like the mask art since it
+  needs distributor API keys; regenerate it, never edit it)
 - Design reasoning / lineage → `solar-glow-drh-design-notes.md`
 
 When a doc disagrees with a source file, **the source file wins** and the doc is
@@ -75,7 +77,10 @@ from a generator CI runs** (check [9]), that every 3D model carries its table co
 itself says why it does not** (check [11], 2026-08-01: a history marker like "culled"/"git
 history" in the sentence, or a reasoned entry in the check's `EXPECTED_ABSENT` list; born
 from a night that found four silently-dead citations check [9] could not see, since it
-guards only displayed images).
+guards only displayed images), and that **no footprint has changed sides** against the
+`FRONT_SIDE` snapshot (check [12], 2026-08-01 — closing TODO's named tooling gap: DRC, parity
+and check [1] are all side-blind, and a B-side flip silently deletes that part's brace pocket;
+a deliberate move updates the snapshot in the same commit, the exclusion-ledger shape).
 
 ## CI
 - `kibot.yml` — regenerates `Generated/` (fab + docs) on `PCB/**` changes and commits
@@ -106,7 +111,8 @@ guards only displayed images).
   `scripts/ref_figures.py` (the board reference figures — LED polarity, SW2 bridge — drawn from
   the board into `Generated/docs/`), the
   generators' own non-board inputs (`enclosure/assembly_render.py`, `fit_rules.py`,
-  `board_parts.py`, `medallion.py`, `enclosure/**.stl`) **and, since 2026-07-31, the CAD/drawing
+  `board_parts.py`, `medallion.py`, `part_heights.py` — the last missing until 2026-08-01,
+  the #132 gap class again — and `enclosure/**.stl`) **and, since 2026-07-31, the CAD/drawing
   generators themselves** (shell, brace, both DRAWING-gens — before that, a generator-only edit
   regenerated nothing, and PR #129 only rebuilt because `fit_rules.py` shared the diff) and the
   workflow itself — **not** all of `scripts/` or all of `enclosure/`, so editing an unrelated

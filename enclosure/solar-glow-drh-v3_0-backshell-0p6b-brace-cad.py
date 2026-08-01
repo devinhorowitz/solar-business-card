@@ -529,7 +529,14 @@ B = "solar-glow-drh-v3_0-backshell-0p6b-brace"
 jobs = [
     # name                 floor wall  border ribs  prog   note
     ("Ti-max",             1.00, 1.00, 0.15, False, False, "0.6mm-board DUMB BOX for the resin brace: TRUE 1.00 floor (cavity 1.80, cap gap 0.10) + NO relief pocket (true uniform floor) + 1.0 walls + 8 bosses (4 corner + 4 panel-corner). NO locator pillars (retired: the H-brace registers by fitment). NO ribs (the brace carries center support). Overall 3.55."),
-    ("Ti-max-progwindow",  1.00, 1.00, 0.15, False, True,  "Ti-max + a Ø11 through-window at board (13.3,16.9) -- the TC2030 land. Honest status 2026-08-01: TC1 flipped to the FRONT on 2026-07-30 and the new B-side mirror TC1/b sits UNDER SC1's can (body spans board (7,1.75)-(24,40.75), fully covering both the window and the pads), so on an assembled card the window opens onto the supercap, not a land. Useful only for a build without SC1, or if the window ever moves."),
+    # Ti-max-progwindow RETIRED 2026-08-01. Its O11 re-flash window at board (13.3, 16.9)
+    # opens onto SC1's can on any assembled card (SC1 body spans (7,1.75)-(24,40.75), fully
+    # covering both the window and the TC1/b land beneath), so the variant shipped a false
+    # affordance -- and its second medallion boolean was roughly half of CI's ~6.7 min CAD
+    # step, paid on every board push. One line here (plus prog_window=True) brings it back
+    # if the window or the land ever moves out from under the supercap; the retired STEP/STL
+    # live in git history.
+
 ]
 # Ti-conservative (0.60 floor / 1.60 wall) struck: if the shop cannot hold the floor we
 # re-issue to whatever minimum they will hold, so a pre-baked 0.60 fallback is dead weight.

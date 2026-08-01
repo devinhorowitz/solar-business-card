@@ -34,6 +34,9 @@ on:
       # check [7] reads enclosure/part_heights.py and measures it against the board's
       # 3D models. Until 2026-07-29 nothing in CI triggered on enclosure/ at all.
       - 'enclosure/**'
+      # the BOM master lives here since 2026-08-01 (was PCB/, covered by PCB/**) and the
+      # package-vs-land check reads it — without this line a master edit checks nothing.
+      - 'BOM/**'
       - '.github/workflows/consistency.yml'
   pull_request:
     paths:
@@ -45,6 +48,7 @@ on:
       - 'scripts/part_colors.py'
       - '.github/workflows/kibot.yml'
       - 'enclosure/**'
+      - 'BOM/**'
       - '.github/workflows/consistency.yml'
 
 jobs:
