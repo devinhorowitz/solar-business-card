@@ -255,17 +255,15 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
 
 ## PCB — `PCB/solar-glow-drh-v4_0.kicad_pcb` / `.kicad_sch`
 
-- [ ] **[PCB/FAB] Panel fiducials — the panel has NONE, and PCBWay machine-places 47 parts**
+- [x] **[PCB/FAB] Panel fiducials — CLOSED 2026-08-01, built into `panelize.py` as specified**
   _(2026-08-01, found by the kicad-happy second-opinion analyzer on its first run — see
-  `docs/kicad-happy.md`.)_ The card carries no fiducials (fine — it's a business card face) and
-  `scripts/panelize.py` adds only the two 1.5 mm NPTH tooling holes; optical registration for
-  turnkey assembly has nothing to lock onto, and U1/U8 are 0.4 mm-pitch QFNs. Fix in
-  `panelize.py` (derived, never hand-drawn, like everything else in the panel): **three Ø1.0 mm
-  bare-copper fiducials with Ø2.0 mm mask openings on the frame rails, placed asymmetrically**
-  (so the panel is orientation-unambiguous), clear of the plating-bus ring (BUS_INSET 2.5 ring on
-  the rail — fiducials want ≥0.5 mm to any copper) and the tooling holes. Consider two local
-  fiducials near U1 on the card's B side only if PCBWay asks — the panel set usually suffices.
-  The merge run's panel-gerber diff is the verification.
+  `docs/kicad-happy.md` → "Integrated".)_ Exactly the derivation this item asked for: three
+  Ø1.0 mm bare-copper dots with Ø2.0 mm mask openings (via `solder_mask_margin`), both faces,
+  three corners of four on the rails' OUTER band (`FID_INSET` 1.0 from the panel edge → dot edge
+  0.5 mm clear of the bus-ring copper, asserted in code), clear of the tooling-hole ring dodges,
+  with a 180°-asymmetry guard in `main()` mirroring the tooling holes' own. The merge run's
+  panel-gerber diff is the verification; local fiducials near U1 stay a
+  only-if-PCBWay-asks option.
 
 - [ ] **[PCB — PARKED, decision pending external research] 0.4 mm board thickness (3.55 → 3.35 mm)**
   _(2026-08-01.)_ Held deliberately while the thinness tradeoff is researched. The engineering
@@ -286,15 +284,15 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   first-article exists: near-field probe over the AEM10300 hot loop and the LED string under
   PWM, and a reader-coupling check that the NFC coil's Q survived assembly (Ti shell + ferrite).
 
-- [ ] **[PCB — next respin, ride-along] GND return-path stitching vias** _(2026-08-01, from the
-  kicad-happy full-mode EMC pass; measured independently from the board file.)_ 28 GND vias vs
-  82 signal vias; only 2/82 signal vias have a GND via within 1.0 mm (median nearest 2.75 mm,
-  worst 19.25 mm — SRC at (46.5, 69.5); then VNFC (7.0, 8.0), CHG_DIS_G (43.8, 63.0), MID
-  (39.7, 64.0), STO (12.4, 13.0)). Not a compliance risk for a cable-less, harvest-powered card
-  in a grounded Ti shell whose fastest nets never change layers (LX_LIN/LX_LOUT: zero vias) —
-  so **no standalone respin**; add a handful of GND vias beside those clusters whenever the
-  copper next opens for a real reason. The coil crossover via at (42.9, 38.0) stays unstitched
-  — it is inside the coil keepout deliberately.
+- [x] **[PCB — ride-along] GND return-path stitching vias — CLOSED 2026-08-01, same day** _(from
+  the kicad-happy full-mode EMC pass; measured independently from the board file.)_ The trigger
+  condition ("whenever the copper next opens for a real reason") arrived hours later with the
+  TC1/b1 GUI session, so the nine vias rode along: one GND via on a hatch-crossing of both
+  lattices beside each worst cluster (SRC, VNFC, CHG_DIS_G, MID, STO, NFC_EN, VSENSE, the
+  coil-adjacent SDA side, VS — coordinates in `docs/kicad-happy.md` → "Integrated"). Before:
+  2/82 signal vias had a GND via within 1.0 mm, median nearest 2.75 mm, worst 19.25 mm. The coil
+  crossover via at (42.9, 38.0) stays unstitched — inside the coil keepout deliberately.
+  Verified: DRC `Errors: 0 (+11 excluded)`, zero F.Mask hits, mask art re-applied and MATCH.
 
 - [ ] **[PCB/FW] R1–R4 exceed their 62.5 mW rating only at the worst corner — note, and one cheap guard**
   _(2026-07-30, same audit.)_ The LED ballasts are `AC0402FR-07150RL` (0402, **1/16 W**). Worst
