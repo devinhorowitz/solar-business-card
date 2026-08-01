@@ -13,12 +13,11 @@ Z stack (aligned to PCB/solar-glow-drh-v4_0.kicad_pcb, 0.60 mm board; geometry i
 The 0.60 board (vs 0.80) frees 0.20 mm into the floor: 1.00 clears stainless/copper and puts aluminum
 past the old titanium-0.75 stiffness, without growing the assembled part. Overall stays 3.55.
 
-Locator pillars: two Ø3.0 x 0.4 metal pillars stand on the cavity floor at board (13,35) and (33,55)
-(both west of the NFC coil), left as islands in the same cavity pass as the four bosses. They engage
-Ø3.2 x 0.8 recesses in the brace bottom: 0.4 engagement, 0.1 radial, ~0.25 axial margin after the
-brace's ~0.15 bottom-sanding. Height is 0.4 (not 0.6): the recess is 0.8 and the brace bottom is
-sanded to fit, so 0.4 preserves the axial margin against sanding variation. The floor stays a full
-1.00 everywhere -- no locating holes, so the back is a uniform engraving surface.
+Locator pillars: RETIRED (both shipped variants pass locators=False; the H-brace registers by
+fitment). The mechanism is kept behind the flag: two Ø3.0 x 0.4 metal pillars on the cavity floor
+at board (13,35) and (33,55), engaging Ø3.2 x 0.8 recesses in the brace bottom -- 0.4 engagement,
+0.1 radial, ~0.25 axial margin after the brace's ~0.15 bottom-sanding. The floor stays a full
+1.00 everywhere either way -- no locating holes, so the back is a uniform engraving surface.
 
 No ribs, no support posts: the resin brace carries center support. The rib/brace machinery is retained
 as build() options (ribs=/braces=) for a fallback, but the shipped part uses neither.
@@ -530,7 +529,7 @@ B = "solar-glow-drh-v3_0-backshell-0p6b-brace"
 jobs = [
     # name                 floor wall  border ribs  prog   note
     ("Ti-max",             1.00, 1.00, 0.15, False, False, "0.6mm-board DUMB BOX for the resin brace: TRUE 1.00 floor (cavity 1.80, cap gap 0.10) + NO relief pocket (true uniform floor) + 1.0 walls + 8 bosses (4 corner + 4 panel-corner). NO locator pillars (retired: the H-brace registers by fitment). NO ribs (the brace carries center support). Overall 3.55."),
-    ("Ti-max-progwindow",  1.00, 1.00, 0.15, False, True,  "0.6mm-board / ribs-trimmed + TC2030 re-flash window"),
+    ("Ti-max-progwindow",  1.00, 1.00, 0.15, False, True,  "Ti-max + a Ø11 through-window at board (13.3,16.9) -- the TC2030 land. Honest status 2026-08-01: TC1 flipped to the FRONT on 2026-07-30 and the new B-side mirror TC1/b sits UNDER SC1's can (body spans board (7,1.75)-(24,40.75), fully covering both the window and the pads), so on an assembled card the window opens onto the supercap, not a land. Useful only for a build without SC1, or if the window ever moves."),
 ]
 # Ti-conservative (0.60 floor / 1.60 wall) struck: if the shop cannot hold the floor we
 # re-issue to whatever minimum they will hold, so a pre-baked 0.60 fallback is dead weight.

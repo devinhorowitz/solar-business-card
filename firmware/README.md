@@ -91,8 +91,14 @@ power the card itself. Its 3-pin JST-SH cable is colour-coded **white = UPDI**,
 1. **Set the voltage switch to 3 V.** VS is the LDO's regulated 3.3 V rail (U9 TPS7A0233), so 3 V power and
    logic are safe; **never 5 V** - it over-drives the UPDI pin and exceeds the 3.3 V parts.
 2. Wire by signal to TC1 (or J1): **white/UPDI → UPDI**, **black/GND → GND**, and
-   **red/PWR → the connector's Vcc pin** (it sits on VS). Confirm the TC1/J1 pin
+   **red/PWR → the connector's Vcc pin** (it sits on **STO**, the supercap tank — upstream of
+   U9, whose output is VS; this line said "VS" until 2026-08-01, which the v4 board contradicts:
+   TC1.2 and J1.2 both net to STO. Practical consequence: the programmer first charges the 1 F
+   tank through that pin — at the Friend's 500 mA limit budget ~6 s before the rail comes up).
+   Confirm the TC1/J1 pin
    order against the schematic — a 3-contact UPDI Tag-Connect carries UPDI, GND, Vcc.
+   Since 2026-08-01 the TC2030 land is double-sided (`TC1/b`, same nets, mirrored to the back):
+   on a board without SC1 fitted the cable seats from either side.
 3. On 3 V the UPDI Friend's supply (up to 500 mA) powers the card for programming —
    which matters because a flat solar card has no power of its own for UPDI. If your
    connector doesn't break out Vcc, charge the cap in light first and wire only
