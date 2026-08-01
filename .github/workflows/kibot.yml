@@ -24,6 +24,9 @@ on:
       - '!PCB/**.md'
       - 'scripts/panelize.py'
       - 'scripts/render.py'
+      # Board reference figures (LED polarity, SW2 bridge). Board edits already trigger via
+      # PCB/**; this line is the generator's OWN edit -- the #132 lesson again.
+      - 'scripts/ref_figures.py'
       # The assembly views are textured with the raytraced card face and read the board's
       # own outline, mounts and part positions, so they are a function of PCB/** too — they
       # are regenerated in this job, after the raytrace that produces their texture. These
@@ -137,6 +140,18 @@ jobs:
         run: |
           docker run --rm -u "$(id -u):$(id -g)" -e HOME=/tmp -v "$PWD":/wk -w /wk \
             "$KICAD_IMAGE" python3 scripts/render.py
+
+      # Reference figures for PCB/README.md's assembly steps (D2-D5 LED polarity, the SW2
+      # master bridge), drawn FROM the board file so they cannot silently disagree with it.
+      # They replaced two hand-uploaded v2-era PNGs (culled 2026-08-01) that had gone stale
+      # three ways at once -- a ghost SJ1, pre-move SW2/R12 positions, dead net names -- with
+      # nothing to notice. The script asserts the electrical story it tells (common anode
+      # rail, R12 dim path) and fails this job if the board stops matching it. Runner-side:
+      # matplotlib only, nothing KiCad. ~2 s.
+      - name: Draw the board reference figures
+        run: |
+          python3 -m pip install --quiet 'matplotlib==3.10.7'
+          python3 scripts/ref_figures.py
 
       # THE ENCLOSURE IS DOWNSTREAM OF THE BOARD, and until now nothing rebuilt it.
       #

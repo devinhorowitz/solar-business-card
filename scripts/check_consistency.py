@@ -545,6 +545,13 @@ PRODUCERS = {
         "enclosure/brace/*DRAWING.png", "enclosure/brace/*DRAWING.pdf",
         "enclosure/brace/*pocket-map.png",
     ],
+    # Redundant with the Generated/docs/* claim above, kept for the WHO: these two are not
+    # kibot or the raytracer, they are the assembly-step reference figures drawn from the
+    # board (LED polarity, SW2 bridge) -- the replacements for the hand-uploaded v2 PNGs
+    # that went stale invisibly (culled 2026-08-01).
+    ".github/workflows/kibot.yml -> scripts/ref_figures.py": [
+        "Generated/docs/*-led-orientation.png", "Generated/docs/*-sw2-selector.png",
+    ],
 }
 
 # Images a doc displays that NOTHING in this repo generates. Each needs a reason, and the
