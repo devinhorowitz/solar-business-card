@@ -154,12 +154,23 @@ Other serial-UPDI adapters, or a PICkit 4/5 / MPLAB SNAP, also work
 (`PROG=serialupdi` or `PROG=pickit4_updi` / `snap_updi`); a bare USB-serial adapter
 would need a 4.7 kΩ resistor between TX and the joined RX/UPDI node — exactly what the
 UPDI Friend builds in. We leave `UPDIPINCFG` at default (UPDI stays active on pin 23),
-so the plain UPDI Friend is all this board *needs* — the High-Voltage variant
-([5893](https://www.adafruit.com/product/5893)) is only **required** if UPDI has been
-fused off. It is, however, a valid stand-in when the plain one is dry: it does standard
-serial UPDI too (the HV pulse is an added capability, not a replacement) and carries the
-same switchable 3 V/5 V supply at up to 500 mA, so at the 3 V setting it drives a flat
-card identically. It is the documented substitute in `BOM/check_stock.py`.
+so the plain UPDI Friend is all this board needs.
+
+> **Do NOT substitute the High-Voltage UPDI Friend ([5893](https://www.adafruit.com/product/5893)) on this board.**
+> It is tempting — it does standard serial UPDI too, carries the same 3 V/5 V supply at
+> 500 mA, and it is the one that stays in stock — but its 12 V pulse goes **down the UPDI
+> line** ("sends a pulse to the UPDI line when the RTS pin is toggled low"). That is the
+> right mechanism for tinyAVR/megaAVR parts, where UPDI and RESET share a pin. **The EA
+> does not share them.** UPDI is its own pin 23, and DS40002443A §33.3.2.1.2 puts HV
+> activation on the **RESET** pin. So the pulse would land on a general I/O pin whose
+> Absolute Maximum (Table 35-1) is **−0.3 to +6.0 V** — 12 V is twice that, and only the
+> RESET pin gets the raised 9 V limit. The trigger is not a button you choose to press
+> either: RTS is a serial control line drivers commonly assert on port open.
+> The feature buys nothing here in exchange — `UPDIPINCFG` stays at default so UPDI is
+> never fused off, and PF6/RESET is not broken out on this card at all.
+
+If the plain Friend is dry, reach for a programmer with no HV circuit — a PICkit or MPLAB
+Snap (below), which is what `BOM/check_stock.py` lists as the substitute.
 
 Refs: [UPDI Friend guide](https://learn.adafruit.com/adafruit-updi-friend) ·
 [what UPDI is (Microchip)](https://onlinedocs.microchip.com/oxy/GUID-DDB0017E-84E3-4E77-AAE9-7AC4290E5E8B-en-US-4/index.html).

@@ -9,7 +9,7 @@
 > Refresh: `python3 BOM/check_stock.py` (needs `DIGIKEY_CLIENT_ID`,
 > `DIGIKEY_CLIENT_SECRET`, `MOUSER_PART_API_KEY` in the environment; ~1 min).
 
-**Checked: 2026-08-02 22:59 UTC** · DigiKey Product Information v4 + Mouser Search API, queried by MPN (stored distributor P/Ns are shown as found live, not trusted from the sheet).
+**Checked: 2026-08-02 23:35 UTC** · DigiKey Product Information v4 + Mouser Search API, queried by MPN (stored distributor P/Ns are shown as found live, not trusted from the sheet).
 
 **30 of 30 lines fully available** · 0 on substitute only · **0 dead (❌)** · 0 unverifiable this run · 0 manual-order.
 
@@ -62,7 +62,7 @@ Hand-kept sourcing knowledge — availability shown live. Older entries were tra
 | U6 | `TPS22918TDBVRQ1` | Active (DigiKey) | 0 | $0.75 | pin-identical AEC-Q100 sibling, ~50x the OFF leakage -- last resort only; NEVER TPS22917L (inverted EN) (U6 row note) |
 | FER1 | `3641014` | Active (DigiKey) | 304 | $4.19 | 0.14 mm sheet -- stack 3x for equivalent ferrite thickness (FER1 row note) |
 | FER1 | `MHLL6060-300` | Active (DigiKey) | 4,733 | $6.40 | Laird 0.09 mm -- weakest shielding, last resort (FER1 row note) |
-| PRG1 | `5893` | Active (DigiKey) | 65 | $9.95 | HV UPDI Friend -- does STANDARD serial UPDI as well (the high-voltage pulse is an added capability, not a replacement), with the same switchable 3 V/5 V supply at up to 500 mA and the same built-in loop-back resistor, so it drives a flat card identically at the 3 V setting. ~$3 dearer and its HV feature is never needed here (UPDIPINCFG stays at default). Source: adafruit.com/product/5893, checked 2026-08-02 |
+| PRG1 | `PG164100` | Active (DigiKey) | 1,247 | $11.68 | MPLAB Snap -- the Makefile already speaks it (PROG=snap_updi), and it puts no high voltage on the UPDI line. Confirm whether yours can power the target: a flat card has no supply of its own, and if the programmer cannot provide one, use the charge-in-light path in firmware/README.md step 3 |
 
 ## Datasheet filename prices
 

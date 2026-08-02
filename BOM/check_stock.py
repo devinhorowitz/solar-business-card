@@ -151,14 +151,28 @@ SUBS = {
     # convention for anything added after the xlsx was culled. Added 2026-08-02, the
     # day the primary went dry at DigiKey, so the NEXT dry-out reports SUB instead of
     # sending someone back to the distributor sites to rediscover the alternate.
+    #
+    # THE HV UPDI FRIEND (Adafruit 5893) IS NOT LISTED HERE, DELIBERATELY. It was, for
+    # part of 2026-08-02, on the reasoning that it does standard serial UPDI too and
+    # carries the same 3 V/500 mA supply -- both true. What that missed is where its
+    # 12 V goes. Adafruit triggers the pulse from RTS ("sends a pulse to the UPDI line
+    # when the RTS pin is toggled low"), i.e. down the UPDI wire, which is the right
+    # mechanism for tinyAVR/megaAVR parts where UPDI and RESET share a pin. The EA does
+    # not share them: UPDI is its own pin 23, and DS40002443A 33.3.2.1.2 puts HV
+    # activation on the RESET pin instead. So the pulse lands on a general I/O pin whose
+    # Absolute Maximum (Table 35-1) is -0.3 to +6.0 V -- 12 V is 2x over, and only the
+    # RESET pin gets the raised 9 V limit. RTS is not a deliberate action either; serial
+    # drivers routinely assert it on port open. The HV feature is also useless here:
+    # UPDIPINCFG stays at default so UPDI is never fused off, and PF6/RESET is not
+    # broken out on this board at all. $3 cheaper shipping is not worth 12 V into a 6 V
+    # pin. Sources: adafruit.com/product/5893 and DS40002443A 33.3.2.1.2 + Table 35-1,
+    # both checked 2026-08-02.
     "PRG1": [
-        ("5893", "Adafruit Industries LLC", "digikey", None,
-         "HV UPDI Friend -- does STANDARD serial UPDI as well (the high-voltage pulse "
-         "is an added capability, not a replacement), with the same switchable 3 V/5 V "
-         "supply at up to 500 mA and the same built-in loop-back resistor, so it drives "
-         "a flat card identically at the 3 V setting. ~$3 dearer and its HV feature is "
-         "never needed here (UPDIPINCFG stays at default). "
-         "Source: adafruit.com/product/5893, checked 2026-08-02"),
+        ("PG164100", "Microchip Technology", "digikey", None,
+         "MPLAB Snap -- the Makefile already speaks it (PROG=snap_updi), and it puts no "
+         "high voltage on the UPDI line. Confirm whether yours can power the target: a "
+         "flat card has no supply of its own, and if the programmer cannot provide one, "
+         "use the charge-in-light path in firmware/README.md step 3"),
     ],
 }
 
