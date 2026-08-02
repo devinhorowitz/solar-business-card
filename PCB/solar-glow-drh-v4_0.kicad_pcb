@@ -6838,7 +6838,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Supplier P/N" "187-CL21B106KOQNNNG (Mouser)"
+		(property "Supplier P/N" "187-CL21B106KOQNNNG"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -8287,7 +8287,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Supplier P/N" "187-CL21B106KOQNNNG (Mouser)"
+		(property "Supplier P/N" "187-CL21B106KOQNNNG"
 			(at 0 0 90)
 			(unlocked yes)
 			(layer "B.Fab")
