@@ -579,9 +579,11 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
 
 - [x] **[PCB/FAB — durability] Define the gold area on a user layer instead of in prose**
   _(2026-07-27; the deliberate yes given and DONE 2026-08-02.)_ `scripts/mask_art.py` now draws
-  the net rule's result on `User.1` (~394 mm², 72 pieces: every F.Mask graphic opening + the NFC
-  arcs + the GND pads with front openings, minus the excepted PV solder lands), and both kibot
-  configs plot it, so the `User_1` gerber ships in the 1-up and panel fab sets. Generated, gated
+  the net rule's result on `User.1` (72 pieces: every F.Mask graphic opening + the NFC arcs + the
+  GND pads with front openings, minus the excepted PV solder lands), and both kibot configs plot
+  it, so the `User_1` gerber ships in the 1-up and panel fab sets. **It is 394.2 mm² of OPENING,
+  of which ~296 mm² is copper** — the rest is bare laminate inside the openings, mostly the
+  monogram backlight window. Do not quote 394 as "mm² of gold". Generated, gated
   by check [6], and the generator refuses an area that overlaps a PV land. The predicted drift
   was already real: the README enumeration said *four* mounting annuli; the board has eight
   (MP1–4 were born after the sentence). Both the drawing and the prose now come from the same

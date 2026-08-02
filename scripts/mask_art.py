@@ -222,6 +222,17 @@ def nfc_guard(board, glyph):
 # corners + MP1-4 mid-edge shell points) and TC1's GND pad 3 -- a spring-contact
 # surface, which is what hard gold is FOR. Netless apertures (the TC2030 locating
 # holes) carry no copper and fall out on the net test.
+#
+# THIS IS THE OPENING SET, NOT THE PLATED SET, and the distinction is worth stating
+# because the area figure invites the wrong reading. Roughly a quarter of what this
+# draws is bare laminate INSIDE an opening -- overwhelmingly the monogram window,
+# which is bare FR4 by design because it is the backlight, plus the NFC mark, which
+# sits in the antenna keepout and has no copper under it whatsoever (0.00 mm2,
+# measured 2026-08-02, when "does the gold NFC symbol attenuate the antenna?" was
+# answered: there is no gold there). That is consistent, not sloppy -- the net rule
+# says to plate "the copper surface an opening exposes", so laminate inside an
+# opening is nothing to plate -- but do not quote this polygon's area as "mm2 of
+# gold". PCB/README carries the split.
 GOLD_LAYER = "User.1"
 GOLD_PAD_SKIP = ("PV1", "PV2")   # the net rule's one exception: soldered GND lands
 
@@ -424,8 +435,10 @@ def main() -> int:
           f"{mark.area:.2f} mm² on F.Mask at x[{b[0]:.1f},{b[2]:.1f}] y[{b[1]:.1f},{b[3]:.1f}], "
           f"no live copper exposed")
     ng = len(gold.geoms) if gold.geom_type == "MultiPolygon" else 1
-    print(f"  gold area: {ng} piece(s), {gold.area:.1f} mm² on {GOLD_LAYER} — the plating "
-          f"request as artwork; PV lands excepted and verified clear")
+    print(f"  gold area: {ng} piece(s), {gold.area:.1f} mm² of OPENING on {GOLD_LAYER} — the "
+          f"plating request as artwork; PV lands excepted and verified clear")
+    print(f"    (opening area, not plated area: ~75% of it is copper, the rest is bare laminate "
+          f"inside the openings — mostly the monogram backlight window. See PCB/README.)")
 
     raw = BOARD.read_bytes()
     crlf = raw.count(b"\r\n")

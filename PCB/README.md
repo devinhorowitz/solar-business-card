@@ -359,8 +359,12 @@ a PCBWay DFM reviewer asks — their absence is a decision, not an oversight.
   > they are soldered and thick electrolytic gold embrittles solder joints. **The `User_1` gerber
   > in this upload draws exactly this area — treat it as the plating drawing.** Concretely the gold
   > set is: the DRH monogram field and letter rims, the perimeter frame, the six edge ornament
-  > shapes, the eight M2 mounting-hole annuli (four corners, four mid-edge), the TC2030 GND pad,
-  > and the small contactless-mark arcs right of the monogram. Where the crosshatched ground pour shows inside one
+  > shapes, the eight M2 mounting-hole annuli (four corners, four mid-edge), and the TC2030 GND pad.
+  > **The small contactless-mark arcs right of the monogram are NOT in the gold set and need no
+  > attention: there is no copper under them at all** (they sit inside the antenna keepout, so the
+  > pour cannot enter — measured 2026-08-02, 4.26 mm² of opening, 0.00 mm² of copper). They are a
+  > mask opening over bare laminate, deliberately; expect bare FR4 there, not a missing plate.
+  > Where the crosshatched ground pour shows inside one
   > of those openings, plate it with them; that is intended, not a defect. All other exposed top-side
   > copper stays with the base finish: the eight solar-cell lands PV1/PV2 (four SRC + the four
   > excepted GND solder lands) and TC2030 pads 1/2/4/5/6 (not on GND, so they have no electrical
@@ -381,7 +385,14 @@ a PCBWay DFM reviewer asks — their absence is a decision, not an oversight.
   rule's result on **`User.1`**, and both fab sets plot it as its own gerber (`…-User_1.gbr`,
   1-up and panel). The drawing is generated from the board — every F.Mask graphic opening, the
   NFC arcs, and every GND pad with a front opening minus the excepted PV lands — so it re-derives
-  on `--apply` and cannot drift when a pour outline or an opening moves. Drift is not
+  on `--apply` and cannot drift when a pour outline or an opening moves.
+  **Read it as the OPENING set, not the plated set.** It draws **394.2 mm² of opening**, of which
+  **~296 mm² is copper** that will actually take gold; the remaining ~98 mm² is bare laminate
+  inside those openings — overwhelmingly the monogram window, which is bare FR4 *on purpose*
+  because that is the backlight, plus the 4.26 mm² contactless mark. That is not a discrepancy to
+  reconcile: the net rule already says "plate the copper surface an opening exposes", so laminate
+  inside an opening is simply nothing to plate. (Split measured 2026-08-02 against the refilled
+  board; re-measure it if the routing or the pour outline moves.) Drift is not
   hypothetical: the enumeration above said "four" mounting annuli while the board carried eight
   (MP1–4, the mid-edge shell points, are GND annuli with front openings too — the net rule always
   covered them; the prose didn't). Consistency check [6] gates the drawing like the rest of the
@@ -400,8 +411,12 @@ a PCBWay DFM reviewer asks — their absence is a decision, not an oversight.
   the 2026-08-01 B-side mirror, opens **B.Mask** only — it is outside the front gold set by
   construction and takes the board-wide base finish like every other back pad.) The gold set
   stays a single connected F.Cu group fed by the pour — the net rule *adds* the TC2030 GND pad
-  (a spring-contact surface, which is what hard gold is for) and the contactless-mark arcs
-  relative to the old enumeration; same look, better wear, one sentence of spec.) Ordering plain
+  (a spring-contact surface, which is what hard gold is for) relative to the old enumeration;
+  same look, better wear, one sentence of spec. _(It was also read as adding the contactless-mark
+  arcs. It does not: the net rule plates copper an opening exposes, and those arcs expose no
+  copper — corrected 2026-08-02 when the question "does the gold NFC symbol attenuate the
+  antenna?" was answered by measuring it. There is no gold there to attenuate anything.)_)
+  Ordering plain
   ENIG without this request leaves the bus as dead copper and no wear surface on the face — do
   not ship without it.
 
