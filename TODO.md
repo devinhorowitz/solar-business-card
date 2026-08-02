@@ -68,9 +68,9 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   _(Piped 2026-08-02 — the rig was built in-repo but its bring-up had no entry.)_ Everything is
   generated and committed: the in-frame pogo test plate (`enclosure/solar-glow-drh-pogo-testplate`,
   probes TP2–TP7 + TC1 with the card still in the panel), the Pico monitor firmware and channel
-  map, and the host dashboard (`bench/`). Physical work remaining: print/order the plate, fit
-  pogo pins, flash the Pico, and smoke-test channels against `bench/README.md` before the first
-  card powers up on it.
+  map, and the host dashboard (`bench/monitor/`). Physical work remaining: print/order the plate,
+  fit pogo pins, flash the Pico, and smoke-test channels against `bench/monitor/README.md` before
+  the first card powers up on it.
 
 - [ ] **[V-NEXT, PARKED] E-ink display variant — concept banked, not adopted**
   _(Piped 2026-08-02; `docs/eink-display-variant-notes.md` is the full record: panel survey,
