@@ -9,8 +9,9 @@ change to one that isn't mirrored in the others fails loudly (in CI or locally):
       match the schematic netlist for the MCU (U1).            [ERROR on drift]
   [2] BOM PARITY    -- every reference in the CI-generated BOM must be a real
       component in the netlist (no phantom BOM lines).         [ERROR on drift]
-  [4] PACKAGE FIT   -- the package the BOM orders must match the land the board
-      draws (0402 part on a 0402 land).                        [ERROR on drift]
+  [4] PACKAGE FIT   -- RETIRED 2026-08-02 with the hand-authored BOM. It compared
+      a package a human typed into a spreadsheet against the board's land; the BOM
+      is now generated FROM the board, so the check compared the board to itself.
   [5] MODEL REFS -- every (model ...) path resolves, AND every stock model is
       vendored in PCB/kicad-3dmodels/ (what CI renders from).  [ERROR on drift]
   [6] MASK ART -- the generated front soldermask art still matches the routing it
@@ -701,6 +702,22 @@ def check_doc_imagery():
 # Anything else is an error: either the file went missing, or the prose is claiming a
 # tree that is not there.
 EXPECTED_ABSENT = {
+    # The hand-authored BOM, retired 2026-08-02. Every line is now derived from the
+    # schematic plus the board's own exclude_from_bom / dnp flags (scripts/bom_split.py),
+    # so a spreadsheet could only ever be a second opinion that drifts. Both files are in
+    # git history; the prose that still names them is describing where the BOM USED to
+    # live, which is lineage worth keeping rather than a broken pointer to fix.
+    "BOM/solar-glow-drh-v4_0-BOM.xlsx":
+        "hand-authored BOM master — culled 2026-08-02, generated now (scripts/bom_split.py); in git history",
+    "solar-glow-drh-v4_0-BOM.xlsx": "same file, cited by basename",
+    "-BOM-assembly.xlsx":
+        "hand-authored PCBA subset — culled 2026-08-02, superseded by the generated assembly CSV",
+    "solar-glow-drh-v4_0-BOM-assembly.xlsx": "same file, cited by basename",
+    # The buy documents CI writes on every board push (scripts/bom_split.py). Cited as
+    # what an order is placed FROM; they appear in Generated/ after the kibot run, the
+    # same way the gerbers and the position file do.
+    "../Generated/fabdocs/solar-glow-drh-v4_0-pcbway-assembly.csv":
+        "CI-generated buy document (scripts/bom_split.py) — written by the kibot run",
     # Build outputs and CI intermediates — gitignored by design, cited as what a
     # command WRITES rather than what the tree holds.
     "firmware/solar-glow.hex": "firmware build output — gitignored (firmware/README `make`)",
@@ -1470,144 +1487,6 @@ def board_footprints():
     return out
 
 
-def bom_packages():
-    """{refdes: package string} from the BOM master xlsx (BOM/*-BOM.xlsx).
-
-    stdlib only: an .xlsx is a zip of XML, and all we want is column 4 of each
-    row. Cells arrive either as inline strings (<is><t>) or via the shared-string
-    table, so both are handled. A row's first cell may list several refs
-    ("R17, R18"), which is why it is split.
-    """
-    path = os.path.join(ROOT, "BOM", "solar-glow-drh-v4_0-BOM.xlsx")
-    if not os.path.exists(path):
-        return {}
-    import zipfile
-    with zipfile.ZipFile(path) as z:
-        shared = []
-        if "xl/sharedStrings.xml" in z.namelist():
-            sx = z.read("xl/sharedStrings.xml").decode("utf8", "replace")
-            shared = re.findall(r"<t[^>]*>([^<]*)</t>", sx)
-        sheet = z.read("xl/worksheets/sheet1.xml").decode("utf8", "replace")
-    out = {}
-    for row in re.findall(r"<row.*?</row>", sheet, re.S):
-        cells = []
-        for c in re.finditer(r"<c[^>]*?(?:\st=\"(\w+)\")?[^>]*>(.*?)</c>", row, re.S):
-            typ, body = c.group(1), c.group(2)
-            # Excel splits a styled cell into several <t> runs; take them all, or a
-            # cell like "0603 (R_0603_1608Metric)" reads back as just "0603 " -- or
-            # as nothing, if the first run is empty.
-            inline = "".join(re.findall(r"<t[^>]*>([^<]*)</t>", body))
-            if typ == "s":
-                v = re.search(r"<v>(\d+)</v>", body)
-                cells.append(shared[int(v.group(1))] if v and int(v.group(1)) < len(shared) else "")
-            elif inline:
-                cells.append(inline)
-            else:
-                v = re.search(r"<v>([^<]*)</v>", body)
-                cells.append(v.group(1) if v else "")
-        if not cells:
-            continue
-        # Find the package cell by CONTENT, not by column index. Some rows carry a
-        # leading empty cell, so a fixed index lands on the value column instead
-        # ("100 nF, X7R, 50 V") and the row is silently skipped -- which is how the
-        # first cut of this check only covered 15 of 32 comparable parts.
-        pkg = ""
-        for c in cells[1:]:
-            if re.match(r"^(0402|0603|0805|1008|1206)\b", c.strip()):
-                pkg = c.strip()
-                break
-        for r in re.split(r"[,/]", cells[0]):
-            r = r.strip()
-            if re.match(r"^[A-Z]+\d+$", r):
-                out[r] = pkg
-    return out
-
-
-# Land geometry -> chip package, calibrated against footprints whose class is
-# already known from their KiCad lib_id (C_0402 = 0.96 mm pitch, C_0603 = 1.55,
-# R_0603 = 1.65, C_0805 = 1.90, L_1008 = 2.15). The bands are deliberately wide:
-# this project draws its own hand-solder lands slightly larger than KiCad's, so
-# the 0402 band has to admit both 0.96 and the house 1.02.
-_LAND_BANDS = ((0.90, 1.10, "0402"), (1.45, 1.75, "0603"),
-               (1.80, 2.00, "0805"), (2.05, 2.30, "1008"))
-
-
-def board_land_classes():
-    """{refdes: (package_class, pitch)} for every 2-pad SMD footprint."""
-    with open(PCB, encoding="utf-8", errors="replace") as fh:
-        s = fh.read()
-    out = {}
-    for m in re.finditer(r"(?m)^\s*\(footprint ", s):
-        depth, i = 0, s.index("(", m.start())
-        while i < len(s):
-            c = s[i]
-            if c == "(":
-                depth += 1
-            elif c == ")":
-                depth -= 1
-                if depth == 0:
-                    break
-            elif c == '"':
-                i += 1
-                while i < len(s) and s[i] != '"':
-                    i += 2 if s[i] == "\\" else 1
-            i += 1
-        blk = s[m.start():i + 1]
-        ref = re.search(r'\(property "Reference" "([^"]+)"', blk)
-        pads = re.findall(
-            r'\(pad "[^"]*" \w+ \w+\s*\(at (-?[\d.]+) (-?[\d.]+)(?: -?[\d.]+)?\)\s*\(size ([\d.]+) ([\d.]+)\)',
-            blk)
-        if not ref or len(pads) != 2:
-            continue
-        (x1, y1, _, _), (x2, y2, _, _) = [tuple(map(float, p)) for p in pads]
-        pitch = max(abs(x1 - x2), abs(y1 - y2))
-        cls = next((n for lo, hi, n in _LAND_BANDS if lo <= pitch <= hi), None)
-        if cls:
-            out[ref.group(1)] = (cls, round(pitch, 3))
-    return out
-
-
-def check_package_vs_land():
-    """Does the part the BOM orders actually fit the land the board draws?
-
-    This exists because of FB1 (2026-07-28). The design notes, the BOM and even
-    the schematic symbol's Value all said "0603 ferrite", but the Footprint field
-    was never changed, so a 0603 part was being ordered for a 0402 land -- its
-    terminations would sit ~0.165 mm outboard of the pad centres with almost no
-    fillet. NOTHING caught it: KiCad's schematic parity only compares the
-    schematic to the board, and those two agreed with each other. The BOM master
-    is a third copy of the truth, and it was the only one that was right.
-
-    So this compares the ORDERED package against the DRAWN land. Cheap, and it is
-    the only check in this repo that can see that class of drift.
-
-    Coverage is partial and SAYS SO: it can only speak for two-pad parts whose BOM
-    package cell starts with a size token. About 16 rows word it differently and
-    are listed in a note rather than silently dropped. Widen the BOM wording, not
-    this parser, if you want them covered.
-    """
-    print("[4] BOM package vs board land geometry")
-    bom, land = bom_packages(), board_land_classes()
-    checked, skipped = 0, []
-    for ref in sorted(land):
-        pkg = bom.get(ref)
-        m = re.match(r"^(0402|0603|0805|1008|1206)\b", pkg or "")
-        if not m:
-            skipped.append(ref)
-            continue
-        checked += 1
-        cls, pitch = land[ref]
-        if m.group(1) != cls:
-            err(f"{ref}: BOM orders a {m.group(1)} part ({pkg!r}) but the board land "
-                f"is {cls} (pad pitch {pitch} mm) -- the part will not fit")
-    if not errors or checked:
-        ok(f"{checked} of {len(land)} two-pad parts cross-checked, package matches land")
-    # Never fail silently: say which parts this check could NOT speak for.
-    if skipped:
-        print(f"  note:   {len(skipped)} two-pad parts have no size in the BOM package "
-              f"column, so they are not covered: {' '.join(sorted(skipped))}")
-
-
 def check_board_sch_parity(comps, sch_fps):
     """Guard the schematic <-> board boundary.
 
@@ -1661,7 +1540,6 @@ def main():
     check_pin_contract(netpins)
     check_bom_parity(comps)
     check_board_sch_parity(comps, sch_fps)
-    check_package_vs_land()
     check_model_refs()
     check_mask_art()
     check_part_heights()

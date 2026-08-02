@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """Live stock check for the SOLAR-GLOW DRH v4.0 BOM -> BOM/README.md.
 
-Reads every ordered line from the master (BOM/solar-glow-drh-v4_0-BOM.xlsx),
+Reads every orderable line from the DESIGN (via scripts/bom_split.py, which
+derives them from the schematic and the board's own flags -- there is no
+hand-authored BOM any more),
 asks DigiKey (Product Information v4) and Mouser (Search API) what each MPN
 costs and whether it is still in production, and rewrites BOM/README.md as a
 purely derived availability table. The point is the years-later glance: run
@@ -10,11 +12,12 @@ orderable -- and where a line is dead AND its documented substitutes are dead
 too, a red X says so.
 
 Sources of truth:
-  - line items, quantities, reference prices .... the master xlsx (col layout
-    below); this script never edits it
-  - substitutes ................................. SUBS, transcribed from the
-    master's own sourcing notes (each entry cites its row) -- when a note
-    gains or loses an alternate, mirror it here
+  - line items and quantities ................... scripts/bom_split.py, i.e. the
+    schematic + the board's exclude_from_bom / dnp flags. A part enters or leaves
+    this table by changing the DESIGN, never by editing a sheet.
+  - substitutes ................................. SUBS below, the one piece of
+    hand-kept sourcing knowledge left (the xlsx that used to carry it was retired
+    2026-08-02); each entry cites where its alternate came from
   - live numbers ................................ the distributor APIs at run
     time; nothing is cached
 
@@ -50,14 +53,8 @@ import time
 
 import requests
 
-try:
-    import openpyxl
-except ImportError:
-    sys.exit("openpyxl is required: pip install openpyxl")
-
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
-MASTER = os.path.join(HERE, "solar-glow-drh-v4_0-BOM.xlsx")
 OUT = os.path.join(HERE, "README.md")
 DATASHEETS = os.path.join(ROOT, "datasheets")
 
@@ -327,32 +324,30 @@ def query_part(dk, mouser, mpn, mfr=None, source_hint=None, mouser_sku=None):
     return _CACHE[key]
 
 
-def load_master():
-    wb = openpyxl.load_workbook(MASTER, data_only=True)
-    ws = wb.active
-    ordered, unordered = [], []
-    for row in ws.iter_rows(min_row=2, values_only=True):
-        refs, mpn = row[COL_REFS], row[COL_MPN]
-        if not isinstance(refs, str) or not refs.strip():
-            continue
-        refs = refs.strip()
-        if refs.startswith("*") or refs == "—":
-            continue
-        if not isinstance(mpn, str) or not mpn.strip():
-            continue
-        mpn = mpn.strip()
-        entry = {
-            "refs": refs,
-            "qty": row[COL_QTY],
-            "mfr": (row[COL_MFR] or "").strip() if isinstance(row[COL_MFR], str) else row[COL_MFR],
-            "mpn": mpn,
-            "ref_price": row[COL_PRICE],
-        }
-        if mpn.startswith("("):
-            unordered.append(entry)
-        else:
-            ordered.append(entry)
-    return ordered, unordered
+def load_lines():
+    """Every ORDERABLE line, derived from the design.
+
+    scripts/bom_split.py owns the split (assembly / hand-solder / off-board) and
+    reads it from the schematic plus the board's own flags, so this script cannot
+    disagree with what the fab documents say. Only lines with a supplier are
+    returned: a screw sourced locally or the machined shell have nothing for a
+    distributor API to answer about, and a stock table that lists them is lying
+    about what it checked.
+    """
+    sys.path.insert(0, os.path.join(ROOT, "scripts"))
+    import bom_split
+    asm, hand, off, once, problems = bom_split.build()
+    if problems:
+        sys.exit("check_stock: the design cannot be split cleanly -- " + "; ".join(problems))
+    out = []
+    for kind, rows in (("assembly", asm), ("hand-solder", hand)):
+        for r in rows:
+            out.append({"refs": ", ".join(r["refs"]), "qty": r["qty"], "mfr": "",
+                        "mpn": r["mpn"], "kind": kind})
+    for ref, qty, mpn, sup, _dpn, _note in list(off) + list(once):
+        if sup:
+            out.append({"refs": ref, "qty": qty, "mfr": "", "mpn": mpn, "kind": "off-board"})
+    return out
 
 
 def fmt_price(p):
@@ -440,22 +435,6 @@ def fix_datasheet_names(name_rows):
         if b != n0:
             open(path, "wb").write(b)
             print(f"citations updated: {os.path.relpath(path, ROOT)}")
-    # the BOM master's string cells
-    wb = openpyxl.load_workbook(MASTER)
-    ws = wb.active
-    touched = 0
-    for row in ws.iter_rows():
-        for c in row:
-            if isinstance(c.value, str):
-                v = c.value
-                for old, new in renames:
-                    v = v.replace(old, new)
-                if v != c.value:
-                    c.value = v
-                    touched += 1
-    if touched:
-        wb.save(MASTER)
-        print(f"citations updated: {os.path.relpath(MASTER, ROOT)} ({touched} cell(s))")
     # tracked markdown
     ls = subprocess.run(["git", "ls-files", "*.md"], cwd=ROOT,
                         capture_output=True, text=True, check=True)
@@ -473,7 +452,7 @@ def fix_datasheet_names(name_rows):
 
 
 def main():
-    ordered, unordered = load_master()
+    ordered = load_lines()
     dk = DigiKey()
     mouser = Mouser()
 
@@ -528,9 +507,10 @@ def main():
     a("# BOM — live availability")
     a("")
     a("> **GENERATED — do not edit.** Written by [`BOM/check_stock.py`](check_stock.py)")
-    a("> from the master [`BOM/solar-glow-drh-v4_0-BOM.xlsx`](solar-glow-drh-v4_0-BOM.xlsx)")
-    a("> plus live DigiKey/Mouser data. The master is the source of truth for what the")
-    a("> board needs; this file is the source of nothing — regenerate it, never hand-edit it.")
+    a("> from the DESIGN (`scripts/bom_split.py` — the schematic plus the board\'s own")
+    a("> flags) plus live DigiKey/Mouser data. There is no hand-authored BOM: the board")
+    a("> is the source of truth for what to buy, and this file is the source of nothing —")
+    a("> regenerate it, never hand-edit it.")
     a(">")
     a("> Refresh: `python3 BOM/check_stock.py` (needs `DIGIKEY_CLIENT_ID`,")
     a("> `DIGIKEY_CLIENT_SECRET`, `MOUSER_PART_API_KEY` in the environment; ~1 min).")
@@ -542,23 +522,23 @@ def main():
       f"{n_sub} on substitute only · **{n_dead} dead (❌)** · "
       f"{n_unk} unverifiable this run · {n_man} manual-order.")
     a("")
-    a("| | Ref(s) | Qty | Mfr | MPN | Distributor P/N | Lifecycle | Stock | $ @1 live | ≈$ master |")
-    a("|---|---|---|---|---|---|---|---|---|---|")
+    a("| | Ref(s) | Qty | Mfr | MPN | Distributor P/N | Lifecycle | Stock | $ @1 live |")
+    a("|---|---|---|---|---|---|---|---|---|")
     for entry, hit, err, verdict, _subs in results:
         if verdict == "manual":
             key = entry["refs"].split(",")[0].split("–")[0].strip()
             note = NO_API.get(key, NO_API.get(entry["refs"], "manual order"))
             a(f"| — | {entry['refs']} | {entry['qty'] or ''} | {entry['mfr'] or ''} | "
-              f"`{entry['mpn']}` | — | {note} | — | — | {fmt_price(entry['ref_price'])} |")
+              f"`{entry['mpn']}` | — | {note} | — | — | |")
             continue
         if hit:
             a(f"| {icon[verdict]} | {entry['refs']} | {entry['qty'] or ''} | {entry['mfr'] or ''} | "
               f"`{entry['mpn']}` | {hit['dist_pn']} ({hit['source']}) | {hit['status']} | "
-              f"{fmt_qty(hit['qty'])} | {fmt_price(hit['price'])} | {fmt_price(entry['ref_price'])} |")
+              f"{fmt_qty(hit['qty'])} | {fmt_price(hit['price'])} | |")
         else:
             why = "no exact listing found" if not err else "query failed"
             a(f"| {icon[verdict]} | {entry['refs']} | {entry['qty'] or ''} | {entry['mfr'] or ''} | "
-              f"`{entry['mpn']}` | — | {why} | 0 | — | {fmt_price(entry['ref_price'])} |")
+              f"`{entry['mpn']}` | — | {why} | 0 | — | |")
     a("")
     a("**Verdicts** — ✅ primary MPN in stock and in production · "
       "⚠️ primary unavailable, a documented substitute (below) is available · "
@@ -607,20 +587,12 @@ def main():
     else:
         a(f"All priced names within ±{NAME_PRICE_TOL:.0%} of live.")
     a("")
-    a("## Lines with no ordered part")
-    a("")
-    a("Straight from the master — PCB features, bare pads and drills, plus the "
-      "machined/fabbed items that are ordered from the repo's own outputs:")
-    a("")
-    for entry in unordered:
-        a(f"- **{entry['refs']}** — `{entry['mpn']}`")
-    a("")
     a("---")
-    a("*Prices are qty-1 USD list at the checked timestamp; the master's ≈$ column is its "
-      "2026-07 sourcing-pass reference, kept for drift-spotting. Stock numbers age by the "
-      "hour — re-run before ordering. The assembly subset (machine-placed 47) lives in "
-      "[`solar-glow-drh-v4_0-BOM-assembly.xlsx`](solar-glow-drh-v4_0-BOM-assembly.xlsx); "
-      "values there mirror the master, and the master wins on disagreement.*")
+    a("*Prices are qty-1 USD list at the checked timestamp; stock numbers age by the hour "
+      "— re-run before ordering. Every line here is derived from the design, so the split "
+      "between what PCBWay places and what you hand-solder is the one in "
+      "`Generated/fabdocs/` (`…-pcbway-assembly.csv` and `…-handbuy-*.csv`), generated by "
+      "the same `scripts/bom_split.py` this table is built from.*")
 
     with open(OUT, "w", encoding="utf-8") as f:
         f.write("\n".join(lines) + "\n")

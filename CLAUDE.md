@@ -22,9 +22,11 @@ is the "Where the truth lives" table in `README.md`. In short:
 - Board copper / geometry → `PCB/solar-glow-drh-v4_0.kicad_pcb` / `.kicad_sch`
 - Back-shell medallion (ring text, monogram, serial) → `enclosure/medallion.py`
 - Firmware pin map + tunables → `firmware/board.h` and `firmware/README.md`
-- BOM master → `BOM/solar-glow-drh-v4_0-BOM.xlsx` (`BOM/README.md` is **derived** — a live
-  availability table written by `BOM/check_stock.py`, manual-apply like the mask art since it
-  needs distributor API keys; regenerate it, never edit it)
+- BOM → **there is no hand-authored BOM.** Both `*-BOM.xlsx` masters were culled 2026-08-02 and
+  live in git history; every line is now derived from the schematic + the board's own flags.
+  `BOM/README.md` is the **live availability table** written by `BOM/check_stock.py` (manual-apply
+  like the mask art, since it needs distributor API keys; regenerate it, never edit it), and it
+  reads its line items from `scripts/bom_split.py` rather than from a sheet
 - **The two BUY documents are GENERATED, not maintained** → `scripts/bom_split.py` writes them
   into `Generated/fabdocs/` on every board push: `…-pcbway-assembly.csv` (what the machine buys
   and places) and `…-handbuy-{digikey,mouser}.csv` + `…-handbuy.md` (what **you** buy — the
