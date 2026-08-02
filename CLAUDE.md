@@ -108,7 +108,16 @@ from a night that found four silently-dead citations check [9] could not see, si
 guards only displayed images), and that **no footprint has changed sides** against the
 `FRONT_SIDE` snapshot (check [12], 2026-08-01 — closing TODO's named tooling gap: DRC, parity
 and check [1] are all side-blind, and a B-side flip silently deletes that part's brace pocket;
-a deliberate move updates the snapshot in the same commit, the exclusion-ledger shape).
+a deliberate move updates the snapshot in the same commit, the exclusion-ledger shape), and that
+**every opening in the `User.1` plating drawing actually has copper under it, and the fab
+request's hand-written gold-set enumeration still matches the board** (check [14], 2026-08-02).
+That last one closes a gap class that produced two wrong fab instructions in a week — the request
+said *four* M2 annuli when the board has eight, and listed the contactless arcs as gold when they
+have no copper at all — because a human list of the gold set sat next to a generated drawing of it
+with no gate between. It found a third case on its first run: the D/R/H letter apertures plate
+nothing either (bare FR4 *is* the backlight), so they are now a reasoned exception rather than an
+unnoticed one. Both exceptions are recognised **by construction** (inside `mask_art`'s own mark, or
+inside the `optical_window` keepout), never by coordinates.
 
 ## CI
 - `kibot.yml` — regenerates `Generated/` (fab + docs) on `PCB/**` changes and commits

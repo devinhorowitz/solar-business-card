@@ -392,7 +392,14 @@ a PCBWay DFM reviewer asks — their absence is a decision, not an oversight.
   because that is the backlight, plus the 4.26 mm² contactless mark. That is not a discrepancy to
   reconcile: the net rule already says "plate the copper surface an opening exposes", so laminate
   inside an opening is simply nothing to plate. (Split measured 2026-08-02 against the refilled
-  board; re-measure it if the routing or the pour outline moves.) Drift is not
+  board; re-measure it if the routing or the pour outline moves.)
+  **The enumeration above is now GATED** by consistency check [14], which re-derives it from the
+  board: every opening in the drawing must have copper under it or be one of two reasoned
+  exceptions (the mask-only contactless mark, and the D/R/H letter apertures, where bare FR4 *is*
+  the backlight), and the stated M2-annulus count must match the pads. That gate exists because
+  this paragraph was wrong twice in a week — *four* annuli when the board has eight, and the
+  contactless arcs listed as gold when they have none — and a fab acts on this text. Editing the
+  enumeration without the board agreeing now fails CI. Drift is not
   hypothetical: the enumeration above said "four" mounting annuli while the board carried eight
   (MP1–4, the mid-edge shell points, are GND annuli with front openings too — the net rule always
   covered them; the prose didn't). Consistency check [6] gates the drawing like the rest of the
