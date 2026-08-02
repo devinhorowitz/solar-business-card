@@ -34,6 +34,8 @@ change to one that isn't mirrored in the others fails loudly (in CI or locally):
   [14] GOLD SET -- every opening the User.1 plating drawing carries has copper
       under it (or is the mask-only contactless mark), and the fab request's
       hand-written enumeration still matches the board.        [ERROR on drift]
+  [15] CPL vs BOM -- nothing reaches the assembler's pick-and-place without a BOM
+      line to buy it; the two fab files describe one build.    [ERROR on drift]
 
 Usage:   python3 scripts/check_consistency.py
 Exit:    nonzero if any ERROR-level check fails; warnings do not fail the build.
@@ -1191,6 +1193,85 @@ def check_gold_set():
            f"match the request")
 
 
+# --- [15] the CPL and the BOM must describe the same build ---------------------------
+#
+# The two files a PCBA house works from are the BOM (what to buy) and the position
+# file / CPL (where to put it). They have to agree, and on this board they did not:
+# SC1-4, PV1-2, MH1-4 and TC1 carried `exclude_from_bom` WITHOUT
+# `exclude_from_pos_files`, so the CPL told an assembler to place ten parts it had no
+# line item for, plus a DNP footprint. Four M2 mounting annuli among them -- nothing
+# to place at all -- while their siblings MP1-4 were correctly excluded from both.
+#
+# The exclusions themselves are right and deliberate: this board is hand-finished, so
+# the supercaps and the solar cells are hand-soldered and must NOT reach the pick-and-
+# place, and a mounting hole is not a part. Only the second flag was missing.
+#
+# WHY NOTHING CAUGHT IT. Check [2] asserts every BOM line is a real component -- the
+# one direction. The reverse (every placeable footprint has a line to buy) was
+# unguarded, and kibot.yaml's own position output carries a CAUTION that it is
+# "informational" because these flags clear on schematic sync, which is exactly the
+# drift that makes a standing gate worth more than a note.
+#
+# THE RULE: excluded from the BOM, or DNP  =>  excluded from the position file.
+# Not the converse -- a part may legitimately be placed by hand while still being
+# bought (it would appear in the BOM and not the CPL), so that direction is a warning.
+def check_cpl_bom_agreement():
+    print("[15] the position file and the BOM describe the same build")
+    sys.path.insert(0, os.path.join(ROOT, "scripts"))
+    try:
+        import pcbnew
+    except Exception as e:
+        warn(f"not checked -- {type(e).__name__}: {e}")
+        return
+    try:
+        board = pcbnew.LoadBoard(PCB)
+    except Exception as e:
+        err(f"could not load the board: {type(e).__name__}: {e}")
+        return
+    placed, ghosts = set(), []
+    for f in board.GetFootprints():
+        ref = f.GetReference() or "(unnamed)"
+        skip_bom = f.IsExcludedFromBOM()
+        dnp = f.IsDNP()
+        in_pos = not f.IsExcludedFromPosFiles()
+        if in_pos:
+            placed.add(ref)
+        if (skip_bom or dnp) and in_pos:
+            why = "not in the BOM" if skip_bom else ""
+            why = (why + " and DNP") if (skip_bom and dnp) else (why or "DNP")
+            ghosts.append(f"{ref} ({why})")
+    if ghosts:
+        err(f"{len(ghosts)} footprint(s) would reach the assembler's pick-and-place with nothing "
+            f"to place -- set exclude_from_pos_files on them, or give them a BOM line: "
+            + ", ".join(sorted(ghosts)))
+
+    # cross-check against the CI BOM's own reference list, so the two FILES are compared
+    # and not merely the flags that generate them.
+    try:
+        with open(BOM, newline="", encoding="utf-8") as fh:
+            bom_refs = set()
+            for row in csv.DictReader(fh):
+                bom_refs.update((row.get("References") or "").split())
+    except OSError:
+        warn("CI BOM not present -- flag check only (kibot regenerates it on PCB pushes)")
+        bom_refs = None
+    if bom_refs:
+        only_cpl = sorted(placed - bom_refs)
+        only_bom = sorted(bom_refs - placed)
+        if only_cpl:
+            err(f"in the position file but absent from the CI BOM: {', '.join(only_cpl)} -- the "
+                f"assembler is told where, but never what")
+        if only_bom:
+            warn(f"in the CI BOM but excluded from the position file: {', '.join(only_bom)} -- "
+                 f"fine if these are hand-soldered, but say so deliberately")
+        if not ghosts and not only_cpl and not only_bom:
+            ok(f"{len(placed)} placeable footprint(s), and the CI BOM lists exactly the same "
+               f"{len(bom_refs)} -- CPL and BOM agree in both directions")
+    elif not ghosts:
+        ok(f"{len(placed)} placeable footprint(s); every BOM-excluded or DNP part is also out "
+           f"of the position file")
+
+
 def check_part_colors():
     print("[10] every 3D model carries the colour the parts table gives it")
     sys.path.insert(0, os.path.join(ROOT, "scripts"))
@@ -1471,6 +1552,7 @@ def main():
     check_footprint_sides()
     check_nfc_coil()
     check_gold_set()
+    check_cpl_bom_agreement()
     print(f"\n== {len(errors)} error(s), {len(warnings)} warning(s) ==")
     sys.exit(1 if errors else 0)
 

@@ -30,6 +30,16 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
 
 ## Cross-domain (link two+ teams — easiest to forget)
 
+- [x] **[PCB/FAB — order blocker] The CPL and the BOM disagreed — FIXED 2026-08-02, gated as check [15]**
+  Found while sweeping for order blockers. SC1–4, PV1–2, MH1–4 and TC1 carried `exclude_from_bom`
+  **without** `exclude_from_pos_files`, so the pick-and-place file told an assembler to place ten
+  parts it had no line item for, plus a DNP footprint — four of them M2 mounting annuli, which are
+  not parts at all, while their siblings MP1–4 were correctly excluded from both. The exclusions
+  themselves were right (the board is hand-finished, so the supercaps and cells are hand-soldered
+  and must not reach the machine); only the second flag was missing. Now 47 placeable footprints
+  against 47 BOM lines, matching in both directions. Check [2] could never have seen it — it
+  asserts every BOM line is a real component, not that every placeable part has something to buy.
+
 - [ ] **[BOM] Buy the low-stock / long-lead parts early** _(2026-07-23; numbers refreshed 2026-07-30
   from a live DUAL-distributor sweep of all 31 orderable MPNs — DigiKey and Mouser, exact-MPN matched.)_
   - **U3 accel `ADXL367BCCZ-RL7` — the new alarm: DigiKey went 731 → 0 in seven days.** Mouser holds

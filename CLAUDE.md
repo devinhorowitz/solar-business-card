@@ -117,7 +117,11 @@ have no copper at all — because a human list of the gold set sat next to a gen
 with no gate between. It found a third case on its first run: the D/R/H letter apertures plate
 nothing either (bare FR4 *is* the backlight), so they are now a reasoned exception rather than an
 unnoticed one. Both exceptions are recognised **by construction** (inside `mask_art`'s own mark, or
-inside the `optical_window` keepout), never by coordinates.
+inside the `optical_window` keepout), never by coordinates. And **check [15]** holds the other
+fab-file pair together: nothing may reach the assembler's pick-and-place without a BOM line to
+buy it. It was written after the pre-order sweep found SC1–4, PV1–2, MH1–4 and TC1 excluded from
+the BOM but *not* from the position file — a CPL that named ten parts the assembler had never
+been sold. Check [2] is the same relationship in the one direction that happened to be guarded.
 
 ## CI
 - `kibot.yml` — regenerates `Generated/` (fab + docs) on `PCB/**` changes and commits
