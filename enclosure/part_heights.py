@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 """Single home for B-side component heights, in mm above the board's back face.
 
+HEIGHTS ARE BODY-ONLY: each is measured from the part's 3D model, which seats at zero
+solder standoff. The real joint adds ~0.05-0.075 mm of paste collapse under every part.
+That allowance lives ONCE, in fit_rules.AIR (sized for the full assembly tolerance
+stack) -- do not add standoff to a height here, or it gets counted twice.
+
 WHY THIS FILE EXISTS
 
 The enclosure generators cut a clearance pocket per B-side part, and the pocket depth

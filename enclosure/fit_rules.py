@@ -54,7 +54,15 @@ TOOL_R = 1.0               # dia 2.0 finisher -> R1.0 internal corners
 
 # ---- brace ----------------------------------------------------------------------------
 GAP = CAVITY               # the brace fills the cavity
-AIR = 0.12                 # air over a covered part
+AIR = 0.22                 # air over a covered part. 0.12 until 2026-08-02 -- that cleared the
+                           # TYPICAL assembly stack but not the corner: body-height tol (+-0.10
+                           # worst class) + solder standoff (~0.075; part_heights measures the
+                           # 3D models, which seat at zero standoff) + resin pocket depth
+                           # (+-0.10) RSS to ~0.16. 0.22 covers the RSS stack with margin;
+                           # scripts/interference_drc.py carries the same stack as WC_STACK and
+                           # reports the worst-case column. If first-article glow suffers from
+                           # the diffuser sitting 0.1 farther off D2-D5, the rollback lever is a
+                           # per-part AIR exception for the LEDs, not a global revert.
 CLR = 0.25                 # in-plane clearance around a part
 SLA_WEB = 0.40             # thinnest resin that may remain OVER a pocket
 SLA_WALL = 0.60            # thinnest in-plane feature we will print
