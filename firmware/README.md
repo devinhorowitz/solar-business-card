@@ -116,10 +116,10 @@ cd firmware
 make DFP=/path/to/Microchip/AVR-Ex_DFP/<version>
 ```
 Produces `solar-glow.hex`; the `avr-size` line reports usage (the part has 64 KB
-flash / 6 KB RAM, so this firmware — 4,794 B flash, 29 B RAM (4786 text + 8 data +
+flash / 6 KB RAM, so this firmware — 4,938 B flash, 29 B RAM (4930 text + 8 data +
 21 bss, measured 2026-08-02 after the audit-findings batch: ADC time bound,
 accel data-valid window, wear-levelled tap ring, clean bus-clear STOP, ballast
-guard and dark dormancy) — leaves room to spare).
+guard, dark dormancy and face-down deep sleep) — leaves room to spare).
 
 ### 3. Wire UPDI and power the board
 UPDI is a single wire on **pin 23**, broken out to the **TC2030 pad (TC1)** (a
@@ -618,6 +618,28 @@ both the light and strong-sun predicates (`sense_vin_flags()`, raw-count, no mV 
   first read still acks instantly; re-polls inside the window are muted (the RF vCard read itself is
   hardware and untouched). The rail floor already stops a brownout; this stops the wasteful bleed
   *to* the floor. Near-free (one main-local byte, aged one count per poll tick).
+- **`USE_FACEDOWN_DEEPSLEEP`** (0/1, default 1) **/ `FACEDOWN_POLL_S`** (4): makes face-down
+  dormancy the card's **off switch**. Dormancy already stops every glow; this drops the standing
+  draw with it, so laying the card face-down is as close to "off" as a device with no switch
+  gets, and turning it over is the "on". Three levers, biggest first:
+  1. **Drops the `FD` pull-up** (PA6 → input-disable). This is worth more than the MCU's own
+     sleep current: the NT3H2211's `FD` pin leaks 1.5 µA typ / **10 µA max** with `FD` high — the
+     card's usual state — and that current flows from VS through PA6's internal pull-up
+     essentially always (`board.h` puts it at +56 % typ / +370 % max against the ~2.7 µA dark
+     standby sum). No pull-up, no path. Cost while face-down: no `FD` wake, so no NFC ack glow
+     (already suppressed) and no DCDC quieting during a read. **The vCard still reads** — that is
+     RF and entirely hardware.
+  2. **Accelerometer to 12.5 Hz with the tap engine off.** Face-down no tap can produce a glow,
+     so running the tap detector is pure cost. Activity stays armed — it is flip-to-wake.
+  3. **Poll slows to `FACEDOWN_POLL_S`**, kept ≤ the ~8 s watchdog so the **WDT stays armed**
+     (unlike the deleted coma mode, which disabled it — a bad trade on a card you can't
+     power-cycle).
+  Waking is just turning it over: the flip is motion, so INT2 fires and the motion branch
+  re-reads Z immediately, with the slowed poll as a backstop. Everything is restored on exit.
+  Entering forces AEM charging **on** first, because the `FD` ISR is what normally re-enables it
+  and we are about to stop servicing `FD` edges — otherwise a card that went dormant mid-read
+  could stop harvesting for as long as it lay face-down. The loggers keep running at the slower
+  cadence, so a card baking face-down in a hot car is still recorded.
 - **`USE_DARK_DORMANT`** (0/1, default 1) **/ `DARK_DORMANT_S`** (1800): the face-down
   dormant's in-a-bag/pocket other half — continuously dark for ~30 min → suppress the
   motion and NFC-ack glows in **any orientation**, and **rate-limit** the tap glow (a bag

@@ -439,6 +439,57 @@
 #define FACEDOWN_Z_THRESH      (-32) /* ZDATA_8 below this = face-down (~-0.5 g)              */
 #define FACEDOWN_DORMANT_POLLS (FACEDOWN_DORMANT_S / POLL_PERIOD_S)   /* derived: polls, not seconds */
 
+/* FACE-DOWN DEEP SLEEP -- turning face-down dormancy into the card's OFF SWITCH.
+ *
+ * Dormancy above already stops every glow. This takes the next step and drops the
+ * standing draw too, so laying the card face-down is as close to "off" as a device
+ * with no switch can get -- and turning it back over is the "on". A deliberate
+ * physical gesture is a far better trigger than any inference: it is unambiguous,
+ * the user already knows they did it, and it is instantly reversible. (It is the
+ * trigger the deleted shipping-coma mode should have used; that one guessed from
+ * 48 h of darkness, which is why it went.)
+ *
+ * Three levers, in descending order of what they are worth:
+ *
+ * 1. DROP THE FD PULL-UP (PA6). This is the big one, and it is bigger than the
+ *    MCU's own sleep current. The FD block below documents the standing cost: the
+ *    NT3H2211's FD pin leaks IL 1.5 uA typ / 10 uA MAX with FD high -- the card's
+ *    dominant state -- and that current flows out of VS through PA6's internal
+ *    pull-up essentially always, "+56% typ / +370% max against the README's
+ *    ~2.7 uA dark-standby sum". Setting PA6 to INPUT_DISABLE removes the pull-up
+ *    AND the input buffer, so the path simply is not there. Cost while face-down:
+ *    no FD wake, so no NFC acknowledge glow (already suppressed by dormancy) and
+ *    no DCDC quieting during a read. The vCard STILL READS -- that is RF and
+ *    entirely hardware. So the only real loss is a slightly noisier read of a card
+ *    lying face-down, which is not how anyone presents a card.
+ * 2. ACCELEROMETER TO LOW POWER: 100 Hz -> 12.5 Hz and the tap engine off
+ *    (adxl367_lowpower). Face-down, no tap can produce a glow, so running the tap
+ *    detector is pure cost. ACTIVITY stays armed: it is flip-to-wake.
+ * 3. SLOW THE POLL to FACEDOWN_POLL_S. Fewer wakes, and the only work left on a
+ *    dormant tick is the orientation check plus the self-rate-limited loggers.
+ *    Deliberately kept at or under the ~8 s watchdog period so the WDT STAYS
+ *    ARMED -- the deleted coma disabled it, and a mode that turns off the
+ *    watchdog to save power is a bad trade on a card you cannot power-cycle.
+ *
+ * WAKE: flipping face-up is motion, so INT2 fires and the motion branch re-reads
+ * Z for an immediate wake; the (slower) poll re-checks orientation as a backstop,
+ * bounding the worst case to FACEDOWN_POLL_S. Everything is restored on the way
+ * out -- pull-up, interrupt, accel profile, poll rate.
+ * The loggers keep running, just FACEDOWN_POLL_S/POLL_PERIOD_S times less often:
+ * a card baking face-down in a hot car is still recorded, which is the point of
+ * having them. 1 = on. */
+#define USE_FACEDOWN_DEEPSLEEP 1
+#define FACEDOWN_POLL_S        4     /* dormant poll period, s (<= the ~8 s WDT, so it stays armed) */
+
+/* Deep sleep is a RIDER on face-down dormancy -- dormancy is what decides the card is
+ * face-down and owns both transitions -- so it cannot mean anything on its own. Say so
+ * at compile time rather than letting the knob sit there doing nothing (which is what
+ * happened on the first build of this feature: with dormancy off the transition
+ * function went uncalled and only -Werror's unused-function caught it). */
+#if USE_FACEDOWN_DEEPSLEEP && !USE_FACEDOWN_DORMANT
+#  error "USE_FACEDOWN_DEEPSLEEP needs USE_FACEDOWN_DORMANT: dormancy is what detects face-down and drives both transitions. Turn both off, or both on."
+#endif
+
 /* R1-R4 ballast power guard: clamp the glow duty when STO sits above GLOW_CLAMP_STO_MV.
  * The ballasts are AC0402FR-07150RL (0402, 1/16 W = 62.5 mW). Worst DC corner from the
  * PCB audit: STO 5.5 V (the supercap RATING -- the AEM's own VOVCH ceiling is 4.65 V, so

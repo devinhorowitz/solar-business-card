@@ -38723,7 +38723,7 @@
 		(uuid "7091349d-692f-4a6e-bbb0-f3a15d021e2f")
 	)
 	(via
-		(at 1.67 39.87)
+		(at 6.62 37.77)
 		(size 0.6)
 		(drill 0.3)
 		(layers "F.Cu" "B.Cu")
@@ -42398,7 +42398,7 @@
 		)
 		(polygon
 			(pts
-				(xy 0 0) (xy 50.8 0) (xy 50.8 88.9) (xy 0 88.9)
+				(xy 2.4 2.4) (xy 48.4 2.4) (xy 48.4 86.5) (xy 2.4 86.5)
 			)
 		)
 		(filled_polygon

@@ -125,8 +125,14 @@ Each of these *reduces* draw and attacks the open energy question directly.
   again, so a stowed card can't drain the ~15 J reserve on false triggers. Reads the accel Z
   directly (no orientation-engine config needed); flip-to-wake is instant (the flip is motion)
   with the poll as a backstop. *The `VSENSE`-dark "in a bag/pocket" co-condition* — **built
-  2026-08-02 as `USE_DARK_DORMANT`**, with the double-tap as the deliberate dark-room escape
-  (the won't-do note's nightstand objection, answered rather than ignored).
+  2026-08-02 as `USE_DARK_DORMANT`**, which rate-limits the tap glow rather than muting it (a
+  mute would have hung the primary interaction on an unmeasured light threshold).
+  **And face-down grew into the card's OFF SWITCH the same day** (`USE_FACEDOWN_DEEPSLEEP`):
+  dormancy now also drops the `FD` pull-up — killing the NT3H2211's 1.5 µA typ / 10 µA max pin
+  leak, the single largest firmware-reachable item in the standby budget — takes the accel to
+  12.5 Hz with the tap engine off, and slows the poll to 4 s while keeping the watchdog armed.
+  Turning the card over restores everything. This is the trigger the deleted shipping-coma
+  mode should have used: a deliberate gesture instead of an inference from darkness.
 - **Voltage-adaptive brightness (brownout stretch).** *(**implemented** -- `USE_BROWNOUT_STRETCH`,
   `sense_glow_peak()`.)* Instead of the hard cutoff at `VS_GLOW_FLOOR_MV` (2600), scale the glow
   peak down as the rail drains toward the floor (full at `VS_GLOW_FULL_MV`, dimming to

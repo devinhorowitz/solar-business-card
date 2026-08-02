@@ -166,6 +166,32 @@ static void gpio_init(void)
     PORTF.PIN6CTRL = PORT_PULLUPEN_bm;   /* PF6/RST: input-only GPIO (RSTPINCFG=0), no external net -- hold it */
 }
 
+/* PIT period selectors, named once so rtc_pit_init() and the face-down deep-sleep
+ * transition cannot drift apart. The PIT runs off the 1.024 kHz ULP oscillator, so
+ * the cycle count IS the period in units of ~0.977 ms; CYC1024 ~ 1 s. */
+#if   POLL_PERIOD_S == 1
+#  define NORMAL_PIT_gc  RTC_PERIOD_CYC1024_gc      /* 1024 / 1.024 kHz = 1.0 s */
+#elif POLL_PERIOD_S == 2
+#  define NORMAL_PIT_gc  RTC_PERIOD_CYC2048_gc      /* 2048 / 1.024 kHz = 2.0 s */
+#else
+#  error "POLL_PERIOD_S must be 1 or 2 (RTC PIT poll period, seconds)."
+#endif
+
+#if USE_FACEDOWN_DEEPSLEEP
+#  if   FACEDOWN_POLL_S == 2
+#    define FACEDOWN_PIT_gc  RTC_PERIOD_CYC2048_gc
+#  elif FACEDOWN_POLL_S == 4
+#    define FACEDOWN_PIT_gc  RTC_PERIOD_CYC4096_gc
+#  elif FACEDOWN_POLL_S == 8
+#    define FACEDOWN_PIT_gc  RTC_PERIOD_CYC8192_gc
+#  else
+#    error "FACEDOWN_POLL_S must be 2, 4 or 8 -- and <= the ~8 s watchdog period, which stays armed."
+#  endif
+#  if FACEDOWN_POLL_S < POLL_PERIOD_S
+#    error "FACEDOWN_POLL_S below POLL_PERIOD_S would make the OFF state poll FASTER than normal."
+#  endif
+#endif
+
 static void rtc_pit_init(void)
 {
     /* 1.024 kHz internal ULP clock (runs in power-down). Period from the
@@ -173,14 +199,42 @@ static void rtc_pit_init(void)
     RTC.CLKSEL = RTC_CLKSEL_OSC1K_gc;
     while (RTC.PITSTATUS & RTC_CTRLBUSY_bm) { }
     RTC.PITINTCTRL = RTC_PI_bm;
-#if   POLL_PERIOD_S == 1
-    RTC.PITCTRLA = RTC_PERIOD_CYC1024_gc | RTC_PITEN_bm;   /* 1024 / 1.024 kHz = 1.0 s */
-#elif POLL_PERIOD_S == 2
-    RTC.PITCTRLA = RTC_PERIOD_CYC2048_gc | RTC_PITEN_bm;   /* 2048 / 1.024 kHz = 2.0 s */
-#else
-#  error "POLL_PERIOD_S must be 1 or 2 (RTC PIT poll period, seconds)."
-#endif
+    RTC.PITCTRLA = NORMAL_PIT_gc | RTC_PITEN_bm;
 }
+
+#if USE_FACEDOWN_DEEPSLEEP
+/* Enter/leave the face-down low-power profile -- the card's off switch. board.h's
+ * USE_FACEDOWN_DEEPSLEEP block has the reasoning and the numbers; these are the two
+ * transitions, and they must stay exact mirrors of each other or the card comes back
+ * from face-down in a half-configured state. */
+static void facedown_deepsleep(uint8_t on)
+{
+    if (on) {
+        /* CHARGING FIRST, and this ordering is load-bearing. The FD ISR is what
+         * re-enables the AEM after a read (gate LOW = charging on), and we are about
+         * to stop servicing FD edges entirely. If a reader's field happened to be
+         * present as dormancy began, the gate would be HIGH and nothing would ever
+         * lower it -- a card that has quietly stopped harvesting for as long as it
+         * lies face-down, which is the exact opposite of what this mode is for.
+         * Force it on before the pin goes deaf. */
+        ENSTOCH_PORT.OUTCLR = ENSTOCH_PIN_bm;
+        FD_PORT.PIN6CTRL = PORT_ISC_INPUT_DISABLE_gc;   /* pull-up + buffer off: kills the FD leak */
+        FD_PORT.INTFLAGS = FD_PIN_bm;                   /* drop any edge latched on the way down */
+        f_nfc = f_fd_arrived = 0;
+        adxl367_lowpower(1);                            /* 12.5 Hz, tap engine off */
+        while (RTC.PITSTATUS & RTC_CTRLBUSY_bm) { }
+        RTC.PITCTRLA = FACEDOWN_PIT_gc | RTC_PITEN_bm;
+    } else {
+        while (RTC.PITSTATUS & RTC_CTRLBUSY_bm) { }
+        RTC.PITCTRLA = NORMAL_PIT_gc | RTC_PITEN_bm;
+        adxl367_lowpower(0);                            /* back to 100 Hz + tap */
+        FD_PORT.PIN6CTRL = PORT_ISC_BOTHEDGES_gc | PORT_PULLUPEN_bm;
+        FD_PORT.INTFLAGS = FD_PIN_bm;                   /* re-enabling the pull-up lifts the pin;
+                                                         * that edge is our own doing, not a field */
+        f_nfc = f_fd_arrived = 0;
+    }
+}
+#endif
 
 /* ---------------- sleep ---------------- */
 
@@ -454,9 +508,14 @@ int main(void)
 #if USE_FACEDOWN_DORMANT
             if (dormant) {
                 /* motion while dormant may be the flip back face-up: re-check Z now for an
-                 * instant wake (the ~1 s poll is only a backstop). No glow on the wake
+                 * instant wake (the slowed poll is only a backstop). No glow on the wake
                  * motion itself either way. */
-                if (adxl367_read_z() >= FACEDOWN_Z_THRESH) { dormant = 0; facedown_polls = 0; }
+                if (adxl367_read_z() >= FACEDOWN_Z_THRESH) {
+                    dormant = 0; facedown_polls = 0;
+#if USE_FACEDOWN_DEEPSLEEP
+                    facedown_deepsleep(0);   /* restore FD, accel profile and poll rate */
+#endif
+                }
                 mute = 1;
             }
 #endif
@@ -542,10 +601,20 @@ int main(void)
             uint8_t skip = 0;
             int8_t z = adxl367_read_z();
             if (dormant) {
-                if (z >= FACEDOWN_Z_THRESH) { dormant = 0; facedown_polls = 0; }
+                if (z >= FACEDOWN_Z_THRESH) {
+                    dormant = 0; facedown_polls = 0;
+#if USE_FACEDOWN_DEEPSLEEP
+                    facedown_deepsleep(0);
+#endif
+                }
                 skip = 1;                                    /* resume normal work next poll */
             } else if (z < FACEDOWN_Z_THRESH) {
-                if (++facedown_polls >= FACEDOWN_DORMANT_POLLS) { dormant = 1; skip = 1; }
+                if (++facedown_polls >= FACEDOWN_DORMANT_POLLS) {
+                    dormant = 1; skip = 1;
+#if USE_FACEDOWN_DEEPSLEEP
+                    facedown_deepsleep(1);   /* the off switch: FD leak, accel and poll all down */
+#endif
+                }
             } else {
                 facedown_polls = 0;
             }

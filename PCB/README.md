@@ -405,9 +405,19 @@ a PCBWay DFM reviewer asks — their absence is a decision, not an oversight.
   ENIG without this request leaves the bus as dead copper and no wear surface on the face — do
   not ship without it.
 
+  > **Superseded 2026-08-02 — the pour was pulled back.** `GND_A`'s outline is now the rectangle
+  > (2.4, 2.4)–(48.4, 86.5), leaving a **0.8 mm dark reveal** between the frame's inner edge and the
+  > mesh, so the frame reads as a clean unbroken line instead of a serrated one (front only; `GND_B`
+  > is inside the shell and unchanged). That removes most of the overlap this note is about — front
+  > fill 2046 → 1778 mm² — but the note stays, because the *reason* the request is a NET RULE rather
+  > than a connectivity rule is unchanged, and because the overlap is smaller now, not gone. The
+  > gold chain was re-verified after the pullback: the frame, the eight M2 annuli and the
+  > plating-bus stub are still one connected group on F.Cu, which is what the electrolytic bath
+  > needs.
+  >
   > **Why the wording changed (2026-07-27, the crosshatch upload).** The request used to say the
   > gold set was "**all connected copper on F.Cu**." The crosshatch rework enlarged the F.Cu pour
-  > outline to 0.5 mm from the board edge, so the pour now overlaps the gold artwork by **157.3 mm²**
+  > outline to 0.5 mm from the board edge, so the pour then overlapped the gold artwork by **157.3 mm²**
   > — 52% of the frame + ornament copper — where it used to graze it over 0.069 mm². Connectivity
   > therefore stopped being a usable way to name the gold area.
   >

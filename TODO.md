@@ -559,12 +559,23 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   out of the window, the documented rule. Fix: take D2's anode out of the window the way its siblings
   do, rather than across it.
 
-- [ ] **[PCB — aesthetic, your call] Should the frame contain the texture, or should the texture run
-  over it?** _(2026-07-27.)_ `hatch_border_algorithm` is `hatch_thickness`, so the pour edge is
-  hatched rather than solid, and the enlarged outline runs the mesh right up to and over the gold
-  frame. Reading it as a solid border that frames the texture means pulling the zone outline back off
-  the artwork. Purely a look decision — no electrical or fab consequence either way now that the
-  plating request is defined by mask opening.
+- [x] **[PCB — aesthetic] Frame contains the texture — DECIDED and DONE 2026-08-02, 0.8 mm reveal.**
+  _(2026-07-27.)_ The mesh used to run right up to and over the gold frame, serrating its edge;
+  `GND_A`'s outline is now the rectangle (2.4, 2.4)–(48.4, 86.5), which leaves a **0.8 mm dark
+  reveal** between the frame's inner edge and the mesh, so the frame reads as one clean unbroken
+  line containing the texture. **Front only** — `GND_B` is inside the titanium shell and never
+  seen, so shrinking it would cost ground copper for nothing.
+  What it cost, measured rather than guessed: the front pour drops 2046 → 1778 mm² (13 %); one
+  stitching via at (1.67, 39.87) sat in the band that is now bare and **moved to (6.62, 37.77)**
+  — verified on a real crossing of both refilled lattices, 0.534 mm clearance, but **5.4 mm from
+  where it was**, so it no longer sits beside the cluster it was placed for (revisit if the EMC
+  bench ever cares). 34 signal traces cross the reveal band; they are under mask and read as a
+  faint sheen rather than texture, which is why the band still reads as clean.
+  Verified: DRC ledger byte-identical (0 errors +11 excluded, 5 silk; only the nondeterministic
+  mask-bridge count moved, 223 → 222), `mask_art --check` MATCH (the gold layer derives from
+  openings and pads, not the pour, so it is unchanged), and — the load-bearing one — the frame,
+  the M2 annuli and the plating-bus stub are still **one connected 2005 mm² group** on F.Cu, so
+  the hard-gold chain survives.
 
 - [x] **[PCB/FAB — durability] Define the gold area on a user layer instead of in prose**
   _(2026-07-27; the deliberate yes given and DONE 2026-08-02.)_ `scripts/mask_art.py` now draws

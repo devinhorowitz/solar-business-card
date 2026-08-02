@@ -132,6 +132,24 @@ void adxl367_clear_activity(void)
     (void)twi_reg_read(ADXL367_ADDR, ADXL_STATUS, &st, 1);   /* reading STATUS acks ACT */
 }
 
+void adxl367_lowpower(uint8_t on)
+{
+    /* Both registers are writable while measuring -- the config-before-MEASURE
+     * rule in this file's header is about the BRING-UP sequence (a soft reset
+     * leaves the part in standby and the whole config must land before MEASURE),
+     * not a prohibition on retuning a live part. Bus faults are ignored the same
+     * way every other call here ignores them: the worst case is the part stays in
+     * its previous profile, which is functional, and the next transition retries.
+     * No data-valid wait is needed because MEASURE is never left -- this changes
+     * the rate of a running conversion stream, it does not restart it. */
+    (void)twi_reg_write(ADXL367_ADDR, ADXL_FILTER_CTL,
+                        on ? ADXL_CFG_FILTER_CTL_LP : ADXL_CFG_FILTER_CTL);
+    (void)twi_reg_write(ADXL367_ADDR, ADXL_TAP_THRESH,
+                        on ? ADXL_CFG_TAP_THRESH_OFF : ADXL_CFG_TAP_THRESH);
+    if (!on)
+        adxl367_clear_tap();     /* re-arming tap can latch on the transition; drop it */
+}
+
 int8_t adxl367_read_z(void)
 {
     /* One 8-bit Z sample: the card-face normal (same axis the tap engine watches). At
