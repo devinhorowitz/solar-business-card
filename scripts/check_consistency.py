@@ -721,10 +721,8 @@ EXPECTED_ABSENT = {
     "tools/gen_report.py": "ThomsonLint report generator — lives in the pinned external clone (docs/thomsonlint.md)",
     "docs/REVIEWER_INSTRUCTIONS.md": "ThomsonLint review contract — lives in the pinned external clone (docs/thomsonlint.md)",
     "-findings.json": "ThomsonLint review output — scratch, out-of-repo by rule (docs/thomsonlint.md)",
-    # On-demand analysis outputs that deliberately live OUTSIDE the repo (the same
-    # rule that keeps engraving-study renders out — see their README).
-    "all_studies.png": "engraving-study sheet — scratch output, out-of-repo by rule",
-    "shell_nomark.stl": "engraving-study base solid — scratch output, out-of-repo by rule",
+    # (The engraving-study scratch-output entries that lived here were dropped 2026-08-02
+    # when the studies themselves were culled — the suite's own dead-entry check flagged them.)
     # Not a file at all: the datasheets/ naming-convention pattern in README's tree
     # ("REF  MPN  $price.pdf") tokenizes to this placeholder.
     "price.pdf": "the datasheets/ naming-convention placeholder, not a path",

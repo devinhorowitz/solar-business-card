@@ -53,7 +53,47 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
     Samsung / TDK passives, useless for the actual chokepoints (SCHURTER, ANYSOLAR, e-peas, RAMXEED,
     Würth FSFS, likely ADXL367)._
 
+- [ ] **[BENCH/PCB] Two designed-but-never-laid-out test boards — the instrument and the go/no-go**
+  _(Piped into TODO 2026-08-02; both docs are complete design handoffs that were invisible from
+  this list.)_ (a) `docs/harvest-bench-fixture-handoff.md` — the **panel characterization
+  fixture** (single-sided, no MCU: 4-wire panel I-V under real light, needs an SMU/DMM); the
+  authoritative tables are in the doc, it just needs KiCad layout. (b)
+  `docs/harvest-budget-test-board.md` — the **harvest-surplus blinker** (carries two product
+  panels + a jumper-selected card-draw emulation load; flash rate ∝ net banked power — the
+  glanceable desk answer to "can this light run the card?"). Sequence: fixture first
+  (characterize V_mp), then set the blinker's window from it (its §5). Both attack the #1 gate
+  from the instrument side and could ride the same fab order as the card panel.
+
+- [ ] **[BENCH] Assemble and bring up the pogo test rig when the panel arrives**
+  _(Piped 2026-08-02 — the rig was built in-repo but its bring-up had no entry.)_ Everything is
+  generated and committed: the in-frame pogo test plate (`enclosure/solar-glow-drh-pogo-testplate`,
+  probes TP2–TP7 + TC1 with the card still in the panel), the Pico monitor firmware and channel
+  map, and the host dashboard (`bench/monitor/`). Physical work remaining: print/order the plate,
+  fit pogo pins, flash the Pico, and smoke-test channels against `bench/monitor/README.md` before
+  the first card powers up on it.
+
+- [ ] **[V-NEXT, PARKED] E-ink display variant — concept banked, not adopted**
+  _(Piped 2026-08-02; `docs/eink-display-variant-notes.md` is the full record: panel survey,
+  geometry both directions to scale, 1-bit artwork + QR mockups.)_ A different output modality
+  on the same harvest/supercap/NFC/accel platform. Deliberately NOT a v4 item; revisit only
+  after the v4 first article proves the platform. The doc is the decision ledger if it wakes.
+
 ## Firmware — `firmware/`, `firmware/README.md`
+
+- [ ] **[FIRMWARE] The screened feature ledger's live remainder — imported 2026-08-02**
+  _(`firmware/feature-roadmap.md` is the Gemini-brainstorm decision ledger, dispositioned
+  2026-07-12: seven features shipped as `board.h` knobs, the rest triaged. It was an ORPHAN —
+  nothing here pointed at it. This item is now the single live pointer; the ledger carries the
+  detail and stays.)_ The still-open remainder, by gate:
+  **(a) Actionable now, energy-safe:** the face-down dormant's missing half (the VSENSE-dark
+  "in a bag/pocket" co-condition — the knob shipped with only the accel-Z test); **shipping/coma
+  mode** (halt RTC/ADC, wake on sustained solar spike — protects the caps in a dark shipping box).
+  **(b) Gated on the energy-budget bench** (the #1 gate — these spend LED energy or need measured
+  constants): zero-CPU reflex glow (EVSYS→TCA0), CCL heartbeat, ambient auto-brightness,
+  shadow-abort / AC0 brownout-reflex, "find the sun" bar-graph, circadian duty-cycling, PoV
+  air-message, free-fall catch, FIFO gestures.
+  **(c) Revival hooks only if a companion app ever exists:** SRAM-mailbox telemetry /
+  orientation-keyed NFC (declined for v4 — they endanger the offline-first vCard).
 
 - [ ] **[FIRMWARE] Functional audit findings never filed — carried over honestly**
   _(2026-07-26; surfaced by the pass-3/pass-4 firmware audits, actioned in docs only.)_ Each is real,
@@ -569,8 +609,9 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   solid (the thickness figure measures 3.5500 from it). The rename touches, together, in one
   commit: both generator filenames, `kibot.yml` trigger paths AND its CAD-step commands,
   `assembly_render.py`, `scripts/ref_figures.py` (if it names the file), `check_mesh.py`'s
-  BASELINE keys, `engraving-studies/spin1_cutters.py`, README + PCB/README + enclosure/README
-  prose, and design-notes references (historical mentions keep their history markers). Do it
+  BASELINE keys, README + PCB/README + enclosure/README
+  prose, and design-notes references (historical mentions keep their history markers; the
+  engraving-studies reference this list once carried was culled 2026-08-02). Do it
   as its own PR — a miss anywhere breaks the CI chain silently.
 
 - [ ] **[ENCLOSURE, cosmetic] The shell STL's one tessellation pinch** _(2026-08-01, found and
