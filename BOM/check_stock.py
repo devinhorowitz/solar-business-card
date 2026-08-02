@@ -522,23 +522,28 @@ def main():
       f"{n_sub} on substitute only · **{n_dead} dead (❌)** · "
       f"{n_unk} unverifiable this run · {n_man} manual-order.")
     a("")
-    a("| | Ref(s) | Qty | Mfr | MPN | Distributor P/N | Lifecycle | Stock | $ @1 live |")
-    a("|---|---|---|---|---|---|---|---|---|")
+    # THE P/N GETS ITS OWN CELL, and the source gets a separate one. This column used to
+    # render "{dist_pn} ({source})" in one cell, and on 2026-08-02 that cost a fab document:
+    # the C26/C27 cell was copied back into the schematic's Supplier P/N field, annotation
+    # and all, so the design carried "187-CL21B106KOQNNNG (Mouser)" as a part number. A
+    # generated display string must not be paste-compatible with the field it derives from.
+    a("| | Ref(s) | Qty | Mfr | MPN | Distributor P/N | Src | Lifecycle | Stock | $ @1 live |")
+    a("|---|---|---|---|---|---|---|---|---|---|")
     for entry, hit, err, verdict, _subs in results:
         if verdict == "manual":
             key = entry["refs"].split(",")[0].split("–")[0].strip()
             note = NO_API.get(key, NO_API.get(entry["refs"], "manual order"))
             a(f"| — | {entry['refs']} | {entry['qty'] or ''} | {entry['mfr'] or ''} | "
-              f"`{entry['mpn']}` | — | {note} | — | — | |")
+              f"`{entry['mpn']}` | — | — | {note} | — | — |")
             continue
         if hit:
             a(f"| {icon[verdict]} | {entry['refs']} | {entry['qty'] or ''} | {entry['mfr'] or ''} | "
-              f"`{entry['mpn']}` | {hit['dist_pn']} ({hit['source']}) | {hit['status']} | "
-              f"{fmt_qty(hit['qty'])} | {fmt_price(hit['price'])} | |")
+              f"`{entry['mpn']}` | `{hit['dist_pn']}` | {hit['source']} | {hit['status']} | "
+              f"{fmt_qty(hit['qty'])} | {fmt_price(hit['price'])} |")
         else:
             why = "no exact listing found" if not err else "query failed"
             a(f"| {icon[verdict]} | {entry['refs']} | {entry['qty'] or ''} | {entry['mfr'] or ''} | "
-              f"`{entry['mpn']}` | — | {why} | 0 | — | |")
+              f"`{entry['mpn']}` | — | — | {why} | 0 | — |")
     a("")
     a("**Verdicts** — ✅ primary MPN in stock and in production · "
       "⚠️ primary unavailable, a documented substitute (below) is available · "

@@ -66,12 +66,16 @@ OFF_BOARD = [
 # Bought ONCE for the project, not once per board -- so a --boards multiplier must not
 # scale them. Tools and cables, not parts.
 OFF_BOARD_ONCE = [
-    ("PRG1",  1, "5879",        "DigiKey", "",
-     "Adafruit UPDI Friend. SOURCE CONFLICT to settle at order: the BOM master says "
-     "DigiKey by MPN 5879, TODO's sweep recorded it as Mouser-only. Check both."),
-    ("CBL1",  1, "TC2030-MCP",  "DigiKey", "",
-     "Tag-Connect cable. TRAP: DigiKey stocks the LEGLESS TC2030-MCP-NL; the legged "
-     "TC2030-MCP this design wants is zero/restricted at Mouser -- consider Tag-Connect direct."),
+    ("PRG1",  1, "5879",        "DigiKey", "1528-5879-ND",
+     "Adafruit UPDI Friend. The source conflict this line used to carry is SETTLED "
+     "2026-08-02: DigiKey does stock it, as 1528-5879-ND (~$6.95). It is listed under "
+     "Adafruit's own product number 5879, which is why a cart upload of the bare MPN "
+     "finds nothing -- DigiKey resolves 1528-5879-ND, not 5879."),
+    ("CBL1",  1, "TC2030-MCP",  None,      "",
+     "Tag-Connect TC2030-MCP, the LEGGED cable. Deliberately NOT a cart line: DigiKey "
+     "stocks only the legless TC2030-MCP-NL and the legged part is zero/restricted at "
+     "Mouser, so order it from Tag-Connect direct. Emitting it into a cart CSV would "
+     "just fail at upload, or worse, silently buy the wrong cable."),
 ]
 # Orderable, but not from a distributor -- so it belongs on the page a human reads
 # before ordering, not in a cart CSV.
@@ -86,6 +90,23 @@ OFF_BOARD_ONCE = [
 NOT_DISTRIBUTOR = {
     "ENC1": "the titanium back-shell -- its own fab order, machined from enclosure/*.step",
 }
+
+# A distributor P/N is an IDENTIFIER, not a description: it is submitted verbatim and
+# either resolves or silently vanishes from the upload. Whitespace or a parenthetical
+# means prose leaked into the field.
+#
+# C26/C27 carried "187-CL21B106KOQNNNG (Mouser)" in BOTH the schematic and the board
+# until 2026-08-02, and the origin is legible: BOM/README.md renders that column as
+# `{dist_pn} ({source})`, so a live-availability CELL was copied back into the field
+# it was derived FROM -- the report's own source annotation glued onto the part number.
+# A generated display string round-tripped into a source of truth, which is the failure
+# this repo's one-home rule exists to prevent.
+#
+# It was invisible because C26/C27 sit on the ASSEMBLY side, where PCBWay buys by MPN
+# and never reads the field. It was not harmless: the grouping key is (mpn, supplier,
+# dist_pn), so the suffix also split one 2-off capacitor line into two 1-off lines.
+# The same string on the hand-buy side is the UPDI Friend failure again.
+_MALFORMED_PN = re.compile(r"[\s()]")
 
 
 def _sch_parts():
@@ -152,6 +173,13 @@ def build():
             asm_rows.append(row)
         if not sup:
             problems.append(f"{ref} ({mpn}) has an MPN but no Supplier -- cannot be routed to a cart")
+        elif not dpn:
+            problems.append(f"{ref} ({mpn}) is sourced from {sup} but carries no Supplier P/N -- "
+                            f"a cart upload cannot resolve a bare MPN")
+        elif _MALFORMED_PN.search(dpn):
+            problems.append(f'{ref} ({mpn}) has a Supplier P/N that is not a part number: '
+                            f'"{dpn}". A distributor resolves the identifier verbatim, so a '
+                            f'parenthetical or a trailing note makes the line unresolvable.')
     return _group(asm_rows), _group(hand_rows), OFF_BOARD, OFF_BOARD_ONCE, problems
 
 
@@ -165,6 +193,7 @@ def _w(path, header, rows):
 
 def write_all(boards, outdir):
     asm, hand, off, once, problems = build()
+    problems = list(problems)
     os.makedirs(outdir, exist_ok=True)
     made = []
 
@@ -185,13 +214,26 @@ def write_all(boards, outdir):
         if r["supplier"]:
             carts.setdefault(r["supplier"], []).append((r, boards))
     for ref, q, m, s, d, n in once:          # tools: quantity does NOT scale with boards
-        carts.setdefault(s, []).append(({"mpn": m, "supplier": s, "dist_pn": d,
-                                         "refs": [ref], "qty": q, "value": n,
-                                         "footprint": ""}, 1))
+        if s:                                # None == not a cart line; the page carries it
+            carts.setdefault(s, []).append(({"mpn": m, "supplier": s, "dist_pn": d,
+                                             "refs": [ref], "qty": q, "value": n,
+                                             "footprint": ""}, 1))
     for sup, items in sorted(carts.items()):
         rows = []
         for r, mult in items:
-            rows.append([r["qty"] * mult, r["dist_pn"] or r["mpn"], " ".join(r["refs"])])
+            # NO MPN FALLBACK. A distributor cart resolves ITS OWN part number; a bare
+            # manufacturer product code may or may not match, and when it does not the
+            # line simply vanishes from the upload with no error. That is exactly how the
+            # UPDI Friend went missing on 2026-08-02: emitted as Adafruit's "5879" when
+            # DigiKey wanted "1528-5879-ND". A line without a distributor P/N is a defect
+            # in this table, caught here rather than at the checkout page.
+            if not r["dist_pn"]:
+                problems.append(
+                    f"{', '.join(r['refs'])} ({r['mpn']}, {sup}) has no distributor part "
+                    f"number -- a cart upload cannot resolve it. Add its P/N, or set its "
+                    f"supplier to None so it lands on the readable page instead.")
+                continue
+            rows.append([r["qty"] * mult, r["dist_pn"], " ".join(r["refs"])])
         made.append(_w(os.path.join(outdir, f"{STEM}-handbuy-{sup.lower()}.csv"),
                        ["Quantity", "Part Number", "Customer Reference"], rows))
 
@@ -208,11 +250,12 @@ def write_all(boards, outdir):
         md.append(f"| {', '.join(r['refs'])} | {r['qty'] * boards} | `{r['mpn']}` | "
                   f"{r['supplier']} | {r['dist_pn']} | {r['value']} |")
     for ref, q, m, s, d, n in off:
-        md.append(f"| {ref} | {q * boards} | `{m}` | {s or '—'} | {d} | {n} |")
+        md.append(f"| {ref} | {q * boards} | `{m}` | {s or '—'} | {d or '—'} | {n} |")
     md += ["", f"**Bought once for the project, not per board:**", "",
-           "| Ref | Qty | MPN | Supplier | What |", "|---|---|---|---|---|"]
+           "| Ref | Qty | MPN | Supplier | Distributor P/N | What |",
+           "|---|---|---|---|---|---|"]
     for ref, q, m, s, d, n in once:
-        md.append(f"| {ref} | {q} | `{m}` | {s or '—'} | {n} |")
+        md.append(f"| {ref} | {q} | `{m}` | {s or '—'} | {d or '—'} | {n} |")
     md += ["", "**Ordered, but not from a distributor:**", ""]
     for ref, why in sorted(NOT_DISTRIBUTOR.items()):
         md.append(f"- `{ref}` — {why}")

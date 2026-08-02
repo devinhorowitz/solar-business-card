@@ -18625,7 +18625,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "187-CL21B106KOQNNNG (Mouser)"
+		(property "Supplier P/N" "187-CL21B106KOQNNNG"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -20927,7 +20927,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "187-CL21B106KOQNNNG (Mouser)"
+		(property "Supplier P/N" "187-CL21B106KOQNNNG"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
