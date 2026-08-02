@@ -112,10 +112,16 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   (a phone tap is PIT+accel+FD at once) can no longer make a healthy ADC read as "dark" and eat a
   light edge. A dead ADC still exits 0; the WDT stays the recovery.
   (b) **ADXL367 config inside the 100 ms data-valid window** → FIXED: `_delay_ms(140)` after
-  MEASURE (datasheet: "a 100 ms wait time must be observed" + 1/ODR), so the boot latch clears see
-  a settled data stream instead of re-latching on garbage. **140, not 110**, because `_delay_ms`
-  bakes in a 1 MHz cycle count and an un-fused part runs CLK_PER at 1.25 MHz — 110 would elapse in
-  88 ms and land back inside the window on exactly the un-fused first article that matters most.
+  MEASURE (datasheet: "a 100 ms wait time must be observed before reading acceleration data"
+  + 1/ODR). **140, not 110**, because `_delay_ms` bakes in a 1 MHz cycle count and an un-fused part
+  runs CLK_PER at 1.25 MHz — 110 would elapse in 88 ms and land back inside the window on exactly
+  the un-fused first article that matters most. _Severity corrected 2026-08-02 after review: the
+  original filing (and my first comment) said this risked a phantom tap from settling data. It does
+  not — `TAP_THRESH` is 1.5 g, above anything a stationary settle reaches, and a non-zero
+  `TAP_LATENT` arms the hardware double-tap engine so a single-tap interrupt cannot surface for
+  `TAP_LATENT + TAP_WINDOW` = 280 ms, long after the latch clears at any clock speed. The wait is
+  datasheet compliance for the acceleration-data path (`adxl367_read_z`), cheaply bought at boot;
+  it was never the tap guard it was described as._
   (c) **Tap tally single-cell wear** → FIXED: wear-levelled 8-slot ring at EEPROM 12–43 (monotonic
   counter, max = latest, no sequence field) — ~800 k tap ceiling instead of 100 k. Offsets 0–3
   retired (no fielded card ever wrote them; no migration needed).

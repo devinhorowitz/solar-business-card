@@ -67,11 +67,30 @@ uint8_t adxl367_init_tap(void)
     /* MANDATORY ~100 ms: "after entering measurement mode, a 100 ms wait time
      * must be observed before reading acceleration data" (data sheet Rev. B,
      * Measurement Mode; Table 1 puts the first valid sample at ~100 ms + 1/ODR).
-     * The tap and activity engines consume that same settling data stream, so
-     * the latch clears below used to run INSIDE the window (audit (b) -- the
-     * 10 ms reset-latency fix above never covered this second window): a latch
-     * dropped at t=0 could simply re-latch on settling garbage and serve a
-     * phantom tap the moment main() reaches sei().
+     * This is audit (b): the config and the latch clears below used to run
+     * INSIDE that window (the 10 ms reset-latency fix above covers a different
+     * one -- the post-SOFT_RESET latency). We wait it out because the datasheet
+     * says to and because adxl367_read_z() is a reader of acceleration data.
+     *
+     * WHAT THIS DOES NOT BUY, stated honestly because the first draft of this
+     * comment claimed it (caught 2026-08-02 by an adversarial review of the fix
+     * itself, then verified against the datasheet). It does NOT prevent a phantom
+     * tap from settling data, because two configured facts already make that
+     * unreachable, and both are worth knowing before anyone "optimizes" this
+     * delay away:
+     *   - TAP_THRESH = 0x30 at 31.25 mg/LSB is 1.5 g (bits [7:6] are ignored on
+     *     the +-2 g range, and both are 0 here, so the value stands). A stationary
+     *     card's settle converges on the static ~1 g Z vector and never crosses it.
+     *   - TAP_LATENT is non-zero, so the double-tap engine is armed in HARDWARE
+     *     regardless of USE_DOUBLE_TAP (that macro only chooses how main.c reads
+     *     STATUS_2). The datasheet: "If both single and double tap functions are
+     *     in use, the single tap interrupt is triggered when the double tap event
+     *     has been either validated or invalidated" -- TAP_LATENT + TAP_WINDOW =
+     *     40 + 240 = 280 ms. Any candidate inside the settling window therefore
+     *     could not raise INT1 until long after these clears, at any clock speed.
+     * So the wait is datasheet compliance for the data path, cheaply bought at
+     * boot -- not a guard against a tap race that the tap engine's own timing
+     * had already closed.
      *
      * WHY 140 AND NOT 110. The target is 110 ms of REAL time (the 100 ms window
      * plus 1/ODR at the configured 100 Hz), but _delay_ms bakes in a cycle count
