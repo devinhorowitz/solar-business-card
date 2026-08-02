@@ -86,6 +86,19 @@
 #define ADXL_CFG_INTMAP1_UPPER  ADXL_STATUS2_TAP_ONE_bm   /* 0x01: tap  -> INT1 */
 #define ADXL_CFG_INTMAP2_LOWER  ADXL_STATUS_ACT_bm        /* 0x10: motion -> INT2 */
 
+/* Low-power profile for face-down deep sleep: ODR down to 12.5 Hz (FILTER_CTL
+ * ODR[2:0] = 000, data sheet Rev. B Table 50; RANGE and I2C_HS keep their
+ * configured values) and the tap engine off. TAP_THRESH = 0 is the datasheet's
+ * own disable ("A value of 0 disables both tap and double tap detection"), which
+ * is what we want face-down: no glow can fire, so detecting taps is pure cost.
+ * ACTIVITY stays armed -- it is the flip-to-wake path. Note TIME_ACT is counted
+ * in SAMPLES, so at 12.5 Hz its 2 samples become ~160 ms of sustained motion
+ * rather than ~20 ms; a deliberate flip clears that easily and the longer window
+ * rejects incidental knocks, which is the right bias for a card meant to stay
+ * asleep. */
+#define ADXL_CFG_FILTER_CTL_LP  0x20   /* +-2 g, I2C_HS on, ODR 12.5 Hz */
+#define ADXL_CFG_TAP_THRESH_OFF 0x00   /* disables single AND double tap        */
+
 /* ---- tunables (BARE-CARD starting points; re-tune with brace + shell) ----
  * The enclosed stack makes taps sharper/lower-amplitude, so these will feel wrong
  * bare; re-tune on the bench (seat -> test -> lift -> adjust). Non-zero TAP_LATENT
@@ -109,5 +122,8 @@ void    adxl367_clear_tap(void);      /* read STATUS_2 to drop the tap latch    
 void    adxl367_clear_activity(void); /* read STATUS to ack the INT2 activity     */
 int8_t  adxl367_read_z(void);         /* signed 8-bit Z (ZDATA_8, ~64 LSB/g at +-2 g);
                                        * 0 on bus fault = level = fail-safe not-face-down */
+void    adxl367_lowpower(uint8_t on); /* 1 = 12.5 Hz + tap engine off (face-down deep sleep),
+                                       * 0 = back to the configured 100 Hz + tap. Activity
+                                       * (INT2) stays armed either way -- it is flip-to-wake. */
 
 #endif /* ADXL367_H */

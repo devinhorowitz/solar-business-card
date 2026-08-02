@@ -53,16 +53,18 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
     Samsung / TDK passives, useless for the actual chokepoints (SCHURTER, ANYSOLAR, e-peas, RAMXEED,
     Würth FSFS, likely ADXL367)._
 
-- [ ] **[BENCH/PCB] Two designed-but-never-laid-out test boards — the instrument and the go/no-go**
-  _(Piped into TODO 2026-08-02; both docs are complete design handoffs that were invisible from
-  this list.)_ (a) `docs/harvest-bench-fixture-handoff.md` — the **panel characterization
-  fixture** (single-sided, no MCU: 4-wire panel I-V under real light, needs an SMU/DMM); the
-  authoritative tables are in the doc, it just needs KiCad layout. (b)
+- [ ] **[BENCH/PCB — TABLED 2026-08-02 until the hero project ships] Two designed-but-never-laid-out
+  test boards — the instrument and the go/no-go**
+  _(Piped into TODO 2026-08-02; tabled the same day: they do NOT ride the card's fab order.)_
+  They can be made cheaper at OSH Park, thicker (1.6 mm, no reason to share the card's exotic
+  0.6), and they need no assembly service — both are hand-solderable. Deliberately decoupled so
+  nothing about them gates the hero order. (a) `docs/harvest-bench-fixture-handoff.md` — the
+  **panel characterization fixture** (single-sided, no MCU: 4-wire panel I-V under real light,
+  needs an SMU/DMM); the authoritative tables are in the doc, it just needs KiCad layout. (b)
   `docs/harvest-budget-test-board.md` — the **harvest-surplus blinker** (carries two product
   panels + a jumper-selected card-draw emulation load; flash rate ∝ net banked power — the
-  glanceable desk answer to "can this light run the card?"). Sequence: fixture first
-  (characterize V_mp), then set the blinker's window from it (its §5). Both attack the #1 gate
-  from the instrument side and could ride the same fab order as the card panel.
+  glanceable desk answer to "can this light run the card?"). Sequence when picked up: fixture
+  first (characterize V_mp), then set the blinker's window from it (its §5).
 
 - [ ] **[BENCH] Assemble and bring up the pogo test rig when the panel arrives**
   _(Piped 2026-08-02 — the rig was built in-repo but its bring-up had no entry.)_ Everything is
@@ -85,9 +87,15 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   2026-07-12: seven features shipped as `board.h` knobs, the rest triaged. It was an ORPHAN —
   nothing here pointed at it. This item is now the single live pointer; the ledger carries the
   detail and stays.)_ The still-open remainder, by gate:
-  **(a) Actionable now, energy-safe:** the face-down dormant's missing half (the VSENSE-dark
-  "in a bag/pocket" co-condition — the knob shipped with only the accel-Z test); **shipping/coma
-  mode** (halt RTC/ADC, wake on sustained solar spike — protects the caps in a dark shipping box).
+  **(a) Actionable now, energy-safe: one BUILT, one DECLINED, 2026-08-02.** The VSENSE-dark
+  co-condition landed as `USE_DARK_DORMANT` (30 min dark → tap/motion/ack glows suppressed in
+  any orientation; **double-tap is the deliberate dark-room escape**, answering the won't-do
+  note's nightstand objection; light exits in ~1 poll). **Shipping/coma mode is declined** —
+  built and removed the same day: the card is hand-delivered, so the dark-shipping-box premise
+  never occurs, and what it bought (~1.5–1.7× on box standby, since only ~1 µA of the ~2.7 µA
+  dark sum is firmware's to trim) did not justify a mode that changes the poll period, disables
+  the watchdog and re-powers the card's only input. Decision record in `feature-roadmap.md`;
+  working implementation in git history if a mailed-batch variant ever becomes real.
   **(b) Gated on the energy-budget bench** (the #1 gate — these spend LED energy or need measured
   constants): zero-CPU reflex glow (EVSYS→TCA0), CCL heartbeat, ambient auto-brightness,
   shadow-abort / AC0 brownout-reflex, "find the sun" bar-graph, circadian duty-cycling, PoV
@@ -95,26 +103,37 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   **(c) Revival hooks only if a companion app ever exists:** SRAM-mailbox telemetry /
   orientation-keyed NFC (declined for v4 — they endanger the offline-first vCard).
 
-- [ ] **[FIRMWARE] Functional audit findings never filed — carried over honestly**
-  _(2026-07-26; surfaced by the pass-3/pass-4 firmware audits, actioned in docs only.)_ Each is real,
-  each survived adversarial verification, none is fixed:
-  (a) **`adc_read_raw`'s guard is a WAKE COUNT, not a time bound** (sense.c). Three unrelated
-  interrupts inside one ~212 µs conversion make a *healthy* ADC return 0, which every caller reads as
-  "rail below floor / dark". Fail-safe for the glow, but it also clears `prev_light`, so it is not
-  fail-safe for the light edge. Bounding by time instead of wakes is the fix.
-  (b) **ADXL367 configured inside its 100 ms data-valid window** (adxl367.c:62). `POWER_CTL` enters
-  MEASURE and the latch clears run immediately after, inside the window the datasheet says must
-  elapse before acceleration data is valid. The 10 ms reset-latency fix did not address this.
-  (c) **Tap tally wears one EEPROM cell** (sense.c). It is the only writer with a user-driven,
-  unbounded rate, and byte 0 of the dword at offset 0 changes on every tallied tap → a hard 100 k
-  ceiling on that byte. A rotating/gray-coded counter or a wear-levelled slot would remove it.
-  (d) **`EE_WRITE_FLOOR_MV` is derived against VDD hazards but compared against STO** — different
-  nodes. Harmless below 3.3 V where STO ≈ VS, but the derivation should say so.
-  (e) **`twi_bus_clear()` ends with START-immediately-followed-by-STOP**, which the EA datasheet
-  itself names an illegal bus operation. Benign for the targets, but worth a deliberate comment or a
-  reordered terminating sequence.
-  (f) **`ndef_default[]` has no Lock Control TLV**, which the NT3H datasheet says a Type-2 tag needs
-  for full NFC-Forum compliance. Phones read it fine without one; strict validators may not.
+- [x] **[FIRMWARE] Functional audit findings — ALL SIX CLOSED 2026-08-02** _(2026-07-26; surfaced
+  by the pass-3/pass-4 firmware audits, carried honestly, now landed in one batch. Build verified
+  warning-free under `WERROR=1` on the pinned toolchain; README size figure updated in the same
+  commit per the gate.)_
+  (a) **`adc_read_raw` wake-count guard** → FIXED: the 3-wake sleep loop stays as the cheap common
+  path, and a ~20 ms bounded-spin tail is now the actual TIME bound — three co-arriving interrupts
+  (a phone tap is PIT+accel+FD at once) can no longer make a healthy ADC read as "dark" and eat a
+  light edge. A dead ADC still exits 0; the WDT stays the recovery.
+  (b) **ADXL367 config inside the 100 ms data-valid window** → FIXED: `_delay_ms(140)` after
+  MEASURE (datasheet: "a 100 ms wait time must be observed before reading acceleration data"
+  + 1/ODR). **140, not 110**, because `_delay_ms` bakes in a 1 MHz cycle count and an un-fused part
+  runs CLK_PER at 1.25 MHz — 110 would elapse in 88 ms and land back inside the window on exactly
+  the un-fused first article that matters most. _Severity corrected 2026-08-02 after review: the
+  original filing (and my first comment) said this risked a phantom tap from settling data. It does
+  not — `TAP_THRESH` is 1.5 g, above anything a stationary settle reaches, and a non-zero
+  `TAP_LATENT` arms the hardware double-tap engine so a single-tap interrupt cannot surface for
+  `TAP_LATENT + TAP_WINDOW` = 280 ms, long after the latch clears at any clock speed. The wait is
+  datasheet compliance for the acceleration-data path (`adxl367_read_z`), cheaply bought at boot;
+  it was never the tap guard it was described as._
+  (c) **Tap tally single-cell wear** → FIXED: wear-levelled 8-slot ring at EEPROM 12–43 (monotonic
+  counter, max = latest, no sequence field) — ~800 k tap ceiling instead of 100 k. Offsets 0–3
+  retired (no fielded card ever wrote them; no migration needed).
+  (d) **`EE_WRITE_FLOOR_MV` node mismatch** → DOCUMENTED in board.h: below ~3.3 V the LDO is in
+  dropout so VDD tracks STO within mV; above, VDD is regulated — the compare guards the hazard's
+  node across the whole range, only the label was loose.
+  (e) **`twi_bus_clear()` START-then-STOP** → FIXED: SDA now drops under a LOW SCL (data move, not
+  a START) before the STOP is formed — one clean STOP, no illegal sequence.
+  (f) **No Lock Control TLV** → RESOLVED DELIBERATE, not a defect: NXP AN11786 Table 2 gives this
+  exact no-TLV init (CC `E1 10 6D 00` + NDEF TLV) as the one "recommended … unless there are
+  special needs" on NTAG I²C plus 1k/2k; the TLV becomes required only if the CC size byte ever
+  grows past 6Dh (recorded beside `ndef_default[]` with the revisit trigger).
 
 
 - [ ] **[BENCH/DESIGN] SWEEP_SUN_VIN_MV measures the wrong thing — retune or retire it**
@@ -314,16 +333,31 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   panel-gerber diff is the verification; local fiducials near U1 stay a
   only-if-PCBWay-asks option.
 
-- [ ] **[PCB — PARKED, decision pending external research] 0.4 mm board thickness (3.55 → 3.35 mm)**
-  _(2026-08-01.)_ Held deliberately while the thinness tradeoff is researched. The engineering
-  picture as assessed: mechanics fine in-assembly (Ti + brace + 8 screws carry the card; screw
-  flushness is already parametric — the shell's `sf_bottom` spotface derives from `board_th`, so
-  the same DIN 84 M2×3 stays flush with +0.2 mm MORE Ti engagement); the REAL open questions are
-  daylight show-through of B-side copper through the bare-FR4 windows (flagged at 0.6 already),
-  panel break-tab redesign for thin FR4, reflow warpage/assembly handling, and the optics/energy
-  re-tune (thinner FR4 = brighter glow — possibly the bigger prize than the feel). Do NOT respin
-  the verified 0.6 board before first-article optical + energy data. 0.2 mm assessed and advised
-  against (depanel fragility + show-through for an imperceptible gain).
+- [x] **[PCB — DECIDED 2026-08-02] Board thickness stays 0.6 mm — locked.**
+  The call, in the owner's terms: the added stiffness of 0.6 is worth the 0.2 mm it costs the
+  stack — added PCB flex is something that makes the card *feel cheaper*, which is exactly what
+  this object must not do; a 3.55 vs 3.35 mm assembled height is not perceptible, flex is. The
+  verified 0.6 board ships. The engineering picture that informed it is preserved below as
+  history; the open sub-questions (show-through, glow brightness vs FR4 thickness) fold into
+  first-article measurement, and the empirical half of the decision moves to the feel-coupon
+  item that follows.
+  _(Original 2026-08-01 assessment, kept as the record:)_ mechanics fine in-assembly (Ti +
+  brace + 8 screws carry the card; the shell's `sf_bottom` spotface derives from `board_th`, so
+  the same DIN 84 M2×3 stays flush with +0.2 mm MORE Ti engagement); the real open questions
+  were daylight show-through of B-side copper through the bare-FR4 windows (flagged at 0.6
+  already), panel break-tab redesign for thin FR4, reflow warpage, and the optics/energy re-tune
+  (thinner FR4 = brighter glow). 0.2 mm assessed and advised against (depanel fragility +
+  show-through for an imperceptible gain).
+
+- [ ] **[PCB/BENCH — cheap, any time] Feel coupons: bare same-size boards at 0.4 and 0.2 mm**
+  _(2026-08-02, born from the thickness decision.)_ Order the cheapest possible bare PCBs at the
+  card's exact outline (50.8 × 88.9 mm, any copper, any colour) in **0.4 mm and 0.2 mm** — plus
+  the 0.6 reference the real panel already provides — and just *handle* them. If the flex
+  difference is imperceptible in hand, a future revision can bank the 0.2 mm; if it reads cheap,
+  the 0.6 lock is confirmed by touch, not guesswork — and either way the enclosure work that
+  follows is informed **by handling it, not just guessing**. No assembly, no schematic, no panel:
+  a one-outline Edge.Cuts board at a budget fab is a few dollars a piece. Decoupled from the
+  hero order; do not let it gate anything.
 
 - [ ] **[PCB/EMC] EMC pre-compliance — paper half DONE 2026-08-01, measured half open.**
   kicad-happy's `emc` skill ran in full mode (risk score 64.0, 37 findings — every one triaged
@@ -348,15 +382,16 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   crossover via at (42.9, 38.0) stays unstitched — inside the coil keepout deliberately.
   Verified: DRC `Errors: 0 (+11 excluded)`, zero F.Mask hits, mask art re-applied and MATCH.
 
-- [ ] **[PCB/FW] R1–R4 exceed their 62.5 mW rating only at the worst corner — note, and one cheap guard**
-  _(2026-07-30, same audit.)_ The LED ballasts are `AC0402FR-07150RL` (0402, **1/16 W**). Worst
-  DC corner: full tank STO = 5.5 V through SW2, min-bin V<sub>f</sub> 1.9 V (LA P47F 3B bin),
-  AVR V<sub>OL</sub> ≈ 0.4 V ⇒ I ≈ 21 mA ⇒ **~68–70 mW ≈ 110 % of rating** at 100 % duty.
-  Typical operation (STO 4.5, V<sub>f</sub> 2.2) is ~22 mW. PWM breathing keeps the average
-  far below the peak, so this only bites if firmware ever holds 100 % duty with a full tank
-  and a low-bin LED. Cheapest guard: clamp duty when STO > ~5.2 V in the glow constants
-  (which are provisional pending the energy budget anyway). Alternative if the board is ever
-  re-laid: 0402 → 0603 (0.1 W) on the four ballasts. No action on the copper today.
+- [x] **[PCB/FW] R1–R4 62.5 mW worst corner — GUARD BUILT 2026-08-02 (`USE_BALLAST_GUARD`)**
+  _(2026-07-30, same audit; the "cheapest guard" below is now firmware.)_ `sense_glow_peak()`
+  clamps every glow's peak to 225/255 whenever STO > 5.2 V, and main.c now routes the sweep
+  peak through the same chokepoint (it was the one animation outside it) — worst-corner
+  average lands at 61.8 mW < 62.5 mW rating. Normal harvest never trips the clamp (VOVCH is
+  4.65 V); it is insurance against bench supplies and abuse. _(Original numbers, kept:)_
+  ballasts `AC0402FR-07150RL` (0402, **1/16 W**); worst DC corner STO 5.5 V through SW2,
+  min-bin V<sub>f</sub> 1.9 V (LA P47F 3B bin), V<sub>OL</sub> ≈ 0.4 V ⇒ I ≈ 21 mA ⇒
+  **~68–70 mW ≈ 110 % of rating** at 100 % duty; typical ~22 mW. Alternative if the board is
+  ever re-laid: 0402 → 0603 (0.1 W) on the four ballasts. No action on the copper.
 
 - [x] **[TOOLING] Nothing in CI notices a footprint changing SIDES — CLOSED 2026-08-01 as
   consistency check [12]**, built to this item's own spec: a `FRONT_SIDE` refdes→side snapshot
@@ -524,18 +559,35 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   out of the window, the documented rule. Fix: take D2's anode out of the window the way its siblings
   do, rather than across it.
 
-- [ ] **[PCB — aesthetic, your call] Should the frame contain the texture, or should the texture run
-  over it?** _(2026-07-27.)_ `hatch_border_algorithm` is `hatch_thickness`, so the pour edge is
-  hatched rather than solid, and the enlarged outline runs the mesh right up to and over the gold
-  frame. Reading it as a solid border that frames the texture means pulling the zone outline back off
-  the artwork. Purely a look decision — no electrical or fab consequence either way now that the
-  plating request is defined by mask opening.
+- [x] **[PCB — aesthetic] Frame contains the texture — DECIDED and DONE 2026-08-02, 0.8 mm reveal.**
+  _(2026-07-27.)_ The mesh used to run right up to and over the gold frame, serrating its edge;
+  `GND_A`'s outline is now the rectangle (2.4, 2.4)–(48.4, 86.5), which leaves a **0.8 mm dark
+  reveal** between the frame's inner edge and the mesh, so the frame reads as one clean unbroken
+  line containing the texture. **Front only** — `GND_B` is inside the titanium shell and never
+  seen, so shrinking it would cost ground copper for nothing.
+  What it cost, measured rather than guessed: the front pour drops 2046 → 1778 mm² (13 %); one
+  stitching via at (1.67, 39.87) sat in the band that is now bare and **moved to (6.62, 37.77)**
+  — verified on a real crossing of both refilled lattices, 0.534 mm clearance, but **5.4 mm from
+  where it was**, so it no longer sits beside the cluster it was placed for (revisit if the EMC
+  bench ever cares). 34 signal traces cross the reveal band; they are under mask and read as a
+  faint sheen rather than texture, which is why the band still reads as clean.
+  Verified: DRC ledger byte-identical (0 errors +11 excluded, 5 silk; only the nondeterministic
+  mask-bridge count moved, 223 → 222), `mask_art --check` MATCH (the gold layer derives from
+  openings and pads, not the pour, so it is unchanged), and — the load-bearing one — the frame,
+  the M2 annuli and the plating-bus stub are still **one connected 2005 mm² group** on F.Cu, so
+  the hard-gold chain survives.
 
-- [ ] **[PCB/FAB — durability] Define the gold area on a user layer instead of in prose**
-  _(2026-07-27.)_ `User.1` is empty. Drawing the gold region there and plotting it as its own gerber
-  makes the area artwork rather than a paragraph, so it cannot drift the next time a pour outline
-  moves — which is exactly what just happened. Adds one file to the fab package, so it needs a
-  deliberate yes before the order goes out.
+- [x] **[PCB/FAB — durability] Define the gold area on a user layer instead of in prose**
+  _(2026-07-27; the deliberate yes given and DONE 2026-08-02.)_ `scripts/mask_art.py` now draws
+  the net rule's result on `User.1` (72 pieces: every F.Mask graphic opening + the NFC arcs + the
+  GND pads with front openings, minus the excepted PV solder lands), and both kibot configs plot
+  it, so the `User_1` gerber ships in the 1-up and panel fab sets. **It is 394.2 mm² of OPENING,
+  of which ~296 mm² is copper** — the rest is bare laminate inside the openings, mostly the
+  monogram backlight window. Do not quote 394 as "mm² of gold". Generated, gated
+  by check [6], and the generator refuses an area that overlaps a PV land. The predicted drift
+  was already real: the README enumeration said *four* mounting annuli; the board has eight
+  (MP1–4 were born after the sentence). Both the drawing and the prose now come from the same
+  inventory.
 
 - [x] **[MIDNIGHT — decided 2026-07-31] Hard gold, or one truly identical file?** **Resolved as
   (a) in net-rule form** (recorded in `solar-glow-drh-design-notes.md` and `PCB/README.md`): all

@@ -178,7 +178,35 @@ uint8_t nfc_write_ndef(const uint8_t *buf, uint16_t len)
  * Framing: TLV 03 FF 01 28 (NDEF message, 296 B) | record C2 0A 00 00 01 18
  * ("text/vcard" MIME, non-short, 280 B payload) | ... | FE terminator. 304 B
  * padded = 19 blocks, written to blocks 0x01..0x13 (sector-0 holds to 0x37 -> fits).
- * --------------------------------------------------------------------------- */
+ *
+ * NO LOCK CONTROL TLV -- RESOLVED DELIBERATE, 2026-08-02 (audit (f)). The datasheet's
+ * blanket line (8.3.7: the tag "needs a Lock Control TLV ... to ensure NFC Forum Type 2
+ * Tag compliancy") reads as if one belongs in front of this message. NXP's own memory-
+ * configuration app note says otherwise for exactly this layout: AN11786 Table 2 gives
+ * CC E1 10 6D 00 + a bare NDEF TLV + FE -- no Lock Control TLV -- as the initialization
+ * "recommended to be used on NTAG I2C plus 1k/2k unless there are special needs", and
+ * lists the Lock Control TLV among the changes needed only "when NDEF messages need
+ * more space" than that NTAG216-like T2T_Area. The CC this driver writes (nfc_write_cc)
+ * IS that recommended 6Dh profile, and this 304 B message sits comfortably inside its
+ * 872 B area, so the compliant-by-app-note configuration is the one WITHOUT the TLV --
+ * adding one would deviate from NXP's recommended profile, with hand-derived granularity
+ * bytes no validator has blessed.
+ *
+ * ONE HONEST CAVEAT, checked 2026-08-02 rather than assumed. The datasheet carries a
+ * SECOND recommendation the app note does not mention: "NXP recommends setting the size
+ * parameter of the CC only to values that the T2T_Area ends at lock bit granularity
+ * boundaries when using only part of the memory", and lists those boundaries as
+ * 112 + 64*N (or 888) for the 1k part and 176 + 128*N (or 2032) for the 2k part -- which
+ * is the part on this board. 6Dh = 872 B is on NEITHER list, so the app note's blanket
+ * "1k/2k" profile does not in fact sit on a 2k boundary. It does not bite here, and the
+ * reason is specific: that rule exists so lock bits can be aligned to the NDEF area, and
+ * this card NEVER sets a lock bit -- it does not lock, does not transition to READ ONLY,
+ * and writes the tag exactly once at provisioning. The mismatch would only become real
+ * for a variant that locks the tag read-only, which would want a boundary size (816 or
+ * 944 B) and the Lock Control TLV together.
+ * THE TRIGGERS TO REVISIT, either of which makes the TLV genuinely required: raising the
+ * CC size byte past 6Dh to claim more of the 2k memory (which also wants a Memory Control
+ * TLV excluding the config/SRAM area), or deciding to lock the tag read-only. */
 static const uint8_t ndef_default[] = {
     0x03, 0xFF, 0x01, 0x28, 0xC2, 0x0A, 0x00, 0x00,
     0x01, 0x18, 0x74, 0x65, 0x78, 0x74, 0x2F, 0x76,

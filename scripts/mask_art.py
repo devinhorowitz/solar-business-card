@@ -7,7 +7,11 @@
 
 WHAT IT DRAWS TODAY
 
-One thing: the NFC contactless mark over the antenna (see "the NFC indicator" below).
+Two things:
+  * the NFC contactless mark over the antenna, on F.Mask (see "the NFC indicator" below);
+  * the selective hard-gold plating area, on User.1 (see "the hard-gold plating area"
+    below) — not a mask opening but a drawing OF the mask openings that get gold, so
+    the fab order's plating request ships as artwork instead of only as a paragraph.
 
 The left-field CARTOUCHE — the negative-routing ornament that was this script's whole
 reason to exist — is switched off (`CARTOUCHE = False`). The generator is intact and
@@ -200,6 +204,85 @@ def nfc_guard(board, glyph):
     return bad
 
 
+# --- the hard-gold plating area (User.1) --------------------------------------------
+# The selective-gold order request in PCB/README is a NET RULE: plate every top-side
+# copper surface an F.Mask opening exposes that belongs to GND, with one exception --
+# the PV solder lands stay base finish, because they are soldered and thick
+# electrolytic gold embrittles solder joints. This block draws that rule's RESULT on
+# User.1, so it plots into both fab sets (1-up and panel) as its own gerber and the
+# fab has a picture, not just the special-request paragraph. Generated, it re-derives
+# from the board on every --apply, so the area cannot drift when a pour outline or an
+# opening moves -- which is what happened to the prose enumeration twice.
+#
+# What qualifies, and why it is computable from the board alone: every front mask
+# GRAPHIC exposes only GND pour or bare laminate (this script's own rule for its art;
+# re-verified for the hand-drawn monogram/frame/ornament set in PCB/README), so the
+# graphics union in wholesale. Add the in-memory NFC mark, then every GND pad with a
+# front opening except GOLD_PAD_SKIP: today the eight M2 mounting annuli (MH1-4
+# corners + MP1-4 mid-edge shell points) and TC1's GND pad 3 -- a spring-contact
+# surface, which is what hard gold is FOR. Netless apertures (the TC2030 locating
+# holes) carry no copper and fall out on the net test.
+#
+# THIS IS THE OPENING SET, NOT THE PLATED SET, and the distinction is worth stating
+# because the area figure invites the wrong reading. Roughly a quarter of what this
+# draws is bare laminate INSIDE an opening -- overwhelmingly the monogram window,
+# which is bare FR4 by design because it is the backlight, plus the NFC mark, which
+# sits in the antenna keepout and has no copper under it whatsoever (0.00 mm2,
+# measured 2026-08-02, when "does the gold NFC symbol attenuate the antenna?" was
+# answered: there is no gold there). That is consistent, not sloppy -- the net rule
+# says to plate "the copper surface an opening exposes", so laminate inside an
+# opening is nothing to plate -- but do not quote this polygon's area as "mm2 of
+# gold". PCB/README carries the split.
+GOLD_LAYER = "User.1"
+GOLD_PAD_SKIP = ("PV1", "PV2")   # the net rule's one exception: soldered GND lands
+
+
+def _shape_polys(ps):
+    """SHAPE_POLY_SET -> shapely Polygons (each outline with its holes)."""
+    from shapely.geometry import Polygon
+    IU = 1e6
+    out = []
+    for i in range(ps.OutlineCount()):
+        ol = ps.Outline(i)
+        ext = [(ol.CPoint(k).x / IU, ol.CPoint(k).y / IU) for k in range(ol.PointCount())]
+        holes = [[(h.CPoint(k).x / IU, h.CPoint(k).y / IU) for k in range(h.PointCount())]
+                 for h in (ps.Hole(i, j) for j in range(ps.HoleCount(i)))]
+        out.append(Polygon(ext, holes))
+    return out
+
+
+def gold_area(board, mark):
+    """Union of every F.Mask opening in the gold set, per PCB/README's net rule."""
+    import pcbnew
+    from shapely.ops import unary_union
+    fmask = board.GetLayerID("F.Mask")
+    err = pcbnew.FromMM(0.005)
+    parts, skipped = [mark], []
+    for d in board.GetDrawings():
+        if d.GetLayer() != fmask or str(d.m_Uuid.AsString()).startswith(MARK):
+            continue                     # MARK prefix = this script's own output
+        ps = pcbnew.SHAPE_POLY_SET()
+        d.TransformShapeToPolygon(ps, fmask, 0, err, pcbnew.ERROR_INSIDE)
+        parts.extend(_shape_polys(ps))
+    for f in board.GetFootprints():
+        for p in f.Pads():
+            if not p.IsOnLayer(fmask) or p.GetNetname() != "GND":
+                continue
+            ps = pcbnew.SHAPE_POLY_SET()
+            p.TransformShapeToPolygon(ps, fmask, p.GetSolderMaskExpansion(fmask), err,
+                                      pcbnew.ERROR_INSIDE)
+            polys = _shape_polys(ps)
+            (skipped if f.GetReference() in GOLD_PAD_SKIP else parts).extend(polys)
+    gold = unary_union(parts)
+    # The exception must stay an exception: if a graphic opening ever slides over a PV
+    # solder land, the fab following this drawing would gold-plate a soldered surface.
+    for s in skipped:
+        if gold.intersects(s) and gold.intersection(s).area > 1e-6:
+            raise SystemExit("mask_art: the gold area overlaps an excepted PV solder land "
+                             f"by {gold.intersection(s).area:.3f} mm2 -- refusing to draw it")
+    return gold
+
+
 # --- emit ------------------------------------------------------------------------
 
 def _bridge(poly):
@@ -299,7 +382,7 @@ def report(geom):
 
 
 def generate(board):
-    """-> (body, cartouche_or_None, nfc_mark). THE one definition of what this generator writes.
+    """-> (body, cartouche_or_None, nfc_mark, gold). THE one definition of what this generator writes.
 
     main() and check_consistency [6] both call this. They used not to: the check rebuilt only
     `emit(build(board))` and compared that against the whole file, which was a second, quieter
@@ -311,8 +394,12 @@ def generate(board):
     mark = nfc_mark(board)
     if mark.is_empty:
         raise SystemExit("mask_art: the NFC mark came out empty -- live copper ate all of it")
+    gold = gold_area(board, mark)
+    if gold.is_empty:
+        raise SystemExit("mask_art: the gold plating area came out empty -- no front mask openings?")
     body = emit(art) if art is not None else ""
-    return body + emit(mark, tag=f"{TAG}-nfc"), art, mark
+    return (body + emit(mark, tag=f"{TAG}-nfc") + emit(gold, layer=GOLD_LAYER, tag=f"{TAG}-gold"),
+            art, mark, gold)
 
 
 def main() -> int:
@@ -328,7 +415,7 @@ def main() -> int:
     import pcbnew
 
     board = pcbnew.LoadBoard(str(BOARD))
-    body, art, mark = generate(board)
+    body, art, mark, gold = generate(board)
     if art is None:
         print("  cartouche: OFF (CARTOUCHE = False) — the left mid-field stays under mask")
     else:
@@ -347,6 +434,11 @@ def main() -> int:
     print(f"  nfc mark: {len(mark.geoms) if mark.geom_type == 'MultiPolygon' else 1} wave(s), "
           f"{mark.area:.2f} mm² on F.Mask at x[{b[0]:.1f},{b[2]:.1f}] y[{b[1]:.1f},{b[3]:.1f}], "
           f"no live copper exposed")
+    ng = len(gold.geoms) if gold.geom_type == "MultiPolygon" else 1
+    print(f"  gold area: {ng} piece(s), {gold.area:.1f} mm² of OPENING on {GOLD_LAYER} — the "
+          f"plating request as artwork; PV lands excepted and verified clear")
+    print(f"    (opening area, not plated area: ~75% of it is copper, the rest is bare laminate "
+          f"inside the openings — mostly the monogram backlight window. See PCB/README.)")
 
     raw = BOARD.read_bytes()
     crlf = raw.count(b"\r\n")

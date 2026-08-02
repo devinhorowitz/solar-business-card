@@ -116,9 +116,10 @@ cd firmware
 make DFP=/path/to/Microchip/AVR-Ex_DFP/<version>
 ```
 Produces `solar-glow.hex`; the `avr-size` line reports usage (the part has 64 KB
-flash / 6 KB RAM, so this firmware — 4,514 B flash, 26 B RAM (4506 text + 8 data +
-18 bss, measured 2026-08-01 on the pinned CI toolchain after the pressure-test
-fixes) — leaves room to spare).
+flash / 6 KB RAM, so this firmware — 4,938 B flash, 29 B RAM (4930 text + 8 data +
+21 bss, measured 2026-08-02 after the audit-findings batch: ADC time bound,
+accel data-valid window, wear-levelled tap ring, clean bus-clear STOP, ballast
+guard, dark dormancy and face-down deep sleep) — leaves room to spare).
 
 ### 3. Wire UPDI and power the board
 UPDI is a single wire on **pin 23**, broken out to the **TC2030 pad (TC1)** (a
@@ -541,8 +542,11 @@ the sensor.
   impedance. If you change CLK_ADC, keep the long sample length — and keep
   `CLKCTRL.MCLKTIMEBASE` matched to CLK_PER (`clocks_init` owns it), since the
   ADC times its analog start-up from that µs timebase.
-- **EEPROM counter** (`sense.c`) rewrites the same 4-byte cell (offset 0) every tap;
-  only a concern past ~100 k lifetime taps, where you'd rotate the cell address.
+- **EEPROM counter** (`sense.c`) is a **wear-levelled 8-slot ring** (offsets 12–43,
+  4 B per slot; the counter is monotonic so the max across slots IS the latest value,
+  no sequence field needed). Each commit writes the next slot round-robin, so the
+  per-cell ~100 k endurance becomes ~800 k lifetime taps. Offsets 0–3 are the retired
+  pre-ring single cell — reserved, never written (no fielded card ever used it).
 - **`USE_SUN_DIARY`** (0/1, default 1): bank lifetime whole-hours of strong sun to a
   2-byte EEPROM cell (offset 4), read out over UPDI or surfaced in the NDEF later. The
   in-progress hour is counted in RAM and written only once per banked hour, so EEPROM sees
@@ -602,7 +606,8 @@ both the light and strong-sun predicates (`sense_vin_flags()`, raw-count, no mV 
 - **`USE_DARK_MOTION_MUTE`** (0/1, default 1): mute the *motion* soft-breath when the last poll
   saw no light (card stowed in a dark pocket/bag), closing a real carry-drain — a jostling card
   would otherwise fire a ~1.6 s breath on every activity trip and empty the reserve on a walk. The
-  deliberate **tap** glow is untouched (dark or light), so the dark-room tap-to-glow moment stays.
+  deliberate **tap** glow is untouched by this knob (dark or light) — `USE_DARK_DORMANT` below
+  rate-limits it but never silences it — so the dark-room tap-to-glow moment stays.
   Near-free (reuses the cached poll light); complements face-down dormant by covering *any*
   orientation a pocket leaves the card in.
 - **`USE_NFC_ACK_COOLDOWN`** (0/1, default 1) **/ `NFC_ACK_COOLDOWN_S`** (3): rate-limit the
@@ -613,6 +618,46 @@ both the light and strong-sun predicates (`sense_vin_flags()`, raw-count, no mV 
   first read still acks instantly; re-polls inside the window are muted (the RF vCard read itself is
   hardware and untouched). The rail floor already stops a brownout; this stops the wasteful bleed
   *to* the floor. Near-free (one main-local byte, aged one count per poll tick).
+- **`USE_FACEDOWN_DEEPSLEEP`** (0/1, default 1) **/ `FACEDOWN_POLL_S`** (4): makes face-down
+  dormancy the card's **off switch**. Dormancy already stops every glow; this drops the standing
+  draw with it, so laying the card face-down is as close to "off" as a device with no switch
+  gets, and turning it over is the "on". Three levers, biggest first:
+  1. **Drops the `FD` pull-up** (PA6 → input-disable). This is worth more than the MCU's own
+     sleep current: the NT3H2211's `FD` pin leaks 1.5 µA typ / **10 µA max** with `FD` high — the
+     card's usual state — and that current flows from VS through PA6's internal pull-up
+     essentially always (`board.h` puts it at +56 % typ / +370 % max against the ~2.7 µA dark
+     standby sum). No pull-up, no path. Cost while face-down: no `FD` wake, so no NFC ack glow
+     (already suppressed) and no DCDC quieting during a read. **The vCard still reads** — that is
+     RF and entirely hardware.
+  2. **Accelerometer to 12.5 Hz with the tap engine off.** Face-down no tap can produce a glow,
+     so running the tap detector is pure cost. Activity stays armed — it is flip-to-wake.
+  3. **Poll slows to `FACEDOWN_POLL_S`**, kept ≤ the ~8 s watchdog so the **WDT stays armed**
+     (unlike the deleted coma mode, which disabled it — a bad trade on a card you can't
+     power-cycle).
+  Waking is just turning it over: the flip is motion, so INT2 fires and the motion branch
+  re-reads Z immediately, with the slowed poll as a backstop. Everything is restored on exit.
+  Entering forces AEM charging **on** first, because the `FD` ISR is what normally re-enables it
+  and we are about to stop servicing `FD` edges — otherwise a card that went dormant mid-read
+  could stop harvesting for as long as it lay face-down. The loggers keep running at the slower
+  cadence, so a card baking face-down in a hot car is still recorded.
+- **`USE_DARK_DORMANT`** (0/1, default 1) **/ `DARK_DORMANT_S`** (1800): the face-down
+  dormant's in-a-bag/pocket other half — continuously dark for ~30 min → suppress the
+  motion and NFC-ack glows in **any orientation**, and **rate-limit** the tap glow (a bag
+  ride can false-fire the *tap* engine, the one leak the dark-motion mute never covered).
+  **A tap always glows and always ends dormancy**, which must then be re-earned by another
+  ~30 min of dark — so a bag walk costs one breath per half hour instead of one per jostle,
+  and a person tapping the card in a dark room always gets the monogram. That is the whole
+  design: a stricter mute would hang the card's primary interaction on `LIGHT_THRESH_MV`,
+  which `board.h` itself documents as an unmeasured guess, and a dim room misread as dark
+  would silently kill tap-to-glow. Tighten it only once the bench measures that threshold.
+  Any lit poll exits dormancy (~1 poll after morning light). Behaves identically with
+  `USE_DOUBLE_TAP` either way.
+- **`USE_BALLAST_GUARD`** (0/1, default 1) **/ `GLOW_CLAMP_STO_MV`** (5200) **/
+  `GLOW_CLAMP_PEAK`** (225): clamp every glow's peak duty when STO sits above 5.2 V, so the
+  0402 1/16 W ballasts R1–R4 stay under rating even at the abuse corner (STO at the 5.5 V
+  supercap rating × min-bin V<sub>f</sub> × 100 % duty ≈ 110 % of rating). Normal harvest
+  never trips it — the AEM's VOVCH ceiling is 4.65 V — it is insurance for bench supplies
+  and over-voltage, applied in `sense_glow_peak()` (the sweep now routes through it too).
 - **Core clock** is 1 MHz OSCHF (`clocks_init`, see Robustness for the why and the
   knock-ons). Note the ADC's hardware-sequenced start-up counts µs off
   `CLKCTRL.MCLKTIMEBASE`, which `clocks_init` sizes for this clock (with margin to

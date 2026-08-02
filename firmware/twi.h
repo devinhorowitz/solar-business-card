@@ -108,10 +108,22 @@ static inline void twi_bus_clear(void)
         _delay_us(TWI_HALF_US);
     }
 
-    /* STOP: SDA low -> high while SCL is high. */
-    TWI_PORT.DIRSET = TWI_SDA_bm;
+    /* STOP, with SDA taken low UNDER A LOW SCL first. The old order pulled SDA
+     * low while SCL was already high -- which IS a START condition -- and then
+     * released it, i.e. START immediately followed by STOP, the sequence the EA
+     * datasheet itself names an illegal bus operation (audit (e)). Benign for
+     * these three targets in practice, but a recovery routine has no business
+     * emitting undefined bus states at the exact moment a target is confused.
+     * Correct order: SCL low (SDA moves under a low clock are data, never
+     * START/STOP), then SDA low, then SCL high, then SDA low->high under the
+     * high clock = one clean STOP and nothing else. */
+    TWI_PORT.DIRSET = TWI_SCL_bm;                /* SCL low: SDA may now move freely */
     _delay_us(TWI_HALF_US);
-    TWI_PORT.DIRCLR = TWI_SDA_bm;
+    TWI_PORT.DIRSET = TWI_SDA_bm;                /* SDA low, no START implied */
+    _delay_us(TWI_HALF_US);
+    TWI_PORT.DIRCLR = TWI_SCL_bm;                /* SCL released -> high */
+    _delay_us(TWI_HALF_US);
+    TWI_PORT.DIRCLR = TWI_SDA_bm;                /* SDA low -> high under SCL high = STOP */
     _delay_us(TWI_HALF_US);
 }
 

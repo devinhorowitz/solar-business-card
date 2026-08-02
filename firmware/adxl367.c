@@ -64,7 +64,51 @@ uint8_t adxl367_init_tap(void)
     /* ---- arm last: enter measurement mode ---- */
     rc |= twi_reg_write(ADXL367_ADDR, ADXL_POWER_CTL,     ADXL_CFG_POWER_CTL);
 
-    /* drop any power-on tap / activity latch so the first real event is clean */
+    /* MANDATORY ~100 ms: "after entering measurement mode, a 100 ms wait time
+     * must be observed before reading acceleration data" (data sheet Rev. B,
+     * Measurement Mode; Table 1 puts the first valid sample at ~100 ms + 1/ODR).
+     * This is audit (b): the config and the latch clears below used to run
+     * INSIDE that window (the 10 ms reset-latency fix above covers a different
+     * one -- the post-SOFT_RESET latency). We wait it out because the datasheet
+     * says to and because adxl367_read_z() is a reader of acceleration data.
+     *
+     * WHAT THIS DOES NOT BUY, stated honestly because the first draft of this
+     * comment claimed it (caught 2026-08-02 by an adversarial review of the fix
+     * itself, then verified against the datasheet). It does NOT prevent a phantom
+     * tap from settling data, because two configured facts already make that
+     * unreachable, and both are worth knowing before anyone "optimizes" this
+     * delay away:
+     *   - TAP_THRESH = 0x30 at 31.25 mg/LSB is 1.5 g (bits [7:6] are ignored on
+     *     the +-2 g range, and both are 0 here, so the value stands). A stationary
+     *     card's settle converges on the static ~1 g Z vector and never crosses it.
+     *   - TAP_LATENT is non-zero, so the double-tap engine is armed in HARDWARE
+     *     regardless of USE_DOUBLE_TAP (that macro only chooses how main.c reads
+     *     STATUS_2). The datasheet: "If both single and double tap functions are
+     *     in use, the single tap interrupt is triggered when the double tap event
+     *     has been either validated or invalidated" -- TAP_LATENT + TAP_WINDOW =
+     *     40 + 240 = 280 ms. Any candidate inside the settling window therefore
+     *     could not raise INT1 until long after these clears, at any clock speed.
+     * So the wait is datasheet compliance for the data path, cheaply bought at
+     * boot -- not a guard against a tap race that the tap engine's own timing
+     * had already closed.
+     *
+     * WHY 140 AND NOT 110. The target is 110 ms of REAL time (the 100 ms window
+     * plus 1/ODR at the configured 100 Hz), but _delay_ms bakes in a cycle count
+     * from the compile-time F_CPU (1 MHz), and this board does not always run at
+     * 1 MHz: board.h's clocks_init note is explicit that until the OSCHFFRQ fuse
+     * is burned the base is 20 MHz, so CLK_PER is 1.25 MHz and "delays run ~20%
+     * short". _delay_ms(110) is 110,000 cycles, which at 1.25 MHz elapses in
+     * 88 ms -- back INSIDE the 100 ms window this fix exists to clear, on
+     * precisely the parts that matter most: an un-fused first article, straight
+     * off the programmer. 140,000 cycles clears the target in both clock states
+     * (140 ms fused, 112 ms un-fused). Boot-only, pre-WDT, invisible next to a
+     * flash cycle. (The _delay_ms(10) reset latency above survives the same test
+     * with less room: 8.0 ms un-fused against a 7.5 ms spec.) */
+    _delay_ms(140);
+
+    /* drop any power-on tap / activity latch so the first real event is clean
+     * -- NOW the stream behind the engines is valid, so what stays cleared
+     * stays cleared. */
     adxl367_clear_tap();
     adxl367_clear_activity();
     return rc;
@@ -86,6 +130,24 @@ void adxl367_clear_activity(void)
 {
     uint8_t st;
     (void)twi_reg_read(ADXL367_ADDR, ADXL_STATUS, &st, 1);   /* reading STATUS acks ACT */
+}
+
+void adxl367_lowpower(uint8_t on)
+{
+    /* Both registers are writable while measuring -- the config-before-MEASURE
+     * rule in this file's header is about the BRING-UP sequence (a soft reset
+     * leaves the part in standby and the whole config must land before MEASURE),
+     * not a prohibition on retuning a live part. Bus faults are ignored the same
+     * way every other call here ignores them: the worst case is the part stays in
+     * its previous profile, which is functional, and the next transition retries.
+     * No data-valid wait is needed because MEASURE is never left -- this changes
+     * the rate of a running conversion stream, it does not restart it. */
+    (void)twi_reg_write(ADXL367_ADDR, ADXL_FILTER_CTL,
+                        on ? ADXL_CFG_FILTER_CTL_LP : ADXL_CFG_FILTER_CTL);
+    (void)twi_reg_write(ADXL367_ADDR, ADXL_TAP_THRESH,
+                        on ? ADXL_CFG_TAP_THRESH_OFF : ADXL_CFG_TAP_THRESH);
+    if (!on)
+        adxl367_clear_tap();     /* re-arming tap can latch on the transition; drop it */
 }
 
 int8_t adxl367_read_z(void)

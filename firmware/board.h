@@ -381,7 +381,16 @@
  * in RAM and only COMMIT here, so a recoverable sag/heat spell is still captured -- only a terminal
  * drain below this floor goes unrecorded, which is unavoidable (you cannot safely write EEPROM as the
  * rail collapses). Sits just above the 2.75 V glow floor, so if the card is healthy enough to have
- * been glowing, it is healthy enough to commit a log entry. */
+ * been glowing, it is healthy enough to commit a log entry.
+ * NODE NOTE (audit (d)): the hazards this floor is derived from are VDD-side -- NVM
+ * corruption (11.3.3) and erratum 2.2.1's 2.7 V write floor are core-supply phenomena --
+ * but the COMPARE is against STO (sense_vdd_mv reads the tank divider), a different node.
+ * They coincide exactly where the guard matters: below ~3.3 V the TPS7A02 is in dropout,
+ * so VDD tracks STO minus the dropout at the write's few-mA load (single-digit mV for
+ * this part), and STO >= 2850 implies VDD >= ~2.84 V -- above both hazards. Above 3.3 V
+ * the LDO regulates and VDD is a constant 3.3 V, so any STO that passes the gate implies
+ * a healthy VDD trivially. The floor therefore guards the node the hazard actually lives
+ * on across the whole range; it is only the LABEL ("rail") that is loose. */
 #define EE_WRITE_FLOOR_MV  2850
 
 /* wake-on-light threshold on VSENSE (= VIN/2), mV AT THE PIN (so the VIN node is 2x this).
@@ -430,16 +439,115 @@
 #define FACEDOWN_Z_THRESH      (-32) /* ZDATA_8 below this = face-down (~-0.5 g)              */
 #define FACEDOWN_DORMANT_POLLS (FACEDOWN_DORMANT_S / POLL_PERIOD_S)   /* derived: polls, not seconds */
 
+/* FACE-DOWN DEEP SLEEP -- turning face-down dormancy into the card's OFF SWITCH.
+ *
+ * Dormancy above already stops every glow. This takes the next step and drops the
+ * standing draw too, so laying the card face-down is as close to "off" as a device
+ * with no switch can get -- and turning it back over is the "on". A deliberate
+ * physical gesture is a far better trigger than any inference: it is unambiguous,
+ * the user already knows they did it, and it is instantly reversible. (It is the
+ * trigger the deleted shipping-coma mode should have used; that one guessed from
+ * 48 h of darkness, which is why it went.)
+ *
+ * Three levers, in descending order of what they are worth:
+ *
+ * 1. DROP THE FD PULL-UP (PA6). This is the big one, and it is bigger than the
+ *    MCU's own sleep current. The FD block below documents the standing cost: the
+ *    NT3H2211's FD pin leaks IL 1.5 uA typ / 10 uA MAX with FD high -- the card's
+ *    dominant state -- and that current flows out of VS through PA6's internal
+ *    pull-up essentially always, "+56% typ / +370% max against the README's
+ *    ~2.7 uA dark-standby sum". Setting PA6 to INPUT_DISABLE removes the pull-up
+ *    AND the input buffer, so the path simply is not there. Cost while face-down:
+ *    no FD wake, so no NFC acknowledge glow (already suppressed by dormancy) and
+ *    no DCDC quieting during a read. The vCard STILL READS -- that is RF and
+ *    entirely hardware. So the only real loss is a slightly noisier read of a card
+ *    lying face-down, which is not how anyone presents a card.
+ * 2. ACCELEROMETER TO LOW POWER: 100 Hz -> 12.5 Hz and the tap engine off
+ *    (adxl367_lowpower). Face-down, no tap can produce a glow, so running the tap
+ *    detector is pure cost. ACTIVITY stays armed: it is flip-to-wake.
+ * 3. SLOW THE POLL to FACEDOWN_POLL_S. Fewer wakes, and the only work left on a
+ *    dormant tick is the orientation check plus the self-rate-limited loggers.
+ *    Deliberately kept at or under the ~8 s watchdog period so the WDT STAYS
+ *    ARMED -- the deleted coma disabled it, and a mode that turns off the
+ *    watchdog to save power is a bad trade on a card you cannot power-cycle.
+ *
+ * WAKE: flipping face-up is motion, so INT2 fires and the motion branch re-reads
+ * Z for an immediate wake; the (slower) poll re-checks orientation as a backstop,
+ * bounding the worst case to FACEDOWN_POLL_S. Everything is restored on the way
+ * out -- pull-up, interrupt, accel profile, poll rate.
+ * The loggers keep running, just FACEDOWN_POLL_S/POLL_PERIOD_S times less often:
+ * a card baking face-down in a hot car is still recorded, which is the point of
+ * having them. 1 = on. */
+#define USE_FACEDOWN_DEEPSLEEP 1
+#define FACEDOWN_POLL_S        4     /* dormant poll period, s (<= the ~8 s WDT, so it stays armed) */
+
+/* Deep sleep is a RIDER on face-down dormancy -- dormancy is what decides the card is
+ * face-down and owns both transitions -- so it cannot mean anything on its own. Say so
+ * at compile time rather than letting the knob sit there doing nothing (which is what
+ * happened on the first build of this feature: with dormancy off the transition
+ * function went uncalled and only -Werror's unused-function caught it). */
+#if USE_FACEDOWN_DEEPSLEEP && !USE_FACEDOWN_DORMANT
+#  error "USE_FACEDOWN_DEEPSLEEP needs USE_FACEDOWN_DORMANT: dormancy is what detects face-down and drives both transitions. Turn both off, or both on."
+#endif
+
+/* R1-R4 ballast power guard: clamp the glow duty when STO sits above GLOW_CLAMP_STO_MV.
+ * The ballasts are AC0402FR-07150RL (0402, 1/16 W = 62.5 mW). Worst DC corner from the
+ * PCB audit: STO 5.5 V (the supercap RATING -- the AEM's own VOVCH ceiling is 4.65 V, so
+ * this corner needs an external/bench supply or abuse, never normal harvest), min-bin
+ * Vf 1.9 V (LA P47F 3B bin), VOL ~0.4 V -> I ~21 mA -> ~68-70 mW at 100% duty = ~110%
+ * of rating. PWM averages far below that in every shipped animation, so this clamp is
+ * dormancy insurance, not a behavior change: above the threshold, peak duty is capped so
+ * the worst-corner AVERAGE stays under rating (70 mW x 225/255 = 61.8 mW < 62.5 mW).
+ * Applied inside sense_glow_peak(), the one chokepoint every glow's peak passes through
+ * (main.c routes the sweep peak through it too). Free: the STO read is already in hand.
+ * 1 = on. Alternative if the board is ever re-laid: 0402 -> 0603 (0.1 W) ballasts. */
+#define USE_BALLAST_GUARD   1
+#define GLOW_CLAMP_STO_MV   5200   /* above this STO, clamp duty (VOVCH 4.65 V never trips it) */
+#define GLOW_CLAMP_PEAK     225    /* max peak while clamped: 70 mW x 225/255 < 62.5 mW rating  */
+
 /* Dark-motion mute: suppress the MOTION soft-breath while the card is in the dark (the last poll
  * saw no light, VSENSE < LIGHT_THRESH) -- i.e. stowed in a pocket / bag. This closes a real carry-
  * drain: a charged card jostling in a dark pocket fires a ~1.6 s soft breath on every activity trip
- * and would empty the reserve on a long walk. The deliberate TAP is left untouched (its branch never
- * checks light), so the monogram still lights when tapped in a dark room -- the marquee moment stays;
+ * and would empty the reserve on a long walk. The deliberate TAP is left untouched by THIS knob (its
+ * branch never checks light; USE_DARK_DORMANT below rate-limits it, but never silences it), so the
+ * monogram still lights when tapped in a dark room -- the marquee moment stays;
  * only the incidental motion breath is muted, and only when dark. Near-free (reuses the cached poll
  * light). Complements face-down dormant (which needs the card face-down; this works in any orientation
  * a pocket leaves it). 1 = on. (Distilled from Gemini's "sensory fusion": only auto-glow on motion when
  * there is light to see it in; always honor a tap.) */
 #define USE_DARK_MOTION_MUTE  1
+
+/* Dark dormant -- the face-down dormant's missing half (the feature ledger's "VSENSE-dark
+ * in-a-bag/pocket co-condition"). Face-down dormancy needs the card face-DOWN; a card in a
+ * bag or pocket rides in any orientation and never triggers it, and while the dark-motion
+ * mute already silences the incidental MOTION breath there, a jostled bag can still
+ * false-fire the TAP engine and glow into fabric, breath by breath. So: continuously dark
+ * for DARK_DORMANT_S -> dark-dormant, which suppresses the MOTION and NFC-ack glows
+ * outright and RATE-LIMITS the tap glow.
+ *
+ * THE TAP IS RATE-LIMITED, NEVER SILENCED. A tap always glows and always ends dormancy,
+ * which then has to be re-earned by another DARK_DORMANT_S of continuous dark -- so a bag
+ * walk glows at most once per ~30 min instead of once per jostle (essentially all of the
+ * leak, closed) while a person tapping the card in a dark room ALWAYS gets the monogram.
+ * This is deliberate and it replaced a stricter first cut (double-tap-to-escape) for a
+ * reason: a mute would hang the card's PRIMARY interaction on LIGHT_THRESH_MV, a constant
+ * this very file admits has no measurement behind it. If that guess reads a dim office as
+ * dark, a single tap does nothing and the owner cannot tell why -- much worse than the few
+ * stray breaths saved. A feature that can only cost energy may lean on an unmeasured
+ * constant; one that can silence the product may not. Revisit the stricter mute only once
+ * the bench has measured the real dark/light threshold.
+ * Any poll that sees light exits dormancy, so a nightstand card is awake the moment morning
+ * light lands (~1 poll) and the dark->light greeting still fires. Near-free: reuses the
+ * poll's cached light bit, one counter. 1 = on. */
+#define USE_DARK_DORMANT      1
+#define DARK_DORMANT_S        1800  /* continuous dark before dark-dormant (~30 min) */
+#define DARK_DORMANT_POLLS    (DARK_DORMANT_S / POLL_PERIOD_S)   /* derived: polls */
+
+/* (No shipping/"coma" mode. It was built 2026-08-02 and removed the same day: the card is
+ * hand-delivered, not boxed and shipped, so the dark-shipping-box premise the feature exists
+ * for does not occur. Dark dormancy above covers the stowage case that DOES happen -- a bag,
+ * a drawer, a pocket -- at a fraction of the machinery. The decision record, including what
+ * the coma actually bought (~1.5-1.7x on box life, not 10x), is in feature-roadmap.md.) */
 
 /* NFC-ack cooldown: rate-limit the field-leave acknowledge glow. The NT3H2211 FD pin (PA6) tracks
  * the reader's field, and a phone that sits in-field and keeps *polling* (its NFC discovery loop

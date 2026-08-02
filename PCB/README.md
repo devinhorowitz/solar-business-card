@@ -121,7 +121,7 @@ PCB/
 | Layers | **2 copper**: F.Cu (cells, plating ties, monogram art) · B.Cu (everything else) |
 | Power architecture | **GND = full-board B.Cu pour** (~3000 mm²); **VS = routed B.Cu mesh** |
 | Finished thickness | **0.6 mm** FR4 |
-| Surface finish | **ENIG** + **selective hard (electrolytic) gold** on the F.Cu gold set — the plating bus exists to feed it (see the order special request) |
+| Surface finish | **ENIG** + **selective hard (electrolytic) gold** on the F.Cu gold set — the plating bus exists to feed it (see the order special request; the area itself is drawn on `User.1` by `scripts/mask_art.py` and plots into both fab sets) |
 | Soldermask | **Matte black**, both sides |
 | Silkscreen | White (back-side identifiers / logos); front face is intentionally bare |
 | Components | **52 on the back**; the front carries only the two solar cells (PV1/PV2) |
@@ -356,10 +356,15 @@ a PCBWay DFM reviewer asks — their absence is a decision, not an oversight.
   > *"Selective hard gold plating on top side, defined **by net**: gold **every top-side copper
   > surface exposed by an F.Mask opening that belongs to the GND net**, with one exception — the
   > four solar-cell N-side solder lands (PV1/PV2 pads N and Nt) stay with the base finish, because
-  > they are soldered and thick electrolytic gold embrittles solder joints. Concretely the gold set
-  > is: the DRH monogram field and letter rims, the perimeter frame, the six edge ornament shapes,
-  > the four corner M2 mounting-hole annuli, the TC2030 GND pad, and the small contactless-mark
-  > arcs right of the monogram. Where the crosshatched ground pour shows inside one
+  > they are soldered and thick electrolytic gold embrittles solder joints. **The `User_1` gerber
+  > in this upload draws exactly this area — treat it as the plating drawing.** Concretely the gold
+  > set is: the DRH monogram field and letter rims, the perimeter frame, the six edge ornament
+  > shapes, the eight M2 mounting-hole annuli (four corners, four mid-edge), and the TC2030 GND pad.
+  > **The small contactless-mark arcs right of the monogram are NOT in the gold set and need no
+  > attention: there is no copper under them at all** (they sit inside the antenna keepout, so the
+  > pour cannot enter — measured 2026-08-02, 4.26 mm² of opening, 0.00 mm² of copper). They are a
+  > mask opening over bare laminate, deliberately; expect bare FR4 there, not a missing plate.
+  > Where the crosshatched ground pour shows inside one
   > of those openings, plate it with them; that is intended, not a defect. All other exposed top-side
   > copper stays with the base finish: the eight solar-cell lands PV1/PV2 (four SRC + the four
   > excepted GND solder lands) and TC2030 pads 1/2/4/5/6 (not on GND, so they have no electrical
@@ -372,27 +377,62 @@ a PCBWay DFM reviewer asks — their absence is a decision, not an oversight.
   > the panel frame's bus ring, which is where the plating rack should clip. Please retain them
   > through plating and rout at depanel. The bus ring on the frame rail is plating hardware, NOT part
   > of the gold set — it is mask-opened so you have bare copper to contact, and it is routed away at
-  > depanel; no need to plate it. The gold set is GND-referenced by design (the four M2 mounting-hole pads overlap the
-  > frame at all four corners); not floating copper, not a defect. All in-pad vias: resin-filled and
+  > depanel; no need to plate it. The gold set is GND-referenced by design (the eight M2 mounting-hole pads overlap the
+  > frame at the corners and mid-edges); not floating copper, not a defect. All in-pad vias: resin-filled and
   > copper-capped (POFV, IPC-4761 Type VII)."*
+
+  **Since 2026-08-02 the request also ships as artwork:** `scripts/mask_art.py` draws the net
+  rule's result on **`User.1`**, and both fab sets plot it as its own gerber (`…-User_1.gbr`,
+  1-up and panel). The drawing is generated from the board — every F.Mask graphic opening, the
+  NFC arcs, and every GND pad with a front opening minus the excepted PV lands — so it re-derives
+  on `--apply` and cannot drift when a pour outline or an opening moves.
+  **Read it as the OPENING set, not the plated set.** It draws **394.2 mm² of opening**, of which
+  **~296 mm² is copper** that will actually take gold; the remaining ~98 mm² is bare laminate
+  inside those openings — overwhelmingly the monogram window, which is bare FR4 *on purpose*
+  because that is the backlight, plus the 4.26 mm² contactless mark. That is not a discrepancy to
+  reconcile: the net rule already says "plate the copper surface an opening exposes", so laminate
+  inside an opening is simply nothing to plate. (Split measured 2026-08-02 against the refilled
+  board; re-measure it if the routing or the pour outline moves.) Drift is not
+  hypothetical: the enumeration above said "four" mounting annuli while the board carried eight
+  (MP1–4, the mid-edge shell points, are GND annuli with front openings too — the net rule always
+  covered them; the prose didn't). Consistency check [6] gates the drawing like the rest of the
+  generator's output, and the generator refuses to draw an area that overlaps an excepted PV
+  solder land, so the exception cannot silently erode either.
 
   A DFM reviewer will flag copper-to-edge = 0 at the two stubs; that is by design. (Net inventory
   re-verified against the committed board 2026-07-31, when the request moved from an enumerated
   area list to the **net rule** above: the front's F.Mask-opened pads are exactly PV1/PV2 ×8
   (4 SRC + the 4 GND solder lands the rule excepts) and TC2030 ×6 (1 GND, in the gold set; 2
-  signal + 3 unconnected, unplateable — no bus path); every graphic opening exposes GND pour or
+  signal + 3 unconnected, unplateable — no bus path); beyond the SMD set, the eight M2
+  mounting annuli are GND with front openings (in the set) and the TC2030 locating apertures
+  are netless holes with no copper to plate (2026-08-02 re-verification, when the `User.1`
+  drawing was born from the same inventory); every graphic opening exposes GND pour or
   bare laminate only, which `scripts/mask_art.py`'s guard enforces for its own art. (`TC1/b`,
   the 2026-08-01 B-side mirror, opens **B.Mask** only — it is outside the front gold set by
   construction and takes the board-wide base finish like every other back pad.) The gold set
   stays a single connected F.Cu group fed by the pour — the net rule *adds* the TC2030 GND pad
-  (a spring-contact surface, which is what hard gold is for) and the contactless-mark arcs
-  relative to the old enumeration; same look, better wear, one sentence of spec.) Ordering plain
+  (a spring-contact surface, which is what hard gold is for) relative to the old enumeration;
+  same look, better wear, one sentence of spec. _(It was also read as adding the contactless-mark
+  arcs. It does not: the net rule plates copper an opening exposes, and those arcs expose no
+  copper — corrected 2026-08-02 when the question "does the gold NFC symbol attenuate the
+  antenna?" was answered by measuring it. There is no gold there to attenuate anything.)_)
+  Ordering plain
   ENIG without this request leaves the bus as dead copper and no wear surface on the face — do
   not ship without it.
 
+  > **Superseded 2026-08-02 — the pour was pulled back.** `GND_A`'s outline is now the rectangle
+  > (2.4, 2.4)–(48.4, 86.5), leaving a **0.8 mm dark reveal** between the frame's inner edge and the
+  > mesh, so the frame reads as a clean unbroken line instead of a serrated one (front only; `GND_B`
+  > is inside the shell and unchanged). That removes most of the overlap this note is about — front
+  > fill 2046 → 1778 mm² — but the note stays, because the *reason* the request is a NET RULE rather
+  > than a connectivity rule is unchanged, and because the overlap is smaller now, not gone. The
+  > gold chain was re-verified after the pullback: the frame, the eight M2 annuli and the
+  > plating-bus stub are still one connected group on F.Cu, which is what the electrolytic bath
+  > needs.
+  >
   > **Why the wording changed (2026-07-27, the crosshatch upload).** The request used to say the
   > gold set was "**all connected copper on F.Cu**." The crosshatch rework enlarged the F.Cu pour
-  > outline to 0.5 mm from the board edge, so the pour now overlaps the gold artwork by **157.3 mm²**
+  > outline to 0.5 mm from the board edge, so the pour then overlapped the gold artwork by **157.3 mm²**
   > — 52% of the frame + ornament copper — where it used to graze it over 0.069 mm². Connectivity
   > therefore stopped being a usable way to name the gold area.
   >

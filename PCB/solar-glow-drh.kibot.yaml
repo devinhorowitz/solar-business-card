@@ -56,6 +56,10 @@ outputs:
       - F.SilkS
       - B.SilkS
       - Edge.Cuts
+      # The selective hard-gold plating area, drawn by scripts/mask_art.py from the
+      # net rule in PCB/README ("Selective hard gold" special request). Plotting it
+      # makes the plating area artwork in the fab set, not just a paragraph.
+      - User.1
 
   - name: drill
     comment: Excellon drill files (PTH + NPTH separate)

@@ -66,6 +66,23 @@ static uint8_t  dormant;
 static uint16_t facedown_polls;
 #endif
 
+#if USE_DARK_DORMANT
+/* dark dormant (the in-a-bag/pocket co-condition; board.h has the design). Orientation-
+ * independent companion to face-down dormancy: continuously dark for DARK_DORMANT_POLLS
+ * -> suppress the MOTION and NFC-ack glows outright, and rate-limit the TAP glow (a tap
+ * always glows and ends dormancy, which must then be re-earned). Exits on any lit poll.
+ * Main-context only. */
+static uint8_t  dark_dormant;
+static uint16_t dark_polls;          /* consecutive dark polls toward DARK_DORMANT_POLLS */
+#endif
+
+/* (A shipping/"coma" mode lived here for part of 2026-08-02 -- 48 h of dark dropping the
+ * accel to standby, disabling the WDT and slowing the PIT to 32 s ticks. Removed: this card
+ * is hand-delivered, so the dark-shipping-box premise never occurs, and a mode that changes
+ * the poll rate, the watchdog and the accel's power state is a lot of failure surface to
+ * carry for a scenario that does not happen. Dark dormancy above is the stowage answer that
+ * does. See feature-roadmap.md for the full decision record.) */
+
 /* ---------------- init ---------------- */
 
 static void clocks_init(void)
@@ -149,6 +166,32 @@ static void gpio_init(void)
     PORTF.PIN6CTRL = PORT_PULLUPEN_bm;   /* PF6/RST: input-only GPIO (RSTPINCFG=0), no external net -- hold it */
 }
 
+/* PIT period selectors, named once so rtc_pit_init() and the face-down deep-sleep
+ * transition cannot drift apart. The PIT runs off the 1.024 kHz ULP oscillator, so
+ * the cycle count IS the period in units of ~0.977 ms; CYC1024 ~ 1 s. */
+#if   POLL_PERIOD_S == 1
+#  define NORMAL_PIT_gc  RTC_PERIOD_CYC1024_gc      /* 1024 / 1.024 kHz = 1.0 s */
+#elif POLL_PERIOD_S == 2
+#  define NORMAL_PIT_gc  RTC_PERIOD_CYC2048_gc      /* 2048 / 1.024 kHz = 2.0 s */
+#else
+#  error "POLL_PERIOD_S must be 1 or 2 (RTC PIT poll period, seconds)."
+#endif
+
+#if USE_FACEDOWN_DEEPSLEEP
+#  if   FACEDOWN_POLL_S == 2
+#    define FACEDOWN_PIT_gc  RTC_PERIOD_CYC2048_gc
+#  elif FACEDOWN_POLL_S == 4
+#    define FACEDOWN_PIT_gc  RTC_PERIOD_CYC4096_gc
+#  elif FACEDOWN_POLL_S == 8
+#    define FACEDOWN_PIT_gc  RTC_PERIOD_CYC8192_gc
+#  else
+#    error "FACEDOWN_POLL_S must be 2, 4 or 8 -- and <= the ~8 s watchdog period, which stays armed."
+#  endif
+#  if FACEDOWN_POLL_S < POLL_PERIOD_S
+#    error "FACEDOWN_POLL_S below POLL_PERIOD_S would make the OFF state poll FASTER than normal."
+#  endif
+#endif
+
 static void rtc_pit_init(void)
 {
     /* 1.024 kHz internal ULP clock (runs in power-down). Period from the
@@ -156,14 +199,42 @@ static void rtc_pit_init(void)
     RTC.CLKSEL = RTC_CLKSEL_OSC1K_gc;
     while (RTC.PITSTATUS & RTC_CTRLBUSY_bm) { }
     RTC.PITINTCTRL = RTC_PI_bm;
-#if   POLL_PERIOD_S == 1
-    RTC.PITCTRLA = RTC_PERIOD_CYC1024_gc | RTC_PITEN_bm;   /* 1024 / 1.024 kHz = 1.0 s */
-#elif POLL_PERIOD_S == 2
-    RTC.PITCTRLA = RTC_PERIOD_CYC2048_gc | RTC_PITEN_bm;   /* 2048 / 1.024 kHz = 2.0 s */
-#else
-#  error "POLL_PERIOD_S must be 1 or 2 (RTC PIT poll period, seconds)."
-#endif
+    RTC.PITCTRLA = NORMAL_PIT_gc | RTC_PITEN_bm;
 }
+
+#if USE_FACEDOWN_DEEPSLEEP
+/* Enter/leave the face-down low-power profile -- the card's off switch. board.h's
+ * USE_FACEDOWN_DEEPSLEEP block has the reasoning and the numbers; these are the two
+ * transitions, and they must stay exact mirrors of each other or the card comes back
+ * from face-down in a half-configured state. */
+static void facedown_deepsleep(uint8_t on)
+{
+    if (on) {
+        /* CHARGING FIRST, and this ordering is load-bearing. The FD ISR is what
+         * re-enables the AEM after a read (gate LOW = charging on), and we are about
+         * to stop servicing FD edges entirely. If a reader's field happened to be
+         * present as dormancy began, the gate would be HIGH and nothing would ever
+         * lower it -- a card that has quietly stopped harvesting for as long as it
+         * lies face-down, which is the exact opposite of what this mode is for.
+         * Force it on before the pin goes deaf. */
+        ENSTOCH_PORT.OUTCLR = ENSTOCH_PIN_bm;
+        FD_PORT.PIN6CTRL = PORT_ISC_INPUT_DISABLE_gc;   /* pull-up + buffer off: kills the FD leak */
+        FD_PORT.INTFLAGS = FD_PIN_bm;                   /* drop any edge latched on the way down */
+        f_nfc = f_fd_arrived = 0;
+        adxl367_lowpower(1);                            /* 12.5 Hz, tap engine off */
+        while (RTC.PITSTATUS & RTC_CTRLBUSY_bm) { }
+        RTC.PITCTRLA = FACEDOWN_PIT_gc | RTC_PITEN_bm;
+    } else {
+        while (RTC.PITSTATUS & RTC_CTRLBUSY_bm) { }
+        RTC.PITCTRLA = NORMAL_PIT_gc | RTC_PITEN_bm;
+        adxl367_lowpower(0);                            /* back to 100 Hz + tap */
+        FD_PORT.PIN6CTRL = PORT_ISC_BOTHEDGES_gc | PORT_PULLUPEN_bm;
+        FD_PORT.INTFLAGS = FD_PIN_bm;                   /* re-enabling the pull-up lifts the pin;
+                                                         * that edge is our own doing, not a field */
+        f_nfc = f_fd_arrived = 0;
+    }
+}
+#endif
 
 /* ---------------- sleep ---------------- */
 
@@ -294,9 +365,20 @@ int main(void)
 
     /* power-on wink so a freshly programmed card shows life. Gated on a margin
      * above the glow floor (WINK_FLOOR_MV), not the floor itself, so a marginal
-     * just-charged card cannot wink itself back below the floor. */
-    if (sense_vdd_mv() >= WINK_FLOOR_MV)
-        led_breathe(1, GLOW_BREATH_MS, GLOW_PEAK);
+     * just-charged card cannot wink itself back below the floor.
+     * The PEAK goes through sense_glow_peak() like every other animation, so the
+     * ballast guard covers this one too. It did not until 2026-08-02: the wink
+     * passed a raw GLOW_PEAK, which made "every glow's peak passes through that
+     * chokepoint" false for the one glow that fires with the tank at its fullest
+     * -- straight off a programmer or a bench supply, exactly the over-voltage
+     * case USE_BALLAST_GUARD exists for. Costs one extra STO read at boot;
+     * WINK_FLOOR_MV (3000) still gates whether the wink fires at all, since it is
+     * a stricter floor than sense_glow_peak's own VS_GLOW_FLOOR_MV (2750). */
+    if (sense_vdd_mv() >= WINK_FLOOR_MV) {
+        uint8_t wink = sense_glow_peak(GLOW_PEAK);
+        if (wink)
+            led_breathe(1, GLOW_BREATH_MS, wink);
+    }
 
     /* seed the dark->light detector with the actual boot light level, so a card
      * powered on already in light does not fire a phantom dark->light glow on the
@@ -326,9 +408,35 @@ int main(void)
              * muted event ~0.1 uC -- in exactly the repeat-event scenarios the mutes
              * exist to cheapen. Gate first, convert only if a glow can still fire. */
             uint8_t peak = 0;
+            uint8_t mute = 0;
 #if USE_FACEDOWN_DORMANT
-            if (!dormant)            /* face-down: suppress the glow + tally (latches still acked below) */
+            if (dormant) mute = 1;   /* face-down: suppress the glow + tally (latches still acked below) */
 #endif
+#if USE_DARK_DORMANT
+            /* DARK DORMANCY RATE-LIMITS THE TAP GLOW; IT NEVER SWALLOWS ONE.
+             *
+             * A tap always glows and always ends dormancy, which then has to be
+             * re-earned by another DARK_DORMANT_S of continuous dark. So a card
+             * jostling in a bag glows at most once per ~30 min instead of once per
+             * jostle -- essentially all of the leak, closed -- while a person who
+             * taps the card in a dark room ALWAYS gets the monogram.
+             *
+             * The first cut of this required a DOUBLE tap to escape, and that was
+             * wrong for a reason worth writing down: it hung the card's PRIMARY
+             * interaction on LIGHT_THRESH_MV, a constant board.h itself documents as
+             * having no measurement behind it ("the exact trip point is a guess").
+             * If that guess reads a dim office as dark, a single tap does nothing,
+             * the owner has no way to know why, and the marquee moment silently
+             * fails -- a far worse outcome than the handful of stray breaths the
+             * mute was saving. A feature that can only cost energy is allowed to
+             * lean on an unmeasured constant; one that can silence the product is
+             * not. Rate-limiting keeps the saving and removes that failure mode,
+             * and it needs no single-vs-double distinction, so it behaves the same
+             * with USE_DOUBLE_TAP either way. Revisit the mute only once the bench
+             * has measured the dark/light threshold for real. */
+            if (dark_dormant) { dark_dormant = 0; dark_polls = 0; }
+#endif
+            if (!mute)
                 peak = sense_glow_peak(dbl ? DTAP_PEAK : GLOW_PEAK);
             if (peak) {
                 /* tally BEFORE the glow: the EEPROM write then happens at the
@@ -370,6 +478,9 @@ int main(void)
 #if USE_FACEDOWN_DORMANT
             if (dormant) mute = 1;   /* face-down: no acknowledge glow */
 #endif
+#if USE_DARK_DORMANT
+            if (dark_dormant) mute = 1;   /* stowed dark: read the vCard silently */
+#endif
 #if USE_NFC_ACK_COOLDOWN
             /* rate-limit: a phone parked in-field keeps polling and re-toggling FD; ack at most
              * once per NFC_ACK_COOLDOWN_S so a stowed re-poll can't bleed the reserve breath by
@@ -397,11 +508,19 @@ int main(void)
 #if USE_FACEDOWN_DORMANT
             if (dormant) {
                 /* motion while dormant may be the flip back face-up: re-check Z now for an
-                 * instant wake (the ~1 s poll is only a backstop). No glow on the wake
+                 * instant wake (the slowed poll is only a backstop). No glow on the wake
                  * motion itself either way. */
-                if (adxl367_read_z() >= FACEDOWN_Z_THRESH) { dormant = 0; facedown_polls = 0; }
+                if (adxl367_read_z() >= FACEDOWN_Z_THRESH) {
+                    dormant = 0; facedown_polls = 0;
+#if USE_FACEDOWN_DEEPSLEEP
+                    facedown_deepsleep(0);   /* restore FD, accel profile and poll rate */
+#endif
+                }
                 mute = 1;
             }
+#endif
+#if USE_DARK_DORMANT
+            if (dark_dormant) mute = 1;   /* stowed dark: no motion breath (any orientation) */
 #endif
 #if USE_DARK_MOTION_MUTE
             /* Stowed in the dark (last poll saw no light): mute the *motion* soft-breath so a card
@@ -482,10 +601,20 @@ int main(void)
             uint8_t skip = 0;
             int8_t z = adxl367_read_z();
             if (dormant) {
-                if (z >= FACEDOWN_Z_THRESH) { dormant = 0; facedown_polls = 0; }
+                if (z >= FACEDOWN_Z_THRESH) {
+                    dormant = 0; facedown_polls = 0;
+#if USE_FACEDOWN_DEEPSLEEP
+                    facedown_deepsleep(0);
+#endif
+                }
                 skip = 1;                                    /* resume normal work next poll */
             } else if (z < FACEDOWN_Z_THRESH) {
-                if (++facedown_polls >= FACEDOWN_DORMANT_POLLS) { dormant = 1; skip = 1; }
+                if (++facedown_polls >= FACEDOWN_DORMANT_POLLS) {
+                    dormant = 1; skip = 1;
+#if USE_FACEDOWN_DEEPSLEEP
+                    facedown_deepsleep(1);   /* the off switch: FD leak, accel and poll all down */
+#endif
+                }
             } else {
                 facedown_polls = 0;
             }
@@ -511,11 +640,36 @@ int main(void)
                  * play the "loading" sweep. Caps-full (sense_caps_full()) is the hard gate, so it
                  * can never draw the pack down; it re-arms each poll, looping while the sun holds
                  * and spending the surplus harvest as light instead of leaving it unharvested. The greeting above
-                 * wins on the entry edge (one breath in), then this runs while the card sits. */
-                else if ((vf & SENSE_SUN_bm) && sense_caps_full())
-                    led_sweep(SWEEP_PASSES, SWEEP_PASS_MS, SWEEP_PEAK, SWEEP_OVERLAP);
+                 * wins on the entry edge (one breath in), then this runs while the card sits.
+                 * The peak is routed through sense_glow_peak() -- the same chokepoint as
+                 * every other glow -- so the ballast guard's high-STO clamp applies to the
+                 * sweep too. At caps-full (>= 4.4 V) the brownout stretch returns full peak,
+                 * so normal harvest is unchanged. The cost is honest: this call adds a
+                 * second STO conversion on a basking poll, since sense_caps_full() just
+                 * read the same node. It buys the guard's coverage on the one animation
+                 * that only ever runs with a full tank, and a basking card is by definition
+                 * the case where harvest is free. */
+                else if ((vf & SENSE_SUN_bm) && sense_caps_full()) {
+                    uint8_t sp = sense_glow_peak(SWEEP_PEAK);
+                    if (sp)
+                        led_sweep(SWEEP_PASSES, SWEEP_PASS_MS, sp, SWEEP_OVERLAP);
+                }
 #endif
                 prev_light = light;
+#if USE_DARK_DORMANT
+                /* Dark-dormancy clock. Deliberately INSIDE the not-skip path, for two
+                 * reasons: `light` is this poll's reading and already in hand, so the
+                 * clock costs no extra ADC conversion; and while the card is face-down
+                 * dormant every glow is suppressed anyway, so there is nothing for dark
+                 * dormancy to add there. A card that is face-down dormant and then
+                 * picked up in the dark starts its dark clock from that moment, which
+                 * is the honest reading of "continuously dark while awake". */
+                if (light) {
+                    dark_dormant = 0; dark_polls = 0;      /* any light ends it, ~1 poll */
+                } else if (!dark_dormant && ++dark_polls >= DARK_DORMANT_POLLS) {
+                    dark_dormant = 1;
+                }
+#endif
             }
 #if FRAM_RESLEEP_EVERY_POLL
             /* Defensive re-park: the accel traffic this tick may have woken the
