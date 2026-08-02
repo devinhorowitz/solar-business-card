@@ -54,6 +54,9 @@ on:
       # The pogo test plate has no other trigger: it is not consumed by the assembly
       # render, so an edit to its generator alone must regenerate its STEP/STL/drawing.
       - 'enclosure/solar-glow-drh-pogo-testplate-cad.py'
+      # the buy-document generator: its OFF_BOARD table is the one hand-maintained input
+      # to the hand-buy list, so editing it must regenerate the carts it feeds
+      - 'scripts/bom_split.py'
       # the mesh gate's ledger -- editing a baseline must re-prove it against the artifacts
       - 'scripts/check_mesh.py'
       - 'scripts/interference_drc.py'
@@ -129,6 +132,18 @@ jobs:
         run: |
           python3 -m pip install --quiet 'shapely==2.1.2'
           python3 scripts/panelize.py
+
+      # The two BUY documents an order actually needs, split by who purchases what:
+      # the assembly BOM PCBWay works from, and the hand-buy carts (DigiKey/Mouser
+      # CSVs + one readable page) for the parts that are deliberately hand-soldered
+      # or never reach a pick-and-place at all -- supercaps, cells, ferrite, the UPDI
+      # programmer, the Tag-Connect cable. Derived from the schematic and the board's
+      # own exclude_from_bom/dnp flags, so a part changes documents by changing the
+      # DESIGN, never by editing a list. Needs pcbnew, so it runs in the KiCad image.
+      - name: Split the BOM into the assembly and hand-buy documents
+        run: |
+          docker run --rm -u "$(id -u):$(id -g)" -e HOME=/tmp -v "$PWD":/wk -w /wk \
+            "$KICAD_IMAGE" python3 scripts/bom_split.py
 
       # No schematic argument: the panel has none, and its config runs no ERC/DRC preflight
       # (see the header of solar-glow-drh-panel.kibot.yaml for why).

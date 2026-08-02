@@ -25,6 +25,15 @@ is the "Where the truth lives" table in `README.md`. In short:
 - BOM master → `BOM/solar-glow-drh-v4_0-BOM.xlsx` (`BOM/README.md` is **derived** — a live
   availability table written by `BOM/check_stock.py`, manual-apply like the mask art since it
   needs distributor API keys; regenerate it, never edit it)
+- **The two BUY documents are GENERATED, not maintained** → `scripts/bom_split.py` writes them
+  into `Generated/fabdocs/` on every board push: `…-pcbway-assembly.csv` (what the machine buys
+  and places) and `…-handbuy-{digikey,mouser}.csv` + `…-handbuy.md` (what **you** buy — the
+  hand-soldered supercaps and cells, plus the ferrite, screws, film, UPDI Friend and
+  Tag-Connect cable that never reach a pick-and-place). A part moves between the two by
+  changing the **design** — the board's own `exclude_from_bom` / `dnp` flags decide — never by
+  editing a list. The one hand-maintained input is `OFF_BOARD` in that script, for items with
+  no schematic symbol. Check [15] gates the split. **The four supercaps are two MPNs, 2 + 2**
+  (SC1/SC3 `3-153-440`, SC2/SC4 `3-153-438`); four of either builds nothing.
 - Design reasoning / lineage → `solar-glow-drh-design-notes.md`
 
 When a doc disagrees with a source file, **the source file wins** and the doc is

@@ -1271,6 +1271,22 @@ def check_cpl_bom_agreement():
         ok(f"{len(placed)} placeable footprint(s); every BOM-excluded or DNP part is also out "
            f"of the position file")
 
+    # --- the buy documents themselves -------------------------------------------------
+    # scripts/bom_split.py emits what an order ships: the PCBWay assembly BOM and the
+    # hand-buy carts. Its build() must stay clean -- a sourced part with no Supplier
+    # cannot be routed to a cart, and would silently vanish from the buy list.
+    try:
+        import bom_split
+        asm, hand, _off, _once, probs = bom_split.build()
+        if probs:
+            err("the buy documents cannot be generated cleanly: " + "; ".join(probs))
+        elif len(asm) and len(hand):
+            ok(f"buy documents split cleanly: {len(asm)} assembly line(s) / "
+               f"{sum(r['qty'] for r in asm)} placed parts, {len(hand)} hand-buy line(s) / "
+               f"{sum(r['qty'] for r in hand)} hand-soldered parts")
+    except Exception as e:
+        warn(f"buy-document split not checked -- {type(e).__name__}: {e}")
+
     # --- the HAND-SOLDER buy list ---------------------------------------------------
     # Excluding SC1-4 and PV1-2 from both fab files is correct -- they are hand-soldered
     # -- but it leaves them bought by NOBODY: no line in the assembly BOM, no line in the
