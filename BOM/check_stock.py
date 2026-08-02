@@ -15,6 +15,9 @@ Sources of truth:
   - line items and quantities ................... scripts/bom_split.py, i.e. the
     schematic + the board's exclude_from_bom / dnp flags. A part enters or leaves
     this table by changing the DESIGN, never by editing a sheet.
+  - manufacturers ............................... the schematic's own Manufacturer
+    property, via the same split. Not decoration: it is the hard filter that keeps a
+    short or all-numeric MPN from matching another vendor's part (see MOUSER_FIRST).
   - substitutes ................................. SUBS below, the one piece of
     hand-kept sourcing knowledge left (the xlsx that used to carry it was retired
     2026-08-02); each entry cites where its alternate came from
@@ -80,34 +83,34 @@ NO_API = {
     "precision alt Accu SFE-M2-3 (master row note)",
 }
 
-# Lines queried at Mouser BY SKU, matching on MouserPartNumber. Two different
-# reasons land a ref here, and both make a bare-MPN query unreliable:
+# The one line whose MPN no distributor query can resolve: Mouser lists the mfr P/N as
+# AEM10300-QFN, not the e-peas ordering code the design carries, so the SKU is pinned
+# and matched on MouserPartNumber.
 #
-#   U8   -- Mouser lists the mfr P/N as AEM10300-QFN, not the e-peas ordering
-#           code the design carries, so an MPN query finds nothing.
-#   PRG1 -- the opposite failure: "5879" is Adafruit's own product number, short
-#           and all-numeric, and it matches OTHER manufacturers' parts. Pinning
-#           the SKU is what makes the query deterministic.
+# NOTHING ELSE IS PINNED, and that is deliberate -- the collision problem this table
+# used to absorb is now solved upstream. pick_match() treats the manufacturer as a HARD
+# filter for collision-prone MPNs (short or all-numeric), and mfr_ok()'s docstring names
+# the case exactly: "a bare '5879' is both the Adafruit programmer and a Pomona test
+# clip". That filter was inert for as long as the design had no manufacturer to give it.
+# When the xlsx master carrying the Mfr column was culled on 2026-08-02, load_lines()
+# started sending mfr="" for every line, and mfr_ok() returns True on an empty
+# manufacturer -- the filter was not bypassed, it was starved.
 #
-# PRG1 is here because the guard that should have caught it cannot fire. pick_match()
-# treats the manufacturer as a HARD filter for collision-prone MPNs, and mfr_ok()'s
-# docstring names this exact part -- "a bare '5879' is both the Adafruit programmer
-# and a Pomona test clip". But load_lines() has had no manufacturer to pass since the
-# xlsx master (which carried the Mfr column) was culled on 2026-08-02: every line now
-# goes out with mfr="", and mfr_ok() returns True on an empty manufacturer. The filter
-# is intact and starved.
+# It bit immediately: the 2026-08-02 run resolved PRG1 to Mouser 243-5879 -- a Pomona
+# clip, $88.96, 0 in stock -- and published it as the UPDI Friend, downgrading the row
+# to substitute-only while the real part (485-5879) had 54 in stock at $6.95.
 #
-# It is not hypothetical. The 2026-08-02 run resolved PRG1 to Mouser 243-5879 -- a
-# Pomona clip, $88.96, 0 in stock -- and the table published it as the UPDI Friend,
-# verdict downgraded to substitute-only, while the real part (485-5879) had 54 in
-# stock at $6.95. Every OTHER collision-prone MPN on this board (FER1's 364006, the
-# Schurter supercaps) happens to resolve correctly today, which is luck, not a check.
-# The real repair is a Manufacturer field in the schematic, feeding through
-# bom_split.build(); until that exists, a SKU pin here is the deterministic answer,
-# and any line whose MPN is short or all-numeric belongs in this table.
+# The repair is upstream, where it belongs: every placed symbol now carries a
+# Manufacturer property in the schematic (and mirrored onto its footprint, so DRC's
+# schematic-parity check holds the two together), bom_split.build() FAILS on a part that
+# has an MPN but no manufacturer, and load_lines() passes it through. Measured on the
+# same query: starved -> 243-5879 @ $88.96/0 stock; fed "Adafruit" -> 485-5879 @
+# $6.95/54 stock. A SKU pin for PRG1 would work too, but it would be redundant cover
+# that hides a regression -- if the field were ever lost, the pinned line would keep
+# looking correct while every other collision-prone MPN (FER1's 364006, the Schurter
+# supercaps) quietly went wrong.
 MOUSER_FIRST = {
     "U8": "120-AEM10300-QFN",
-    "PRG1": "485-5879",
 }
 
 # Documented substitutes, transcribed from the master's own sourcing notes --
@@ -378,11 +381,12 @@ def load_lines():
     out = []
     for kind, rows in (("assembly", asm), ("hand-solder", hand)):
         for r in rows:
-            out.append({"refs": ", ".join(r["refs"]), "qty": r["qty"], "mfr": "",
+            out.append({"refs": ", ".join(r["refs"]), "qty": r["qty"], "mfr": r["mfr"],
                         "mpn": r["mpn"], "kind": kind})
-    for ref, qty, mpn, sup, _dpn, _note in list(off) + list(once):
+    for ref, qty, mpn, mfr, sup, _dpn, _note in list(off) + list(once):
         if sup:
-            out.append({"refs": ref, "qty": qty, "mfr": "", "mpn": mpn, "kind": "off-board"})
+            out.append({"refs": ref, "qty": qty, "mfr": mfr, "mpn": mpn,
+                        "kind": "off-board"})
     return out
 
 

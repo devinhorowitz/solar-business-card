@@ -372,6 +372,19 @@
 				)
 			)
 		)
+		(property "Manufacturer" "ANYSOLAR Ltd"
+			(at 0 0 0)
+			(unlocked yes)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "d0383c49-3bd0-5da2-8e99-6dba78d472ab")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
 		(property "Supplier" "DigiKey"
 			(at 0 0 0)
 			(unlocked yes)
@@ -1305,6 +1318,19 @@
 				)
 			)
 		)
+		(property "Manufacturer" "ANYSOLAR Ltd"
+			(at 0 0 0)
+			(unlocked yes)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "42ed626e-2dfe-58e4-b38b-43042a81eb16")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
 		(property "Supplier" "DigiKey"
 			(at 0 0 0)
 			(unlocked yes)
@@ -1602,6 +1628,20 @@
 			(layer "B.Fab")
 			(hide yes)
 			(uuid "50755f45-afd0-4553-a4bb-69d94cc9da3f")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
+		(property "Manufacturer" "SCHURTER Inc."
+			(at 0 0 180)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "0b4d53a4-1443-5e72-8af1-734c7f6d182b")
 			(effects
 				(font
 					(size 1 1)
@@ -1919,6 +1959,20 @@
 				(justify mirror)
 			)
 		)
+		(property "Manufacturer" "YAGEO"
+			(at 0 0 270)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "4b6f7d02-99d0-59e1-bb47-39de119b6936")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
 		(property "Supplier" "DigiKey"
 			(at 0 0 270)
 			(unlocked yes)
@@ -2088,6 +2142,20 @@
 			(layer "B.Fab")
 			(hide yes)
 			(uuid "4a0d27dd-707a-4984-84a8-59216383f538")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
+		(property "Manufacturer" "Texas Instruments"
+			(at 0 0 0)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "7ffa0425-7077-52f6-8e4b-241802542606")
 			(effects
 				(font
 					(size 1 1)
@@ -2554,6 +2622,20 @@
 				(justify mirror)
 			)
 		)
+		(property "Manufacturer" "YAGEO"
+			(at 0 0 180)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "0927d587-a188-5128-8ca8-d3efb7b88551")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
 		(property "Supplier" "DigiKey"
 			(at 0 0 180)
 			(unlocked yes)
@@ -2847,6 +2929,20 @@
 				(justify mirror)
 			)
 		)
+		(property "Manufacturer" "Murata Electronics"
+			(at 0 0 90)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "63a2366e-7072-5926-a8a2-fdbadd9bc114")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
 		(property "Supplier" "DigiKey"
 			(at 0 0 90)
 			(unlocked yes)
@@ -3017,6 +3113,20 @@
 			(layer "B.Fab")
 			(hide yes)
 			(uuid "d4987ac2-f77c-4dbd-add2-e7e1ae8655fe")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
+		(property "Manufacturer" "YAGEO"
+			(at 0 0 90)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "0a72be75-847c-501c-8f7c-9003a669245d")
 			(effects
 				(font
 					(size 1 1)
@@ -3248,6 +3358,20 @@
 			(layer "B.Fab")
 			(hide yes)
 			(uuid "95fdd7e1-827b-48ae-b39b-699e48183d89")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
+		(property "Manufacturer" "Murata Electronics"
+			(at 0 0 180)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "77e49fb2-9074-5e54-ba6d-703387eb1ba7")
 			(effects
 				(font
 					(size 1 1)
@@ -3531,6 +3655,20 @@
 				(justify mirror)
 			)
 		)
+		(property "Manufacturer" "Murata Electronics"
+			(at 0 0 0)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "532290cc-2bbf-5993-85f0-c03748fcf937")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
 		(property "Supplier" "DigiKey"
 			(at 0 0 0)
 			(unlocked yes)
@@ -3681,6 +3819,20 @@
 			(layer "B.Fab")
 			(hide yes)
 			(uuid "f60f3edb-1253-4bdb-ab3d-6a3de3f5855e")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
+		(property "Manufacturer" "Murata Electronics"
+			(at 0 0 270)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "104aace6-801d-5d9d-b961-30f754db422f")
 			(effects
 				(font
 					(size 1 1)
@@ -3955,6 +4107,20 @@
 			(layer "B.Fab")
 			(hide yes)
 			(uuid "fe87acdc-a806-40ae-8273-f08f1d584da5")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
+		(property "Manufacturer" "e-peas"
+			(at 0 0 0)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "03a87cad-7719-5d1f-89a7-78a865cdc46e")
 			(effects
 				(font
 					(size 1 1)
@@ -4719,6 +4885,20 @@
 				(justify mirror)
 			)
 		)
+		(property "Manufacturer" "YAGEO"
+			(at 0 0 0)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "ef7f5eea-8437-518a-8ba4-1eaab0d6546b")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
 		(property "Supplier" "DigiKey"
 			(at 0 0 0)
 			(unlocked yes)
@@ -4868,6 +5048,20 @@
 			(layer "B.Fab")
 			(hide yes)
 			(uuid "b2b3a0ab-e6ad-4b14-a05e-bbd293d4436b")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
+		(property "Manufacturer" "ams-OSRAM USA INC."
+			(at 0 0 0)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "1652db16-0b8d-5a9f-8912-43db723389ce")
 			(effects
 				(font
 					(size 1 1)
@@ -5046,6 +5240,20 @@
 			(layer "B.Fab")
 			(hide yes)
 			(uuid "63f178d7-0b4e-40db-9a93-96025cc0fb29")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
+		(property "Manufacturer" "Microchip Technology"
+			(at 0 0 0)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "14e3dae4-ac4f-5a88-8688-6c330298eb8e")
 			(effects
 				(font
 					(size 1 1)
@@ -5829,6 +6037,20 @@
 				(justify mirror)
 			)
 		)
+		(property "Manufacturer" "RAMXEED"
+			(at 0 0 0)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "92ca8b59-58a4-5f45-a6c8-3edd56d8032c")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
 		(property "Supplier" "DigiKey"
 			(at 0 0 0)
 			(unlocked yes)
@@ -6468,6 +6690,20 @@
 				(justify mirror)
 			)
 		)
+		(property "Manufacturer" "Murata Electronics"
+			(at 0 0 180)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "c8c7c4a0-9307-5f64-b9f6-126a3dd3915f")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
 		(property "Supplier" "DigiKey"
 			(at 0 0 180)
 			(unlocked yes)
@@ -6618,6 +6854,20 @@
 			(layer "B.Fab")
 			(hide yes)
 			(uuid "716dbd04-330c-4248-8adb-b55341348ec8")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
+		(property "Manufacturer" "ams-OSRAM USA INC."
+			(at 0 0 0)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "bd3fc404-313e-5a41-b44e-61d156c3b583")
 			(effects
 				(font
 					(size 1 1)
@@ -6824,6 +7074,20 @@
 				(justify mirror)
 			)
 		)
+		(property "Manufacturer" "Samsung Electro-Mechanics"
+			(at 0 0 270)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "1acaf15d-5ced-5c82-addf-f48e3a04c9b7")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
 		(property "Supplier" "Mouser"
 			(at 0 0 270)
 			(unlocked yes)
@@ -7015,6 +7279,20 @@
 			(layer "B.Fab")
 			(hide yes)
 			(uuid "05798ceb-8672-4fa6-b911-865be2398ab1")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
+		(property "Manufacturer" "YAGEO"
+			(at 0 0 0)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "ca84c0e8-eee7-5b47-b63d-5a031e6daa67")
 			(effects
 				(font
 					(size 1 1)
@@ -7295,6 +7573,20 @@
 				(justify mirror)
 			)
 		)
+		(property "Manufacturer" "TDK"
+			(at 0 0 90)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "50d12cd1-5347-599a-b32b-426e2c71b912")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
 		(property "Supplier" "DigiKey"
 			(at 0 0 90)
 			(unlocked yes)
@@ -7496,6 +7788,20 @@
 			(layer "B.Fab")
 			(hide yes)
 			(uuid "673d24c9-ef27-4e31-bc97-7f47312b60a8")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
+		(property "Manufacturer" "onsemi"
+			(at 0 0 0)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "924636f3-b538-5f6e-a3bb-78dd13b67d1b")
 			(effects
 				(font
 					(size 1 1)
@@ -7948,6 +8254,20 @@
 				(justify mirror)
 			)
 		)
+		(property "Manufacturer" "NXP USA Inc."
+			(at 0 0 0)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "a1c9ea6b-bdfb-5dfb-bcf4-34f16640a330")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
 		(property "Supplier" "DigiKey"
 			(at 0 0 0)
 			(unlocked yes)
@@ -8273,6 +8593,20 @@
 				(justify mirror)
 			)
 		)
+		(property "Manufacturer" "Samsung Electro-Mechanics"
+			(at 0 0 90)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "e7d3717a-ac65-553c-9901-0b38313d3948")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
 		(property "Supplier" "Mouser"
 			(at 0 0 90)
 			(unlocked yes)
@@ -8581,6 +8915,20 @@
 				(justify mirror)
 			)
 		)
+		(property "Manufacturer" "YAGEO"
+			(at 0 0 0)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "d923d95a-e80e-5dd3-b220-2e247a228753")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
 		(property "Supplier" "DigiKey"
 			(at 0 0 0)
 			(unlocked yes)
@@ -8834,6 +9182,20 @@
 				(justify mirror)
 			)
 		)
+		(property "Manufacturer" "YAGEO"
+			(at 0 0 0)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "0ee9899d-f0fd-5003-be32-a11c32480fa5")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
 		(property "Supplier" "DigiKey"
 			(at 0 0 0)
 			(unlocked yes)
@@ -8983,6 +9345,20 @@
 			(layer "B.Fab")
 			(hide yes)
 			(uuid "1925b58c-ec17-4fa0-82b7-d333bff3b690")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
+		(property "Manufacturer" "Murata Electronics"
+			(at 0 0 180)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "611c3cc1-5aa8-526a-a028-2071dd4067b0")
 			(effects
 				(font
 					(size 1 1)
@@ -9161,6 +9537,20 @@
 			(layer "B.Fab")
 			(hide yes)
 			(uuid "ec161308-18fa-437c-bef4-6a85285699a6")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
+		(property "Manufacturer" "Murata Electronics"
+			(at 0 0 270)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "0d5e19f8-3696-5288-8ed2-4bd7d494387f")
 			(effects
 				(font
 					(size 1 1)
@@ -9369,6 +9759,20 @@
 				(justify mirror)
 			)
 		)
+		(property "Manufacturer" "YAGEO"
+			(at 0 0 270)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "e1ace62c-fe99-5852-b377-7cceac8ca5c4")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
 		(property "Supplier" "DigiKey"
 			(at 0 0 270)
 			(unlocked yes)
@@ -9539,6 +9943,20 @@
 			(layer "B.Fab")
 			(hide yes)
 			(uuid "11b621e1-3645-437d-a4ad-c145809c0739")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
+		(property "Manufacturer" "YAGEO"
+			(at 0 0 270)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "fe76474a-1581-520d-9e89-5a7311d96418")
 			(effects
 				(font
 					(size 1 1)
@@ -10054,6 +10472,20 @@
 				(justify mirror)
 			)
 		)
+		(property "Manufacturer" "SCHURTER Inc."
+			(at 0 0 0)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "021fae73-18ae-5c78-af78-3a7a422876ef")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
 		(property "Supplier" "DigiKey"
 			(at 0 0 0)
 			(unlocked yes)
@@ -10364,6 +10796,20 @@
 			(layer "B.Fab")
 			(hide yes)
 			(uuid "14ccec53-470c-4408-884c-25d8b4e74a80")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
+		(property "Manufacturer" "Texas Instruments"
+			(at 0 0 270)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "6c09589a-54fb-58ae-a68b-117de55567a5")
 			(effects
 				(font
 					(size 1 1)
@@ -10794,6 +11240,20 @@
 				(justify mirror)
 			)
 		)
+		(property "Manufacturer" "Murata Electronics"
+			(at 0 0 90)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "ea9cf584-b6fc-55ac-83ee-d82b836138b2")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
 		(property "Supplier" "DigiKey"
 			(at 0 0 90)
 			(unlocked yes)
@@ -10983,6 +11443,20 @@
 				(justify mirror)
 			)
 		)
+		(property "Manufacturer" "Murata Electronics"
+			(at 0 0 180)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "74699879-3f7f-5507-b21b-7910dbb0a0d6")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
 		(property "Supplier" "DigiKey"
 			(at 0 0 180)
 			(unlocked yes)
@@ -11133,6 +11607,20 @@
 			(layer "B.Fab")
 			(hide yes)
 			(uuid "fe1af0ce-da3d-4b2e-ba11-b711009e9742")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
+		(property "Manufacturer" "ams-OSRAM USA INC."
+			(at 0 0 0)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "ea793761-ace0-5121-8b01-ab7bdca33d30")
 			(effects
 				(font
 					(size 1 1)
@@ -11331,6 +11819,20 @@
 			(layer "B.Fab")
 			(hide yes)
 			(uuid "74350de6-21a2-4409-858a-c2b5e6508bc8")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
+		(property "Manufacturer" "Murata Electronics"
+			(at 0 0 270)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "622e84f8-7a26-5777-9bfd-13660acdbacf")
 			(effects
 				(font
 					(size 1 1)
@@ -11538,6 +12040,20 @@
 				(justify mirror)
 			)
 		)
+		(property "Manufacturer" "ams-OSRAM USA INC."
+			(at 0 0 0)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "58573760-32cb-58a3-9eb0-75d20fc74fb2")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
 		(property "Supplier" "DigiKey"
 			(at 0 0 0)
 			(unlocked yes)
@@ -11708,6 +12224,20 @@
 			(layer "B.Fab")
 			(hide yes)
 			(uuid "f280d7e7-8998-4cf2-a218-c025f2c5f869")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
+		(property "Manufacturer" "YAGEO"
+			(at 0 0 270)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "593b879e-ca36-5f85-bd0d-38d3063a67bd")
 			(effects
 				(font
 					(size 1 1)
@@ -11973,6 +12503,20 @@
 			(layer "B.Fab")
 			(hide yes)
 			(uuid "aa01c852-073c-4f8d-b7d8-0bab55eff6e3")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
+		(property "Manufacturer" "Analog Devices Inc."
+			(at 0 0 180)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "d6b27e32-5780-513b-bbfe-7bd67554abed")
 			(effects
 				(font
 					(size 1 1)
@@ -12375,6 +12919,20 @@
 				(justify mirror)
 			)
 		)
+		(property "Manufacturer" "Murata Electronics"
+			(at 0 0 90)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "9aa46cbd-cf59-5a00-b2ce-022ea8eddd69")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
 		(property "Supplier" "DigiKey"
 			(at 0 0 90)
 			(unlocked yes)
@@ -12545,6 +13103,20 @@
 			(layer "B.Fab")
 			(hide yes)
 			(uuid "f97decff-8d7e-4562-b79a-b15c38f657b4")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
+		(property "Manufacturer" "Johanson Technology Inc."
+			(at 0 0 270)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "26b1232a-15b6-5e00-933b-66c21d24724f")
 			(effects
 				(font
 					(size 1 1)
@@ -12768,6 +13340,20 @@
 				(justify mirror)
 			)
 		)
+		(property "Manufacturer" "Murata Electronics"
+			(at 0 0 90)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "62bee60b-cf08-52ec-9757-e4b416910e6e")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
 		(property "Supplier" "DigiKey"
 			(at 0 0 90)
 			(unlocked yes)
@@ -12959,6 +13545,20 @@
 			(layer "B.Fab")
 			(hide yes)
 			(uuid "df6b0c5f-8d24-4976-9bac-a6b46f56af7f")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
+		(property "Manufacturer" "YAGEO"
+			(at 0 0 90)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "ad4291d4-3e86-50ee-b937-8a78669700c0")
 			(effects
 				(font
 					(size 1 1)
@@ -13219,6 +13819,20 @@
 				(justify mirror)
 			)
 		)
+		(property "Manufacturer" "YAGEO"
+			(at 0 0 180)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "3ea44a85-8db1-5846-9a4e-5a2396ebf8f2")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
 		(property "Supplier" "DigiKey"
 			(at 0 0 180)
 			(unlocked yes)
@@ -13471,6 +14085,20 @@
 				(justify mirror)
 			)
 		)
+		(property "Manufacturer" "Murata Electronics"
+			(at 0 0 90)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "808ac289-5360-5cc9-99e8-7f31feda8379")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
 		(property "Supplier" "DigiKey"
 			(at 0 0 90)
 			(unlocked yes)
@@ -13640,6 +14268,20 @@
 			(layer "B.Fab")
 			(hide yes)
 			(uuid "63d61c92-aa06-4272-90e2-d53fa491ceb8")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
+		(property "Manufacturer" "Murata Electronics"
+			(at 0 0 0)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "f1e48903-5fa4-5bc2-95c1-f464f8436e2d")
 			(effects
 				(font
 					(size 1 1)
@@ -13846,6 +14488,20 @@
 			(layer "B.Fab")
 			(hide yes)
 			(uuid "ca75775c-a92b-42ea-b5af-f22b5711a2ed")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
+		(property "Manufacturer" "SCHURTER Inc."
+			(at 0 0 180)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "ed15eed9-f7b0-58c6-b147-40f79773d004")
 			(effects
 				(font
 					(size 1 1)
@@ -14152,6 +14808,20 @@
 				(justify mirror)
 			)
 		)
+		(property "Manufacturer" "Murata Electronics"
+			(at 0 0 270)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "510889da-0a02-5545-bf00-1d9065140535")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
 		(property "Supplier" "DigiKey"
 			(at 0 0 270)
 			(unlocked yes)
@@ -14309,6 +14979,20 @@
 			(layer "B.Fab")
 			(hide yes)
 			(uuid "b23dfc51-fb03-4fba-83dd-4ba3bec83888")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
+		(property "Manufacturer" "SCHURTER Inc."
+			(at 0 0 0)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "cf552a96-3180-5f7e-a482-cccfe1ab318c")
 			(effects
 				(font
 					(size 1 1)
@@ -14646,6 +15330,20 @@
 				(justify mirror)
 			)
 		)
+		(property "Manufacturer" "Murata Electronics"
+			(at 0 0 180)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "717f8a62-7b88-59ab-ac8d-35fd2f1ad9f0")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
 		(property "Supplier" "DigiKey"
 			(at 0 0 180)
 			(unlocked yes)
@@ -14865,6 +15563,20 @@
 				(justify mirror)
 			)
 		)
+		(property "Manufacturer" "YAGEO"
+			(at 0 0 90)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "64c5e54d-b7b9-5733-9895-9dbeacce0df0")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
 		(property "Supplier" "DigiKey"
 			(at 0 0 90)
 			(unlocked yes)
@@ -15076,6 +15788,20 @@
 				(justify mirror)
 			)
 		)
+		(property "Manufacturer" "Murata Electronics"
+			(at 0 0 90)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "1e363a9d-3f72-5b27-83ca-7257794d79ca")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
 		(property "Supplier" "DigiKey"
 			(at 0 0 90)
 			(unlocked yes)
@@ -15247,6 +15973,20 @@
 			(layer "B.Fab")
 			(hide yes)
 			(uuid "cd84f909-08f3-4a25-9ed3-c62d61f8492a")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
+		(property "Manufacturer" "Vishay Dale"
+			(at 0 0 180)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "32cd1a06-9e06-5aec-9b54-d33ef5784c57")
 			(effects
 				(font
 					(size 1 1)
