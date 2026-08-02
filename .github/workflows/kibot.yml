@@ -56,6 +56,7 @@ on:
       - 'enclosure/solar-glow-drh-pogo-testplate-cad.py'
       # the mesh gate's ledger -- editing a baseline must re-prove it against the artifacts
       - 'scripts/check_mesh.py'
+      - 'scripts/interference_drc.py'
       - 'enclosure/**.stl'
       - '.github/workflows/kibot.yml'
 
@@ -187,6 +188,10 @@ jobs:
         run: |
           python3 -m pip install --quiet 'trimesh==5.0.0'
           python3 scripts/check_mesh.py
+          # the 3D interference DRC: ray-casts the brace STL written above against every
+          # B-side body polygon + ledgered height -- the assembled boolean truth that
+          # check [7] (one part at a time) cannot see. Fails BEFORE the commit-back.
+          python3 scripts/interference_drc.py
 
       # Reference figures for PCB/README.md's assembly steps (D2-D5 LED polarity, the SW2
       # master bridge) plus the thickness-at-hand-scale figure, drawn FROM the board file
