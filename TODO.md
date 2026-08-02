@@ -531,11 +531,15 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   the artwork. Purely a look decision — no electrical or fab consequence either way now that the
   plating request is defined by mask opening.
 
-- [ ] **[PCB/FAB — durability] Define the gold area on a user layer instead of in prose**
-  _(2026-07-27.)_ `User.1` is empty. Drawing the gold region there and plotting it as its own gerber
-  makes the area artwork rather than a paragraph, so it cannot drift the next time a pour outline
-  moves — which is exactly what just happened. Adds one file to the fab package, so it needs a
-  deliberate yes before the order goes out.
+- [x] **[PCB/FAB — durability] Define the gold area on a user layer instead of in prose**
+  _(2026-07-27; the deliberate yes given and DONE 2026-08-02.)_ `scripts/mask_art.py` now draws
+  the net rule's result on `User.1` (~394 mm², 72 pieces: every F.Mask graphic opening + the NFC
+  arcs + the GND pads with front openings, minus the excepted PV solder lands), and both kibot
+  configs plot it, so the `User_1` gerber ships in the 1-up and panel fab sets. Generated, gated
+  by check [6], and the generator refuses an area that overlaps a PV land. The predicted drift
+  was already real: the README enumeration said *four* mounting annuli; the board has eight
+  (MP1–4 were born after the sentence). Both the drawing and the prose now come from the same
+  inventory.
 
 - [x] **[MIDNIGHT — decided 2026-07-31] Hard gold, or one truly identical file?** **Resolved as
   (a) in net-rule form** (recorded in `solar-glow-drh-design-notes.md` and `PCB/README.md`): all

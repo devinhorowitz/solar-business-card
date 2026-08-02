@@ -41,6 +41,11 @@ outputs:
       - F.SilkS
       - B.SilkS
       - Edge.Cuts
+      # The hard-gold plating area (drawn on the board by scripts/mask_art.py; the
+      # panelizer carries every board drawing over, so the panel plots it too). The
+      # bus ring on the frame rail is deliberately NOT in it — plating hardware,
+      # not gold set — which this gerber now shows instead of only saying.
+      - User.1
 
   - name: drill
     comment: Panel Excellon (the 8 mouse bites land in the NPTH file)

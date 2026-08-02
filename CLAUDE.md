@@ -58,9 +58,11 @@ should be `(excluded)` and map to that list; a *new* unexcluded error is a real 
 python3 scripts/mask_art.py --check     # does the board match the current routing?
 python3 scripts/mask_art.py --apply     # regenerate after ANY front re-route
 ```
-Today it writes one thing, the NFC contactless mark. The left-field **cartouche is off**
-(`CARTOUCHE = False` in that file, since 2026-07-29) — generator intact, one constant brings
-it back; the reason it is off is in the comment above the switch.
+Today it writes two things: the NFC contactless mark (F.Mask) and, since 2026-08-02, the
+**selective hard-gold plating area on `User.1`** — the PCB/README net rule drawn as artwork, so
+it plots into both fab sets and cannot drift against the routing. The left-field **cartouche is
+off** (`CARTOUCHE = False` in that file, since 2026-07-29) — generator intact, one constant
+brings it back; the reason it is off is in the comment above the switch.
 
 **Component colours** (the one part of a render that is data, not decoration):
 ```sh
