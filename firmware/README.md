@@ -125,8 +125,10 @@ guard, dark dormancy and face-down deep sleep) — leaves room to spare).
 UPDI is a single wire on **pin 23**, broken out to the **TC2030 pad (TC1)** (a
 Tag-Connect cable latches hands-free) and the backup header **J1**.
 
-This guide uses the **[Adafruit UPDI Friend](https://www.digikey.com/en/products/detail/adafruit-industries-llc/5879/22596413)**
-(DigiKey 5879) — a USB-C serial-UPDI programmer with the loop-back resistor *and* a
+This guide uses the **[Adafruit UPDI Friend](https://www.adafruit.com/product/5879)**
+(Adafruit product **5879** — that is the manufacturer's number, *not* a distributor P/N;
+the orderable one lives in the generated hand-buy list, and as of 2026-08-02 it is Mouser
+`485-5879`, DigiKey having gone to zero stock) — a USB-C serial-UPDI programmer with the loop-back resistor *and* a
 switchable **3 V / 5 V** supply built in, so there's no resistor to wire and it can
 power the card itself. Its 3-pin JST-SH cable is colour-coded **white = UPDI**,
 **black = GND**, **red = PWR** (same three signals on the 0.1" header).
@@ -152,8 +154,12 @@ Other serial-UPDI adapters, or a PICkit 4/5 / MPLAB SNAP, also work
 (`PROG=serialupdi` or `PROG=pickit4_updi` / `snap_updi`); a bare USB-serial adapter
 would need a 4.7 kΩ resistor between TX and the joined RX/UPDI node — exactly what the
 UPDI Friend builds in. We leave `UPDIPINCFG` at default (UPDI stays active on pin 23),
-so the standard (non-HV) UPDI Friend is the right one — the High-Voltage variant is
-only needed if UPDI has been fused off.
+so the plain UPDI Friend is all this board *needs* — the High-Voltage variant
+([5893](https://www.adafruit.com/product/5893)) is only **required** if UPDI has been
+fused off. It is, however, a valid stand-in when the plain one is dry: it does standard
+serial UPDI too (the HV pulse is an added capability, not a replacement) and carries the
+same switchable 3 V/5 V supply at up to 500 mA, so at the 3 V setting it drives a flat
+card identically. It is the documented substitute in `BOM/check_stock.py`.
 
 Refs: [UPDI Friend guide](https://learn.adafruit.com/adafruit-updi-friend) ·
 [what UPDI is (Microchip)](https://onlinedocs.microchip.com/oxy/GUID-DDB0017E-84E3-4E77-AAE9-7AC4290E5E8B-en-US-4/index.html).

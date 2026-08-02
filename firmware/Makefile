@@ -27,7 +27,7 @@ DFP_INC   = $(DFP)/include
 DFP_SPEC  = $(DFP)/gcc/dev/$(MCU)
 
 # UPDI programmer + port (TC2030 pad TC1 or header J1 -> UPDI on pin 23).
-# Default flow = Adafruit UPDI Friend (DigiKey 5879): a serial-UPDI adapter with
+# Default flow = Adafruit UPDI Friend (Adafruit product 5879): a serial-UPDI adapter with
 # the loop-back resistor + a 3V/5V supply built in -> set its switch to 3V.
 # A bare USB-serial + 4.7k resistor, or a pickit4/snap, also work.
 PROG     ?= serialupdi

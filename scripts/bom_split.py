@@ -66,11 +66,25 @@ OFF_BOARD = [
 # Bought ONCE for the project, not once per board -- so a --boards multiplier must not
 # scale them. Tools and cables, not parts.
 OFF_BOARD_ONCE = [
-    ("PRG1",  1, "5879",        "DigiKey", "1528-5879-ND",
-     "Adafruit UPDI Friend. The source conflict this line used to carry is SETTLED "
-     "2026-08-02: DigiKey does stock it, as 1528-5879-ND (~$6.95). It is listed under "
-     "Adafruit's own product number 5879, which is why a cart upload of the bare MPN "
-     "finds nothing -- DigiKey resolves 1528-5879-ND, not 5879."),
+    # Routed DigiKey -> Mouser on 2026-08-02, and the reason is a distinction worth
+    # keeping: DigiKey LISTS the UPDI Friend (1528-5879-ND, lifecycle Active) but sits
+    # at ZERO stock, while Mouser has it at the same ~$6.95. The note this line carried
+    # until today answered the wrong question -- it established that DigiKey resolves a
+    # part number for the thing, and called that "DigiKey does stock it". Listing is not
+    # stock, and a cart line at a dry distributor buys nothing.
+    #
+    # BOM/README.md had ALREADY resolved this line at Mouser on its 2026-08-01 run:
+    # check_stock queries DigiKey first but keeps a live Mouser hit over a dry DigiKey
+    # one (the C26/C27 rule). So the buy list was contradicting the availability table
+    # printed beside it, and the table was the one that was right. Lifecycle is still
+    # Active at both, so this is a dry spell, not an end-of-life -- if DigiKey refills,
+    # moving it back is a one-line change here and nowhere else.
+    ("PRG1",  1, "5879",        "Mouser",  "485-5879",
+     "Adafruit UPDI Friend. 5879 is Adafruit's OWN product number, not a distributor "
+     "P/N -- a cart upload of the bare MPN finds nothing; Mouser resolves 485-5879 "
+     "(DigiKey would be 1528-5879-ND, dry as of 2026-08-02). Substitute if this one "
+     "goes dry too: the HV variant, which does standard UPDI as well -- see SUBS in "
+     "BOM/check_stock.py."),
     ("CBL1",  1, "TC2030-MCP",  None,      "",
      "Tag-Connect TC2030-MCP, the LEGGED cable. Deliberately NOT a cart line: DigiKey "
      "stocks only the legless TC2030-MCP-NL and the legged part is zero/restricted at "

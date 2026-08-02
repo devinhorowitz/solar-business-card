@@ -80,11 +80,34 @@ NO_API = {
     "precision alt Accu SFE-M2-3 (master row note)",
 }
 
-# The one line the master sources outside DigiKey. Query Mouser by its SKU
-# and match on MouserPartNumber (Mouser lists the mfr P/N as AEM10300-QFN,
-# not the e-peas ordering code the master carries).
+# Lines queried at Mouser BY SKU, matching on MouserPartNumber. Two different
+# reasons land a ref here, and both make a bare-MPN query unreliable:
+#
+#   U8   -- Mouser lists the mfr P/N as AEM10300-QFN, not the e-peas ordering
+#           code the design carries, so an MPN query finds nothing.
+#   PRG1 -- the opposite failure: "5879" is Adafruit's own product number, short
+#           and all-numeric, and it matches OTHER manufacturers' parts. Pinning
+#           the SKU is what makes the query deterministic.
+#
+# PRG1 is here because the guard that should have caught it cannot fire. pick_match()
+# treats the manufacturer as a HARD filter for collision-prone MPNs, and mfr_ok()'s
+# docstring names this exact part -- "a bare '5879' is both the Adafruit programmer
+# and a Pomona test clip". But load_lines() has had no manufacturer to pass since the
+# xlsx master (which carried the Mfr column) was culled on 2026-08-02: every line now
+# goes out with mfr="", and mfr_ok() returns True on an empty manufacturer. The filter
+# is intact and starved.
+#
+# It is not hypothetical. The 2026-08-02 run resolved PRG1 to Mouser 243-5879 -- a
+# Pomona clip, $88.96, 0 in stock -- and the table published it as the UPDI Friend,
+# verdict downgraded to substitute-only, while the real part (485-5879) had 54 in
+# stock at $6.95. Every OTHER collision-prone MPN on this board (FER1's 364006, the
+# Schurter supercaps) happens to resolve correctly today, which is luck, not a check.
+# The real repair is a Manufacturer field in the schematic, feeding through
+# bom_split.build(); until that exists, a SKU pin here is the deterministic answer,
+# and any line whose MPN is short or all-numeric belongs in this table.
 MOUSER_FIRST = {
     "U8": "120-AEM10300-QFN",
+    "PRG1": "485-5879",
 }
 
 # Documented substitutes, transcribed from the master's own sourcing notes --
@@ -120,6 +143,19 @@ SUBS = {
          "0.14 mm sheet -- stack 3x for equivalent ferrite thickness (FER1 row note)"),
         ("MHLL6060-300", "Laird", "digikey", None,
          "Laird 0.09 mm -- weakest shielding, last resort (FER1 row note)"),
+    ],
+    # Not from the retired master -- this one cites its own source, which is the
+    # convention for anything added after the xlsx was culled. Added 2026-08-02, the
+    # day the primary went dry at DigiKey, so the NEXT dry-out reports SUB instead of
+    # sending someone back to the distributor sites to rediscover the alternate.
+    "PRG1": [
+        ("5893", "Adafruit Industries LLC", "digikey", None,
+         "HV UPDI Friend -- does STANDARD serial UPDI as well (the high-voltage pulse "
+         "is an added capability, not a replacement), with the same switchable 3 V/5 V "
+         "supply at up to 500 mA and the same built-in loop-back resistor, so it drives "
+         "a flat card identically at the 3 V setting. ~$3 dearer and its HV feature is "
+         "never needed here (UPDIPINCFG stays at default). "
+         "Source: adafruit.com/product/5893, checked 2026-08-02"),
     ],
 }
 
@@ -553,7 +589,9 @@ def main():
     a("")
     a("## Documented substitutes")
     a("")
-    a("Transcribed from the master's own sourcing notes — availability shown live. "
+    a("Hand-kept sourcing knowledge — availability shown live. Older entries were "
+      "transcribed from the retired xlsx master; anything added since cites its own "
+      "source in the note. "
       "These are the master's named fallbacks (C9's are its enclosed-tuning ladder, "
       "U6's an explicit last resort), not re-engineering suggestions.")
     a("")
