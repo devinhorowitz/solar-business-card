@@ -49,7 +49,7 @@ BASELINE = {
     # committed STL reads 2069.74 until the merge-run rebuild, so a local run is red
     # for exactly that one transition.
     "solar-glow-drh-diffuser-brace.stl": dict(
-        volume_mm3=2030.54, bbox=(-22.85, -42.4, 0.0, 24.35, 42.4, 1.8),
+        volume_mm3=2032.99, bbox=(-22.85, -42.4, 0.0, 24.35, 42.4, 1.8),
         max_boundary_edges=0, max_open_len_mm=0.0, max_degenerate=0),
 }
 VOL_TOL = 0.005
