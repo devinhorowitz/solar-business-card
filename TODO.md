@@ -53,6 +53,31 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
     Samsung / TDK passives, useless for the actual chokepoints (SCHURTER, ANYSOLAR, e-peas, RAMXEED,
     Würth FSFS, likely ADXL367)._
 
+- [ ] **[BENCH/PCB] Two designed-but-never-laid-out test boards — the instrument and the go/no-go**
+  _(Piped into TODO 2026-08-02; both docs are complete design handoffs that were invisible from
+  this list.)_ (a) `docs/harvest-bench-fixture-handoff.md` — the **panel characterization
+  fixture** (single-sided, no MCU: 4-wire panel I-V under real light, needs an SMU/DMM); the
+  authoritative tables are in the doc, it just needs KiCad layout. (b)
+  `docs/harvest-budget-test-board.md` — the **harvest-surplus blinker** (carries two product
+  panels + a jumper-selected card-draw emulation load; flash rate ∝ net banked power — the
+  glanceable desk answer to "can this light run the card?"). Sequence: fixture first
+  (characterize V_mp), then set the blinker's window from it (its §5). Both attack the #1 gate
+  from the instrument side and could ride the same fab order as the card panel.
+
+- [ ] **[BENCH] Assemble and bring up the pogo test rig when the panel arrives**
+  _(Piped 2026-08-02 — the rig was built in-repo but its bring-up had no entry.)_ Everything is
+  generated and committed: the in-frame pogo test plate (`enclosure/solar-glow-drh-pogo-testplate`,
+  probes TP2–TP7 + TC1 with the card still in the panel), the Pico monitor firmware and channel
+  map, and the host dashboard (`bench/`). Physical work remaining: print/order the plate, fit
+  pogo pins, flash the Pico, and smoke-test channels against `bench/README.md` before the first
+  card powers up on it.
+
+- [ ] **[V-NEXT, PARKED] E-ink display variant — concept banked, not adopted**
+  _(Piped 2026-08-02; `docs/eink-display-variant-notes.md` is the full record: panel survey,
+  geometry both directions to scale, 1-bit artwork + QR mockups.)_ A different output modality
+  on the same harvest/supercap/NFC/accel platform. Deliberately NOT a v4 item; revisit only
+  after the v4 first article proves the platform. The doc is the decision ledger if it wakes.
+
 ## Firmware — `firmware/`, `firmware/README.md`
 
 - [ ] **[FIRMWARE] The screened feature ledger's live remainder — imported 2026-08-02**
