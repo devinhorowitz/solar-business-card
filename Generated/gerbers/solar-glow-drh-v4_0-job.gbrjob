@@ -5,7 +5,7 @@
       "Application": "Pcbnew",
       "Version": "10.0.5-unknown-202607221313~667fa36054~ubuntu25.10.1"
     },
-    "CreationDate": "2026-08-02T12:45:46+00:00"
+    "CreationDate": "2026-08-02T16:53:52+00:00"
   },
   "GeneralSpecs": {
     "ProjectId": {
@@ -76,6 +76,11 @@
     {
       "Path": "solar-glow-drh-v4_0-Edge_Cuts.gbr",
       "FileFunction": "Profile",
+      "FilePolarity": "Positive"
+    },
+    {
+      "Path": "solar-glow-drh-v4_0-User_1.gbr",
+      "FileFunction": "Other,User",
       "FilePolarity": "Positive"
     }
   ],
