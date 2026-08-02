@@ -63,6 +63,18 @@ AIR = 0.22                 # air over a covered part. 0.12 until 2026-08-02 -- t
                            # reports the worst-case column. If first-article glow suffers from
                            # the diffuser sitting 0.1 farther off D2-D5, the rollback lever is a
                            # per-part AIR exception for the LEDs, not a global revert.
+# Per-part AIR exceptions (2026-08-02). D2-D5 will be OPTICALLY GEL-COUPLED to the
+# diffuser: an index-matched fill eliminates the air interface, so gap THICKNESS stops
+# mattering optically and the constraint flips to mechanical -- the thinnest pocket that
+# cannot hard-contact the LED dome at the worst-case corner. 0.16 puts worst-case at
+# exactly 0.00 (the RSS stack), and the gel cushions the kiss corner. If bench gel work
+# wants thinner still, 0.12 is the floor already proven printable -- accepting a
+# gel-cushioned -0.04 corner. scripts/interference_drc.py reads this same dict.
+AIR_EXCEPTIONS = {"D2": 0.16, "D3": 0.16, "D4": 0.16, "D5": 0.16}
+
+
+def air_for(ref):
+    return AIR_EXCEPTIONS.get(ref, AIR)
 CLR = 0.25                 # in-plane clearance around a part
 SLA_WEB = 0.40             # thinnest resin that may remain OVER a pocket
 SLA_WALL = 0.60            # thinnest in-plane feature we will print

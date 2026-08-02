@@ -72,7 +72,7 @@ BASE = "solar-glow-drh-diffuser-brace"
 # brace put 593 mm3 of solid resin inside three 1.70 mm cans and could not be installed.
 # The footprint is computed from the board now; see enclosure/fit_rules.py.
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
-from fit_rules import GAP, CLR, AIR, export_step_stable                                          # noqa: E402
+from fit_rules import GAP, CLR, AIR, air_for, export_step_stable                                          # noqa: E402
 GLOW  = (14.95, 40.8, 35.85, 47.0)
 FER   = (36.9, 31.5, 48.9, 57.5)   # 12 WIDE (x, CRITICAL -- edge-limited) x 26 LONG (y, nominal; length is
                                    # forgiving -- open-ended channel, may run long/short and extend slightly past the brace).
@@ -167,7 +167,7 @@ for ref,x0,x1,y0,y1 in comps:
     if h is None: continue
     if not in_fp(x0,x1,y0,y1): continue                 # only parts under the H (band + rails); SCs/TC1 in the open middle are skipped
     px0,px1,py0,py1=x0-CLR,x1+CLR,y0-CLR,y1+CLR         # full pad box + CLR; the cut is a no-op where there is no brace
-    depth=h+AIR; through=(GAP-depth) < SLA_WEB       # THROUGH whenever the blind web would be
+    depth=h+air_for(ref); through=(GAP-depth) < SLA_WEB       # THROUGH whenever the blind web would be
                                                      # unprintable. This was hardcoded `or ref=="U6"`,
                                                      # so U9 -- same 1.45 SOT-23-6, same 1.57 pocket --
                                                      # silently kept a 0.23 mm ceiling the code itself
@@ -259,7 +259,7 @@ for ref,x0,x1,y0,y1 in comps:
     h=part_height(ref)
     if h is None: continue
     if not in_fp(x0,x1,y0,y1): continue
-    depth=h+AIR; thru=depth>=GAP-0.05
+    depth=h+air_for(ref); thru=depth>=GAP-0.05
     col="#e0483a" if thru else ("#e08a3a" if depth>1.0 else "#43a047")
     ax.add_patch(Rectangle((x0-CLR,y0-CLR),(x1-x0)+2*CLR,(y1-y0)+2*CLR,fc=col,ec="#222",lw=0.3,alpha=0.9))
     if (x1-x0)>1.8 and (y1-y0)>1.3: ax.text((x0+x1)/2,(y0+y1)/2,ref,color="#111",ha="center",va="center",fontsize=4.6)
