@@ -23,8 +23,8 @@ The card needs SC1/SC3 = SS17 1.8 F (3-153-440) and SC2/SC4 = WS17 1 F
 
 WHERE THE TRUTH COMES FROM
 
-Board parts are read from the SCHEMATIC (MPN / Supplier / Supplier P/N per
-symbol) and classified by the BOARD's own flags -- the same `exclude_from_bom`
+Board parts are read from the SCHEMATIC (MPN / Manufacturer / Supplier /
+Supplier P/N per symbol) and classified by the BOARD's own flags -- the same `exclude_from_bom`
 and `dnp` attributes consistency check [15] gates. So a part moves between the
 two documents by changing the design, never by editing a list:
 
@@ -55,23 +55,42 @@ STEM = "solar-glow-drh-v4_0"
 # bought at all. `supplier` routes it to a cart; None means "not a distributor line".
 # Quantities are PER BOARD unless the note says otherwise.
 OFF_BOARD = [
-    # ref,   qty, mpn,                     supplier,   dist_pn,        note
-    ("FER1",  1, "364006",                 "DigiKey",  "732-5049-ND",
+    # ref,   qty, mpn,                     mfr,                 supplier,   dist_pn,   note
+    # The mfr column matters for the same reason it does on a schematic symbol: it is
+    # check_stock's only guard against a short/all-numeric MPN matching another
+    # vendor's part. "364006" is exactly that shape. Items with no manufacturer are
+    # generic by nature (a DIN screw, sheet film) and are not distributor lines, so
+    # nothing queries them.
+    ("FER1",  1, "364006",                 "Würth Elektronik",  "DigiKey",  "732-5049-ND",
      "Wurth WE-FSFS ferrite sheet behind the coil -- load-bearing for the NFC tune"),
-    ("HW1",   4, "DIN 84 M2x3 brass",      None,       "",
+    ("HW1",   4, "DIN 84 M2x3 brass",      "",                  None,       "",
      "shell screws; any DIN 84 M2x3 -- source locally, not a distributor line"),
-    ("INS1",  1, "polyimide film 0.05 mm", None,       "",
+    ("INS1",  1, "polyimide film 0.05 mm", "",                  None,       "",
      "insulator; cut from stock film -- not a distributor line"),
 ]
 # Bought ONCE for the project, not once per board -- so a --boards multiplier must not
 # scale them. Tools and cables, not parts.
 OFF_BOARD_ONCE = [
-    ("PRG1",  1, "5879",        "DigiKey", "1528-5879-ND",
-     "Adafruit UPDI Friend. The source conflict this line used to carry is SETTLED "
-     "2026-08-02: DigiKey does stock it, as 1528-5879-ND (~$6.95). It is listed under "
-     "Adafruit's own product number 5879, which is why a cart upload of the bare MPN "
-     "finds nothing -- DigiKey resolves 1528-5879-ND, not 5879."),
-    ("CBL1",  1, "TC2030-MCP",  None,      "",
+    # Routed DigiKey -> Mouser on 2026-08-02, and the reason is a distinction worth
+    # keeping: DigiKey LISTS the UPDI Friend (1528-5879-ND, lifecycle Active) but sits
+    # at ZERO stock, while Mouser has it at the same ~$6.95. The note this line carried
+    # until today answered the wrong question -- it established that DigiKey resolves a
+    # part number for the thing, and called that "DigiKey does stock it". Listing is not
+    # stock, and a cart line at a dry distributor buys nothing.
+    #
+    # BOM/README.md had ALREADY resolved this line at Mouser on its 2026-08-01 run:
+    # check_stock queries DigiKey first but keeps a live Mouser hit over a dry DigiKey
+    # one (the C26/C27 rule). So the buy list was contradicting the availability table
+    # printed beside it, and the table was the one that was right. Lifecycle is still
+    # Active at both, so this is a dry spell, not an end-of-life -- if DigiKey refills,
+    # moving it back is a one-line change here and nowhere else.
+    ("PRG1",  1, "5879",        "Adafruit",     "Mouser",  "485-5879",
+     "Adafruit UPDI Friend. 5879 is Adafruit's OWN product number, not a distributor "
+     "P/N -- a cart upload of the bare MPN finds nothing; Mouser resolves 485-5879 "
+     "(DigiKey would be 1528-5879-ND, dry as of 2026-08-02). Substitute if this one "
+     "goes dry too: the HV variant, which does standard UPDI as well -- see SUBS in "
+     "BOM/check_stock.py."),
+    ("CBL1",  1, "TC2030-MCP",  "Tag-Connect",  None,      "",
      "Tag-Connect TC2030-MCP, the LEGGED cable. Deliberately NOT a cart line: DigiKey "
      "stocks only the legless TC2030-MCP-NL and the legged part is zero/restricted at "
      "Mouser, so order it from Tag-Connect direct. Emitting it into a cart CSV would "
@@ -110,7 +129,7 @@ _MALFORMED_PN = re.compile(r"[\s()]")
 
 
 def _sch_parts():
-    """{ref: (mpn, supplier, dist_pn, value)} for every placed schematic symbol."""
+    """{ref: (mpn, mfr, supplier, dist_pn, value)} for every placed schematic symbol."""
     text = open(SCH, encoding="utf-8", errors="replace").read()
     out = {}
     for blk in re.split(r"\n\t\(symbol\n", text):
@@ -127,7 +146,8 @@ def _sch_parts():
             continue                      # power flags
         if ref in out and out[ref][0]:
             continue                      # keep the first instance that carries an MPN
-        out[ref] = (g("MPN"), g("Supplier"), g("Supplier P/N"), g("Value"))
+        out[ref] = (g("MPN"), g("Manufacturer"), g("Supplier"), g("Supplier P/N"),
+                    g("Value"))
     return out
 
 
@@ -140,18 +160,19 @@ def _board_flags():
 
 
 def _group(rows):
-    """Collapse [(ref, mpn, supplier, dist_pn, value, fp)] into per-MPN lines."""
+    """Collapse [(ref, mpn, mfr, supplier, dist_pn, value, fp)] into per-MPN lines."""
     by = {}
-    for ref, mpn, sup, dpn, val, fp in rows:
+    for ref, mpn, mfr, sup, dpn, val, fp in rows:
         k = (mpn, sup, dpn)
-        e = by.setdefault(k, {"refs": [], "value": val, "fp": fp})
+        e = by.setdefault(k, {"refs": [], "value": val, "fp": fp, "mfr": mfr})
         e["refs"].append(ref)
     out = []
     for (mpn, sup, dpn), e in by.items():
         refs = sorted(e["refs"], key=lambda r: (re.sub(r"\d", "", r),
                                                 int(re.sub(r"\D", "", r) or 0)))
-        out.append({"mpn": mpn, "supplier": sup, "dist_pn": dpn, "refs": refs,
-                    "qty": len(refs), "value": e["value"], "footprint": e["fp"]})
+        out.append({"mpn": mpn, "mfr": e["mfr"], "supplier": sup, "dist_pn": dpn,
+                    "refs": refs, "qty": len(refs), "value": e["value"],
+                    "footprint": e["fp"]})
     return sorted(out, key=lambda d: (d["supplier"] or "~", d["mpn"]))
 
 
@@ -160,17 +181,28 @@ def build():
     sch, flags = _sch_parts(), _board_flags()
     asm_rows, hand_rows, problems = [], [], []
     for ref, (exbom, dnp, fp) in sorted(flags.items()):
-        mpn, sup, dpn, val = sch.get(ref, ("", "", "", ""))
+        mpn, mfr, sup, dpn, val = sch.get(ref, ("", "", "", "", ""))
         # A "no part" placeholder MPN is how this schematic marks bridges, pads,
         # mounting holes and unpopulated headers. They order nothing, by design.
         placeholder = mpn.startswith("(") or not mpn
         if dnp or placeholder:
             continue
-        row = (ref, mpn, sup, dpn, val, fp)
+        row = (ref, mpn, mfr, sup, dpn, val, fp)
         if exbom:
             hand_rows.append(row)
         else:
             asm_rows.append(row)
+        # A missing Manufacturer is a GATE, not a cosmetic gap. pick_match() in
+        # BOM/check_stock.py treats the manufacturer as a hard filter for
+        # collision-prone MPNs (short or all-numeric), and an empty one makes
+        # mfr_ok() return True unconditionally -- the filter is not bypassed, it is
+        # starved. That is exactly how the 2026-08-02 run published a Pomona test
+        # clip as the UPDI Friend. Failing here means the availability table can
+        # never again silently lose its only defence against a wrong match.
+        if not mfr:
+            problems.append(f"{ref} ({mpn}) has an MPN but no Manufacturer -- "
+                            f"check_stock's collision filter needs it to tell this "
+                            f"part from another vendor's identically-numbered one")
         if not sup:
             problems.append(f"{ref} ({mpn}) has an MPN but no Supplier -- cannot be routed to a cart")
         elif not dpn:
@@ -198,26 +230,30 @@ def write_all(boards, outdir):
     made = []
 
     # 1. PCBWay assembly BOM
+    # Manufacturer sits beside the MPN because that is the pair an assembler actually
+    # buys on: a part number alone is ambiguous exactly where it is short or numeric,
+    # which is the same hazard that made the field a hard filter in check_stock.
     made.append(_w(os.path.join(outdir, f"{STEM}-pcbway-assembly.csv"),
-                   ["Designator", "Qty per board", "Value", "Footprint", "MPN", "Supplier",
-                    "Supplier P/N"],
+                   ["Designator", "Qty per board", "Value", "Footprint", "MPN",
+                    "Manufacturer", "Supplier", "Supplier P/N"],
                    [[" ".join(r["refs"]), r["qty"], r["value"], r["footprint"], r["mpn"],
-                     r["supplier"], r["dist_pn"]] for r in asm]))
+                     r["mfr"], r["supplier"], r["dist_pn"]] for r in asm]))
 
     # 2/3. Hand-buy carts, one file per distributor, in that distributor's upload shape.
     #      DigiKey wants Quantity,Part Number,Customer Reference; Mouser wants its own
     #      part number first. Anything with no distributor P/N falls back to the MPN,
     #      which both accept.
     carts = {}
-    for r in hand + [{"mpn": m, "supplier": s, "dist_pn": d, "refs": [ref], "qty": q,
-                      "value": n, "footprint": ""} for ref, q, m, s, d, n in off]:
+    for r in hand + [{"mpn": m, "mfr": mf, "supplier": s, "dist_pn": d, "refs": [ref],
+                      "qty": q, "value": n, "footprint": ""}
+                     for ref, q, m, mf, s, d, n in off]:
         if r["supplier"]:
             carts.setdefault(r["supplier"], []).append((r, boards))
-    for ref, q, m, s, d, n in once:          # tools: quantity does NOT scale with boards
+    for ref, q, m, mf, s, d, n in once:      # tools: quantity does NOT scale with boards
         if s:                                # None == not a cart line; the page carries it
-            carts.setdefault(s, []).append(({"mpn": m, "supplier": s, "dist_pn": d,
-                                             "refs": [ref], "qty": q, "value": n,
-                                             "footprint": ""}, 1))
+            carts.setdefault(s, []).append(({"mpn": m, "mfr": mf, "supplier": s,
+                                             "dist_pn": d, "refs": [ref], "qty": q,
+                                             "value": n, "footprint": ""}, 1))
     for sup, items in sorted(carts.items()):
         rows = []
         for r, mult in items:
@@ -244,18 +280,19 @@ def write_all(boards, outdir):
           "GENERATED by `scripts/bom_split.py` — do not edit. Everything here is bought by",
           "**you**, not by PCBWay: the deliberately hand-soldered parts plus the items that",
           "never reach a pick-and-place.", "",
-          "| Ref(s) | Qty | MPN | Supplier | Distributor P/N | What |",
-          "|---|---|---|---|---|---|"]
+          "| Ref(s) | Qty | MPN | Manufacturer | Supplier | Distributor P/N | What |",
+          "|---|---|---|---|---|---|---|"]
     for r in hand:
         md.append(f"| {', '.join(r['refs'])} | {r['qty'] * boards} | `{r['mpn']}` | "
-                  f"{r['supplier']} | {r['dist_pn']} | {r['value']} |")
-    for ref, q, m, s, d, n in off:
-        md.append(f"| {ref} | {q * boards} | `{m}` | {s or '—'} | {d or '—'} | {n} |")
+                  f"{r['mfr'] or '—'} | {r['supplier']} | {r['dist_pn']} | {r['value']} |")
+    for ref, q, m, mf, s, d, n in off:
+        md.append(f"| {ref} | {q * boards} | `{m}` | {mf or '—'} | {s or '—'} | "
+                  f"{d or '—'} | {n} |")
     md += ["", f"**Bought once for the project, not per board:**", "",
-           "| Ref | Qty | MPN | Supplier | Distributor P/N | What |",
-           "|---|---|---|---|---|---|"]
-    for ref, q, m, s, d, n in once:
-        md.append(f"| {ref} | {q} | `{m}` | {s or '—'} | {d or '—'} | {n} |")
+           "| Ref | Qty | MPN | Manufacturer | Supplier | Distributor P/N | What |",
+           "|---|---|---|---|---|---|---|"]
+    for ref, q, m, mf, s, d, n in once:
+        md.append(f"| {ref} | {q} | `{m}` | {mf or '—'} | {s or '—'} | {d or '—'} | {n} |")
     md += ["", "**Ordered, but not from a distributor:**", ""]
     for ref, why in sorted(NOT_DISTRIBUTOR.items()):
         md.append(f"- `{ref}` — {why}")

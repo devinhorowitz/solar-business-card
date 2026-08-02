@@ -15,6 +15,9 @@ Sources of truth:
   - line items and quantities ................... scripts/bom_split.py, i.e. the
     schematic + the board's exclude_from_bom / dnp flags. A part enters or leaves
     this table by changing the DESIGN, never by editing a sheet.
+  - manufacturers ............................... the schematic's own Manufacturer
+    property, via the same split. Not decoration: it is the hard filter that keeps a
+    short or all-numeric MPN from matching another vendor's part (see MOUSER_FIRST).
   - substitutes ................................. SUBS below, the one piece of
     hand-kept sourcing knowledge left (the xlsx that used to carry it was retired
     2026-08-02); each entry cites where its alternate came from
@@ -80,9 +83,32 @@ NO_API = {
     "precision alt Accu SFE-M2-3 (master row note)",
 }
 
-# The one line the master sources outside DigiKey. Query Mouser by its SKU
-# and match on MouserPartNumber (Mouser lists the mfr P/N as AEM10300-QFN,
-# not the e-peas ordering code the master carries).
+# The one line whose MPN no distributor query can resolve: Mouser lists the mfr P/N as
+# AEM10300-QFN, not the e-peas ordering code the design carries, so the SKU is pinned
+# and matched on MouserPartNumber.
+#
+# NOTHING ELSE IS PINNED, and that is deliberate -- the collision problem this table
+# used to absorb is now solved upstream. pick_match() treats the manufacturer as a HARD
+# filter for collision-prone MPNs (short or all-numeric), and mfr_ok()'s docstring names
+# the case exactly: "a bare '5879' is both the Adafruit programmer and a Pomona test
+# clip". That filter was inert for as long as the design had no manufacturer to give it.
+# When the xlsx master carrying the Mfr column was culled on 2026-08-02, load_lines()
+# started sending mfr="" for every line, and mfr_ok() returns True on an empty
+# manufacturer -- the filter was not bypassed, it was starved.
+#
+# It bit immediately: the 2026-08-02 run resolved PRG1 to Mouser 243-5879 -- a Pomona
+# clip, $88.96, 0 in stock -- and published it as the UPDI Friend, downgrading the row
+# to substitute-only while the real part (485-5879) had 54 in stock at $6.95.
+#
+# The repair is upstream, where it belongs: every placed symbol now carries a
+# Manufacturer property in the schematic (and mirrored onto its footprint, so DRC's
+# schematic-parity check holds the two together), bom_split.build() FAILS on a part that
+# has an MPN but no manufacturer, and load_lines() passes it through. Measured on the
+# same query: starved -> 243-5879 @ $88.96/0 stock; fed "Adafruit" -> 485-5879 @
+# $6.95/54 stock. A SKU pin for PRG1 would work too, but it would be redundant cover
+# that hides a regression -- if the field were ever lost, the pinned line would keep
+# looking correct while every other collision-prone MPN (FER1's 364006, the Schurter
+# supercaps) quietly went wrong.
 MOUSER_FIRST = {
     "U8": "120-AEM10300-QFN",
 }
@@ -120,6 +146,33 @@ SUBS = {
          "0.14 mm sheet -- stack 3x for equivalent ferrite thickness (FER1 row note)"),
         ("MHLL6060-300", "Laird", "digikey", None,
          "Laird 0.09 mm -- weakest shielding, last resort (FER1 row note)"),
+    ],
+    # Not from the retired master -- this one cites its own source, which is the
+    # convention for anything added after the xlsx was culled. Added 2026-08-02, the
+    # day the primary went dry at DigiKey, so the NEXT dry-out reports SUB instead of
+    # sending someone back to the distributor sites to rediscover the alternate.
+    #
+    # THE HV UPDI FRIEND (Adafruit 5893) IS NOT LISTED HERE, DELIBERATELY. It was, for
+    # part of 2026-08-02, on the reasoning that it does standard serial UPDI too and
+    # carries the same 3 V/500 mA supply -- both true. What that missed is where its
+    # 12 V goes. Adafruit triggers the pulse from RTS ("sends a pulse to the UPDI line
+    # when the RTS pin is toggled low"), i.e. down the UPDI wire, which is the right
+    # mechanism for tinyAVR/megaAVR parts where UPDI and RESET share a pin. The EA does
+    # not share them: UPDI is its own pin 23, and DS40002443A 33.3.2.1.2 puts HV
+    # activation on the RESET pin instead. So the pulse lands on a general I/O pin whose
+    # Absolute Maximum (Table 35-1) is -0.3 to +6.0 V -- 12 V is 2x over, and only the
+    # RESET pin gets the raised 9 V limit. RTS is not a deliberate action either; serial
+    # drivers routinely assert it on port open. The HV feature is also useless here:
+    # UPDIPINCFG stays at default so UPDI is never fused off, and PF6/RESET is not
+    # broken out on this board at all. $3 cheaper shipping is not worth 12 V into a 6 V
+    # pin. Sources: adafruit.com/product/5893 and DS40002443A 33.3.2.1.2 + Table 35-1,
+    # both checked 2026-08-02.
+    "PRG1": [
+        ("PG164100", "Microchip Technology", "digikey", None,
+         "MPLAB Snap -- the Makefile already speaks it (PROG=snap_updi), and it puts no "
+         "high voltage on the UPDI line. Confirm whether yours can power the target: a "
+         "flat card has no supply of its own, and if the programmer cannot provide one, "
+         "use the charge-in-light path in firmware/README.md step 3"),
     ],
 }
 
@@ -342,11 +395,12 @@ def load_lines():
     out = []
     for kind, rows in (("assembly", asm), ("hand-solder", hand)):
         for r in rows:
-            out.append({"refs": ", ".join(r["refs"]), "qty": r["qty"], "mfr": "",
+            out.append({"refs": ", ".join(r["refs"]), "qty": r["qty"], "mfr": r["mfr"],
                         "mpn": r["mpn"], "kind": kind})
-    for ref, qty, mpn, sup, _dpn, _note in list(off) + list(once):
+    for ref, qty, mpn, mfr, sup, _dpn, _note in list(off) + list(once):
         if sup:
-            out.append({"refs": ref, "qty": qty, "mfr": "", "mpn": mpn, "kind": "off-board"})
+            out.append({"refs": ref, "qty": qty, "mfr": mfr, "mpn": mpn,
+                        "kind": "off-board"})
     return out
 
 
@@ -553,7 +607,9 @@ def main():
     a("")
     a("## Documented substitutes")
     a("")
-    a("Transcribed from the master's own sourcing notes — availability shown live. "
+    a("Hand-kept sourcing knowledge — availability shown live. Older entries were "
+      "transcribed from the retired xlsx master; anything added since cites its own "
+      "source in the note. "
       "These are the master's named fallbacks (C9's are its enclosed-tuning ladder, "
       "U6's an explicit last resort), not re-engineering suggestions.")
     a("")

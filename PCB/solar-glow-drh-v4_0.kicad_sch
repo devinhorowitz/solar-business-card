@@ -17461,6 +17461,17 @@
 				)
 			)
 		)
+		(property "Manufacturer" "Murata Electronics"
+			(at 459.74 372.11 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
 			(hide yes)
@@ -17660,6 +17671,17 @@
 				)
 			)
 		)
+		(property "Manufacturer" "Texas Instruments"
+			(at 459.74 372.11 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
 			(hide yes)
@@ -17791,6 +17813,17 @@
 				)
 			)
 		)
+		(property "Manufacturer" "Murata Electronics"
+			(at 459.74 372.11 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
 			(hide yes)
@@ -17891,6 +17924,17 @@
 		)
 		(property "MPN" "C2012X5R1C226M125AC"
 			(at 581.66 372.11 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Manufacturer" "TDK"
+			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -18010,6 +18054,17 @@
 		)
 		(property "MPN" "AC0402FR-074K7L"
 			(at 350.52 129.54 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Manufacturer" "YAGEO"
+			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -18384,6 +18439,17 @@
 				)
 			)
 		)
+		(property "Manufacturer" "Murata Electronics"
+			(at 459.74 372.11 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
 			(hide yes)
@@ -18503,6 +18569,17 @@
 				)
 			)
 		)
+		(property "Manufacturer" "onsemi"
+			(at 934.72 372.11 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(property "Supplier" "DigiKey"
 			(at 934.72 372.11 0)
 			(hide yes)
@@ -18614,6 +18691,17 @@
 				)
 			)
 		)
+		(property "Manufacturer" "Samsung Electro-Mechanics"
+			(at 459.74 372.11 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(property "Supplier" "Mouser"
 			(at 459.74 372.11 0)
 			(hide yes)
@@ -18714,6 +18802,17 @@
 		)
 		(property "MPN" "LA P47F-V2BB-24-3B5A-30-R18-Z"
 			(at 279.4 220.98 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Manufacturer" "ams-OSRAM USA INC."
+			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -18834,6 +18933,17 @@
 				)
 			)
 		)
+		(property "Manufacturer" "YAGEO"
+			(at 459.74 372.11 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
 			(hide yes)
@@ -18942,6 +19052,17 @@
 				)
 			)
 		)
+		(property "Manufacturer" "Murata Electronics"
+			(at 459.74 372.11 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
 			(hide yes)
@@ -19042,6 +19163,17 @@
 		)
 		(property "MPN" "LA P47F-V2BB-24-3B5A-30-R18-Z"
 			(at 279.4 99.06 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Manufacturer" "ams-OSRAM USA INC."
+			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -19231,6 +19363,17 @@
 				)
 			)
 		)
+		(property "Manufacturer" "Murata Electronics"
+			(at 459.74 372.11 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
 			(hide yes)
@@ -19331,6 +19474,17 @@
 		)
 		(property "MPN" "MCT0603MD2004BP500"
 			(at 764.54 372.11 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Manufacturer" "Vishay Dale"
+			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -19616,6 +19770,17 @@
 				)
 			)
 		)
+		(property "Manufacturer" "YAGEO"
+			(at 459.74 372.11 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
 			(hide yes)
@@ -19807,6 +19972,17 @@
 				)
 			)
 		)
+		(property "Manufacturer" "Murata Electronics"
+			(at 459.74 372.11 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
 			(hide yes)
@@ -19988,6 +20164,17 @@
 				)
 			)
 		)
+		(property "Manufacturer" "YAGEO"
+			(at 459.74 372.11 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
 			(hide yes)
@@ -20088,6 +20275,17 @@
 		)
 		(property "MPN" "AC0402FR-07150RL"
 			(at 279.4 241.3 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Manufacturer" "YAGEO"
+			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -20204,6 +20402,17 @@
 				)
 			)
 		)
+		(property "Manufacturer" "Murata Electronics"
+			(at 459.74 372.11 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
 			(hide yes)
@@ -20304,6 +20513,17 @@
 		)
 		(property "MPN" "AC0402FR-074K7L"
 			(at 350.52 149.86 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Manufacturer" "YAGEO"
+			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -20420,6 +20640,17 @@
 				)
 			)
 		)
+		(property "Manufacturer" "Murata Electronics"
+			(at 459.74 372.11 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
 			(hide yes)
@@ -20520,6 +20751,17 @@
 		)
 		(property "MPN" "3-153-438"
 			(at 80.01 58.42 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Manufacturer" "SCHURTER Inc."
+			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -20725,6 +20967,17 @@
 				)
 			)
 		)
+		(property "Manufacturer" "YAGEO"
+			(at 459.74 372.11 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
 			(hide yes)
@@ -20908,6 +21161,17 @@
 		)
 		(property "MPN" "CL21B106KOQNNNG"
 			(at 642.62 372.11 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Manufacturer" "Samsung Electro-Mechanics"
+			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -21118,6 +21382,17 @@
 				)
 			)
 		)
+		(property "Manufacturer" "SCHURTER Inc."
+			(at 459.74 372.11 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
 			(hide yes)
@@ -21316,6 +21591,17 @@
 				)
 			)
 		)
+		(property "Manufacturer" "Murata Electronics"
+			(at 459.74 372.11 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
 			(hide yes)
@@ -21419,6 +21705,17 @@
 		)
 		(property "MPN" "NT3H2211W0FHKH"
 			(at 604.52 69.85 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Manufacturer" "NXP USA Inc."
+			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -21554,6 +21851,17 @@
 				)
 			)
 		)
+		(property "Manufacturer" "YAGEO"
+			(at 459.74 372.11 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
 			(hide yes)
@@ -21654,6 +21962,17 @@
 		)
 		(property "MPN" "AC0402FR-07220RL"
 			(at 279.4 307.34 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Manufacturer" "YAGEO"
+			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -21770,6 +22089,17 @@
 				)
 			)
 		)
+		(property "Manufacturer" "YAGEO"
+			(at 934.72 391.16 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(property "Supplier" "DigiKey"
 			(at 934.72 391.16 0)
 			(hide yes)
@@ -21870,6 +22200,17 @@
 		)
 		(property "MPN" "SM141K06TF"
 			(at 25.4 38.1 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Manufacturer" "ANYSOLAR Ltd"
+			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -21984,6 +22325,17 @@
 		)
 		(property "MPN" "10AEM10300C0000"
 			(at 459.74 372.11 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Manufacturer" "e-peas"
+			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -22173,6 +22525,17 @@
 		)
 		(property "MPN" "GRT188R61C106KE13D"
 			(at 120.65 165.1 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Manufacturer" "Murata Electronics"
+			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -22393,6 +22756,17 @@
 				)
 			)
 		)
+		(property "Manufacturer" "Johanson Technology Inc."
+			(at 560.07 119.38 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(property "Supplier" "DigiKey"
 			(at 560.07 119.38 0)
 			(hide yes)
@@ -22493,6 +22867,17 @@
 		)
 		(property "MPN" "3-153-440"
 			(at 80.01 38.1 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Manufacturer" "SCHURTER Inc."
+			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -22609,6 +22994,17 @@
 				)
 			)
 		)
+		(property "Manufacturer" "YAGEO"
+			(at 459.74 372.11 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
 			(hide yes)
@@ -22709,6 +23105,17 @@
 		)
 		(property "MPN" "AC0402FR-07150RL"
 			(at 279.4 58.42 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Manufacturer" "YAGEO"
+			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -22912,6 +23319,17 @@
 				)
 			)
 		)
+		(property "Manufacturer" "Murata Electronics"
+			(at 459.74 372.11 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
 			(hide yes)
@@ -23012,6 +23430,17 @@
 		)
 		(property "MPN" "GRT155R71H104KE01D"
 			(at 410.21 241.3 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Manufacturer" "Murata Electronics"
+			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -23226,6 +23655,17 @@
 				)
 			)
 		)
+		(property "Manufacturer" "Analog Devices Inc."
+			(at 459.74 372.11 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
 			(hide yes)
@@ -23364,6 +23804,17 @@
 				)
 			)
 		)
+		(property "Manufacturer" "Murata Electronics"
+			(at 459.74 392.43 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 392.43 0)
 			(hide yes)
@@ -23464,6 +23915,17 @@
 		)
 		(property "MPN" "LA P47F-V2BB-24-3B5A-30-R18-Z"
 			(at 279.4 160.02 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Manufacturer" "ams-OSRAM USA INC."
+			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -23580,6 +24042,17 @@
 				)
 			)
 		)
+		(property "Manufacturer" "Murata Electronics"
+			(at 459.74 372.11 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
 			(hide yes)
@@ -23680,6 +24153,17 @@
 		)
 		(property "MPN" "GRT188R61C106KE13D"
 			(at 410.21 302.26 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Manufacturer" "Murata Electronics"
+			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -24163,6 +24647,17 @@
 				)
 			)
 		)
+		(property "Manufacturer" "Texas Instruments"
+			(at 459.74 372.11 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
 			(hide yes)
@@ -24283,6 +24778,17 @@
 		)
 		(property "MPN" "LA P47F-V2BB-24-3B5A-30-R18-Z"
 			(at 279.4 38.1 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Manufacturer" "ams-OSRAM USA INC."
+			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -24482,6 +24988,17 @@
 				)
 			)
 		)
+		(property "Manufacturer" "YAGEO"
+			(at 459.74 372.11 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
 			(hide yes)
@@ -24585,6 +25102,17 @@
 		)
 		(property "MPN" "MB85RC512TYPN-GS-AWEWE1"
 			(at 855.98 372.11 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Manufacturer" "RAMXEED"
+			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -24742,6 +25270,17 @@
 				)
 			)
 		)
+		(property "Manufacturer" "Murata Electronics"
+			(at 459.74 372.11 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
 			(hide yes)
@@ -24853,6 +25392,17 @@
 		)
 		(property "MPN" "AVR64EA28-E/STX"
 			(at 209.55 38.1 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Manufacturer" "Microchip Technology"
+			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -25042,6 +25592,17 @@
 		)
 		(property "MPN" "SM141K06TF"
 			(at 25.4 68.58 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Manufacturer" "ANYSOLAR Ltd"
+			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -25243,6 +25804,17 @@
 		)
 		(property "MPN" "BLM18PG221SN1D"
 			(at 551.18 372.11 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Manufacturer" "Murata Electronics"
+			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -25510,6 +26082,17 @@
 		)
 		(property "MPN" "3-153-438"
 			(at 80.01 99.06 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Manufacturer" "SCHURTER Inc."
+			(at 459.74 372.11 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects

@@ -27,6 +27,14 @@ is the "Where the truth lives" table in `README.md`. In short:
   `BOM/README.md` is the **live availability table** written by `BOM/check_stock.py` (manual-apply
   like the mask art, since it needs distributor API keys; regenerate it, never edit it), and it
   reads its line items from `scripts/bom_split.py` rather than from a sheet
+- Manufacturer → the schematic's own **`Manufacturer`** property on every placed symbol (mirrored
+  onto the footprint, so DRC's schematic-parity check holds the two in step). It is **not
+  decoration**: `pick_match()` in `check_stock.py` uses it as a HARD filter for collision-prone
+  MPNs — short or all-numeric ones — and an empty manufacturer makes that filter return True
+  rather than fail, so the guard goes quiet instead of loud. It arrived 2026-08-02 after the
+  culled xlsx took the Mfr column with it and the next run published a **Pomona test clip
+  ($88.96, 0 in stock) as the UPDI Friend**, while the real part sat at 54 in stock. A part with
+  an MPN and no manufacturer now FAILS `bom_split.build()`
 - **The two BUY documents are GENERATED, not maintained** → `scripts/bom_split.py` writes them
   into `Generated/fabdocs/` on every board push: `…-pcbway-assembly.csv` (what the machine buys
   and places) and `…-handbuy-{digikey,mouser}.csv` + `…-handbuy.md` (what **you** buy — the
