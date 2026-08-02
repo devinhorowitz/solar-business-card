@@ -29,6 +29,11 @@ change to one that isn't mirrored in the others fails loudly (in CI or locally):
       in its own sentence, or carry a reason in EXPECTED_ABSENT. [ERROR on drift]
   [12] FOOTPRINT SIDES -- every footprint sits on the side the FRONT_SIDE
       snapshot records; a side flip must update the snapshot.  [ERROR on drift]
+  [13] NFC COIL -- the antenna's geometry and paper tune re-derived from the
+      routing (scripts/nfc_coil.py); a lost turn goes red.     [ERROR on drift]
+  [14] GOLD SET -- every opening the User.1 plating drawing carries has copper
+      under it (or is the mask-only contactless mark), and the fab request's
+      hand-written enumeration still matches the board.        [ERROR on drift]
 
 Usage:   python3 scripts/check_consistency.py
 Exit:    nonzero if any ERROR-level check fails; warnings do not fail the build.
@@ -934,6 +939,258 @@ def check_nfc_coil():
            f"C9 {r['C9_placed_pF']:g} pF")
 
 
+# --- [14] the gold set: drawn area vs the fab request's prose ------------------------
+#
+# WHY THIS EXISTS. The selective hard-gold request in PCB/README is the sentence a fab
+# reads and acts on, and it carries a hand-written enumeration of what is in the gold
+# set. Beside it sits a GENERATED drawing of the same thing (User.1, from
+# mask_art.gold_area). Nothing checked one against the other, and the prose was wrong
+# twice in a week:
+#   * it said FOUR M2 mounting-hole annuli when the board carries EIGHT (MP1-4, the
+#     mid-edge shell points, are GND annuli with front openings too -- the net rule
+#     always covered them, the sentence never caught up);
+#   * it listed "the small contactless-mark arcs" as part of the gold set. They have
+#     NO COPPER UNDER THEM AT ALL -- they sit inside NFC_COIL_KEEPOUT, which the pour
+#     cannot enter -- so a fab following that line would hunt for copper and find none.
+# Both are the same failure: a human list of what is in the set, next to a machine
+# drawing of the set, with no gate between them. Neither DRC, nor parity, nor check [6]
+# (which only proves the ART matches the ROUTING) can see it.
+#
+# TWO ASSERTIONS, because the two errors had different shapes:
+#   (A) STRUCTURAL -- every piece of the drawn gold area either has copper under it (a
+#       real plating target) or is a declared, reasoned exception. This is the
+#       contactless-arcs class, caught without parsing any English: an opening that
+#       plates nothing must say why. There are exactly two reasoned exceptions, and
+#       BOTH are recognised BY CONSTRUCTION -- by the geometry that defines them, not
+#       by a coordinate list that would rot the moment anything moved:
+#         * the NFC contactless mark (inside mask_art's own mark): mask-only, sits in
+#           the antenna keepout, no copper by design;
+#         * the D / R / H letter apertures (inside the `optical_window` keepout): bare
+#           FR4 IS the feature -- it is the window the LEDs backlight through, and the
+#           pour cannot enter that keepout. This second class was found BY THIS CHECK
+#           on its first run, which is the argument for the check in miniature: three
+#           ~10 mm2 openings that plate nothing, sitting in the fab's plating drawing,
+#           and nobody had noticed.
+#   (B) PROSE -- the countable claims in the request are re-derived from the board and
+#       compared. This is the four-vs-eight class.
+# Both are ERRORs: this text goes to a fab, and a fab acts on it.
+GOLD_COPPER_EPS = 0.002   # mm2 of copper under an opening for it to count as a plating target
+
+
+def _gold_copper_union(board, pcbnew, shapely_ops, with_pour):
+    """Every F.Cu conductor as one geometry; the pour is optional.
+
+    TWO SPEEDS, and the reason is measured rather than assumed. Including the pour
+    means REFILLING it in memory -- reading the committed fill would judge the board
+    against a stale lattice, since every edit here lands as a text patch (the vias,
+    the pour pullback, the mask art) and leaves the fill behind. That refill costs
+    ~80 s. Without it the copper set is built from graphics, pads and tracks in
+    ~0.1 s, and on this board it classifies every one of the 72 openings IDENTICALLY
+    (verified 2026-08-02: the same 7 come back copper-less either way). That is not a
+    coincidence -- the openings that plate copper sit on the frame, the ornaments,
+    the annuli and the TC pad, all of which are their own copper, and the two
+    copper-less classes live in keepouts the pour cannot enter.
+    So the check runs the fast set first and only pays for the refill to CONFIRM a
+    failure before reporting it. Fast when passing, exact when it matters.
+    """
+    from shapely.geometry import Polygon, Point, LineString
+    from shapely.validation import make_valid
+    IU, err_mm = 1e6, pcbnew.FromMM(0.005)
+    fcu = board.GetLayerID("F.Cu")
+    if with_pour:
+        pcbnew.ZONE_FILLER(board).Fill(board.Zones())
+
+    def polys(ps):
+        out = []
+        for i in range(ps.OutlineCount()):
+            ol = ps.Outline(i)
+            ext = [(ol.CPoint(k).x / IU, ol.CPoint(k).y / IU) for k in range(ol.PointCount())]
+            holes = [[(h.CPoint(k).x / IU, h.CPoint(k).y / IU) for k in range(h.PointCount())]
+                     for h in (ps.Hole(i, j) for j in range(ps.HoleCount(i)))]
+            g = Polygon(ext, holes)
+            if not g.is_valid:
+                g = make_valid(g)
+            if g.is_empty:
+                continue
+            out.extend([x for x in (g.geoms if g.geom_type in ("MultiPolygon", "GeometryCollection")
+                                    else [g]) if x.geom_type == "Polygon" and x.area > 0])
+        return out
+
+    parts = []
+    if with_pour:
+        for z in board.Zones():
+            if z.IsOnLayer(fcu):
+                parts += polys(z.GetFilledPolysList(fcu))
+    for d in board.GetDrawings():
+        if d.GetLayer() == fcu:
+            s = pcbnew.SHAPE_POLY_SET()
+            d.TransformShapeToPolygon(s, fcu, 0, err_mm, pcbnew.ERROR_INSIDE)
+            parts += polys(s)
+    for f in board.GetFootprints():
+        for p in f.Pads():
+            if p.IsOnLayer(fcu):
+                s = pcbnew.SHAPE_POLY_SET()
+                p.TransformShapeToPolygon(s, fcu, 0, err_mm, pcbnew.ERROR_INSIDE)
+                parts += polys(s)
+    for t in board.GetTracks():
+        if not t.IsOnLayer(fcu):
+            continue
+        st, en = t.GetStart(), t.GetEnd()
+        try:
+            w = t.GetWidth() / IU
+        except Exception:
+            w = 0.6
+        a, c = (st.x / IU, st.y / IU), (en.x / IU, en.y / IU)
+        parts.append(Point(a).buffer(w / 2) if a == c else LineString([a, c]).buffer(w / 2))
+    return shapely_ops.unary_union(parts)
+
+
+_NUM_WORDS = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6,
+              "seven": 7, "eight": 8, "nine": 9, "ten": 10, "eleven": 11, "twelve": 12}
+
+
+def check_gold_set():
+    print("[14] the fab request's gold-set enumeration matches the board")
+    sys.path.insert(0, os.path.join(ROOT, "scripts"))
+    try:
+        import pcbnew
+        import mask_art
+        from shapely import ops as shapely_ops
+    except Exception as e:
+        warn(f"not checked -- {type(e).__name__}: {e}. "
+             f"Needs pcbnew + shapely; run `python3 scripts/mask_art.py --check` locally.")
+        return
+    try:
+        board = pcbnew.LoadBoard(mask_art.BOARD.as_posix())
+        mark = mask_art.nfc_mark(board)
+        gold = mask_art.gold_area(board, mark)
+        copper = _gold_copper_union(board, pcbnew, shapely_ops, with_pour=False)
+    except Exception as e:
+        err(f"could not rebuild the gold area: {type(e).__name__}: {e}")
+        return
+
+    # the backlight window: the one keepout the pour cannot enter, and the reason the
+    # monogram letters are bare laminate rather than plated copper.
+    window = None
+    try:
+        from shapely.geometry import Polygon
+        IU = 1e6
+        for z in board.Zones():
+            if z.GetZoneName() == "optical_window":
+                ol = z.Outline().Outline(0)
+                window = Polygon([(ol.CPoint(k).x / IU, ol.CPoint(k).y / IU)
+                                  for k in range(ol.PointCount())])
+                break
+    except Exception:
+        window = None
+    if window is None:
+        warn("no `optical_window` keepout found -- the monogram's backlight apertures cannot be "
+             "told apart from an opening that plates nothing; check [14] is running degraded")
+
+    pieces = list(gold.geoms) if gold.geom_type == "MultiPolygon" else [gold]
+    # (A) every opening either plates something or says why not
+    unexplained, n_mark, n_window = [], 0, 0
+    for p in pieces:
+        if p.intersection(copper).area >= GOLD_COPPER_EPS:
+            continue
+        if mark.buffer(1e-6).contains(p):
+            n_mark += 1            # the contactless mark: mask-only, antenna keepout
+            continue
+        if window is not None and window.buffer(1e-6).contains(p):
+            n_window += 1          # a monogram letter: bare FR4 is the backlight, by design
+            continue
+        unexplained.append(p)
+    if unexplained:
+        # Confirm against the REFILLED pour before reporting. The fast set omits the
+        # pour, so an opening whose only copper is hatch would look bare; pay the ~80 s
+        # once, here, rather than on every green run -- and never cry wolf.
+        try:
+            exact = _gold_copper_union(board, pcbnew, shapely_ops, with_pour=True)
+            unexplained = [p for p in unexplained
+                           if p.intersection(exact).area < GOLD_COPPER_EPS]
+        except Exception as e:
+            warn(f"could not refill the pour to confirm [14]'s finding ({type(e).__name__}: {e})"
+                 f" -- reporting against the fast copper set, which omits the hatch")
+    if unexplained:
+        unexplained = [f"{p.area:.3f} mm2 at x[{p.bounds[0]:.1f},{p.bounds[2]:.1f}] "
+                       f"y[{p.bounds[1]:.1f},{p.bounds[3]:.1f}]" for p in unexplained]
+        err(f"{len(unexplained)} gold-area opening(s) have NO copper under them, and are neither "
+            f"the contactless mark nor inside the optical window, so the fab's plating drawing is "
+            f"pointing at bare laminate -- either the opening is wrong or it needs a reasoned "
+            f"exception in check_gold_set: " + "; ".join(sorted(unexplained)))
+    # The README asserts the mark has NO copper under it, so the fab is told to expect bare
+    # FR4 there. Two independent ways that can stop being true, and the cheap set only sees
+    # one of them: a TRACK routed under the mark shows up in `copper` directly, but POUR
+    # flooding it would not (the fast set omits the pour). So test the structural precondition
+    # too -- the mark lying inside the keepout the pour cannot enter. That is the invariant the
+    # paragraph actually rests on, and it costs nothing to check.
+    mark_cu = mark.intersection(copper).area
+    if mark_cu >= GOLD_COPPER_EPS:
+        err(f"the contactless mark now has {mark_cu:.3f} mm2 of copper under it -- PCB/README "
+            f"states it has none. Either a trace was routed under it or the mark moved; the "
+            f"request's 'NOT in the gold set' paragraph must be re-derived.")
+    keepout = None
+    try:
+        from shapely.geometry import Polygon as _Poly
+        for z in board.Zones():
+            if z.GetZoneName() == "NFC_COIL_KEEPOUT":
+                _o = z.Outline().Outline(0)
+                keepout = _Poly([(_o.CPoint(k).x / 1e6, _o.CPoint(k).y / 1e6)
+                                 for k in range(_o.PointCount())])
+                break
+    except Exception:
+        keepout = None
+    if keepout is None:
+        warn("no `NFC_COIL_KEEPOUT` zone found -- cannot confirm the contactless mark still sits "
+             "where the pour cannot reach it")
+    elif not keepout.buffer(1e-6).contains(mark):
+        err("the contactless mark is no longer wholly inside NFC_COIL_KEEPOUT, so the pour can "
+            "now reach it -- PCB/README tells the fab there is no copper under those arcs, and "
+            "that claim has to be re-derived (and the mark or the keepout moved back).")
+
+    # (B) the countable claims in the request, re-derived
+    readme = os.path.join(ROOT, "PCB", "README.md")
+    try:
+        doc = open(readme, encoding="utf-8").read()
+    except OSError as e:
+        warn(f"prose claims not checked -- {type(e).__name__}: {e}")
+        return
+    fmask = board.GetLayerID("F.Mask")
+    fams = {}
+    for f in board.GetFootprints():
+        ref = f.GetReference()
+        for p in f.Pads():
+            if not p.IsOnLayer(fmask) or p.GetNetname() != "GND":
+                continue
+            fam = ("M2" if re.match(r"^(MH|MP)\d+$", ref)
+                   else "PV" if re.match(r"^PV\d+$", ref)
+                   else "TC" if ref.startswith("TC") else ref)
+            fams[fam] = fams.get(fam, 0) + 1
+    bad = []
+    m = re.search(r"(\w+)\s+M2 mounting-hole annuli", doc)
+    if not m:
+        bad.append("the request no longer states an M2 mounting-hole annulus count at all")
+    else:
+        claimed = _NUM_WORDS.get(m.group(1).lower())
+        if claimed is None:
+            bad.append(f"unparseable M2 annulus count {m.group(1)!r}")
+        elif claimed != fams.get("M2", 0):
+            bad.append(f"request says {m.group(1)} ({claimed}) M2 mounting-hole annuli, "
+                       f"board has {fams.get('M2', 0)}")
+    # the PV lands are the rule's one EXCEPTION -- they must still exist to be excepted
+    if fams.get("PV", 0) == 0:
+        bad.append("no PV GND solder lands with front openings -- the request's solder-land "
+                   "exception now excepts nothing; re-read it before shipping")
+    if bad:
+        err("the gold-set enumeration has drifted from the board: " + "; ".join(bad))
+
+    if not unexplained and not bad and mark_cu < GOLD_COPPER_EPS:
+        ok(f"{len(pieces)} opening(s): {len(pieces) - n_mark - n_window} plate copper, "
+           f"{n_mark} mask-only contactless mark, {n_window} monogram backlight aperture(s); "
+           f"{fams.get('M2', 0)} M2 annuli and {fams.get('PV', 0)} excepted PV lands "
+           f"match the request")
+
+
 def check_part_colors():
     print("[10] every 3D model carries the colour the parts table gives it")
     sys.path.insert(0, os.path.join(ROOT, "scripts"))
@@ -1213,6 +1470,7 @@ def main():
     check_doc_cited_paths()
     check_footprint_sides()
     check_nfc_coil()
+    check_gold_set()
     print(f"\n== {len(errors)} error(s), {len(warnings)} warning(s) ==")
     sys.exit(1 if errors else 0)
 
