@@ -1271,6 +1271,44 @@ def check_cpl_bom_agreement():
         ok(f"{len(placed)} placeable footprint(s); every BOM-excluded or DNP part is also out "
            f"of the position file")
 
+    # --- the TAGGING the buy documents are derived from -------------------------------
+    # Everything downstream reads two flags per part, so the flags have to mean what
+    # they say. A "no part" placeholder MPN -- how this schematic marks bridges, test
+    # pads, mounting holes and unpopulated headers -- must be backed by a real flag on
+    # the board, or bom_split would happily put a PCB feature in a cart. Conversely a
+    # part with a REAL MPN must not be silently BOM-excluded unless it is one of the
+    # hand-soldered ones, which the buy list already enumerates.
+    try:
+        stext = open(os.path.join(ROOT, "PCB", "solar-glow-drh-v4_0.kicad_sch"),
+                     encoding="utf-8", errors="replace").read()
+        sym = {}
+        for blk in re.split(r"\n\t\(symbol\n", stext):
+            rm = re.search(r'\(property "Reference"\s+"([^"]+)"', blk)
+            if not rm or rm.group(1).startswith("#"):
+                continue
+            pm = re.search(r'\(property "MPN"\s+"([^"]*)"', blk)
+            ref = rm.group(1)
+            if ref in sym and sym[ref]:
+                continue
+            sym[ref] = (pm.group(1).strip() if pm else "")
+        untagged = []
+        for f in board.GetFootprints():
+            ref = f.GetReference()
+            if not ref or ref not in sym:
+                continue
+            placeholder = sym[ref].startswith("(") or not sym[ref]
+            if placeholder and not (f.IsExcludedFromBOM() or f.IsDNP()):
+                untagged.append(f"{ref} (MPN {sym[ref]!r})")
+        if untagged:
+            err(f"{len(untagged)} symbol(s) carry a 'no part' MPN but are NOT flagged on the "
+                f"board -- a PCB feature would reach a buy document: set exclude_from_bom "
+                f"(and dnp where it is genuinely not populated): " + ", ".join(sorted(untagged)))
+        else:
+            ok(f"every 'no part' symbol is flagged on the board -- no PCB feature can reach "
+               f"a buy document")
+    except Exception as e:
+        warn(f"tagging not checked -- {type(e).__name__}: {e}")
+
     # --- the buy documents themselves -------------------------------------------------
     # scripts/bom_split.py emits what an order ships: the PCBWay assembly BOM and the
     # hand-buy carts. Its build() must stay clean -- a sourced part with no Supplier

@@ -73,12 +73,18 @@ OFF_BOARD_ONCE = [
      "Tag-Connect cable. TRAP: DigiKey stocks the LEGLESS TC2030-MCP-NL; the legged "
      "TC2030-MCP this design wants is zero/restricted at Mouser -- consider Tag-Connect direct."),
 ]
-# Present in the BOM master but never ordered from a distributor. Listed so the
-# absence is a decision on the page rather than an omission.
-NOT_ORDERED = {
-    "L1":   "the NFC antenna is etched PCB copper -- there is no part",
-    "SJ1":  "removed from the design 2026-07-30 (was DNP after the EA swap)",
-    "ENC1": "the titanium back-shell -- its own fab order, from enclosure/*.step",
+# Orderable, but not from a distributor -- so it belongs on the page a human reads
+# before ordering, not in a cart CSV.
+#
+# NOTHING UNORDERABLE IS LISTED AT ALL. The old spreadsheet carried rows for `L1`
+# (the NFC antenna, which is etched PCB copper) and `SJ1` (deleted from the design
+# on 2026-07-30). Neither can be bought from anywhere, so neither appears here or in
+# any generated document: a line item you cannot act on is noise in a buy list. The
+# same rule is what drops the 20 bridges, pads, mounting holes and unpopulated
+# headers -- they are flagged in the schematic and the board, and build() filters on
+# those flags rather than on a list kept here.
+NOT_DISTRIBUTOR = {
+    "ENC1": "the titanium back-shell -- its own fab order, machined from enclosure/*.step",
 }
 
 
@@ -207,8 +213,8 @@ def write_all(boards, outdir):
            "| Ref | Qty | MPN | Supplier | What |", "|---|---|---|---|---|"]
     for ref, q, m, s, d, n in once:
         md.append(f"| {ref} | {q} | `{m}` | {s or '—'} | {n} |")
-    md += ["", "**Deliberately not ordered:**", ""]
-    for ref, why in sorted(NOT_ORDERED.items()):
+    md += ["", "**Ordered, but not from a distributor:**", ""]
+    for ref, why in sorted(NOT_DISTRIBUTOR.items()):
         md.append(f"- `{ref}` — {why}")
     md += ["", "**The supercaps are two different parts.** SC1/SC3 and SC2/SC4 are different",
            "capacitances with different MPNs and separate stock pools; four of either one",
@@ -234,7 +240,7 @@ def main() -> int:
         for r in hand:
             print(f"      {r['mpn']:16} x{r['qty']}  {', '.join(r['refs'])}")
         print(f"  off-board:                {len(OFF_BOARD)} per-board + "
-              f"{len(OFF_BOARD_ONCE)} one-off, {len(NOT_ORDERED)} deliberately unordered")
+              f"{len(OFF_BOARD_ONCE)} one-off + {len(NOT_DISTRIBUTOR)} non-distributor")
         for p in problems:
             print(f"  PROBLEM: {p}")
         return 1 if problems else 0
