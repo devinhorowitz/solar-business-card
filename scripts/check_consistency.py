@@ -713,11 +713,10 @@ EXPECTED_ABSENT = {
     "-BOM-assembly.xlsx":
         "hand-authored PCBA subset — culled 2026-08-02, superseded by the generated assembly CSV",
     "solar-glow-drh-v4_0-BOM-assembly.xlsx": "same file, cited by basename",
-    # The buy documents CI writes on every board push (scripts/bom_split.py). Cited as
-    # what an order is placed FROM; they appear in Generated/ after the kibot run, the
-    # same way the gerbers and the position file do.
-    "../Generated/fabdocs/solar-glow-drh-v4_0-pcbway-assembly.csv":
-        "CI-generated buy document (scripts/bom_split.py) — written by the kibot run",
+    # (The buy documents scripts/bom_split.py writes were listed here while they were
+    # still unbuilt. The first kibot run after the split landed committed all of them
+    # into Generated/fabdocs/, so the entry became a lie about the tree and this check
+    # said so on its own -- the ledger is meant to shrink as CI catches up to it.)
     # Build outputs and CI intermediates — gitignored by design, cited as what a
     # command WRITES rather than what the tree holds.
     "firmware/solar-glow.hex": "firmware build output — gitignored (firmware/README `make`)",
