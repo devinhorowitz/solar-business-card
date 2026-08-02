@@ -1271,6 +1271,73 @@ def check_cpl_bom_agreement():
         ok(f"{len(placed)} placeable footprint(s); every BOM-excluded or DNP part is also out "
            f"of the position file")
 
+    # --- the HAND-SOLDER buy list ---------------------------------------------------
+    # Excluding SC1-4 and PV1-2 from both fab files is correct -- they are hand-soldered
+    # -- but it leaves them bought by NOBODY: no line in the assembly BOM, no line in the
+    # CPL. The two most expensive, most supply-constrained parts on the card are exactly
+    # the ones the fab package is silent about, and the silence is by design.
+    #
+    # The specific way that goes wrong: the four supercaps are NOT four of one part.
+    # SC1/SC3 are SS17 1.8 F (3-153-440) and SC2/SC4 are WS17 1 F (3-153-438) -- two of
+    # each, two MPNs, two separate stock pools. Ordering 4x either one builds nothing.
+    # (The datasheet filename in datasheets/ still reads "SC1-SC4 ... 3-153-438", which
+    # is that error written down; BOM/README's generated table has it right.)
+    #
+    # So: derive the buy list from the design and print it on every run, and hold it
+    # against BOM/README -- the document someone actually orders from.
+    sch = os.path.join(ROOT, "PCB", "solar-glow-drh-v4_0.kicad_sch")
+    hand = [f.GetReference() for f in board.GetFootprints()
+            if f.IsExcludedFromBOM() and not f.IsDNP() and f.GetReference()
+            and not re.match(r"^(MH|MP)\d+$", f.GetReference())]
+    if not hand:
+        return
+    try:
+        stext = open(sch, encoding="utf-8", errors="replace").read()
+    except OSError as e:
+        warn(f"hand-solder buy list not checked -- {type(e).__name__}: {e}")
+        return
+    mpn_of = {}
+    for blk in re.split(r"\n\t\(symbol\n", stext):
+        rm = re.search(r'\(property "Reference"\s+"([^"]+)"', blk)
+        pm = re.search(r'\(property "MPN"\s+"([^"]*)"', blk)
+        if rm and pm and rm.group(1) in hand:
+            mpn_of[rm.group(1)] = pm.group(1).strip()
+    groups = {}
+    for r in sorted(hand):
+        groups.setdefault(mpn_of.get(r, ""), []).append(r)
+    if "" in groups:
+        err(f"hand-soldered part(s) with no MPN in the schematic -- nothing in the repo says "
+            f"what to buy for them: {', '.join(groups[''])}")
+        del groups[""]
+    # BOM/README is the derived availability table -- the thing a human orders from.
+    bomdoc = os.path.join(ROOT, "BOM", "README.md")
+    try:
+        rows = {}
+        for line in open(bomdoc, encoding="utf-8"):
+            m = re.match(r"\|[^|]*\|\s*([^|]+?)\s*\|\s*(\d+)\s*\|[^|]*\|\s*`([^`]+)`", line)
+            if m:
+                rows[m.group(3).strip()] = (m.group(1).strip(), int(m.group(2)))
+    except OSError:
+        warn("BOM/README not present -- hand-solder buy list printed but not cross-checked")
+        rows = None
+    problems = []
+    if rows is not None:
+        for part, refs in sorted(groups.items()):
+            want = (", ".join(refs), len(refs))
+            got = rows.get(part)
+            if got is None:
+                problems.append(f"{part} (x{len(refs)}: {want[0]}) has no row in BOM/README")
+            elif got != want:
+                problems.append(f"{part}: board says {want[1]}x [{want[0]}], "
+                                f"BOM/README says {got[1]}x [{got[0]}]")
+    if problems:
+        err("the hand-solder buy list disagrees with BOM/README -- these parts are in NEITHER "
+            "fab file, so this table is the only thing that buys them; regenerate it with "
+            "scripts/check_stock.py: " + "; ".join(problems))
+    else:
+        listing = "; ".join(f"{p} x{len(r)} ({', '.join(r)})" for p, r in sorted(groups.items()))
+        ok(f"hand-solder buy list (in neither fab file, buy separately): {listing}")
+
 
 def check_part_colors():
     print("[10] every 3D model carries the colour the parts table gives it")

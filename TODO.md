@@ -44,9 +44,25 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   from a live DUAL-distributor sweep of all 31 orderable MPNs — DigiKey and Mouser, exact-MPN matched.)_
   - **U3 accel `ADXL367BCCZ-RL7` — the new alarm: DigiKey went 731 → 0 in seven days.** Mouser holds
     2,601 ($7.80). The card's only actuator is now single-distributor. Buy from Mouser, early.
+  - **THE SUPERCAPS ARE TWO DIFFERENT PARTS, 2 + 2 — NOT four of one.** _(Called out 2026-08-02;
+    now printed on every consistency run and gated by check [15].)_
+    **SC1, SC3 = SS17 1.8 F 2.75 V = `3-153-440`** (DigiKey `486-3-153-440-ND`) and
+    **SC2, SC4 = WS17 1 F 2.75 V = `3-153-438`** (DigiKey `486-3-153-438-ND`). Two MPNs, two
+    separate stock pools, two of each per board — ordering 4× either one builds nothing.
+    Board and schematic have always agreed on this; what invites the mistake is that
+    `datasheets/` holds exactly one supercap PDF and its filename reads
+    **`SC1-SC4  SCHURTER 3-153-438`**, i.e. the wrong belief written down, with no datasheet
+    on file for `3-153-440` at all. (`BOM/README`'s generated table is correct — it maps that
+    PDF to SC2, SC4 by MPN, not by the filename.) Fix the filename and fetch the missing
+    datasheet at order time; do not let the folder be the source.
   - **Supercaps are the global chokepoint:** SS17 ≈ 400 and WS17 ≈ 393 **combined across both
     distributors** — at 2/board, ~200 boards of world-visible stock per type. SS17 is $0.66 cheaper
     at Mouser. Order with the first cut, from both carts if batching.
+  - **Nothing in the fab package buys the hand-soldered parts.** SC1–4 and PV1–2 are excluded
+    from the assembly BOM *and* (since 2026-08-02) from the CPL — correct, they are hand-soldered
+    — which means **no fab file orders them**. `BOM/README`'s table is the only document that
+    does, so check [15] now holds it against the board and prints the buy list every run:
+    `3-153-438 ×2 (SC2, SC4); 3-153-440 ×2 (SC1, SC3); SM141K06TF ×2 (PV1, PV2)`.
   - **FER1 was a false scarcity:** the "41 in stock, 24-week lead" figure was DigiKey's; **Mouser has
     119 at $13.18 vs DK's $17.43**. Buy there.
   - **U1 MCU recovered:** DK 608 → 1,365 (Mouser only 269 — buy DK). **PV cells** 423, DK-only
