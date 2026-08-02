@@ -37,6 +37,13 @@ ROOT = Path(__file__).resolve().parent.parent
 BRACE_STL = ROOT / "enclosure" / "brace" / "solar-glow-drh-diffuser-brace.stl"
 SAMPLE_MM = 1.0
 EPS = 1e-3
+# The assembly tolerance stack (RSS): body-height datasheet tolerance (+-0.10 worst
+# class) + solder standoff (~0.075 -- part heights are body-only, measured from 3D
+# models seated at zero standoff) + resin pocket-depth print tolerance (+-0.10).
+# fit_rules.AIR is sized to cover this; the worst-case column here is the proof.
+# Assumes the board's B face registers on the shell seat (board-thickness tolerance
+# goes to the front face, not the cavity).
+WC_STACK = 0.16
 
 
 def main():
@@ -109,8 +116,15 @@ def main():
             fails.append(f"{ref}: h {h:.2f} mm exceeds local headroom by {-margin:.2f} mm")
 
     rows.sort()
+    wc_warn = [r for r in rows if r[0] - WC_STACK < -EPS]
     for margin, ref, h in rows[:6]:
-        print(f"  {'FAIL' if margin < -EPS else 'ok  '} {ref:6s} h={h:.2f}  min margin {margin:+.2f} mm")
+        tag = 'FAIL' if margin < -EPS else ('warn' if margin - WC_STACK < -EPS else 'ok  ')
+        print(f"  {tag} {ref:6s} h={h:.2f}  nominal {margin:+.2f}  worst-case "
+              f"{margin - WC_STACK:+.2f} mm")
+    if wc_warn:
+        print(f"  WARN: {len(wc_warn)} bodies clear nominally but not the worst-case "
+              f"stack (WC_STACK {WC_STACK}) -- expected only against a brace built "
+              f"with the pre-2026-08-02 AIR")
     print(f"  ({len(rows)} bodies checked, tightest 6 shown; skipped pad-only: "
           f"{', '.join(skipped) if skipped else 'none'})")
     if fails:
