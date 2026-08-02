@@ -22,9 +22,20 @@ is the "Where the truth lives" table in `README.md`. In short:
 - Board copper / geometry → `PCB/solar-glow-drh-v4_0.kicad_pcb` / `.kicad_sch`
 - Back-shell medallion (ring text, monogram, serial) → `enclosure/medallion.py`
 - Firmware pin map + tunables → `firmware/board.h` and `firmware/README.md`
-- BOM master → `BOM/solar-glow-drh-v4_0-BOM.xlsx` (`BOM/README.md` is **derived** — a live
-  availability table written by `BOM/check_stock.py`, manual-apply like the mask art since it
-  needs distributor API keys; regenerate it, never edit it)
+- BOM → **there is no hand-authored BOM.** Both `*-BOM.xlsx` masters were culled 2026-08-02 and
+  live in git history; every line is now derived from the schematic + the board's own flags.
+  `BOM/README.md` is the **live availability table** written by `BOM/check_stock.py` (manual-apply
+  like the mask art, since it needs distributor API keys; regenerate it, never edit it), and it
+  reads its line items from `scripts/bom_split.py` rather than from a sheet
+- **The two BUY documents are GENERATED, not maintained** → `scripts/bom_split.py` writes them
+  into `Generated/fabdocs/` on every board push: `…-pcbway-assembly.csv` (what the machine buys
+  and places) and `…-handbuy-{digikey,mouser}.csv` + `…-handbuy.md` (what **you** buy — the
+  hand-soldered supercaps and cells, plus the ferrite, screws, film, UPDI Friend and
+  Tag-Connect cable that never reach a pick-and-place). A part moves between the two by
+  changing the **design** — the board's own `exclude_from_bom` / `dnp` flags decide — never by
+  editing a list. The one hand-maintained input is `OFF_BOARD` in that script, for items with
+  no schematic symbol. Check [15] gates the split. **The four supercaps are two MPNs, 2 + 2**
+  (SC1/SC3 `3-153-440`, SC2/SC4 `3-153-438`); four of either builds nothing.
 - Design reasoning / lineage → `solar-glow-drh-design-notes.md`
 
 When a doc disagrees with a source file, **the source file wins** and the doc is
@@ -117,7 +128,11 @@ have no copper at all — because a human list of the gold set sat next to a gen
 with no gate between. It found a third case on its first run: the D/R/H letter apertures plate
 nothing either (bare FR4 *is* the backlight), so they are now a reasoned exception rather than an
 unnoticed one. Both exceptions are recognised **by construction** (inside `mask_art`'s own mark, or
-inside the `optical_window` keepout), never by coordinates.
+inside the `optical_window` keepout), never by coordinates. And **check [15]** holds the other
+fab-file pair together: nothing may reach the assembler's pick-and-place without a BOM line to
+buy it. It was written after the pre-order sweep found SC1–4, PV1–2, MH1–4 and TC1 excluded from
+the BOM but *not* from the position file — a CPL that named ten parts the assembler had never
+been sold. Check [2] is the same relationship in the one direction that happened to be guarded.
 
 ## CI
 - `kibot.yml` — regenerates `Generated/` (fab + docs) on `PCB/**` changes and commits

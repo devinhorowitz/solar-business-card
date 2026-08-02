@@ -101,7 +101,7 @@ outputs:
       bottom: true
 
   - name: position
-    comment: 'Pick+place CSV. CAUTION: the 13 exclude-from-position flags clear on schematic sync; this CI output is informational, the fab CPL follows the pre-order checklist.'
+    comment: 'Pick+place CSV. As of 2026-08-02 this matches the BOM exactly (47 placeable footprints, gated by consistency check [15]); the exclude-from-position flags can still clear on a schematic sync, which is what that check exists to catch.'
     type: position
     dir: fabdocs
     options:

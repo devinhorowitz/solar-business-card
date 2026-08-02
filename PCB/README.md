@@ -523,9 +523,12 @@ BOM files remain in git history as lineage.
 
 Summary of the **orderable** lines:
 
-> **Derived snapshot, regenerated from the BOM master 2026-07-25.** The master is
-> `../BOM/solar-glow-drh-v4_0-BOM.xlsx` (with `-BOM-assembly.xlsx` for the machine-place set) — order
-> from those, not from this table. This copy had drifted badly (it still listed the pre-swap
+> **Derived snapshot. DO NOT ORDER FROM IT.** As of 2026-08-02 there is no hand-authored BOM at
+> all: both `*-BOM.xlsx` masters were culled (they are in git history) and every line is derived
+> from the schematic plus the board's own flags. Order from the generated documents —
+> `../Generated/fabdocs/solar-glow-drh-v4_0-pcbway-assembly.csv` for the machine-placed set and
+> `…-handbuy-*.csv` / `…-handbuy.md` for what you buy yourself — or from `../BOM/README.md` for
+> live availability. This copy had drifted badly (it still listed the pre-swap
 > `AVR64DD28-I/STX`, `TPS22918DBVR`, the SOIC-8 FRAM and the pre-longevity-pass passives), so
 > treat any disagreement as this table being wrong.
 

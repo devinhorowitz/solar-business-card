@@ -9,8 +9,9 @@ change to one that isn't mirrored in the others fails loudly (in CI or locally):
       match the schematic netlist for the MCU (U1).            [ERROR on drift]
   [2] BOM PARITY    -- every reference in the CI-generated BOM must be a real
       component in the netlist (no phantom BOM lines).         [ERROR on drift]
-  [4] PACKAGE FIT   -- the package the BOM orders must match the land the board
-      draws (0402 part on a 0402 land).                        [ERROR on drift]
+  [4] PACKAGE FIT   -- RETIRED 2026-08-02 with the hand-authored BOM. It compared
+      a package a human typed into a spreadsheet against the board's land; the BOM
+      is now generated FROM the board, so the check compared the board to itself.
   [5] MODEL REFS -- every (model ...) path resolves, AND every stock model is
       vendored in PCB/kicad-3dmodels/ (what CI renders from).  [ERROR on drift]
   [6] MASK ART -- the generated front soldermask art still matches the routing it
@@ -34,6 +35,8 @@ change to one that isn't mirrored in the others fails loudly (in CI or locally):
   [14] GOLD SET -- every opening the User.1 plating drawing carries has copper
       under it (or is the mask-only contactless mark), and the fab request's
       hand-written enumeration still matches the board.        [ERROR on drift]
+  [15] CPL vs BOM -- nothing reaches the assembler's pick-and-place without a BOM
+      line to buy it; the two fab files describe one build.    [ERROR on drift]
 
 Usage:   python3 scripts/check_consistency.py
 Exit:    nonzero if any ERROR-level check fails; warnings do not fail the build.
@@ -699,6 +702,22 @@ def check_doc_imagery():
 # Anything else is an error: either the file went missing, or the prose is claiming a
 # tree that is not there.
 EXPECTED_ABSENT = {
+    # The hand-authored BOM, retired 2026-08-02. Every line is now derived from the
+    # schematic plus the board's own exclude_from_bom / dnp flags (scripts/bom_split.py),
+    # so a spreadsheet could only ever be a second opinion that drifts. Both files are in
+    # git history; the prose that still names them is describing where the BOM USED to
+    # live, which is lineage worth keeping rather than a broken pointer to fix.
+    "BOM/solar-glow-drh-v4_0-BOM.xlsx":
+        "hand-authored BOM master — culled 2026-08-02, generated now (scripts/bom_split.py); in git history",
+    "solar-glow-drh-v4_0-BOM.xlsx": "same file, cited by basename",
+    "-BOM-assembly.xlsx":
+        "hand-authored PCBA subset — culled 2026-08-02, superseded by the generated assembly CSV",
+    "solar-glow-drh-v4_0-BOM-assembly.xlsx": "same file, cited by basename",
+    # The buy documents CI writes on every board push (scripts/bom_split.py). Cited as
+    # what an order is placed FROM; they appear in Generated/ after the kibot run, the
+    # same way the gerbers and the position file do.
+    "../Generated/fabdocs/solar-glow-drh-v4_0-pcbway-assembly.csv":
+        "CI-generated buy document (scripts/bom_split.py) — written by the kibot run",
     # Build outputs and CI intermediates — gitignored by design, cited as what a
     # command WRITES rather than what the tree holds.
     "firmware/solar-glow.hex": "firmware build output — gitignored (firmware/README `make`)",
@@ -1191,6 +1210,206 @@ def check_gold_set():
            f"match the request")
 
 
+# --- [15] the CPL and the BOM must describe the same build ---------------------------
+#
+# The two files a PCBA house works from are the BOM (what to buy) and the position
+# file / CPL (where to put it). They have to agree, and on this board they did not:
+# SC1-4, PV1-2, MH1-4 and TC1 carried `exclude_from_bom` WITHOUT
+# `exclude_from_pos_files`, so the CPL told an assembler to place ten parts it had no
+# line item for, plus a DNP footprint. Four M2 mounting annuli among them -- nothing
+# to place at all -- while their siblings MP1-4 were correctly excluded from both.
+#
+# The exclusions themselves are right and deliberate: this board is hand-finished, so
+# the supercaps and the solar cells are hand-soldered and must NOT reach the pick-and-
+# place, and a mounting hole is not a part. Only the second flag was missing.
+#
+# WHY NOTHING CAUGHT IT. Check [2] asserts every BOM line is a real component -- the
+# one direction. The reverse (every placeable footprint has a line to buy) was
+# unguarded, and kibot.yaml's own position output carries a CAUTION that it is
+# "informational" because these flags clear on schematic sync, which is exactly the
+# drift that makes a standing gate worth more than a note.
+#
+# THE RULE: excluded from the BOM, or DNP  =>  excluded from the position file.
+# Not the converse -- a part may legitimately be placed by hand while still being
+# bought (it would appear in the BOM and not the CPL), so that direction is a warning.
+def check_cpl_bom_agreement():
+    print("[15] the position file and the BOM describe the same build")
+    sys.path.insert(0, os.path.join(ROOT, "scripts"))
+    try:
+        import pcbnew
+    except Exception as e:
+        warn(f"not checked -- {type(e).__name__}: {e}")
+        return
+    try:
+        board = pcbnew.LoadBoard(PCB)
+    except Exception as e:
+        err(f"could not load the board: {type(e).__name__}: {e}")
+        return
+    placed, ghosts = set(), []
+    for f in board.GetFootprints():
+        ref = f.GetReference() or "(unnamed)"
+        skip_bom = f.IsExcludedFromBOM()
+        dnp = f.IsDNP()
+        in_pos = not f.IsExcludedFromPosFiles()
+        if in_pos:
+            placed.add(ref)
+        if (skip_bom or dnp) and in_pos:
+            why = "not in the BOM" if skip_bom else ""
+            why = (why + " and DNP") if (skip_bom and dnp) else (why or "DNP")
+            ghosts.append(f"{ref} ({why})")
+    if ghosts:
+        err(f"{len(ghosts)} footprint(s) would reach the assembler's pick-and-place with nothing "
+            f"to place -- set exclude_from_pos_files on them, or give them a BOM line: "
+            + ", ".join(sorted(ghosts)))
+
+    # cross-check against the CI BOM's own reference list, so the two FILES are compared
+    # and not merely the flags that generate them.
+    try:
+        with open(BOM, newline="", encoding="utf-8") as fh:
+            bom_refs = set()
+            for row in csv.DictReader(fh):
+                bom_refs.update((row.get("References") or "").split())
+    except OSError:
+        warn("CI BOM not present -- flag check only (kibot regenerates it on PCB pushes)")
+        bom_refs = None
+    if bom_refs:
+        only_cpl = sorted(placed - bom_refs)
+        only_bom = sorted(bom_refs - placed)
+        if only_cpl:
+            err(f"in the position file but absent from the CI BOM: {', '.join(only_cpl)} -- the "
+                f"assembler is told where, but never what")
+        if only_bom:
+            warn(f"in the CI BOM but excluded from the position file: {', '.join(only_bom)} -- "
+                 f"fine if these are hand-soldered, but say so deliberately")
+        if not ghosts and not only_cpl and not only_bom:
+            ok(f"{len(placed)} placeable footprint(s), and the CI BOM lists exactly the same "
+               f"{len(bom_refs)} -- CPL and BOM agree in both directions")
+    elif not ghosts:
+        ok(f"{len(placed)} placeable footprint(s); every BOM-excluded or DNP part is also out "
+           f"of the position file")
+
+    # --- the TAGGING the buy documents are derived from -------------------------------
+    # Everything downstream reads two flags per part, so the flags have to mean what
+    # they say. A "no part" placeholder MPN -- how this schematic marks bridges, test
+    # pads, mounting holes and unpopulated headers -- must be backed by a real flag on
+    # the board, or bom_split would happily put a PCB feature in a cart. Conversely a
+    # part with a REAL MPN must not be silently BOM-excluded unless it is one of the
+    # hand-soldered ones, which the buy list already enumerates.
+    try:
+        stext = open(os.path.join(ROOT, "PCB", "solar-glow-drh-v4_0.kicad_sch"),
+                     encoding="utf-8", errors="replace").read()
+        sym = {}
+        for blk in re.split(r"\n\t\(symbol\n", stext):
+            rm = re.search(r'\(property "Reference"\s+"([^"]+)"', blk)
+            if not rm or rm.group(1).startswith("#"):
+                continue
+            pm = re.search(r'\(property "MPN"\s+"([^"]*)"', blk)
+            ref = rm.group(1)
+            if ref in sym and sym[ref]:
+                continue
+            sym[ref] = (pm.group(1).strip() if pm else "")
+        untagged = []
+        for f in board.GetFootprints():
+            ref = f.GetReference()
+            if not ref or ref not in sym:
+                continue
+            placeholder = sym[ref].startswith("(") or not sym[ref]
+            if placeholder and not (f.IsExcludedFromBOM() or f.IsDNP()):
+                untagged.append(f"{ref} (MPN {sym[ref]!r})")
+        if untagged:
+            err(f"{len(untagged)} symbol(s) carry a 'no part' MPN but are NOT flagged on the "
+                f"board -- a PCB feature would reach a buy document: set exclude_from_bom "
+                f"(and dnp where it is genuinely not populated): " + ", ".join(sorted(untagged)))
+        else:
+            ok(f"every 'no part' symbol is flagged on the board -- no PCB feature can reach "
+               f"a buy document")
+    except Exception as e:
+        warn(f"tagging not checked -- {type(e).__name__}: {e}")
+
+    # --- the buy documents themselves -------------------------------------------------
+    # scripts/bom_split.py emits what an order ships: the PCBWay assembly BOM and the
+    # hand-buy carts. Its build() must stay clean -- a sourced part with no Supplier
+    # cannot be routed to a cart, and would silently vanish from the buy list.
+    try:
+        import bom_split
+        asm, hand, _off, _once, probs = bom_split.build()
+        if probs:
+            err("the buy documents cannot be generated cleanly: " + "; ".join(probs))
+        elif len(asm) and len(hand):
+            ok(f"buy documents split cleanly: {len(asm)} assembly line(s) / "
+               f"{sum(r['qty'] for r in asm)} placed parts, {len(hand)} hand-buy line(s) / "
+               f"{sum(r['qty'] for r in hand)} hand-soldered parts")
+    except Exception as e:
+        warn(f"buy-document split not checked -- {type(e).__name__}: {e}")
+
+    # --- the HAND-SOLDER buy list ---------------------------------------------------
+    # Excluding SC1-4 and PV1-2 from both fab files is correct -- they are hand-soldered
+    # -- but it leaves them bought by NOBODY: no line in the assembly BOM, no line in the
+    # CPL. The two most expensive, most supply-constrained parts on the card are exactly
+    # the ones the fab package is silent about, and the silence is by design.
+    #
+    # The specific way that goes wrong: the four supercaps are NOT four of one part.
+    # SC1/SC3 are SS17 1.8 F (3-153-440) and SC2/SC4 are WS17 1 F (3-153-438) -- two of
+    # each, two MPNs, two separate stock pools. Ordering 4x either one builds nothing.
+    # (The datasheet filename in datasheets/ still reads "SC1-SC4 ... 3-153-438", which
+    # is that error written down; BOM/README's generated table has it right.)
+    #
+    # So: derive the buy list from the design and print it on every run, and hold it
+    # against BOM/README -- the document someone actually orders from.
+    sch = os.path.join(ROOT, "PCB", "solar-glow-drh-v4_0.kicad_sch")
+    hand = [f.GetReference() for f in board.GetFootprints()
+            if f.IsExcludedFromBOM() and not f.IsDNP() and f.GetReference()
+            and not re.match(r"^(MH|MP)\d+$", f.GetReference())]
+    if not hand:
+        return
+    try:
+        stext = open(sch, encoding="utf-8", errors="replace").read()
+    except OSError as e:
+        warn(f"hand-solder buy list not checked -- {type(e).__name__}: {e}")
+        return
+    mpn_of = {}
+    for blk in re.split(r"\n\t\(symbol\n", stext):
+        rm = re.search(r'\(property "Reference"\s+"([^"]+)"', blk)
+        pm = re.search(r'\(property "MPN"\s+"([^"]*)"', blk)
+        if rm and pm and rm.group(1) in hand:
+            mpn_of[rm.group(1)] = pm.group(1).strip()
+    groups = {}
+    for r in sorted(hand):
+        groups.setdefault(mpn_of.get(r, ""), []).append(r)
+    if "" in groups:
+        err(f"hand-soldered part(s) with no MPN in the schematic -- nothing in the repo says "
+            f"what to buy for them: {', '.join(groups[''])}")
+        del groups[""]
+    # BOM/README is the derived availability table -- the thing a human orders from.
+    bomdoc = os.path.join(ROOT, "BOM", "README.md")
+    try:
+        rows = {}
+        for line in open(bomdoc, encoding="utf-8"):
+            m = re.match(r"\|[^|]*\|\s*([^|]+?)\s*\|\s*(\d+)\s*\|[^|]*\|\s*`([^`]+)`", line)
+            if m:
+                rows[m.group(3).strip()] = (m.group(1).strip(), int(m.group(2)))
+    except OSError:
+        warn("BOM/README not present -- hand-solder buy list printed but not cross-checked")
+        rows = None
+    problems = []
+    if rows is not None:
+        for part, refs in sorted(groups.items()):
+            want = (", ".join(refs), len(refs))
+            got = rows.get(part)
+            if got is None:
+                problems.append(f"{part} (x{len(refs)}: {want[0]}) has no row in BOM/README")
+            elif got != want:
+                problems.append(f"{part}: board says {want[1]}x [{want[0]}], "
+                                f"BOM/README says {got[1]}x [{got[0]}]")
+    if problems:
+        err("the hand-solder buy list disagrees with BOM/README -- these parts are in NEITHER "
+            "fab file, so this table is the only thing that buys them; regenerate it with "
+            "scripts/check_stock.py: " + "; ".join(problems))
+    else:
+        listing = "; ".join(f"{p} x{len(r)} ({', '.join(r)})" for p, r in sorted(groups.items()))
+        ok(f"hand-solder buy list (in neither fab file, buy separately): {listing}")
+
+
 def check_part_colors():
     print("[10] every 3D model carries the colour the parts table gives it")
     sys.path.insert(0, os.path.join(ROOT, "scripts"))
@@ -1268,144 +1487,6 @@ def board_footprints():
     return out
 
 
-def bom_packages():
-    """{refdes: package string} from the BOM master xlsx (BOM/*-BOM.xlsx).
-
-    stdlib only: an .xlsx is a zip of XML, and all we want is column 4 of each
-    row. Cells arrive either as inline strings (<is><t>) or via the shared-string
-    table, so both are handled. A row's first cell may list several refs
-    ("R17, R18"), which is why it is split.
-    """
-    path = os.path.join(ROOT, "BOM", "solar-glow-drh-v4_0-BOM.xlsx")
-    if not os.path.exists(path):
-        return {}
-    import zipfile
-    with zipfile.ZipFile(path) as z:
-        shared = []
-        if "xl/sharedStrings.xml" in z.namelist():
-            sx = z.read("xl/sharedStrings.xml").decode("utf8", "replace")
-            shared = re.findall(r"<t[^>]*>([^<]*)</t>", sx)
-        sheet = z.read("xl/worksheets/sheet1.xml").decode("utf8", "replace")
-    out = {}
-    for row in re.findall(r"<row.*?</row>", sheet, re.S):
-        cells = []
-        for c in re.finditer(r"<c[^>]*?(?:\st=\"(\w+)\")?[^>]*>(.*?)</c>", row, re.S):
-            typ, body = c.group(1), c.group(2)
-            # Excel splits a styled cell into several <t> runs; take them all, or a
-            # cell like "0603 (R_0603_1608Metric)" reads back as just "0603 " -- or
-            # as nothing, if the first run is empty.
-            inline = "".join(re.findall(r"<t[^>]*>([^<]*)</t>", body))
-            if typ == "s":
-                v = re.search(r"<v>(\d+)</v>", body)
-                cells.append(shared[int(v.group(1))] if v and int(v.group(1)) < len(shared) else "")
-            elif inline:
-                cells.append(inline)
-            else:
-                v = re.search(r"<v>([^<]*)</v>", body)
-                cells.append(v.group(1) if v else "")
-        if not cells:
-            continue
-        # Find the package cell by CONTENT, not by column index. Some rows carry a
-        # leading empty cell, so a fixed index lands on the value column instead
-        # ("100 nF, X7R, 50 V") and the row is silently skipped -- which is how the
-        # first cut of this check only covered 15 of 32 comparable parts.
-        pkg = ""
-        for c in cells[1:]:
-            if re.match(r"^(0402|0603|0805|1008|1206)\b", c.strip()):
-                pkg = c.strip()
-                break
-        for r in re.split(r"[,/]", cells[0]):
-            r = r.strip()
-            if re.match(r"^[A-Z]+\d+$", r):
-                out[r] = pkg
-    return out
-
-
-# Land geometry -> chip package, calibrated against footprints whose class is
-# already known from their KiCad lib_id (C_0402 = 0.96 mm pitch, C_0603 = 1.55,
-# R_0603 = 1.65, C_0805 = 1.90, L_1008 = 2.15). The bands are deliberately wide:
-# this project draws its own hand-solder lands slightly larger than KiCad's, so
-# the 0402 band has to admit both 0.96 and the house 1.02.
-_LAND_BANDS = ((0.90, 1.10, "0402"), (1.45, 1.75, "0603"),
-               (1.80, 2.00, "0805"), (2.05, 2.30, "1008"))
-
-
-def board_land_classes():
-    """{refdes: (package_class, pitch)} for every 2-pad SMD footprint."""
-    with open(PCB, encoding="utf-8", errors="replace") as fh:
-        s = fh.read()
-    out = {}
-    for m in re.finditer(r"(?m)^\s*\(footprint ", s):
-        depth, i = 0, s.index("(", m.start())
-        while i < len(s):
-            c = s[i]
-            if c == "(":
-                depth += 1
-            elif c == ")":
-                depth -= 1
-                if depth == 0:
-                    break
-            elif c == '"':
-                i += 1
-                while i < len(s) and s[i] != '"':
-                    i += 2 if s[i] == "\\" else 1
-            i += 1
-        blk = s[m.start():i + 1]
-        ref = re.search(r'\(property "Reference" "([^"]+)"', blk)
-        pads = re.findall(
-            r'\(pad "[^"]*" \w+ \w+\s*\(at (-?[\d.]+) (-?[\d.]+)(?: -?[\d.]+)?\)\s*\(size ([\d.]+) ([\d.]+)\)',
-            blk)
-        if not ref or len(pads) != 2:
-            continue
-        (x1, y1, _, _), (x2, y2, _, _) = [tuple(map(float, p)) for p in pads]
-        pitch = max(abs(x1 - x2), abs(y1 - y2))
-        cls = next((n for lo, hi, n in _LAND_BANDS if lo <= pitch <= hi), None)
-        if cls:
-            out[ref.group(1)] = (cls, round(pitch, 3))
-    return out
-
-
-def check_package_vs_land():
-    """Does the part the BOM orders actually fit the land the board draws?
-
-    This exists because of FB1 (2026-07-28). The design notes, the BOM and even
-    the schematic symbol's Value all said "0603 ferrite", but the Footprint field
-    was never changed, so a 0603 part was being ordered for a 0402 land -- its
-    terminations would sit ~0.165 mm outboard of the pad centres with almost no
-    fillet. NOTHING caught it: KiCad's schematic parity only compares the
-    schematic to the board, and those two agreed with each other. The BOM master
-    is a third copy of the truth, and it was the only one that was right.
-
-    So this compares the ORDERED package against the DRAWN land. Cheap, and it is
-    the only check in this repo that can see that class of drift.
-
-    Coverage is partial and SAYS SO: it can only speak for two-pad parts whose BOM
-    package cell starts with a size token. About 16 rows word it differently and
-    are listed in a note rather than silently dropped. Widen the BOM wording, not
-    this parser, if you want them covered.
-    """
-    print("[4] BOM package vs board land geometry")
-    bom, land = bom_packages(), board_land_classes()
-    checked, skipped = 0, []
-    for ref in sorted(land):
-        pkg = bom.get(ref)
-        m = re.match(r"^(0402|0603|0805|1008|1206)\b", pkg or "")
-        if not m:
-            skipped.append(ref)
-            continue
-        checked += 1
-        cls, pitch = land[ref]
-        if m.group(1) != cls:
-            err(f"{ref}: BOM orders a {m.group(1)} part ({pkg!r}) but the board land "
-                f"is {cls} (pad pitch {pitch} mm) -- the part will not fit")
-    if not errors or checked:
-        ok(f"{checked} of {len(land)} two-pad parts cross-checked, package matches land")
-    # Never fail silently: say which parts this check could NOT speak for.
-    if skipped:
-        print(f"  note:   {len(skipped)} two-pad parts have no size in the BOM package "
-              f"column, so they are not covered: {' '.join(sorted(skipped))}")
-
-
 def check_board_sch_parity(comps, sch_fps):
     """Guard the schematic <-> board boundary.
 
@@ -1459,7 +1540,6 @@ def main():
     check_pin_contract(netpins)
     check_bom_parity(comps)
     check_board_sch_parity(comps, sch_fps)
-    check_package_vs_land()
     check_model_refs()
     check_mask_art()
     check_part_heights()
@@ -1471,6 +1551,7 @@ def main():
     check_footprint_sides()
     check_nfc_coil()
     check_gold_set()
+    check_cpl_bom_agreement()
     print(f"\n== {len(errors)} error(s), {len(warnings)} warning(s) ==")
     sys.exit(1 if errors else 0)
 

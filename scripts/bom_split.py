@@ -1,0 +1,256 @@
+#!/usr/bin/env python3
+"""Split the design into the TWO buy documents an order actually needs.
+
+    python3 scripts/bom_split.py                 # write them into Generated/fabdocs/
+    python3 scripts/bom_split.py --boards 10     # quantities for a 10-card build
+    python3 scripts/bom_split.py --check         # regenerate in memory, report, write nothing
+
+WHY THIS EXISTS
+
+A card order is two purchases, not one, and they go to different places:
+
+  1. THE ASSEMBLY BOM -> PCBWay. Everything the machine buys and places.
+  2. THE HAND-BUY LIST -> your own DigiKey / Mouser carts. Everything else: the
+     parts that are deliberately hand-soldered (the supercaps and the solar
+     cells), plus the things that never touch a pick-and-place at all -- the UPDI
+     programmer, the Tag-Connect cable, the ferrite sheet, the screws, the film.
+
+Before this, only the first existed as a generated artifact. The second was spread
+across a spreadsheet's off-board rows, a live availability table, and prose in
+TODO -- which is how the two-of-each supercap split nearly became four-of-one.
+The card needs SC1/SC3 = SS17 1.8 F (3-153-440) and SC2/SC4 = WS17 1 F
+(3-153-438): two MPNs, two stock pools, and no fab file mentions either.
+
+WHERE THE TRUTH COMES FROM
+
+Board parts are read from the SCHEMATIC (MPN / Supplier / Supplier P/N per
+symbol) and classified by the BOARD's own flags -- the same `exclude_from_bom`
+and `dnp` attributes consistency check [15] gates. So a part moves between the
+two documents by changing the design, never by editing a list:
+
+    on board, not BOM-excluded, not DNP  ->  ASSEMBLY   (PCBWay places it)
+    on board, BOM-excluded, not DNP      ->  HAND-BUY   (you solder it)
+    DNP / no-part footprints             ->  neither    (bridges, pads, holes)
+
+Items with no schematic symbol cannot be derived, so they are declared once in
+OFF_BOARD below, with a reason each -- the exclusion-ledger shape used throughout
+this repo. That table is the ONLY hand-maintained data here.
+"""
+from __future__ import annotations
+
+import argparse
+import csv
+import os
+import re
+import sys
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+SCH = os.path.join(ROOT, "PCB", "solar-glow-drh-v4_0.kicad_sch")
+PCB = os.path.join(ROOT, "PCB", "solar-glow-drh-v4_0.kicad_pcb")
+OUTDIR = os.path.join(ROOT, "Generated", "fabdocs")
+STEM = "solar-glow-drh-v4_0"
+
+# --- things with no schematic symbol -------------------------------------------------
+# Every row here is bought on the same trip as the supercaps, or is deliberately not
+# bought at all. `supplier` routes it to a cart; None means "not a distributor line".
+# Quantities are PER BOARD unless the note says otherwise.
+OFF_BOARD = [
+    # ref,   qty, mpn,                     supplier,   dist_pn,        note
+    ("FER1",  1, "364006",                 "DigiKey",  "732-5049-ND",
+     "Wurth WE-FSFS ferrite sheet behind the coil -- load-bearing for the NFC tune"),
+    ("HW1",   4, "DIN 84 M2x3 brass",      None,       "",
+     "shell screws; any DIN 84 M2x3 -- source locally, not a distributor line"),
+    ("INS1",  1, "polyimide film 0.05 mm", None,       "",
+     "insulator; cut from stock film -- not a distributor line"),
+]
+# Bought ONCE for the project, not once per board -- so a --boards multiplier must not
+# scale them. Tools and cables, not parts.
+OFF_BOARD_ONCE = [
+    ("PRG1",  1, "5879",        "DigiKey", "",
+     "Adafruit UPDI Friend. SOURCE CONFLICT to settle at order: the BOM master says "
+     "DigiKey by MPN 5879, TODO's sweep recorded it as Mouser-only. Check both."),
+    ("CBL1",  1, "TC2030-MCP",  "DigiKey", "",
+     "Tag-Connect cable. TRAP: DigiKey stocks the LEGLESS TC2030-MCP-NL; the legged "
+     "TC2030-MCP this design wants is zero/restricted at Mouser -- consider Tag-Connect direct."),
+]
+# Orderable, but not from a distributor -- so it belongs on the page a human reads
+# before ordering, not in a cart CSV.
+#
+# NOTHING UNORDERABLE IS LISTED AT ALL. The old spreadsheet carried rows for `L1`
+# (the NFC antenna, which is etched PCB copper) and `SJ1` (deleted from the design
+# on 2026-07-30). Neither can be bought from anywhere, so neither appears here or in
+# any generated document: a line item you cannot act on is noise in a buy list. The
+# same rule is what drops the 20 bridges, pads, mounting holes and unpopulated
+# headers -- they are flagged in the schematic and the board, and build() filters on
+# those flags rather than on a list kept here.
+NOT_DISTRIBUTOR = {
+    "ENC1": "the titanium back-shell -- its own fab order, machined from enclosure/*.step",
+}
+
+
+def _sch_parts():
+    """{ref: (mpn, supplier, dist_pn, value)} for every placed schematic symbol."""
+    text = open(SCH, encoding="utf-8", errors="replace").read()
+    out = {}
+    for blk in re.split(r"\n\t\(symbol\n", text):
+        rm = re.search(r'\(property "Reference"\s+"([^"]+)"', blk)
+        if not rm:
+            continue
+
+        def g(name):
+            m = re.search(r'\(property "' + name + r'"\s+"([^"]*)"', blk)
+            return m.group(1).strip() if m else ""
+
+        ref = rm.group(1)
+        if ref.startswith("#"):
+            continue                      # power flags
+        if ref in out and out[ref][0]:
+            continue                      # keep the first instance that carries an MPN
+        out[ref] = (g("MPN"), g("Supplier"), g("Supplier P/N"), g("Value"))
+    return out
+
+
+def _board_flags():
+    """{ref: (excluded_from_bom, dnp, footprint)} straight from the board."""
+    import pcbnew
+    b = pcbnew.LoadBoard(PCB)
+    return {f.GetReference(): (f.IsExcludedFromBOM(), f.IsDNP(), f.GetFPIDAsString())
+            for f in b.GetFootprints() if f.GetReference()}
+
+
+def _group(rows):
+    """Collapse [(ref, mpn, supplier, dist_pn, value, fp)] into per-MPN lines."""
+    by = {}
+    for ref, mpn, sup, dpn, val, fp in rows:
+        k = (mpn, sup, dpn)
+        e = by.setdefault(k, {"refs": [], "value": val, "fp": fp})
+        e["refs"].append(ref)
+    out = []
+    for (mpn, sup, dpn), e in by.items():
+        refs = sorted(e["refs"], key=lambda r: (re.sub(r"\d", "", r),
+                                                int(re.sub(r"\D", "", r) or 0)))
+        out.append({"mpn": mpn, "supplier": sup, "dist_pn": dpn, "refs": refs,
+                    "qty": len(refs), "value": e["value"], "footprint": e["fp"]})
+    return sorted(out, key=lambda d: (d["supplier"] or "~", d["mpn"]))
+
+
+def build():
+    """-> (assembly, handbuy, offboard, offboard_once, problems). THE one definition."""
+    sch, flags = _sch_parts(), _board_flags()
+    asm_rows, hand_rows, problems = [], [], []
+    for ref, (exbom, dnp, fp) in sorted(flags.items()):
+        mpn, sup, dpn, val = sch.get(ref, ("", "", "", ""))
+        # A "no part" placeholder MPN is how this schematic marks bridges, pads,
+        # mounting holes and unpopulated headers. They order nothing, by design.
+        placeholder = mpn.startswith("(") or not mpn
+        if dnp or placeholder:
+            continue
+        row = (ref, mpn, sup, dpn, val, fp)
+        if exbom:
+            hand_rows.append(row)
+        else:
+            asm_rows.append(row)
+        if not sup:
+            problems.append(f"{ref} ({mpn}) has an MPN but no Supplier -- cannot be routed to a cart")
+    return _group(asm_rows), _group(hand_rows), OFF_BOARD, OFF_BOARD_ONCE, problems
+
+
+def _w(path, header, rows):
+    with open(path, "w", newline="", encoding="utf-8") as fh:
+        wr = csv.writer(fh)
+        wr.writerow(header)
+        wr.writerows(rows)
+    return f"{os.path.relpath(path, ROOT)} ({len(rows)} line(s))"
+
+
+def write_all(boards, outdir):
+    asm, hand, off, once, problems = build()
+    os.makedirs(outdir, exist_ok=True)
+    made = []
+
+    # 1. PCBWay assembly BOM
+    made.append(_w(os.path.join(outdir, f"{STEM}-pcbway-assembly.csv"),
+                   ["Designator", "Qty per board", "Value", "Footprint", "MPN", "Supplier",
+                    "Supplier P/N"],
+                   [[" ".join(r["refs"]), r["qty"], r["value"], r["footprint"], r["mpn"],
+                     r["supplier"], r["dist_pn"]] for r in asm]))
+
+    # 2/3. Hand-buy carts, one file per distributor, in that distributor's upload shape.
+    #      DigiKey wants Quantity,Part Number,Customer Reference; Mouser wants its own
+    #      part number first. Anything with no distributor P/N falls back to the MPN,
+    #      which both accept.
+    carts = {}
+    for r in hand + [{"mpn": m, "supplier": s, "dist_pn": d, "refs": [ref], "qty": q,
+                      "value": n, "footprint": ""} for ref, q, m, s, d, n in off]:
+        if r["supplier"]:
+            carts.setdefault(r["supplier"], []).append((r, boards))
+    for ref, q, m, s, d, n in once:          # tools: quantity does NOT scale with boards
+        carts.setdefault(s, []).append(({"mpn": m, "supplier": s, "dist_pn": d,
+                                         "refs": [ref], "qty": q, "value": n,
+                                         "footprint": ""}, 1))
+    for sup, items in sorted(carts.items()):
+        rows = []
+        for r, mult in items:
+            rows.append([r["qty"] * mult, r["dist_pn"] or r["mpn"], " ".join(r["refs"])])
+        made.append(_w(os.path.join(outdir, f"{STEM}-handbuy-{sup.lower()}.csv"),
+                       ["Quantity", "Part Number", "Customer Reference"], rows))
+
+    # 4. One human-readable page for the whole hand buy, because a cart CSV cannot
+    #    carry the traps (the legless cable, the two-MPN supercap split).
+    md = [f"# Hand-buy list — SOLAR-GLOW DRH v4.0 ({boards} board"
+          f"{'s' if boards != 1 else ''})", "",
+          "GENERATED by `scripts/bom_split.py` — do not edit. Everything here is bought by",
+          "**you**, not by PCBWay: the deliberately hand-soldered parts plus the items that",
+          "never reach a pick-and-place.", "",
+          "| Ref(s) | Qty | MPN | Supplier | Distributor P/N | What |",
+          "|---|---|---|---|---|---|"]
+    for r in hand:
+        md.append(f"| {', '.join(r['refs'])} | {r['qty'] * boards} | `{r['mpn']}` | "
+                  f"{r['supplier']} | {r['dist_pn']} | {r['value']} |")
+    for ref, q, m, s, d, n in off:
+        md.append(f"| {ref} | {q * boards} | `{m}` | {s or '—'} | {d} | {n} |")
+    md += ["", f"**Bought once for the project, not per board:**", "",
+           "| Ref | Qty | MPN | Supplier | What |", "|---|---|---|---|---|"]
+    for ref, q, m, s, d, n in once:
+        md.append(f"| {ref} | {q} | `{m}` | {s or '—'} | {n} |")
+    md += ["", "**Ordered, but not from a distributor:**", ""]
+    for ref, why in sorted(NOT_DISTRIBUTOR.items()):
+        md.append(f"- `{ref}` — {why}")
+    md += ["", "**The supercaps are two different parts.** SC1/SC3 and SC2/SC4 are different",
+           "capacitances with different MPNs and separate stock pools; four of either one",
+           "builds nothing. Consistency check [15] holds this list against the board."]
+    p = os.path.join(outdir, f"{STEM}-handbuy.md")
+    open(p, "w", encoding="utf-8").write("\n".join(md) + "\n")
+    made.append(f"{os.path.relpath(p, ROOT)} ({len(hand) + len(off) + len(once)} line(s))")
+    return asm, hand, problems, made
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--boards", type=int, default=1, help="scale per-board quantities")
+    ap.add_argument("--check", action="store_true", help="report only, write nothing")
+    ap.add_argument("--outdir", default=OUTDIR)
+    a = ap.parse_args()
+    if a.check:
+        asm, hand, _, _, problems = build()
+        print(f"  assembly (PCBWay places): {len(asm)} line(s), "
+              f"{sum(r['qty'] for r in asm)} part(s) per board")
+        print(f"  hand-buy (you solder):    {len(hand)} line(s), "
+              f"{sum(r['qty'] for r in hand)} part(s) per board")
+        for r in hand:
+            print(f"      {r['mpn']:16} x{r['qty']}  {', '.join(r['refs'])}")
+        print(f"  off-board:                {len(OFF_BOARD)} per-board + "
+              f"{len(OFF_BOARD_ONCE)} one-off + {len(NOT_DISTRIBUTOR)} non-distributor")
+        for p in problems:
+            print(f"  PROBLEM: {p}")
+        return 1 if problems else 0
+    asm, hand, problems, made = write_all(a.boards, a.outdir)
+    for m in made:
+        print(f"  wrote {m}")
+    for p in problems:
+        print(f"  PROBLEM: {p}")
+    return 1 if problems else 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
