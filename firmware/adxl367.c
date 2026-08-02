@@ -64,7 +64,21 @@ uint8_t adxl367_init_tap(void)
     /* ---- arm last: enter measurement mode ---- */
     rc |= twi_reg_write(ADXL367_ADDR, ADXL_POWER_CTL,     ADXL_CFG_POWER_CTL);
 
-    /* drop any power-on tap / activity latch so the first real event is clean */
+    /* MANDATORY ~100 ms: "after entering measurement mode, a 100 ms wait time
+     * must be observed before reading acceleration data" (data sheet Rev. B,
+     * Measurement Mode; Table 1 puts the first valid sample at ~100 ms + 1/ODR).
+     * The tap and activity engines consume that same settling data stream, so
+     * the latch clears below used to run INSIDE the window (audit (b) -- the
+     * 10 ms reset-latency fix above never covered this second window): a latch
+     * dropped at t=0 could simply re-latch on settling garbage and serve a
+     * phantom tap the moment main() reaches sei(). 110 ms = window + 1/ODR at
+     * the configured 100 Hz. Boot-only cost, pre-WDT, invisible next to a
+     * flash cycle. */
+    _delay_ms(110);
+
+    /* drop any power-on tap / activity latch so the first real event is clean
+     * -- NOW the stream behind the engines is valid, so what stays cleared
+     * stays cleared. */
     adxl367_clear_tap();
     adxl367_clear_activity();
     return rc;

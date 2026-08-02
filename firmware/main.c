@@ -66,6 +66,22 @@ static uint8_t  dormant;
 static uint16_t facedown_polls;
 #endif
 
+#if USE_DARK_DORMANT
+/* dark dormant (the in-a-bag/pocket co-condition; board.h has the design). Orientation-
+ * independent companion to face-down dormancy: continuously dark for DARK_DORMANT_POLLS
+ * -> suppress the single-tap / motion / NFC-ack glows. Exits on any lit poll, or on a
+ * DOUBLE tap (the deliberate dark-room escape). Main-context only. */
+static uint8_t  dark_dormant;
+static uint16_t dark_polls;          /* consecutive dark polls toward DARK_DORMANT_POLLS */
+#endif
+
+/* (A shipping/"coma" mode lived here for part of 2026-08-02 -- 48 h of dark dropping the
+ * accel to standby, disabling the WDT and slowing the PIT to 32 s ticks. Removed: this card
+ * is hand-delivered, so the dark-shipping-box premise never occurs, and a mode that changes
+ * the poll rate, the watchdog and the accel's power state is a lot of failure surface to
+ * carry for a scenario that does not happen. Dark dormancy above is the stowage answer that
+ * does. See feature-roadmap.md for the full decision record.) */
+
 /* ---------------- init ---------------- */
 
 static void clocks_init(void)
@@ -326,9 +342,33 @@ int main(void)
              * muted event ~0.1 uC -- in exactly the repeat-event scenarios the mutes
              * exist to cheapen. Gate first, convert only if a glow can still fire. */
             uint8_t peak = 0;
+            uint8_t mute = 0;
 #if USE_FACEDOWN_DORMANT
-            if (!dormant)            /* face-down: suppress the glow + tally (latches still acked below) */
+            if (dormant) mute = 1;   /* face-down: suppress the glow + tally (latches still acked below) */
 #endif
+#if USE_DARK_DORMANT
+            if (dark_dormant) {
+                /* The deliberate dark-room escape. With double-tap available it is a
+                 * DOUBLE tap -- hardware-validated against TAP_LATENT/TAP_WINDOW, which
+                 * bag jostle essentially never satisfies -- so a single incidental tap
+                 * in a pocket stays silent (the leak this knob exists to close) while a
+                 * deliberate double still lights the monogram in a pitch-dark room.
+                 * With USE_DOUBLE_TAP compiled out there is no such distinction to draw:
+                 * `dbl` is always 0, so requiring it would leave a dark-stowed card with
+                 * NO tap escape at all -- unresponsive until it next sees light, which is
+                 * a worse failure than the leak. So in that build ANY tap escapes, which
+                 * degrades to roughly the pre-dormancy behaviour rather than to a dead
+                 * card. Either way the escaping tap also glows: the wake should be
+                 * visible, or the owner cannot tell the card from a flat one. */
+#if USE_DOUBLE_TAP
+                if (dbl) { dark_dormant = 0; dark_polls = 0; }
+                else     mute = 1;
+#else
+                dark_dormant = 0; dark_polls = 0;
+#endif
+            }
+#endif
+            if (!mute)
                 peak = sense_glow_peak(dbl ? DTAP_PEAK : GLOW_PEAK);
             if (peak) {
                 /* tally BEFORE the glow: the EEPROM write then happens at the
@@ -370,6 +410,9 @@ int main(void)
 #if USE_FACEDOWN_DORMANT
             if (dormant) mute = 1;   /* face-down: no acknowledge glow */
 #endif
+#if USE_DARK_DORMANT
+            if (dark_dormant) mute = 1;   /* stowed dark: read the vCard silently */
+#endif
 #if USE_NFC_ACK_COOLDOWN
             /* rate-limit: a phone parked in-field keeps polling and re-toggling FD; ack at most
              * once per NFC_ACK_COOLDOWN_S so a stowed re-poll can't bleed the reserve breath by
@@ -402,6 +445,9 @@ int main(void)
                 if (adxl367_read_z() >= FACEDOWN_Z_THRESH) { dormant = 0; facedown_polls = 0; }
                 mute = 1;
             }
+#endif
+#if USE_DARK_DORMANT
+            if (dark_dormant) mute = 1;   /* stowed dark: no motion breath (any orientation) */
 #endif
 #if USE_DARK_MOTION_MUTE
             /* Stowed in the dark (last poll saw no light): mute the *motion* soft-breath so a card
@@ -511,11 +557,32 @@ int main(void)
                  * play the "loading" sweep. Caps-full (sense_caps_full()) is the hard gate, so it
                  * can never draw the pack down; it re-arms each poll, looping while the sun holds
                  * and spending the surplus harvest as light instead of leaving it unharvested. The greeting above
-                 * wins on the entry edge (one breath in), then this runs while the card sits. */
-                else if ((vf & SENSE_SUN_bm) && sense_caps_full())
-                    led_sweep(SWEEP_PASSES, SWEEP_PASS_MS, SWEEP_PEAK, SWEEP_OVERLAP);
+                 * wins on the entry edge (one breath in), then this runs while the card sits.
+                 * The peak is routed through sense_glow_peak() -- the same chokepoint as
+                 * every other glow -- so the ballast guard's high-STO clamp applies to the
+                 * sweep too (it was the one animation outside it). At caps-full (>= 4.4 V)
+                 * the brownout stretch returns full peak, so normal harvest is unchanged. */
+                else if ((vf & SENSE_SUN_bm) && sense_caps_full()) {
+                    uint8_t sp = sense_glow_peak(SWEEP_PEAK);
+                    if (sp)
+                        led_sweep(SWEEP_PASSES, SWEEP_PASS_MS, sp, SWEEP_OVERLAP);
+                }
 #endif
                 prev_light = light;
+#if USE_DARK_DORMANT
+                /* Dark-dormancy clock. Deliberately INSIDE the not-skip path, for two
+                 * reasons: `light` is this poll's reading and already in hand, so the
+                 * clock costs no extra ADC conversion; and while the card is face-down
+                 * dormant every glow is suppressed anyway, so there is nothing for dark
+                 * dormancy to add there. A card that is face-down dormant and then
+                 * picked up in the dark starts its dark clock from that moment, which
+                 * is the honest reading of "continuously dark while awake". */
+                if (light) {
+                    dark_dormant = 0; dark_polls = 0;      /* any light ends it, ~1 poll */
+                } else if (!dark_dormant && ++dark_polls >= DARK_DORMANT_POLLS) {
+                    dark_dormant = 1;
+                }
+#endif
             }
 #if FRAM_RESLEEP_EVERY_POLL
             /* Defensive re-park: the accel traffic this tick may have woken the

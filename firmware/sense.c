@@ -135,14 +135,12 @@ static uint16_t adc_read_raw(uint8_t muxpos)
      * IDLE-sleep through it rather than spinning the core in active mode: the ADC
      * keeps converting in IDLE and RESRDY wakes us (same race-free SEI+SLEEP idiom
      * as the glow). RESRDY is the first wake in the healthy case; a stray PIT/accel
-     * wake just re-checks the flag and sleeps again. The guard bounds a stuck ADC
-     * (RESRDY never arrives) to 3 wakes, then bails with RESULT 0 -- reads as low
-     * rail / dark, fail-safe no glow. NOTE the bound is 3 WAKES, not a time: on a
-     * dark, motionless card the only Idle wake is the PIT, so a stuck read costs up
-     * to ~3 poll periods, and a tick that chains several reads (temp + vmin + light)
-     * can then outrun the 8 s WDT -> watchdog reset. That is the intended recovery
-     * for dead analog (reinit everything), not a hang -- the WDT is the designed
-     * backstop here, not a bystander. */
+     * wake just re-checks the flag and sleeps again. The sleep loop bounds a stuck
+     * ADC (RESRDY never arrives) to 3 wakes; on a dark, motionless card the only
+     * Idle wake is the PIT, so a genuinely stuck read costs up to ~3 poll periods,
+     * and a tick that chains several reads (temp + vmin + light) can then outrun
+     * the 8 s WDT -> watchdog reset. That is the intended recovery for dead analog
+     * (reinit everything) -- the WDT is the designed backstop here, not a bystander. */
     slp_set_mode(SLEEP_MODE_IDLE);
     for (uint8_t guard = 0; guard < 3 && !adc_done; guard++) {
         cli();
@@ -152,6 +150,17 @@ static uint16_t adc_read_raw(uint8_t muxpos)
         sleep_cpu();
         slp_disable();
     }
+    /* TIME-bounded tail (audit (a) fix). Three wakes is NOT a time bound: three
+     * UNRELATED interrupts (PIT + accel INT + FD can co-arrive -- a phone tap IS
+     * all three at once) landing inside one conversion used to exhaust the loop
+     * and bail with RESULT 0, so a perfectly HEALTHY ADC read as "rail low /
+     * dark" -- fail-safe for the glow, but it also cleared prev_light and ate a
+     * real dark->light edge. The spin below is the actual time bound: ~4096
+     * iterations of a volatile-flag check is >= 20 ms at 1 MHz, orders beyond
+     * any real conversion, and it is only ever reached (and only burns active-
+     * mode time) in the already-pathological multi-wake case. A genuinely dead
+     * ADC still exits 0 here, and the WDT remains the recovery for that. */
+    for (uint16_t spin = 4096u; spin && !adc_done; spin--) { }
     ADC0.INTCTRL = 0;                  /* stop the ADC interrupt */
     if (adc_done)
         res = (uint16_t)ADC0.RESULT;   /* 12-bit single fits the low half; reading
@@ -270,9 +279,19 @@ static uint8_t sense_ee_safe(void)
  * IS sense_rail_ok() (peak above the floor, 0 below). */
 uint8_t sense_glow_peak(uint8_t peak)
 {
-#if USE_BROWNOUT_STRETCH
     uint16_t mv = sense_vdd_mv();
-    if (mv <  VS_GLOW_FLOOR_MV) return 0;                     /* below floor: dark, let it charge */
+    if (mv < VS_GLOW_FLOOR_MV) return 0;                      /* below floor: dark, let it charge */
+#if USE_BALLAST_GUARD
+    /* HIGH-side clamp (the R1-R4 audit item): at an abuse-corner STO (bench
+     * supply, over-voltage -- the AEM's own VOVCH 4.65 V never reaches the
+     * threshold) a held 100% duty into a min-Vf LED pushes the 0402 1/16 W
+     * ballasts to ~110% of rating. Cap the duty so worst-corner average power
+     * stays under 62.5 mW; see GLOW_CLAMP_STO_MV in board.h for the numbers.
+     * Costs nothing here -- the STO read is already in hand. */
+    if (mv > GLOW_CLAMP_STO_MV && peak > GLOW_CLAMP_PEAK)
+        peak = GLOW_CLAMP_PEAK;
+#endif
+#if USE_BROWNOUT_STRETCH
     if (mv >= VS_GLOW_FULL_MV)  return peak;                  /* healthy rail: full brightness    */
     /* linear ramp between the dim floor and `peak`. dim < peak always (VS_GLOW_DIM_PEAK <
      * GLOW_PEAK), so peak-dim never underflows; span is a positive compile-time constant. */
@@ -281,24 +300,58 @@ uint8_t sense_glow_peak(uint8_t peak)
     uint16_t span = VS_GLOW_FULL_MV - VS_GLOW_FLOOR_MV;
     return (uint8_t)(dim + (uint32_t)(peak - dim) * over / span);
 #else
-    return sense_rail_ok() ? peak : 0u;                      /* original hard cutoff at the floor */
+    /* stretch off: the old hard cutoff, now sharing the single mV read above
+     * (sense_rail_ok()'s raw-count compare and this are the same boolean). */
+    return peak;
 #endif
 }
 
-/* ---------- EEPROM lifetime activation counter ---------- */
+/* ---------- EEPROM lifetime activation counter (wear-levelled ring) ---------- */
 
-/* Address 0 in the EEPROM address space -- NOT a RAM null pointer. avr-libc's
- * eeprom_*_dword take an address within EEPROM, where 0 is the first cell; the
- * (uint32_t *) cast is the avr-libc idiom for that, not a null-pointer deref. */
-#define EE_COUNT_ADDR  ((uint32_t *)0)     /* 4-byte counter at EEPROM offset 0 */
+/* WEAR-LEVELLED SLOT RING (audit (c) fix). The tap tally is the one writer with a
+ * user-driven, unbounded rate, and the old single dword at offset 0 changed byte 0
+ * on every tallied tap -- a hard ~100k ceiling on that one cell (DS40002443 EEPROM
+ * endurance), i.e. the card's marquee interaction carried its own odometer limit.
+ * Ring instead: EE_TAP_SLOTS dwords, each commit written to the slot AFTER the one
+ * holding the current maximum, round-robin. The counter is monotonic, so the ring
+ * needs no sequence field -- THE MAX IS THE LATEST -- and per-cell wear drops by
+ * the slot count: 8 slots x 100k = ~800k taps before any cell ages out, with the
+ * whole ring still just 32 B of the 512 B EEPROM. An erased slot reads 0xFFFFFFFF
+ * and maps to 0, so a virgin part starts clean at slot 0.
+ *   THE 8x IS REAL, and it rests on one datasheet fact worth citing because the
+ * scheme collapses without it: the EA's EEPROM page is 8 B, so a PAGE-granular
+ * write would wear two slots at once (4x, not 8x) and would also drag the
+ * power-cycle counter at offset 9-10 into slot 0's page. It does not.
+ * DS40002443 Table 11-4 gives the EEPROM array BYTE erase granularity and BYTE
+ * write granularity, and 11.3.1.2 is explicit: "The remaining bytes on the page
+ * will not be erased/written ... only the bytes updated in the page buffer will
+ * be written or erased in the EEPROM." So each commit wears its four bytes and
+ * nothing else, and the ring neighbours (and the boot counter) are untouched.
+ *   Offset 0..3 is the RETIRED single-cell tally (pre-ring layout). No fielded
+ * card ever wrote it -- the first article does not exist yet -- so there is no
+ * migration read; it stays reserved so old UPDI notes don't misread new data. */
+#define EE_TAP_RING_BASE   12u             /* offsets 12..43: 8 x 4 B, past boot count at 9-10 */
+#define EE_TAP_SLOTS       8u
 
-/* Read the lifetime tap counter. The firmware only ever increments it at runtime
- * (sense_count_inc); this reader exists for external readout over UPDI/debug and
- * future use -- uncalled on-chip BY DESIGN, kept as API (--gc-sections drops it if
- * it stays unused). Not dead code. */
+static uint32_t tap_slot_read(uint8_t idx)
+{
+    uint32_t v = eeprom_read_dword((uint32_t *)(EE_TAP_RING_BASE + 4u * idx));
+    return (v == 0xFFFFFFFFUL) ? 0UL : v;  /* erased slot = never written = 0 */
+}
+
+/* Read the lifetime tap counter: the maximum across the ring (monotonic counter ->
+ * max = latest). The firmware only ever increments it at runtime (sense_count_inc);
+ * this reader exists for external readout over UPDI/debug and future use --
+ * uncalled on-chip BY DESIGN, kept as API (--gc-sections drops it if it stays
+ * unused). Not dead code. */
 uint32_t sense_count_get(void)
 {
-    return eeprom_read_dword(EE_COUNT_ADDR);
+    uint32_t best = 0;
+    for (uint8_t i = 0; i < EE_TAP_SLOTS; i++) {
+        uint32_t v = tap_slot_read(i);
+        if (v > best) best = v;
+    }
+    return best;
 }
 
 void sense_count_inc(void)
@@ -320,11 +373,18 @@ void sense_count_inc(void)
     if (pending < 0xFFu) pending++;        /* saturate: 255 unflushed taps is already pathological */
     if (!sense_ee_safe())
         return;
-    uint32_t c = eeprom_read_dword(EE_COUNT_ADDR);
-    if (c == 0xFFFFFFFFUL) c = 0;          /* erased EEPROM reads all-ones */
-    c += pending;
+    /* find the latest slot (max value; last index on a tie so rotation always
+     * advances even past an update that changed nothing), then write the bumped
+     * count to the NEXT slot round-robin -- that rotation IS the wear levelling. */
+    uint32_t best = 0;
+    uint8_t  at   = (uint8_t)(EE_TAP_SLOTS - 1u);   /* all-erased ring -> next is slot 0 */
+    for (uint8_t i = 0; i < EE_TAP_SLOTS; i++) {
+        uint32_t v = tap_slot_read(i);
+        if (v >= best && v > 0) { best = v; at = i; }
+    }
+    uint32_t c = best + pending;
     pending = 0;
-    eeprom_update_dword(EE_COUNT_ADDR, c); /* update = no write if unchanged */
+    eeprom_update_dword((uint32_t *)(EE_TAP_RING_BASE + 4u * ((at + 1u) % EE_TAP_SLOTS)), c);
 }
 
 /* ---------- EEPROM sun diary (lifetime strong-sun hours) ---------- */

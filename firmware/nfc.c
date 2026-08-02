@@ -178,7 +178,22 @@ uint8_t nfc_write_ndef(const uint8_t *buf, uint16_t len)
  * Framing: TLV 03 FF 01 28 (NDEF message, 296 B) | record C2 0A 00 00 01 18
  * ("text/vcard" MIME, non-short, 280 B payload) | ... | FE terminator. 304 B
  * padded = 19 blocks, written to blocks 0x01..0x13 (sector-0 holds to 0x37 -> fits).
- * --------------------------------------------------------------------------- */
+ *
+ * NO LOCK CONTROL TLV -- RESOLVED DELIBERATE, 2026-08-02 (audit (f)). The datasheet's
+ * blanket line (8.3.7: the tag "needs a Lock Control TLV ... to ensure NFC Forum Type 2
+ * Tag compliancy") reads as if one belongs in front of this message. NXP's own memory-
+ * configuration app note says otherwise for exactly this layout: AN11786 Table 2 gives
+ * CC E1 10 6D 00 + a bare NDEF TLV + FE -- no Lock Control TLV -- as the initialization
+ * "recommended to be used on NTAG I2C plus 1k/2k unless there are special needs", and
+ * lists the Lock Control TLV among the changes needed only "when NDEF messages need
+ * more space" than that NTAG216-like T2T_Area. The CC this driver writes (nfc_write_cc)
+ * IS that recommended 6Dh profile, and this 304 B message sits comfortably inside its
+ * 872 B area, so the compliant-by-app-note configuration is the one WITHOUT the TLV --
+ * adding one would deviate from NXP's recommended profile, with hand-derived granularity
+ * bytes no validator has blessed. THE TRIGGER TO REVISIT: if the CC size byte is ever
+ * raised past 6Dh to claim more of the 2k memory, the Lock Control TLV (and a Memory
+ * Control TLV excluding the config/SRAM area) becomes REQUIRED per that same app note --
+ * do not enlarge the CC without adding both. */
 static const uint8_t ndef_default[] = {
     0x03, 0xFF, 0x01, 0x28, 0xC2, 0x0A, 0x00, 0x00,
     0x01, 0x18, 0x74, 0x65, 0x78, 0x74, 0x2F, 0x76,

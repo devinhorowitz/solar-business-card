@@ -21,9 +21,12 @@ for detail.
   free): sun diary, brownout-stretch brightness, face-down dormant, **dark-motion mute** (mute the
   motion breath when dark so a pocket-carry can't drain the reserve; a tap still glows), **NFC-ack
   cooldown** (rate-limit the field-leave glow to one per few seconds so a parked, re-polling phone
-  can't bleed the reserve breath by breath), thermal-abuse max-temp log, and the micro-power **black
-  box** (lowest-rail-ever + power-cycle count). EEPROM map: tap 0-3, sun-hours 4-5, max-temp 6,
-  min-rail 7-8, power-cycles 9-10.
+  can't bleed the reserve breath by breath), thermal-abuse max-temp log, the micro-power **black
+  box** (lowest-rail-ever + power-cycle count), and -- added 2026-08-02 -- **dark dormant**
+  (`USE_DARK_DORMANT`, the face-down dormant's in-a-bag/pocket other half; double-tap escapes it)
+  and the **ballast guard** (`USE_BALLAST_GUARD`, duty clamp above STO 5.2 V). EEPROM map (tap ring
+  since 2026-08-02; 0-3 is the retired pre-ring tap cell): tap ring 12-43 (8 x 4 B slots),
+  sun-hours 4-5, max-temp 6, min-rail 7-8, power-cycles 9-10.
 - **Deferred to the energy-budget bench** (the #1 gate -- these spend LED energy or need measured
   constants): zero-CPU reflex glow (EVSYS->TCA0), CCL "heartbeat" glow, ambient auto-brightness (also
   a dim-when-you-want-it risk + a lux->duty curve), shadow-abort / hardware brownout-reflex
@@ -37,10 +40,16 @@ for detail.
   safe channel for either is the tag's 64-byte **SRAM mailbox** read by a companion app (leaves the
   offline vCard untouched) -- worth building only if such an app ever exists; until then the counters
   stay UPDI-readable. Kept as a v-next revival hook, not a v4.0 feature.
+- **Declined on product scope (2026-08-02): shipping / "coma" mode** -- built, working, and removed
+  the same day because this card is hand-delivered, so the dark-shipping-box premise never occurs;
+  the full record, including the honest ~1.5-1.7x it actually bought, is in Tier 2 below.
 - **Won't do -- a real conflict or physics wall**: the *naive* "suppress ALL glows when dark" coma
   would kill the dark-room tap-glow (VSENSE can't tell a nightstand from a pocket) -- but its clean
-  distillation **shipped** as dark-motion mute above (mute only the *motion* breath when dark, always
-  honor a tap; credit: Gemini's sensory-fusion reframe); mains-flicker classification (the ~3 Hz VSENSE
+  distillation **shipped** twice: as dark-motion mute above (mute only the *motion* breath when dark,
+  always honor a tap; credit: Gemini's sensory-fusion reframe) and, on 2026-08-02, as **dark dormant**,
+  which answers the nightstand objection head-on rather than dodging it -- after 30 min of dark the
+  incidental glows stop, but a deliberate DOUBLE tap still lights the monogram in a pitch-dark room;
+  mains-flicker classification (the ~3 Hz VSENSE
   low-pass attenuates
   100/120 Hz ~30x); cap-touch hover / front-face touch (the ~500 kΩ // 100 nF solar node is a poor,
   noisy electrode); analog PUF / NFC OTA / TOTP (speculative, high-effort); tally-counter LED display
@@ -115,7 +124,9 @@ Each of these *reduces* draw and attacks the open energy question directly.
   `FACEDOWN_DORMANT_S` (~3 min), go dormant: suppress every glow until it is turned face-up
   again, so a stowed card can't drain the ~15 J reserve on false triggers. Reads the accel Z
   directly (no orientation-engine config needed); flip-to-wake is instant (the flip is motion)
-  with the poll as a backstop. *Still open:* the `VSENSE`-dark "in a bag/pocket" co-condition.
+  with the poll as a backstop. *The `VSENSE`-dark "in a bag/pocket" co-condition* — **built
+  2026-08-02 as `USE_DARK_DORMANT`**, with the double-tap as the deliberate dark-room escape
+  (the won't-do note's nightstand objection, answered rather than ignored).
 - **Voltage-adaptive brightness (brownout stretch).** *(**implemented** -- `USE_BROWNOUT_STRETCH`,
   `sense_glow_peak()`.)* Instead of the hard cutoff at `VS_GLOW_FLOOR_MV` (2600), scale the glow
   peak down as the rail drains toward the floor (full at `VS_GLOW_FULL_MV`, dimming to
@@ -134,8 +145,23 @@ Each of these *reduces* draw and attacks the open energy question directly.
   internal temp (pulsed ADC, 1.024 V ref + SIGROW cal per DS40002443 sec 31.3.3.7) → EEPROM
   lifetime max; matches the CLAUDE.md hot-car warning about supercap degradation. Sampled
   sparsely and written only on a new max, so near-zero energy; runs even while face-down dormant.
-- **Shipping / "coma" mode.** Halt RTC/ADC, wake only on a sustained solar spike; protects
-  the caps during a dark shipping box. Low effort, real value.
+- **Shipping / "coma" mode.** *(**DECLINED 2026-08-02, after being built and removed the same
+  day** -- the one entry here that went all the way to working code and back out.)* The idea:
+  halt RTC/ADC, wake only on a sustained solar spike; protects the caps during a dark shipping
+  box. It worked (48 h of continuous dark → accel to standby, WDT off, PIT slowed to 32 s
+  ticks; wake on ~64 s of sustained light or an NFC read), and it is deleted anyway, for two
+  reasons worth keeping on the page. **(1) The premise does not occur.** This card is
+  hand-delivered — it is a thing you take out of your pocket and hand to someone — so the
+  dark-shipping-box scenario the feature exists for is not part of its life. **(2) What it
+  bought was smaller than it sounds.** The coma trims the firmware+accel share, ~1 µA, of the
+  ~2.7 µA dark-standby sum; the FD pull-up leakage and the LDO's own IQ are hardware and
+  untouchable from software, so box life stretched ~1.5–1.7×, not the order of magnitude
+  "coma" implies. Weighed against that: a mode that changes the poll period, disables the
+  watchdog and re-powers the accelerometer is a large, rarely-exercised failure surface on a
+  card whose only input is that accelerometer. **`USE_DARK_DORMANT` is the stowage answer that
+  survives**, because a bag, a drawer and a pocket *do* happen. If a boxed-and-shipped variant
+  is ever real (a batch mailed to a client), this is the design to revive — `git log` for
+  2026-08-02 has the working implementation.
 - **Shadow-abort (AC0 zero-cross).** Use AC0 (VSENSE on AINP0 vs. internal DAC) to halt an
   in-flight LED animation in µs when a shadow drops SRC, instead of waiting for the 1 s poll.
 
