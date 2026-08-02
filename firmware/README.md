@@ -116,7 +116,7 @@ cd firmware
 make DFP=/path/to/Microchip/AVR-Ex_DFP/<version>
 ```
 Produces `solar-glow.hex`; the `avr-size` line reports usage (the part has 64 KB
-flash / 6 KB RAM, so this firmware — 4,796 B flash, 29 B RAM (4788 text + 8 data +
+flash / 6 KB RAM, so this firmware — 4,794 B flash, 29 B RAM (4786 text + 8 data +
 21 bss, measured 2026-08-02 after the audit-findings batch: ADC time bound,
 accel data-valid window, wear-levelled tap ring, clean bus-clear STOP, ballast
 guard and dark dormancy) — leaves room to spare).
@@ -606,7 +606,8 @@ both the light and strong-sun predicates (`sense_vin_flags()`, raw-count, no mV 
 - **`USE_DARK_MOTION_MUTE`** (0/1, default 1): mute the *motion* soft-breath when the last poll
   saw no light (card stowed in a dark pocket/bag), closing a real carry-drain — a jostling card
   would otherwise fire a ~1.6 s breath on every activity trip and empty the reserve on a walk. The
-  deliberate **tap** glow is untouched (dark or light), so the dark-room tap-to-glow moment stays.
+  deliberate **tap** glow is untouched by this knob (dark or light) — `USE_DARK_DORMANT` below
+  rate-limits it but never silences it — so the dark-room tap-to-glow moment stays.
   Near-free (reuses the cached poll light); complements face-down dormant by covering *any*
   orientation a pocket leaves the card in.
 - **`USE_NFC_ACK_COOLDOWN`** (0/1, default 1) **/ `NFC_ACK_COOLDOWN_S`** (3): rate-limit the
@@ -619,15 +620,16 @@ both the light and strong-sun predicates (`sense_vin_flags()`, raw-count, no mV 
   *to* the floor. Near-free (one main-local byte, aged one count per poll tick).
 - **`USE_DARK_DORMANT`** (0/1, default 1) **/ `DARK_DORMANT_S`** (1800): the face-down
   dormant's in-a-bag/pocket other half — continuously dark for ~30 min → suppress the
-  single-tap, motion and NFC-ack glows in **any orientation** (a bag ride can false-fire
-  the *tap* engine, the one leak the dark-motion mute never covered). The deliberate
-  escape is the **double tap**: hardware-validated, essentially never produced by jostle,
-  it wakes the card and fires its signature glow even pitch-dark — so the nightstand
-  moment survives, which is exactly why the naive "suppress everything when dark" coma was
-  a won't-do. Any lit poll exits instantly (~1 poll after morning light). With
-  `USE_DOUBLE_TAP`=0 there is no single/double distinction to draw, so **any** tap escapes
-  instead — degrading to roughly the pre-dormancy behaviour rather than to a card that
-  cannot be woken in the dark at all.
+  motion and NFC-ack glows in **any orientation**, and **rate-limit** the tap glow (a bag
+  ride can false-fire the *tap* engine, the one leak the dark-motion mute never covered).
+  **A tap always glows and always ends dormancy**, which must then be re-earned by another
+  ~30 min of dark — so a bag walk costs one breath per half hour instead of one per jostle,
+  and a person tapping the card in a dark room always gets the monogram. That is the whole
+  design: a stricter mute would hang the card's primary interaction on `LIGHT_THRESH_MV`,
+  which `board.h` itself documents as an unmeasured guess, and a dim room misread as dark
+  would silently kill tap-to-glow. Tighten it only once the bench measures that threshold.
+  Any lit poll exits dormancy (~1 poll after morning light). Behaves identically with
+  `USE_DOUBLE_TAP` either way.
 - **`USE_BALLAST_GUARD`** (0/1, default 1) **/ `GLOW_CLAMP_STO_MV`** (5200) **/
   `GLOW_CLAMP_PEAK`** (225): clamp every glow's peak duty when STO sits above 5.2 V, so the
   0402 1/16 W ballasts R1–R4 stay under rating even at the abuse corner (STO at the 5.5 V

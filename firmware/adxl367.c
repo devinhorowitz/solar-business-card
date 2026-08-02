@@ -71,10 +71,21 @@ uint8_t adxl367_init_tap(void)
      * the latch clears below used to run INSIDE the window (audit (b) -- the
      * 10 ms reset-latency fix above never covered this second window): a latch
      * dropped at t=0 could simply re-latch on settling garbage and serve a
-     * phantom tap the moment main() reaches sei(). 110 ms = window + 1/ODR at
-     * the configured 100 Hz. Boot-only cost, pre-WDT, invisible next to a
-     * flash cycle. */
-    _delay_ms(110);
+     * phantom tap the moment main() reaches sei().
+     *
+     * WHY 140 AND NOT 110. The target is 110 ms of REAL time (the 100 ms window
+     * plus 1/ODR at the configured 100 Hz), but _delay_ms bakes in a cycle count
+     * from the compile-time F_CPU (1 MHz), and this board does not always run at
+     * 1 MHz: board.h's clocks_init note is explicit that until the OSCHFFRQ fuse
+     * is burned the base is 20 MHz, so CLK_PER is 1.25 MHz and "delays run ~20%
+     * short". _delay_ms(110) is 110,000 cycles, which at 1.25 MHz elapses in
+     * 88 ms -- back INSIDE the 100 ms window this fix exists to clear, on
+     * precisely the parts that matter most: an un-fused first article, straight
+     * off the programmer. 140,000 cycles clears the target in both clock states
+     * (140 ms fused, 112 ms un-fused). Boot-only, pre-WDT, invisible next to a
+     * flash cycle. (The _delay_ms(10) reset latency above survives the same test
+     * with less room: 8.0 ms un-fused against a 7.5 ms spec.) */
+    _delay_ms(140);
 
     /* drop any power-on tap / activity latch so the first real event is clean
      * -- NOW the stream behind the engines is valid, so what stays cleared

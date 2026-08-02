@@ -111,10 +111,11 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   path, and a ~20 ms bounded-spin tail is now the actual TIME bound — three co-arriving interrupts
   (a phone tap is PIT+accel+FD at once) can no longer make a healthy ADC read as "dark" and eat a
   light edge. A dead ADC still exits 0; the WDT stays the recovery.
-  (b) **ADXL367 config inside the 100 ms data-valid window** → FIXED: `_delay_ms(110)` after
+  (b) **ADXL367 config inside the 100 ms data-valid window** → FIXED: `_delay_ms(140)` after
   MEASURE (datasheet: "a 100 ms wait time must be observed" + 1/ODR), so the boot latch clears see
-  a settled data stream instead of re-latching on garbage. Same rule enforced in the new
-  `adxl367_resume()`.
+  a settled data stream instead of re-latching on garbage. **140, not 110**, because `_delay_ms`
+  bakes in a 1 MHz cycle count and an un-fused part runs CLK_PER at 1.25 MHz — 110 would elapse in
+  88 ms and land back inside the window on exactly the un-fused first article that matters most.
   (c) **Tap tally single-cell wear** → FIXED: wear-levelled 8-slot ring at EEPROM 12–43 (monotonic
   counter, max = latest, no sequence field) — ~800 k tap ceiling instead of 100 k. Offsets 0–3
   retired (no fielded card ever wrote them; no migration needed).

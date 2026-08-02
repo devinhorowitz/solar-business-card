@@ -69,8 +69,9 @@ static uint16_t facedown_polls;
 #if USE_DARK_DORMANT
 /* dark dormant (the in-a-bag/pocket co-condition; board.h has the design). Orientation-
  * independent companion to face-down dormancy: continuously dark for DARK_DORMANT_POLLS
- * -> suppress the single-tap / motion / NFC-ack glows. Exits on any lit poll, or on a
- * DOUBLE tap (the deliberate dark-room escape). Main-context only. */
+ * -> suppress the MOTION and NFC-ack glows outright, and rate-limit the TAP glow (a tap
+ * always glows and ends dormancy, which must then be re-earned). Exits on any lit poll.
+ * Main-context only. */
 static uint8_t  dark_dormant;
 static uint16_t dark_polls;          /* consecutive dark polls toward DARK_DORMANT_POLLS */
 #endif
@@ -310,9 +311,20 @@ int main(void)
 
     /* power-on wink so a freshly programmed card shows life. Gated on a margin
      * above the glow floor (WINK_FLOOR_MV), not the floor itself, so a marginal
-     * just-charged card cannot wink itself back below the floor. */
-    if (sense_vdd_mv() >= WINK_FLOOR_MV)
-        led_breathe(1, GLOW_BREATH_MS, GLOW_PEAK);
+     * just-charged card cannot wink itself back below the floor.
+     * The PEAK goes through sense_glow_peak() like every other animation, so the
+     * ballast guard covers this one too. It did not until 2026-08-02: the wink
+     * passed a raw GLOW_PEAK, which made "every glow's peak passes through that
+     * chokepoint" false for the one glow that fires with the tank at its fullest
+     * -- straight off a programmer or a bench supply, exactly the over-voltage
+     * case USE_BALLAST_GUARD exists for. Costs one extra STO read at boot;
+     * WINK_FLOOR_MV (3000) still gates whether the wink fires at all, since it is
+     * a stricter floor than sense_glow_peak's own VS_GLOW_FLOOR_MV (2750). */
+    if (sense_vdd_mv() >= WINK_FLOOR_MV) {
+        uint8_t wink = sense_glow_peak(GLOW_PEAK);
+        if (wink)
+            led_breathe(1, GLOW_BREATH_MS, wink);
+    }
 
     /* seed the dark->light detector with the actual boot light level, so a card
      * powered on already in light does not fire a phantom dark->light glow on the
@@ -347,26 +359,28 @@ int main(void)
             if (dormant) mute = 1;   /* face-down: suppress the glow + tally (latches still acked below) */
 #endif
 #if USE_DARK_DORMANT
-            if (dark_dormant) {
-                /* The deliberate dark-room escape. With double-tap available it is a
-                 * DOUBLE tap -- hardware-validated against TAP_LATENT/TAP_WINDOW, which
-                 * bag jostle essentially never satisfies -- so a single incidental tap
-                 * in a pocket stays silent (the leak this knob exists to close) while a
-                 * deliberate double still lights the monogram in a pitch-dark room.
-                 * With USE_DOUBLE_TAP compiled out there is no such distinction to draw:
-                 * `dbl` is always 0, so requiring it would leave a dark-stowed card with
-                 * NO tap escape at all -- unresponsive until it next sees light, which is
-                 * a worse failure than the leak. So in that build ANY tap escapes, which
-                 * degrades to roughly the pre-dormancy behaviour rather than to a dead
-                 * card. Either way the escaping tap also glows: the wake should be
-                 * visible, or the owner cannot tell the card from a flat one. */
-#if USE_DOUBLE_TAP
-                if (dbl) { dark_dormant = 0; dark_polls = 0; }
-                else     mute = 1;
-#else
-                dark_dormant = 0; dark_polls = 0;
-#endif
-            }
+            /* DARK DORMANCY RATE-LIMITS THE TAP GLOW; IT NEVER SWALLOWS ONE.
+             *
+             * A tap always glows and always ends dormancy, which then has to be
+             * re-earned by another DARK_DORMANT_S of continuous dark. So a card
+             * jostling in a bag glows at most once per ~30 min instead of once per
+             * jostle -- essentially all of the leak, closed -- while a person who
+             * taps the card in a dark room ALWAYS gets the monogram.
+             *
+             * The first cut of this required a DOUBLE tap to escape, and that was
+             * wrong for a reason worth writing down: it hung the card's PRIMARY
+             * interaction on LIGHT_THRESH_MV, a constant board.h itself documents as
+             * having no measurement behind it ("the exact trip point is a guess").
+             * If that guess reads a dim office as dark, a single tap does nothing,
+             * the owner has no way to know why, and the marquee moment silently
+             * fails -- a far worse outcome than the handful of stray breaths the
+             * mute was saving. A feature that can only cost energy is allowed to
+             * lean on an unmeasured constant; one that can silence the product is
+             * not. Rate-limiting keeps the saving and removes that failure mode,
+             * and it needs no single-vs-double distinction, so it behaves the same
+             * with USE_DOUBLE_TAP either way. Revisit the mute only once the bench
+             * has measured the dark/light threshold for real. */
+            if (dark_dormant) { dark_dormant = 0; dark_polls = 0; }
 #endif
             if (!mute)
                 peak = sense_glow_peak(dbl ? DTAP_PEAK : GLOW_PEAK);
@@ -560,8 +574,12 @@ int main(void)
                  * wins on the entry edge (one breath in), then this runs while the card sits.
                  * The peak is routed through sense_glow_peak() -- the same chokepoint as
                  * every other glow -- so the ballast guard's high-STO clamp applies to the
-                 * sweep too (it was the one animation outside it). At caps-full (>= 4.4 V)
-                 * the brownout stretch returns full peak, so normal harvest is unchanged. */
+                 * sweep too. At caps-full (>= 4.4 V) the brownout stretch returns full peak,
+                 * so normal harvest is unchanged. The cost is honest: this call adds a
+                 * second STO conversion on a basking poll, since sense_caps_full() just
+                 * read the same node. It buys the guard's coverage on the one animation
+                 * that only ever runs with a full tank, and a basking card is by definition
+                 * the case where harvest is free. */
                 else if ((vf & SENSE_SUN_bm) && sense_caps_full()) {
                     uint8_t sp = sense_glow_peak(SWEEP_PEAK);
                     if (sp)

@@ -457,8 +457,9 @@
 /* Dark-motion mute: suppress the MOTION soft-breath while the card is in the dark (the last poll
  * saw no light, VSENSE < LIGHT_THRESH) -- i.e. stowed in a pocket / bag. This closes a real carry-
  * drain: a charged card jostling in a dark pocket fires a ~1.6 s soft breath on every activity trip
- * and would empty the reserve on a long walk. The deliberate TAP is left untouched (its branch never
- * checks light), so the monogram still lights when tapped in a dark room -- the marquee moment stays;
+ * and would empty the reserve on a long walk. The deliberate TAP is left untouched by THIS knob (its
+ * branch never checks light; USE_DARK_DORMANT below rate-limits it, but never silences it), so the
+ * monogram still lights when tapped in a dark room -- the marquee moment stays;
  * only the incidental motion breath is muted, and only when dark. Near-free (reuses the cached poll
  * light). Complements face-down dormant (which needs the card face-down; this works in any orientation
  * a pocket leaves it). 1 = on. (Distilled from Gemini's "sensory fusion": only auto-glow on motion when
@@ -470,14 +471,23 @@
  * bag or pocket rides in any orientation and never triggers it, and while the dark-motion
  * mute already silences the incidental MOTION breath there, a jostled bag can still
  * false-fire the TAP engine and glow into fabric, breath by breath. So: continuously dark
- * for DARK_DORMANT_S -> dark-dormant, suppressing the single-tap, motion and NFC-ack glows.
- * THE DELIBERATE ESCAPE IS THE DOUBLE-TAP: the ledger's won't-do note rejected a naive dark
- * coma precisely because VSENSE can't tell a nightstand from a pocket, and this knob keeps
- * that promise -- a DOUBLE tap (hardware-validated TAP_LATENT/TAP_WINDOW pattern, which bag
- * jostle essentially never produces) still fires its signature glow in a pitch-dark room
- * AND wakes the card from dark dormancy. Any poll that sees light exits instantly, so a
- * nightstand card is awake the moment morning light lands (~1 poll) and the dark->light
- * greeting still fires. Near-free: reuses the poll's cached light bit, one counter. 1 = on. */
+ * for DARK_DORMANT_S -> dark-dormant, which suppresses the MOTION and NFC-ack glows
+ * outright and RATE-LIMITS the tap glow.
+ *
+ * THE TAP IS RATE-LIMITED, NEVER SILENCED. A tap always glows and always ends dormancy,
+ * which then has to be re-earned by another DARK_DORMANT_S of continuous dark -- so a bag
+ * walk glows at most once per ~30 min instead of once per jostle (essentially all of the
+ * leak, closed) while a person tapping the card in a dark room ALWAYS gets the monogram.
+ * This is deliberate and it replaced a stricter first cut (double-tap-to-escape) for a
+ * reason: a mute would hang the card's PRIMARY interaction on LIGHT_THRESH_MV, a constant
+ * this very file admits has no measurement behind it. If that guess reads a dim office as
+ * dark, a single tap does nothing and the owner cannot tell why -- much worse than the few
+ * stray breaths saved. A feature that can only cost energy may lean on an unmeasured
+ * constant; one that can silence the product may not. Revisit the stricter mute only once
+ * the bench has measured the real dark/light threshold.
+ * Any poll that sees light exits dormancy, so a nightstand card is awake the moment morning
+ * light lands (~1 poll) and the dark->light greeting still fires. Near-free: reuses the
+ * poll's cached light bit, one counter. 1 = on. */
 #define USE_DARK_DORMANT      1
 #define DARK_DORMANT_S        1800  /* continuous dark before dark-dormant (~30 min) */
 #define DARK_DORMANT_POLLS    (DARK_DORMANT_S / POLL_PERIOD_S)   /* derived: polls */

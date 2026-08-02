@@ -629,8 +629,7 @@ Not a v3.0 change (the board is electrically frozen); logged here as a **v4 cons
 
 - **The limit today.** v3.0 logs telemetry (tap count / sun-hours / max-temp) to the AVR's
   **internal EEPROM**: 256 B, **100k** write cycles, **40 yr retention @ 55 °C** (DS40002315).
-  Two ceilings bite for a keepsake: the tap counter can approach 100k over a very active life
-  (`firmware/README.md`), and EEPROM retention derates ~2x per 10 °C -- so a card baked on a hot
+  One ceiling still bites for a keepsake: EEPROM retention derates ~2x per 10 °C -- so a card baked on a hot
   dashboard, the exact abuse the temp-logger watches for, can fall well short of 40 yr. A third:
   EEPROM write energy (charge-pump, ~4-13 ms) is *why* the sun diary throttles to one write per
   banked hour and max-temp writes only on a new max.
@@ -746,9 +745,12 @@ bytes live in `firmware/Makefile` + `firmware/README.md`, the write-guard code i
   flagged at boot and committed once the rail has charged past the floor (a cold boot lands right at
   the reset-release voltage). Only a terminal drain below the floor goes unrecorded -- which is
   inherent (you cannot safely write EEPROM as the rail dies). The tap counter was already implicitly
-  safe (its write is gated upstream by the glow-peak floor) but wears its low byte at ~100k taps --
+  safe (its write is gated upstream by the glow-peak floor) but wore its low byte at ~100k taps --
   fine for a keepsake, and eliminated outright by the v4 FRAM (~10^13 endurance). Credit: the reviewing
-  team.
+  team. _(Superseded 2026-08-02: the single cell became a **wear-levelled 8-slot ring** in the
+  internal EEPROM -- `sense.c`, offsets 12-43 -- so the ~100k ceiling is ~800k without needing the
+  FRAM at all. The AVR-EA's EEPROM has BYTE erase/write granularity, DS40002443 Table 11-4, so each
+  commit wears only its own four bytes; a page-granular part would have halved the benefit.)_
 
 - **v4 note (FRAM, decided -- automotive grade):** the archival log lands on the **MB85RC512TY**
   (`MB85RC512TYPNF-GS-BCERE1`, 512 Kbit = 64 KB, I2C, AEC-Q100, 8-SOP, 1.75 mm -> ~0.1 mm shell

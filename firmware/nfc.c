@@ -190,10 +190,23 @@ uint8_t nfc_write_ndef(const uint8_t *buf, uint16_t len)
  * IS that recommended 6Dh profile, and this 304 B message sits comfortably inside its
  * 872 B area, so the compliant-by-app-note configuration is the one WITHOUT the TLV --
  * adding one would deviate from NXP's recommended profile, with hand-derived granularity
- * bytes no validator has blessed. THE TRIGGER TO REVISIT: if the CC size byte is ever
- * raised past 6Dh to claim more of the 2k memory, the Lock Control TLV (and a Memory
- * Control TLV excluding the config/SRAM area) becomes REQUIRED per that same app note --
- * do not enlarge the CC without adding both. */
+ * bytes no validator has blessed.
+ *
+ * ONE HONEST CAVEAT, checked 2026-08-02 rather than assumed. The datasheet carries a
+ * SECOND recommendation the app note does not mention: "NXP recommends setting the size
+ * parameter of the CC only to values that the T2T_Area ends at lock bit granularity
+ * boundaries when using only part of the memory", and lists those boundaries as
+ * 112 + 64*N (or 888) for the 1k part and 176 + 128*N (or 2032) for the 2k part -- which
+ * is the part on this board. 6Dh = 872 B is on NEITHER list, so the app note's blanket
+ * "1k/2k" profile does not in fact sit on a 2k boundary. It does not bite here, and the
+ * reason is specific: that rule exists so lock bits can be aligned to the NDEF area, and
+ * this card NEVER sets a lock bit -- it does not lock, does not transition to READ ONLY,
+ * and writes the tag exactly once at provisioning. The mismatch would only become real
+ * for a variant that locks the tag read-only, which would want a boundary size (816 or
+ * 944 B) and the Lock Control TLV together.
+ * THE TRIGGERS TO REVISIT, either of which makes the TLV genuinely required: raising the
+ * CC size byte past 6Dh to claim more of the 2k memory (which also wants a Memory Control
+ * TLV excluding the config/SRAM area), or deciding to lock the tag read-only. */
 static const uint8_t ndef_default[] = {
     0x03, 0xFF, 0x01, 0x28, 0xC2, 0x0A, 0x00, 0x00,
     0x01, 0x18, 0x74, 0x65, 0x78, 0x74, 0x2F, 0x76,
