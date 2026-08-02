@@ -62,8 +62,10 @@ BOM rather than the prose docs:
 3. **TINY shared-ballast droop** -- *real physics, not firmware-fixable; documented.* SW2 = TINY
    shares one 220 R (`R12`) across all anodes, so per-LED brightness varies with channel count. The
    firmware can't sense SW2 and can't correct without wrecking ON mode; TINY is a dim hack by design.
-   Documented as low-fidelity in `README`; **v4:** move the ballast to the individual cathodes so TINY
-   is linear.
+   Documented as low-fidelity in `README`. *(2026-08-02 sift: the "move the ballast to the cathodes"
+   fix this note asked of v4 is BUILT — R1–R4 are 150 R per-cathode ballasts on the v4 board
+   (`board.h` pin table). Residual droop from the still-shared R12 remains, N× smaller; TINY stays a
+   dim hack by design.)*
 4. **Titanium eddy currents kill NFC** -- *already solved.* The `FER1` ferrite (Würth WE-FSFS 364006)
    sits in a dedicated brace channel between coil and shell; physics + no-ferrite fallback are in
    `../PCB/PCB-side-notes-brace-direction.md` §3. Underlying concern correct; the design already

@@ -55,6 +55,21 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
 
 ## Firmware — `firmware/`, `firmware/README.md`
 
+- [ ] **[FIRMWARE] The screened feature ledger's live remainder — imported 2026-08-02**
+  _(`firmware/feature-roadmap.md` is the Gemini-brainstorm decision ledger, dispositioned
+  2026-07-12: seven features shipped as `board.h` knobs, the rest triaged. It was an ORPHAN —
+  nothing here pointed at it. This item is now the single live pointer; the ledger carries the
+  detail and stays.)_ The still-open remainder, by gate:
+  **(a) Actionable now, energy-safe:** the face-down dormant's missing half (the VSENSE-dark
+  "in a bag/pocket" co-condition — the knob shipped with only the accel-Z test); **shipping/coma
+  mode** (halt RTC/ADC, wake on sustained solar spike — protects the caps in a dark shipping box).
+  **(b) Gated on the energy-budget bench** (the #1 gate — these spend LED energy or need measured
+  constants): zero-CPU reflex glow (EVSYS→TCA0), CCL heartbeat, ambient auto-brightness,
+  shadow-abort / AC0 brownout-reflex, "find the sun" bar-graph, circadian duty-cycling, PoV
+  air-message, free-fall catch, FIFO gestures.
+  **(c) Revival hooks only if a companion app ever exists:** SRAM-mailbox telemetry /
+  orientation-keyed NFC (declined for v4 — they endanger the offline-first vCard).
+
 - [ ] **[FIRMWARE] Functional audit findings never filed — carried over honestly**
   _(2026-07-26; surfaced by the pass-3/pass-4 firmware audits, actioned in docs only.)_ Each is real,
   each survived adversarial verification, none is fixed:
