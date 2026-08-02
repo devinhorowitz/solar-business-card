@@ -204,7 +204,7 @@ solar-business-card/
 │                                   #   (survey sheets and replaced-part docs culled 2026-08-01 — git history)
 ├── enclosure/                      # Ti back-shell + resin brace: CAD / STEP / STL / drawings / assembly views
 │                                   #   fit_rules.py + board_parts.py = the geometry both generators derive from
-└── v0-prototype/                   # the original prototype, kept for posterity (renamed from "v0 prototype" 2026-08-01)
+└── (v0-prototype/ and enclosure/engraving-studies/ culled 2026-08-02 — concluded history, kept in git history; the medallion the studies produced ships in enclosure/medallion.py)
 ```
 
 ---

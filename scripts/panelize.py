@@ -33,7 +33,7 @@ panel rectangle plus two slots).
 
 LINEAGE
 -------
-v0 shipped a working panel, emitted directly as gerber by "v0-prototype"'s
+v0 shipped a working panel, emitted directly as gerber by "v0-prototype"'s (culled 2026-08-02; git history)
 gerber_export.py (MOAT_W/RAIL_W/TAB_W = 2.4/3.0/3.0, four 0.5 mm mouse bites at 0.8 mm
 pitch per tab). Panel outline was 61.6 x 99.7 mm. Two constants are deliberately
 different here, both for the same reason -- v0 had no rail copper and this panel does:

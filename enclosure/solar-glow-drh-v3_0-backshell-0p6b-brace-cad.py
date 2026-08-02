@@ -125,7 +125,7 @@ MARK_DEPTH = 0.00                  # 0 = laser mark (no cut). >0 would engrave a
 # geometry, the four agnostic parameters (RING_TEXT / RING_ANCHOR / DIAL_MONOGRAM / SERIAL) and
 # the machining contract (min-island audit, tool cascade) live in medallion.py -- it ASSERTS at
 # build time, so an unmachinable parameter refuses to generate. Decision trail with every number:
-# enclosure/engraving-studies/. ----
+# enclosure/engraving-studies/ (culled 2026-08-02; git history). ----
 # The exact glyph outlines end up cut into the titanium, so the font is part of the deliverable,
 # not a styling choice -- it is vendored in enclosure/fonts/ (JetBrains Mono, SIL OFL 1.1,
 # license bundled alongside as the OFL requires). These paths used to point at /home/claude/fonts/,

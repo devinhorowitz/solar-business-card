@@ -609,8 +609,9 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   solid (the thickness figure measures 3.5500 from it). The rename touches, together, in one
   commit: both generator filenames, `kibot.yml` trigger paths AND its CAD-step commands,
   `assembly_render.py`, `scripts/ref_figures.py` (if it names the file), `check_mesh.py`'s
-  BASELINE keys, `engraving-studies/spin1_cutters.py`, README + PCB/README + enclosure/README
-  prose, and design-notes references (historical mentions keep their history markers). Do it
+  BASELINE keys, README + PCB/README + enclosure/README
+  prose, and design-notes references (historical mentions keep their history markers; the
+  engraving-studies reference this list once carried was culled 2026-08-02). Do it
   as its own PR — a miss anywhere breaks the CI chain silently.
 
 - [ ] **[ENCLOSURE, cosmetic] The shell STL's one tessellation pinch** _(2026-08-01, found and

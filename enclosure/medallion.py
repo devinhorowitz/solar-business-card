@@ -6,7 +6,7 @@ fields, its crests -- ring text, rim, hoop, monogram, serial -- standing on the 
 lapping plate: the plate touches frame + crests and nothing else, by geometry, so the
 bright/dark two-texture contrast is a bench operation that re-does forever. The full
 decision trail (ten study spins, every number measured) lives in
-enclosure/engraving-studies/.
+enclosure/engraving-studies/ (culled 2026-08-02; git history).
 
 THE FOUR PARAMETERS -- the agnostic contract. The next maker drops in their own facts:
 
