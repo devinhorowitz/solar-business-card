@@ -186,7 +186,10 @@ jobs:
       # zero-length rim pinch; triangle count is deliberately not gated (not bit-stable).
       - name: Gate the generated meshes
         run: |
-          python3 -m pip install --quiet 'trimesh==5.0.0'
+          # rtree is trimesh's spatial index -- the ray engine imports it lazily, so its
+          # absence is invisible until the first intersects_location() call (found the hard
+          # way: runs 451/452 died there while the mesh gate above passed clean).
+          python3 -m pip install --quiet 'trimesh==5.0.0' 'rtree==1.4.1'
           python3 scripts/check_mesh.py
           # the 3D interference DRC: ray-casts the brace STL written above against every
           # B-side body polygon + ledgered height -- the assembled boolean truth that
