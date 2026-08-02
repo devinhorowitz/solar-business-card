@@ -10,15 +10,15 @@ never reach a pick-and-place.
 | SC1, SC3 | 2 | `3-153-440` | DigiKey | 486-3-153-440-ND | SS17 1.8F 2.75V |
 | PV1, PV2 | 2 | `SM141K06TF` | DigiKey | 2994-SM141K06TF-ND | SM141K06TF |
 | FER1 | 1 | `364006` | DigiKey | 732-5049-ND | Wurth WE-FSFS ferrite sheet behind the coil -- load-bearing for the NFC tune |
-| HW1 | 4 | `DIN 84 M2x3 brass` | — |  | shell screws; any DIN 84 M2x3 -- source locally, not a distributor line |
-| INS1 | 1 | `polyimide film 0.05 mm` | — |  | insulator; cut from stock film -- not a distributor line |
+| HW1 | 4 | `DIN 84 M2x3 brass` | — | — | shell screws; any DIN 84 M2x3 -- source locally, not a distributor line |
+| INS1 | 1 | `polyimide film 0.05 mm` | — | — | insulator; cut from stock film -- not a distributor line |
 
 **Bought once for the project, not per board:**
 
-| Ref | Qty | MPN | Supplier | What |
-|---|---|---|---|---|
-| PRG1 | 1 | `5879` | DigiKey | Adafruit UPDI Friend. SOURCE CONFLICT to settle at order: the BOM master says DigiKey by MPN 5879, TODO's sweep recorded it as Mouser-only. Check both. |
-| CBL1 | 1 | `TC2030-MCP` | DigiKey | Tag-Connect cable. TRAP: DigiKey stocks the LEGLESS TC2030-MCP-NL; the legged TC2030-MCP this design wants is zero/restricted at Mouser -- consider Tag-Connect direct. |
+| Ref | Qty | MPN | Supplier | Distributor P/N | What |
+|---|---|---|---|---|---|
+| PRG1 | 1 | `5879` | DigiKey | 1528-5879-ND | Adafruit UPDI Friend. The source conflict this line used to carry is SETTLED 2026-08-02: DigiKey does stock it, as 1528-5879-ND (~$6.95). It is listed under Adafruit's own product number 5879, which is why a cart upload of the bare MPN finds nothing -- DigiKey resolves 1528-5879-ND, not 5879. |
+| CBL1 | 1 | `TC2030-MCP` | — | — | Tag-Connect TC2030-MCP, the LEGGED cable. Deliberately NOT a cart line: DigiKey stocks only the legless TC2030-MCP-NL and the legged part is zero/restricted at Mouser, so order it from Tag-Connect direct. Emitting it into a cart CSV would just fail at upload, or worse, silently buy the wrong cable. |
 
 **Ordered, but not from a distributor:**
 
