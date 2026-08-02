@@ -23,8 +23,8 @@ The card needs SC1/SC3 = SS17 1.8 F (3-153-440) and SC2/SC4 = WS17 1 F
 
 WHERE THE TRUTH COMES FROM
 
-Board parts are read from the SCHEMATIC (MPN / Supplier / Supplier P/N per
-symbol) and classified by the BOARD's own flags -- the same `exclude_from_bom`
+Board parts are read from the SCHEMATIC (MPN / Manufacturer / Supplier /
+Supplier P/N per symbol) and classified by the BOARD's own flags -- the same `exclude_from_bom`
 and `dnp` attributes consistency check [15] gates. So a part moves between the
 two documents by changing the design, never by editing a list:
 
@@ -230,11 +230,14 @@ def write_all(boards, outdir):
     made = []
 
     # 1. PCBWay assembly BOM
+    # Manufacturer sits beside the MPN because that is the pair an assembler actually
+    # buys on: a part number alone is ambiguous exactly where it is short or numeric,
+    # which is the same hazard that made the field a hard filter in check_stock.
     made.append(_w(os.path.join(outdir, f"{STEM}-pcbway-assembly.csv"),
-                   ["Designator", "Qty per board", "Value", "Footprint", "MPN", "Supplier",
-                    "Supplier P/N"],
+                   ["Designator", "Qty per board", "Value", "Footprint", "MPN",
+                    "Manufacturer", "Supplier", "Supplier P/N"],
                    [[" ".join(r["refs"]), r["qty"], r["value"], r["footprint"], r["mpn"],
-                     r["supplier"], r["dist_pn"]] for r in asm]))
+                     r["mfr"], r["supplier"], r["dist_pn"]] for r in asm]))
 
     # 2/3. Hand-buy carts, one file per distributor, in that distributor's upload shape.
     #      DigiKey wants Quantity,Part Number,Customer Reference; Mouser wants its own
