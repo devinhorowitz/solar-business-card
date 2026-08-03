@@ -39,6 +39,8 @@ change to one that isn't mirrored in the others fails loudly (in CI or locally):
       line to buy it; the two fab files describe one build.    [ERROR on drift]
   [16] fit_rules.MOUNTS IS the board's eight MH/MP drills -- the enclosure cannot
       be built around holes the board does not have.           [ERROR on drift]
+  [17] the card face's contact block is what face_art describes, and carries no
+      F.Cu island the gold request cannot plate.               [ERROR on drift]
 
 Usage:   python3 scripts/check_consistency.py
 Exit:    nonzero if any ERROR-level check fails; warnings do not fail the build.
@@ -1588,6 +1590,38 @@ def check_mount_parity():
            f"({', '.join(f'{r}' for r in sorted(drills))})")
 
 
+# --- [17] the card face's contact block is what face_art describes --------------------
+#
+# Same relationship as [6] and the same reason: the type on the face is generated, the
+# board is where it lands, and an --apply that never happened is invisible from the board
+# alone. This calls face_art's own check_state() so there is one definition of "does the
+# board match", not a second copy that can drift from the generator the way [6]'s used to.
+#
+# It also asserts the thing that is not about typography at all: NO F.Cu graphic may live
+# in the block. Each letter used to be an isolated copper island with a mask opening over
+# it, which put three lines into the User.1 hard-gold drawing with no path to the plating
+# bus. The letters are openings over the GND plane now, and this is what stops a hand-drawn
+# island creeping back in.
+def check_face_art():
+    print("[17] the card face's contact block matches face_art")
+    # BOTH imports are guarded, and matplotlib is the one that bit: the KiCad image does
+    # not carry it, so the first CI run of this check sailed through [1]..[16] and then
+    # died on a bare ModuleNotFoundError inside build(). consistency.yml installs it now;
+    # this catch is so a missing dependency degrades to a loud skip rather than taking the
+    # whole suite down with a traceback, which tells you nothing about the board.
+    try:
+        import pcbnew  # noqa: F401
+        import matplotlib  # noqa: F401
+    except Exception as e:
+        warn(f"NOT CHECKED -- {type(e).__name__}: {e}. The contact block was not verified; "
+             f"install the dependency rather than trusting this run")
+        return
+    sys.path.insert(0, os.path.join(ROOT, "scripts"))
+    import face_art
+    ok_state, msg = face_art.check_state()
+    (ok if ok_state else err)(msg)
+
+
 def main():
     cli = find_kicad_cli()
     netpins, comps, sch_fps = export_netlist(cli)
@@ -1607,6 +1641,7 @@ def main():
     check_gold_set()
     check_cpl_bom_agreement()
     check_mount_parity()
+    check_face_art()
     print(f"\n== {len(errors)} error(s), {len(warnings)} warning(s) ==")
     sys.exit(1 if errors else 0)
 
