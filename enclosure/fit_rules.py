@@ -54,6 +54,20 @@ TOOL_R = 1.0               # dia 2.0 finisher -> R1.0 internal corners
 
 # ---- brace ----------------------------------------------------------------------------
 GAP = CAVITY               # the brace fills the cavity
+
+# ---- the ferrite behind the NFC coil (Wurth WE-FSFS 364006, FER1) ----------------------
+# Moved here 2026-08-03 so it has ONE home, the same rule the rest of this file exists for.
+# It was declared in the brace CAD and copied verbatim into the brace DRAWING-gen; the
+# assembly render now needs it too, and a third copy is how the first two stop agreeing.
+# The brace CAD is not importable (no __main__ guard -- it builds and exports at import),
+# so "import it from where it already lives" was not available; this is where it belongs.
+#
+# The pocket is on the BOARD-FACING face of the brace, so the sheet is sandwiched between
+# the brace and the PCB's B-side, directly under the coil.
+FER = (36.9, 31.5, 48.9, 57.5)   # x0,y0,x1,y1 -- 12 WIDE (x, CRITICAL, edge-limited) x 26 LONG
+FER_T = 0.38                     # OVERALL stack per DK 732-5049-ND (ferrite + PET + PSA)
+FER_POCKET_DEPTH = FER_T - 0.05  # 0.33 -- sheet sits ~0.05 proud and seats flush when clamped
+FER_CLR = 0.20                   # channel wall clearance on the critical 12 mm width
 AIR = 0.22                 # air over a covered part. 0.12 until 2026-08-02 -- that cleared the
                            # TYPICAL assembly stack but not the corner: body-height tol (+-0.10
                            # worst class) + solder standoff (~0.075; part_heights measures the

@@ -325,6 +325,21 @@ def cyl(x, y, z0, dz, r, res=28):
 shell_pd = stl(f"{ROOT}/enclosure/solar-glow-drh-v3_0-backshell-0p6b-brace-Ti-max.stl")
 brace_pd = stl(f"{ROOT}/enclosure/brace/solar-glow-drh-diffuser-brace.stl", dz=FLOOR)
 
+# ---- FER1, the ferrite sheet behind the NFC coil ----------------------------------------
+# It was missing from this animation entirely, which made the stack a lie by omission: the
+# card cannot read through titanium without it, and the brace carries a pocket machined
+# specifically to hold it. Extent and depth come from fit_rules (ONE home) rather than being
+# re-typed here.
+#
+# Z: the pocket is cut into the brace's BOARD-FACING face, so the sheet's top face is the
+# brace top -- which is exactly Z_BOARD, the PCB underside. Drawn filling the pocket
+# (Z_BOARD - FER_POCKET_DEPTH -> Z_BOARD) rather than its full 0.38: the extra 0.05 is the
+# proud-then-compressed allowance, and drawing it would interpenetrate the board and z-fight.
+FERRITE = (0.24, 0.235, 0.25)    # flexible ferrite: dark neutral grey, matte, no sheen
+_fx0, _fy0, _fx1, _fy1 = fr.FER
+ferrite_pd = poly_prism(sbox(_fx0, _fy0, _fx1, _fy1),
+                        Z_BOARD - fr.FER_POCKET_DEPTH, fr.FER_POCKET_DEPTH)
+
 # board outline: 50.8 x 88.9, R3 corners, 8 x M2 clearance holes
 R = 3.0
 out = sbox(R, 0, W - R, H).union(sbox(0, R, W, H - R))
@@ -416,11 +431,47 @@ def slot_bar(x, y, z0):
     return c.GetOutput()
 
 
+M2_PITCH = 0.40                  # ISO metric coarse for M2
+THREAD_R = 0.105                 # ridge tube radius; M2 crest-to-root is ~0.245 total
+
+
+def thread_helix(x, y, z0, dz, r_major, pitch=M2_PITCH, seg=18):
+    """The helical thread ridge, as a swept tube around a helix.
+
+    The shank was a bare cylinder -- a dowel, not a screw. A real thread form is a swept
+    trapezoid and a CSG job; vtkBooleanOperationPolyDataFilter is already documented in
+    slot_bar() as unreliable on these coarse cylinders, so this takes the same way out it
+    does: a tube on a helical polyline sitting proud of a slightly undersized shank reads as
+    a thread at every size this render is ever viewed at, with none of the fragility.
+    """
+    n = max(8, int(round(dz / pitch * seg)))
+    pts = vtk.vtkPoints()
+    line = vtk.vtkPolyLine()
+    line.GetPointIds().SetNumberOfIds(n + 1)
+    r = r_major - THREAD_R * 0.55
+    for i in range(n + 1):
+        z = z0 + dz * i / n
+        a = 2.0 * math.pi * (z - z0) / pitch
+        pts.InsertNextPoint(x + r * math.cos(a), y + r * math.sin(a), z)
+        line.GetPointIds().SetId(i, i)
+    cells = vtk.vtkCellArray(); cells.InsertNextCell(line)
+    pd = vtk.vtkPolyData(); pd.SetPoints(pts); pd.SetLines(cells)
+    tube = vtk.vtkTubeFilter()
+    tube.SetInputData(pd); tube.SetRadius(THREAD_R); tube.SetNumberOfSides(10); tube.CappingOn()
+    tube.Update()
+    return tube.GetOutput()
+
+
+# Each entry carries its OWN axis, because the screws now rotate about it (see the render
+# loop). Without the axis a screw would spin about the scene origin and orbit the card.
 screws = []
 for mx, my in fr.MOUNTS:
-    screws.append(("shank", cyl(mx, my, Z_FRONT - SCREW_LEN, SCREW_LEN, SHANK_D / 2.0)))
-    screws.append(("head", cyl(mx, my, Z_FRONT, HEAD_H, HEAD_D / 2.0, res=44)))
-    screws.append(("slot", slot_bar(mx, my, Z_FRONT)))
+    screws.append(("shank", cyl(mx, my, Z_FRONT - SCREW_LEN, SCREW_LEN,
+                                SHANK_D / 2.0 - THREAD_R * 0.55), mx, my))
+    screws.append(("thread", thread_helix(mx, my, Z_FRONT - SCREW_LEN, SCREW_LEN,
+                                          SHANK_D / 2.0), mx, my))
+    screws.append(("head", cyl(mx, my, Z_FRONT, HEAD_H, HEAD_D / 2.0, res=44), mx, my))
+    screws.append(("slot", slot_bar(mx, my, Z_FRONT), mx, my))
 
 # ---- render ---------------------------------------------------------------------------
 ren = vtk.vtkRenderer(); ren.SetBackground(0.965, 0.963, 0.955)
@@ -433,9 +484,14 @@ groups["board"] = ([textured(actor(board_pd, MASK, spec=0.30, power=26))]
                    + [actor(p, SOLAR, spec=0.42, power=48) for p in solar_pds]
                    + [actor(p, SILVER, spec=0.75, power=60) for p in cap_pds]
                    + [actor(p, IC, spec=0.22, power=18) for p in ic_pds])
-groups["screw"] = [actor(pd, (0.22, 0.16, 0.07) if k == "slot" else BRASS,
-                         spec=0.20 if k == "slot" else 0.70,
-                         power=12 if k == "slot" else 55) for k, pd in screws]
+groups["ferrite"] = [actor(ferrite_pd, FERRITE, spec=0.06, power=6)]
+groups["screw"] = []
+for k, pd, mx, my in screws:
+    a = actor(pd, (0.22, 0.16, 0.07) if k == "slot" else BRASS,
+              spec=0.20 if k == "slot" else 0.70,
+              power=12 if k == "slot" else 55)
+    a.SetOrigin(mx, my, 0.0)     # spin about the screw's own axis, not the scene origin
+    groups["screw"].append(a)
 
 for g in groups.values():
     for a in g:
@@ -458,10 +514,16 @@ cam = ren.GetActiveCamera()
 cam.SetFocalPoint(W / 2, H / 2, Z_FRONT / 2)
 
 # base Z of each group in the assembled state
-BASE = {"shell": 0.0, "brace": FLOOR, "board": Z_BOARD, "screw": 0.0}
-# explode offsets (multiplied by the eased factor)
-EXPL = {"shell": -26.0, "brace": -8.0, "board": 10.0, "screw": 30.0}
+BASE = {"shell": 0.0, "brace": FLOOR, "board": Z_BOARD,
+        "ferrite": Z_BOARD - fr.FER_POCKET_DEPTH, "screw": 0.0}
+# Explode offsets (multiplied by the eased factor). The ferrite gets its OWN offset, between
+# the brace's and the board's, so it separates into a visible third layer instead of riding
+# the brace. It is PSA'd into the brace pocket and travels captive with it in real assembly --
+# but an exploded view exists to show what the closed stack hides, and a sheet that never
+# leaves its pocket is a sheet nobody can see.
+EXPL = {"shell": -26.0, "brace": -8.0, "board": 10.0, "ferrite": 2.5, "screw": 30.0}
 
+SCREW_TURNS = 2.0                # see the rotation note in the frame loop
 FRAMES = 44
 frames = []
 for i in range(FRAMES):
@@ -472,10 +534,22 @@ for i in range(FRAMES):
         e = u * u * (3 - 2 * u)          # smoothstep in
     else:
         e = 0.0
+    # SCREWS TURN AS THEY DRIVE IN (2026-08-03). They used to translate rigidly -- eight
+    # brass dowels sliding into holes. The slot is what makes the rotation legible: a smooth
+    # cylinder spinning about its own axis is indistinguishable from a still one, so the
+    # visible cue is the driver slot sweeping round.
+    #
+    # The rate is CHOSEN, not physical, and that is deliberate. At the real M2 pitch (0.40)
+    # the 30 mm approach is 75 turns, and even the 3 mm of actual thread engagement is 7.5 --
+    # at 90 ms/frame either one aliases into strobing jitter that reads as vibration, not
+    # driving. SCREW_TURNS is set to what a viewer parses as "being screwed down".
+    ang = -360.0 * SCREW_TURNS * e
     for name, acts in groups.items():
         dz = EXPL[name] * e
         for a in acts:
             a.SetPosition(0, 0, dz)
+            if name == "screw":
+                a.SetOrientation(0.0, 0.0, ang)
     # STILL CAMERA, ANGLED FROM BELOW (2026-07-31). Two findings, one fix: the old view
     # swung +-26 deg and dollied while the parts translated, so the whole assembly seemed
     # to float and wander; and it looked DOWN from the screw side, so the shell's back --
@@ -543,7 +617,7 @@ ren2.AddActor(_mat(shell_pd, (0.68, 0.69, 0.72), 0.60, 0.62, 46, 0.13))
 ren2.AddActor(textured(_mat(board_pd, MASK, 0.85, 0.30, 26, 0.14)))
 for _p in solar_pds:
     ren2.AddActor(_mat(_p, SOLAR, 0.75, 0.45, 55, 0.10))
-for _k, _pd in screws:
+for _k, _pd, _mx, _my in screws:
     ren2.AddActor(_mat(_pd, (0.22, 0.16, 0.07) if _k == "slot" else (0.74, 0.56, 0.21),
                        0.70, 0.18 if _k == "slot" else 0.82, 12 if _k == "slot" else 62, 0.11))
 for _pos, _i in [((-80, -130, -170), 0.80), ((120, 80, -100), 0.36), ((0, 0, -240), 0.30)]:
@@ -750,7 +824,7 @@ card_flip([_mat(shell_pd, TI, 0.85, 0.55, 42, 0.16), _mat(brace_pd, RESIN, 0.85,
           + [_mat(p, IC, 0.85, 0.22, 18, 0.16) for p in ic_pds]
           + [_mat(pd, (0.22, 0.16, 0.07) if k == "slot" else BRASS, 0.85,
                   0.20 if k == "slot" else 0.70, 12 if k == "slot" else 55, 0.16)
-             for k, pd in screws],
+             for k, pd, _mx, _my in screws],
           os.path.join(HERE, f"{STEM}-spin.gif"), "card flip",
           frames=HERO_FRAMES, ms=HERO_MS, animate=(_board_actor, _tex_seq))
 
