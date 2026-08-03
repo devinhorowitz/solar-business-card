@@ -536,8 +536,8 @@ Summary of the **orderable** lines:
 |---|---:|---|---|---|
 | U1 | 1 | AVR64EA28, 64 KB, 20 MHz | VQFN-28 (4×4×1.0 mm, w/ EP) | `AVR64EA28-E/STX` |
 | PV1, PV2 | 2 | Voc 4.15 V, 184 mW, mono, 1.2 mm thick | 42×23×1.2 mm, custom land | `SM141K06TF` |
-| SC1, SC3 | 2 | 1.8 F, 2.75 V (SS17) | SS17 (under-body P/N pads, 39 mm) | `3-153-440` |
-| SC2, SC4 | 2 | 1.0 F, 2.75 V (WS17) | WS17 (under-body P/N pads, 28.5 mm) | `3-153-438` |
+| SC1, SC3 | 2 | 1.8 F, 2.75 V (SS17) | SS17 (diagonal under-body P/N pads, 39 mm) | `3-153-440` |
+| SC2, SC4 | 2 | 1.0 F, 2.75 V (WS17) | WS17 (diagonal under-body P/N pads, 28.5 mm) | `3-153-438` |
 | D2–D5 | 4 | Amber 617 nm, Vf≈2.25 V | SMD, 3.4x1.9 mm | `LA P47F-V2BB-24-3B5A-30-R18-Z` |
 | R1–R4 | 4 | 150 Ω, ±1% | 0402 | `AC0402FR-07150RL` |
 | R12 | 1 | 220 Ω, ±1% | 0402 | `AC0402FR-07220RL` |
@@ -735,10 +735,30 @@ needs translucent FR4, the black look comes from the soldermask.
 Work outside-in by heat sensitivity:
 
 1. **Supercaps SC1–SC4 — hot air / hotplate, not an iron.** They solder to **flat pads under
-   the body**; the **asymmetric P/N widths (P = 7.8 mm, N = 12.2 mm) are the polarity key**.
+   the body**; the **asymmetric P/N widths (P = 7.75 mm, N = 12.25 mm) are the polarity key**,
+   and so is their **lateral offset** — N sits 1.50 mm in from one long edge, P 1.50 mm in from
+   the other, so the two run diagonally rather than down the centreline.
    The folded end tabs are coated, non-solderable locators — never solder to those. The cells
    sit at the board ends, clear of the central cluster, so localized hot air will not disturb
    the reflowed parts.
+
+   > **The land on THIS board is wrong, and knowingly so (2026-08-03).** Measured off the SCPC
+   > datasheet's Case WS10/WS13/WS17 and SS17 bottom views, the terminals are 3.50 mm long with
+   > their **outer edge 0.20 mm inside the body end** — centres at **±12.30** (WS) and **±17.55**
+   > (SS) — and laterally opposed as above. The board's embedded lands put both pads on the
+   > centreline at ±11.00 / ±16.25: **1.30 mm per side too far in, 2.60 mm on the pitch.** The
+   > cause was reading the datasheet's `1.5 ±0.5` as an inset from the *end*; it is an inset from
+   > a long *edge*. A cap still solders — about 63 % of each terminal's length lands on copper —
+   > but P also overhangs its 7.75 mm terminal by ~3.1 mm onto the bare can.
+   >
+   > `solarglow.pretty/SCHURTER_SCPC_{WS17,SS17}.kicad_mod` **carry the corrected geometry**.
+   > The board does not, because adopting it is not a footprint swap: the corrected pads reach
+   > 1.30 mm further toward each cell end, into a band already carrying **45 B.Cu segments across
+   > 11 nets** — `INT1`, `INT2`, `VS`, `VSENSE`, `SDA`, `ANODE`, `K2`, `LDRV2`, `UPDI`,
+   > `EN_STO_CH`, `SRC` — which run lengthwise past the cell ends and cross the new pads at full
+   > width, so no narrower pad dodges them. Cost is the same shape if only the ±1.30 pitch is
+   > taken and the lateral offset skipped (38 segments): the pitch is what costs, not the offset.
+   > **Correcting the board is a deliberate B-side re-route, and belongs to a respin.**
 2. **Solar cells PV1 / PV2 last (most fragile).** Iron **≤ 260 °C, ≤ 2 s per joint**, and
    **do not clean with IPA**. Mind cell polarity to the custom land.
 3. **Set the LED master switch SW2** (3-pad bridge): center–left = **ON** (`ANODE` straight

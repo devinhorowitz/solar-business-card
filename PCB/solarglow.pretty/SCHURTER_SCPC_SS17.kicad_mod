@@ -3,7 +3,7 @@
 	(generator "pcbnew")
 	(generator_version "10.0")
 	(layer "F.Cu")
-	(descr "SCHURTER SCPC Case SS17 prismatic supercapacitor (P/N 3-153-440), 1.8 F 2.75 V, ESR 25 mOhm. Flat prismatic cell 39.0 x 17.0 mm, 1.70 mm max thick. Under-body solder pads only: N 12.25 x 3.5 and P 7.75 x 3.5, centred +/-16.25 mm from cell centre (outer edge 1.5 mm in from each end). Asymmetric pad widths are the polarity key (N wider than P). The end tabs (drawn on F.Fab, ~2.75 mm past each end) are finish-coated locators, NOT solder pads. Derived from the locked WS17 land (solarglow:SC1): pad geometry identical, pads moved +/-11 -> +/-16.25 and body 28.5 -> 39.0 for the SS17 case.")
+	(descr "SCHURTER SCPC Case SS17 prismatic supercapacitor (P/N 3-153-440), 1.8 F 2.75 V, ESR 25 mOhm. Flat prismatic cell 39.0 x 17.0 mm, 1.70 mm max thick. Under-body solder pads only: N 12.25 x 3.5 and P 7.75 x 3.5, centred +/-17.55 mm from cell centre (outer edge 0.20 mm in from each body end) and laterally OPPOSED -- N sits 1.50 mm in from one long edge, P 1.50 mm in from the other, so the pair runs diagonally. Pad width AND that lateral offset are the polarity key. The end tabs (drawn on F.Fab, ~2.75 mm past each end) are finish-coated locators, NOT solder pads. Terminal geometry is IDENTICAL to the WS cases -- same 12.25/7.75 x 3.5 pads, same 1.50 lateral insets, same 0.20 end inset; only the body length moves them, 28.5 -> 39.0 giving +/-12.30 -> +/-17.55. CORRECTED 2026-08-03 from +/-16.25 on the centreline; see the WS17 land for why. The board's embedded land (Downloads:SCHURTER_SCPC_SS17) still carries the old geometry; correcting it needs a B-side re-route, see PCB/README.md.")
 	(tags "supercapacitor SCHURTER SCPC SS17 3-153-440 prismatic")
 	(attr smd)
 	(property "Reference" "REF**"
@@ -51,14 +51,14 @@
 		)
 	)
 	(pad "N" smd roundrect
-		(at 0 16.25 90)
+		(at 0.875 17.55 90)
 		(size 3.5 12.25)
 		(layers "F.Cu" "F.Mask" "F.Paste")
 		(roundrect_rratio 0.25)
 		(uuid "c2000000-0000-0000-0000-000000000011")
 	)
 	(pad "P" smd roundrect
-		(at 0 -16.25 90)
+		(at -3.125 -17.55 90)
 		(size 3.5 7.75)
 		(layers "F.Cu" "F.Mask" "F.Paste")
 		(roundrect_rratio 0.25)
