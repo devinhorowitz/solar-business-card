@@ -1604,10 +1604,17 @@ def check_mount_parity():
 # island creeping back in.
 def check_face_art():
     print("[17] the card face's contact block matches face_art")
+    # BOTH imports are guarded, and matplotlib is the one that bit: the KiCad image does
+    # not carry it, so the first CI run of this check sailed through [1]..[16] and then
+    # died on a bare ModuleNotFoundError inside build(). consistency.yml installs it now;
+    # this catch is so a missing dependency degrades to a loud skip rather than taking the
+    # whole suite down with a traceback, which tells you nothing about the board.
     try:
         import pcbnew  # noqa: F401
+        import matplotlib  # noqa: F401
     except Exception as e:
-        warn(f"not checked -- {type(e).__name__}: {e}")
+        warn(f"NOT CHECKED -- {type(e).__name__}: {e}. The contact block was not verified; "
+             f"install the dependency rather than trusting this run")
         return
     sys.path.insert(0, os.path.join(ROOT, "scripts"))
     import face_art

@@ -31,6 +31,10 @@ on:
       # check [13] imports this module and re-derives the coil's paper tune from the
       # routing — an edit to the coil math must re-gate the unchanged board.
       - 'scripts/nfc_coil.py'
+      # check [17] imports this one and re-sets the card face's type from it, so a change
+      # to the generator can make the committed board stale without the board being touched
+      # — the same relationship [6] has with mask_art.py.
+      - 'scripts/face_art.py'
       # check [9] parses the OUTS list out of kibot.yml to confirm that everything it calls
       # "automated" is something CI actually commits.
       - '.github/workflows/kibot.yml'
@@ -50,6 +54,7 @@ on:
       - 'scripts/mask_art.py'
       - 'scripts/part_colors.py'
       - 'scripts/nfc_coil.py'
+      - 'scripts/face_art.py'
       - '.github/workflows/kibot.yml'
       - 'enclosure/**'
       - 'BOM/**'
@@ -61,5 +66,10 @@ jobs:
     container: ghcr.io/inti-cmnb/kicad10_auto_full@sha256:dd3b846da945f204fa7b61916df34a99170b2a2095b49c3879cd96d414b8a7b8
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1   # v7.0.1
+      # check [17] sets the card face's type from the JetBrains Mono TTFs, and the KiCad
+      # image does not carry matplotlib. Pinned to the version kibot.yml already installs
+      # for the drawings, so the two jobs cannot render from different font machinery.
+      - name: Install the type-setting dependency
+        run: python3 -m pip install --quiet 'matplotlib==3.11.1'
       - name: Run consistency check
         run: python3 scripts/check_consistency.py
