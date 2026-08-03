@@ -20770,7 +20770,7 @@
 				)
 			)
 		)
-		(property "Supplier" "DigiKey"
+		(property "Supplier" "Mouser"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -20781,7 +20781,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "486-3-153-438-ND"
+		(property "Supplier P/N" "693-3-153-438"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -21393,7 +21393,7 @@
 				)
 			)
 		)
-		(property "Supplier" "DigiKey"
+		(property "Supplier" "Mouser"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -21404,7 +21404,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "486-3-153-440-ND"
+		(property "Supplier P/N" "693-3-153-440"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -22886,7 +22886,7 @@
 				)
 			)
 		)
-		(property "Supplier" "DigiKey"
+		(property "Supplier" "Mouser"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -22897,7 +22897,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "486-3-153-440-ND"
+		(property "Supplier P/N" "693-3-153-440"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -26101,7 +26101,7 @@
 				)
 			)
 		)
-		(property "Supplier" "DigiKey"
+		(property "Supplier" "Mouser"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -26112,7 +26112,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "486-3-153-438-ND"
+		(property "Supplier P/N" "693-3-153-438"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)

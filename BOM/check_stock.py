@@ -396,11 +396,11 @@ def load_lines():
     for kind, rows in (("assembly", asm), ("hand-solder", hand)):
         for r in rows:
             out.append({"refs": ", ".join(r["refs"]), "qty": r["qty"], "mfr": r["mfr"],
-                        "mpn": r["mpn"], "kind": kind})
+                        "mpn": r["mpn"], "kind": kind, "supplier": r["supplier"]})
     for ref, qty, mpn, mfr, sup, _dpn, _note in list(off) + list(once):
         if sup:
             out.append({"refs": ref, "qty": qty, "mfr": mfr, "mpn": mpn,
-                        "kind": "off-board"})
+                        "kind": "off-board", "supplier": sup})
     return out
 
 
@@ -518,7 +518,15 @@ def main():
             results.append((entry, None, None, "manual", []))
             print(f"  {refs:10s} {mpn:32s} manual line, not queried")
             continue
-        hint = "mouser" if key in MOUSER_FIRST else None
+        # Ask the DESIGN's chosen distributor first. Without this the query is always
+        # DigiKey-first, so a line the buy documents route to Mouser still gets reported
+        # at DigiKey whenever DigiKey happens to stock it -- and this table sits beside
+        # those documents saying a different thing. That disagreement is the exact bug
+        # this file was fixed for on 2026-08-02, in the other direction (the buy list
+        # said DigiKey while the table said Mouser, and the table was right). The
+        # fallback is unchanged: a dry preferred source still loses to a live other one.
+        hint = ("mouser" if key in MOUSER_FIRST
+                or (entry.get("supplier") or "").lower() == "mouser" else None)
         hit, err = query_part(dk, mouser, mpn, mfr=entry["mfr"], source_hint=hint,
                               mouser_sku=MOUSER_FIRST.get(key))
         # Substitutes are always queried when documented -- the table shows

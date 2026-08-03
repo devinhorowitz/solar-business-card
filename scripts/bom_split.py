@@ -61,7 +61,9 @@ OFF_BOARD = [
     # vendor's part. "364006" is exactly that shape. Items with no manufacturer are
     # generic by nature (a DIN screw, sheet film) and are not distributor lines, so
     # nothing queries them.
-    ("FER1",  1, "364006",                 "Würth Elektronik",  "DigiKey",  "732-5049-ND",
+    # Moved DigiKey -> Mouser 2026-08-03, on price and depth rather than consolidation:
+    # $13.18 vs $17.43 and 119 in stock vs 41. Same Würth part either way.
+    ("FER1",  1, "364006",                 "Würth Elektronik",  "Mouser",   "710-364006",
      "Wurth WE-FSFS ferrite sheet behind the coil -- load-bearing for the NFC tune"),
     ("HW1",   4, "DIN 84 M2x3 brass",      "",                  None,       "",
      "shell screws; any DIN 84 M2x3 -- source locally, not a distributor line"),
