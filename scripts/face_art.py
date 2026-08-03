@@ -270,6 +270,55 @@ def build():
     return unary_union(parts)
 
 
+ZONE_NAME = "faceart"      # ownership marker: --apply strips zones carrying this name
+ZONE_PRIORITY = 2          # above the hatched GND pour (1), below the teardrops (30000+)
+
+
+def emit_zones(geom):
+    """The letters as SOLID copper on GND -- one zone per glyph piece.
+
+    WHY THIS EXISTS. Deleting the F.Cu islands grounded the type and cost it its finish,
+    and CI's regenerated card-face render is where that showed: the front GND pour is
+    HATCH_PATTERN, 0.20 mm on a 0.50 mm gap, so the openings came back sitting over mesh
+    and the type read as pale screen instead of solid gold. The repo already knew the
+    hazard from the other side -- the cartouche was switched off in July because "the GND
+    crosshatch under it plated ENIG and read as a gold mesh".
+
+    A zone carries a net, which a graphic does not. So the letters go back to being solid
+    copper AND are on GND: solid gold to look at, and a real path to the plating bus, which
+    is strictly better than the islands this replaced (solid but ungrounded).
+
+    The outline is each piece's EXTERIOR only -- counters are not cut out. Copper inside the
+    'o' is covered by mask either way, so leaving it saves the bridged-hole seam a zone
+    outline would otherwise need.
+
+    `filled_polygon` is emitted equal to the outline, which is exact here and not a guess:
+    the nearest non-GND copper to any glyph measures 0.350 mm, against a 0.152 mm floor, so
+    no part of any letter is clearance-limited and the fill has nothing to cut back from.
+    KiBot refills before plotting regardless; this is so the fill stored in the board is
+    right for anything that reads it without refilling, check [14] included.
+    """
+    from shapely.geometry import MultiPolygon
+    parts = list(geom.geoms) if isinstance(geom, MultiPolygon) else [geom]
+    out = []
+    for p in sorted(parts, key=lambda q: (-q.area, q.bounds)):
+        pts = "".join(f"\t\t\t\t(xy {x:.4f} {y:.4f})\n" for x, y in list(p.exterior.coords)[:-1])
+        out.append(
+            '\t(zone\n\t\t(net "GND")\n\t\t(name "' + ZONE_NAME + '")\n'
+            '\t\t(layer "F.Cu")\n\t\t(hatch none 0.5)\n'
+            f'\t\t(priority {ZONE_PRIORITY})\n'
+            '\t\t(connect_pads yes\n\t\t\t(clearance 0)\n\t\t)\n'
+            '\t\t(min_thickness 0.0254)\n'
+            # NEVER remove islands: every letter is a small shape that merges with the pour
+            # only because they share a net. Under the default ALWAYS it would be a candidate
+            # for deletion, and a vanished letter is not a failure anyone would see coming.
+            '\t\t(fill yes\n\t\t\t(island_removal_mode 1)\n\t\t)\n'
+            f'\t\t(polygon\n\t\t\t(pts\n{pts}\t\t\t)\n\t\t)\n'
+            f'\t\t(filled_polygon\n\t\t\t(layer "F.Cu")\n\t\t\t(pts\n{pts}\t\t\t)\n\t\t)\n'
+            '\t)\n')
+    return "".join(out)
+
+
 def _in_block(x0, y0, x1, y1):
     bx0, by0, bx1, by1 = BLOCK
     return x0 >= bx0 and y0 >= by0 and x1 <= bx1 and y1 <= by1
@@ -309,7 +358,7 @@ def strip_block(txt):
     """Remove every gr_poly on F.Mask or F.Cu whose points all fall inside BLOCK."""
     out, removed, i = [], 0, 0
     while True:
-        m = re.search(r'(?m)^\t\(gr_poly\n', txt[i:])
+        m = re.search(r'(?m)^\t\((?:gr_poly|zone)\n', txt[i:])
         if not m:
             out.append(txt[i:])
             break
@@ -332,9 +381,14 @@ def strip_block(txt):
         blk = txt[st:j + 1]
         lay = re.search(r'\(layer "([^"]+)"\)', blk)
         xy = [(float(a), float(b)) for a, b in re.findall(r'\(xy (-?[\d.]+) (-?[\d.]+)\)', blk)]
-        mine = (lay and lay.group(1) in ("F.Mask", "F.Cu") and xy and
-                _in_block(min(p[0] for p in xy), min(p[1] for p in xy),
-                          max(p[0] for p in xy), max(p[1] for p in xy)))
+        # a zone is ours by NAME (it may legitimately sit anywhere); a graphic is ours by
+        # region, because the artwork this replaced predates any tagging
+        if blk.startswith("\t(zone"):
+            mine = f'(name "{ZONE_NAME}")' in blk
+        else:
+            mine = (lay and lay.group(1) in ("F.Mask", "F.Cu") and xy and
+                    _in_block(min(p[0] for p in xy), min(p[1] for p in xy),
+                              max(p[0] for p in xy), max(p[1] for p in xy)))
         if mine:
             out.append(txt[i:st])
             removed += 1
@@ -407,8 +461,39 @@ def check_state():
     if sym > ROUND_TRIP:
         return False, (f"STALE -- board and LINES differ by {sym:.4f} mm2 "
                        f"(round-trip noise is under {ROUND_TRIP}); run face_art --apply")
+
+    # AND THE LETTERS MUST BE SOLID COPPER ON GND. Openings alone are not enough: with the
+    # copper islands deleted and no zone under them, the type sits on the front pour, which
+    # is HATCH_PATTERN -- 0.20 mm on a 0.50 mm gap -- and plates as mesh. That shipped once,
+    # and only CI's regenerated card-face render showed it, because the fill stored in the
+    # board still carried the moats from the islands. A number is cheaper than a picture.
+    from shapely.geometry import Polygon
+    from shapely.ops import unary_union
+    import pcbnew as _p
+    fc = _p.LoadBoard(PCB).GetLayerID("F.Cu")
+    board = _p.LoadBoard(PCB)
+    fill = []
+    for z in board.Zones():
+        if z.GetZoneName() != ZONE_NAME:
+            continue
+        if z.GetFillMode() != 0:
+            return False, f"the {ZONE_NAME} zones are not SOLID fill -- the type would plate as mesh"
+        ps = z.GetFilledPolysList(fc)
+        for i in range(ps.OutlineCount()):
+            ol = ps.Outline(i)
+            pts = [(ol.CPoint(k).x / 1e6, ol.CPoint(k).y / 1e6) for k in range(ol.PointCount())]
+            if len(pts) >= 3:
+                fill.append(Polygon(pts).buffer(0))
+    if not fill:
+        return False, ("no solid GND zone under the type -- the openings would sit on the "
+                       "hatched pour and plate as mesh; run face_art --apply")
+    covered = new.intersection(unary_union(fill)).area / new.area * 100
+    if covered < 99.0:
+        return False, (f"solid GND copper reaches only {covered:.1f}% of the type; the rest "
+                       f"would plate as hatch")
     return True, (f"the contact block matches LINES ({len(list(getattr(new, 'geoms', [new])))} "
-                  f"opening(s), {new.area:.2f} mm2), and carries no F.Cu island")
+                  f"opening(s), {new.area:.2f} mm2), carries no F.Cu island, and sits on "
+                  f"{covered:.1f}% solid GND copper")
 
 
 def main():
@@ -446,11 +531,13 @@ def main():
     if not removed:
         sys.exit("face_art: found nothing to replace in the block -- refusing to write, "
                  "since appending to artwork that is still there would double it")
-    body = mask_art.emit(new, layer="F.Mask", tag=TAG).replace(mask_art.MARK, MARK)
+    body = (mask_art.emit(new, layer="F.Mask", tag=TAG).replace(mask_art.MARK, MARK)
+            + emit_zones(new))
     out = mask_art._splice(stripped, body)
     open(PCB, "wb").write(out.replace("\n", nl).encode("utf-8"))
     print(f"  removed {removed} shape(s) from the block, wrote {r['pieces']} F.Mask "
-          f"opening(s) and NO F.Cu -- the GND pour is the copper now")
+          f"opening(s) and {r['pieces']} solid GND zone(s) under them -- the letters are "
+          f"copper ON A NET, not graphics, and not the hatched pour")
     print("  NOW RUN: python3 scripts/mask_art.py --apply   (the gold area is derived "
           "from these openings)")
 
