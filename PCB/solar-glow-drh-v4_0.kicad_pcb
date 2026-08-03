@@ -372,7 +372,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "ANYSOLAR Ltd"
+		(property "Manufacturer" "ANYSOLAR"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -1318,7 +1318,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "ANYSOLAR Ltd"
+		(property "Manufacturer" "ANYSOLAR"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -1636,7 +1636,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Manufacturer" "SCHURTER Inc."
+		(property "Manufacturer" "SCHURTER"
 			(at 0 0 180)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -1959,7 +1959,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Manufacturer" "YAGEO"
+		(property "Manufacturer" "Yageo"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -2622,7 +2622,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Manufacturer" "YAGEO"
+		(property "Manufacturer" "Yageo"
 			(at 0 0 180)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -2929,7 +2929,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Manufacturer" "Murata Electronics"
+		(property "Manufacturer" "Murata"
 			(at 0 0 90)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -3121,7 +3121,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Manufacturer" "YAGEO"
+		(property "Manufacturer" "Yageo"
 			(at 0 0 90)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -3366,7 +3366,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Manufacturer" "Murata Electronics"
+		(property "Manufacturer" "Murata"
 			(at 0 0 180)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -3655,7 +3655,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Manufacturer" "Murata Electronics"
+		(property "Manufacturer" "Murata"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -3827,7 +3827,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Manufacturer" "Murata Electronics"
+		(property "Manufacturer" "Murata"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -4885,7 +4885,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Manufacturer" "YAGEO"
+		(property "Manufacturer" "Yageo"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -5056,7 +5056,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Manufacturer" "ams-OSRAM USA INC."
+		(property "Manufacturer" "ams-OSRAM"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -6690,7 +6690,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Manufacturer" "Murata Electronics"
+		(property "Manufacturer" "Murata"
 			(at 0 0 180)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -6862,7 +6862,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Manufacturer" "ams-OSRAM USA INC."
+		(property "Manufacturer" "ams-OSRAM"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -7287,7 +7287,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Manufacturer" "YAGEO"
+		(property "Manufacturer" "Yageo"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -8254,7 +8254,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Manufacturer" "NXP USA Inc."
+		(property "Manufacturer" "NXP Semiconductors"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -8915,7 +8915,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Manufacturer" "YAGEO"
+		(property "Manufacturer" "Yageo"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -9182,7 +9182,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Manufacturer" "YAGEO"
+		(property "Manufacturer" "Yageo"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -9353,7 +9353,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Manufacturer" "Murata Electronics"
+		(property "Manufacturer" "Murata"
 			(at 0 0 180)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -9545,7 +9545,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Manufacturer" "Murata Electronics"
+		(property "Manufacturer" "Murata"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -9759,7 +9759,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Manufacturer" "YAGEO"
+		(property "Manufacturer" "Yageo"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -9951,7 +9951,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Manufacturer" "YAGEO"
+		(property "Manufacturer" "Yageo"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -10472,7 +10472,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Manufacturer" "SCHURTER Inc."
+		(property "Manufacturer" "SCHURTER"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -11240,7 +11240,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Manufacturer" "Murata Electronics"
+		(property "Manufacturer" "Murata"
 			(at 0 0 90)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -11443,7 +11443,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Manufacturer" "Murata Electronics"
+		(property "Manufacturer" "Murata"
 			(at 0 0 180)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -11615,7 +11615,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Manufacturer" "ams-OSRAM USA INC."
+		(property "Manufacturer" "ams-OSRAM"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -11827,7 +11827,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Manufacturer" "Murata Electronics"
+		(property "Manufacturer" "Murata"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -12040,7 +12040,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Manufacturer" "ams-OSRAM USA INC."
+		(property "Manufacturer" "ams-OSRAM"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -12232,7 +12232,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Manufacturer" "YAGEO"
+		(property "Manufacturer" "Yageo"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -12511,7 +12511,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Manufacturer" "Analog Devices Inc."
+		(property "Manufacturer" "Analog Devices"
 			(at 0 0 180)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -12919,7 +12919,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Manufacturer" "Murata Electronics"
+		(property "Manufacturer" "Murata"
 			(at 0 0 90)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -13111,7 +13111,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Manufacturer" "Johanson Technology Inc."
+		(property "Manufacturer" "Johanson Technology"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -13340,7 +13340,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Manufacturer" "Murata Electronics"
+		(property "Manufacturer" "Murata"
 			(at 0 0 90)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -13553,7 +13553,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Manufacturer" "YAGEO"
+		(property "Manufacturer" "Yageo"
 			(at 0 0 90)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -13819,7 +13819,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Manufacturer" "YAGEO"
+		(property "Manufacturer" "Yageo"
 			(at 0 0 180)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -14085,7 +14085,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Manufacturer" "Murata Electronics"
+		(property "Manufacturer" "Murata"
 			(at 0 0 90)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -14276,7 +14276,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Manufacturer" "Murata Electronics"
+		(property "Manufacturer" "Murata"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -14496,7 +14496,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Manufacturer" "SCHURTER Inc."
+		(property "Manufacturer" "SCHURTER"
 			(at 0 0 180)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -14808,7 +14808,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Manufacturer" "Murata Electronics"
+		(property "Manufacturer" "Murata"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -14987,7 +14987,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Manufacturer" "SCHURTER Inc."
+		(property "Manufacturer" "SCHURTER"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -15330,7 +15330,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Manufacturer" "Murata Electronics"
+		(property "Manufacturer" "Murata"
 			(at 0 0 180)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -15563,7 +15563,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Manufacturer" "YAGEO"
+		(property "Manufacturer" "Yageo"
 			(at 0 0 90)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -15788,7 +15788,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Manufacturer" "Murata Electronics"
+		(property "Manufacturer" "Murata"
 			(at 0 0 90)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -15981,7 +15981,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Manufacturer" "Vishay Dale"
+		(property "Manufacturer" "Vishay"
 			(at 0 0 180)
 			(unlocked yes)
 			(layer "B.Fab")
