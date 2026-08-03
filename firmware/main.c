@@ -274,29 +274,129 @@ static void go_to_sleep(void)
  * (~450 us) + bus time, the part riding always-on VS since the back-power fix.
  * This is the integration scaffold: richer per-event archival hangs off the same
  * wake/read/write/sleep cycle once the budget is bench-measured. */
+/* Record layout at addr 0. v1 was magic 'DRHb' + a boot count and nothing else; v2 is
+ * 'DRHc' and appends four lifetime event counters. A v1 record is MIGRATED rather than
+ * overwritten -- any card already carrying boot counts keeps them, and the new fields
+ * start at zero. That matters because this is the black box: its whole value is that it
+ * has been counting since the board's first power-up.
+ *
+ *   [ 0.. 3] magic 'DRHc'
+ *   [ 4.. 7] cold boots        u32 BE     (v1 field, preserved across the migration)
+ *   [ 8..11] taps              u32 BE
+ *   [12..15] double taps       u32 BE
+ *   [16..19] NFC field reads   u32 BE
+ *   [20..23] motion trips      u32 BE
+ */
+#define REC_LEN     24
+#define EV_TAP       0
+#define EV_DBL       1
+#define EV_NFC       2
+#define EV_MOTION    3
+#define EV_N         4
+
+/* RAM shadow, committed on the poll tick. THE COMMIT CADENCE IS THE WHOLE DESIGN.
+ *
+ * A FRAM cycle is a wake (~450 us of ACK-polling), the bus traffic, and a re-park. Doing
+ * that per EVENT would put an I2C transaction inside the tap path -- the one path this
+ * firmware is most careful to keep cheap, where even a muted glow is deliberately costed
+ * at a byte-compare rather than an ADC conversion. So an event costs a saturating byte
+ * increment in RAM, and at most ONE FRAM cycle per ~1 s poll folds whatever accumulated
+ * into the lifetime totals. A burst of taps is one cycle, not one per tap.
+ *
+ * The trade is a loss window: a card whose tank dies between commits loses up to a poll
+ * period of events. That is the right way round. These are curios, not telemetry anyone
+ * acts on, and the alternative spends real energy from an unmeasured harvest to protect
+ * a tap count.
+ *
+ * u8 saturating: 255 events inside one poll period is already far past anything physical,
+ * and saturating beats wrapping -- an implausible 255 reads better than a plausible 3. */
+static uint8_t ev_pending[EV_N];
+
+static void ev_note(uint8_t which)
+{
+    if (ev_pending[which] != 0xFF) ev_pending[which]++;
+}
+
+static uint32_t rec_get(const uint8_t *r, uint8_t i)
+{
+    const uint8_t *p = r + 4 + 4 * i;
+    return ((uint32_t)p[0] << 24) | ((uint32_t)p[1] << 16) |
+           ((uint32_t)p[2] <<  8) |  (uint32_t)p[3];
+}
+
+static void rec_put(uint8_t *r, uint8_t i, uint32_t v)
+{
+    uint8_t *p = r + 4 + 4 * i;
+    p[0] = (uint8_t)(v >> 24); p[1] = (uint8_t)(v >> 16);
+    p[2] = (uint8_t)(v >>  8); p[3] = (uint8_t)(v);
+}
+
+/* Read the record, migrating v1 -> v2 and re-seeding a virgin/garbage part.
+ * Returns 0 on success with `rec` populated; non-zero leaves it undefined. */
+static uint8_t rec_load(uint8_t *rec)
+{
+    if (fram_read(0x0000, rec, REC_LEN)) return 1;
+    if (rec[0] == 'D' && rec[1] == 'R' && rec[2] == 'H' && rec[3] == 'c')
+        return 0;                                    /* v2 already */
+    if (rec[0] == 'D' && rec[1] == 'R' && rec[2] == 'H' && rec[3] == 'b') {
+        rec[3] = 'c';                                /* v1: keep [4..7], zero the rest */
+        for (uint8_t i = 8; i < REC_LEN; i++) rec[i] = 0;
+        return 0;
+    }
+    rec[0] = 'D'; rec[1] = 'R'; rec[2] = 'H'; rec[3] = 'c';
+    for (uint8_t i = 4; i < REC_LEN; i++) rec[i] = 0; /* virgin / garbage: start clean */
+    return 0;
+}
+
 static void fram_boot_record(void)
 {
-    static const uint8_t MAGIC[4] = { 'D', 'R', 'H', 'b' };
-    uint8_t hdr[8];
-    uint32_t n;
+    uint8_t rec[REC_LEN];
 
     if (fram_wake()) { fram_sleep(); return; }   /* absent -> best-effort park + skip */
-    if (fram_read(0x0000, hdr, sizeof hdr) == 0) {
-        if (hdr[0] == MAGIC[0] && hdr[1] == MAGIC[1] &&
-            hdr[2] == MAGIC[2] && hdr[3] == MAGIC[3]) {
-            n = ((uint32_t)hdr[4] << 24) | ((uint32_t)hdr[5] << 16) |
-                ((uint32_t)hdr[6] <<  8) |  (uint32_t)hdr[7];
-            n++;
-        } else {
-            hdr[0] = MAGIC[0]; hdr[1] = MAGIC[1]; hdr[2] = MAGIC[2]; hdr[3] = MAGIC[3];
-            n = 1;
-        }
-        hdr[4] = (uint8_t)(n >> 24); hdr[5] = (uint8_t)(n >> 16);
-        hdr[6] = (uint8_t)(n >>  8); hdr[7] = (uint8_t)(n);
-        (void)fram_write(0x0000, hdr, sizeof hdr);
+    if (rec_load(rec) == 0) {
+        rec_put(rec, 0, rec_get(rec, 0) + 1);    /* field 0 = cold boots */
+        (void)fram_write(0x0000, rec, REC_LEN);
     }
     fram_sleep();                 /* re-park: standing cost back to IZZ (0.20 uA typ) */
 }
+
+/* Fold the RAM shadow into the lifetime totals. Called from the poll tick, and ONLY when
+ * something is pending -- an idle card in a drawer must not pay a FRAM cycle a second to
+ * add zero to four counters. Pending counts are cleared only after the write is accepted,
+ * so a bus fault defers them to the next tick instead of dropping them. */
+static void fram_events_commit(void)
+{
+    uint8_t rec[REC_LEN];
+    uint8_t i, any = 0;
+
+    for (i = 0; i < EV_N; i++) if (ev_pending[i]) { any = 1; break; }
+    if (!any) return;
+
+    if (fram_wake()) { fram_sleep(); return; }   /* absent: keep pending, retry next tick */
+    if (rec_load(rec) == 0) {
+        for (i = 0; i < EV_N; i++)
+            if (ev_pending[i]) rec_put(rec, i + 1, rec_get(rec, i + 1) + ev_pending[i]);
+        if (fram_write(0x0000, rec, REC_LEN) == 0)
+            for (i = 0; i < EV_N; i++) ev_pending[i] = 0;
+    }
+    fram_sleep();
+}
+#endif
+
+/* ev_note() is called from the event branches whether or not the log is built, so it has
+ * to exist either way. Compiled out, it is a no-op the optimiser deletes -- which keeps
+ * the call sites free of #if fences and stops the counting and the not-counting from
+ * being two different control flows. */
+#if !USE_FRAM_LOG
+#define EV_TAP       0
+#define EV_DBL       1
+#define EV_NFC       2
+#define EV_MOTION    3
+static inline void ev_note(uint8_t which) { (void)which; }
+/* Same reasoning for the commit. Its call site sits inside the FRAM_RESLEEP_EVERY_POLL
+ * block, which is a SEPARATE knob -- with the log off and re-park on, an unstubbed call
+ * would simply not compile. */
+static inline void fram_events_commit(void) { }
 #endif
 
 /* ---------------- main ---------------- */
@@ -392,6 +492,7 @@ int main(void)
 #endif
         if (f_tap) {
             f_tap = 0;
+            ev_note(EV_TAP);
             uint8_t dbl = 0;
 #if USE_DOUBLE_TAP
             /* The ADXL367 resolves single vs double IN HARDWARE: with both tap
@@ -462,6 +563,7 @@ int main(void)
         }
         else if (f_nfc) {
             f_nfc = 0;
+            ev_note(EV_NFC);   /* a completed read: FD has risen, the exchange is over */
             /* the reader's field just LEFT (FD rose): the exchange is done, so it is
              * now safe to light up. Acknowledge the read with the same breath as a
              * single tap, rail-gated. During the read the LEDs were held dark (led.c
@@ -500,6 +602,7 @@ int main(void)
         }
         else if (f_motion) {
             f_motion = 0;
+            ev_note(EV_MOTION);
             /* free gates BEFORE the rail read (see the tap branch): the pocket-walk case
              * this mute exists for fires an activity trip per jostle, and each muted trip
              * must cost a compare, not a conversion. */
@@ -672,6 +775,11 @@ int main(void)
 #endif
             }
 #if FRAM_RESLEEP_EVERY_POLL
+            /* Fold this poll's events into the FRAM black box FIRST -- it leaves the
+             * part parked on its own, so the defensive re-park below covers the ticks
+             * where nothing was pending and the commit returned without touching the
+             * bus. */
+            fram_events_commit();
             /* Defensive re-park: the accel traffic this tick may have woken the
              * VS-railed FRAM to 10 uA standby (its Sleep-exit wording doesn't
              * promise address-selective wake). Two short frames, NACK-tolerant
