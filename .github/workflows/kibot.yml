@@ -60,6 +60,7 @@ on:
       # the mesh gate's ledger -- editing a baseline must re-prove it against the artifacts
       - 'scripts/check_mesh.py'
       - 'scripts/interference_drc.py'
+      - 'scripts/assembly_drc.py'
       - 'enclosure/**.stl'
       - '.github/workflows/kibot.yml'
 
@@ -210,6 +211,11 @@ jobs:
           # B-side body polygon + ledgered height -- the assembled boolean truth that
           # check [7] (one part at a time) cannot see. Fails BEFORE the commit-back.
           python3 scripts/interference_drc.py
+          # tier 4: the ASSEMBLED stack. interference_drc above covers exactly one
+          # interface pair (brace <-> B-side parts); this closes the Z budget against the
+          # shell that has to contain it, and gates the two subsystems that were in no fit
+          # check at all -- the ferrite in its pocket, and the screws' bosses.
+          python3 scripts/assembly_drc.py
 
       # Reference figures for PCB/README.md's assembly steps (D2-D5 LED polarity, the SW2
       # master bridge) plus the thickness-at-hand-scale figure, drawn FROM the board file
@@ -244,7 +250,14 @@ jobs:
       - name: Render the enclosure assembly views
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq xvfb
-          python3 -m pip install --quiet 'vtk==9.6.2' 'pillow==12.3.0' 'numpy==2.5.1' 'shapely==2.1.2'
+          # NUMPY IS HELD BELOW 2.5, deliberately. The KiCad image ships numba 0.66.0,
+          # which requires numpy<2.5; installing 2.5.1 over it left pip printing a
+          # dependency-conflict ERROR on every render step and numba nominally broken in
+          # the image we did not build. 2.4.6 is the newest numpy under that ceiling, and
+          # it is the pairing every local render and solid gate has been run against.
+          # The `# HELD numpy:` marker is read by weekly-freshness.yml, so the sweep reports it as
+          # a held pin with its reason instead of permanent drift against 2.5.x.
+          python3 -m pip install --quiet 'vtk==9.6.2' 'pillow==12.3.0' 'numpy==2.4.6' 'shapely==2.1.2'  # HELD numpy: the KiCad image ships numba 0.66.0, which needs numpy under 2.5
           xvfb-run -a python3 enclosure/assembly_render.py
 
       - name: Commit generated outputs

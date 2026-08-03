@@ -136,11 +136,26 @@ jobs:
           # pip pins (self-discovered from the workflows, so a new pin joins automatically)
           for spec in $(grep -rhoE "[a-zA-Z0-9_-]+==[0-9][0-9.]*" .github/workflows/*.yml | sort -u); do
             pkg=${spec%%==*}; pin=${spec##*==}
+            # The marker NAMES its package -- `# HELD <pkg>: <reason>`. A bare `# HELD:`
+            # was tried first and bound to every pin sharing the line: one comment on the
+            # render install claimed pillow, shapely and vtk were held too, which would
+            # have hidden real drift on three pins to explain one.
+            # ...and it must sit ON THE PIN LINE. Matching the marker anywhere let the
+            # prose ABOVE the pin win on file order, so the reported reason was a
+            # sentence about the mechanism rather than the reason itself.
+            held=$(grep -rhoE "$pkg==[0-9][0-9.]*.*# *HELD +$pkg *: *[^\"']*" .github/workflows/*.yml \
+                   | head -1 | sed -E 's/.*# *HELD +[A-Za-z0-9_-]+ *: *//')
             latest=$(curl -fsSL "https://pypi.org/pypi/$pkg/json" 2>/dev/null | python3 -c "import json,sys; print(json.load(sys.stdin)['info']['version'])" 2>/dev/null)
             if [ -z "$latest" ]; then
               echo "| pip \`$pkg\` | $pin | probe failed | ⚠️ PyPI unreachable |" >> "$R"
             elif [ "$pin" = "$latest" ]; then
               echo "| pip \`$pkg\` | $pin | same | ✅ current |" >> "$R"
+            elif [ -n "$held" ]; then
+              # A pin can be BELOW latest on purpose. Reporting that as drift forever
+              # trains the reader to skip the row, which is how a real drift gets missed
+              # next to a fake one -- so a pin carrying `# HELD: <reason>` reports the
+              # reason instead, and stays visible without crying wolf.
+              echo "| pip \`$pkg\` | $pin | $latest | ⏸️ held on purpose — $held |" >> "$R"
             else
               echo "| pip \`$pkg\` | $pin | $latest | 🔻 drifted (render pins: remember VTK pixels differ across versions — a bump churns Generated/) |" >> "$R"
             fi
