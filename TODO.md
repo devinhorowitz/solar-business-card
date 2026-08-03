@@ -124,18 +124,34 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   only the old boot counter. **The gate stays 0** until README's "the open question" — harvest
   vs. draw under real indoor light — has a bench number. Flipping it is then a one-line change.
 
-- [ ] **[FIRMWARE/PRODUCT — needs one fact from you] Card as an office-door credential**
-  _(2026-08-03, from `firmware/NFC Chip Integration Possibilities - Google Gemini.pdf`.)_
-  Nothing to build until the reader is identified, and the answer is binary:
-  **125 kHz HID Prox → dead end** (wrong frequency; the coil is 13.56 MHz).
-  **13.56 MHz UID-only → works today**, zero firmware and zero hardware: enroll the NT3H2211's
-  fixed 7-byte NXP UID like a fob. **HID iCLASS / Seos / MIFARE DESFire → no** — they demand a
-  cryptographic challenge-response and the tag has no crypto engine.
-  Two things to weigh in the middle case. For: the reader powers the tag from its own field, so
-  **the card opens the door with a completely flat tank** — independent of the VOUT item below.
-  Against: the UID is readable by any phone and trivially cloned to a magic card, so enrolling
-  it makes your door credential copyable by anyone you hand a business card to. That is the
-  decision, and it is not an engineering one.
+- [x] ~~**[FIRMWARE/PRODUCT — needs one fact from you] Card as an office-door credential**~~
+  **CLOSED 2026-08-03: the reader is an HID ProX. Not possible on this board, and not close.**
+  _(Opened 2026-08-03 from `firmware/NFC Chip Integration Possibilities - Google Gemini.pdf`;
+  closed the same day when DRH named the reader — this item existed to hold exactly that one
+  fact, and it landed on the dead-end branch.)_
+
+  HID **Prox** is the **125 kHz** low-frequency line (ProxCard / ProxPoint / ProxPro /
+  ThinLine / MiniProx), not the 13.56 MHz iCLASS line. The card's whole radio is 13.56 MHz, so
+  the gap is physics, not firmware:
+  - The coil is **6.5 turns, ~1.09 µH** bare-copper (consistency check `[13]`). Resonating at
+    125 kHz against the placed C9 47 pF would need **34.5 mH — 31,644× more inductance.**
+    Since L ∝ N² for fixed geometry, that is roughly **1,156 turns** where the card has 6.5.
+    An LF antenna is a ferrite rod with a thousand turns of fine wire; it is not a spiral
+    etched into a business card.
+  - Independently fatal: the **NT3H2211 is an ISO 14443A part with no LF mode at all.** Even
+    handed a perfect 125 kHz antenna it cannot speak HID's proprietary Prox modulation, and
+    the reader wants Wiegand out of a Prox credential.
+
+  So the two downstream questions are moot: no UID to enroll, and the security trade that made
+  this a judgement call (a door credential copyable by anyone you hand a card to) never arises.
+
+  **The one thing that reopens it:** if the door actually carries a **multi-technology** reader
+  — HID multiCLASS SE or iCLASS SE, which read 125 kHz Prox *and* 13.56 MHz — then the org is
+  merely *issuing* Prox cards while the reader can also take a 14443A UID, and the
+  "13.56 MHz UID-only → works today, zero firmware and zero hardware" branch is live again.
+  Tell them apart by the model name moulded on the reader body, or by whether a phone wallet
+  credential or an iCLASS/Seos card also opens that door. Worth thirty seconds of looking
+  before this stays shut.
 
 - [ ] **[FIRMWARE] HOTP authenticator — PARKED behind the VOUT respin item**
   _(2026-08-03, same source.)_ Flash is not the obstacle: ~2.4 KB used of 64 KB, and HMAC-SHA1
