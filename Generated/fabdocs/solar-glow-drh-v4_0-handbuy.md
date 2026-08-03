@@ -6,10 +6,10 @@ never reach a pick-and-place.
 
 | Ref(s) | Qty | MPN | Manufacturer | Supplier | Distributor P/N | What |
 |---|---|---|---|---|---|---|
-| SC2, SC4 | 2 | `3-153-438` | SCHURTER | DigiKey | 486-3-153-438-ND | WS17 1F 2.75V |
-| SC1, SC3 | 2 | `3-153-440` | SCHURTER | DigiKey | 486-3-153-440-ND | SS17 1.8F 2.75V |
 | PV1, PV2 | 2 | `SM141K06TF` | ANYSOLAR | DigiKey | 2994-SM141K06TF-ND | SM141K06TF |
-| FER1 | 1 | `364006` | Würth Elektronik | DigiKey | 732-5049-ND | Wurth WE-FSFS ferrite sheet behind the coil -- load-bearing for the NFC tune |
+| SC2, SC4 | 2 | `3-153-438` | SCHURTER | Mouser | 693-3-153-438 | WS17 1F 2.75V |
+| SC1, SC3 | 2 | `3-153-440` | SCHURTER | Mouser | 693-3-153-440 | SS17 1.8F 2.75V |
+| FER1 | 1 | `364006` | Würth Elektronik | Mouser | 710-364006 | Wurth WE-FSFS ferrite sheet behind the coil -- load-bearing for the NFC tune |
 | HW1 | 4 | `DIN 84 M2x3 brass` | — | — | — | shell screws; any DIN 84 M2x3 -- source locally, not a distributor line |
 | INS1 | 1 | `polyimide film 0.05 mm` | — | — | — | insulator; cut from stock film -- not a distributor line |
 
