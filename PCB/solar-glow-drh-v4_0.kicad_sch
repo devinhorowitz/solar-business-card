@@ -17461,7 +17461,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "Murata Electronics"
+		(property "Manufacturer" "Murata"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -17813,7 +17813,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "Murata Electronics"
+		(property "Manufacturer" "Murata"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -18062,7 +18062,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "YAGEO"
+		(property "Manufacturer" "Yageo"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -18439,7 +18439,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "Murata Electronics"
+		(property "Manufacturer" "Murata"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -18810,7 +18810,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "ams-OSRAM USA INC."
+		(property "Manufacturer" "ams-OSRAM"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -18933,7 +18933,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "YAGEO"
+		(property "Manufacturer" "Yageo"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -19052,7 +19052,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "Murata Electronics"
+		(property "Manufacturer" "Murata"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -19171,7 +19171,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "ams-OSRAM USA INC."
+		(property "Manufacturer" "ams-OSRAM"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -19363,7 +19363,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "Murata Electronics"
+		(property "Manufacturer" "Murata"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -19482,7 +19482,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "Vishay Dale"
+		(property "Manufacturer" "Vishay"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -19770,7 +19770,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "YAGEO"
+		(property "Manufacturer" "Yageo"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -19972,7 +19972,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "Murata Electronics"
+		(property "Manufacturer" "Murata"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -20164,7 +20164,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "YAGEO"
+		(property "Manufacturer" "Yageo"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -20283,7 +20283,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "YAGEO"
+		(property "Manufacturer" "Yageo"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -20402,7 +20402,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "Murata Electronics"
+		(property "Manufacturer" "Murata"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -20521,7 +20521,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "YAGEO"
+		(property "Manufacturer" "Yageo"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -20640,7 +20640,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "Murata Electronics"
+		(property "Manufacturer" "Murata"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -20759,7 +20759,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "SCHURTER Inc."
+		(property "Manufacturer" "SCHURTER"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -20967,7 +20967,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "YAGEO"
+		(property "Manufacturer" "Yageo"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -21382,7 +21382,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "SCHURTER Inc."
+		(property "Manufacturer" "SCHURTER"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -21591,7 +21591,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "Murata Electronics"
+		(property "Manufacturer" "Murata"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -21714,7 +21714,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "NXP USA Inc."
+		(property "Manufacturer" "NXP Semiconductors"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -21851,7 +21851,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "YAGEO"
+		(property "Manufacturer" "Yageo"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -21970,7 +21970,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "YAGEO"
+		(property "Manufacturer" "Yageo"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -22089,7 +22089,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "YAGEO"
+		(property "Manufacturer" "Yageo"
 			(at 934.72 391.16 0)
 			(hide yes)
 			(show_name no)
@@ -22208,7 +22208,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "ANYSOLAR Ltd"
+		(property "Manufacturer" "ANYSOLAR"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -22533,7 +22533,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "Murata Electronics"
+		(property "Manufacturer" "Murata"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -22756,7 +22756,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "Johanson Technology Inc."
+		(property "Manufacturer" "Johanson Technology"
 			(at 560.07 119.38 0)
 			(hide yes)
 			(show_name no)
@@ -22875,7 +22875,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "SCHURTER Inc."
+		(property "Manufacturer" "SCHURTER"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -22994,7 +22994,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "YAGEO"
+		(property "Manufacturer" "Yageo"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -23113,7 +23113,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "YAGEO"
+		(property "Manufacturer" "Yageo"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -23319,7 +23319,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "Murata Electronics"
+		(property "Manufacturer" "Murata"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -23438,7 +23438,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "Murata Electronics"
+		(property "Manufacturer" "Murata"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -23655,7 +23655,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "Analog Devices Inc."
+		(property "Manufacturer" "Analog Devices"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -23804,7 +23804,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "Murata Electronics"
+		(property "Manufacturer" "Murata"
 			(at 459.74 392.43 0)
 			(hide yes)
 			(show_name no)
@@ -23923,7 +23923,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "ams-OSRAM USA INC."
+		(property "Manufacturer" "ams-OSRAM"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -24042,7 +24042,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "Murata Electronics"
+		(property "Manufacturer" "Murata"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -24161,7 +24161,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "Murata Electronics"
+		(property "Manufacturer" "Murata"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -24786,7 +24786,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "ams-OSRAM USA INC."
+		(property "Manufacturer" "ams-OSRAM"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -24988,7 +24988,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "YAGEO"
+		(property "Manufacturer" "Yageo"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -25270,7 +25270,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "Murata Electronics"
+		(property "Manufacturer" "Murata"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -25600,7 +25600,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "ANYSOLAR Ltd"
+		(property "Manufacturer" "ANYSOLAR"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -25812,7 +25812,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "Murata Electronics"
+		(property "Manufacturer" "Murata"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -26090,7 +26090,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "SCHURTER Inc."
+		(property "Manufacturer" "SCHURTER"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
