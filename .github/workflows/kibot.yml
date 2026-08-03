@@ -60,6 +60,7 @@ on:
       # the mesh gate's ledger -- editing a baseline must re-prove it against the artifacts
       - 'scripts/check_mesh.py'
       - 'scripts/interference_drc.py'
+      - 'scripts/assembly_drc.py'
       - 'enclosure/**.stl'
       - '.github/workflows/kibot.yml'
 
@@ -210,6 +211,11 @@ jobs:
           # B-side body polygon + ledgered height -- the assembled boolean truth that
           # check [7] (one part at a time) cannot see. Fails BEFORE the commit-back.
           python3 scripts/interference_drc.py
+          # tier 4: the ASSEMBLED stack. interference_drc above covers exactly one
+          # interface pair (brace <-> B-side parts); this closes the Z budget against the
+          # shell that has to contain it, and gates the two subsystems that were in no fit
+          # check at all -- the ferrite in its pocket, and the screws' bosses.
+          python3 scripts/assembly_drc.py
 
       # Reference figures for PCB/README.md's assembly steps (D2-D5 LED polarity, the SW2
       # master bridge) plus the thickness-at-hand-scale figure, drawn FROM the board file
