@@ -117,8 +117,18 @@ COIL_CLR = 1.00            # grounded metal to coil copper. Raised from 0.30 on 
 # LA/LB copper reaches x48.550 -- so the lip sized against it overhung the antenna.
 from board_parts import coil_extent as _coil_extent          # noqa: E402
 COIL_EAST = round(_coil_extent()[1] + COIL_CLR, 3)
-MOUNTS = [(3.0, 3.0), (47.8, 3.0), (3.0, 85.9), (47.8, 85.9),
-          (3.0, 28.5), (47.8, 28.5), (3.0, 60.4), (47.8, 60.4)]
+# NUDGED 0.13 mm DIAGONALLY OUTBOARD, 2026-08-03, off a bench fit. Every mount moved 0.13 in
+# BOTH axes, away from the nearest solar cell corner: x away from the board centreline, y away
+# from that cell. The move is diagonal because the binding dimension is diagonal -- the screw
+# sits outside the cell's CORNER, not beside an edge -- so 0.13 on each axis buys 0.1836 mm of
+# actual clearance, not 0.13. Head cap goes Ø3.754 -> Ø4.121, which is what takes a stock M2
+# head off the cell: an ISO 4762 / DIN 84 Ø3.8 was touching by 0.023 mm and now clears by 0.160.
+# The 0.13 is not arbitrary -- it is the largest nudge that moves NO trace. Beyond it MP1 runs
+# into UPDI on F.Cu. Symmetry is exact: still mirrored about x25.4 and y44.45.
+# KEEP IN STEP WITH THE BOARD -- these eight are the same eight drills in the .kicad_pcb, and
+# check [16] is what makes that true rather than hoped-for.
+MOUNTS = [(2.87, 2.87), (47.93, 2.87), (2.87, 86.03), (47.93, 86.03),
+          (2.87, 28.63), (47.93, 28.63), (2.87, 60.27), (47.93, 60.27)]
 RELIEF_R = BOSS_R + CLR    # 2.85 -- brace relief around a boss; was a flat 3.00, which
                            # pinched every rail to a 0.750 mm waist at all eight bosses.
 

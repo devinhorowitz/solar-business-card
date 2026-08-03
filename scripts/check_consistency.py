@@ -37,6 +37,8 @@ change to one that isn't mirrored in the others fails loudly (in CI or locally):
       hand-written enumeration still matches the board.        [ERROR on drift]
   [15] CPL vs BOM -- nothing reaches the assembler's pick-and-place without a BOM
       line to buy it; the two fab files describe one build.    [ERROR on drift]
+  [16] fit_rules.MOUNTS IS the board's eight MH/MP drills -- the enclosure cannot
+      be built around holes the board does not have.           [ERROR on drift]
 
 Usage:   python3 scripts/check_consistency.py
 Exit:    nonzero if any ERROR-level check fails; warnings do not fail the build.
@@ -1533,6 +1535,59 @@ def check_board_sch_parity(comps, sch_fps):
         ok("schematic and board agree on every footprint assignment")
 
 
+# --- [16] the enclosure's mount table IS the board's mount drills ---------------------
+#
+# `fit_rules.MOUNTS` drives every screw-shaped thing the enclosure has: the eight shell
+# bosses, the brace's relief around them, both dimensioned drawings, and assembly_drc's
+# section [D]. The board carries the same eight positions independently, as MH1-4 and
+# MP1-4. Nothing tied the two together.
+#
+# That is a silent-divergence shape, and a nasty one, because everything downstream reads
+# the SAME side of it. Move the drills on the board and leave the table alone and the whole
+# enclosure chain regenerates happily around the old holes -- assembly_drc included, since
+# it measures fit_rules against a shell built from fit_rules. It would agree with itself all
+# the way to a titanium back that will not bolt on. The reverse loses the gold annuli.
+#
+# Written 2026-08-03, the same day the mounts first moved (0.13 mm diagonally outboard, to
+# get a stock M2 head off the solar cells). Before that the table had never changed, which
+# is the only reason the gap never bit.
+def check_mount_parity():
+    print("[16] the enclosure mount table and the board's mount drills are the same eight")
+    try:
+        import pcbnew
+    except Exception as e:
+        warn(f"not checked -- {type(e).__name__}: {e}")
+        return
+    sys.path.insert(0, os.path.join(ROOT, "enclosure"))
+    import fit_rules as fr
+    board = pcbnew.LoadBoard(PCB)
+    drills = {}
+    for fp in board.GetFootprints():
+        ref = fp.GetReference()
+        if not (ref.startswith("MH") or ref.startswith("MP")):
+            continue
+        for pad in fp.Pads():
+            if pad.GetDrillSize().x:
+                pos = pad.GetPosition()
+                drills[ref] = (round(pcbnew.ToMM(pos.x), 3), round(pcbnew.ToMM(pos.y), 3))
+    table = {(round(x, 3), round(y, 3)) for x, y in fr.MOUNTS}
+    if len(drills) != len(fr.MOUNTS):
+        err(f"the board has {len(drills)} MH/MP drill(s) but fit_rules.MOUNTS lists "
+            f"{len(fr.MOUNTS)} -- they must be the same set")
+        return
+    unmatched = {r: p for r, p in drills.items() if p not in table}
+    orphan = table - set(drills.values())
+    if unmatched or orphan:
+        for r, p in sorted(unmatched.items()):
+            err(f"board mount {r} at {p} has no entry in fit_rules.MOUNTS -- the shell's boss, "
+                f"the brace relief and both drawings would be built around the wrong hole")
+        for p in sorted(orphan):
+            err(f"fit_rules.MOUNTS lists {p} with no matching drill on the board")
+    else:
+        ok(f"all {len(drills)} mount drills match fit_rules.MOUNTS exactly "
+           f"({', '.join(f'{r}' for r in sorted(drills))})")
+
+
 def main():
     cli = find_kicad_cli()
     netpins, comps, sch_fps = export_netlist(cli)
@@ -1551,6 +1606,7 @@ def main():
     check_nfc_coil()
     check_gold_set()
     check_cpl_bom_agreement()
+    check_mount_parity()
     print(f"\n== {len(errors)} error(s), {len(warnings)} warning(s) ==")
     sys.exit(1 if errors else 0)
 

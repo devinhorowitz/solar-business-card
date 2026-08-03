@@ -138,17 +138,34 @@ board's real artwork.</sub>
 
 **M2×3 slotted brass**, head Ø3.0 (matched to `CBORE_D`, the back spotface), shank Ø2.0.
 
-> **The "Ø4.0, cell-limited" cap this line used to quote is wrong** (corrected 2026-08-03,
-> after a bench fit). Each cell is 46.20 × 23.00 and its four screws sit **1.25 mm beyond the
-> short edge and 0.70 mm *inboard* of the long edge** — all eight identical. The head is
-> therefore limited to **Ø2.5** for true non-contact, not Ø4.0. At the Ø3.0 actually specified
-> the head crosses the cell outline by **0.25 mm** over a 1.53 mm span; at Ø4.0 it would
-> overrun by 0.75 mm. Because the screw sits inboard in x, that interference is a bite out of
-> the cell's **short edge starting at the corner**, not a nick on the corner point — so a corner
-> *radius* is the inefficient relief (R ≈ 2.0 mm only reaches zero margin, R ≈ 2.5 mm buys
-> 0.16 mm). A local **notch ≈ 1.6 mm along the short edge × 0.35 mm deep** at each corner clears
-> the same interference for a fraction of the cell area, and a Ø2.5 head clears it with no cell
-> modification at all. The head seats on the board *front*; the tip reaches **z 0.40**
+> **Head-vs-cell, measured (2026-08-03, after a bench fit).** The old "Ø4.0, cell-limited"
+> figure was close but a little generous; the true cap is **Ø3.754**. The constraint is
+> *diagonal*: the cell body is **42 × 23** (`SM141K06TF`), so PV1 occupies x 4.40–46.40,
+> y 4.25–27.25, and each screw sits **outside its nearest cell corner**, 1.40 mm out in x and
+> 1.25 mm in y — 1.8768 mm centre-to-corner, all eight identical.
+>
+> _(An earlier revision of this note claimed the cap was Ø2.5 and that Ø3.0 overran the cell by
+> 0.25 mm. That was wrong: it used `board_parts`' **46.20 × 23.00 courtyard** as the cell body.
+> The 46.20 is the span of the four solder **tabs**, which live in the y 14.00–17.50 band, 11 mm
+> clear of any screw — not the cell outline. Take cell dimensions from the datasheet, not from a
+> footprint extent.)_
+>
+> At the specified Ø3.0 the head cleared by 0.377 mm even before the nudge. The problem is that
+> **no stock M2 screw has a Ø3.0 head** — ISO 7380 button is Ø3.5, DIN 84 / ISO 4762 is Ø3.8 —
+> and Ø3.8 was *touching*, by 0.023 mm. That is the "fits exactly, almost too exact" a bench fit
+> found. **The 0.13 mm diagonal mount nudge fixes it**: centre-to-corner goes 1.8768 → 2.0604,
+> so the cap rises to **Ø4.121** and a Ø3.8 head now clears by **0.160 mm**. Note the nudge buys
+> **0.1836 mm**, not 0.13 — the move is along the diagonal the constraint is measured on.
+>
+> | head | before | after |
+> |---|---:|---:|
+> | Ø3.0 (spec, `CBORE_D`) | +0.377 | +0.560 |
+> | Ø3.5 ISO 7380 button | +0.127 | +0.310 |
+> | Ø3.8 DIN 84 / ISO 4762 | **−0.023** | +0.160 |
+> | Ø4.0 | −0.123 | +0.060 |
+>
+> No cell modification is needed. Rounding or notching the cell corners was considered and is
+> not required at any of these head sizes. The head seats on the board *front*; the tip reaches **z 0.40**
 against a spotface floor cut to `3.40 − 3.00 = 0.40`, so it sits **flush** and nothing stands
 proud of the back face. Engagement is 2.40 mm — more than the 1.80 mm boss, so the screw
 deliberately continues into the floor, whose pilot is tap-drilled clean through.
