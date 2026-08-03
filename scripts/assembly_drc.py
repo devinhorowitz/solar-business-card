@@ -40,10 +40,7 @@ module agrees with itself; check [8]'s own docstring records that failure mode.
 WHAT THIS DOES NOT COVER, said plainly so it is not mistaken for total:
   * B-side part bodies vs the brace -- that is interference_drc.py, deliberately
     not duplicated here.
-  * Front-side parts (PV1/PV2) vs the shell's cell cutouts. The cells stand proud
-    of a rim that is flush with the board's front face, so there is no Z conflict
-    to find; the XY cutout fit is not yet gated and is named here as a known gap.
-  * Anything about the resin's print tolerance beyond the RSS stack fit_rules.AIR
+  * Nothing about the resin's print tolerance beyond the RSS stack fit_rules.AIR
     already carries.
 """
 import os
@@ -114,6 +111,7 @@ def main():
     try:
         import trimesh
         import fit_rules as fr
+        import board_parts as bp
     except Exception as e:                                        # noqa: BLE001
         print(f"assembly_drc: cannot import ({type(e).__name__}: {e})")
         return 1
@@ -259,6 +257,44 @@ def main():
     if not _ERRORS:
         ok(f"all {len(fr.MOUNTS)} mounts: boss material present, 3.0 mm screw lands inside "
            f"the shell (back face {back:.3f})")
+
+    # ---- 5. the front side: nothing of the shell may stand over it -------------------
+    # THE CELLS ARE THE WHOLE POINT. This card harvests indoor light through two cells
+    # that between them cover most of the show face, so titanium standing over any part
+    # of one is not a fit problem, it is lost harvest -- and it would be invisible in
+    # every gate here, all of which look at the B side.
+    #
+    # The assertion is the artifact's, not the intent's: ray-cast the SHELL over each
+    # front body and require that it finds nothing at or above the board's front face.
+    # That is the plane the rim is built to finish flush with ([A] proves it does), so
+    # any material there is the rim or the lip reaching over the board instead of
+    # stopping at its edge. It generalises past the cells for free -- TC1's pad field
+    # gets the same guarantee, and so does anything placed on the front later.
+    print("[E] front side clear of the shell")
+    board_front = FLOOR + fr.CAVITY + fr.BOARD_TH
+    fronts = [(r, p) for r, p, _h, _s in bp.parts("F") if r and not r.startswith("?")]
+    if not fronts:
+        err("no front-side bodies found -- board_parts returned nothing to check")
+    for ref, poly in fronts:
+        x0, y0, x1, y1 = poly.bounds
+        nx = max(3, min(9, int((x1 - x0) / 5) + 3))
+        ny = max(3, min(15, int((y1 - y0) / 5) + 3))
+        shaded = []
+        for fx in np.linspace(x0 + 0.2, x1 - 0.2, nx):
+            for fy in np.linspace(y0 + 0.2, y1 - 0.2, ny):
+                t = top_at(shell, fx, fy, W, H)
+                if t is not None and t > board_front - TOL:
+                    shaded.append((round(float(fx), 1), round(float(fy), 1), round(t, 3)))
+        if shaded:
+            frac = 100.0 * len(shaded) / (nx * ny)
+            what = ("that is harvest area lost to titanium"
+                    if ref.startswith("PV") else "the shell fouls it")
+            err(f"{ref}: shell material stands at/above the board's front face "
+                f"{board_front:.3f} over {frac:.0f}% of its footprint "
+                f"(e.g. {shaded[:3]}) -- {what}")
+        else:
+            ok(f"{ref}: clear -- no shell material at or above {board_front:.3f} anywhere "
+               f"over its {x1-x0:.1f} x {y1-y0:.1f} mm footprint")
 
     print()
     print(f"== {len(_ERRORS)} error(s), {len(_WARNS)} warning(s) ==")
