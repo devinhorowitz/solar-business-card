@@ -51,7 +51,10 @@ FONTS = os.path.join(ROOT, "enclosure", "fonts")
 REGULAR = os.path.join(FONTS, "JetBrainsMono-Regular.ttf")
 BOLD = os.path.join(FONTS, "JetBrainsMono-Bold.ttf")
 
-MARK = "fACE0000-0000-4000-8000-"      # this generator's uuid namespace, as a literal prefix
+MARK = "face0000-0000-4000-8000-"      # this generator's uuid namespace, as a literal prefix
+# lower case deliberately: KiCad rewrites uuids to lower case on save, so an upper-case
+# nibble here would make the board differ from what was emitted the moment it is opened in
+# the GUI -- the same shape as the `fill solid` -> `fill yes` drift mask_art records.
 TAG = "faceart"
 
 # THE BLOCK THIS GENERATOR OWNS. Everything inside it on F.Mask and F.Cu is ours, and
@@ -177,7 +180,36 @@ def _outline(txt, fontpath):
     faces = list(polygonize(unary_union([LineString(r) for r in rings])))
     keep = [f for f in faces
             if sum(_winding(f.representative_point().coords[0], r) for r in rings) != 0]
-    return unary_union(keep)
+    return _drop_counter_islands(unary_union(keep))
+
+
+def _drop_counter_islands(geom):
+    """Delete ornaments that float inside a counter -- JetBrains Mono's DOTTED ZERO.
+
+    It is a coding-font affectation: a dot inside every 0, to tell it from O at 11 px in a
+    terminal. On a card it is not read as anything, and as MASK it is actively bad. The one
+    in "8076" measured 0.164 mm across -- under mask_art's own MIN_APERTURE of 0.12 once
+    the fab's registration is spent, and marooned: it sits inside the zero's counter, where
+    the surrounding mask is closed, so the GND plane cannot reach it and the fab's plating
+    drawing ends up pointing at bare laminate. Consistency check [14] caught exactly that
+    on the first apply, which is what this function exists to answer.
+
+    enclosure/medallion.py deletes the same ornament for the same reason (its DIAL_MIN_MARK
+    is 'dial marks under this are font ornament: deleted'), so this is the house rule, not
+    a new opinion.
+
+    The test is structural rather than a size threshold: drop a piece only when it lies
+    inside another piece's HOLE. A size rule would also eat the dot on an 'i' and the full
+    stop in "Devin@Horowitz.Law", which are type, not ornament.
+    """
+    from shapely.geometry import MultiPolygon, Polygon
+    from shapely.ops import unary_union
+    parts = list(geom.geoms) if isinstance(geom, MultiPolygon) else [geom]
+    holes = [Polygon(r) for p in parts for r in p.interiors]
+    if not holes:
+        return geom
+    return unary_union([p for p in parts
+                        if not any(h.contains(p) for h in holes)])
 
 
 def _run(prefix, cap, fontpath):
@@ -343,6 +375,42 @@ def preview(path):
     print(f"wrote {path}")
 
 
+ROUND_TRIP = 0.02      # mm2 -- see check_state()
+
+
+def check_state():
+    """-> (ok, message). THE one definition of 'does the board carry what LINES says'.
+
+    consistency check [17] calls this rather than rebuilding the comparison, so the gate
+    and the generator cannot drift apart -- the failure mode [6] had before mask_art grew
+    its own generate().
+
+    The area bar is a TOLERANCE, not exactness, because this compares GEOMETRY across a
+    lossy round trip: emit() writes vertices at 4 decimal places and _bridge() splices
+    interior rings into the exterior with a seam, so reading the board back never returns
+    the shapely input to the bit. Measured round-trip noise on this block is 0.0050 mm2 out
+    of 19.02 -- 0.026 %. The bar sits 4x above that and is still ~0.1 % of the block, so
+    anything an editor would actually do (a cap change, a re-word, a baseline nudge) clears
+    it by orders of magnitude.
+
+    mask_art compares TEXT instead, which is exact, and that does not work here: two
+    generators now splice into the same file, so block order depends on which ran last and
+    a string compare would report drift on a board nobody touched.
+    """
+    import pcbnew
+    new = build()
+    old, cu = board_block(pcbnew.LoadBoard(PCB))
+    if cu:
+        return False, (f"STALE -- {cu} F.Cu graphic(s) in the contact block; the type is "
+                       f"not grounded, and User.1 is ordering hard gold on isolated copper")
+    sym = new.symmetric_difference(old).area if old else new.area
+    if sym > ROUND_TRIP:
+        return False, (f"STALE -- board and LINES differ by {sym:.4f} mm2 "
+                       f"(round-trip noise is under {ROUND_TRIP}); run face_art --apply")
+    return True, (f"the contact block matches LINES ({len(list(getattr(new, 'geoms', [new])))} "
+                  f"opening(s), {new.area:.2f} mm2), and carries no F.Cu island")
+
+
 def main():
     import pcbnew
     mode = sys.argv[1] if len(sys.argv) > 1 else "--check"
@@ -358,23 +426,29 @@ def main():
     print(f"  contact block: {r['pieces']} piece(s), {r['area']:.2f} mm2 of F.Mask "
           f"opening, narrowest feature {r['min_aperture']:.3f} mm")
     if mode == "--check":
-        if cu:
-            print(f"  STALE -- {cu} F.Cu graphic(s) still in the block; the type is not "
-                  f"grounded and User.1 is ordering hard gold on isolated copper")
-            sys.exit(1)
-        sym = new.symmetric_difference(old).area if old else new.area
-        if sym > 1e-4:
-            print(f"  STALE -- board and LINES differ by {sym:.4f} mm2; run --apply")
-            sys.exit(1)
-        print("  MATCH -- the board carries exactly what LINES describes")
-        return
+        good, msg = check_state()
+        print("  " + msg)
+        sys.exit(0 if good else 1)
     if mode != "--apply":
         raise SystemExit(__doc__)
-    import io
-    txt = io.open(PCB, encoding="utf-8", newline="").read()
+    # NORMALISE THE LINE ENDINGS BEFORE THE SURGERY, restore them after -- mask_art's rule,
+    # for mask_art's reason. This board is CRLF, and strip_block anchors on '^\t(gr_poly\n'.
+    # Reading it raw, that pattern matches nothing: the first --apply removed 0 shapes and
+    # appended 54 on top of the 121 already there, doubling the artwork. Caught because the
+    # run reported "removed 0" and the board was restored from a copy taken beforehand.
+    raw = open(PCB, "rb").read()
+    crlf = raw.count(b"\r\n")
+    if crlf and crlf != raw.count(b"\n"):
+        sys.exit("face_art: mixed line endings in the board; refusing to touch it")
+    nl = "\r\n" if crlf else "\n"
+    txt = raw.decode("utf-8").replace("\r\n", "\n")
     stripped, removed = strip_block(txt)
+    if not removed:
+        sys.exit("face_art: found nothing to replace in the block -- refusing to write, "
+                 "since appending to artwork that is still there would double it")
     body = mask_art.emit(new, layer="F.Mask", tag=TAG).replace(mask_art.MARK, MARK)
-    io.open(PCB, "w", encoding="utf-8", newline="").write(mask_art._splice(stripped, body))
+    out = mask_art._splice(stripped, body)
+    open(PCB, "wb").write(out.replace("\n", nl).encode("utf-8"))
     print(f"  removed {removed} shape(s) from the block, wrote {r['pieces']} F.Mask "
           f"opening(s) and NO F.Cu -- the GND pour is the copper now")
     print("  NOW RUN: python3 scripts/mask_art.py --apply   (the gold area is derived "
