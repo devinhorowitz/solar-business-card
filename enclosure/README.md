@@ -246,8 +246,8 @@ panel; the switch faces the plate.
 ## The 2D drawing
 
 `solar-glow-drh-v3_0-backshell-0p6b-brace-DRAWING.pdf` matches the committed STEP on every headline
-dimension (1.00 floor / 1.80 cavity / 0.60 board recess / 8-hole mount pattern [x 44.80; y rows
-3.0/28.5/60.4/85.9] / 3.55 overall). **The U7-pocket discrepancy is closed as of 2026-07-29**: the
+dimension (1.00 floor / 1.80 cavity / 0.60 board recess / 8-hole mount pattern [x 45.06; y rows
+2.87/28.63/60.27/86.03] / 3.55 overall). **The U7-pocket discrepancy is closed as of 2026-07-29**: the
 drawing showed a relief pocket the STEP had stopped containing on 2026-07-28, and the sheet has been
 regenerated — its note 7 now reads "NO U7 RELIEF POCKET" and the pocket outline is gone. It is
 derived from `enclosure/part_heights.py` rather than written on the sheet, so it cannot fall out of
@@ -272,7 +272,7 @@ Form settings on the CNC quote page (the on-screen selections override the drawi
 - **Units:** mm. **Quantity:** 1 (prototype).
 - **Technical drawing:** attach `...-0p6b-brace-DRAWING.pdf`; do not attach the stale v2.1 file.
 - **Threads / tapped holes: Yes** — `8× M2×0.4 tapped through, from the back face`.
-- **Tolerance: leave on standard / ISO 2768** — do **not** enable "Tighter tolerances required." That toggle trips an automated review gate that rejects the order with a templated "tighter tolerance not specified at position" message even though the drawing marks it. Marked callouts govern regardless of the toggle. Two dims are marked **±0.05**: **C1 cavity depth 1.80 ±0.05** (Section A-A) and **C3 mounting-hole pattern pitch (x 44.80; y rows 3.0/28.5/60.4/85.9) ±0.05** (plan, 8 holes). **C1 is the non-negotiable one.** Flatness C2 = 0.05 rides along as a form callout. Paste into the notes box: *"Two dimensions are marked ±0.05 and must be held as marked: cavity depth 1.80 ±0.05 (Section A-A), and the 8-hole mounting pattern pitch x 44.80 / y rows 3.0/28.5/60.4/85.9 ±0.05 (plan). All other dimensions per ISO 2768-1 medium."*
+- **Tolerance: leave on standard / ISO 2768** — do **not** enable "Tighter tolerances required." That toggle trips an automated review gate that rejects the order with a templated "tighter tolerance not specified at position" message even though the drawing marks it. Marked callouts govern regardless of the toggle. Two dims are marked **±0.05**: **C1 cavity depth 1.80 ±0.05** (Section A-A) and **C3 mounting-hole pattern pitch (x 45.06; y rows 2.87/28.63/60.27/86.03) ±0.05** (plan, 8 holes). **C1 is the non-negotiable one.** Flatness C2 = 0.05 rides along as a form callout. Paste into the notes box: *"Two dimensions are marked ±0.05 and must be held as marked: cavity depth 1.80 ±0.05 (Section A-A), and the 8-hole mounting pattern pitch x 45.06 / y rows 2.87/28.63/60.27/86.03 ±0.05 (plan). All other dimensions per ISO 2768-1 medium."*
 - **Surface finish: Bead blasting** (matte, uniform on the stepped back face) — **not Brushed.** The back face is stepped (recessed art field, raised frame, boss annuli and the medallion crests), so a brushed grain cannot run continuously; bead-blast covers into every recess. The two-texture finish is **not** ordered from the shop: after the blast, the bearing plane (frame + medallion crests, coplanar at −0.15) is hand-lapped bright on a plate at the bench — the plate cannot touch anything else, by geometry (engraving-studies spins 6–8; the studies were culled 2026-08-02 and live in git history).
 - **Surface roughness:** 250 µin / 6.3 µm Ra (default).
 - **Finished appearance: Standard** for the first article.
@@ -336,7 +336,7 @@ Default everything to ISO 2768-1 general. Control **only** the items below.
 |---|---|---|---|---|
 | C1 | Cavity depth (boss-top plane → cavity floor) | **1.80 mm** | **±0.05** | Range 1.75–1.85. Air gap over the four 1.70 mm WS17 supercaps (datasheet **max** height): 0.05–0.15 mm. Must not be under 1.70 or the floor contacts the caps. |
 | C2 | PCB-rest plane flatness (lip + 8 bosses, coplanar at Z +2.80) | — | flatness **0.05 mm** | Board must seat flat so the screws clamp evenly. |
-| C3 | 8× mounting-hole pattern (pitch, linear) | x 44.80 / y rows 3.0·28.5·60.4·85.9 mm | **±0.05** | Must align with the PCB's 8 M2 holes (MH1–4 corners + 4 panel-corner). |
+| C3 | 8× mounting-hole pattern (pitch, linear) | x 45.06 / y rows 2.87·28.63·60.27·86.03 mm | **±0.05** | Must align with the PCB's 8 M2 holes (MH1–4 corners + 4 panel-corner). |
 | C4 | Mounting-hole diameter (tapped) | **M2** (tap-drill Ø1.6, through) | standard | Thread fit for the M2 screws. |
 
 > **Cavity note.** The cavity is **cap-limited**: the four WS17 supercaps set it. The SCHURTER SCPC datasheet (Case WS17) gives height **max 1.7 mm** and body 28.5 +0.5/−0.0 long, so the general cavity is **1.80 mm** (0.10 nominal air; worst-case 1.75 − 1.70 = 0.05, non-contact). ~~U7 (FRAM, SOIC-8, 1.75 mm) is the single tallest part but sits over the local relief pocket (note 7), which drops the floor 0.05 mm there so U7 keeps a 0.10 mm air gap.~~ The freed 0.05 mm went into the floor (0.95 → 1.00).

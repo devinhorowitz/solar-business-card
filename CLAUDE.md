@@ -244,6 +244,21 @@ been sold. Check [2] is the same relationship in the one direction that happened
   confirming its 0402→0805 upsize had landed meant re-rendering with `dnp` cleared and diffing:
   528 px, 20×37, an 0805 turned 90°. `render.py` names the DNP set beside the resolve count so
   the next dnp-with-a-model is visible the day it appears.
+- **The eight mount positions live in `enclosure/fit_rules.py` as `MOUNTS`, once.** Same rule as
+  `part_heights.py`, and it was broken the same way. On 2026-08-03 all eight mounts moved 0.13 mm
+  diagonally to buy the solar cells clearance from the screw heads. The board moved, `MOUNTS`
+  moved — and **five other copies did not**: the shell CAD and its DRAWING-gen each held their own
+  literal, `scripts/gen_panel_overlay.py` held a third, and `README.md` + `enclosure/README.md`
+  quoted the numbers in prose. The titanium came out with every boss, tapped hole, back annulus and
+  spotface **0.1838 mm** from the drills they must line up with, against **0.100 mm** of radial slack
+  (Ø2.20 hole, Ø2.00 screw), and the drawing a machinist would cut to still said the pitch was
+  **44.80 ±0.05** where the board had become **45.06** — 5.2× the tolerance printed beside it. The
+  *brace* was right throughout, because it reads `fit_rules.boss_island`; brace and shell silently
+  disagreed. Check **[16]** passed green the whole time: it compares `MOUNTS` against the *board*,
+  and had never been told the other copies existed. It now also **refuses any literal mount list in
+  `enclosure/` or `scripts/`** — the copy is the failure mode, so the copy is what is banned. A
+  drawing that is wrong is worse than one that is missing: nothing about the hole pattern is typed
+  into that sheet any more, every dimension on it is computed from `MOUNTS`.
 - **Glyph outlines come from `scripts/glyphs.py`, once — never fold contours by hand.** Two
   generators set type from the same JetBrains Mono files: `scripts/face_art.py` opens the card
   face's soldermask, and the shell CAD engraves the medallion's ring text, monogram and unit

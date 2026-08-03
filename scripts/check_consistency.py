@@ -1589,6 +1589,54 @@ def check_mount_parity():
         ok(f"all {len(drills)} mount drills match fit_rules.MOUNTS exactly "
            f"({', '.join(f'{r}' for r in sorted(drills))})")
 
+    # ...AND NOBODY ELSE MAY DECLARE THE PATTERN. The comparison above is necessary and was
+    # not sufficient: it holds fit_rules against the BOARD, and on 2026-08-03 it passed green
+    # while the shell CAD and its DRAWING-gen each carried a THIRD and FOURTH copy of the
+    # list, both stale by the 0.13 mm diagonal nudge. The titanium came out with every boss,
+    # tapped hole, back annulus and spotface 0.1838 mm from the drills they must line up
+    # with -- against 0.100 mm of radial slack (Ø2.20 hole, Ø2.00 screw) -- and the sheet the
+    # machinist would have cut to still called the pitch "44.80 ±0.05" where the board had
+    # become 45.06, 5.2x the tolerance printed beside it. The brace was correct throughout
+    # (it reads fit_rules.boss_island), so brace and shell silently disagreed.
+    #
+    # A copy is the failure mode, so the copy is what gets banned. Any module-level
+    # `mounts`/`MOUNTS` assignment outside fit_rules.py must be an expression that reaches
+    # fit_rules -- never a literal list.
+    #
+    # SCOPE IS enclosure/ AND scripts/, because the first sweep found a FIFTH copy in
+    # scripts/gen_panel_overlay.py -- which overlays the solar-cell borders on the screw
+    # heads, i.e. its entire subject is the clearance the nudge existed to buy. A scan
+    # limited to enclosure/ would have left the one script whose picture is ABOUT this
+    # measurement drawing it from the superseded numbers.
+    import ast
+    offenders = []
+    roots = [os.path.join(ROOT, "enclosure"), os.path.join(ROOT, "scripts")]
+    for path in sorted(p for r in roots
+                       for p in glob.glob(os.path.join(r, "**", "*.py"), recursive=True)):
+        if os.path.basename(path) == "fit_rules.py":
+            continue                      # the one home
+        try:
+            tree = ast.parse(open(path, encoding="utf-8").read(), path)
+        except SyntaxError as e:
+            err(f"{os.path.relpath(path, ROOT)} does not parse -- {e}")
+            continue
+        for node in tree.body:            # module level only
+            if not isinstance(node, ast.Assign):
+                continue
+            names = [t.id for t in node.targets if isinstance(t, ast.Name)]
+            if not any(n.lower() == "mounts" for n in names):
+                continue
+            if isinstance(node.value, (ast.List, ast.Tuple)):
+                offenders.append((os.path.relpath(path, ROOT), node.lineno,
+                                  len(node.value.elts)))
+    if offenders:
+        for rel, line, n in offenders:
+            err(f"{rel}:{line} declares its own {n}-entry mount list. fit_rules.MOUNTS is the "
+                f"one home -- import it. A local copy does not fail when the mounts move, it "
+                f"goes quietly stale and machines titanium to the previous board.")
+    else:
+        ok("no generator declares its own mount list -- fit_rules.MOUNTS is the only copy")
+
 
 # --- [17] the card face's contact block is what face_art describes --------------------
 #

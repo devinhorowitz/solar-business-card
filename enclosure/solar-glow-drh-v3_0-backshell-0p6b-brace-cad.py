@@ -48,8 +48,28 @@ from shapely.ops import unary_union
 # ===== board (committed PCB) =====
 W, H, R   = 50.80, 88.90, 3.0
 board_th  = 0.60
-mounts = [(3.0, 3.0), (47.8, 3.0), (3.0, 85.9), (47.8, 85.9),      # 4x corner M2, GND, 2.2 drill -- v3.0: concentric with the r3.0 corner fillets (x-inset 3.5->3.0; matches committed PCB v3_0 MH1-4)
-          (3.0, 28.5), (47.8, 28.5), (3.0, 60.4), (47.8, 60.4)]    # +4 panel-corner M2, GND -- match PCB nudge (holes at panel inner corners). 2-col 8-mount pattern. Verified vs committed board: W(3.0,28.5) boss r2.6 clears R14 by 0.34 (R14 y0 31.44, boss top y31.10) and U6 by 0.25 (U6 x0 5.85, boss E x5.60) -- TIGHT; a board-side nudge of U6/R14 (or a local boss trim there) buys margin if a fit check wants it. E bosses at x47.8 merge into the pinched east lip like the corner bosses.
+# THE EIGHT M2 MOUNTS ARE IMPORTED, NOT RE-DECLARED -- see the `MOUNTS as mounts` in the
+# fit_rules import further down. `enclosure/fit_rules.py` is their one home, and consistency
+# check [16] gates that home against the board's own drills.
+#
+# This file carried its OWN copy of the list until 2026-08-03, and that copy is what went
+# wrong. When the board's mounts were nudged 0.13 mm diagonally to buy the solar cells
+# clearance from the screws, the board moved and `fit_rules.MOUNTS` moved with it -- and this
+# literal did not. Every boss, tapped hole, back annulus and spotface in the committed
+# TITANIUM came out **0.1838 mm** from the drills they have to line up with, against
+# **0.100 mm** of radial slack (Ø2.20 board hole on a Ø2.00 screw). The screws bind before
+# they seat, eight times over, on the most expensive part in the project.
+#
+# It survived because check [16] compares fit_rules.MOUNTS against the BOARD and passed green
+# the whole time: it had never been told a third copy existed. The brace was fine throughout
+# -- it takes its reliefs from `fit_rules.boss_island`, which iterates MOUNTS -- so the brace
+# and the shell silently disagreed with each other. Check [16] now refuses any mount list
+# declared outside fit_rules, which is why this comment is a comment and not a list.
+#
+# (The clearance note the old literal carried, kept because it is still live: the W(x,28.63)
+# boss r2.6 clears R14 by ~0.34 and U6 by ~0.25 -- TIGHT. A board-side nudge of U6/R14, or a
+# local boss trim, buys margin if a fit check ever wants it. The east bosses merge into the
+# pinched east lip like the corner bosses.)
 
 # ===== fixed shell knobs =====
 # U7 (MB85RC512TY FRAM). 2026-07-28: was 1.75 for a SOIC-8, which the v4 board does not
@@ -252,7 +272,8 @@ from fit_rules import (lip_bands, cavity_void_poly as _cavity_void_poly,
                        boss_island as _boss_island, LIP_CLR, LIP_MAX, COIL_EAST,
                        BOSS_CLR, THREAD_KEEP, export_step_stable,
                        fin_region as _fin_region, fin_ribs as _fin_ribs,
-                       FIN_PROUD, FIN_VALLEY)                                 # noqa: E402
+                       FIN_PROUD, FIN_VALLEY,
+                       MOUNTS as mounts)                                      # noqa: E402
 
 def _inner_pocket():
     """pocket-interior (void) footprint in BOARD coords, identical to the CAD cavity cut:
