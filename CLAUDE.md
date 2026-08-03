@@ -244,6 +244,20 @@ been sold. Check [2] is the same relationship in the one direction that happened
   confirming its 0402→0805 upsize had landed meant re-rendering with `dnp` cleared and diffing:
   528 px, 20×37, an 0805 turned 90°. `render.py` names the DNP set beside the resolve count so
   the next dnp-with-a-model is visible the day it appears.
+- **Glyph outlines come from `scripts/glyphs.py`, once — never fold contours by hand.** Two
+  generators set type from the same JetBrains Mono files: `scripts/face_art.py` opens the card
+  face's soldermask, and the shell CAD engraves the medallion's ring text, monogram and unit
+  `SERIAL` into titanium. Both used to fill glyphs with `reduce(symmetric_difference)`, which
+  assumes one outline plus disjoint counters — true for `o`/`e`/`a`, false for **`8`**, which
+  the font draws as two closed, *self-intersecting* loops. `buffer(0)` floods each and the XOR
+  eats the waist, so the eight comes back as two solid lumps: **+56.9 % ink in Regular, +28.8 %
+  in Bold**, and a survey of 89 glyphs in both weights found no other character affected. That
+  is what made it dangerous — it looks right until a phone number or a serial contains an
+  eight, and `medallion.SERIAL` is variable data, one substitution per unit. The module fills
+  by the **nonzero winding rule** a rasteriser uses. It returns the glyph *as the font draws
+  it*; ornament policy is the caller's (`face_art` drops the dotted zero's island, the
+  medallion has `DIAL_MIN_MARK`). Both workflows trigger on it — an edit here changes the
+  board's mask art and the engraved STEP with nothing in `PCB/` or `enclosure/` touched.
 - **The front mask art is generated from the routing.** Every opening is `shape − live copper`,
   so moving a front trace can put a signal under an aperture — re-run `scripts/mask_art.py
   --apply`. Consistency check [6] errors if you forget. It is the one artwork here that goes

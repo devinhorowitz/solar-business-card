@@ -108,6 +108,55 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
 
 ## Firmware — `firmware/`, `firmware/README.md`
 
+- [ ] **[FIRMWARE/BENCH] Turn the FRAM event log ON once the harvest budget is measured** —
+  _built 2026-08-03, deliberately still `USE_FRAM_LOG 0`._
+  The black box at FRAM `0x0000` now counts **taps, double-taps, NFC field reads and motion
+  trips** alongside the cold-boot count it already kept. Record v2 (`DRHc`, 24 B); a v1 `DRHb`
+  record is **migrated**, not overwritten, so a card already in the field keeps its boot count.
+  Design note, because it is the part that matters: events cost a **saturating byte increment
+  in RAM**, and at most one FRAM cycle per ~1 s poll folds them into the lifetime totals. A
+  burst of taps is one wake/read/write/park, not one per tap — an I2C transaction has no
+  business in the tap path, which this firmware costs at a byte-compare even when muted. The
+  trade is a loss window of up to one poll if the tank dies mid-interval; these are curios, not
+  telemetry, and protecting a tap count with unmeasured energy is the wrong way round.
+  **Cost, measured:** shipped build byte-identical (4930 text / 21 bss — `check_fw_size` still
+  matches the README); with the log on, **+238 B flash and +4 B RAM** over the same build with
+  only the old boot counter. **The gate stays 0** until README's "the open question" — harvest
+  vs. draw under real indoor light — has a bench number. Flipping it is then a one-line change.
+
+- [ ] **[FIRMWARE/PRODUCT — needs one fact from you] Card as an office-door credential**
+  _(2026-08-03, from `firmware/NFC Chip Integration Possibilities - Google Gemini.pdf`.)_
+  Nothing to build until the reader is identified, and the answer is binary:
+  **125 kHz HID Prox → dead end** (wrong frequency; the coil is 13.56 MHz).
+  **13.56 MHz UID-only → works today**, zero firmware and zero hardware: enroll the NT3H2211's
+  fixed 7-byte NXP UID like a fob. **HID iCLASS / Seos / MIFARE DESFire → no** — they demand a
+  cryptographic challenge-response and the tag has no crypto engine.
+  Two things to weigh in the middle case. For: the reader powers the tag from its own field, so
+  **the card opens the door with a completely flat tank** — independent of the VOUT item below.
+  Against: the UID is readable by any phone and trivially cloned to a magic card, so enrolling
+  it makes your door credential copyable by anyone you hand a business card to. That is the
+  decision, and it is not an engineering one.
+
+- [ ] **[FIRMWARE] HOTP authenticator — PARKED behind the VOUT respin item**
+  _(2026-08-03, same source.)_ Flash is not the obstacle: ~2.4 KB used of 64 KB, and HMAC-SHA1
+  is another 1–2 KB. Three things are.
+  (a) **Secret provisioning** — there is no secure path to get a key onto the card, and the FRAM
+  is an unencrypted I2C part anyone with a clip can read. (This also sinks the "secure offline
+  vault" idea from the same document: "completely isolated and offline" overstates a part you
+  can read with a $3 clip.)
+  (b) **It needs the card alive.** SRAM pass-through requires `NFC_EN` asserted, so the token is
+  unavailable exactly when the tank is flat — the state it would be most wanted in. Routing
+  `VOUT` (see the PCB item) removes this.
+  (c) **Reach** — WebNFC is Android/Chrome only; iOS will not do raw tag I/O from a browser.
+  Revisit when (b) is fixed; (a) still needs an answer.
+
+_(Also from that document, dispositioned 2026-08-03: **light-aware contextual glow** — already
+built, `VSENSE` on AIN2 and `STO_SNS` on AIN1, so it was a nod not a proposal. **Gesture-based
+NDEF profile switching** — declined; the pieces exist (`nfc_write_ndef()`, hardware single/double
+tap) but each switch is a powered NFC session plus a tag-EEPROM write, and it solves a problem
+nobody reported. The document's headline **"zero-battery vampire wake, no hardware changes"** is
+wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
+
 - [ ] **[FIRMWARE] The screened feature ledger's live remainder — imported 2026-08-02**
   _(`firmware/feature-roadmap.md` is the Gemini-brainstorm decision ledger, dispositioned
   2026-07-12: seven features shipped as `board.h` knobs, the rest triaged. It was an ORPHAN —
@@ -348,6 +397,24 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   V2; a kind reel just looks better. (LED-audit addendum, 2026-07-25.)
 
 ## PCB — `PCB/solar-glow-drh-v4_0.kicad_pcb` / `.kicad_sch`
+
+- [ ] **[PCB — respin] Route `U5` pin 7 (`VOUT`) — NFC energy harvesting, currently unconnected**
+  _(2026-08-03. Bundle with the supercap-land re-route; both are respin-only.)_
+  `U5 pad 7 VOUT_7 -> unconnected-(U5-VOUT-Pad7)`. The NT3H2211 can deliver **up to 15 mW out of
+  the reader's field** (datasheet §"Energy harvesting"), and on this board that pin goes nowhere.
+  **Size it as a WAKE, not as a charger** — the arithmetic is not close:
+  the tank is SC3∥SC4 (2.8 F) in series with SC1∥SC2 (2.8 F) = **1.4 F**, and to the AEM's 4.65 V
+  VOVCH ceiling that is **15.1 J**. One tap at the datasheet *maximum* 15 mW for ~1 s is **15 mJ
+  — 0.1 % of a full tank, ~1000 taps to fill it from empty**, and 15 mW is best-case Class-5
+  coupling that a phone will not deliver. The datasheet also warns that drawing VOUT current
+  *reduces read range*, so it is not free even when it works.
+  What it IS good for: **~8 LED blinks** (16 mA x 2.25 V x 50 ms = 1.8 mJ each) — a real
+  "the card is never dead" flash — and powering the MCU long enough that the **SRAM pass-through
+  works on a flat card**, which is what unblocks the HOTP item above.
+  **Do not wire it into the tank.** Two reasons: `Vout,max` is **3.3 V** and STO runs to 4.65 V,
+  so it cannot push into the top of the stack without a boost; and `MID` is the AEM10300's
+  **`BAL`** pin (U8 pad 13), so charge injected into the lower cell alone is partly burned back
+  off by the balancer. Give VOUT its own small reservoir feeding the MCU/LED path instead.
 
 - [x] **[PCB/FAB] Panel fiducials — CLOSED 2026-08-01, built into `panelize.py` as specified**
   _(2026-08-01, found by the kicad-happy second-opinion analyzer on its first run — see

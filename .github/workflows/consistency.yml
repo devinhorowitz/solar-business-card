@@ -35,6 +35,12 @@ on:
       # to the generator can make the committed board stale without the board being touched
       # — the same relationship [6] has with mask_art.py.
       - 'scripts/face_art.py'
+      # ...and face_art gets its glyph fill from here, so this file reaches check [17] one
+      # import further out. It is shared with the medallion engraver (which kibot.yml
+      # triggers on for the same reason), and it is the file where the fill RULE lives —
+      # the thing that decides whether an '8' has counters. An edit here changes the
+      # committed board's mask art without PCB/** being touched at all.
+      - 'scripts/glyphs.py'
       # check [9] parses the OUTS list out of kibot.yml to confirm that everything it calls
       # "automated" is something CI actually commits.
       - '.github/workflows/kibot.yml'
@@ -55,6 +61,7 @@ on:
       - 'scripts/part_colors.py'
       - 'scripts/nfc_coil.py'
       - 'scripts/face_art.py'
+      - 'scripts/glyphs.py'
       - '.github/workflows/kibot.yml'
       - 'enclosure/**'
       - 'BOM/**'

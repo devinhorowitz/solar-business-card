@@ -48,6 +48,12 @@ on:
       # silently ships unit 001's number.
       - 'enclosure/medallion.py'
       - 'enclosure/solar-glow-drh-v3_0-backshell-0p6b-brace-cad.py'
+      # ...and the glyph fill the shell generator engraves the medallion's ring text,
+      # monogram and unit SERIAL with. It is one import out from that generator, which is
+      # exactly where the #132 gap class hides: change the rule that decides whether an
+      # '8' keeps its counters and, without this line, the committed STEP keeps the old
+      # digits. Shared with scripts/face_art.py (consistency.yml triggers on it there).
+      - 'scripts/glyphs.py'
       - 'enclosure/solar-glow-drh-v3_0-backshell-0p6b-brace-DRAWING-gen.py'
       - 'enclosure/brace/solar-glow-drh-diffuser-brace-cad.py'
       - 'enclosure/brace/solar-glow-drh-diffuser-brace-DRAWING-gen.py'
