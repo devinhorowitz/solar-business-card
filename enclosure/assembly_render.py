@@ -305,12 +305,12 @@ def encode_gif(imgs, path, ms, label, gate=True):
                          f"palette sample; an undithered dark neutral lands on the brass ramp.")
     if gate and _is_noise(_frames_of(path), [q.convert("RGB") for q in qs]):
         print(f"kept {os.path.basename(path)}  (re-render differs only by raytracer noise)")
-        return frac
+        return False
     qs[0].save(path, save_all=True, append_images=qs[1:], duration=ms, loop=0, optimize=True)
     print(f"wrote {os.path.basename(path)}  {imgs[0].width}x{imgs[0].height}  {len(imgs)} frames  "
           f"{os.path.getsize(path) // 1024} KB  {colors} colours  "
           f"{frac:.3f}% shifted >{GIF_DE}")
-    return frac
+    return True
 
 
 def cyl(x, y, z0, dz, r, res=28):
@@ -502,9 +502,29 @@ for i in range(FRAMES):
 print(f"rendered {len(frames)} frames")
 
 gif = os.path.join(HERE, f"{STEM}.gif")
-encode_gif([Image.open(f).convert("RGB") for f in frames], gif, 90, "exploded")
-save_png_stable(Image.open(frames[-1]).convert("RGB"), os.path.join(HERE, f"{STEM}-hero.png"))
-save_png_stable(Image.open(frames[0]).convert("RGB"), os.path.join(HERE, f"{STEM}-exploded.png"))
+# THE TWO STILLS BELOW ARE FRAMES OF THIS GIF -- frames[-1] and frames[0] of the very
+# sequence just encoded. They are not an independent observation of the scene, so they must
+# not get an independent verdict: they follow the SEQUENCE's decision instead of running a
+# fresh fraction-of-frame test on one frame.
+#
+# THIRD OCCURRENCE, found 2026-08-03. save_png_stable's docstring records the first two
+# (brace-render 07-30, shell-spin 08-01). This one: the 08-02 fit change -- AIR 0.12 -> 0.22
+# plus the per-part 0.16 for the LED pockets -- moved the diffuser brace's pockets, CI
+# committed the new .stl and a new gif on every run since, and kept hero.png from 07-31 and
+# exploded.png from 08-01. Two portraits of a brace that no longer exists, exactly the
+# failure the docstring already describes twice.
+#
+# The signature is the one it predicts: small in area, huge in contrast. A single still
+# spreads that change across one frame and lands under NOISE_FRAC; the 60-frame sequence
+# accumulates it past the threshold. So the gif passed while its own endpoints were
+# suppressed -- and a gif disagreeing with its first and last frames about whether anything
+# changed is not a judgement call, it is an inconsistency. Raising the threshold would not
+# fix it (the docstring measured why); tying the derived stills to the source does.
+_gif_wrote = encode_gif([Image.open(f).convert("RGB") for f in frames], gif, 90, "exploded")
+save_png_stable(Image.open(frames[-1]).convert("RGB"),
+                os.path.join(HERE, f"{STEM}-hero.png"), gate=not _gif_wrote)
+save_png_stable(Image.open(frames[0]).convert("RGB"),
+                os.path.join(HERE, f"{STEM}-exploded.png"), gate=not _gif_wrote)
 
 # ---- reverse side, fully closed: the 8 brass tips flush in their CBORE_D spotfaces -------
 ren2 = vtk.vtkRenderer(); ren2.SetBackground(0.965, 0.963, 0.955)
