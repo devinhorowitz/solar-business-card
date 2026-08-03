@@ -146,12 +146,41 @@ jobs:
             fi
           done
 
-          # pinned action SHAs: report the latest release tag beside each pin's comment
-          for act in $(grep -rhoE "uses: [A-Za-z0-9_./-]+@[0-9a-f]{40}" .github/workflows/*.yml | awk '{print $2}' | sort -u); do
-            repo=${act%%@*}; sha=${act##*@}
-            latest=$(gh api "repos/$repo/releases/latest" --jq .tag_name 2>/dev/null)
-            echo "| action \`$repo\` | \`${sha:0:12}…\` | ${latest:-probe failed} | ℹ️ compare against the \`# vN\` comment in the workflow |" >> "$R"
-          done
+          # Pinned action SHAs. The `# vN` comment beside each pin is the claim about which
+          # release that SHA is, so comparing it to the latest release is what turns this
+          # row from a note into a verdict.
+          #
+          # Until 2026-08-03 this loop GREPPED THE COMMENT AWAY and then printed "compare
+          # against the `# vN` comment in the workflow" -- an instruction for a human to
+          # perform, by hand, a comparison the script was already holding both sides of.
+          # Nobody performed it. Both actions sat pinned at v4 while upstream was v7.0.1 --
+          # three majors of drift, reported every week as ℹ️ informational, which is the
+          # one verdict that asks for nothing. Drift is meant to be visible and deliberate
+          # here, not silently reclassified as a note.
+          #
+          # A pin with NO version comment is its own finding: unauditable by construction,
+          # because there is no claim to check the upstream tag against.
+          grep -rhoE "uses: [A-Za-z0-9_./-]+@[0-9a-f]{40}([[:space:]]+#[[:space:]]*v[0-9][0-9.]*)?" \
+              .github/workflows/*.yml \
+            | sed -E 's/^uses: //; s/[[:space:]]+#[[:space:]]*/ /' | sort -u \
+            | while read -r pin claim; do
+              repo=${pin%%@*}; sha=${pin##*@}
+              latest=$(gh api "repos/$repo/releases/latest" --jq .tag_name 2>/dev/null)
+              if [ -z "$claim" ]; then
+                verdict="⚠️ pin carries no \`# vN\` comment — nothing to audit it against"
+              elif [ -z "$latest" ]; then
+                verdict="ℹ️ upstream probe failed — re-run before concluding anything"
+              else
+                pv=${claim#v}; pv=${pv%%.*}
+                lv=${latest#v}; lv=${lv%%.*}
+                if [ "$pv" = "$lv" ]; then
+                  verdict="✅ current (\`$claim\`)"
+                else
+                  verdict="🔻 pinned \`$claim\`, upstream \`$latest\` — $((lv - pv)) major(s) behind"
+                fi
+              fi
+              echo "| action \`$repo\` | \`${sha:0:12}…\` ${claim:+\`$claim\`} | ${latest:-probe failed} | $verdict |" >> "$R"
+            done
 
           {
             echo
