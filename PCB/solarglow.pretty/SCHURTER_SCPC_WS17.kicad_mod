@@ -3,7 +3,7 @@
 	(generator "pcbnew")
 	(generator_version "10.0")
 	(layer "F.Cu")
-	(descr "SCHURTER SCPC Case WS17 prismatic supercapacitor (P/N 3-153-438), 1.0 F 2.75 V, ESR 40 mOhm. Flat prismatic cell 28.5 x 17.0 mm, 1.70 mm max thick. Under-body solder pads only: N 12.25 x 3.5 and P 7.75 x 3.5, centred +/-11.0 mm from cell centre (outer edge 1.5 mm in from each end). Asymmetric pad widths are the polarity key (N wider than P). The end tabs (drawn on F.Fab, ~2.75 mm past each end) are finish-coated locators, NOT solder pads. Pads are byte-identical to the locked embedded land (solarglow:SC1); this bordered version only ADDS the F.Fab body, locator tabs, and courtyard so DRC/visual can catch encroaching parts.")
+	(descr "SCHURTER SCPC Case WS17 prismatic supercapacitor (P/N 3-153-438), 1.0 F 2.75 V, ESR 40 mOhm. Flat prismatic cell 28.5 x 17.0 mm, 1.70 mm max thick. Under-body solder pads only: N 12.25 x 3.5 and P 7.75 x 3.5, centred +/-12.30 mm from cell centre (outer edge 0.20 mm in from each body end) and laterally OPPOSED -- N sits 1.50 mm in from one long edge, P 1.50 mm in from the other, so the pair runs diagonally. Pad width AND that lateral offset are the polarity key. The end tabs (drawn on F.Fab, ~2.75 mm past each end) are finish-coated locators, NOT solder pads. CORRECTED 2026-08-03, measured off the Case WS10/WS13/WS17 bottom views: the datasheet's 1.5 +/-0.5 is a LATERAL inset from a long edge, not an end inset. Read as an end inset it put both pads on the centreline at +/-11.0 -- 1.30 mm per side too far in, and with P overhanging its 7.75 terminal by ~3.1 mm onto the bare can. The board's embedded land (Downloads:SCHURTER_SCPC_WS17-mod2) still carries the old geometry; correcting it needs a B-side re-route, see PCB/README.md.")
 	(tags "supercapacitor SCHURTER SCPC WS17 3-153-438 prismatic")
 	(attr smd)
 	(property "Reference" "REF**"
@@ -51,7 +51,7 @@
 		)
 	)
 	(pad "N" smd roundrect
-		(at 0 11 90)
+		(at 0.875 12.3 90)
 		(size 3.5 12.25)
 		(layers "F.Cu" "F.Mask" "F.Paste")
 		(roundrect_rratio 0.25)
@@ -69,7 +69,7 @@
 		(uuid "b2000000-0000-0000-0000-000000000011")
 	)
 	(pad "P" smd roundrect
-		(at 0 -11 90)
+		(at -3.125 -12.3 90)
 		(size 3.5 7.75)
 		(layers "F.Cu" "F.Mask" "F.Paste")
 		(roundrect_rratio 0.25)
