@@ -462,7 +462,13 @@ def slot_bar(x, y, z0):
 
 
 M2_PITCH = 0.40                  # ISO metric coarse for M2
-THREAD_R = 0.105                 # ridge tube radius; M2 crest-to-root is ~0.245 total
+THREAD_R = 0.20                  # ridge tube radius. 0.105 was geometrically honest and
+                                 # invisible: at CI's framing a screw is ~40 px tall, so a
+                                 # 0.1 mm ridge on a 2 mm shank resolved to nothing and the
+                                 # brass read as a dowel again. Coarsened until it survives
+                                 # the shipped scale, and the helix re-seated below so the
+                                 # CREST still lands on the M2 major radius rather than
+                                 # standing proud of it.
 
 
 def thread_helix(x, y, z0, dz, r_major, pitch=M2_PITCH, seg=18):
@@ -478,7 +484,7 @@ def thread_helix(x, y, z0, dz, r_major, pitch=M2_PITCH, seg=18):
     pts = vtk.vtkPoints()
     line = vtk.vtkPolyLine()
     line.GetPointIds().SetNumberOfIds(n + 1)
-    r = r_major - THREAD_R * 0.55
+    r = r_major - THREAD_R          # crest = r_major exactly
     for i in range(n + 1):
         z = z0 + dz * i / n
         a = 2.0 * math.pi * (z - z0) / pitch
@@ -497,7 +503,7 @@ def thread_helix(x, y, z0, dz, r_major, pitch=M2_PITCH, seg=18):
 screws = []
 for mx, my in fr.MOUNTS:
     screws.append(("shank", cyl(mx, my, Z_FRONT - SCREW_LEN, SCREW_LEN,
-                                SHANK_D / 2.0 - THREAD_R * 0.55), mx, my))
+                                SHANK_D / 2.0 - THREAD_R * 1.1), mx, my))
     screws.append(("thread", thread_helix(mx, my, Z_FRONT - SCREW_LEN, SCREW_LEN,
                                           SHANK_D / 2.0), mx, my))
     screws.append(("head", cyl(mx, my, Z_FRONT, HEAD_H, HEAD_D / 2.0, res=44), mx, my))
@@ -592,6 +598,19 @@ for i in range(FRAMES):
     # SPUN 180 deg 2026-08-03: at 208 the ferrite sat on the far side of the board and
     # read as backdrop; at 28 it is the near edge, so the sheet meeting the coil is the
     # interface the explode gap opens onto. Pitch and distance unchanged.
+    # PITCH STAYS AT 22, and the reason is a lesson about what a committed render proves.
+    # The ferrite looked absent from the exploded still, so the pitch was dropped to 10 to
+    # open the interlayer gaps -- which worked, and cost the closed hold its subject: at 10
+    # deg the medallion is an edge-on ellipse and the eight brass tips vanish. Then the
+    # premise turned out to be false. The still being read was `-exploded.png` AS COMMITTED,
+    # whose last content change predates the commit that ADDED the ferrite group; it also
+    # still wore the card FACE on the underside, the very bug this rework fixed. It was a
+    # portrait of a scene that never had a sheet in it -- the stale-still failure this file
+    # documents three times over, arriving a fourth time as a false negative rather than a
+    # false positive. Geometry agrees there was nothing to hide behind: at 22 deg a ray from
+    # the sheet's near edge toward the camera clears the card outline 22 mm out while it is
+    # still 10 mm above the brace, and every B-side blocker sits at z 11.1-12.8, some 6 mm
+    # BEYOND the sheet from a camera below. Verify a render against a render you just made.
     rad = math.radians(28.0)
     dist, pitch = 252.0, math.radians(22.0)
     cam.SetPosition(W / 2 + dist * math.cos(pitch) * math.cos(rad),
