@@ -61,7 +61,9 @@ OFF_BOARD = [
     # vendor's part. "364006" is exactly that shape. Items with no manufacturer are
     # generic by nature (a DIN screw, sheet film) and are not distributor lines, so
     # nothing queries them.
-    ("FER1",  1, "364006",                 "Würth Elektronik",  "DigiKey",  "732-5049-ND",
+    # Moved DigiKey -> Mouser 2026-08-03, on price and depth rather than consolidation:
+    # $13.18 vs $17.43 and 119 in stock vs 41. Same Würth part either way.
+    ("FER1",  1, "364006",                 "Würth Elektronik",  "Mouser",   "710-364006",
      "Wurth WE-FSFS ferrite sheet behind the coil -- load-bearing for the NFC tune"),
     ("HW1",   4, "DIN 84 M2x3 brass",      "",                  None,       "",
      "shell screws; any DIN 84 M2x3 -- source locally, not a distributor line"),
@@ -212,6 +214,17 @@ def build():
             problems.append(f'{ref} ({mpn}) has a Supplier P/N that is not a part number: '
                             f'"{dpn}". A distributor resolves the identifier verbatim, so a '
                             f'parenthetical or a trailing note makes the line unresolvable.')
+    # The off-board tables get the SAME manufacturer gate as the schematic parts above.
+    # They were exempt until 2026-08-03, which was a hole in the guard rather than a
+    # decision: check_stock queries these rows exactly like any other, so a cart line
+    # here with no manufacturer re-opens the collision hazard the field exists to close
+    # -- and FER1's "364006" is precisely the all-numeric shape that needs it. Rows with
+    # no supplier are exempt because nothing queries them: HW1 is any DIN 84 screw and
+    # INS1 is cut from sheet film, so there is no manufacturer to be wrong about.
+    for ref, _qty, mpn, mfr, sup, _dpn, _note in list(OFF_BOARD) + list(OFF_BOARD_ONCE):
+        if sup and not mfr:
+            problems.append(f"{ref} ({mpn}) is a {sup} line with no Manufacturer -- "
+                            f"check_stock's collision filter needs it")
     return _group(asm_rows), _group(hand_rows), OFF_BOARD, OFF_BOARD_ONCE, problems
 
 

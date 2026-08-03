@@ -9,7 +9,7 @@
 > Refresh: `python3 BOM/check_stock.py` (needs `DIGIKEY_CLIENT_ID`,
 > `DIGIKEY_CLIENT_SECRET`, `MOUSER_PART_API_KEY` in the environment; ~1 min).
 
-**Checked: 2026-08-03 00:31 UTC** · DigiKey Product Information v4 + Mouser Search API, queried by MPN (stored distributor P/Ns are shown as found live, not trusted from the sheet).
+**Checked: 2026-08-03 06:21 UTC** · DigiKey Product Information v4 + Mouser Search API, queried by MPN (stored distributor P/Ns are shown as found live, not trusted from the sheet).
 
 **30 of 30 lines fully available** · 0 on substitute only · **0 dead (❌)** · 0 unverifiable this run · 0 manual-order.
 
@@ -40,10 +40,10 @@
 | ✅ | U9 | 1 | Texas Instruments | `TPS7A0233PDBVR` | `296-TPS7A0233PDBVRCT-ND` | DigiKey | Active | 4,092 | $0.84 |
 | ✅ | U8 | 1 | e-peas | `10AEM10300C0000` | `120-AEM10300-QFN` | Mouser | Active (listed) | 553 | $3.77 |
 | ✅ | C26, C27 | 2 | Samsung Electro-Mechanics | `CL21B106KOQNNNG` | `187-CL21B106KOQNNNG` | Mouser | Active (listed) | 2,251 | $0.29 |
-| ✅ | SC2, SC4 | 2 | SCHURTER | `3-153-438` | `486-3-153-438-ND` | DigiKey | Active | 195 | $16.69 |
-| ✅ | SC1, SC3 | 2 | SCHURTER | `3-153-440` | `486-3-153-440-ND` | DigiKey | Active | 200 | $17.16 |
 | ✅ | PV1, PV2 | 2 | ANYSOLAR | `SM141K06TF` | `2994-SM141K06TF-ND` | DigiKey | Active | 423 | $7.61 |
-| ✅ | FER1 | 1 | Würth Elektronik | `364006` | `732-5049-ND` | DigiKey | Active | 41 | $17.43 |
+| ✅ | SC2, SC4 | 2 | SCHURTER | `3-153-438` | `693-3-153-438` | Mouser | New Product | 198 | $16.69 |
+| ✅ | SC1, SC3 | 2 | SCHURTER | `3-153-440` | `693-3-153-440` | Mouser | New Product | 200 | $16.50 |
+| ✅ | FER1 | 1 | Würth Elektronik | `364006` | `710-364006` | Mouser | Active (listed) | 119 | $13.18 |
 | ✅ | PRG1 | 1 | Adafruit | `5879` | `485-5879` | Mouser | Active (listed) | 54 | $6.95 |
 
 **Verdicts** — ✅ primary MPN in stock and in production · ⚠️ primary unavailable, a documented substitute (below) is available · ❌ **primary unavailable and every documented substitute unavailable too** · ❓ the distributor query itself failed (re-run before concluding anything) · — not a distributor line.
@@ -71,7 +71,7 @@ The `datasheets/` naming convention embeds a `$price` — a copy of a live numbe
 | | File | Maps to | $ in name | $ live |
 |---|---|---|---|---|
 | ✅ | `D2-D5  LA P47F-V2BB-24-3B5A-30-R18-Z  $0.43.pdf` | D2, D3, D4, D5 | $0.43 | $0.43 |
-| ✅ | `FER1  Wurth WE-FSFS 364006  $17.43.pdf` | FER1 | $17.43 | $17.43 |
+| ✅ | `FER1  Wurth WE-FSFS 364006  $13.18.pdf` | FER1 | $13.18 | $13.18 |
 | ✅ | `FER1-alt  Laird MHLL6060-300  $6.40.pdf` | FER1 sub | $6.40 | $6.40 |
 | ✅ | `FER1-alt  Wurth WE-FSFS 3641014  $4.19.pdf` | FER1 sub | $4.19 | $4.19 |
 | ✅ | `PV1,PV2  SM141K06TF  $7.61.pdf` | PV1, PV2 | $7.61 | $7.61 |
