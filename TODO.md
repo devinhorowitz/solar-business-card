@@ -795,6 +795,76 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
   and documented in `enclosure/README.md`'s finish/bearing-plane sections and the root README's
   truth table. There is no maker's mark to add.
 
+- [ ] **[ENCLOSURE/TOOLING] A heat-tolerant hand-solder jig for SC1–SC4 and PV1–PV2** — the
+  parts the machine never places, held in register through the melt *and the freeze*.
+  _(DRH, 2026-08-03. Not scheduled; recorded before it is needed, because one of its inputs is
+  not final yet — see SEQUENCING.)_
+
+  **The problem has a number, and the number is `CLR = 0.25`.** `enclosure/fit_rules.py:92`
+  sets the brace's in-plane clearance around every part body at 0.25 mm. So a supercap
+  hand-soldered more than a quarter of a millimetre off its footprint does not merely look
+  crooked — it fouls its own pocket wall, and the brace stops seating. The failure is silent
+  at solder time and only shows up at final assembly, on a card that by then has everything
+  else on it. Same story for the cells against the eight M2 screws: they already fit "almost
+  too exact" (which is why all 8 mounts moved 0.13 mm diagonally on 2026-08-03), so a cell
+  soldered a few tenths proud puts lateral load on its own terminals.
+  **And the supercap joints are UNDER the body** (`PCB/README.md` → hand-solder order): you
+  cannot see them, so you cannot inspect-and-nudge. Alignment has to be mechanical or it is
+  nothing.
+
+  **Why a normal print will not do**, which is the whole reason this is its own item. The
+  requirement is not "hold it while I solder" — it is **hold it while it cools**, so the part
+  cannot shift as the joint freezes and the jig can be lifted off a solid assembly. That means
+  the jig is in contact with a part at hotplate temperature for the whole cycle. PLA/PETG/ABS
+  and standard SLA resin are all out by a wide margin.
+
+  Real candidates, and they are not equivalent:
+  - **FR4, ordered as a PCB from the same fab.** Strongest option and the most repo-idiomatic:
+    FR4 survives a 260 °C reflow *by definition*, a milled/routed outline holds ±0.1 mm easily,
+    it is nearly free, and it can ride the existing PCBWay panel (`scripts/panelize.py`) so it
+    arrives dimensionally matched to the boards it registers. Low thermal conductivity, so it
+    does not rob the joint.
+  - **PEEK or machinable ceramic (Macor)** — ~250 °C continuous, low conductivity, machinable
+    to a fit. Costs real money.
+  - **High-temp platinum-cure silicone** — compliant, insulating, forgiving of the cell's
+    fragile laminate; poor at holding a hard datum on its own, so it wants a rigid frame.
+  - **Aluminium — the tempting wrong answer.** A metal jig sitting on a hotplate is a heat
+    sink pressed against the exact joint you are trying to melt; expect cold joints and a
+    profile you cannot repeat. If metal, prefer **stainless** (~1/15 the conductivity of Al)
+    and minimise contact area.
+
+  **Register off the mounting holes, not the board edge.** MH1–4 / MP1–4 are NPTH at positions
+  `enclosure/fit_rules.py` already publishes as `MOUNTS`, gated against the board by
+  consistency check `[16]` — so a jig derived from that table cannot drift from the drills.
+  The routed outline is the looser datum.
+
+  **The two parts are NOT one jig, because their thermal specs are not the same shape:**
+  - **SC1–SC4**: SCHURTER gives `Soldering Methods: Manual` and an operating range of
+    −40…+85 °C, and publishes **no peak-temperature or reflow profile at all**
+    (`datasheets/SC1-SC4  SCHURTER 3-153-438  $16.69.pdf`). There is no number to design a
+    hotplate profile against — establishing a safe one on scrap cells is part of this task,
+    not a detail of it.
+  - **PV1–PV2**: **≤ 260 °C for ≤ 2 s per joint, no reflow, moisture-sensitive laminate**
+    (`docs/harvest-budget-test-board.md`, `PCB/README.md`). A hotplate that soaks the whole
+    cell is precisely what this part is not rated for — so the cell jig may need to be a
+    *heat-shield-plus-clamp* that keeps the plate off the laminate while a local iron does the
+    four joints each, rather than a soak fixture. Decide this before cutting anything.
+
+  **SEQUENCING — do not build the supercap jig yet.** The board's supercap lands are knowingly
+  wrong (`PCB/README.md`: pads at ±11.00 / ±16.25 where the datasheet wants ±12.30 / ±17.55,
+  2.60 mm on the pitch); `PCB/solarglow.pretty/SCHURTER_SCPC_WS17.kicad_mod` and
+  `PCB/solarglow.pretty/SCHURTER_SCPC_SS17.kicad_mod` already carry the correction but the
+  board does not, pending the B-side re-route. A jig cut today would encode the old pitch and
+  be scrap the day the re-route lands. The **cell** jig has no such dependency and could be
+  done first.
+
+  **Shape of the work**: follow `enclosure/solar-glow-drh-pogo-testplate-cad.py`, which is
+  already exactly this kind of thing — a fixture that is not part of the product, generated
+  from the committed board, emitting STEP/STL/drawing, with its own `kibot.yml` trigger. A jig
+  generator that reads part positions from `PCB/solar-glow-drh-v4_0.kicad_pcb` and mount
+  positions from `fit_rules.MOUNTS` stays correct through every future re-route for free; a
+  hand-drawn one starts rotting immediately.
+
 ## Locked — do NOT re-open
 
 - **Accepted copper trade-offs (2026-07-26 audit, re-affirmed at the 2026-07-30 purge)** — each
