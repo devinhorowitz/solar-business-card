@@ -128,59 +128,26 @@ def _cap_unit(fontpath):
     return _outline("H", fontpath).bounds[3] - _outline("H", fontpath).bounds[1]
 
 
-def _winding(pt, ring):
-    """Signed crossing number of a closed vertex ring about pt (Sunday's algorithm)."""
-    x, y = pt
-    w = 0
-    for i in range(len(ring) - 1):
-        x0, y0 = ring[i]
-        x1, y1 = ring[i + 1]
-        if y0 <= y:
-            if y1 > y and (x1 - x0) * (y - y0) - (x - x0) * (y1 - y0) > 0:
-                w += 1
-        elif y1 <= y and (x1 - x0) * (y - y0) - (x - x0) * (y1 - y0) < 0:
-            w -= 1
-    return w
-
-
 def _outline(txt, fontpath):
-    """Glyph contours -> shapely, filled by the NONZERO WINDING rule fonts are drawn to.
+    """Glyph outlines, minus the ornaments this generator does not want.
 
-    Two simpler readings were tried and both are wrong, in ways worth recording because
-    each looked fine until a specific glyph appeared.
+    The winding-rule fill lives in scripts/glyphs.py, shared with the medallion engraver
+    in enclosure/…-backshell-…-cad.py -- both set type from the same JetBrains Mono files,
+    both used to fold contours with reduce(symmetric_difference), and that fold is wrong
+    for '8'. Having found it here, in "404-213-8076", it had to be fixed in one place
+    rather than two; glyphs.py carries the full reasoning.
 
-    reduce(symmetric_difference) over the contours -- what
-    enclosure/…-backshell-…-cad.py's _maker_text does -- is right for one outline plus
-    disjoint counters ('o', 'e', 'a') and wrong for '8'. The first preview of this
-    generator rendered "404-213-8076" with a solid blob where the 8 should be.
-
-    Containment depth with even-odd is right for '0' (outer, counter, and the dotted
-    zero's island at depth 2) and still wrong for '8'. The reason is the surprise here:
-    JetBrains Mono draws '8' as TWO closed contours, not three -- two overlapping,
-    SELF-INTERSECTING loops, each tracing a bowl's outside and its counter in one stroke.
-    Polygon(c).buffer(0) resolves such a loop by flooding it, so the counters vanish
-    before any nesting rule gets a chance to run.
-
-    So: node all the contours into one planar graph, polygonize it into faces, and keep a
-    face when its winding number is nonzero -- exactly the rule a TrueType rasteriser
-    applies. Self-intersection stops being a special case, and 'g', '8', '0' and the
-    dotted zero all fall out of the same three lines.
+    What stays here is the POLICY: glyphs.py returns the glyph as the font draws it, and
+    dropping the dotted-zero ornament is this generator's own call, not something the
+    medallion (which has DIAL_MIN_MARK for the same job) should inherit.
     """
-    from shapely.geometry import LineString
-    from shapely.ops import unary_union, polygonize
-    from matplotlib.textpath import TextPath
-    from matplotlib.font_manager import FontProperties
-    from matplotlib.path import Path
-    tp = TextPath((0, 0), txt, size=100.0, prop=FontProperties(fname=fontpath))
-    rings = [[tuple(p) for p in c] for c in
-             Path(tp.vertices, tp.codes).to_polygons(closed_only=True) if len(c) >= 4]
-    rings = [r if r[0] == r[-1] else r + [r[0]] for r in rings]
-    if not rings:
+    import sys as _sys, os as _os
+    _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+    from glyphs import outline as _o
+    g = _o(txt, fontpath)
+    if g is None:
         raise SystemExit(f"face_art: {txt!r} produced no outlines")
-    faces = list(polygonize(unary_union([LineString(r) for r in rings])))
-    keep = [f for f in faces
-            if sum(_winding(f.representative_point().coords[0], r) for r in rings) != 0]
-    return _drop_counter_islands(unary_union(keep))
+    return _drop_counter_islands(g)
 
 
 def _drop_counter_islands(geom):

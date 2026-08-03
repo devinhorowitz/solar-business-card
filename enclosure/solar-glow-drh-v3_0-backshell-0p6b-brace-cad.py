@@ -294,17 +294,27 @@ def _poly_solid(poly, z0, dz):
 def _maker_text(txt, lx, cy, capH, fontpath):
     """Readable all-caps engraving text: LEFT edge at x=lx, vertically centered at y=cy, cap height ~capH.
     Returns shapely geometry in BOARD coords (pre-mirror)."""
+    # Outlines come from scripts/glyphs.py, which fills by the NONZERO WINDING rule a font
+    # is drawn to. This used to fold the contours with reduce(symmetric_difference), and
+    # that is wrong for exactly one glyph in everything these generators set: '8'.
+    # JetBrains Mono draws it as two closed, SELF-INTERSECTING loops, one per bowl;
+    # buffer(0) floods each and the XOR eats the overlap at the waist, so the eight came
+    # back as two solid lumps with no counters -- +56.9 % ink in Regular, +28.8 % in Bold.
+    # A survey of 89 glyphs found no other character affected in either weight.
+    #
+    # THE RING TEXT NEVER CONTAINED ONE. The dial does: DIAL is [monogram, "No <SERIAL>"],
+    # and SERIAL is variable data, one substitution per unit. Serial 008 would have been
+    # the first blob engraved into titanium, and nothing here would have caught it -- the
+    # mesh gate checks that the solid is watertight, not that the digits are digits.
+    # (Found 2026-08-03 from the same bug in scripts/face_art.py, which set the card face's
+    # phone number and rendered the 8 in "404-213-8076" as a blob in its first preview.)
     import shapely.affinity as _aff
-    from shapely.geometry import Polygon as _Poly
-    from shapely.ops import unary_union as _uu
-    from matplotlib.textpath import TextPath as _TP
-    from matplotlib.font_manager import FontProperties as _FP
-    from matplotlib.path import Path as _MP
-    from functools import reduce as _rd
-    tp=_TP((0,0),txt,size=100.0,prop=_FP(fname=fontpath))
-    if not len(tp.vertices): return None
-    conts=[c for c in _MP(tp.vertices,tp.codes).to_polygons(closed_only=True) if len(c)>=4]
-    geom=_rd(lambda a,b:a.symmetric_difference(b),[_Poly(c).buffer(0) for c in conts])
+    import sys as _sys, os as _os
+    _sys.path.insert(0, _os.path.join(
+        _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))), "scripts"))
+    from glyphs import outline as _outline
+    geom = _outline(txt, fontpath)
+    if geom is None or geom.is_empty: return None
     mnx,mny,mxx,mxy=geom.bounds; sc=capH/(mxy-mny)
     geom=_aff.scale(geom,xfact=sc,yfact=sc,origin=(mnx,mny)); mnx,mny,mxx,mxy=geom.bounds
     return _aff.translate(geom, lx-mnx, cy-(mny+mxy)/2)
