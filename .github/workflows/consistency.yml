@@ -69,7 +69,15 @@ jobs:
       # check [17] sets the card face's type from the JetBrains Mono TTFs, and the KiCad
       # image does not carry matplotlib. Pinned to the version kibot.yml already installs
       # for the drawings, so the two jobs cannot render from different font machinery.
+      #
+      # --break-system-packages is REQUIRED HERE AND NOT IN kibot.yml, and the difference is
+      # worth knowing before copying a pip line between the two. This job sets `container:`
+      # at the job level, so every step runs INSIDE the KiCad image, whose Debian Python is
+      # PEP 668 externally-managed and refuses a bare `pip install`. kibot.yml has no
+      # `container:` -- it invokes KiCad through `docker run` and pip-installs on the host
+      # runner, where the same line works untouched. The flag is safe in a throwaway CI
+      # container and the version is pinned, so nothing floats.
       - name: Install the type-setting dependency
-        run: python3 -m pip install --quiet 'matplotlib==3.11.1'
+        run: python3 -m pip install --quiet --break-system-packages 'matplotlib==3.11.1'
       - name: Run consistency check
         run: python3 scripts/check_consistency.py
