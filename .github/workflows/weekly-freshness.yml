@@ -47,7 +47,7 @@ jobs:
   firmware-canary:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1   # v7.0.1
       - name: Fetch the PINNED toolchain + DFP (rot check is the point)
         run: |
           set -euo pipefail
@@ -73,7 +73,7 @@ jobs:
     # Keep this digest in step with kibot.yml / consistency.yml (the sweep below flags a mismatch).
     container: ghcr.io/inti-cmnb/kicad10_auto_full@sha256:dd3b846da945f204fa7b61916df34a99170b2a2095b49c3879cd96d414b8a7b8
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1   # v7.0.1
       - name: Run the consistency suite on the unchanged tree
         run: python3 scripts/check_consistency.py
 
@@ -85,7 +85,7 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1   # v7.0.1
       - name: Compose the drift report
         id: report
         run: |
