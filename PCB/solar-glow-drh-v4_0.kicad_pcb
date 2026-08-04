@@ -14704,7 +14704,7 @@
 			(uuid "0e20f0d8-c271-412f-b2cf-99cd3a0f612c")
 		)
 		(pad "N" smd roundrect
-			(at 0 -11 270)
+			(at 0 -12.3 270)
 			(size 3.5 12.25)
 			(layers "B.Cu" "B.Mask")
 			(roundrect_rratio 0.25)
@@ -14726,7 +14726,7 @@
 			(uuid "2576490c-291f-40a8-bbbf-ea765bd6eeea")
 		)
 		(pad "P" smd roundrect
-			(at 0 11 90)
+			(at 0 12.3 90)
 			(size 3.5 7.75)
 			(layers "B.Cu" "B.Mask")
 			(roundrect_rratio 0.25)
