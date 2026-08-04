@@ -741,8 +741,25 @@ Work outside-in by heat sensitivity:
    and so is their **lateral offset** — N sits 1.50 mm in from one long edge, P 1.50 mm in from
    the other, so the two run diagonally rather than down the centreline.
    The folded end tabs are coated, non-solderable locators — never solder to those. The cells
-   sit at the board ends, clear of the central cluster, so localized hot air will not disturb
-   the reflowed parts.
+   sit at the board ends, so localized hot air will not disturb the reflowed parts.
+
+   > **⚠ SC1's can lands 0.090 mm from C1 — check C1 before the can goes down.**
+   > _(Measured 2026-08-04: SC1 body south edge y 40.800, C1's pads start y 40.890.)_ The other
+   > three have room — **SC2 0.350, SC3 0.385, SC4 0.420 mm** to their nearest neighbour — so SC1
+   > is the only one where hand placement can foul a reflowed part. **The can registers to its
+   > P/N pads, not to the board edge**, so a can that looks square to the outline can still be
+   > sitting on C1.
+   >
+   > C1 cannot simply be moved out of the way, which is why this is an instruction rather than a
+   > fix: it is boxed in, 0.090 mm below SC1's body and **0.154 mm above a UPDI run**
+   > ((9.935, 41.780)→(10.580, 41.780)), and that UPDI run is itself only 0.153 mm from its own
+   > nearest neighbour. The best translation available to C1 in ANY direction buys 0.110 mm
+   > against today's 0.090 — not worth the re-route. Revisit after the land correction below,
+   > which moves SC1's pads ±1.30 mm and therefore moves where the can registers.
+   >
+   > Nothing in CI sees this. `missing_courtyard` is `ignore` in the project file and 44 of 78
+   > footprints (20 of them machine-placed) carry no courtyard at all, so the courtyard gate is
+   > blind to it — the *goes quiet instead of loud* pattern this repo has been bitten by before.
 
    > **The land on THIS board is wrong, and knowingly so (2026-08-03).** Measured off the SCPC
    > datasheet's Case WS10/WS13/WS17 and SS17 bottom views, the terminals are 3.50 mm long with

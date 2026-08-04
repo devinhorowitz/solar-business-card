@@ -414,6 +414,36 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
 
 ## PCB — `PCB/solar-glow-drh-v4_0.kicad_pcb` / `.kicad_sch`
 
+- [ ] **[PCB — respin, DEFERRED ON PURPOSE] Re-measure SC1↔C1 after the supercap-land respin**
+  _(2026-08-04. Raised by the checklist sweep; investigated, and deliberately NOT fixed now.)_
+  SC1's can lands **0.090 mm** from C1's pads — the only supercap without room (SC2 0.350,
+  SC3 0.385, SC4 0.420). It is a hand-placement hazard, not a fab defect: the can registers to
+  its P/N pads, so one that looks square to the outline can still be sitting on C1, and the
+  joints are under the body where you cannot see them.
+
+  **Nudging C1 does not work, and the numbers are worth keeping so nobody re-derives them.**
+  C1 is boxed in: 0.090 mm below SC1's body and **0.154 mm above a UPDI run**
+  ((9.935, 41.780)→(10.580, 41.780)). That UPDI run has nowhere to go either — it sits
+  0.153 mm from its own nearest neighbour and reaches 0.000 by 0.25 mm south. A full 2D
+  search over C1 translations buys a **0.110 mm** bottleneck against today's 0.090. A 0.02 mm
+  gain is not worth a re-route in a pocket that congested.
+  _(An earlier read of this said C1 had "~0.26 mm of southward freedom". That came from a
+  PADS-ONLY sweep, which never saw the UPDI trace — the same incomplete-copper mistake as
+  measuring cathode clearance without teardrop zones. Sweep ALL copper on the layer.)_
+
+  **The trigger for revisiting is the land correction**, which moves SC1's pads ±1.30 mm and
+  therefore moves where the can registers — so the 0.090 is measured against geometry that is
+  about to change. Re-measure all four after that lands; it may resolve itself, and if it does
+  not, the pocket gets re-routed once instead of twice. Interim mitigation is shipped: an
+  explicit caution in `PCB/README.md`'s hand-solder step.
+
+  Also open, and the reason nothing caught this: `missing_courtyard` is `"ignore"` in
+  `PCB/solar-glow-drh-v4_0.kicad_pro`, and **44 of 78 footprints carry no courtyard at all,
+  20 of them machine-placed** (C1, C11, C12, C24, C29, C3, C5, C6, C7, C8, R1, R10, R11, R12,
+  R14, R17, R18, R2, R3, R4). Turning the rule on without drawing those courtyards just trades
+  one silence for 20 false alarms, so it is a two-part job: give the library 0402s courtyards,
+  then set the rule to `warning`.
+
 - [ ] **[PCB — respin] Route `U5` pin 7 (`VOUT`) — NFC energy harvesting, currently unconnected**
   _(2026-08-03. Bundle with the supercap-land re-route; both are respin-only.)_
   `U5 pad 7 VOUT_7 -> unconnected-(U5-VOUT-Pad7)`. The NT3H2211 can deliver **up to 15 mW out of
