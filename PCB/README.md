@@ -777,6 +777,16 @@ Work outside-in by heat sensitivity:
    > corrected geometry**, but the board's pads are EMBEDDED in the `.kicad_pcb` and do not read
    > from the library — so fixing the library never touched the board.
    >
+   > **The four `lib_id`s now point at that library (2026-08-04).** They named `Downloads:` — a
+   > path that exists on no machine here and is in no `fp-lib-table`, so KiCad could not resolve
+   > them and *"Update Footprints from Library"* had nothing to update from. They are
+   > `solarglow:SCHURTER_SCPC_SS17` / `…_WS17` now, and the two library footprints were brought to
+   > board parity in the same pass (paste layer dropped — these are hand-soldered;
+   > `exclude_from_pos_files exclude_from_bom` set, matching the flags the board already carried;
+   > 3D model block added). That relink is what makes the KiCad-side fix possible — **and it also
+   > arms it**, per the hand-work warning below: the update pulls the FULL datasheet geometry,
+   > offset included.
+   >
    > **Re-measured 2026-08-04, and the old numbers here were wrong.** They came from a sweep that
    > modelled the pad as 3.50 × 12.25 when the pad carries its own 90° rotation and is really
    > **12.25 wide × 3.50 tall** — wrong shape, wrong axis, wrong overlap set. Measured properly
@@ -787,11 +797,27 @@ Work outside-in by heat sensitivity:
    > | pitch only (±1.30, pads stay on centreline) | **7 segments / 4 nets** |
    > | full datasheet (pitch **+** lateral offset) | **25 segments / 8 nets** |
    >
+   > **⚠ MOVE THESE PADS IN KICAD, NOT BY EDITING THE FILE.** A pad move invalidates the stored
+   > zone fills, and nothing in a text edit can regenerate them. `SC4` was corrected by text
+   > surgery on 2026-08-04 and **reverted the same day**: the pads moved, the pours did not, and
+   > `SC4.P` (net `MID`) ended up with **6.97 mm² of GND pour sitting on it** — a short. KiCad
+   > refills on save, which is why the fix belongs there.
+   >
+   > **And `--refill-zones` HIDES IT.** `kicad-cli pcb drc --refill-zones …` — the invocation
+   > CLAUDE.md documents — refills in memory first, so it reported the exact ledger and 0
+   > clearance errors on a shorted board. Drop the flag to see what a plotter sees: without it,
+   > that board gave **2 clearance errors at 0.0000 mm** against `GND_B` and `GND_B_DCDC_SOLID`,
+   > where main gave 0. **After any pad move, run DRC BOTH ways.**
+   >
    > So *"the pitch is what costs, not the offset"* — which this box used to say — is **backwards**:
    > the lateral offset costs 3.5× the pitch. The offset moves P sideways by 3.125 mm into a live
-   > channel; the pitch only reaches 1.30 mm further out. **`SC4` was corrected on the pitch
-   > 2026-08-04** and is clean. `SC1`, `SC2` and `SC3` are not, and each is blocked by congestion
-   > rather than by anything a narrower pad could dodge:
+   > channel; the pitch only reaches 1.30 mm further out. **So do the pitch, keep `x = 0`.**
+   >
+   > **All four lands are still uncorrected on the board.** `SC4` was moved on the pitch
+   > 2026-08-04 and reverted the same day for the stale-fill reason above — its *routing* is
+   > clear (0 conflicts, and it was the one land with room), so it is the one to do first in
+   > KiCad. The other three are each blocked by congestion rather than by anything a narrower
+   > pad could dodge:
    >
    > - **`SC2.N`** — 1 conflict (`STO` at y 3.175), and 7.7 mm of empty channel south of it. Easiest.
    > - **`SC3.P`** — moving it produced **4 clearance errors** (0.0643 mm to `ANODE`, 0.0943 to

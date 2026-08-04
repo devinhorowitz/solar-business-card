@@ -426,6 +426,26 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
 
 ## PCB — `PCB/solar-glow-drh-v4_0.kicad_pcb` / `.kicad_sch`
 
+- [ ] **[PCB/CI — fab hazard] The PANEL config has no `check_zone_fills`, and the panel is what you upload**
+  _(2026-08-04, found by an adversarial re-check of a board change I had already called clean.)_
+  `PCB/solar-glow-drh.kibot.yaml:18` sets `check_zone_fills: true`, with a comment naming exactly
+  this hazard — without it KiBot "checks whatever fill was last SAVED". **`PCB/solar-glow-drh-panel.kibot.yaml`
+  has no preflight block at all.** Its own header explains why it skips ERC/DRC (no schematic,
+  the frame's plating bus is deliberately unconnected, "panelising adds frame geometry, it does
+  not move a single board object") — sound for DRC, and it misses the fill question entirely:
+  the panel plots gerbers from the board's **stored** fill.
+
+  **Demonstrated, not theorised.** A pad moved by text surgery with stale fills left 6.9709 mm²
+  of GND pour on `SC4.P` (net `MID`). The 1-up gerbers were clean — its config refills. The panel
+  rebuilt from the same board carried **the identical 6.9709 mm²**. `PCB/README.md:336` says to
+  upload `Generated/panel/solar-glow-drh-v4_0-panel-fab_zip.zip`, so the shorted set is the one
+  that gets ordered.
+  Two fab sets that disagree, and the wrong one wins.
+
+  **Fix:** add `preflight: check_zone_fills: true` to the panel config. It restores the source PCB
+  afterwards, so it cannot rewrite the board — the same reason it is safe in the 1-up config.
+  Cheap, and it closes a gap where the *only* surviving copy of a defect is the file you send out.
+
 - [ ] **[PCB — respin, DEFERRED ON PURPOSE] Re-measure SC1↔C1 after the supercap-land respin**
   _(2026-08-04. Raised by the checklist sweep; investigated, and deliberately NOT fixed now.)_
   SC1's can lands **0.090 mm** from C1's pads — the only supercap without room (SC2 0.350,
