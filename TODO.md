@@ -444,6 +444,59 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
   one silence for 20 false alarms, so it is a two-part job: give the library 0402s courtyards,
   then set the rule to `warning`.
 
+- [ ] **[PCB — respin] Delete `SB1`–`SB4`, the per-LED force-on bridges**
+  _(2026-08-04, DRH's call after an analysis pass. Bundle with the supercap-land re-route.)_
+
+  **What they are, because the docs disagree and one of them is wrong.** The chain is
+  `ANODE → Dn → Kn → Rn (150 Ω) → LDRVn → U1 pin`, and `SBn` shorts `LDRVn` to **GND** —
+  bypassing the MCU pin so the LED is on whenever `ANODE` is powered. They are **force-on**.
+  `PCB/README.md` says so correctly; **`README.md` calls them "per-LED disable jumpers", which
+  is backwards**, and that is worth fixing whether or not the parts go.
+
+  **Why remove them: the ballast makes this mode unusable, not merely wasteful.** Rn is sized
+  for the PWM *peak*, and a bridge just holds that peak DC:
+
+  | V_STO | per LED | all four | power |
+  |---:|---:|---:|---:|
+  | 4.65 V | 17.67 mA | 70.67 mA | 329 mW |
+  | 3.50 V | 10.00 mA | 40.00 mA | 140 mW |
+
+  70.67 mA is *exactly* this design's own ~71 mA peak figure, 4 × (4.65 − 2.0)/150. Against a
+  1.4 F tank holding 15.1 J (**10.4 J** spendable to a 2.6 V floor): **one LED forced on flattens
+  the card in ~2.1 minutes, all four in ~32 seconds.** On the board whose #1 open question is
+  whether harvest keeps up with duty-cycled glow, that is a stopwatch rather than a mode. It also
+  defeats the PWM `INVEN` polarity that the dark idle state depends on.
+
+  **The space argument does NOT hold, and that matters for expectations.** Removing all four
+  frees **5.40 mm² in four scattered pockets** (1.35 mm² each) spanning x 5.6→35.0, y 49.5→52.3 —
+  never one usable region. And they sit **6.6–8.3 mm away from the corrected-land bands**, so
+  none of it helps the supercap respin. Do this for the electrical reason and for four fewer
+  bare pads an assembler can bridge by accident; do not expect board area from it.
+
+  **Note `SW2` already provides the useful version** — `ANODE ← STO` (on), `← TINY` through R12
+  (dimmed), or open (true hardware off), i.e. a master enable at the anode rail where one
+  belongs. A single replacement jumper would duplicate SW2 unless it does something SW2 cannot,
+  and nothing here does. **Recommend removing the four and adding nothing.**
+
+  **Scope — the removal touches these and nothing else.** The parts are `dnp` +
+  `exclude_from_bom` + `exclude_from_pos`, verified on the board, so **no fab file changes**:
+  checks [2] and [15] are unaffected and PCBWay is neither sold nor asked to place anything.
+  - schematic: 4 symbols + their `LDRVn`/`GND` wires (`kicad-cli sch erc` after)
+  - board: 4 footprints + only the `LDRVn → SBn` stubs; the `LDRVn` nets themselves stay
+    (12.7 / 32.5 / 42.0 / 41.6 mm to the MCU, unchanged). Re-pour B.Cu.
+  - library: `solarglow:SB1`–`SB4` symbols + footprints become cullable (four separate
+    entries, one per bridge)
+  - **check [12]'s `FRONT_SIDE` snapshot** — it counts footprints (78 today); dropping four
+    must update the snapshot in the same commit, the exclusion-ledger shape
+  - `enclosure/part_heights.py:85` — the `"SB": 0.80` prefix entry can go once no `SB*` remains
+    (leave `"SW": 0.80`, SW2 stays), and the brace stops cutting those pockets
+  - docs: `README.md` (fix the wrong "disable" wording), `PCB/README.md` ×5 (feature list, the
+    BOM table row, the force-on description, the "Not placed" list, and Step 4 "SB1–SB4: leave
+    open"), `CLAUDE.md`'s `dnp` roster, `PCB/PCB-side-notes-brace-direction.md`'s height table.
+    `docs/solar-glow-drh-v2-hardware.md` is v2-era history — leave it.
+  - then: ERC, DRC, `scripts/mask_art.py --check`, the consistency suite, and let CI
+    regenerate the brace + fab set.
+
 - [ ] **[PCB — respin] Route `U5` pin 7 (`VOUT`) — NFC energy harvesting, currently unconnected**
   _(2026-08-03. Bundle with the supercap-land re-route; both are respin-only.)_
   `U5 pad 7 VOUT_7 -> unconnected-(U5-VOUT-Pad7)`. The NT3H2211 can deliver **up to 15 mW out of
