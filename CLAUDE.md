@@ -302,10 +302,14 @@ been sold. Check [2] is the same relationship in the one direction that happened
   and 222 again after the coil aperture was reverted. The published runs since have read **223,
   200, 203**, so the spread across runs on unchanged art was **200–223** — a range of 23 on a
   board whose mask art did not move. _(2026-08-04: the D2 re-route did move the copper inside
-  that aperture — three segments deleted, the rest pushed away from the pads — and the next run
-  read **199**. That is a real reduction, not another sample of the old spread: there are fewer
-  different-net pairs in there to find. Do not read 199 as the new floor either; it is one run
-  of a non-deterministic count on changed geometry.)_ KiCad pairs that aperture against the copper
+  that aperture — three segments deleted, the rest pushed away from the pads — and the local run
+  after it read **199**. This paragraph briefly claimed that was "a real reduction, not another
+  sample of the old spread"; **the merge run falsified that the same day**, reporting **214** on
+  the very same fixed geometry against **215** on the pre-fix board. One sample said the fix
+  moved the count; two samples say the count is dominated by the non-determinism and the
+  geometry change is invisible inside it. The D2 fix is real and is proved by DIRECT
+  MEASUREMENT — 0.1552 → 0.3740 mm, cathode to ANODE copper — not by this number, which is
+  exactly why this number must never be a gate.)_ KiCad pairs that aperture against the copper
   items near it, and the set it finds varies run to run — most likely because `check_zone_fills` refills the pours first
   and the fill is not bit-reproducible. What IS stable, and what to assert if this ever gets a
   gate: `Errors: 0 (+11 excluded)`, zero hits on F.Mask, and every hit citing that one aperture.

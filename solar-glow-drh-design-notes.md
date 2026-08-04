@@ -34,7 +34,14 @@ Part: a **hybrid tank** -- **SC1/SC3 = SCHURTER SCPC 3-153-440** (SS17 housing, 
 1.7 mm, 39 mm land) and **SC2/SC4 = 3-153-438** (WS17 housing, 1.0 F, 2.75 V, ESR 40 mΩ, 1.7 mm, 28.5 mm
 land). The larger SS17 cans go where the board has room, the WS17 where it is tight -- maximizing farads
 in the irregular free area; both are the same 1.7 mm height, so the cavity budget is unaffected. The
-unequal series stages (SC1/SC3 pair > SC2/SC4 pair) rely on the AEM10300 BAL pin holding MID at V/2. The
+two series stages are **EQUAL by construction** — SC1 ∥ SC2 = 2.8 F from `STO` to `MID`, SC3 ∥ SC4 =
+2.8 F from `MID` to `GND`, so the pack is **1.40 F**, not the ~1.3 F this paragraph used to quote. The
+AEM10300 BAL pin holds MID at V/2 against **leakage mismatch between two identical stages**, not against
+a designed capacitance imbalance. _(Corrected 2026-08-04. The old wording — "unequal series stages
+(SC1/SC3 pair > SC2/SC4 pair)" — pairs the cells by CAN SIZE, which is not how they are wired: each
+stage is one SS17 **and** one WS17. The giveaway was the arithmetic: 3.6 F in series with 2.0 F is
+1.286 F, i.e. exactly the "~1.3 F" the prose carried, so the number and the wrong grouping travelled
+together. Read the topology off the board, `SC*.P`/`SC*.N` against `STO`/`MID`/`GND`.)_ The
 diagonal end-tab land **must never be reintroduced**.
 
 ---
@@ -46,9 +53,10 @@ The honest energy model, and the reason a bench bring-up gates any feature decis
 - **Continuous sustainable average draw ≤ harvest.** This — not the cap size — sets the brightness
   you can hold *forever*. Indoor harvest is roughly **0.1–0.5 mA at the rail** (the SM141K06x panel
   is ~185 mW at 1 sun; ordinary office light is 100–500× less).
-- **The reserve buys excursions, not steady-state.** The ~21 J tank is how long/bright you can
-  *exceed* harvest before it drains, and how long the glow rides through darkness. Recharge scales
-  with it: ~21 J / ~1.6 mW ≈ **hours** to refill from empty on office light. A bigger tank = longer
+- **The reserve buys excursions, not steady-state.** The tank is how long/bright you can
+  *exceed* harvest before it drains, and how long the glow rides through darkness. Use the
+  **9.8 J spendable** figure here, not the 21 J nameplate — see the ceiling note below. Recharge
+  scales with it: ~15 J / ~1.6 mW ≈ **hours** to refill from empty on office light. A bigger tank = longer
   dark glow **and** longer cold-start. This is the "diminishing returns" point: a 2× bucket buffers
   dark ~2× longer but cold-starts ~2× slower — it **buffers a deficit, it does not cure** the
   harvest-vs-draw ratio.
@@ -56,7 +64,7 @@ The honest energy model, and the reason a bench bring-up gates any feature decis
 | reserve | sustained draw it supports |
 |---|---|
 | v0: 2× WS10, ~150 mF, ~2.3 J | ≤ harvest; ~40–60 s breathing / ~10–15 min refill |
-| v2.1-on: 2× SS17 + 2× WS17 (hybrid), ~1.3 F @ 5.5 V, ~21 J | ≤ harvest; minutes of breathing per charge; refill ~hours |
+| v2.1-on: 2× SS17 + 2× WS17 (hybrid), 1.40 F @ 5.5 V, ~21 J nameplate / 15.1 J stored / 9.8 J spendable | ≤ harvest; minutes of breathing per charge; refill ~hours |
 
 **Draw line items** (budget against harvest): accel ≈ **0.89 µA** (an ADI ADXL367, always-on at
 100 Hz for this figure — the LIS2DH12 it replaced drew ~10 µA click-armed); light-sense divider
@@ -370,7 +378,7 @@ Recorded so the history is legible and the dead branches stay dead:
 | topic | v0 (REV J) | v1 plan | **v2.1 as-built** |
 |---|---|---|---|
 | Stackup | 2-layer, 0.8 mm | 4-layer, 0.4 mm | **6-layer, 0.8 mm** (L1 sig · L2 GND · L3–4 sig · L5 VS · L6 sig) |
-| Storage | 2× WS10, ~2.3 J | 4× WS17 2P2S, ~15 J | **2× SS17 + 2× WS17 hybrid, 2S2P, ~1.3 F @ 5.5 V, ~21 J** |
+| Storage | 2× WS10, ~2.3 J | 4× WS17 2P2S, ~15 J | **2× SS17 + 2× WS17 hybrid, 2S2P (two EQUAL 2.8 F stages), 1.40 F @ 5.5 V, ~21 J** |
 | Accel rail handling | n/a | planned LDO (TPS7A02) for the 3.6 V-max accel | **TLV3011 comparator+ref shunt clamp holds VS ≤ 3.60 V worst-case** (no LDO); supersedes the TLV431 divider (Iref over-voltage) |
 | Accelerometer | none | BMA400 / LIS2DW12 (candidates) | **ADXL367, I²C addr 0x1D** (swapped from LIS2DH12 on backorder; 0.89 µA vs ~10 µA) |
 | Button | snap-dome / cap-touch | dome (cap-touch expendable) | **accel tap-wake** |
@@ -397,10 +405,18 @@ the LDRV fan moved):
 
 - **The "farad" energy myth (and the hybrid).** Quote energy, not farads. The tank is a **hybrid**:
   SC1/SC3 are 1.8 F (SS17), SC2/SC4 are 1.0 F (WS17), all 2.75 V, wired 2S2P. All-parallel at 2.75 V they
-  would read 5.6 F, but the 5.5 V rail needs two-in-series, so the pack is **~1.3 F *effective* at 5.5 V**.
-  What is fixed is **energy** = the sum of the cells: `2 × ½·1.8·2.75² + 2 × ½·1.0·2.75² ≈` **21 J** (each
-  cell held at 2.75 V by the AEM midpoint balancer -- without it the smaller WS pair would take more than
-  half the rail and over-volt). Farads at 2.75 V vs 5.5 V are not comparable joules.
+  would read 5.6 F, but the 5.5 V rail needs two-in-series, so the pack is **1.40 F *effective* at
+  5.5 V** — two equal 2.8 F stages, `1/(1/2.8 + 1/2.8)`.
+  What is fixed is **energy** = the sum of the cells: `2 × ½·1.8·2.75² + 2 × ½·1.0·2.75² ≈` **21 J**,
+  each cell held at 2.75 V by the AEM midpoint balancer. **That 21 J is the NAMEPLATE, not the tank.**
+  The AEM's strapped `VOVCH` caps `STO` at **4.65 V**, so the board actually stores **15.1 J**, and only
+  **9.8 J** of that is spendable above the 2.75 V glow floor — **46 % of the headline**. Size a duty
+  cycle from 9.8 J, never from 21 J. Farads at 2.75 V vs 5.5 V are not comparable joules.
+  _(Corrected 2026-08-04. This bullet used to end "without it the smaller WS pair would take more than
+  half the rail and over-volt" — but the WS pair **is not a stage**: SC2 and SC4 sit in different
+  stages, one above MID and one below. What BAL actually corrects is leakage mismatch between two
+  identical 2.8 F stages. The board is SAFER than that sentence implied, and the real hazard was
+  someone later "fixing" the wiring to match the prose.)_
 - **Pin authority — one source only.** Earlier drafts of this design carried two *different* pin
   assignments (VSENSE on PA5 with BTN on PA7; and the LEDs on PA4–PA7 / TCD0 with VSENSE on PC3)
   — **neither matches the board.** The committed `solar-glow-drh-v4_0.kicad_sch` and
@@ -1047,7 +1063,7 @@ thickness by swapping the supercap tank for a lithium-ion capacitor (LIC), a lit
 (LTO) cell, or a thin rechargeable Li coin?" Surveyed the three; none is worth a respin.
 
 - **The tank today:** a **hybrid** -- 2× SCHURTER SS17 (3-153-440, 1.8 F) + 2× WS17 (3-153-438, 1.0 F),
-  all 2.75 V, 2S2P = **~1.3 F @ 5.5 V, ~21 J nameplate** (~15 J operational, since the AEM10300 caps STO
+  all 2.75 V, 2S2P = **1.40 F @ 5.5 V, ~21 J nameplate** (~15 J operational, since the AEM10300 caps STO
   at V<sub>OVCH</sub> = 4.65 V; ~11 J usable to the LED floor). Height **1.70 mm** (both cans). Chosen for
   cycle life (millions), burst delivery, wide temp,
   and zero wear -- exactly what a harvest-micro-cycled "forever" card needs.
@@ -1612,9 +1628,11 @@ Specific claims that do not survive contact with their sources, now filed:
 - The **"~13 ms EEPROM write"** that anchors `EE_WRITE_FLOOR_MV` and every logger's
   corruption-window argument appears in six places and matches nothing in the datasheet,
   which specifies 2 ms byte write + 2 ms byte erase.
-- `board.h`'s **"~21 J reserve"** is the 5.5 V cell nameplate. VOVCH caps STO at 4.65 V, so
-  stored energy is ~15 J and the part actually spendable above the glow floor is ~9.6 J —
-  the comment overstates what a stray glow costs by roughly 2×.
+- ~~`board.h`'s **"~21 J reserve"** is the 5.5 V cell nameplate.~~ **Discharged:** `board.h`
+  no longer carries that string (checked 2026-08-04, zero hits for "21 J" in `firmware/`). The
+  underlying fact stands and now lives in the prose above and in `README.md`: VOVCH caps STO at
+  4.65 V, so the tank stores **15.1 J** and only **9.8 J** is spendable above the 2.75 V glow
+  floor — 46 % of the nameplate, so a stray glow costs about half what 21 J implies.
 - The internal EEPROM is described as **"a 256 B black box"**; the AVR64EA28 has **512 B**.
 - `sense.h` still described the gates as reading a **"VDD/10" channel** that v4 deleted.
 - OSC32K total error is *"<1 %"* only at 25 °C/3.0 V and **"<10 %" over the full range** —

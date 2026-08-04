@@ -713,9 +713,6 @@ EXPECTED_ABSENT = {
     # live, which is lineage worth keeping rather than a broken pointer to fix.
     "BOM/solar-glow-drh-v4_0-BOM.xlsx":
         "hand-authored BOM master — culled 2026-08-02, generated now (scripts/bom_split.py); in git history",
-    "solar-glow-drh-v4_0-BOM.xlsx": "same file, cited by basename",
-    "-BOM-assembly.xlsx":
-        "hand-authored PCBA subset — culled 2026-08-02, superseded by the generated assembly CSV",
     "solar-glow-drh-v4_0-BOM-assembly.xlsx": "same file, cited by basename",
     # (The buy documents scripts/bom_split.py writes were listed here while they were
     # still unbuilt. The first kibot run after the split landed committed all of them
