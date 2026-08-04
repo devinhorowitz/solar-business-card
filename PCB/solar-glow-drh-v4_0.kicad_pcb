@@ -6467,7 +6467,7 @@
 			(layer "B.CrtYd")
 			(uuid "241c3363-a769-5be5-a21f-1a9d823d3091")
 		)
-		(fp_text user "UDPI STO GND"
+		(fp_text user "UPDI STO GND"
 			(at -5.421086 1.062541 90)
 			(unlocked yes)
 			(layer "B.SilkS")

@@ -20,8 +20,8 @@
  *     3 PA5      BTN      button pin -- deliberately NO-FIT; a future button = PA5->switch->GND (active-low)
  *     4 PA6      FD       NFC field-detect in (NT3H2211)  FD-wake, both edges; field-powered (works VCC-off)
  *     5 PA7      NFC_EN   NFC VCC load-switch enable (active-HIGH)  output, LOW = NFC off
- *     6 PC0      PC0      spare GPIO  (JP2.2)
- *     7 PC1      PC1      spare GPIO  (JP2.3)
+ *     6 PC0      PC0      spare GPIO  -- deliberately unrouted, no breakout
+ *     7 PC1      PC1      spare GPIO  -- deliberately unrouted, no breakout
  *     8 PC2      SDA      TWI0 host SDA  (TWIROUTEA=ALT2)  ext 4.7k to VS
  *     9 PC3      SCL      TWI0 host SCL  (TWIROUTEA=ALT2)  ext 4.7k to VS
  *    10 PD0      VDDIO2   EA GPIO on the old VDDIO2 pad; SJ1 deleted 2026-07-30 (DNP before that), but C3 (100 nF -> GND, the DD-era decoupler) still hangs on the net -- no DC hold, so the internal pull-up (gpio_init) is still required; it just also charges C3 at boot

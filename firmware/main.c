@@ -135,7 +135,7 @@ static void gpio_init(void)
 
     /* Tie down every unused pin. A floating CMOS input draws shoot-through current
      * in its buffer whenever it drifts near mid-rail; a pull-up holds it high at ~0
-     * current (and for PA5, the no-fit button pin whose future switch ties to GND, and the JP2 breakouts, that
+     * current (and for PA5, the no-fit button pin whose future switch ties to GND, and the unrouted PC0/PC1 spares, that
      * is also the useful resting state). The pins configured above (PA6/PA7/PD2/PF0/
      * PF1) and the LED pins (PA0-3, in led_init) are left alone; a pull-up bit on a
      * driven output is ignored anyway. On the AVR-EA, PD0 IS bonded (pin 10 -- the
@@ -154,8 +154,8 @@ static void gpio_init(void)
     ENSTOCH_PORT.OUTCLR = ENSTOCH_PIN_bm;    /* gate low = charging enabled */
     ENSTOCH_PORT.DIRSET = ENSTOCH_PIN_bm;    /* push-pull from here on */
     PORTA.PIN5CTRL = PORT_PULLUPEN_bm;   /* PA5/BTN no-fit button pin: pull-up is the active-low hold for a future PA5->GND switch */
-    PORTC.PIN0CTRL = PORT_PULLUPEN_bm;   /* PC0 spare (JP2.2)   */
-    PORTC.PIN1CTRL = PORT_PULLUPEN_bm;   /* PC1 spare (JP2.3)   */
+    PORTC.PIN0CTRL = PORT_PULLUPEN_bm;   /* PC0 spare, unrouted */
+    PORTC.PIN1CTRL = PORT_PULLUPEN_bm;   /* PC1 spare, unrouted */
     PORTD.PIN0CTRL = PORT_PULLUPEN_bm;   /* PD0/3-7 unused      */
     PORTD.PIN1CTRL = PORT_ISC_INPUT_DISABLE_gc;   /* PD1 = AIN1 STO_SNS analog in (R15/R16 divider) */
     PORTD.PIN3CTRL = PORT_PULLUPEN_bm;

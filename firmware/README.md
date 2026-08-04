@@ -231,7 +231,7 @@ LEDs are **low-side**: each lights when its PA pin pulls LOW, current set by a
 (4.65−2.25)/150, STO topping at the AEM10300 VOVCH of 4.65 V). PWM only trims the
 average below that ballasted ceiling. The only D-parts on the v4 board are the LEDs D2–D5.
 
-Spare/free: PC0, PC1 (on JP2); PA5 (`BTN`, no-fit button pin — see *Behaviour*);
+Spare/free: PC0, PC1 (**deliberately unrouted — no breakout**); PA5 (`BTN`, no-fit button pin — see *Behaviour*);
 PD3–PD7, PF6/RST. (PA6 = NFC `FD`, PA7 = `NFC_EN`.) All of these unused pins
 get internal pull-ups in `gpio_init` so a floating input can't leak current — see
 *Power notes*.
