@@ -1580,7 +1580,7 @@
 		)
 		(embedded_fonts no)
 	)
-	(footprint "Downloads:SCHURTER_SCPC_SS17"
+	(footprint "solarglow:SCHURTER_SCPC_SS17"
 		(layer "B.Cu")
 		(uuid "030ffafb-c195-49aa-b14c-a5f47412f78a")
 		(at 15.5 21.25)
@@ -10416,7 +10416,7 @@
 		)
 		(embedded_fonts no)
 	)
-	(footprint "Downloads:SCHURTER_SCPC_SS17"
+	(footprint "solarglow:SCHURTER_SCPC_SS17"
 		(layer "B.Cu")
 		(uuid "a09ffc56-bfc0-4760-8e84-0fdf21994975")
 		(at 15.6464 67.4803 180)
@@ -14440,7 +14440,7 @@
 			)
 		)
 	)
-	(footprint "Downloads:SCHURTER_SCPC_WS17-mod2"
+	(footprint "solarglow:SCHURTER_SCPC_WS17"
 		(layer "B.Cu")
 		(uuid "da2cfd36-f7ee-41f2-99e9-304f93937281")
 		(at 36.8 72.8 180)
@@ -14931,7 +14931,7 @@
 			)
 		)
 	)
-	(footprint "Downloads:SCHURTER_SCPC_WS17-mod2"
+	(footprint "solarglow:SCHURTER_SCPC_WS17"
 		(layer "B.Cu")
 		(uuid "e06a2026-0dcf-47be-8ed3-63d076a96c6c")
 		(at 35.3 16.9)
