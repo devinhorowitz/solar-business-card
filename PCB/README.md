@@ -304,14 +304,33 @@ tabs.
 | Frame rail | **5.0 mm** all four sides |
 | Break tabs | **2**, one per short edge, 5.0 mm wide, centred on **x = 25.4** |
 | Mouse bites | **8** total: Ø0.5 mm NPTH, 4 per tab, on the card outline (y = 0 / 88.9) |
-| Plating bus | 0.4 mm across each tab → 1.0 mm ring inset 2.5 mm from the panel edge, F.Cu, GND |
-| Bus mask | Ring is **mask-opened along its whole length** — a plating rack needs bare copper to clip |
+| Plating bus | 0.4 mm spur across each tab → 1.0 mm ring inset 2.5 mm from the panel edge, GND. **Ring on BOTH faces**; spur on whichever face the board's own stubs use |
+| Bus mask | Ring is **mask-opened along its whole length, on both faces** — a plating rack needs bare copper to clip |
+| Ring stitching | **6 × Ø0.6/0.3 vias** — 2 at the spur junctions, 4 at the ring corners |
 
 The mask opening matters more than it looks: a bus ring buried under soldermask is decoration, not
 a plating path, because the rack has nothing bare to grip. Exposing the whole ring does put ~319 mm²
-of copper in reach of the gold bath, but that is ~6 mg of gold — well under a dollar — on material
-that gets routed away, so it is priced in rather than engineered around. The special request above
-tells the fab the rail is hardware and not artwork.
+of copper per face in reach of the gold bath — **~638 mm² now that the ring is double-sided, so
+~12 mg of gold rather than ~6.** Still well under a dollar, on material that gets routed away, so
+it stays priced in rather than engineered around. The special request above tells the fab the rail
+is hardware and not artwork.
+
+**The ring runs on both faces (2026-08-04), and the spur follows the board.** Two reasons. The
+first is operational: with a single-sided ring the rack has to be clipped to the *right* face, and
+a clip on the blank one plates nothing — a failure that shows up as a card with no gold on it,
+after the bath. The second is what the double ring is *for*: it lets the **stubs move to B.Cu**, so
+the 0.4 mm nub left at each short-edge midpoint after depanel lands on the back, under the titanium
+shell, instead of on the card face. The two rings are one node only because of the six stitching
+vias — the spur lands on **one** face, so without them a rack clipped to the other is connected to
+nothing at all.
+
+**The spur's layer is read from the board, never set here.** `stub_layer()` in
+`scripts/panelize.py` finds the two net-GND copper `gr_line`s that cross the outline at x = 25.4
+and emits the tab spur on *their* layer, failing loudly if there are not exactly two, if they
+disagree on layer, or if their width is not `BUS_W_SPUR`. That is deliberate: the stubs live in
+the board file and the spur is a constant in a script, they get edited months apart in different
+tools, and a bus in two disconnected pieces is invisible until the gold does not take. It also
+means there is no flag day — the panel is correct before *and* after the board-side move.
 
 The tab sits at x = 25.4 because that is where the stubs already crossed the outline — the
 board was drawn expecting this panel long before it existed. Each tab keeps a **1.0 mm
@@ -340,6 +359,10 @@ region). Change the board; the panel follows. Never edit the panel and expect it
 **Depanel:** snap the two tabs, then file the edge flat at x ≈ 25.4 on both short edges. The
 filing is not optional and not a defect — a gold-plated bus nub is left behind by design, and
 dressing it flush is the last step of the plating scheme. Expect to touch up the mask/edge there.
+**The nub is on whichever face the stubs run on** — F.Cu today, which puts it on the card face at
+both short-edge midpoints; B.Cu once the TODO's stub move lands, which puts it under the shell.
+Check [19] warns about this every run until it moves, and check [19] also holds the fab request's
+stated side to the board so the two cannot drift apart.
 
 **Deliberately not on this panel:** fiducials, tooling holes and copper thieving. The first two
 want a wider rail than the bus leaves room for, and this board is hand-finished rather than
@@ -373,11 +396,12 @@ a PCBWay DFM reviewer asks — their absence is a decision, not an oversight.
   > itself is under solder mask across ~90% of its area and is not a plating surface — it is a
   > decorative texture meant to be read THROUGH the mask, so please do not open mask over it or add
   > extra mask thickness to 'even it out'. The two 0.4 mm traces crossing the board outline at
-  > x=25.4 (top and bottom edges) are plating-bus connections; they run across the break tabs onto
-  > the panel frame's bus ring, which is where the plating rack should clip. Please retain them
-  > through plating and rout at depanel. The bus ring on the frame rail is plating hardware, NOT part
-  > of the gold set — it is mask-opened so you have bare copper to contact, and it is routed away at
-  > depanel; no need to plate it. The gold set is GND-referenced by design (the eight M2 mounting-hole pads overlap the
+  > x=25.4 (top and bottom edges) are plating-bus connections and run on the **TOP side (F.Cu)**;
+  > they cross the break tabs onto the panel frame's bus ring, which is where the plating rack
+  > should clip. Please retain them through plating and rout at depanel. **The frame's bus ring is
+  > on BOTH faces, mask-opened on both, and stitched together with six vias — clip either face.**
+  > The ring is plating hardware, NOT part of the gold set: it is mask-opened so you have bare
+  > copper to contact, and it is routed away at depanel; no need to plate it. The gold set is GND-referenced by design (the eight M2 mounting-hole pads overlap the
   > frame at the corners and mid-edges); not floating copper, not a defect. All in-pad vias: resin-filled and
   > copper-capped (POFV, IPC-4761 Type VII)."*
 
@@ -436,6 +460,13 @@ a PCBWay DFM reviewer asks — their absence is a decision, not an oversight.
   > gold chain was re-verified after the pullback: the frame, the eight M2 annuli and the
   > plating-bus stub are still one connected group on F.Cu, which is what the electrolytic bath
   > needs.
+  >
+  > _(2026-08-04 — **"one connected group on F.Cu" was never the whole path, and it matters now.**
+  > Measured: F.Cu GND is **5 islands**, not one. Both stubs land on the same island — the 1939 mm²
+  > one holding the gold set and 4 M2 mounts — so the other four have **always** been fed through
+  > vias, never by the stubs. That island carries **19 GND vias** into B.Cu. Which is why moving the
+  > stubs to B.Cu costs the bath nothing: it swaps a direct F.Cu entry for 19 parallel via paths
+  > into a mechanism the design already depended on. See the TODO item for the board-side move.)_
   >
   > **Why the wording changed (2026-07-27, the crosshatch upload).** The request used to say the
   > gold set was "**all connected copper on F.Cu**." The crosshatch rework enlarged the F.Cu pour

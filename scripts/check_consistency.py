@@ -1751,6 +1751,53 @@ def check_face_art():
     (ok if ok_state else err)(msg)
 
 
+def check_plating_bus():
+    print("[19] the plating bus agrees with itself: board stubs, panel spur, fab request")
+    sys.path.insert(0, os.path.join(ROOT, "scripts"))
+    try:
+        import panelize
+    except Exception as e:                                  # pragma: no cover
+        warn(f"not checked -- {type(e).__name__}: {e}")
+        return
+
+    with open(PCB, newline="") as f:
+        src = f.read().replace("\r\n", "\n")
+    try:
+        card = panelize.card_polygon(src)
+        layer = panelize.stub_layer(src, card)
+    except SystemExit as e:
+        err(f"panelize cannot read the plating-bus stubs off the board -- {e}. The panel's tab "
+            "spur is emitted on the stubs' own layer, so it has nothing to follow.")
+        return
+
+    # The fab request is hand-written prose sitting next to generated artwork -- the exact
+    # shape that produced two wrong instructions in a week (see check [14]). It names the
+    # side the stubs run on, so that name is gated against the board rather than trusted.
+    want = {"F.Cu": "TOP side (F.Cu)", "B.Cu": "BOTTOM side (B.Cu)"}[layer]
+    other = {"F.Cu": "BOTTOM side (B.Cu)", "B.Cu": "TOP side (F.Cu)"}[layer]
+    readme = os.path.join(ROOT, "PCB", "README.md")
+    with open(readme, encoding="utf-8") as f:
+        text = f.read()
+
+    if f"**{want}**" in text:
+        print(f"  ok:     both stubs are on {layer}, and the fab request says so ({want!r})")
+    elif f"**{other}**" in text:
+        err(f"the board's plating-bus stubs are on {layer}, but the fab special request in "
+            f"PCB/README.md still tells the fab {other!r}. A fab acts on that text: it would "
+            f"be told to retain a bus on the face that no longer carries one. Change it to "
+            f"{want!r} in the same commit as the stub move.")
+    else:
+        err(f"the fab special request in PCB/README.md no longer names the plating-bus side. "
+            f"It must contain {want!r} in bold, so this check can hold it to the board.")
+
+    # The nub the stub leaves at each short-edge midpoint after depanel is on the stubs' own
+    # face. On B.Cu it is under the titanium shell; on F.Cu it is on the card face.
+    if layer == "F.Cu":
+        warn("the stubs are on F.Cu, so depanelling leaves a 0.4 mm gold nub on the CARD FACE "
+             "at both short-edge midpoints. Moving them to B.Cu puts the nub under the shell -- "
+             "see the TODO item. Not an error: the board is shippable either way.")
+
+
 def main():
     cli = find_kicad_cli()
     netpins, comps, sch_fps = export_netlist(cli)
@@ -1772,6 +1819,7 @@ def main():
     check_mount_parity()
     check_face_art()
     check_fab_identity()
+    check_plating_bus()
     print(f"\n== {len(errors)} error(s), {len(warnings)} warning(s) ==")
     sys.exit(1 if errors else 0)
 
