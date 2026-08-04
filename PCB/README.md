@@ -780,6 +780,21 @@ Work outside-in by heat sensitivity:
    > **Correcting the board is a deliberate B-side re-route, and belongs to a respin.**
 2. **Solar cells PV1 / PV2 last (most fragile).** Iron **≤ 260 °C, ≤ 2 s per joint**, and
    **do not clean with IPA**. Mind cell polarity to the custom land.
+
+   > **The two ground lands carry thermal relief, deliberately (2026-08-04).** `PV1.N`, `PV1.Nt`,
+   > `PV2.N` and `PV2.Nt` used to be `zone_connect 2` — flooded straight into the **1744 mm²**
+   > F.Cu GND pour — on the one part specced at ≤ 260 °C for ≤ 2 s. That is the same mechanism
+   > this project already diagnosed and fixed for C9: *"a pad tied straight into a pour is why an
+   > iron feels like it never wets."* They are now `zone_connect 1` with **four 0.4 mm spokes,
+   > 0.4 mm gap**, matching C9.
+   >
+   > **The asymmetry was the tell.** Each cell's `P`/`Pt` mates sit on `SRC`, which has no pour —
+   > only 2.1–2.7 mm² of local copper. So one terminal was heat-sunk into a 1744 mm² plane and the
+   > other was not, and the two joints on the same cell behaved differently under the same 2 s
+   > iron. Both ends now present a comparable thermal load.
+   >
+   > Electrically free: at the cell's ~**44 mA** max-power current, four 0.4 mm spokes give
+   > **0.79 A/mm²**, an order of magnitude inside anything that matters.
 3. **Set the LED master switch SW2** (3-pad bridge): center–left = **ON** (`ANODE` straight
    to `STO`), center–right = **TINY** (dim: `ANODE` → `TINY` → R12 220 Ω → `STO`),
    unbridged = **OFF** (a true hardware off — supercap-safe for storage).
