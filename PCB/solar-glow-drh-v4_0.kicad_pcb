@@ -7,6 +7,12 @@
 		(legacy_teardrops no)
 	)
 	(paper "A4")
+	(title_block
+		(title "SOLAR-GLOW · DRH")
+		(date "2026-08-04")
+		(rev "v4.0")
+		(company "Devin R. Horowitz")
+	)
 	(layers
 		(0 "F.Cu" signal)
 		(2 "B.Cu" signal)
@@ -80,7 +86,7 @@
 				(type "Bottom Silk Screen")
 				(color "White")
 			)
-			(copper_finish "None")
+			(copper_finish "ENIG")
 			(dielectric_constraints no)
 		)
 		(pad_to_mask_clearance 0)

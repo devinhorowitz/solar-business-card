@@ -1663,6 +1663,65 @@ def check_mount_parity():
             ok(f"the hand-buy list sells {hw[0][1]} shell screws for {len(fr.MOUNTS)} mounts")
 
 
+# --- [18] the fab package identifies itself ------------------------------------------
+#
+# Every gerber carries `%TF.ProjectId,<name>,<guid>,<rev>*%` and both .gbrjob files carry a
+# Revision and a Finish. Until 2026-08-04 the board had NO title block at all, so all ten
+# gerbers, the .gbrjob and the whole panel set went out stamped `rev?` -- and the stackup said
+# `copper_finish "None"` while the single most consequential instruction on this board is ENIG
+# plus selective hard gold. Nothing failed; the fields are simply blank, and blank is what a
+# CAM operator reads when two zips from the same project land in the same week.
+#
+# The revision is checked AGAINST THE FILENAME rather than a constant, because the filename is
+# where this project already encodes its revision (`...-v4_0.kicad_pcb`, and PCB/ holds exactly
+# one board). A v5 rename therefore fails this check until the title block follows it.
+#
+# ON FINISH: `copper_finish` is one field and cannot express "ENIG plus selective hard gold on
+# a named set of pads". ENIG is the base finish and belongs here; the gold set lives where it
+# can be drawn and gated -- the User.1 plating artwork from scripts/mask_art.py, checked by
+# [14]. This check only insists the field is not blank.
+def check_fab_identity():
+    print("[18] the fab package identifies itself (revision + finish)")
+    try:
+        import pcbnew
+    except Exception as e:
+        warn(f"not checked -- {type(e).__name__}: {e}")
+        return
+    board = pcbnew.LoadBoard(PCB)
+    tb = board.GetTitleBlock()
+    rev, title = tb.GetRevision().strip(), tb.GetTitle().strip()
+
+    m = re.search(r"-v(\d+)_(\d+)\.kicad_pcb$", os.path.basename(PCB))
+    want = f"v{m.group(1)}.{m.group(2)}" if m else None
+
+    if not rev:
+        err("the board has no revision in its title block, so every gerber and both .gbrjob "
+            "files ship stamped `rev?`. Board Setup -> Page Settings -> Revision.")
+    elif want and rev != want:
+        err(f"title-block revision {rev!r} does not match the board filename "
+            f"({os.path.basename(PCB)} -> {want!r}). The filename is this project's revision "
+            f"of record; make the title block agree with it.")
+    else:
+        ok(f"revision {rev!r} matches the board filename, so the gerbers stamp it")
+
+    if not title:
+        warn("the board title block has no title -- the .gbrjob names the project but the "
+             "plotted sheets are anonymous")
+
+    finish = ""
+    for line in open(PCB, encoding="utf-8", errors="replace"):
+        mm = re.search(r'\(copper_finish "([^"]*)"\)', line)
+        if mm:
+            finish = mm.group(1).strip()
+            break
+    if not finish or finish.lower() == "none":
+        err(f"the stackup declares copper_finish {finish or '<empty>'!r}, so the .gbrjob tells "
+            f"the fab the board has no surface finish. This board is ENIG (plus the selective "
+            f"hard gold drawn on User.1 and gated by [14]). Board Setup -> Physical Stackup.")
+    else:
+        ok(f"stackup copper finish is {finish!r} -- the .gbrjob carries it to the fab")
+
+
 # --- [17] the card face's contact block is what face_art describes --------------------
 #
 # Same relationship as [6] and the same reason: the type on the face is generated, the
@@ -1715,6 +1774,7 @@ def main():
     check_cpl_bom_agreement()
     check_mount_parity()
     check_face_art()
+    check_fab_identity()
     print(f"\n== {len(errors)} error(s), {len(warnings)} warning(s) ==")
     sys.exit(1 if errors else 0)
 

@@ -287,10 +287,14 @@ been sold. Check [2] is the same relationship in the one direction that happened
   four LEDs are soldered in. So the aperture is deliberate, but **pad-to-copper spacing inside
   it is a real constraint, not a waived one** — there is no mask dam in there to stop a bridge.
   It bit on 2026-08-04: D2's cathode sat **0.1552 mm** from the ANODE detour that wrapped its
-  pad, while D3/D4/D5 sat at 2.5216. The detour was pushed out to clear **0.3740 mm** (the
-  corridor east of it was empty — no other track, pad or via). **Measure this gap after any
-  re-route near the window**; DRC will not fail it for you, because copper clearance passes at
-  0.155 and the mask hits are warnings you have already agreed to ignore.
+  pad. The detour was pushed out to clear **0.3740 mm** (the corridor east of it was empty — no
+  other track, pad or via). **Measure this gap after any re-route near the window**; DRC will
+  not fail it for you, because copper clearance passes at 0.155 and the mask hits are warnings
+  you have already agreed to ignore. **Measure it with the TEARDROPS INCLUDED** — they are
+  zones, not tracks, so a `GetTracks()` sweep silently misses them and flatters the answer:
+  cathode-to-ANODE for D3/D4/D5 reads 2.5216 mm tracks-only and **1.5749 / 1.0775 / 0.5513**
+  once teardrop copper is in. D2's own number is the same either way, but D5's is 4.6× worse
+  than the tracks-only figure, and D5 is the next one that will bite.
   **Zero come from F.Mask**, so the front art is clean. A *new* F.Mask hit is a real find.
   **Do not treat the hit COUNT as a constant, and never gate on it.** It is not deterministic:
   two runs on byte-identical inputs (same board, `.kicad_pro`, `.kicad_dru` and the same pinned
