@@ -442,7 +442,12 @@ corners, and the **same BOM**. It is now frozen as the final unmanaged-solar rev
   (D2–D5) and reverse-mount orientation are unchanged.
 - **Mounting holes symmetrized.** MH1–4 moved concentric with the r3.0 corner fillets — MH1 (3.0,
   85.9), MH2 (47.8, 85.9), MH3 (3.0, 3.0), MH4 (47.8, 3.0); pad Ø3.6, drill 2.2, GND; pitch **44.80 ×
-  82.90** (was 43.80 × 82.90). The enclosure was aligned to match (`enclosure/README.md`). The **v2.3
+  82.90** (was 43.80 × 82.90). _(Those coordinates are the v3.0 state and **were superseded on
+  2026-08-03**: all eight mounts moved 0.13 mm diagonally outward to buy the solar cells clearance
+  from the screw heads, so the current pattern is (2.87, 2.87) … (47.93, 86.03), pitch 45.06 × 83.16.
+  `enclosure/fit_rules.py`'s `MOUNTS` is the one home; this paragraph is kept as the record of the
+  v2→v3 symmetrisation, not as a current value.)_ The enclosure was aligned to match
+  (`enclosure/README.md`). The **v2.3
   fallback still carries the old 3.5 mm x-inset holes** — only relevant if v2.3 is ever fabbed (its
   v2.1 enclosure matches the old positions as-is; backport is a carried, undecided question).
 - **Selective hard gold + plating bus.** Hard electrolytic gold on the DRH field + letters rim, the

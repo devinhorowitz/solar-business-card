@@ -244,6 +244,21 @@ been sold. Check [2] is the same relationship in the one direction that happened
   confirming its 0402→0805 upsize had landed meant re-rendering with `dnp` cleared and diffing:
   528 px, 20×37, an 0805 turned 90°. `render.py` names the DNP set beside the resolve count so
   the next dnp-with-a-model is visible the day it appears.
+- **The eight mount positions live in `enclosure/fit_rules.py` as `MOUNTS`, once.** Same rule as
+  `part_heights.py`, and it was broken the same way. On 2026-08-03 all eight mounts moved 0.13 mm
+  diagonally to buy the solar cells clearance from the screw heads. The board moved, `MOUNTS`
+  moved — and **five other copies did not**: the shell CAD and its DRAWING-gen each held their own
+  literal, `scripts/gen_panel_overlay.py` held a third, and `README.md` + `enclosure/README.md`
+  quoted the numbers in prose. The titanium came out with every boss, tapped hole, back annulus and
+  spotface **0.1838 mm** from the drills they must line up with, against **0.100 mm** of radial slack
+  (Ø2.20 hole, Ø2.00 screw), and the drawing a machinist would cut to still said the pitch was
+  **44.80 ±0.05** where the board had become **45.06** — 5.2× the tolerance printed beside it. The
+  *brace* was right throughout, because it reads `fit_rules.boss_island`; brace and shell silently
+  disagreed. Check **[16]** passed green the whole time: it compares `MOUNTS` against the *board*,
+  and had never been told the other copies existed. It now also **refuses any literal mount list in
+  `enclosure/` or `scripts/`** — the copy is the failure mode, so the copy is what is banned. A
+  drawing that is wrong is worse than one that is missing: nothing about the hole pattern is typed
+  into that sheet any more, every dimension on it is computed from `MOUNTS`.
 - **Glyph outlines come from `scripts/glyphs.py`, once — never fold contours by hand.** Two
   generators set type from the same JetBrains Mono files: `scripts/face_art.py` opens the card
   face's soldermask, and the shell CAD engraves the medallion's ring text, monogram and unit
@@ -265,14 +280,32 @@ been sold. Check [2] is the same relationship in the one direction that happened
   written for is now off; the NFC mark it still writes obeys exactly the same rule.)
 - **`solder_mask_bridge` DRC was `ignore` until 2026-07-28** and is now `warning`. Everything
   it reports is the single rear glow-window aperture at (35.1, 40.3) spanning the LED nets —
-  intentional, nothing is soldered there.
+  intentional, because the window is the optics.
+  **"Nothing is soldered there" is what this line used to say, and it was false**: D2–D5 reflow
+  *inside* that aperture, and the DRC report names their own pads — `A [ANODE]` of all four,
+  plus `K [K2]`, `K [K5]`, `K [K4]`, `K [K3]`. The sentence was reassuring us about a window
+  four LEDs are soldered in. So the aperture is deliberate, but **pad-to-copper spacing inside
+  it is a real constraint, not a waived one** — there is no mask dam in there to stop a bridge.
+  It bit on 2026-08-04: D2's cathode sat **0.1552 mm** from the ANODE detour that wrapped its
+  pad. The detour was pushed out to clear **0.3740 mm** (the corridor east of it was empty — no
+  other track, pad or via). **Measure this gap after any re-route near the window**; DRC will
+  not fail it for you, because copper clearance passes at 0.155 and the mask hits are warnings
+  you have already agreed to ignore. **Measure it with the TEARDROPS INCLUDED** — they are
+  zones, not tracks, so a `GetTracks()` sweep silently misses them and flatters the answer:
+  cathode-to-ANODE for D3/D4/D5 reads 2.5216 mm tracks-only and **1.5749 / 1.0775 / 0.5513**
+  once teardrop copper is in. D2's own number is the same either way, but D5's is 4.6× worse
+  than the tracks-only figure, and D5 is the next one that will bite.
   **Zero come from F.Mask**, so the front art is clean. A *new* F.Mask hit is a real find.
   **Do not treat the hit COUNT as a constant, and never gate on it.** It is not deterministic:
   two runs on byte-identical inputs (same board, `.kicad_pro`, `.kicad_dru` and the same pinned
   image digest) reported **222** and **208**, and a third after the coil landed reported 223
   and 222 again after the coil aperture was reverted. The published runs since have read **223,
-  200, 203**, so the observed spread is now **200–223** — a range of 23 on a board whose mask art
-  did not move. KiCad pairs that aperture against the copper
+  200, 203**, so the spread across runs on unchanged art was **200–223** — a range of 23 on a
+  board whose mask art did not move. _(2026-08-04: the D2 re-route did move the copper inside
+  that aperture — three segments deleted, the rest pushed away from the pads — and the next run
+  read **199**. That is a real reduction, not another sample of the old spread: there are fewer
+  different-net pairs in there to find. Do not read 199 as the new floor either; it is one run
+  of a non-deterministic count on changed geometry.)_ KiCad pairs that aperture against the copper
   items near it, and the set it finds varies run to run — most likely because `check_zone_fills` refills the pours first
   and the fill is not bit-reproducible. What IS stable, and what to assert if this ever gets a
   gate: `Errors: 0 (+11 excluded)`, zero hits on F.Mask, and every hit citing that one aperture.

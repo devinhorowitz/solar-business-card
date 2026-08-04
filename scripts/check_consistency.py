@@ -1589,6 +1589,138 @@ def check_mount_parity():
         ok(f"all {len(drills)} mount drills match fit_rules.MOUNTS exactly "
            f"({', '.join(f'{r}' for r in sorted(drills))})")
 
+    # ...AND NOBODY ELSE MAY DECLARE THE PATTERN. The comparison above is necessary and was
+    # not sufficient: it holds fit_rules against the BOARD, and on 2026-08-03 it passed green
+    # while the shell CAD and its DRAWING-gen each carried a THIRD and FOURTH copy of the
+    # list, both stale by the 0.13 mm diagonal nudge. The titanium came out with every boss,
+    # tapped hole, back annulus and spotface 0.1838 mm from the drills they must line up
+    # with -- against 0.100 mm of radial slack (Ø2.20 hole, Ø2.00 screw) -- and the sheet the
+    # machinist would have cut to still called the pitch "44.80 ±0.05" where the board had
+    # become 45.06, 5.2x the tolerance printed beside it. The brace was correct throughout
+    # (it reads fit_rules.boss_island), so brace and shell silently disagreed.
+    #
+    # A copy is the failure mode, so the copy is what gets banned. Any module-level
+    # `mounts`/`MOUNTS` assignment outside fit_rules.py must be an expression that reaches
+    # fit_rules -- never a literal list.
+    #
+    # SCOPE IS enclosure/ AND scripts/, because the first sweep found a FIFTH copy in
+    # scripts/gen_panel_overlay.py -- which overlays the solar-cell borders on the screw
+    # heads, i.e. its entire subject is the clearance the nudge existed to buy. A scan
+    # limited to enclosure/ would have left the one script whose picture is ABOUT this
+    # measurement drawing it from the superseded numbers.
+    import ast
+    offenders = []
+    roots = [os.path.join(ROOT, "enclosure"), os.path.join(ROOT, "scripts")]
+    for path in sorted(p for r in roots
+                       for p in glob.glob(os.path.join(r, "**", "*.py"), recursive=True)):
+        if os.path.basename(path) == "fit_rules.py":
+            continue                      # the one home
+        try:
+            tree = ast.parse(open(path, encoding="utf-8").read(), path)
+        except SyntaxError as e:
+            err(f"{os.path.relpath(path, ROOT)} does not parse -- {e}")
+            continue
+        for node in tree.body:            # module level only
+            if not isinstance(node, ast.Assign):
+                continue
+            names = [t.id for t in node.targets if isinstance(t, ast.Name)]
+            if not any(n.lower() == "mounts" for n in names):
+                continue
+            if isinstance(node.value, (ast.List, ast.Tuple)):
+                offenders.append((os.path.relpath(path, ROOT), node.lineno,
+                                  len(node.value.elts)))
+    if offenders:
+        for rel, line, n in offenders:
+            err(f"{rel}:{line} declares its own {n}-entry mount list. fit_rules.MOUNTS is the "
+                f"one home -- import it. A local copy does not fail when the mounts move, it "
+                f"goes quietly stale and machines titanium to the previous board.")
+    else:
+        ok("no generator declares its own mount list -- fit_rules.MOUNTS is the only copy")
+
+    # ...AND YOU MUST BE SOLD ONE SCREW PER MOUNT. `HW1` in bom_split.OFF_BOARD is the shell
+    # screw line, and OFF_BOARD is the one hand-maintained input to the whole buy-document
+    # chain -- so it is the one place a quantity can go stale without a generator noticing.
+    # It read 4 against 8 mounts until 2026-08-04, and the handbuy page it feeds carries a
+    # footer claiming "consistency check [15] holds this list against the board" -- [15]
+    # reconciles PLACED FOOTPRINTS against BOM lines and never looks at OFF_BOARD
+    # quantities, so the suite passed green on a list that would leave you four screws short
+    # of closing the enclosure. This is the same four-versus-eight miscount check [14] was
+    # written after; it is cheap to assert, so assert it.
+    sys.path.insert(0, os.path.join(ROOT, "scripts"))
+    try:
+        import bom_split
+    except Exception as e:                     # pragma: no cover -- import guard, as elsewhere
+        warn(f"HW1 screw count not checked -- {type(e).__name__}: {e}")
+    else:
+        hw = [r for r in getattr(bom_split, "OFF_BOARD", []) if r and r[0] == "HW1"]
+        if not hw:
+            warn("no HW1 row in bom_split.OFF_BOARD -- the shell-screw line has moved or gone")
+        elif hw[0][1] != len(fr.MOUNTS):
+            err(f"bom_split.OFF_BOARD sells {hw[0][1]} of HW1 (shell screws) for an enclosure "
+                f"with {len(fr.MOUNTS)} mounts -- one screw per mount, or the shell does not "
+                f"close. Fix the quantity, not this check.")
+        else:
+            ok(f"the hand-buy list sells {hw[0][1]} shell screws for {len(fr.MOUNTS)} mounts")
+
+
+# --- [18] the fab package identifies itself ------------------------------------------
+#
+# Every gerber carries `%TF.ProjectId,<name>,<guid>,<rev>*%` and both .gbrjob files carry a
+# Revision and a Finish. Until 2026-08-04 the board had NO title block at all, so all ten
+# gerbers, the .gbrjob and the whole panel set went out stamped `rev?` -- and the stackup said
+# `copper_finish "None"` while the single most consequential instruction on this board is ENIG
+# plus selective hard gold. Nothing failed; the fields are simply blank, and blank is what a
+# CAM operator reads when two zips from the same project land in the same week.
+#
+# The revision is checked AGAINST THE FILENAME rather than a constant, because the filename is
+# where this project already encodes its revision (`...-v4_0.kicad_pcb`, and PCB/ holds exactly
+# one board). A v5 rename therefore fails this check until the title block follows it.
+#
+# ON FINISH: `copper_finish` is one field and cannot express "ENIG plus selective hard gold on
+# a named set of pads". ENIG is the base finish and belongs here; the gold set lives where it
+# can be drawn and gated -- the User.1 plating artwork from scripts/mask_art.py, checked by
+# [14]. This check only insists the field is not blank.
+def check_fab_identity():
+    print("[18] the fab package identifies itself (revision + finish)")
+    try:
+        import pcbnew
+    except Exception as e:
+        warn(f"not checked -- {type(e).__name__}: {e}")
+        return
+    board = pcbnew.LoadBoard(PCB)
+    tb = board.GetTitleBlock()
+    rev, title = tb.GetRevision().strip(), tb.GetTitle().strip()
+
+    m = re.search(r"-v(\d+)_(\d+)\.kicad_pcb$", os.path.basename(PCB))
+    want = f"v{m.group(1)}.{m.group(2)}" if m else None
+
+    if not rev:
+        err("the board has no revision in its title block, so every gerber and both .gbrjob "
+            "files ship stamped `rev?`. Board Setup -> Page Settings -> Revision.")
+    elif want and rev != want:
+        err(f"title-block revision {rev!r} does not match the board filename "
+            f"({os.path.basename(PCB)} -> {want!r}). The filename is this project's revision "
+            f"of record; make the title block agree with it.")
+    else:
+        ok(f"revision {rev!r} matches the board filename, so the gerbers stamp it")
+
+    if not title:
+        warn("the board title block has no title -- the .gbrjob names the project but the "
+             "plotted sheets are anonymous")
+
+    finish = ""
+    for line in open(PCB, encoding="utf-8", errors="replace"):
+        mm = re.search(r'\(copper_finish "([^"]*)"\)', line)
+        if mm:
+            finish = mm.group(1).strip()
+            break
+    if not finish or finish.lower() == "none":
+        err(f"the stackup declares copper_finish {finish or '<empty>'!r}, so the .gbrjob tells "
+            f"the fab the board has no surface finish. This board is ENIG (plus the selective "
+            f"hard gold drawn on User.1 and gated by [14]). Board Setup -> Physical Stackup.")
+    else:
+        ok(f"stackup copper finish is {finish!r} -- the .gbrjob carries it to the fab")
+
 
 # --- [17] the card face's contact block is what face_art describes --------------------
 #
@@ -1642,6 +1774,7 @@ def main():
     check_cpl_bom_agreement()
     check_mount_parity()
     check_face_art()
+    check_fab_identity()
     print(f"\n== {len(errors)} error(s), {len(warnings)} warning(s) ==")
     sys.exit(1 if errors else 0)
 

@@ -9,8 +9,16 @@ pixels either way -- the point of the back overlay is to show which B-side parts
 sit under each cell.
 
 Geometry from the committed sources:
-  PV1 c(25.4, 17.0), PV2 c(25.4, 71.9), SM141K06TF body 42 x 23 mm, F.Cu
-  mounts (3,3)(47.8,3)(3,85.9)(47.8,85.9); M2 head Ø3.8 (DIN 84, enclosure cad.py)
+  PV1 c(25.4, 17.0), PV2 c(25.4, 71.9), SM141K06TF body 42 x 23 mm; M2 head Ø3.8
+  (DIN 84, enclosure cad.py). Mount positions are IMPORTED from enclosure/fit_rules.py.
+
+  They were a hardcoded four-entry literal at the v3.0 positions until 2026-08-03, which
+  made this script wrong about the one thing it exists to show. Its whole subject is
+  cell-vs-screw-head clearance, and the 0.13 mm diagonal mount nudge WAS that clearance
+  decision -- so a stale copy here drew the overlay that would have said the fit was fine.
+  It also only ever listed the four CORNER mounts; the board has eight, and the panel-corner
+  pair at y 28.63 / 60.27 sit right at the cells' long edges (PV1 spans y 5.5-28.5), which is
+  precisely where the rubbing was. Importing fixes both.
 
 Run from the repo root:  python3 scripts/gen_panel_overlay.py
 Writes beside the CWD (or $OUT_DIR) -- ON-DEMAND analysis output, not repo content. It used
@@ -24,7 +32,10 @@ from PIL import Image, ImageDraw, ImageFont
 BW, BH = 50.80, 88.90                      # board outline (Edge.Cuts)
 PANELS = {"PV1": (25.4, 17.0), "PV2": (25.4, 71.9)}
 PW, PL = 42.0, 23.0                        # SM141K06TF body
-MOUNTS = [(3.0, 3.0), (47.8, 3.0), (3.0, 85.9), (47.8, 85.9)]
+import sys as _sys
+_sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                                 "enclosure"))
+from fit_rules import MOUNTS                                              # noqa: E402
 HEAD_R = 1.9                               # Ø3.8 M2 head radius
 FONT_B = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 

@@ -39,9 +39,18 @@ cavW,cavH,cavR = W+2*ef,H+2*ef,R+ef
 outW,outH,outR = cavW+2*wall,cavH+2*wall,cavR+wall
 bb,wt = floor+cavity, floor+cavity+board
 lb = 0.10                                  # light interior edge-breaks (felt, not seen), 45deg
-mounts=[(3.0,3.0),(47.8,3.0),(3.0,85.9),(47.8,85.9),        # 4 corner M2
-        (3.0,28.5),(47.8,28.5),(3.0,60.4),(47.8,60.4)]      # +4 panel-corner M2 (8-mount pattern, matches committed board + cad.py)
+# Mounts and EVERY dimension derived from them come from fit_rules -- the same one home the
+# shell CAD reads. This sheet held its own literal copy until 2026-08-03, alongside six
+# hardcoded dimension strings, and when the board's mounts were nudged 0.13 mm diagonally the
+# copy went stale: the sheet a machinist would have cut to still called the hole pitch
+# "44.80 ±0.05" when the board had become 45.06 -- **0.26 mm out, 5.2x the tolerance printed
+# beside it.** A drawing that is wrong is worse than a drawing that is missing, so nothing
+# about the hole pattern is typed here any more; it is computed, below, from MOUNTS.
+mounts = _fr.MOUNTS
+_mx = sorted({m[0] for m in mounts})        # 2 columns
+_my = sorted({m[1] for m in mounts})        # 4 rows
 oxmin,oymin = -0.95,-0.95
+_oxmax = 51.75                              # outline east edge, the datum the edge dims run to
 
 INK="#111111"; GRY="#9a9a9a"; HATCH="#e8e8e8"
 fig=plt.figure(figsize=(420/25.4,297/25.4))
@@ -117,19 +126,20 @@ if U7_POCKET > 0:
     ax.add_patch(MplPoly(rrect(X(u7x-pw/2),Y(u7y-ph/2),pw*S1,ph*S1,1.0*S1),closed=True,fill=False,ec=GRY,lw=0.6,ls=(0,(4,2))))
     leader(X(u7x-pw/2),Y(u7y-ph/2),100,150,"U7 RELIEF POCKET  (NOTE 7)",ha="left",fs=5.8)
 dim((X(oxmin),Y(oymin)),(X(51.75),Y(oymin)),Py-20,"52.70",fs=8,side=-1)
-dim((X(oxmin),Y(3.0)),(X(3.0),Y(3.0)),Py-8,"3.95",fs=6.3,side=-1)
-dim((X(3.0),Y(3.0)),(X(47.8),Y(3.0)),Py-8,"44.80 ±0.05",fs=6.3,side=-1)
-dim((X(47.8),Y(3.0)),(X(51.75),Y(3.0)),Py-8,"3.95",fs=6.3,side=-1)
+dim((X(oxmin),Y(_my[0])),(X(_mx[0]),Y(_my[0])),Py-8,f"{_mx[0]-oxmin:.2f}",fs=6.3,side=-1)
+dim((X(_mx[0]),Y(_my[0])),(X(_mx[-1]),Y(_my[0])),Py-8,f"{_mx[-1]-_mx[0]:.2f} ±0.05",fs=6.3,side=-1)
+dim((X(_mx[-1]),Y(_my[0])),(X(_oxmax),Y(_my[0])),Py-8,f"{_oxmax-_mx[-1]:.2f}",fs=6.3,side=-1)
 dim((X(oxmin),Y(89.85)),(X(oxmin),Y(oymin)),Px-22,"90.80",vert=True,fs=8,side=1)
-# 8-mount y-pattern: 4 rows at y 3.0 / 28.5 / 60.4 / 85.9 -> chained pitch (each row ±0.05, per C3)
-dim((X(3.0),Y(28.5)),(X(3.0),Y(3.0)),Px-10,"25.50",vert=True,fs=6.0,side=1)
-dim((X(3.0),Y(60.4)),(X(3.0),Y(28.5)),Px-10,"31.90",vert=True,fs=6.0,side=1)
-dim((X(3.0),Y(85.9)),(X(3.0),Y(60.4)),Px-10,"25.50",vert=True,fs=6.0,side=1)
-dim((X(3.0),Y(85.9)),(X(3.0),Y(3.0)),Px-17,"82.90 ±0.05 (corners)",vert=True,fs=5.6,side=1)
+# 8-mount y-pattern: 4 rows -> chained pitch (each row ±0.05, per C3). Rows AND pitches are
+# derived from MOUNTS; they were four typed literals until 2026-08-03.
+for _a,_b in zip(_my[:-1],_my[1:]):
+    dim((X(_mx[0]),Y(_b)),(X(_mx[0]),Y(_a)),Px-10,f"{_b-_a:.2f}",vert=True,fs=6.0,side=1)
+dim((X(_mx[0]),Y(_my[-1])),(X(_mx[0]),Y(_my[0])),Px-17,
+    f"{_my[-1]-_my[0]:.2f} ±0.05 (corners)",vert=True,fs=5.6,side=1)
 ax.text(X(25.4),Y(89.85)+5,"BACK FACE (outer)   SCALE 1.5:1",ha="center",fontsize=8.5,fontweight="bold",color=INK)
 # hole FCF + callout (middle column)
 fcf(150,182,["POS","\u00d80.10 (M)","A","B"])
-leader(X(47.8),Y(85.9),150,186.3,"",ha="left")
+leader(X(_mx[-1]),Y(_my[-1]),150,186.3,"",ha="left")
 ax.text(150,172,"8\u00d7  M2 THREAD, THRU",fontsize=7.2,fontweight="bold",color=INK)
 ax.text(150,167,"\u00d81.6 TAP DRILL  \u2022  TAP FROM BACK FACE",fontsize=6.8,color=INK)
 ax.text(150,162,"\u00d83.0 SPOTFACE, BACK (depth per Detail B)",fontsize=6.8,color=INK)
@@ -208,7 +218,8 @@ ax.text(BX-92,BY-25,"DETAIL B   (corner boss)   13:1",fontsize=8.5,fontweight="b
 ax.text(20,78,"CRITICAL DIMENSIONS  \u2014  C1 & C3 TOLERANCED \u00b10.05 (MARKED ON VIEWS); ALL OTHER FEATURES PER ISO 2768-1 (MEDIUM)",fontsize=7.4,fontweight="bold",color=INK)
 ct=[["C1","Cavity depth  (boss-top plane \u2192 cavity floor)","1.80  ±0.05"],
     ["C2","PCB-rest plane flatness  (lip + 8 bosses)","FLAT  0.05"],
-    ["C3","8\u00d7 mounting holes  (x 44.80; y rows 3.0/28.5/60.4/85.9)","\u00b10.05  (linear)"],
+    ["C3",f"8\u00d7 mounting holes  (x {_mx[-1]-_mx[0]:.2f}; y rows "
+          f"{'/'.join(f'{v:g}' for v in _my)})","\u00b10.05  (linear)"],
     ["C4","Mounting holes \u2014 tapped, thru, from back","M2   /   \u00d81.6 drill"]]
 yy=72.5
 for r in ct:
@@ -260,7 +271,9 @@ ax.plot([tx,tx+tw],[ty+th-6.5,ty+th-6.5],lw=0.4,color=INK)
 ax.text(tx+tw/2,ty+th-3.3,"GENERAL TOLERANCES  (UNLESS OTHERWISE NOTED, mm)",ha="center",va="center",fontsize=6.2,fontweight="bold",color=INK)
 tol=[("LINEAR & HOLE-POSITION DIMS","ISO 2768-m"),
      ("CAVITY DEPTH  C1  (SECTION A-A)","1.80 \u00b10.05"),
-     ("HOLE-PATTERN PITCH  C3  (8 HOLES)","x 44.80 / y 25.5-31.9-25.5  \u00b10.05"),
+     ("HOLE-PATTERN PITCH  C3  (8 HOLES)",
+      f"x {_mx[-1]-_mx[0]:.2f} / y "
+      f"{'-'.join(f'{b-a:g}' for a,b in zip(_my[:-1],_my[1:]))}  \u00b10.05"),
      ("PCB-REST FLATNESS  C2","FLAT 0.05")]
 yt=ty+th-11.5
 for lab,val in tol:
