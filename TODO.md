@@ -312,6 +312,18 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
   cell balance. If the ceiling lands at rating, consider configuring the harvester one step down
   for cell life.
 
+  **RE-AIMED 2026-08-04, because the phenomenon this was written to catch does not exist.** The
+  docs described "unequal series stages" that BAL had to hold apart; the board's stages are
+  **equal by construction** — SC1 ∥ SC2 = 2.8 F above `MID`, SC3 ∥ SC4 = 2.8 F below, one SS17 and
+  one WS17 in each. So there is no designed capacitance imbalance for a top-of-charge measurement
+  to find, and **top-of-charge over-volt is the wrong thing to look for**.
+  What BAL actually corrects is **leakage mismatch between two identical stages**, and leakage
+  mismatch shows up as **MID drifting away from V/2 in the DARK, over days** — not during a charge
+  cycle. Log MID against STO/2 on a charged card left unlit, and give it long enough to diverge;
+  a charge-cycle log will look clean whether or not the balancer is doing anything.
+  Also worth confirming in the same session: STO caps at the strapped **4.65 V**, not 5.5 V — the
+  difference between **15.1 J stored** and the 21 J nameplate, and between 9.8 J and 21 J spendable.
+
 - [ ] **[EFFICIENCY] Quantified idle-draw levers, if the bench budget comes in tight**
   _(2026-07-26 deep audit; all measured-on-paper, none applied.)_ Ranked: `POLL_PERIOD_S` 1 -> 2
   halves the ~1 Hz housekeeping cost; `FRAM_RESLEEP_EVERY_POLL` -> 0 removes the defensive re-park
