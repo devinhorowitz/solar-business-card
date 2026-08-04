@@ -426,6 +426,36 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
 
 ## PCB — `PCB/solar-glow-drh-v4_0.kicad_pcb` / `.kicad_sch`
 
+- [ ] **[PCB — KiCad, do it with the supercap lands] Move the two plating-bus stubs to B.Cu**
+  _(2026-08-04. The panel half is DONE and landed; this is the board half, and it needs KiCad.)_
+  Today both stubs are net-GND copper `gr_line`s **on F.Cu**, crossing the outline at x = 25.4:
+  `(25.4, 1.25)→(25.4, −0.4)` and `(25.4, 87.65)→(25.4, 89.3)`, width 0.4. Depanelling therefore
+  leaves a 0.4 mm **gold nub on the card FACE** at both short-edge midpoints — on the one surface
+  of this board meant to be looked at. On B.Cu the nub is under the titanium shell and invisible.
+
+  **Change: set both `gr_line`s' layer to `B.Cu`.** Nothing else. Then save (KiCad refills), and
+  update the fab request's `**TOP side (F.Cu)**` to `**BOTTOM side (B.Cu)**` in the *same* commit —
+  check [19] fails until you do, by design.
+
+  **Why it still plates.** Both stubs land on the board's main F.Cu GND island (1939 mm², the one
+  carrying the gold set and 4 M2 mounts), and that island holds **19 GND vias** down to B.Cu. So
+  the path becomes rack → ring → spur → B.Cu GND → those 19 vias → the F.Cu gold set. Measured,
+  not assumed. Via stitching is already load-bearing here: the F.Cu GND copper is in 5 islands and
+  only one of them ever touched a stub, so the other four have *always* been fed through vias.
+
+  **Room on the back is not tight.** At x = 25.4 the nearest non-GND B.Cu copper is **3.92 mm**
+  (top edge) and **24.48 mm** (bottom); the B.Cu GND pour reaches to within 0.382 mm of the edge.
+  Start the B-side line deep enough inside the pour to catch solid copper — the pour is hatched
+  there, and y ≈ 3.5 (top) / 85.4 (bottom) sits on fill rather than in a hatch gap.
+
+  **Do NOT do this by text surgery**, for the reason in the supercap box: a copper edit invalidates
+  the stored zone fills and nothing outside KiCad regenerates them. A bare `pcbnew` load/save is
+  not a substitute either — measured 2026-08-04, it churns **22,984 lines** with zero edits.
+
+  No flag day: `scripts/panelize.py` reads the stubs' layer off the board and emits the tab spur to
+  match, so the panel is correct before and after. Verified both ways — panel DRC is **247
+  violations, identical census**, with the stubs on F.Cu and on B.Cu.
+
 - [ ] **[PCB/CI — fab hazard] The PANEL config has no `check_zone_fills`, and the panel is what you upload**
   _(2026-08-04, found by an adversarial re-check of a board change I had already called clean.)_
   `PCB/solar-glow-drh.kibot.yaml:18` sets `check_zone_fills: true`, with a comment naming exactly

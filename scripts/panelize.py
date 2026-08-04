@@ -16,6 +16,19 @@ across a break-off tab onto a frame rail the rack can clip. PCB/README.md's spec
 request already tells the fab to "retain to panel rail and rout at depanel" -- this
 script is the panel that sentence assumes.
 
+THE BUS IS NOT A CONSTANT IN HERE
+---------------------------------
+The tab spur is emitted on whatever layer the BOARD's stubs cross the outline on --
+stub_layer() reads them out of the .kicad_pcb and fails loudly if there are not exactly
+two, if they disagree, or if their width is not BUS_W_SPUR. Hardcoding the layer would
+put one fact in two places that get edited months apart in different tools (gr_lines in
+KiCad; a constant here), and a bus in two disconnected pieces is invisible until the
+gold does not take. It also means the stubs can move sides with no flag day.
+
+The frame RING, by contrast, is unconditionally on both faces, so the rack can clip
+either one -- and the six stitching vias are what make the two faces a single node,
+since the spur only ever lands on one of them. See BUS_RING_LAYERS.
+
 WHY IT IS A SCRIPT AND NOT A SECOND .kicad_pcb
 ----------------------------------------------
 The board is ~9.7 MB, most of it the monogram artwork. A hand-maintained panel file
@@ -112,15 +125,35 @@ FID_INSET = 1.0     # dot centre from the panel edge
 FID_SETBACK = 6.0   # dot centre from the panel corner, along the rail
 
 # The ring is useless buried under soldermask -- a plating rack needs bare copper to clip. So the
-# ring gets an F.Mask opening along its whole length, which also lets the fab pick its own contact
-# point. Exposing all of it does risk the gold bath reaching it, but that is ~319 mm^2 at ~1 um,
-# i.e. about 6 mg of gold (well under a dollar) on copper that gets routed away at depanel. The
-# special request in PCB/README.md names the gold set as card artwork and excludes the rail
+# ring gets a mask opening along its whole length, which also lets the fab pick its own contact
+# point. Exposing all of it does risk the gold bath reaching it, but that is ~319 mm^2 per face at
+# ~1 um, i.e. about 6 mg of gold (well under a dollar) on copper that gets routed away at depanel.
+# The special request in PCB/README.md names the gold set as card artwork and excludes the rail
 # explicitly, so this should not happen anyway; it is priced in rather than engineered around.
 BUS_MASK_EXPAND = 0.1
 
+# The ring runs on BOTH faces (2026-08-04). Two reasons, one of them the whole point:
+#
+#   1. The rack can clip either face. A single-sided ring means the operator has to know
+#      which way up the panel goes before the bath, and a clip on the blank face plates
+#      nothing -- a silent failure that only shows up as a card with no gold on it.
+#   2. It is what lets the STUB move to the back. The stubs used to cross the outline on
+#      F.Cu, which left a 0.4 mm gold nub on the CARD FACE at each short-edge midpoint
+#      after depanel -- on the one surface of this board that is meant to be looked at.
+#      On B.Cu the nub is under the titanium shell and invisible. The front gold set is
+#      still fed: both stubs land on the board's main F.Cu GND island, which carries 19
+#      GND vias down to B.Cu, so the current path is rack -> ring -> spur -> B.Cu GND ->
+#      those vias -> the F.Cu gold set. Measured, not assumed; see PCB/README.md.
+#
+# The two rings are one node only because these vias say so -- the spur lands on ONE face.
+# Without them a rack clipped to the other face is connected to nothing at all.
+BUS_RING_LAYERS = (("F.Cu", "F.Mask"), ("B.Cu", "B.Mask"))
+VIA_D = 0.6         # ring-stitching via pad, comfortably inside BUS_W_RAIL (1.0)
+VIA_DRILL = 0.3
+
 SILK_SIZE = 1.0
 SILK_THICK = 0.15
+SILK_ADV = 0.80     # conservative stroke-font advance per char, at SILK_SIZE 1.0 (see main())
 
 # Deterministic UUIDs: CI regenerates this file on every PCB/** push, and random UUIDs
 # would make every regeneration a full-file diff.
@@ -183,6 +216,51 @@ def card_polygon(src: str) -> Polygon:
     return polys[0]
 
 
+def stub_layer(src: str, card: Polygon) -> str:
+    """Which copper layer the board's two plating-bus stubs live on.
+
+    DERIVED, never assumed. The panel's tab spur has to land on the same layer the
+    board-side stub crosses the outline on, or the bus is two pieces of copper that
+    never touch and the gold bath has no circuit. Hardcoding it here would put that
+    fact in two places -- and the two are edited months apart, in different tools
+    (the stubs are gr_lines in KiCad, the spur is a constant in this file). So the
+    panel reads the board and follows it.
+
+    A stub is a net-GND copper gr_line at x = TAB_X with one end outside the card.
+    """
+    found = []
+    for _, _, blk in sexpr_blocks(src, "gr_line"):
+        if '(net "GND")' not in blk:
+            continue
+        lay = re.search(r'\(layer "([^"]+)"\)', blk)
+        a = re.search(r"\(start (-?[\d.]+) (-?[\d.]+)\)", blk)
+        e = re.search(r"\(end (-?[\d.]+) (-?[\d.]+)\)", blk)
+        w = re.search(r"\(width (-?[\d.]+)\)", blk)
+        if not (lay and a and e and w) or lay[1] not in ("F.Cu", "B.Cu"):
+            continue
+        p0 = (float(a[1]), float(a[2]))
+        p1 = (float(e[1]), float(e[2]))
+        if abs(p0[0] - TAB_X) > 1e-6 or abs(p1[0] - TAB_X) > 1e-6:
+            continue
+        if card.covers(LineString([p0, p1])):        # wholly inside: not a stub
+            continue
+        found.append((lay[1], float(w[1]), p0, p1))
+
+    if len(found) != 2:
+        sys.exit(f"panelize: expected exactly 2 plating-bus stubs crossing the outline "
+                 f"at x={TAB_X}, found {len(found)} -- the panel's tab spur has nothing "
+                 "to land on (or lands on the wrong thing)")
+    layers = {f[0] for f in found}
+    if len(layers) != 1:
+        sys.exit(f"panelize: the two plating-bus stubs are on different layers {sorted(layers)} "
+                 "-- one of them cannot reach the rail")
+    widths = {f[1] for f in found}
+    if widths != {BUS_W_SPUR}:
+        sys.exit(f"panelize: stub width {sorted(widths)} != BUS_W_SPUR {BUS_W_SPUR} -- the "
+                 "spur would neck down or bulge at the outline")
+    return layers.pop()
+
+
 def build(card: Polygon):
     moat_outer = card.buffer(MOAT_W, join_style=1, quad_segs=24)
     moat = moat_outer.difference(card)
@@ -230,8 +308,18 @@ def track(p0, p1, w, tag, net="GND", layer="F.Cu"):
     )
 
 
-def mask_open(p0, p1, w, tag):
-    """Filled F.Mask graphic over a bus run = an opening in the mask (this board already
+def via(p, tag, net="GND"):
+    """Through via tying the F.Cu and B.Cu bus rings into one node."""
+    return (
+        f"\t(via\n\t\t(at {n(p[0])} {n(p[1])})\n"
+        f"\t\t(size {n(VIA_D)})\n\t\t(drill {n(VIA_DRILL)})\n"
+        f'\t\t(layers "F.Cu" "B.Cu")\n\t\t(net "{net}")\n'
+        f'\t\t(uuid "{uid(tag)}")\n\t)\n'
+    )
+
+
+def mask_open(p0, p1, w, tag, layer="F.Mask"):
+    """Filled mask graphic over a bus run = an opening in the mask (this board already
     uses 605 of them for the monogram artwork, so the convention is established)."""
     x0, x1 = sorted((p0[0], p1[0]))
     y0, y1 = sorted((p0[1], p1[1]))
@@ -243,7 +331,7 @@ def mask_open(p0, p1, w, tag):
     return (
         f"\t(gr_poly\n\t\t(pts\n\t\t\t{pts}\n\t\t)\n"
         f"\t\t(stroke\n\t\t\t(width 0)\n\t\t\t(type solid)\n\t\t)\n"
-        f'\t\t(fill yes)\n\t\t(layer "F.Mask")\n\t\t(uuid "{uid(tag)}")\n\t)\n'
+        f'\t\t(fill yes)\n\t\t(layer "{layer}")\n\t\t(uuid "{uid(tag)}")\n\t)\n'
     )
 
 
@@ -366,6 +454,7 @@ def main() -> int:
     src = src.replace("\r\n", "\n")
 
     card = card_polygon(src)
+    spur_layer = stub_layer(src, card)
     frame, slots, (bx0, by0, bx1, by1) = build(card)
     px0, py0, px1, py1 = frame.bounds
     xs = mousebite_x()
@@ -418,6 +507,24 @@ def main() -> int:
     print(f"fiducials d{FID_D} cu / d{FID_MASK_D} mask, both faces, at "
           + ", ".join(f"({x:g},{y:g})" for x, y in fids)
           + f"; dot-to-ring {fid_clear:.2f} mm")
+    # Ring-stitching vias: two at the spur junctions (electrically necessary -- the spur
+    # lands on ONE face and has to reach the other), four at the corners (redundancy: a
+    # nicked ring run still leaves every rail fed). Built HERE, above the --check return,
+    # so the clearance guard is part of the geometry gate rather than write-path-only.
+    stitch = [(TAB_X, ring_y0), (TAB_X, ring_y1),
+              (ring_x0, ring_y0), (ring_x1, ring_y0),
+              (ring_x1, ring_y1), (ring_x0, ring_y1)]
+    for obst, oname, rad in ((th, "tooling hole", TH_D / 2), (fids, "fiducial", FID_MASK_D / 2)):
+        for (sx, sy) in stitch:
+            for (ox, oy) in obst:
+                gap = math.hypot(sx - ox, sy - oy) - rad - VIA_D / 2
+                if gap < 0.3:
+                    sys.exit(f"panelize: ring-stitch via at ({sx:.2f},{sy:.2f}) is {gap:.2f} mm "
+                             f"from a {oname} -- under the 0.30 mm floor")
+    print(f"plating bus: stubs on {spur_layer} (read from the board) -> spur on {spur_layer}; "
+          f"ring w{BUS_W_RAIL} on " + " + ".join(cu for cu, _ in BUS_RING_LAYERS)
+          + f", mask-opened on both, stitched by {len(stitch)} d{VIA_D}/{VIA_DRILL} vias at "
+          + ", ".join(f"({x:g},{y:g})" for x, y in stitch))
     if args.check:
         return 0
 
@@ -449,30 +556,57 @@ def main() -> int:
         add.append(fid_footprint(f"FID{k + 1}", fx, fy, f"fid{k}"))
 
     # ---- plating bus: stub -> across tab and rail -> ring around the frame
-    add.append(track((TAB_X, by0), (TAB_X, ring_y0), BUS_W_SPUR, "spur-b"))
-    add.append(track((TAB_X, by1), (TAB_X, ring_y1), BUS_W_SPUR, "spur-t"))
-    for k, (a, b) in enumerate(
-        [
-            ((ring_x0, ring_y0), (ring_x1, ring_y0)),
-            ((ring_x1, ring_y0), (ring_x1, ring_y1)),
-            ((ring_x1, ring_y1), (ring_x0, ring_y1)),
-            ((ring_x0, ring_y1), (ring_x0, ring_y0)),
-        ]
-    ):
-        run_holes = [h for h in th if a[0] == b[0] == h[0]]
-        pts = ring_run_with_dodge(a, b, run_holes)
-        for i in range(len(pts) - 1):
-            plain = len(pts) == 2          # undodged runs keep their original tags/uuids
-            add.append(track(pts[i], pts[i + 1], BUS_W_RAIL,
-                             f"ring{k}" if plain else f"ring{k}-{i}"))
-            add.append(mask_open(pts[i], pts[i + 1], BUS_W_RAIL,
-                                 f"ringmask{k}" if plain else f"ringmask{k}-{i}"))
+    # The spur follows the BOARD's stubs onto whichever face they cross the outline on;
+    # the ring runs on both faces so the rack can clip either one.
+    add.append(track((TAB_X, by0), (TAB_X, ring_y0), BUS_W_SPUR, "spur-b", layer=spur_layer))
+    add.append(track((TAB_X, by1), (TAB_X, ring_y1), BUS_W_SPUR, "spur-t", layer=spur_layer))
+    for cu, mask in BUS_RING_LAYERS:
+        # The F.Cu run keeps the original tags, so its UUIDs are unchanged from the
+        # single-sided panel and CI's diff shows only what actually moved.
+        sfx = "" if cu == "F.Cu" else "-b"
+        for k, (a, b) in enumerate(
+            [
+                ((ring_x0, ring_y0), (ring_x1, ring_y0)),
+                ((ring_x1, ring_y0), (ring_x1, ring_y1)),
+                ((ring_x1, ring_y1), (ring_x0, ring_y1)),
+                ((ring_x0, ring_y1), (ring_x0, ring_y0)),
+            ]
+        ):
+            run_holes = [h for h in th if a[0] == b[0] == h[0]]
+            pts = ring_run_with_dodge(a, b, run_holes)
+            for i in range(len(pts) - 1):
+                plain = len(pts) == 2      # undodged runs keep their original tags/uuids
+                add.append(track(pts[i], pts[i + 1], BUS_W_RAIL,
+                                 f"ring{k}{sfx}" if plain else f"ring{k}-{i}{sfx}",
+                                 layer=cu))
+                add.append(mask_open(pts[i], pts[i + 1], BUS_W_RAIL,
+                                     f"ringmask{k}{sfx}" if plain else f"ringmask{k}-{i}{sfx}",
+                                     layer=mask))
+
+    # ---- ring stitching: the two faces are one node only because of these
+    for k, p in enumerate(stitch):
+        add.append(via(p, f"ringvia{k}"))
 
     # ---- panel silkscreen, both rails, clear of the bus ring
-    add.append(text("SOLAR-GLOW DRH v4.0 - PCBWay 1-up panel", TAB_X, ring_y0 + 1.5, "t0"))
-    add.append(text("Generated by scripts/panelize.py - do not edit by hand", TAB_X, ring_y0 - 1.5, "t1"))
-    add.append(text("HARD-GOLD PLATING BUS - RETAIN THROUGH PLATING", TAB_X, ring_y1 - 1.5, "t2"))
-    add.append(text("Break tabs at x=25.4 carry the bus - rout at depanel", TAB_X, ring_y1 + 1.5, "t3"))
+    # These are centred on TAB_X and run along the rail, so a string that grows past the
+    # panel width gets CLIPPED BY THE BOARD EDGE -- a silk_edge_clearance warning that is
+    # easy to miss in a 248-violation panel report. SILK_ADV is measured, not guessed: the
+    # 90-char t3 this replaced clipped at 65.6 mm panel width, so the advance is > 0.729
+    # mm/char at SILK_SIZE 1.0; 0.80 is that with margin, and the assert leaves 2 mm.
+    side = "BACK" if spur_layer == "B.Cu" else "FRONT"
+    silk = [
+        ("SOLAR-GLOW DRH v4.0 - PCBWay 1-up panel", ring_y0 + 1.5, "t0"),
+        ("Generated by scripts/panelize.py - do not edit by hand", ring_y0 - 1.5, "t1"),
+        (f"HARD-GOLD PLATING BUS ON {side} - RETAIN THROUGH PLATING", ring_y1 - 1.5, "t2"),
+        ("Bus ring BOTH faces - clip either; tabs at x=25.4, rout at depanel",
+         ring_y1 + 1.5, "t3"),
+    ]
+    for s, sy, tag in silk:
+        w = len(s) * SILK_ADV * SILK_SIZE
+        if w > (px1 - px0) - 2.0:
+            sys.exit(f"panelize: silk {tag!r} is ~{w:.1f} mm wide on a {px1 - px0:.1f} mm "
+                     "panel -- it will be clipped by the board edge")
+        add.append(text(s, TAB_X, sy, tag))
 
     end = body.rstrip().rfind(")")
     panel = body[:end] + "".join(add) + body[end:]

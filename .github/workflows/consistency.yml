@@ -41,6 +41,10 @@ on:
       # the thing that decides whether an '8' has counters. An edit here changes the
       # committed board's mask art without PCB/** being touched at all.
       - 'scripts/glyphs.py'
+      # check [19] imports panelize.stub_layer() to read the plating-bus stubs off the
+      # board — the same fact the panel's tab spur is emitted from. An edit to that reader
+      # changes what the check sees with no PCB/** in the diff.
+      - 'scripts/panelize.py'
       # check [9] parses the OUTS list out of kibot.yml to confirm that everything it calls
       # "automated" is something CI actually commits.
       - '.github/workflows/kibot.yml'
@@ -62,6 +66,7 @@ on:
       - 'scripts/nfc_coil.py'
       - 'scripts/face_art.py'
       - 'scripts/glyphs.py'
+      - 'scripts/panelize.py'
       - '.github/workflows/kibot.yml'
       - 'enclosure/**'
       - 'BOM/**'

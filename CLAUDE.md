@@ -141,13 +141,23 @@ fab-file pair together: nothing may reach the assembler's pick-and-place without
 buy it. It was written after the pre-order sweep found SC1–4, PV1–2, MH1–4 and TC1 excluded from
 the BOM but *not* from the position file — a CPL that named ten parts the assembler had never
 been sold. Check [2] is the same relationship in the one direction that happened to be guarded.
+**Check [19]** (2026-08-04) is that same shape a third time, on the plating bus: it reads the two
+net-GND `gr_line`s that cross the outline at x = 25.4 — via `panelize.stub_layer()`, the *same*
+reader the panel emits its tab spur from, so the check cannot disagree with the artifact — and
+holds the fab special request's hand-written **`TOP side (F.Cu)`** / **`BOTTOM side (B.Cu)`** to
+what the board actually says. Same gap class as [14]: a human sentence a fab acts on, sitting
+next to generated copper, with nothing between them.
 
 ## CI
 - `kibot.yml` — regenerates `Generated/` (fab + docs) on `PCB/**` changes and commits
   it back as `kibot-ci`. **Do not hand-edit or commit `Generated/` yourself — CI owns it.**
   The same job also rebuilds the **PCBWay panel** via `scripts/panelize.py` and plots its
   fab set into `Generated/panel/`. The panel is derived from the board, never edited —
-  see `PCB/README.md` → "The PCBWay panel".
+  see `PCB/README.md` → "The PCBWay panel". **Including which layer the plating bus is on:**
+  the frame ring is unconditionally on both faces (clip either; six vias make them one node,
+  because the spur lands on only one), but the tab spur follows the board — `stub_layer()`
+  reads the stubs out of the `.kicad_pcb` rather than trusting a constant, so moving them from
+  F.Cu to B.Cu needs no matching edit here and cannot silently leave the bus in two pieces.
   It then raytraces the README images via `scripts/render.py` (panel front/back, the depanelised
   card, the **assembled/populated** views, and the OSH Park midnight variant) into `Generated/docs/`.
   It costs **~12 min** across 14 views (the populated target added 3, ~2.5 min). If that ever
@@ -201,7 +211,8 @@ been sold. Check [2] is the same relationship in the one direction that happened
   upgrade's blast radius, per the pinning doctrine below.
 - `consistency.yml` — runs the drift guard on doc/board/firmware changes, plus
   `scripts/mask_art.py` (check [6] regenerates the mask art through it), `scripts/part_colors.py`
-  (check [10]), `kibot.yml` (check [9] parses its `OUTS` list) and `enclosure/**`
+  (check [10]), `scripts/panelize.py` (check [19] imports its `stub_layer()`), `kibot.yml`
+  (check [9] parses its `OUTS` list) and `enclosure/**`
   (check [7] reads the part-height table). Until 2026-07-29 **nothing in CI triggered on
   `enclosure/` at all**, which is how a stale U7 height survived there for a day; and it
   triggered on `README.md` **by name** until 2026-07-30, so check [9] — which reads every
