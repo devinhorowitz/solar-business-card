@@ -225,7 +225,7 @@ Order parameters, from the committed board:
 | Min track / spacing used | **0.15 mm track / 0.127 mm spacing** (the marginal-band corridors) |
 | Vias | **Uniform: 0.30 mm drill / 0.60 mm pad** (0.15 mm annular), 79 total, tented (resin-fill + cap ordered board-wide) |
 | Non-plated holes | TC2030: Ø **2.3749 mm** (4× leg-latch) and Ø **0.9906 mm** (3× alignment) |
-| Plated mount holes | Ø **2.2 mm** ×4 (M2, corners, tied to GND) |
+| Plated mount holes | Ø **2.2 mm** ×8 (M2 — 4 corner MH1–4 + 4 panel-corner MP1–4, tied to GND) |
 | Castellations | **None** (verified — only the corner mount holes sit within 1.5 mm of the rim) |
 
 **Run PCBWay's DFM check against these.** The binding features are the **0.127 mm spacing**
@@ -649,8 +649,10 @@ types by hand afterward.
   **off** the PCBA BOM on purpose — the supercaps are manual-solder only (SCHURTER SCPC),
   and the cells are heat-sensitive.
 - **Not placed:** SW2, SB1–SB4 (solder bridges you set), TC1 (Tag-Connect pad), J1
-  (optional header), MH1–MH4 (mounting holes). *(C9 was on this list until 2026-07-30; it is now
-  a placed 47 pF part.)*
+  (optional header), MH1–MH4 **and MP1–MP4** (all eight mounting holes). *(C9 was on this list
+  until 2026-07-30; it is now a placed 47 pF part. This line said "MH1–MH4" until 2026-08-04 —
+  the four-versus-eight miscount again, in the list that tells the assembler what NOT to
+  populate.)*
 
 **Sourcing:** turnkey, with the standing instruction that anything PCBWay can't source they
 flag and you consign from DigiKey — **no substitutes without approval**. The likeliest to

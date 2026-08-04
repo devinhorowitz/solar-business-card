@@ -65,8 +65,12 @@ OFF_BOARD = [
     # $13.18 vs $17.43 and 119 in stock vs 41. Same Würth part either way.
     ("FER1",  1, "364006",                 "Würth Elektronik",  "Mouser",   "710-364006",
      "Wurth WE-FSFS ferrite sheet behind the coil -- load-bearing for the NFC tune"),
-    ("HW1",   4, "DIN 84 M2x3 brass",      "",                  None,       "",
-     "shell screws; any DIN 84 M2x3 -- source locally, not a distributor line"),
+    # Qty is 8, and check [16] now asserts it equals len(fit_rules.MOUNTS). It read 4 until
+    # 2026-08-04 -- the same four-versus-eight miscount that check [14] was written after,
+    # in the one document that decides how many screws you actually buy. The enclosure has
+    # eight M2 mounts (MH1-4 corners + MP1-4 panel-corners) and always has.
+    ("HW1",   8, "DIN 84 M2x3 brass",      "",                  None,       "",
+     "shell screws, one per mount; any DIN 84 M2x3 -- source locally, not a distributor line"),
     ("INS1",  1, "polyimide film 0.05 mm", "",                  None,       "",
      "insulator; cut from stock film -- not a distributor line"),
 ]

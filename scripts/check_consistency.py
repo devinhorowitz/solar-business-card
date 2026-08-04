@@ -1637,6 +1637,31 @@ def check_mount_parity():
     else:
         ok("no generator declares its own mount list -- fit_rules.MOUNTS is the only copy")
 
+    # ...AND YOU MUST BE SOLD ONE SCREW PER MOUNT. `HW1` in bom_split.OFF_BOARD is the shell
+    # screw line, and OFF_BOARD is the one hand-maintained input to the whole buy-document
+    # chain -- so it is the one place a quantity can go stale without a generator noticing.
+    # It read 4 against 8 mounts until 2026-08-04, and the handbuy page it feeds carries a
+    # footer claiming "consistency check [15] holds this list against the board" -- [15]
+    # reconciles PLACED FOOTPRINTS against BOM lines and never looks at OFF_BOARD
+    # quantities, so the suite passed green on a list that would leave you four screws short
+    # of closing the enclosure. This is the same four-versus-eight miscount check [14] was
+    # written after; it is cheap to assert, so assert it.
+    sys.path.insert(0, os.path.join(ROOT, "scripts"))
+    try:
+        import bom_split
+    except Exception as e:                     # pragma: no cover -- import guard, as elsewhere
+        warn(f"HW1 screw count not checked -- {type(e).__name__}: {e}")
+    else:
+        hw = [r for r in getattr(bom_split, "OFF_BOARD", []) if r and r[0] == "HW1"]
+        if not hw:
+            warn("no HW1 row in bom_split.OFF_BOARD -- the shell-screw line has moved or gone")
+        elif hw[0][1] != len(fr.MOUNTS):
+            err(f"bom_split.OFF_BOARD sells {hw[0][1]} of HW1 (shell screws) for an enclosure "
+                f"with {len(fr.MOUNTS)} mounts -- one screw per mount, or the shell does not "
+                f"close. Fix the quantity, not this check.")
+        else:
+            ok(f"the hand-buy list sells {hw[0][1]} shell screws for {len(fr.MOUNTS)} mounts")
+
 
 # --- [17] the card face's contact block is what face_art describes --------------------
 #

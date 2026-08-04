@@ -280,14 +280,28 @@ been sold. Check [2] is the same relationship in the one direction that happened
   written for is now off; the NFC mark it still writes obeys exactly the same rule.)
 - **`solder_mask_bridge` DRC was `ignore` until 2026-07-28** and is now `warning`. Everything
   it reports is the single rear glow-window aperture at (35.1, 40.3) spanning the LED nets —
-  intentional, nothing is soldered there.
+  intentional, because the window is the optics.
+  **"Nothing is soldered there" is what this line used to say, and it was false**: D2–D5 reflow
+  *inside* that aperture, and the DRC report names their own pads — `A [ANODE]` of all four,
+  plus `K [K2]`, `K [K5]`, `K [K4]`, `K [K3]`. The sentence was reassuring us about a window
+  four LEDs are soldered in. So the aperture is deliberate, but **pad-to-copper spacing inside
+  it is a real constraint, not a waived one** — there is no mask dam in there to stop a bridge.
+  It bit on 2026-08-04: D2's cathode sat **0.1552 mm** from the ANODE detour that wrapped its
+  pad, while D3/D4/D5 sat at 2.5216. The detour was pushed out to clear **0.3740 mm** (the
+  corridor east of it was empty — no other track, pad or via). **Measure this gap after any
+  re-route near the window**; DRC will not fail it for you, because copper clearance passes at
+  0.155 and the mask hits are warnings you have already agreed to ignore.
   **Zero come from F.Mask**, so the front art is clean. A *new* F.Mask hit is a real find.
   **Do not treat the hit COUNT as a constant, and never gate on it.** It is not deterministic:
   two runs on byte-identical inputs (same board, `.kicad_pro`, `.kicad_dru` and the same pinned
   image digest) reported **222** and **208**, and a third after the coil landed reported 223
   and 222 again after the coil aperture was reverted. The published runs since have read **223,
-  200, 203**, so the observed spread is now **200–223** — a range of 23 on a board whose mask art
-  did not move. KiCad pairs that aperture against the copper
+  200, 203**, so the spread across runs on unchanged art was **200–223** — a range of 23 on a
+  board whose mask art did not move. _(2026-08-04: the D2 re-route did move the copper inside
+  that aperture — three segments deleted, the rest pushed away from the pads — and the next run
+  read **199**. That is a real reduction, not another sample of the old spread: there are fewer
+  different-net pairs in there to find. Do not read 199 as the new floor either; it is one run
+  of a non-deterministic count on changed geometry.)_ KiCad pairs that aperture against the copper
   items near it, and the set it finds varies run to run — most likely because `check_zone_fills` refills the pours first
   and the fill is not bit-reproducible. What IS stable, and what to assert if this ever gets a
   gate: `Errors: 0 (+11 excluded)`, zero hits on F.Mask, and every hit citing that one aperture.
