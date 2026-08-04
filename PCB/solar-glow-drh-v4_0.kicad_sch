@@ -20725,7 +20725,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Downloads:SCHURTER_SCPC_WS17-mod2"
+		(property "Footprint" "solarglow:SCHURTER_SCPC_WS17"
 			(at 91.01 73.66 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -21348,7 +21348,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Downloads:SCHURTER_SCPC_SS17"
+		(property "Footprint" "solarglow:SCHURTER_SCPC_SS17"
 			(at 91.01 93.98 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -22841,7 +22841,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Downloads:SCHURTER_SCPC_SS17"
+		(property "Footprint" "solarglow:SCHURTER_SCPC_SS17"
 			(at 91.01 53.34 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -26056,7 +26056,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Downloads:SCHURTER_SCPC_WS17-mod2"
+		(property "Footprint" "solarglow:SCHURTER_SCPC_WS17"
 			(at 91.01 114.3 0)
 			(show_name no)
 			(do_not_autoplace no)

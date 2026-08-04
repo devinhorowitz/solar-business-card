@@ -773,13 +773,63 @@ Work outside-in by heat sensitivity:
    > a long *edge*. A cap still solders — about 63 % of each terminal's length lands on copper —
    > but P also overhangs its 7.75 mm terminal by ~3.1 mm onto the bare can.
    >
-   > `solarglow.pretty/SCHURTER_SCPC_{WS17,SS17}.kicad_mod` **carry the corrected geometry**.
-   > The board does not, because adopting it is not a footprint swap: the corrected pads reach
-   > 1.30 mm further toward each cell end, into a band already carrying **45 B.Cu segments across
-   > 11 nets** — `INT1`, `INT2`, `VS`, `VSENSE`, `SDA`, `ANODE`, `K2`, `LDRV2`, `UPDI`,
-   > `EN_STO_CH`, `SRC` — which run lengthwise past the cell ends and cross the new pads at full
-   > width, so no narrower pad dodges them. Cost is the same shape if only the ±1.30 pitch is
-   > taken and the lateral offset skipped (38 segments): the pitch is what costs, not the offset.
+   > `PCB/solarglow.pretty/SCHURTER_SCPC_WS17.kicad_mod` and `…_SS17.kicad_mod` **carry the
+   > corrected geometry**, but the board's pads are EMBEDDED in the `.kicad_pcb` and do not read
+   > from the library — so fixing the library never touched the board.
+   >
+   > **The four `lib_id`s now point at that library (2026-08-04).** They named `Downloads:` — a
+   > path that exists on no machine here and is in no `fp-lib-table`, so KiCad could not resolve
+   > them and *"Update Footprints from Library"* had nothing to update from. They are
+   > `solarglow:SCHURTER_SCPC_SS17` / `…_WS17` now, and the two library footprints were brought to
+   > board parity in the same pass (paste layer dropped — these are hand-soldered;
+   > `exclude_from_pos_files exclude_from_bom` set, matching the flags the board already carried;
+   > 3D model block added). That relink is what makes the KiCad-side fix possible — **and it also
+   > arms it**, per the hand-work warning below: the update pulls the FULL datasheet geometry,
+   > offset included.
+   >
+   > **Re-measured 2026-08-04, and the old numbers here were wrong.** They came from a sweep that
+   > modelled the pad as 3.50 × 12.25 when the pad carries its own 90° rotation and is really
+   > **12.25 wide × 3.50 tall** — wrong shape, wrong axis, wrong overlap set. Measured properly
+   > (edit a scratch board, reload it in KiCad, test real pad polygons):
+   >
+   > | variant | conflicts |
+   > |---|---:|
+   > | pitch only (±1.30, pads stay on centreline) | **7 segments / 4 nets** |
+   > | full datasheet (pitch **+** lateral offset) | **25 segments / 8 nets** |
+   >
+   > **⚠ MOVE THESE PADS IN KICAD, NOT BY EDITING THE FILE.** A pad move invalidates the stored
+   > zone fills, and nothing in a text edit can regenerate them. `SC4` was corrected by text
+   > surgery on 2026-08-04 and **reverted the same day**: the pads moved, the pours did not, and
+   > `SC4.P` (net `MID`) ended up with **6.97 mm² of GND pour sitting on it** — a short. KiCad
+   > refills on save, which is why the fix belongs there.
+   >
+   > **And `--refill-zones` HIDES IT.** `kicad-cli pcb drc --refill-zones …` — the invocation
+   > CLAUDE.md documents — refills in memory first, so it reported the exact ledger and 0
+   > clearance errors on a shorted board. Drop the flag to see what a plotter sees: without it,
+   > that board gave **2 clearance errors at 0.0000 mm** against `GND_B` and `GND_B_DCDC_SOLID`,
+   > where main gave 0. **After any pad move, run DRC BOTH ways.**
+   >
+   > So *"the pitch is what costs, not the offset"* — which this box used to say — is **backwards**:
+   > the lateral offset costs 3.5× the pitch. The offset moves P sideways by 3.125 mm into a live
+   > channel; the pitch only reaches 1.30 mm further out. **So do the pitch, keep `x = 0`.**
+   >
+   > **All four lands are still uncorrected on the board.** `SC4` was moved on the pitch
+   > 2026-08-04 and reverted the same day for the stale-fill reason above — its *routing* is
+   > clear (0 conflicts, and it was the one land with room), so it is the one to do first in
+   > KiCad. The other three are each blocked by congestion rather than by anything a narrower
+   > pad could dodge:
+   >
+   > - **`SC2.N`** — 1 conflict (`STO` at y 3.175), and 7.7 mm of empty channel south of it. Easiest.
+   > - **`SC3.P`** — moving it produced **4 clearance errors** (0.0643 mm to `ANODE`, 0.0943 to
+   >   `K2`, against a 0.1520 hard floor) and the offending tracks cannot yield: nudging them
+   >   north makes it *worse*. Reverted.
+   > - **`SC1.P`** — 6 conflicts in the `INT1`/`INT2`/`VSENSE` fan out of U1, in the same pocket
+   >   that boxes in C1.
+   >
+   > **Watch out when doing these by hand:** re-linking a cap to the library footprint also picks
+   > up the lateral offset, i.e. the 25-conflict variant. To match `SC4`, move the pads keeping
+   > `x = 0`. And check CLEARANCE, not just overlap — `SC3.P` overlapped nothing and still broke
+   > the hard floor.
    > **Correcting the board is a deliberate B-side re-route, and belongs to a respin.**
 2. **Solar cells PV1 / PV2 last (most fragile).** Iron **≤ 260 °C, ≤ 2 s per joint**, and
    **do not clean with IPA**. Mind cell polarity to the custom land.
