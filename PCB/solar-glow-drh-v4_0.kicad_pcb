@@ -16001,7 +16001,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "TTPS7A0233PDQNR  (X2SON-4)"
+		(property "Value" "TPS7A0233PDQNR"
 			(at 0 -1.5 90)
 			(layer "B.Fab")
 			(hide yes)
@@ -16042,7 +16042,7 @@
 				(justify mirror)
 			)
 		)
-		(property "MPN" "TPS7A0233PDBVR"
+		(property "MPN" "TPS7A0233PDQNR"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -16084,7 +16084,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Supplier P/N" "296-TPS7A0233PDBVRCT-ND"
+		(property "Supplier P/N" "296-TPS7A0233PDQNRCT-ND"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "B.Fab")
