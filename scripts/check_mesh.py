@@ -48,8 +48,20 @@ BASELINE = {
     # measured from a local regeneration then restored -- CI owns the artifact). The
     # committed STL reads 2069.74 until the merge-run rebuild, so a local run is red
     # for exactly that one transition.
+    #
+    # Re-ledgered 2026-08-05, 2032.99 -> 2070.29, and the delta is ITEMISED rather than
+    # copied off the failing run: +23.13 mm3 is U6/U9's ceilings (TPS22919 1.10 and
+    # TPS7A0233PDQNR 0.40 replaced two 1.45 SOT bodies, so both pockets grew resin roofs
+    # -- measured by rebuilding the brace on the same board with the heights reverted),
+    # and +14.17 mm3 is the U6/U9 re-route moving the brace's computed footprint. The
+    # drift spans THREE board changes, not one, because every kibot run since the
+    # 2026-08-04 commit-back died at schematic parity BEFORE reaching this gate -- the
+    # first run to get this far carried all of it. Local regeneration reproduces CI's
+    # 2070.29 to the hundredth; interference_drc and assembly_drc (skipped when the step
+    # died) were run on that geometry and pass. Same transition note as above: the
+    # committed STL stays at the old volume until the merge-run rebuild.
     "solar-glow-drh-diffuser-brace.stl": dict(
-        volume_mm3=2032.99, bbox=(-22.85, -42.4, 0.0, 24.35, 42.4, 1.8),
+        volume_mm3=2070.29, bbox=(-22.85, -42.4, 0.0, 24.35, 42.4, 1.8),
         max_boundary_edges=0, max_open_len_mm=0.0, max_degenerate=0),
 }
 VOL_TOL = 0.005
