@@ -10352,7 +10352,7 @@
 			(in_pos_files yes)
 			(duplicate_pin_numbers_are_jumpers no)
 			(property "Reference" "U9"
-				(at 0 0 0)
+				(at 11.43 0 0)
 				(show_name no)
 				(do_not_autoplace no)
 				(effects
@@ -10361,8 +10361,8 @@
 					)
 				)
 			)
-			(property "Value" "TPS7A0233 (SOT23-5*)"
-				(at 0 0 0)
+			(property "Value" "TTPS7A0233PDQNR  (X2SON-4)"
+				(at 11.43 -5.08 0)
 				(show_name no)
 				(do_not_autoplace no)
 				(effects
@@ -10371,8 +10371,8 @@
 					)
 				)
 			)
-			(property "Footprint" "Package_TO_SOT_SMD:SOT-23-6"
-				(at 0 0 0)
+			(property "Footprint" "Package_SON:Texas_X2SON-4_1x1mm_P0.65mm"
+				(at 11.43 -10.16 0)
 				(show_name no)
 				(do_not_autoplace no)
 				(hide yes)
@@ -10393,7 +10393,62 @@
 					)
 				)
 			)
-			(property "Description" ""
+			(property "Description" "TPS7A0233 nanopower LDO, 3.3V fixed, ~25nA Iq (VS rail)"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "MPN" "TPS7A0233PDBVR"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Manufacturer" "Texas Instruments"
+				(at -30.48 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Supplier" "DigiKey"
+				(at -30.48 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Supplier P/N" "296-TPS7A0233PDBVRCT-ND"
+				(at -30.48 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "KiLib_Generator" "package/gullwing"
 				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -10419,7 +10474,7 @@
 				(pin passive line
 					(at 0 0 0)
 					(length 2.54)
-					(name "IN"
+					(name "OUT"
 						(effects
 							(font
 								(size 1 1)
@@ -10473,7 +10528,7 @@
 				(pin passive line
 					(at 0 -15.24 0)
 					(length 2.54)
-					(name "NC"
+					(name "IN"
 						(effects
 							(font
 								(size 1 1)
@@ -10491,7 +10546,7 @@
 				(pin passive line
 					(at 0 -20.32 0)
 					(length 2.54)
-					(name "OUT"
+					(name "GND"
 						(effects
 							(font
 								(size 1 1)
@@ -15655,7 +15710,7 @@
 			)
 		)
 	)
-	(global_label "VS"
+	(global_label "GND"
 		(shape bidirectional)
 		(at 485.14 392.43 0)
 		(effects
@@ -15824,8 +15879,8 @@
 			)
 		)
 	)
-	(global_label "STO_LDO"
-		(shape passive)
+	(global_label "VS"
+		(shape bidirectional)
 		(at 485.14 372.11 0)
 		(effects
 			(font
@@ -24599,7 +24654,7 @@
 				)
 			)
 		)
-		(property "Value" "TPS7A0233 (SOT23-5*)"
+		(property "Value" "TTPS7A0233PDQNR  (X2SON-4)"
 			(at 501.65 377.19 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -24609,7 +24664,7 @@
 				)
 			)
 		)
-		(property "Footprint" "solarglow:U9_SOT23_5"
+		(property "Footprint" "Package_SON:Texas_X2SON-4_1x1mm_P0.65mm"
 			(at 501.65 382.27 0)
 			(hide yes)
 			(show_name no)
