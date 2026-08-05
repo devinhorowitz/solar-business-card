@@ -479,99 +479,11 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
   1.45 against the same 1.25 model, an overshoot the check permits. The gap class is: *a part whose
   datasheet max exceeds its generic package model, declared at the model's height.* Worth a gate.
 
-- [ ] **[PCB — respin, DECIDED] U9 `TPS7A0233PDBVR` → `TPS7A0233PDQNR` (SOT-23-5 → X2SON, 1.45 → 0.40 mm)**
-  _(2026-08-05. Decided on area and clearance, not thickness — see the cavity note at the end.)_
-  Same silicon, same 3.3 V fixed. Height from TI's own package drawings on both ends: **SBVS277C /
-  DQN0004A, drawing 4215302/E**, sheet titled *"X2SON - 0.4 mm max height"*, against **DBV0005A,
-  4214839/K**, *"SOT-23 - 1.45 mm max height"*. A **1.05 mm** delta, datasheet to datasheet. That
-  also independently confirms the 1.45 this repo already carries for U9.
-
-  **Zero electrical penalty, structurally rather than by luck:** SBVS277C §6.5 Electrical
-  Characteristics is a SINGLE table headed "Specified at TJ = −40 °C to +125 °C" with **no
-  per-package columns**. IGND 25 nA typ / 46 nA max @25 °C, ISHDN 3 nA typ, PSRR 55 dB @1 kHz,
-  IOUT 200 mA, TJ −40…+125 — the same numbers the incumbent is specified to. Only §6.4 Thermal is
-  per-package. _(DigiKey's "60 nA Iq" field reads the same on the incumbent, so it is their
-  max-convention, not a package difference.)_ There is **no `-Q1` TPS7A02 in any package**, so this
-  is not a temp-grade regression — the incumbent is the same commercial part.
-
-  **The reason to take it is AREA.** U9's courtyard today is **12.229 mm²**; the X2SON land is
-  **~2.6 mm²**. That returns **~9.7 mm²** to a B side where SC1's can sits 0.090 mm from C1 and
-  SC1.P has six conflicts in U1's `INT1`/`INT2`/`VSENSE` fan — the same region the supercap-land
-  respin has to re-route anyway. Cost: **$0.89 vs $0.84**, DigiKey 2,244, Active. _(Mouser 0 at time
-  of writing — effectively single-distributor. `TPS7A0233DQNR` is $0.84 and mechanically identical,
-  differing only in lead finish, but SBVS277C contradicts itself on whether active discharge is
-  P-only — §7.3.2 is titled "Active Discharge (P-Version Only)" while Table 9-1 says all members have
-  it. The incumbent is a P part; stay P.)_
-
-  **Integration, none of it optional:**
-  - **Not a drop-in.** 5 pins → 4 AND the order changes: DBV 1=IN 2=GND 3=EN 4=NC 5=OUT →
-    DQN 1=OUT 2=GND 3=EN 4=IN. New symbol, new footprint, re-route the U9 block. Board check: pad 4
-    is `unconnected-(U9-NC-Pad4)` today so nothing is lost, and EN is strapped to IN (`STO_LDO` on
-    pads 1 and 3), so the LDO is permanently enabled.
-  - **Exposed thermal pad, internally tied to GND, must be soldered** (drawing Notes 3/7). It lands
-    on the B.Cu GND pour, so no new net.
-  - **§8.4.1 forbids a via directly under the DQN pad** (solder wicking); any via under paste must be
-    filled/plugged/tented. Draw the keepout.
-  - **Solder-mask-defined land**, 4× (0.18 × 0.36) on 0.65 pitch, 0.22 mm typ exposed-metal clearance
-    — at PCBWay's standard mask-dam minimum. Worth a DFM query rather than an assumption.
-  - Repo chain: new 3D model → `part_colors.py` (check [10] errors on an uncoloured model) →
-    `part_heights.py` 1.45 → 0.40, measured against that model by check [7] → check [12]'s
-    `FRONT_SIDE` snapshot.
-  - Do NOT repeat "better thermals": RθJA favours DQN (179.1 vs 181.9) but that is a JEDEC high-K
-    figure. On 0.6 mm two-layer with no via under the pad the governing metrics are RθJB 116.3 vs
-    88.1 and RθJC(top) 137.6 vs 53.0 — DQN is **worse**. Immaterial at tens of mW; just do not claim it.
-
-  **It buys 0.00 mm of card thickness on its own**, and that is fine — take it for the area. The
-  cavity is `max(supercap + 0.10, tallest_other + 0.22)` and C25/C26/C27 hold the wall at 1.45.
-
-- [ ] **[PCB — respin, DECIDED] U6 `TPS22917DBVT` → `TPS22919DCKR` (SOT-23-6 → SC-70-6, 1.45 → 1.10 mm)**
-  _(2026-08-05. Decided after the I_Q objection was costed against the firmware and did not survive.)_
-  **The schematic side is DONE** — Value, MPN, Footprint (`Package_TO_SOT_SMD:SOT-363_SC-70-6`),
-  Datasheet and Description are updated, and the symbol's pin 4 is renamed `CT` → `NC`. Nothing else
-  in the schematic moved, because **the pinout is identical on every net we use**:
-
-  | pad | TPS22917 | net | TPS22919 |
-  |---|---|---|---|
-  | 1 | IN | `VS` | IN |
-  | 2 | GND | `GND` | GND |
-  | 3 | ON | `NFC_EN` | ON (active-HIGH) |
-  | 4 | CT — floated | unconnected | **NC — "leave floating"** |
-  | 5 | QOD → VOUT | `VNFC` | QOD (tying to VOUT sanctioned, internal 24 Ω) |
-  | 6 | VOUT | `VNFC` | VOUT |
-
-  We already float CT, so losing the adjustable ramp costs nothing. ERC is unchanged (3 pre-existing
-  `isolated_pin_label` warnings before and after). **Remaining: swap the footprint on the board and
-  re-route** — SC-70-6 is 2.0 × 2.1 mm against SOT-23-6's 2.9 × 1.6.
-
-  **Why the 8 µA I_Q objection failed.** `nfc_provision_default()` runs **once, at cold boot**
-  (`main.c:435`); re-boots exit early on the CC check, and FD-wake works with VCC gated off. The one
-  provisioning window is ~157 ms (19 NDEF blocks × [1.7 ms of 100 kHz bus + 6 ms `NFC_EEPROM_WR_MS`]
-  + the CC block), so the I_Q delta costs **7.5 µA × 3.3 V × 0.157 s = 3.9 µJ — once, ever**. That is
-  0.00004 % of the 9.8 J spendable tank, or **0.44 s** of ordinary ~2.7 µA dark standby. Meanwhile
-  the OFF-state leakage, which *does* run continuously, improves: 10 nA → 2 nA typ is −0.3 % of dark
-  standby, and on guaranteed numbers at 25 °C it is **≤20 nA against ≤100 nA**. The annual saving
-  beats the once-ever cost by ~200,000×. The 800 nA figure is a **+125 °C** corner where TPS22917
-  specifies nothing at all.
-
-  **Firmware co-requisite — DONE.** `NFC_SOFTSTART_US` raised 200 → 2000 µs in `firmware/nfc.c`.
-  TPS22919's ramp is slew-controlled and FIXED at 1.75 ms typ (2.7 mV/µs); at 200 µs the rail is at
-  ~0.54 V and the tag cannot answer. It still *worked* — the 20 × 250 µs poll loop covers 5 ms and
-  the rail crosses the tag's ~1.6 V minimum near 600 µs — but it silently spent the margin the
-  constant exists to hold. Verified `_delay_us(2000)` compiles to a 499 × 4-cycle `sbiw` loop
-  (≈2000 cycles = 2 ms at F_CPU 1 MHz) under `-Wall -Wextra -Wundef -Werror`; the docs' 768 µs
-  ceiling applies only to the backward-compatible path, not the `__builtin_avr_delay_cycles` one
-  `-Os` selects. The longer delay is harmless for TPS22917, so firmware and board can land apart.
-
-  **What we give up, stated plainly:** no reverse-current blocking (TPS22917 had it; nothing in the
-  notes makes it load-bearing on VNFC, but it is a deleted feature), V_IN min 1.6 V vs 1.0 V, and a
-  fixed ramp instead of a CT-adjustable one. **What we gain besides height:** $0.23 vs $1.14,
-  45,198 in stock vs 9,265, and an AEC-Q100 orderable (`TPS22919QDCKRQ1`) — which restores the
-  temp-grade-up policy that was silently dropped when U6 moved from TPS22918 to TPS22917, since
-  **TPS22917 has no -Q1 in any package**.
-
 - [ ] **[PCB — superseded reference] U6 alternatives considered**
   _(2026-08-05. The first-pass answer said "no clean option"; that was wrong — it searched inside
-  TI's TPS229xx family and stopped.)_ TPS22917 exists in exactly ONE package (SOT-23-6/DBV, drawing
+  TI's TPS229xx family and stopped. The decision has since LANDED — TPS22919 is U6 on the board
+  and schematic as of 2026-08-05; this table stays as the do-not-re-research record.)_
+  TPS22917 exists in exactly ONE package (SOT-23-6/DBV, drawing
   DBV0006A "SOT-23 - 1.45 mm max height") and has **no `-Q1` in any package** — so the temp-grade-up
   policy recorded for `TPS22918 -> TPS22918-Q1` was silently dropped when U6 became TPS22917. Both
   candidates below restore or improve on something the incumbent lacks.
@@ -678,30 +590,14 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
   afterwards, so it cannot rewrite the board — the same reason it is safe in the 1-up config.
   Cheap, and it closes a gap where the *only* surviving copy of a defect is the file you send out.
 
-- [ ] **[PCB — respin, DEFERRED ON PURPOSE] Re-measure SC1↔C1 after the supercap-land respin**
-  _(2026-08-04. Raised by the checklist sweep; investigated, and deliberately NOT fixed now.)_
-  SC1's can lands **0.090 mm** from C1's pads — the only supercap without room (SC2 0.350,
-  SC3 0.385, SC4 0.420). It is a hand-placement hazard, not a fab defect: the can registers to
-  its P/N pads, so one that looks square to the outline can still be sitting on C1, and the
-  joints are under the body where you cannot see them.
+- [ ] **[PCB — DRC hygiene] `missing_courtyard` is blind, and it hid a 0.090 mm hazard**
+  _(2026-08-04, raised by the SC1↔C1 sweep. The re-measure half of this item closed 2026-08-05:
+  the land correction moved SC1's pads ±1.30 mm **symmetrically**, so the can registration did
+  not move and SC1↔C1 stands at **0.090 mm** — with SC2 0.350, SC3 0.385, SC4 0.420. It did NOT
+  resolve itself; the accepted mitigation remains the caution in `PCB/README.md`'s hand-solder
+  step, and the boxed-in-C1 numbers live in that same box so nobody re-derives them.)_
 
-  **Nudging C1 does not work, and the numbers are worth keeping so nobody re-derives them.**
-  C1 is boxed in: 0.090 mm below SC1's body and **0.154 mm above a UPDI run**
-  ((9.935, 41.780)→(10.580, 41.780)). That UPDI run has nowhere to go either — it sits
-  0.153 mm from its own nearest neighbour and reaches 0.000 by 0.25 mm south. A full 2D
-  search over C1 translations buys a **0.110 mm** bottleneck against today's 0.090. A 0.02 mm
-  gain is not worth a re-route in a pocket that congested.
-  _(An earlier read of this said C1 had "~0.26 mm of southward freedom". That came from a
-  PADS-ONLY sweep, which never saw the UPDI trace — the same incomplete-copper mistake as
-  measuring cathode clearance without teardrop zones. Sweep ALL copper on the layer.)_
-
-  **The trigger for revisiting is the land correction**, which moves SC1's pads ±1.30 mm and
-  therefore moves where the can registers — so the 0.090 is measured against geometry that is
-  about to change. Re-measure all four after that lands; it may resolve itself, and if it does
-  not, the pocket gets re-routed once instead of twice. Interim mitigation is shipped: an
-  explicit caution in `PCB/README.md`'s hand-solder step.
-
-  Also open, and the reason nothing caught this: `missing_courtyard` is `"ignore"` in
+  What stays open is the reason nothing caught this: `missing_courtyard` is `"ignore"` in
   `PCB/solar-glow-drh-v4_0.kicad_pro`, and **44 of 78 footprints carry no courtyard at all,
   20 of them machine-placed** (C1, C11, C12, C24, C29, C3, C5, C6, C7, C8, R1, R10, R11, R12,
   R14, R17, R18, R2, R3, R4). Turning the rule on without drawing those courtyards just trades
@@ -709,7 +605,9 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
   then set the rule to `warning`.
 
 - [ ] **[PCB — respin] Delete `SB1`–`SB4`, the per-LED force-on bridges**
-  _(2026-08-04, DRH's call after an analysis pass. Bundle with the supercap-land re-route.)_
+  _(2026-08-04, DRH's call after an analysis pass. Was "bundle with the supercap-land re-route";
+  that landed 2026-08-05 without this — bundle with the next board-edit window instead, e.g. the
+  B.Cu plating-stub move.)_
 
   **What they are, because the docs disagree and one of them is wrong.** The chain is
   `ANODE → Dn → Kn → Rn (150 Ω) → LDRVn → U1 pin`, and `SBn` shorts `LDRVn` to **GND** —
@@ -762,7 +660,8 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
     regenerate the brace + fab set.
 
 - [ ] **[PCB — respin] Route `U5` pin 7 (`VOUT`) — NFC energy harvesting, currently unconnected**
-  _(2026-08-03. Bundle with the supercap-land re-route; both are respin-only.)_
+  _(2026-08-03. Was "bundle with the supercap-land re-route"; that landed 2026-08-05 without
+  this — still respin-only, bundle with the next board-edit window.)_
   `U5 pad 7 VOUT_7 -> unconnected-(U5-VOUT-Pad7)`. The NT3H2211 can deliver **up to 15 mW out of
   the reader's field** (datasheet §"Energy harvesting"), and on this board that pin goes nowhere.
   **Size it as a WAKE, not as a charger** — the arithmetic is not close:
@@ -1213,13 +1112,12 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
     *heat-shield-plus-clamp* that keeps the plate off the laminate while a local iron does the
     four joints each, rather than a soak fixture. Decide this before cutting anything.
 
-  **SEQUENCING — do not build the supercap jig yet.** The board's supercap lands are knowingly
-  wrong (`PCB/README.md`: pads at ±11.00 / ±16.25 where the datasheet wants ±12.30 / ±17.55,
-  2.60 mm on the pitch); `PCB/solarglow.pretty/SCHURTER_SCPC_WS17.kicad_mod` and
-  `PCB/solarglow.pretty/SCHURTER_SCPC_SS17.kicad_mod` already carry the correction but the
-  board does not, pending the B-side re-route. A jig cut today would encode the old pitch and
-  be scrap the day the re-route lands. The **cell** jig has no such dependency and could be
-  done first.
+  **SEQUENCING — the supercap-jig gate LIFTED 2026-08-05.** This paragraph used to block the
+  supercap jig on the knowingly-wrong lands (±11.00 / ±16.25 against the datasheet's
+  ±12.30 / ±17.55). The land correction landed 2026-08-05 — board pads now at datasheet pitch,
+  `x = 0` — so a jig cut from today's board encodes the right pitch. The **cell** jig never had
+  the dependency. One residual: the jig generator must read pad positions from the *board*, per
+  the "Shape of the work" below, so it inherits any future correction for free.
 
   **Shape of the work**: follow `enclosure/solar-glow-drh-pogo-testplate-cad.py`, which is
   already exactly this kind of thing — a fixture that is not part of the product, generated

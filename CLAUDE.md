@@ -313,9 +313,11 @@ red, the check itself fails.
   not fail it for you, because copper clearance passes at 0.155 and the mask hits are warnings
   you have already agreed to ignore. **Measure it with the TEARDROPS INCLUDED** — they are
   zones, not tracks, so a `GetTracks()` sweep silently misses them and flatters the answer:
-  cathode-to-ANODE for D3/D4/D5 reads 2.5216 mm tracks-only and **1.5749 / 1.0775 / 0.5513**
-  once teardrop copper is in. D2's own number is the same either way, but D5's is 4.6× worse
-  than the tracks-only figure, and D5 is the next one that will bite.
+  on the 2026-08-04 board, cathode-to-ANODE for D3/D4/D5 read 2.5216 mm tracks-only and
+  **1.5749 / 1.0775 / 0.5513** once teardrop copper was in — D5's real number was 4.6× worse
+  than the tracks-only figure. The 2026-08-05 supercap-land re-route re-fed the ANODE tree
+  through that corridor; the current teardrop-inclusive gaps are **D2 0.3740, D3 0.4249,
+  D4 0.3634, D5 0.5116** (`PCB/README.md`'s supercap box owns them now).
   **Zero come from F.Mask**, so the front art is clean. A *new* F.Mask hit is a real find.
   **Do not treat the hit COUNT as a constant, and never gate on it.** It is not deterministic:
   two runs on byte-identical inputs (same board, `.kicad_pro`, `.kicad_dru` and the same pinned
