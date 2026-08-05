@@ -54,6 +54,7 @@ COLORS = {
     "AVR64EA28_VQFN28":   ((0.100, 0.100, 0.105), "MCU, matte black epoxy QFN"),
     "AEM10300_QFN28":     ((0.100, 0.100, 0.105), "harvester, matte black epoxy QFN"),
     "MB85RC512TY_DFN8":   ((0.100, 0.100, 0.105), "FRAM, matte black epoxy DFN"),
+    "TI_X2SON4_DQN":      ((0.100, 0.100, 0.105), "LDO, matte black epoxy X2SON"),
     "NT3H2211_XQFN8":     ((0.100, 0.100, 0.105), "NFC tag, matte black epoxy XQFN"),
     "ADXL367_CC12":       ((0.100, 0.100, 0.105), "accelerometer, LGA/CC ceramic-black"),
 
