@@ -364,6 +364,21 @@ both short-edge midpoints; B.Cu once the TODO's stub move lands, which puts it u
 Check [19] warns about this every run until it moves, and check [19] also holds the fab request's
 stated side to the board so the two cannot drift apart.
 
+**Why 1-up and not 2-up (costed 2026-08-04, for a 10-card / 2-assembled order).** Two cards
+side by side — sharing a moat, long edges adjacent — would be **118.8 × 103.7 mm**: half the
+pieces (5 instead of 10) and **9.5% less laminate** (616.0 vs 680.3 cm² for ten cards), and
+5 panels lands exactly on PCBWay's 5-piece minimum. It still lost. **PCBWay quoted the 2-up
+about $3 MORE**, which ends the fab argument, and assembly cannot rescue it: setup, stencil,
+**25 feeder lines and 94 placements** (47 × 2) are identical whether the two assembled cards
+arrive on one panel or two. Only per-panel handling could differ, and it would have to beat $3
+*and* pay for the rework — the panel is built by *appending* a frame to the board's own
+s-expressions, so a second card means cloning every coordinate-bearing item in a ~9.7 MB file
+(footprints, tracks, zones **and their stored fills**, 605 mask-art polys) with fresh UUIDs and
+an x-offset. Mechanical, but one missed nested `(xy …)` corrupts artwork silently instead of
+failing. Revisit only if a future order is large enough for the per-card area saving to compound.
+_(Stacking short-edge-to-short-edge is worse on both counts: 6.0% area, and it points each
+card's bus tabs at the other card across the moat instead of at a rail.)_
+
 **Deliberately not on this panel:** fiducials, tooling holes and copper thieving. The first two
 want a wider rail than the bus leaves room for, and this board is hand-finished rather than
 machine-placed (see the hand-assembly notes below), so none of them buy anything today. Say so if

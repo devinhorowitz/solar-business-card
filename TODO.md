@@ -92,6 +92,36 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   glanceable desk answer to "can this light run the card?"). Sequence when picked up: fixture
   first (characterize V_mp), then set the blinker's window from it (its §5).
 
+- [ ] **[BENCH — BLOCKS the pogo rig] The test plate has no hold-down, only registration**
+  _(2026-08-04. Raised by DRH while costing the panel; the numbers below confirm it.)_
+  `enclosure/solar-glow-drh-pogo-testplate-cad.py` asserts **14 probe pads** (TP1–TP7 + JP1 ×4 +
+  J1 ×3) and specs P75 probes at **~100 gf** spring. That is **~9–14 N pushing up**, working to
+  full stroke. Its only fasteners are `2x dia 1.5 dowel pins through TH1/TH2` — those *register*
+  the panel, nothing *holds it down*. The 1-up panel is 65.6 × 103.7 × 0.6 mm of FR4, ≈ 4.1 cm³
+  at ~1.85 g/cm³ ≈ **7.6 g ≈ 0.075 N**. The springs beat gravity by **~120–180×**: the panel
+  never seats, it floats off the pins. A thumb is not a test fixture.
+
+  **Fix: clamp through the card's own eight M2 mounts.** `fit_rules.MOUNTS` — Ø2.20 plated
+  through-holes, 3.60 mm annuli, all on GND, four corners plus two mid-edge pairs, on a
+  **45.06 × 83.16** pattern. Distributed clamping, which also matters because 14 point loads in
+  the middle will bow a 0.6 mm board that is only pinned at two rail holes.
+
+  Three things fall out, and the third is the reason to do it even if the rig were fine:
+
+  - **Registration gets SHORTER, not just firmer.** TH1/TH2 are in the *rail*, so the tolerance
+    chain is rail → tab → rout → card. The mounts put the datum and the probed part on the same
+    piece of copper-clad.
+  - **In-panel testing is NOT lost.** The plate is already panel-sized, so the rails just rest on
+    it — screw the card down while it is still in the frame and "test as delivered, then depanel"
+    survives intact, now with actual clamping.
+  - **It decouples the plate from panel topology.** Today it imports `panelize` for `TH_LEFT_Y`,
+    `TH_RIGHT_Y`, `BUS_INSET` and `RAIL_W` — a fixture bolted to a frame that gets *routed away*.
+    Re-based on `fit_rules.MOUNTS` it stops caring whether the panel is 1-up, 2-up or absent,
+    and it sits on the same single source of truth the brace and shell already read. Note
+    check [16] bans literal mount lists in `enclosure/`, so this must be an import either way.
+
+  Do this before ordering the plate — it is a generator edit, and CI reprints the STEP/STL/drawing.
+
 - [ ] **[BENCH] Assemble and bring up the pogo test rig when the panel arrives**
   _(Piped 2026-08-02 — the rig was built in-repo but its bring-up had no entry.)_ Everything is
   generated and committed: the in-frame pogo test plate (`enclosure/solar-glow-drh-pogo-testplate`,
