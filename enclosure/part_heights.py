@@ -45,11 +45,20 @@ HEIGHTS = {
     "U1":  1.00,   # AVR64EA28 VQFN-28 4x4
     "U3":  0.87,   # ADXL367 CC-12-4 (ADI datasheet Rev.B: 2.2 x 2.3 x 0.87)
     "U5":  0.50,   # NT3H2211 XQFN-8
-    "U6":  1.45,   # SOT-23-6 body, datasheet max -- see MODEL_NOTES below
+    # U6 moved SOT-23-6 -> SC-70-6 (DCK) on 2026-08-05 with the TPS22917 -> TPS22919 swap.
+    # 1.10 is TI SLVSEN5B package outline DCK0006A, sheet titled "SOT - 1.1 max height", and
+    # the vendored stock model measures exactly 1.100 -- declaration and model agree to the
+    # micron, so check [7] measures rather than tolerates this one.
+    "U6":  1.10,   # SC-70-6 (DCK), 1.1 max height
     "U7":  0.90,   # MB85RC512TY FRAM DFN-8. WAS 1.75 here for a SOIC-8 that the v4
                    # rework removed; 1.75 cut this pocket clean through the brace.
     "U8":  0.90,   # AEM10300 QFN-28 4x4 (modelled 0.85)
-    "U9":  1.45,   # TPS7A0233 SOT-23-6, same body as U6
+    # U9 moved SOT-23-5 -> X2SON-4 (DQN) on 2026-08-05. 0.40 is TI SBVS277C package outline
+    # DQN0004A (drawing 4215302/E), sheet titled "X2SON - 0.4 mm max height". The model is
+    # ours, not KiCad's: the upstream footprint names a Package_SON.3dshapes STEP that does
+    # not exist in kicad-packages3D, so U9 rendered with no body until scripts/make_3d_models.py
+    # grew TI_X2SON4_DQN. At 0.40 U9 is now the SHORTEST B-side part on the board.
+    "U9":  0.40,   # X2SON-4 (DQN), 0.4 max height
     "L2":  1.00,   # Murata DFE252010F-100M, 2.5 x 2.0 x 1.0 -- see MODEL_NOTES
     "Q2":  1.20,   # SOT-23. Was falling through to the 0.60 default.
     "FB1": 0.80,   # 0603 ferrite bead. Was falling through to the 0.60 default.

@@ -10647,6 +10647,38 @@
 	)
 	(wire
 		(pts
+			(xy 490.22 387.35) (xy 485.14 387.35)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "ba41d94f-0670-5f60-86e2-bd6056ca9ddc")
+	)
+	(global_label "STO_LDO"
+		(shape passive)
+		(at 485.14 387.35 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+			(justify left)
+		)
+		(uuid "dca2ee67-c1a7-5694-925a-a2e0d3aa421c")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 485.14 387.35 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
+	(wire
+		(pts
 			(xy 25.4 43.18) (xy 20.32 43.18)
 		)
 		(stroke
@@ -24654,7 +24686,7 @@
 				)
 			)
 		)
-		(property "Value" "TTPS7A0233PDQNR  (X2SON-4)"
+		(property "Value" "TPS7A0233PDQNR"
 			(at 501.65 377.19 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -24697,7 +24729,7 @@
 				)
 			)
 		)
-		(property "MPN" "TPS7A0233PDBVR"
+		(property "MPN" "TPS7A0233PDQNR"
 			(at 490.22 372.11 0)
 			(hide yes)
 			(show_name no)

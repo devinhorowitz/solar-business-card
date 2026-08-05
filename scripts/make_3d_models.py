@@ -162,6 +162,11 @@ SPECS = {
         body=(5.0, 6.0, 0.90), tab=None,
         desc="U7 MB85RC512TY FRAM, LCC-8P-M05 DFN-8 — 5.00 x 6.00 x 0.90 MAX",
     ),
+    "TI_X2SON4_DQN": dict(
+        color=COL_IC,
+        body=(1.05, 1.05, 0.40), tab=None,
+        desc="U9 TPS7A0233PDQNR, X2SON-4 DQN0004A — 1.05 max square x 0.40 MAX height",
+    ),
 }
 
 # refdes -> (model path as KiCad should store it, Z rotation in degrees)
@@ -187,6 +192,18 @@ ATTACH = {
     # carries an exposed pad and U7's footprint has 8 pads and no EP, and the nearest stock part
     # measures 0.870 tall against U7's 0.90 MAX. Own solid, at the datasheet maximum.
     "U7": (f"{PRJ}/MB85RC512TY_DFN8.step", 0),
+    # U9 gained a model reference on 2026-08-05 when it moved to the X2SON package, and that
+    # reference was BROKEN ON ARRIVAL -- through no fault of the board. KiCad's own
+    # `Package_SON.pretty/Texas_X2SON-4_1x1mm_P0.65mm.kicad_mod` names
+    # `${KICAD10_3DMODEL_DIR}/Package_SON.3dshapes/Texas_X2SON-4_1x1mm_P0.65mm.step`, and that
+    # file DOES NOT EXIST in kicad-packages3D: the library ships exactly one X2SON solid,
+    # `X2SON-8_1.4x1mm_P0.35mm.step`, an 8-pin 1.4x1.0 part. So the upstream footprint carries a
+    # dangling model path, the board inherited it verbatim, and U9 rendered with no body at all
+    # -- the same failure mode U7 had, arriving by a different route. Own solid, at the
+    # datasheet maximum: TI SBVS277C package outline DQN0004A (drawing 4215302/E), sheet titled
+    # "X2SON - 0.4 mm max height", body 0.95-1.05 square. Modelled at 1.05 x 1.05 x 0.40 so the
+    # envelope is the worst case in every axis, which is the only question the brace asks.
+    "U9": (f"{PRJ}/TI_X2SON4_DQN.step", 0),
 }
 
 
