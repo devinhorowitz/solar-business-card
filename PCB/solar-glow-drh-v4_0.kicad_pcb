@@ -16514,7 +16514,7 @@
 		)
 		(pad "5" smd roundrect
 			(at 0 0 135)
-			(size 0.58 0.58)
+			(size 0.48 0.48)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
 			(net "GND")
