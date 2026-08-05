@@ -6169,7 +6169,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Supplier P/N" "296-48370-1-ND"
+		(property "Supplier P/N" "296-TPS22919DCKRCT-ND"
 			(at 0 0 180)
 			(unlocked yes)
 			(layer "B.Fab")
