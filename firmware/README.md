@@ -65,7 +65,8 @@ card's largest idle load. See **NFC contact card** below.
 > The **NFC** firmware is verified against the NTAG I2C plus datasheet
 > (NT3H2111_2211 Rev 3.6), and the whole front-end is on the committed
 > `solar-glow-drh-v4_0.kicad_pcb`, verified from its copper: tag `U5`, the `U6`
-> (TPS22917) VCC load switch, `R14` and `C8` are placed and wired as this
+> (TPS22917 today; **TPS22919 pending**, see `TODO.md` — pin-for-pin on every net
+> this firmware touches, and `NFC_SOFTSTART_US` already covers both) VCC load switch, `R14` and `C8` are placed and wired as this
 > firmware assumes — FD→PA6, NFC_EN→PA7→`U6` enable, `U6` gating VS→the switched
 > tag rail (`VNFC`), the internal PA6 pull-up holding FD to **VS**, `R14` (1 M) holding NFC_EN low.
 > What still needs the bench is electrical, not wiring: that FD swings to a valid
@@ -214,7 +215,7 @@ AVR64EA28, VQFN-28, on the **back** of the board.
 | 1 | PA3 | LDRV1 | LED D2, TCA0 WO3 |
 | 2 | PA4 | CHG_DIS_G | gate of Q2, the low-side charge-disable buffer (push-pull; HIGH = disable AEM charging during an NFC read; R18 1 M pulldown holds charging ENABLED while the MCU is dead — the cold-start-deadlock fix) |
 | 4 | PA6 | FD | NFC field-detect in (`U5`); PORTA pin int, **both edges**; field-powered (works VCC-off); int pull-up on (sole FD pull-up; no external FD resistor) |
-| 5 | PA7 | NFC_EN | Enables the NFC VCC load switch (`U6`, TPS22917), **active-HIGH**; init LOW = NFC off. (`R14`, 1 M, holds `U6` off while PA7 tristates during reset/UPDI/brown-out -- at (5.35, 4.92) on the board. Firmware also drives PA7 low-before-output and low-before-sleep, so the window is covered both ends.) |
+| 5 | PA7 | NFC_EN | Enables the NFC VCC load switch (`U6`, TPS22917 → **TPS22919 pending**; both active-HIGH on pin 3, same net), **active-HIGH**; init LOW = NFC off. (`R14`, 1 M, holds `U6` off while PA7 tristates during reset/UPDI/brown-out -- at (5.35, 4.92) on the board. Firmware also drives PA7 low-before-output and low-before-sleep, so the window is covered both ends.) |
 | 8 | PC2 | SDA | TWI0 host (PORTMUX **ALT2**), ext 4.7k → VS |
 | 9 | PC3 | SCL | TWI0 host (ALT2), ext 4.7k → VS |
 | 10 | PD0 | VDDIO2 | plain EA GPIO on the DD's old VDDIO2 pad; `SJ1` deleted outright 2026-07-30, but `C3` (100 nF → GND, the DD-era decoupler) still hangs on the net — no DC hold, so the internal pull-up in `gpio_init` still does that job (and charges C3 once at boot). *(This row said "SJ1 = DNP, so the pin floats" until the 2026-08-01 pressure test — doubly stale.)* |
@@ -404,6 +405,21 @@ things here diverge from the hardware doc's §6:
   *Fuses*) is now the single largest *avoidable* draw on the board, so keeping it
   sampled/off matters more than it did. Tap is single-axis (Z) and the single-vs-double
   decision is made in the ADXL367's own hardware window; see *What to tune → Tap*.
+- **The NFC load switch's ON-state current is not in this sum, and cannot be.** `U6`
+  gates VNFC and is turned on by `nfc_provision_default()` **exactly once, at cold
+  boot** — re-boots exit early on the CC check, and FD-wake works with VCC gated off
+  (the tag's field-detect pin is operated from the reader's field). So the switch's
+  I_Q is a one-shot, not a standing line item; only its OFF-state leakage belongs in
+  the dark budget above. Worked for the pending TPS22919 swap: the provisioning
+  window is ~157 ms (19 NDEF blocks × [1.7 ms of 100 kHz bus + 6 ms `NFC_EEPROM_WR_MS`]
+  + the CC block), so the 8 µA-vs-0.5 µA I_Q difference costs **3.9 µJ once, ever** —
+  0.00004 % of the 9.8 J spendable tank, or **0.44 s** of ordinary ~2.7 µA dark
+  standby. Its OFF-state leakage goes the other way and *does* run continuously:
+  10 nA typ → 2 nA typ is **−0.3 % of dark standby**, and on guaranteed numbers at
+  25 °C it is ≤20 nA against ≤100 nA. The annual saving beats the once-ever cost by
+  ~200,000×. _(All of it against a dark budget that is itself a 2.0 V-referenced
+  lower bound with the FD leakage unbudgeted — so treat the percentages as ratios,
+  not as measurements.)_
 - **There is no AC0 "instant" wake-on-light from Power-Down** (the hardware doc's
   option A). This firmware's baseline sleep is Power-Down, and the EA's wake table
   (DS40002443 Table 13-3) lists only the PORT pins, TWI address match, BOD VLM,

@@ -613,7 +613,7 @@ Summary of the **orderable** lines:
 | C9 | 1 | 47 pF, C0G/NP0, ±2 %, 250 V, High-Q | 0805 | `QSCT251Q470G1GV001E` |
 | C13 | 1 | 10 µF, X5R, 16 V | 0603 | `GRT188R61C106KE13D` |
 | L1 | 1 | 2.76 µH design value | PCB copper — no package | **(no part — PCB feature)** |
-| U6 | 1 | Ultra-low-leakage load switch | SOT-23-6 (DBV) | `TPS22917DBVT` |
+| U6 | 1 | Ultra-low-leakage load switch | SC-70-6 (DCK) — **was SOT-23-6 (DBV); board sync pending** | `TPS22919DCKR` |
 | R14 | 1 | 1 MΩ, ±1% | 0402 | `AC0402FR-071ML` |
 | U8 | 1 | AEM10300 | QFN-28 (4x4 mm, EP land 2.30) | `10AEM10300C0000` |
 | U9 | 1 | TPS7A0233, 3.3 V, ~25 nA Iq | SOT-23-5 | `TPS7A0233PDBVR` |

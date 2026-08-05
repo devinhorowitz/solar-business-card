@@ -456,6 +456,178 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
 
 ## PCB — `PCB/solar-glow-drh-v4_0.kicad_pcb` / `.kicad_sch`
 
+- [ ] **[BUG — `part_heights.py`] C25 is declared 1.25 mm and the part is 1.45 mm max**
+  _(2026-08-05, found by the thinning sweep. Not urgent — nothing on the bench is broken — but it is
+  a wrong number in a single-source-of-truth file, and every thickness calculation reads it.)_
+  `enclosure/part_heights.py:65` carries `"C25": 1.25` with the comment "1.25 max". The part is TDK
+  `C2012X5R1C226M125AC`, and **TDK's thickness code is the NOMINAL, not the maximum**: T = 1.25 ±0.20
+  → **1.45 mm max**. Verified twice — TDK's own dimension table, and DigiKey's `Thickness (Max):
+  0.057" (1.45mm)`. The same convention check: the `085` code part reads `Thickness (Max): 1.00mm`,
+  i.e. 0.85 nominal +0.15. So `125` never meant 1.25 max.
+
+  **No physical interference today.** `SPAN_LIMIT` is 1.180, so C25 is a THROUGH-hole in the brace at
+  both 1.25 and 1.45 — there is no pocket ceiling to hit. (An earlier draft of this finding claimed
+  the pocket was 0.20 mm too shallow; that was wrong, and the through-hole is why.)
+
+  **What it does break is the arithmetic.** C25 belongs on the 1.45 wall with C26/C27, not in the
+  1.25 tier. Any thinning plan that treats it as 1.25 is wrong by 0.20 mm.
+
+  **Why no gate caught it, which is the durable part.** Check [7] compares the DECLARED height against
+  the part's **3D model**, and C25 resolves to KiCad's generic `C_0805_2012Metric` (body 1.25).
+  Declared 1.25 against a 1.25 model is an exact match and passes green forever. **Nothing anywhere
+  compares the model against the datasheet.** C26/C27 escaped only by accident — they are declared
+  1.45 against the same 1.25 model, an overshoot the check permits. The gap class is: *a part whose
+  datasheet max exceeds its generic package model, declared at the model's height.* Worth a gate.
+
+- [ ] **[PCB — respin, DECIDED] U9 `TPS7A0233PDBVR` → `TPS7A0233PDQNR` (SOT-23-5 → X2SON, 1.45 → 0.40 mm)**
+  _(2026-08-05. Decided on area and clearance, not thickness — see the cavity note at the end.)_
+  Same silicon, same 3.3 V fixed. Height from TI's own package drawings on both ends: **SBVS277C /
+  DQN0004A, drawing 4215302/E**, sheet titled *"X2SON - 0.4 mm max height"*, against **DBV0005A,
+  4214839/K**, *"SOT-23 - 1.45 mm max height"*. A **1.05 mm** delta, datasheet to datasheet. That
+  also independently confirms the 1.45 this repo already carries for U9.
+
+  **Zero electrical penalty, structurally rather than by luck:** SBVS277C §6.5 Electrical
+  Characteristics is a SINGLE table headed "Specified at TJ = −40 °C to +125 °C" with **no
+  per-package columns**. IGND 25 nA typ / 46 nA max @25 °C, ISHDN 3 nA typ, PSRR 55 dB @1 kHz,
+  IOUT 200 mA, TJ −40…+125 — the same numbers the incumbent is specified to. Only §6.4 Thermal is
+  per-package. _(DigiKey's "60 nA Iq" field reads the same on the incumbent, so it is their
+  max-convention, not a package difference.)_ There is **no `-Q1` TPS7A02 in any package**, so this
+  is not a temp-grade regression — the incumbent is the same commercial part.
+
+  **The reason to take it is AREA.** U9's courtyard today is **12.229 mm²**; the X2SON land is
+  **~2.6 mm²**. That returns **~9.7 mm²** to a B side where SC1's can sits 0.090 mm from C1 and
+  SC1.P has six conflicts in U1's `INT1`/`INT2`/`VSENSE` fan — the same region the supercap-land
+  respin has to re-route anyway. Cost: **$0.89 vs $0.84**, DigiKey 2,244, Active. _(Mouser 0 at time
+  of writing — effectively single-distributor. `TPS7A0233DQNR` is $0.84 and mechanically identical,
+  differing only in lead finish, but SBVS277C contradicts itself on whether active discharge is
+  P-only — §7.3.2 is titled "Active Discharge (P-Version Only)" while Table 9-1 says all members have
+  it. The incumbent is a P part; stay P.)_
+
+  **Integration, none of it optional:**
+  - **Not a drop-in.** 5 pins → 4 AND the order changes: DBV 1=IN 2=GND 3=EN 4=NC 5=OUT →
+    DQN 1=OUT 2=GND 3=EN 4=IN. New symbol, new footprint, re-route the U9 block. Board check: pad 4
+    is `unconnected-(U9-NC-Pad4)` today so nothing is lost, and EN is strapped to IN (`STO_LDO` on
+    pads 1 and 3), so the LDO is permanently enabled.
+  - **Exposed thermal pad, internally tied to GND, must be soldered** (drawing Notes 3/7). It lands
+    on the B.Cu GND pour, so no new net.
+  - **§8.4.1 forbids a via directly under the DQN pad** (solder wicking); any via under paste must be
+    filled/plugged/tented. Draw the keepout.
+  - **Solder-mask-defined land**, 4× (0.18 × 0.36) on 0.65 pitch, 0.22 mm typ exposed-metal clearance
+    — at PCBWay's standard mask-dam minimum. Worth a DFM query rather than an assumption.
+  - Repo chain: new 3D model → `part_colors.py` (check [10] errors on an uncoloured model) →
+    `part_heights.py` 1.45 → 0.40, measured against that model by check [7] → check [12]'s
+    `FRONT_SIDE` snapshot.
+  - Do NOT repeat "better thermals": RθJA favours DQN (179.1 vs 181.9) but that is a JEDEC high-K
+    figure. On 0.6 mm two-layer with no via under the pad the governing metrics are RθJB 116.3 vs
+    88.1 and RθJC(top) 137.6 vs 53.0 — DQN is **worse**. Immaterial at tens of mW; just do not claim it.
+
+  **It buys 0.00 mm of card thickness on its own**, and that is fine — take it for the area. The
+  cavity is `max(supercap + 0.10, tallest_other + 0.22)` and C25/C26/C27 hold the wall at 1.45.
+
+- [ ] **[PCB — respin, DECIDED] U6 `TPS22917DBVT` → `TPS22919DCKR` (SOT-23-6 → SC-70-6, 1.45 → 1.10 mm)**
+  _(2026-08-05. Decided after the I_Q objection was costed against the firmware and did not survive.)_
+  **The schematic side is DONE** — Value, MPN, Footprint (`Package_TO_SOT_SMD:SOT-363_SC-70-6`),
+  Datasheet and Description are updated, and the symbol's pin 4 is renamed `CT` → `NC`. Nothing else
+  in the schematic moved, because **the pinout is identical on every net we use**:
+
+  | pad | TPS22917 | net | TPS22919 |
+  |---|---|---|---|
+  | 1 | IN | `VS` | IN |
+  | 2 | GND | `GND` | GND |
+  | 3 | ON | `NFC_EN` | ON (active-HIGH) |
+  | 4 | CT — floated | unconnected | **NC — "leave floating"** |
+  | 5 | QOD → VOUT | `VNFC` | QOD (tying to VOUT sanctioned, internal 24 Ω) |
+  | 6 | VOUT | `VNFC` | VOUT |
+
+  We already float CT, so losing the adjustable ramp costs nothing. ERC is unchanged (3 pre-existing
+  `isolated_pin_label` warnings before and after). **Remaining: swap the footprint on the board and
+  re-route** — SC-70-6 is 2.0 × 2.1 mm against SOT-23-6's 2.9 × 1.6.
+
+  **Why the 8 µA I_Q objection failed.** `nfc_provision_default()` runs **once, at cold boot**
+  (`main.c:435`); re-boots exit early on the CC check, and FD-wake works with VCC gated off. The one
+  provisioning window is ~157 ms (19 NDEF blocks × [1.7 ms of 100 kHz bus + 6 ms `NFC_EEPROM_WR_MS`]
+  + the CC block), so the I_Q delta costs **7.5 µA × 3.3 V × 0.157 s = 3.9 µJ — once, ever**. That is
+  0.00004 % of the 9.8 J spendable tank, or **0.44 s** of ordinary ~2.7 µA dark standby. Meanwhile
+  the OFF-state leakage, which *does* run continuously, improves: 10 nA → 2 nA typ is −0.3 % of dark
+  standby, and on guaranteed numbers at 25 °C it is **≤20 nA against ≤100 nA**. The annual saving
+  beats the once-ever cost by ~200,000×. The 800 nA figure is a **+125 °C** corner where TPS22917
+  specifies nothing at all.
+
+  **Firmware co-requisite — DONE.** `NFC_SOFTSTART_US` raised 200 → 2000 µs in `firmware/nfc.c`.
+  TPS22919's ramp is slew-controlled and FIXED at 1.75 ms typ (2.7 mV/µs); at 200 µs the rail is at
+  ~0.54 V and the tag cannot answer. It still *worked* — the 20 × 250 µs poll loop covers 5 ms and
+  the rail crosses the tag's ~1.6 V minimum near 600 µs — but it silently spent the margin the
+  constant exists to hold. Verified `_delay_us(2000)` compiles to a 499 × 4-cycle `sbiw` loop
+  (≈2000 cycles = 2 ms at F_CPU 1 MHz) under `-Wall -Wextra -Wundef -Werror`; the docs' 768 µs
+  ceiling applies only to the backward-compatible path, not the `__builtin_avr_delay_cycles` one
+  `-Os` selects. The longer delay is harmless for TPS22917, so firmware and board can land apart.
+
+  **What we give up, stated plainly:** no reverse-current blocking (TPS22917 had it; nothing in the
+  notes makes it load-bearing on VNFC, but it is a deleted feature), V_IN min 1.6 V vs 1.0 V, and a
+  fixed ramp instead of a CT-adjustable one. **What we gain besides height:** $0.23 vs $1.14,
+  45,198 in stock vs 9,265, and an AEC-Q100 orderable (`TPS22919QDCKRQ1`) — which restores the
+  temp-grade-up policy that was silently dropped when U6 moved from TPS22918 to TPS22917, since
+  **TPS22917 has no -Q1 in any package**.
+
+- [ ] **[PCB — superseded reference] U6 alternatives considered**
+  _(2026-08-05. The first-pass answer said "no clean option"; that was wrong — it searched inside
+  TI's TPS229xx family and stopped.)_ TPS22917 exists in exactly ONE package (SOT-23-6/DBV, drawing
+  DBV0006A "SOT-23 - 1.45 mm max height") and has **no `-Q1` in any package** — so the temp-grade-up
+  policy recorded for `TPS22918 -> TPS22918-Q1` was silently dropped when U6 became TPS22917. Both
+  candidates below restore or improve on something the incumbent lacks.
+
+  | | TPS22917 (now) | **TPS22919** SC-70-6 | **MIC94085** UDFN |
+  |---|---|---|---|
+  | Height | 1.45 | **1.10** | **0.60** |
+  | ISD typ | 10 nA | **2 nA** | 20 nA |
+  | ISD max | 250 nA (only to +105 °C) | 20 nA @25 °C; 800 nA to +125 °C | 1 µA |
+  | IQ (ON) | **0.5 µA** | 8 µA | 8 µA |
+  | Turn-on | 100 µs (CT open) | 1.75 ms fixed | 120 µs |
+  | QOD | 150 Ω pin→VOUT | 24 Ω internal | 250 Ω internal |
+  | Reverse blocking | yes | no | no |
+  | AEC-Q100 | **none exists** | **yes** (`TPS22919QDCKRQ1`) | no |
+  | Price / stock | $1.14 / 9,265 | **$0.23 / 45,198** | $0.60 / 21,246 + 6,107 |
+
+  **The temperature comparison is not apples-to-apples and it favours TPS22919.** The incumbent's
+  table simply STOPS at +105 °C — it guarantees nothing above that. TPS22919 specifies to +125 °C,
+  and at 25 °C promises **≤20 nA** where the incumbent only promises ≤100 nA. The 800 nA is a
+  +125 °C corner figure for a card that lives in a wallet. Its real cost is **IQ: 8 µA vs 0.5 µA**
+  during NFC windows (N-channel charge pump), plus no reverse blocking and a fixed 1.75 ms ramp.
+  There is precedent — the notes accepted TPS22918's 8.3 µA — but the swap TO TPS22917 was made
+  deliberately to escape it, so this reopens a closed decision.
+
+  **Neither buys thickness while C25/C26/C27 hold 1.45.** Decide on leakage, price, AEC-Q100 and
+  area, not on millimetres.
+
+- [ ] **[PCB — CLOSED, do not re-derive] C26/C27 cannot be thinned; and the incumbent is nearly out of stock**
+  _(2026-08-05. Recorded so this is not researched a third time.)_
+  **No vendor makes a 10 µF / 16 V / true-X7R / 0805 thinner than 1.40 mm max, and our Samsung
+  `CL21B106KOQNNNG` is the thinnest that exists.** Every such part industry-wide is the same 1.25 mm
+  nominal; only the tolerance grade differs (Samsung ±0.15 → 1.40; everyone else ±0.20 → 1.45). TDK
+  and Vishay do not offer it at 16 V in 0805 at all. Dropping to 10 V or 6.3 V buys **0.00 mm** —
+  Samsung's 10 V and 6.3 V parts are also 1.40 — so the deliberate 16 V DC-bias choice is
+  thickness-free and stands. X7S and X7T also buy nothing (1.40, 1.45). X6S reaches 1.00 mm but
+  costs the 125 °C ceiling and is NRND.
+
+  **The `2 × 4.7 µF` route was proposed and is REFUTED, twice over.** The low-profile 0805 class
+  (0.85 ±0.10 → 0.95 max) does carry 4.7 µF/16 V/X7R, but: (1) **EOL** — Taiyo Yuden renumbered its
+  catalogue, legacy PNs went NRND 2023-04-01 and EOL 2025-04-01, and `EMK212BB7475MD-T`'s own spec
+  sheet says *"Lifecycle Stage: New PN available"* on the very page the dimension comes from; the
+  successor `MSASE219LB7475MTNA01` is 0 stock everywhere. (2) **Effective capacitance** — the
+  datasheet's DC-bias curve reads −55 % at 5.5 V, and STO charges to VOVCH 4.65 V (~−46 %), so the
+  pair delivers **~5.1 µF effective against the AEM10300's CINT = 10 µF requirement**. Tolerance
+  alone regresses before any bias: incumbent ±10 % → 9.00 µF worst case; the pair at ±20 % → 7.52 µF.
+  This is the failure the project already hit once, when C25 was re-picked 2026-07-30 "because the
+  0603/10V one derated under the AEM's CSRC minimum."
+
+  Two further blockers if anyone revisits: check [7]'s `MODEL_NOTES` waiver is keyed **by model, not
+  refdes**, so waiving `C_0805_2012Metric` to allow a 0.95 declaration would blind the check for C25
+  and C9 as well; and C27 sits on the tracked 4.17 mm² live-pad-under-titanium ledger and is named in
+  `scripts/interference_drc.py`'s `EDGE_LEDGER`.
+
+  **ORDER-BLOCKING:** `CL21B106KOQNNNG` is **0 stock at DigiKey**, 394 at Mouser. You need 20 for a
+  10-card build. Buy them with the order, not after.
+
 - [ ] **[PCB — KiCad, do it with the supercap lands] Move the two plating-bus stubs to B.Cu**
   _(2026-08-04. The panel half is DONE and landed; this is the board half, and it needs KiCad.)_
   Today both stubs are net-GND copper `gr_line`s **on F.Cu**, crossing the outline at x = 25.4:

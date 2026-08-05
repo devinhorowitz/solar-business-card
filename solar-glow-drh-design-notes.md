@@ -820,6 +820,21 @@ prioritization rather than a blanket "everything AEC-Q100" sweep.
     ~50× lower off-state drain; no AEC variant exists, and dark current beat grade for this
     always-energized, ~always-off switch. See the TODO 6-pin audit + BOM.)_
 
+    _(**Superseded again 2026-08-05: `TPS22919DCKR`, SC-70-6.** The 2026-07-23 note above says "no
+    AEC variant exists" — true of TPS22917, and that is exactly the problem: taking the 917 silently
+    dropped the AEC-Q100 upgrade this whole bullet was written to capture. TPS22919 has one
+    (`TPS22919QDCKRQ1`), so the policy is restored rather than abandoned. It also wins on the metric
+    the 917 was chosen for: **ISD 2 nA typ / ≤20 nA max at 25 °C against the 917's 10 nA typ /
+    ≤100 nA max** — 5× better guaranteed, where the card actually lives. Its 800 nA max applies only
+    at **+125 °C**, a corner at which the 917 publishes nothing at all, so the headline "worse
+    leakage" comparison is between a specified number and an absent one. The cost is I_Q 8 µA typ
+    while ON versus 0.5 µA — and that is a **one-shot**, because `nfc_provision_default()` runs once
+    at cold boot: 7.5 µA × 3.3 V × 157 ms = **3.9 µJ, once, ever**, i.e. 0.00004 % of the 9.8 J
+    spendable tank or 0.44 s of ordinary dark standby. Also lost: reverse-current blocking, and the
+    CT-adjustable ramp (fixed 1.75 ms now — `NFC_SOFTSTART_US` raised 200 → 2000 µs to match).
+    Also gained: $0.23 vs $1.14 and 45,198 in stock vs 9,265. Pin-for-pin on every net used; pin 4
+    goes CT-float → NC-float. Schematic landed 2026-08-05, board sync pending.)_
+
 - **Evaluated and rejected -- automotive accelerometer (full survey + FXLS8961 head-to-head).**
   Surveyed all 34 in-stock AEC-Q accelerometers against the ADXL367's role. 28 are airbag/crash sensors
   (±100-250 g, 5-30 V, PSI5/DSI/PCM bus) -- wrong class; the ADI **ADXL316** was likewise wrong-class
