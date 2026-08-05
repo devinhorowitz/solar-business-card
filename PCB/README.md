@@ -803,21 +803,26 @@ Work outside-in by heat sensitivity:
    > fix: it is boxed in, 0.090 mm below SC1's body and **0.154 mm above a UPDI run**
    > ((9.935, 41.780)→(10.580, 41.780)), and that UPDI run is itself only 0.153 mm from its own
    > nearest neighbour. The best translation available to C1 in ANY direction buys 0.110 mm
-   > against today's 0.090 — not worth the re-route. Revisit after the land correction below,
-   > which moves SC1's pads ±1.30 mm and therefore moves where the can registers.
+   > against today's 0.090 — not worth the re-route. _(The 2026-08-05 land correction below moved
+   > SC1's pads ±1.30 mm **symmetrically about the body centre**, so where the can registers did
+   > not move and the 0.090 stands unchanged. Re-measured on the corrected board.)_
    >
    > Nothing in CI sees this. `missing_courtyard` is `ignore` in the project file and 44 of 78
    > footprints (20 of them machine-placed) carry no courtyard at all, so the courtyard gate is
    > blind to it — the *goes quiet instead of loud* pattern this repo has been bitten by before.
 
-   > **The land on THIS board is wrong, and knowingly so (2026-08-03).** Measured off the SCPC
+   > **The lands are at datasheet pitch since 2026-08-05** — centres at **±12.30** (WS17) and
+   > **±17.55** (SS17), pads on the centreline (`x = 0`, deliberately — see below). History of
+   > how they got there, kept because every number in it still explains the geometry:
+   >
+   > **The land was wrong, and knowingly so (2026-08-03).** Measured off the SCPC
    > datasheet's Case WS10/WS13/WS17 and SS17 bottom views, the terminals are 3.50 mm long with
    > their **outer edge 0.20 mm inside the body end** — centres at **±12.30** (WS) and **±17.55**
    > (SS) — and laterally opposed as above. The board's embedded lands put both pads on the
    > centreline at ±11.00 / ±16.25: **1.30 mm per side too far in, 2.60 mm on the pitch.** The
    > cause was reading the datasheet's `1.5 ±0.5` as an inset from the *end*; it is an inset from
-   > a long *edge*. A cap still solders — about 63 % of each terminal's length lands on copper —
-   > but P also overhangs its 7.75 mm terminal by ~3.1 mm onto the bare can.
+   > a long *edge*. A cap still soldered — about 63 % of each terminal's length landed on copper —
+   > but P also overhung its 7.75 mm terminal by ~3.1 mm onto the bare can.
    >
    > `PCB/solarglow.pretty/SCHURTER_SCPC_WS17.kicad_mod` and `…_SS17.kicad_mod` **carry the
    > corrected geometry**, but the board's pads are EMBEDDED in the `.kicad_pcb` and do not read
@@ -843,11 +848,14 @@ Work outside-in by heat sensitivity:
    > | pitch only (±1.30, pads stay on centreline) | **7 segments / 4 nets** |
    > | full datasheet (pitch **+** lateral offset) | **25 segments / 8 nets** |
    >
-   > **⚠ MOVE THESE PADS IN KICAD, NOT BY EDITING THE FILE.** A pad move invalidates the stored
-   > zone fills, and nothing in a text edit can regenerate them. `SC4` was corrected by text
-   > surgery on 2026-08-04 and **reverted the same day**: the pads moved, the pours did not, and
-   > `SC4.P` (net `MID`) ended up with **6.97 mm² of GND pour sitting on it** — a short. KiCad
-   > refills on save, which is why the fix belongs there.
+   > **⚠ A pad move invalidates the stored zone fills, and a naive text edit cannot regenerate
+   > them.** `SC4` was corrected by text surgery on 2026-08-04 and **reverted the same day**: the
+   > pads moved, the pours did not, and `SC4.P` (net `MID`) ended up with **6.97 mm² of GND pour
+   > sitting on it** — a short. The 2026-08-05 correction landed by text surgery anyway, but only
+   > because the stale-fill hazard was closed head-on: refill the zones on a scratch copy (double
+   > fill, with the `.kicad_pro`/`.kicad_dru` beside the board, or the fill uses default rules)
+   > and splice the changed `(filled_polygon)` payloads back by zone uuid. A pad move without
+   > that step — or a KiCad session, which refills on save — re-creates the SC4 short.
    >
    > **And `--refill-zones` HIDES IT.** `kicad-cli pcb drc --refill-zones …` — the invocation
    > CLAUDE.md documents — refills in memory first, so it reported the exact ledger and 0
@@ -859,24 +867,31 @@ Work outside-in by heat sensitivity:
    > the lateral offset costs 3.5× the pitch. The offset moves P sideways by 3.125 mm into a live
    > channel; the pitch only reaches 1.30 mm further out. **So do the pitch, keep `x = 0`.**
    >
-   > **All four lands are still uncorrected on the board.** `SC4` was moved on the pitch
-   > 2026-08-04 and reverted the same day for the stale-fill reason above — its *routing* is
-   > clear (0 conflicts, and it was the one land with room), so it is the one to do first in
-   > KiCad. The other three are each blocked by congestion rather than by anything a narrower
-   > pad could dodge:
+   > **All four lands were corrected 2026-08-05** — pitch only, pads kept at `x = 0` — and every
+   > blocker above was re-routed rather than waived:
    >
-   > - **`SC2.N`** — 1 conflict (`STO` at y 3.175), and 7.7 mm of empty channel south of it. Easiest.
-   > - **`SC3.P`** — moving it produced **4 clearance errors** (0.0643 mm to `ANODE`, 0.0943 to
-   >   `K2`, against a 0.1520 hard floor) and the offending tracks cannot yield: nudging them
-   >   north makes it *worse*. Reverted.
-   > - **`SC1.P`** — 6 conflicts in the `INT1`/`INT2`/`VSENSE` fan out of U1, in the same pocket
-   >   that boxes in C1.
+   > - **`SC4`** — the one land with room; moved clean, as the 2026-08-04 attempt already showed.
+   > - **`SC2.N`** — the `STO` run at y 3.175 dropped south into the empty channel.
+   > - **`SC3.P`** — the one that could not be nudged. Its pocket was congested by the `ANODE`
+   >   *feed* passing through; the fix was topological, not incremental: the ANODE tree is now fed
+   >   from the D3 branch, and the old feed — segments, both vias, and their teardrops — came out
+   >   whole as dead copper. (Its last link hid from the no-refill DRC behind a stored teardrop
+   >   fill and only showed as a dangler under `--refill-zones` — the both-ways rule cuts both
+   >   ways.)
+   > - **`SC1.P`** — the 6-conflict `INT1`/`INT2`/`VSENSE` fan out of U1 re-routed within its
+   >   pocket; C1 did not move (see the can-clearance note above — the 0.090 stands).
    >
-   > **Watch out when doing these by hand:** re-linking a cap to the library footprint also picks
-   > up the lateral offset, i.e. the 25-conflict variant. To match `SC4`, move the pads keeping
-   > `x = 0`. And check CLEARANCE, not just overlap — `SC3.P` overlapped nothing and still broke
-   > the hard floor.
-   > **Correcting the board is a deliberate B-side re-route, and belongs to a respin.**
+   > Verified on the corrected board, both DRC modes: 0 unconnected, 0 clearance, 0 dangling,
+   > exact exclusion ledger, 0 parity issues; mask art MATCH; glow-window gaps re-measured
+   > teardrop-inclusive — **D2 0.3740, D3 0.4249, D4 0.3634, D5 0.5116 mm** (D2 unchanged, the
+   > others now reflect the re-fed ANODE tree). **Teardrops in the re-routed pockets were deleted
+   > with the copper they hugged and are NOT re-added** — run *Tools → Add Teardrops* in the next
+   > GUI session; the refill on save will keep the fills honest.
+   >
+   > **Watch out if a cap is ever re-linked by hand:** *Update Footprints from Library* pulls the
+   > FULL datasheet geometry — the lateral offset too, i.e. the 25-conflict variant. The board
+   > deliberately keeps `x = 0`. And check CLEARANCE, not just overlap — `SC3.P` overlapped
+   > nothing and still broke the hard floor.
 2. **Solar cells PV1 / PV2 last (most fragile).** Iron **≤ 260 °C, ≤ 2 s per joint**, and
    **do not clean with IPA**. Mind cell polarity to the custom land.
 
