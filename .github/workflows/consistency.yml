@@ -45,6 +45,10 @@ on:
       # board — the same fact the panel's tab spur is emitted from. An edit to that reader
       # changes what the check sees with no PCB/** in the diff.
       - 'scripts/panelize.py'
+      # check [20] imports bom_split.build() -- the Supplier-P/N gate reads every BOM
+      # line through it, so an edit to the splitter changes what the check sees with
+      # no PCB/** in the diff.
+      - 'scripts/bom_split.py'
       # check [9] parses the OUTS list out of kibot.yml to confirm that everything it calls
       # "automated" is something CI actually commits.
       - '.github/workflows/kibot.yml'
@@ -67,6 +71,7 @@ on:
       - 'scripts/face_art.py'
       - 'scripts/glyphs.py'
       - 'scripts/panelize.py'
+      - 'scripts/bom_split.py'
       - '.github/workflows/kibot.yml'
       - 'enclosure/**'
       - 'BOM/**'
