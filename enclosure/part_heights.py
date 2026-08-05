@@ -56,13 +56,33 @@ HEIGHTS = {
     # Capacitors above 0402 -- the prefix rule below is the 0402 number and undershoots
     # these. Each is set to cover its modelled body with a little air.
     "C4":  0.90, "C13": 0.90, "C22": 0.90, "C23": 0.90,                # 0603 (0.80)
-    # C25 re-picked 2026-07-30 (audit #2) to an 0805/16V part (TDK C2012X5R1C226M125AC,
-    # 1.25 max) because the 0603/10V one derated under the AEM's CSRC minimum. The land
-    # sync landed 2026-07-30 (87f7af1, moved to x 25.875 -- every neighbour gap >=0.525);
-    # this entry flipped 0.90 -> 1.25 in the same change, the sequencing C9 established:
-    # check [7] measures this number against the model on the board, so the height had to
-    # wait for the 0805 body to actually be there.
-    "C25": 1.25,                                                       # 0805 (1.25)
+    # C25 re-picked 2026-07-30 (audit #2) to an 0805/16V part (TDK C2012X5R1C226M125AC)
+    # because the 0603/10V one derated under the AEM's CSRC minimum. The land sync landed
+    # 2026-07-30 (87f7af1, moved to x 25.875 -- every neighbour gap >=0.525); this entry
+    # flipped 0.90 -> 1.25 in the same change, the sequencing C9 established: check [7]
+    # measures this number against the model on the board, so the height had to wait for
+    # the 0805 body to actually be there.
+    #
+    # CORRECTED 1.25 -> 1.45 on 2026-08-05. TDK's thickness code is the NOMINAL, not the
+    # maximum: C2012X5R1C226M***125***AC is T = 1.25 +/-0.20, so the MAX is 1.45. Verified
+    # against TDK's own dimension table and DigiKey's "Thickness (Max) 0.057in (1.45mm)",
+    # and cross-checked against the convention -- the 085-code part reads 1.00 max, i.e.
+    # 0.85 nominal +0.15. "125" never meant 1.25 max. The old comment said "1.25 max" and
+    # was simply wrong.
+    #
+    # It caused no interference: SPAN_LIMIT is 1.180, so C25 is a THROUGH hole in the
+    # brace at both values and there is no pocket ceiling to hit. What it broke was the
+    # ARITHMETIC -- C25 belongs on the 1.45 wall beside C26/C27, not in the 1.25 tier, so
+    # every thinning estimate that treated it as 1.25 was 0.20 mm optimistic.
+    #
+    # WHY CHECK [7] CANNOT SEE THIS CLASS, which is the part worth keeping: check [7]
+    # compares the DECLARED height against the part's 3D MODEL, and C25 resolves to
+    # KiCad's generic C_0805_2012Metric (body 1.25). Declared 1.25 against a 1.25 model is
+    # an exact match and passes green forever. NOTHING compares the model against the
+    # datasheet. C26/C27 escaped only by luck -- they are declared 1.45 against the same
+    # 1.25 model, an overshoot the check permits. The gap class is: a part whose datasheet
+    # max EXCEEDS its generic package model, declared at the model's height.
+    "C25": 1.45,                                          # 0805, TDK 1.25 +/-0.20 -> 1.45 max
     # C26/C27 re-picked 2026-07-30 (audit #2): Samsung CL21B106KOQNNNG, 10uF 16V X7R --
     # the old Murata went stock-zero at both distributors. The Samsung body is 1.40 max,
     # taller than the 1.25 package-generic figure these carried, so the declared height

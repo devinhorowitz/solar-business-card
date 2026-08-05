@@ -21,8 +21,30 @@
 
 #define NFC_EEPROM_WR_MS   6   /* >= ~4 ms datasheet program time, with margin */
 
-/* ---- power-gate timing (high-side load switch on NFC_EN; see board.h) ---- */
-#define NFC_SOFTSTART_US     200   /* switch turn-on + tag POR before the first ACK-poll */
+/* ---- power-gate timing (high-side load switch on NFC_EN; see board.h) ----
+ *
+ * NFC_SOFTSTART_US IS A PROPERTY OF THE SWITCH, NOT OF THE TAG. It was 200 us,
+ * sized for U6 = TPS22917 whose turn-on is ~100 us with CT open -- 2x margin.
+ * U6 is moving to TPS22919 (SC-70-6), whose ramp is SLEW-RATE CONTROLLED and
+ * FIXED: t_ON = 1.75 ms typ at V_IN 3.6 V (2.7 mV/us), 1.95 ms at 5.0 V
+ * (SLVSEN5B section 6.6). At 200 us that rail has reached ~0.54 V and the tag
+ * cannot answer, so the old value would silently spend the boot-poll budget
+ * waiting for a rail it had already declared settled.
+ *
+ * It still WORKED at 200 us -- the 20 x 250 us poll loop covers 5 ms, and the
+ * rail crosses the tag's ~1.6 V minimum around 600 us, so the address ACKs on
+ * roughly the third attempt. That is the failure mode this constant exists to
+ * prevent: not a fault, a quietly consumed margin.
+ *
+ * 2 ms covers t_ON at 5.0 V with margin and leaves the full 20-try budget for
+ * what it is actually for -- the tag's own POR. The cost is nothing measurable:
+ * provisioning is ONE-SHOT at cold boot (nfc_provision_default), so this delay
+ * is paid once in the card's life, and 1.8 ms of extra U6 on-time is ~45 nJ
+ * against a 9.8 J tank.
+ *
+ * If U6 ever moves to a fast switch again, bring this back down WITH it -- e.g.
+ * MIC94085 is 120 us typ / 175 us max and fits inside the original 200. */
+#define NFC_SOFTSTART_US    2000   /* switch turn-on + tag POR before the first ACK-poll */
 #define NFC_BOOT_POLL_US     250   /* spacing between ACK-poll attempts                   */
 #define NFC_BOOT_POLL_TRIES  20    /* ~5 ms total budget for the tag to answer its addr   */
 

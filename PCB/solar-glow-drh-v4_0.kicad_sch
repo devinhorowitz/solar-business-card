@@ -9365,7 +9365,7 @@
 					)
 				)
 			)
-			(property "Value" "TPS22918"
+			(property "Value" "TPS22919"
 				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -9477,7 +9477,7 @@
 				(pin passive line
 					(at 0 -15.24 0)
 					(length 2.54)
-					(name "CT"
+					(name "NC"
 						(effects
 							(font
 								(size 1 1)
@@ -17623,7 +17623,7 @@
 				)
 			)
 		)
-		(property "Value" "TPS22917"
+		(property "Value" "TPS22919"
 			(at 661.67 81.28 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -17633,7 +17633,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Package_TO_SOT_SMD:SOT-23-6"
+		(property "Footprint" "Package_TO_SOT_SMD:SOT-363_SC-70-6"
 			(at 661.67 86.36 0)
 			(hide yes)
 			(show_name no)
@@ -17644,7 +17644,7 @@
 				)
 			)
 		)
-		(property "Datasheet" "datasheets/U6  TPS22917DBVT  $1.14.pdf"
+		(property "Datasheet" "SLVSEN5B"
 			(at 650.24 76.2 0)
 			(hide yes)
 			(show_name no)
@@ -17655,7 +17655,7 @@
 				)
 			)
 		)
-		(property "Description" "NFC VNFC high-side load switch - TPS22917 ultra-low leakage (ISD 10nA typ vs 918's 0.5uA/3.5uA max); pin-identical to TPS22918, CT float + QOD->VOUT sanctioned; active-HIGH ON (NOT the 917L)"
+		(property "Description" "NFC VNFC high-side load switch - TPS22919 (SC-70-6). ISD 2nA typ / 20nA max @25C vs the 917's 10nA typ / 100nA max, so better where the card lives; its 800nA max applies only at +125C, where the 917 specifies nothing at all. IQ 8uA typ while ON is a one-shot, not a standing cost: provisioning runs once at cold boot (~157ms), i.e. 3.9uJ against a 9.8J tank. Pin-for-pin with the 917 on every net used - pin4 CT-float becomes NC-float, QOD->VOUT sanctioned (internal 24 ohm), active-HIGH ON. Losses: no reverse-current blocking, and a fixed 1.75ms ramp (NFC_SOFTSTART_US raised to 2000). AEC-Q100 exists as TPS22919QDCKRQ1; the 917 has no -Q1 in any package."
 			(at 650.24 76.2 0)
 			(hide yes)
 			(show_name no)
@@ -17666,7 +17666,7 @@
 				)
 			)
 		)
-		(property "MPN" "TPS22917DBVT"
+		(property "MPN" "TPS22919DCKR"
 			(at 650.24 76.2 0)
 			(hide yes)
 			(show_name no)

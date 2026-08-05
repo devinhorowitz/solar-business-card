@@ -524,7 +524,52 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
   **It buys 0.00 mm of card thickness on its own**, and that is fine — take it for the area. The
   cavity is `max(supercap + 0.10, tallest_other + 0.22)` and C25/C26/C27 hold the wall at 1.45.
 
-- [ ] **[PCB — respin, OPEN DECISION] U6 `TPS22917DBVT`: two real alternatives, neither free**
+- [ ] **[PCB — respin, DECIDED] U6 `TPS22917DBVT` → `TPS22919DCKR` (SOT-23-6 → SC-70-6, 1.45 → 1.10 mm)**
+  _(2026-08-05. Decided after the I_Q objection was costed against the firmware and did not survive.)_
+  **The schematic side is DONE** — Value, MPN, Footprint (`Package_TO_SOT_SMD:SOT-363_SC-70-6`),
+  Datasheet and Description are updated, and the symbol's pin 4 is renamed `CT` → `NC`. Nothing else
+  in the schematic moved, because **the pinout is identical on every net we use**:
+
+  | pad | TPS22917 | net | TPS22919 |
+  |---|---|---|---|
+  | 1 | IN | `VS` | IN |
+  | 2 | GND | `GND` | GND |
+  | 3 | ON | `NFC_EN` | ON (active-HIGH) |
+  | 4 | CT — floated | unconnected | **NC — "leave floating"** |
+  | 5 | QOD → VOUT | `VNFC` | QOD (tying to VOUT sanctioned, internal 24 Ω) |
+  | 6 | VOUT | `VNFC` | VOUT |
+
+  We already float CT, so losing the adjustable ramp costs nothing. ERC is unchanged (3 pre-existing
+  `isolated_pin_label` warnings before and after). **Remaining: swap the footprint on the board and
+  re-route** — SC-70-6 is 2.0 × 2.1 mm against SOT-23-6's 2.9 × 1.6.
+
+  **Why the 8 µA I_Q objection failed.** `nfc_provision_default()` runs **once, at cold boot**
+  (`main.c:435`); re-boots exit early on the CC check, and FD-wake works with VCC gated off. The one
+  provisioning window is ~157 ms (19 NDEF blocks × [1.7 ms of 100 kHz bus + 6 ms `NFC_EEPROM_WR_MS`]
+  + the CC block), so the I_Q delta costs **7.5 µA × 3.3 V × 0.157 s = 3.9 µJ — once, ever**. That is
+  0.00004 % of the 9.8 J spendable tank, or **0.44 s** of ordinary ~2.7 µA dark standby. Meanwhile
+  the OFF-state leakage, which *does* run continuously, improves: 10 nA → 2 nA typ is −0.3 % of dark
+  standby, and on guaranteed numbers at 25 °C it is **≤20 nA against ≤100 nA**. The annual saving
+  beats the once-ever cost by ~200,000×. The 800 nA figure is a **+125 °C** corner where TPS22917
+  specifies nothing at all.
+
+  **Firmware co-requisite — DONE.** `NFC_SOFTSTART_US` raised 200 → 2000 µs in `firmware/nfc.c`.
+  TPS22919's ramp is slew-controlled and FIXED at 1.75 ms typ (2.7 mV/µs); at 200 µs the rail is at
+  ~0.54 V and the tag cannot answer. It still *worked* — the 20 × 250 µs poll loop covers 5 ms and
+  the rail crosses the tag's ~1.6 V minimum near 600 µs — but it silently spent the margin the
+  constant exists to hold. Verified `_delay_us(2000)` compiles to a 499 × 4-cycle `sbiw` loop
+  (≈2000 cycles = 2 ms at F_CPU 1 MHz) under `-Wall -Wextra -Wundef -Werror`; the docs' 768 µs
+  ceiling applies only to the backward-compatible path, not the `__builtin_avr_delay_cycles` one
+  `-Os` selects. The longer delay is harmless for TPS22917, so firmware and board can land apart.
+
+  **What we give up, stated plainly:** no reverse-current blocking (TPS22917 had it; nothing in the
+  notes makes it load-bearing on VNFC, but it is a deleted feature), V_IN min 1.6 V vs 1.0 V, and a
+  fixed ramp instead of a CT-adjustable one. **What we gain besides height:** $0.23 vs $1.14,
+  45,198 in stock vs 9,265, and an AEC-Q100 orderable (`TPS22919QDCKRQ1`) — which restores the
+  temp-grade-up policy that was silently dropped when U6 moved from TPS22918 to TPS22917, since
+  **TPS22917 has no -Q1 in any package**.
+
+- [ ] **[PCB — superseded reference] U6 alternatives considered**
   _(2026-08-05. The first-pass answer said "no clean option"; that was wrong — it searched inside
   TI's TPS229xx family and stopped.)_ TPS22917 exists in exactly ONE package (SOT-23-6/DBV, drawing
   DBV0006A "SOT-23 - 1.45 mm max height") and has **no `-Q1` in any package** — so the temp-grade-up
