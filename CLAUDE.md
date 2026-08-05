@@ -147,6 +147,16 @@ reader the panel emits its tab spur from, so the check cannot disagree with the 
 holds the fab special request's hand-written **`TOP side (F.Cu)`** / **`BOTTOM side (B.Cu)`** to
 what the board actually says. Same gap class as [14]: a human sentence a fab acts on, sitting
 next to generated copper, with nothing between them.
+**Check [20]** (2026-08-05) guards the field NOTHING else reads: the schematic's **Supplier
+P/N** against the MPN beside it. KiCad's parity compares Value and MPN, never the distributor
+number, and `bom_split` copies it verbatim — which is how one part swap left three stale
+distributor fields in a week, ending with an assembly CSV whose U6 row said `TPS22919DCKR`
+beside `296-48370-1-ND`, the TPS22917's orderable. The distributor ships what the *number*
+says. Self-describing P/Ns are matched textually; bare catalog codes (`490-5221-1-ND`,
+`YAG3443CT-ND`) live in `OPAQUE_PN_LEDGER`, verified live once and keyed by **(MPN, P/N)** so
+an MPN change orphans the pair and goes red in the same commit — the FRONT_SIDE-snapshot
+shape. The check re-classifies both historical failures on every run; if either stops going
+red, the check itself fails.
 
 ## CI
 - `kibot.yml` — regenerates `Generated/` (fab + docs) on `PCB/**` changes and commits

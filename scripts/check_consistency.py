@@ -1798,6 +1798,127 @@ def check_plating_bus():
              "see the TODO item. Not an error: the board is shippable either way.")
 
 
+# ---- check [20]: the Supplier P/N actually buys the MPN beside it --------------------
+# Born 2026-08-05 from the U6/U9 respin, which left THREE stale distributor fields in
+# one week: U9's MPN (caught by KiCad parity), U9's Supplier P/N (caught only because
+# parity happened to fail on the same symbol at the same moment), and U6's Supplier P/N
+# -- the regenerated assembly CSV said MPN TPS22919DCKR beside P/N 296-48370-1-ND,
+# which is the TPS22917DBVT cut-tape. DigiKey ships what the NUMBER says. KiCad's
+# parity never reads this field and bom_split copies it through verbatim, so nothing
+# between the schematic and the cart ever looked at it.
+#
+# Pairs whose P/N is a bare catalog code (490-5221-1-ND, YAG3443CT-ND) that no static
+# rule can tie to its MPN. Each was verified live (check_stock's availability table,
+# BOM/README.md) and is ledgered DELIBERATELY: an MPN change under one of these numbers
+# -- the exact U6 failure -- orphans its pair and goes red in the same commit, which is
+# the FRONT_SIDE-snapshot shape. A new opaque pairing gets one live lookup and one line
+# here.
+OPAQUE_PN_LEDGER = {
+    ("AC0402FR-07150RL", "YAG3443CT-ND"),        # R1-R4      Yageo catalog code
+    ("AC0402FR-071ML", "YAG3450CT-ND"),          # R14/17/18  Yageo catalog code
+    ("AC0402FR-07220RL", "YAG3456CT-ND"),        # R12        Yageo catalog code
+    ("AC0402FR-074K7L", "YAG3497CT-ND"),         # R10/R11    Yageo catalog code
+    ("RT0603BRD071ML", "YAG4498CT-ND"),          # R5/R6/R16  Yageo catalog code
+    ("BLM18PG221SN1D", "490-5221-1-ND"),         # FB1        DigiKey legacy numeric
+    ("C2012X5R1C226M125AC", "445-7647-1-ND"),    # C25        DigiKey legacy numeric
+    ("DFE252010F-100M", "490-13039-1-ND"),       # L2         DigiKey legacy numeric
+    ("GRT188R61C106KE13D", "490-12317-1-ND"),    # C4/C13     DigiKey legacy numeric
+    ("NT3H2211W0FHKH", "568-12901-1-ND"),        # U5         DigiKey legacy numeric
+    ("5879", "485-5879"),                        # PRG1       Adafruit via Mouser; 4-char
+                                                 #            MPN is below the 6-char
+                                                 #            match floor ON PURPOSE --
+                                                 #            short numbers are where
+                                                 #            collisions live
+}
+
+
+def _pn_classify(mpn, supplier, dpn):
+    """'ok' | 'conflict' | 'opaque' -- see the check header for the semantics."""
+    nm = re.sub(r"[^A-Z0-9]", "", (mpn or "").upper())
+    d = (dpn or "").strip()
+    s = (supplier or "").lower()
+    if s.startswith("digikey"):
+        tok = re.sub(r"-ND$", "", re.sub(r"^\d+-", "", d))
+        tok = re.sub(r"(CT|TR|DKR|TB)$", "", tok)     # packaging suffix, not part id
+    elif s.startswith("mouser"):
+        tok = re.sub(r"^\d+-", "", d)
+    else:
+        tok = d
+    nt = re.sub(r"[^A-Z0-9]", "", tok.upper())
+    if nt and nm and min(len(nt), len(nm)) >= 6 and (nt.startswith(nm) or nm.startswith(nt)):
+        return "ok"
+    chunks = [c for c in re.split(r"[^A-Za-z0-9]+", tok) if c]
+    for c in chunks:
+        cu = re.sub(r"[^A-Z0-9]", "", c.upper())
+        if len(cu) >= 6 and cu in nm:
+            return "ok"                                # Mouser alias style (AEM10300-QFN)
+    for c in chunks:
+        cu = c.upper()
+        kinds = ["a" if ch.isalpha() else "d" for ch in cu]
+        trans = sum(1 for i in range(1, len(kinds)) if kinds[i] != kinds[i - 1])
+        if len(cu) >= 7 and trans >= 2 and re.sub(r"[^A-Z0-9]", "", cu) not in nm:
+            return "conflict"
+    return "opaque"
+
+
+def check_supplier_pns():
+    print("[20] every Supplier P/N buys the MPN beside it")
+    sys.path.insert(0, os.path.join(ROOT, "scripts"))
+    try:
+        import bom_split
+        asm, hand, off, off_once, _problems = bom_split.build()
+    except SystemExit as e:
+        warn(f"not checked -- bom_split.build() refused: {e}")
+        return
+    except Exception as e:                              # pragma: no cover
+        warn(f"not checked -- {type(e).__name__}: {e}")
+        return
+
+    # The check must never lose its teeth silently: re-classify the two historical
+    # failures every run. If either stops being flagged, the classifier broke.
+    if _pn_classify("TPS7A0233PDQNR", "DigiKey", "296-TPS7A0233PDBVRCT-ND") != "conflict":
+        err("self-test: the U9-class stale P/N (embedded PDBVR vs MPN PDQNR) no longer "
+            "classifies as a conflict -- the classifier lost the case it was built for")
+        return
+    if _pn_classify("TPS22919DCKR", "DigiKey", "296-48370-1-ND") != "opaque":
+        err("self-test: the U6-class stale P/N (opaque 296-48370-1-ND under a changed "
+            "MPN) no longer classifies as opaque -- the ledger guard is bypassed")
+        return
+
+    rows = [(", ".join(r["refs"]), r["mpn"], r["supplier"], r["dist_pn"])
+            for r in asm + hand]
+    rows += [(e[0], e[2], e[4], e[5]) for e in off]
+    rows += [(e[0], e[2], e[4], e[5]) for e in off_once]
+
+    n_ok = n_led = 0
+    for refs, mpn, sup, dpn in rows:
+        if not (dpn or "").strip():
+            continue          # nothing to validate; missing-P/N policing is bom_split's
+        cls = _pn_classify(mpn, sup, dpn)
+        if cls == "ok":
+            n_ok += 1
+        elif cls == "conflict":
+            err(f"{refs}: Supplier P/N {dpn!r} embeds a part number that is not the "
+                f"MPN {mpn!r} beside it -- the distributor ships what the NUMBER says, "
+                f"so an order off this line buys a different part. (The U9-class "
+                f"failure: a part swap updated the MPN and left the P/N.)")
+        elif (mpn, dpn) in OPAQUE_PN_LEDGER:
+            n_led += 1
+        else:
+            err(f"{refs}: Supplier P/N {dpn!r} is an opaque catalog code that no "
+                f"static rule can tie to MPN {mpn!r}, and the pair is not in "
+                f"OPAQUE_PN_LEDGER. Verify it live (BOM/check_stock.py, or the "
+                f"distributor page) and ledger it in the same commit. (The U6-class "
+                f"failure: 296-48370-1-ND stayed behind while the MPN moved to "
+                f"TPS22919DCKR.)")
+    dead = OPAQUE_PN_LEDGER - {(m, d) for _, m, _, d in rows}
+    for m, d in sorted(dead):
+        warn(f"OPAQUE_PN_LEDGER entry ({m!r}, {d!r}) matches no current BOM line -- "
+             f"the part moved on; drop the entry")
+    ok(f"{n_ok} self-describing pair(s), {n_led} ledgered opaque pair(s), "
+       f"both historical regressions still classify red")
+
+
 def main():
     cli = find_kicad_cli()
     netpins, comps, sch_fps = export_netlist(cli)
@@ -1820,6 +1941,7 @@ def main():
     check_face_art()
     check_fab_identity()
     check_plating_bus()
+    check_supplier_pns()
     print(f"\n== {len(errors)} error(s), {len(warnings)} warning(s) ==")
     sys.exit(1 if errors else 0)
 
