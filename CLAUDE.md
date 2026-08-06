@@ -227,7 +227,11 @@ red, the check itself fails.
   `enclosure/` at all**, which is how a stale U7 height survived there for a day; and it
   triggered on `README.md` **by name** until 2026-07-30, so check [9] — which reads every
   `.md` in the tree — could not have fired on an image added to `PCB/README.md` or
-  `enclosure/README.md`. It is `'**.md'` now.
+  `enclosure/README.md`. It is `'**.md'` now. **And since 2026-08-06 it re-runs after every
+  successful `PCB CI` run on main** (`workflow_run`), because a BOM-changing merge always
+  went red on the merge sha — checks [2]/[15] against the *previous* `Generated/` — and the
+  healing `[skip ci]` commit-back never got a verdict. Red on the merge run followed by
+  green on the re-verdict is the transition signature; a red re-verdict is real drift.
 - **Everything CI runs is pinned.** The KiCad 10 image is pinned by *digest* in both
   `kibot.yml` and `consistency.yml` (keep the two in step), every action by commit SHA,
   shapely and the AVR toolchain/DFP by version. This is not hygiene: DRC is a merge gate
