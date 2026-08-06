@@ -139,6 +139,16 @@ def _sch_parts():
     text = open(SCH, encoding="utf-8", errors="replace").read()
     out = {}
     for blk in re.split(r"\n\t\(symbol\n", text):
+        # Placed instances only. Library definitions inside (lib_symbols ...) never match
+        # the split pattern (deeper indent, name on the opener line), so the whole library
+        # region rides along in chunk 0 -- and its DEFAULT properties read exactly like a
+        # placed part's. That is how the 2026-08-06 BOM sold C1 as a TPS7A0233PDBVR: the
+        # first Reference default in the library was "C1", the first MPN default was the
+        # solarglow:U9 lib def's stale pre-X2SON orderable, and the keep-first-MPN rule
+        # below then discarded the real placed C1. Every placed symbol carries a lib_id;
+        # no library definition does -- so that is the membership test.
+        if '(lib_id "' not in blk:
+            continue
         rm = re.search(r'\(property "Reference"\s+"([^"]+)"', blk)
         if not rm:
             continue
