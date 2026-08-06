@@ -180,6 +180,16 @@ SPECS = {
         body=(3.2, 1.6, 0.95), tab=None,
         desc="C25/C26/C27 Murata GRM319 low-profile 1206 — 3.2 x 1.6 x 0.85 +/-0.10 (0.95 MAX)",
     ),
+    # The ultrathin U6 (2026-08-06): TPS22916C DSBGA-4, TI YFP0004 drawing 4223507/A —
+    # body D/E 0.75-0.81 square, "DSBGA - 0.5 mm max height" in the title block (balls
+    # included: 0.13-0.19 ball + die). Modelled at the max envelope like every solid here.
+    # The model rides in solarglow:TPS22916_YFP0004 itself (no ATTACH entry needed —
+    # unlike U9, whose STOCK footprint named a model upstream never shipped).
+    "TI_DSBGA4_YFP": dict(
+        color=COL_IC,
+        body=(0.81, 0.81, 0.50), tab=None,
+        desc="U6 TPS22916CYFPR, DSBGA-4 YFP0004 (4223507/A) — 0.75-0.81 sq, 0.5 MAX incl. balls",
+    ),
 }
 
 # refdes -> (model path as KiCad should store it, Z rotation in degrees)

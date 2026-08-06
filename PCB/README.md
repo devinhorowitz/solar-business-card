@@ -611,26 +611,26 @@ Summary of the **orderable** lines:
 | MH1–MH4 | 4 | M2 | 2.2 mm plated | **(no part — drill)** |
 | U5 | 1 | NTAG I²C plus, 2 KB, I²C 0x55 | XQFN8 (SOT902-3, 1.6×1.6×0.5 mm) | `NT3H2211W0FHKH` |
 | C8 | 1 | 100 nF, X7R, 50 V | 0402 | `GRT155R71H104KE01D` |
-| C9 | 1 | 47 pF, C0G/NP0, ±2 %, 250 V, High-Q | 0805 | `QSCT251Q470G1GV001E` |
+| C9 | 1 | 47 pF, C0G/NP0, ±2 %, 250 V, High-Q (S-series) | 0603 (`Capacitor_SMD:C_0603_1608Metric`, 0.89 max) — **was 0805 High-Q `QSCT251Q470G1GV001E` (1.17) until the 2026-08-06 low-profile respin; same purpose-built family one case down (no flat RF 1206 exists); board sync pending** | `QSCP251Q470G1GV001T` |
 | C13 | 1 | 10 µF, X5R, 16 V | 0603 | `GRT188R61C106KE13D` |
 | L1 | 1 | 2.76 µH design value | PCB copper — no package | **(no part — PCB feature)** |
-| U6 | 1 | Ultra-low-leakage load switch | SC-70-6 (DCK) — **was SOT-23-6 (DBV); board sync pending** | `TPS22919DCKR` |
+| U6 | 1 | Ultra-low-leakage load switch (ISD 10 nA typ, IQ 0.5 µA, QOD, RCB) | DSBGA-4 (`solarglow:TPS22916_YFP0004`, 0.4 mm pitch, 0.5 max) — **was SC-70-6 `TPS22919DCKR` until the 2026-08-06 ultrathin swap; board sync pending** | `TPS22916CYFPR` |
 | R14 | 1 | 1 MΩ, ±1% | 0402 | `AC0402FR-071ML` |
 | U8 | 1 | AEM10300 | QFN-28 (4x4 mm, EP land 2.30) | `10AEM10300C0000` |
-| U9 | 1 | TPS7A0233, 3.3 V, ~25 nA Iq | SOT-23-5 | `TPS7A0233PDBVR` |
+| U9 | 1 | TPS7A0233, 3.3 V, ~25 nA Iq | X2SON-4 (DQN, 1×1 mm, 0.4 max) — was SOT-23-5 (DBV) until the 2026-08-05 swap | `TPS7A0233PDQNR` |
 | U7 | 1 | MB85RC512TY | DFN-8 LCC-8P-M05 (5.0×6.0×0.90 mm MAX, 1.27 mm pitch) | `MB85RC512TYPN-GS-AWEWE1` |
 | L2 | 1 | 10 uH | 1008/2520 (L_1008_2520Metric), 2.5x2.0 mm | `DFE252010F-100M` |
 | FB1 | 1 | 0603 bead | 0603 (`L_0603_1608Metric` — **board still draws the 0402 land**, see TODO.md) | `BLM18PG221SN1D` |
 | C22 | 1 | 1 uF, 25 V, 0603, X7R | 0603 (C_0603_1608Metric) | `GRT188R71E105KE13D` |
 | C23 | 1 | 2.2 µF, 25 V, 0603, X7R | 0603 (C_0603_1608Metric) | `GRM188Z71E225ME43D` |
 | C24 | 1 | 100 nF, 0402, X7R | 0402 | `GRT155R71H104KE01D` |
-| C25 | 1 | 22 uF, 16 V, 1206 low-profile (0.95 max), X5R | 1206 (`solarglow:C_1206_3216Metric_LP085`) | `GRM319R61C226KE15D` |
-| C26, C27 | 2 | 10 µF, 25 V, 1206 low-profile (0.95 max), X5R | 1206 (`solarglow:C_1206_3216Metric_LP085`) | `GRM319R61E106KA12D` |
+| C25 | 1 | 22 uF, 16 V, 1206 low-profile (0.95 max), X5R | 1206 (`solarglow:C_1206_3216Metric_HS_LP085`) | `GRM319R61C226KE15D` |
+| C26, C27 | 2 | 10 µF, 25 V, 1206 low-profile (0.95 max), X5R | 1206 (`solarglow:C_1206_3216Metric_HS_LP085`) | `GRM319R61E106KA12D` |
 | C28 | 1 | 100 nF, 0402, X7R | 0402 | `GRT155R71H104KE01D` |
 | R15 | 1 | 2 M, 0603, ±0.1%, 25 ppm | 0603 (R_0603_1608Metric) | `MCT0603MD2004BP500` |
 | R16 | 1 | 1 M, 0603, ±0.1%, 25 ppm | 0603 (R_0603_1608Metric) | `RT0603BRD071ML` |
 | R17, R18 | 2 | 1 M, 0402, ±1% | 0402 | `AC0402FR-071ML` |
-| Q2 | 1 | N-ch MOSFET, 60 V, logic-level | SOT-23 | `BSS138LT1G` |
+| Q2 | 1 | N-ch MOSFET, 20 V, logic-level (Vth 1.0 max) | SOT-523 (0.90 max) — **was SOT-23 `BSS138LT1G` until the 2026-08-06 low-profile respin; board sync pending** | `DMG1012T-7` |
 
 **No ordered part — these are board features, not BOM line items:**
 - **SW2** (LED OFF/ON) is a **solder bridge** on the PCB. _(SB1–SB4, the per-LED force-on
@@ -962,8 +962,12 @@ and the glow-window mask staying open (Step 3) — a tented window kills the opt
    > defaults hard-off while PA7 floats during reset / UPDI. Still drive PA7 low early in
    > init as belt-and-suspenders. The **U6 pin-map check is done** — TI SLVSD76C
    > (`../datasheets/U6  TPS22918DBVR  $0.55.pdf` — the *then*-fitted part, its sheet culled
-   > 2026-08-01 with the other replaced-part datasheets, git history; U6 is now the
-   > pin-identical `TPS22917DBVT`, see `../datasheets/U6  TPS22917DBVT  $1.14.pdf`) showed the symbol had **VIN/VOUT and GND/QOD
+   > 2026-08-01 with the other replaced-part datasheets, git history; the pin-identical
+   > `TPS22917DBVT` that followed was replaced by the SC-70 `TPS22919DCKR` on 2026-08-05, and
+   > that by the DSBGA `TPS22916CYFPR` on 2026-08-06 — each superseded sheet culled the same
+   > way, git history. The current sheet is `../datasheets/U6  TPS22916CYFPR  $0.55.pdf`, a
+   > different package whose ball map was verified against SLVSDO5F Fig 5-1/5-2 in its own
+   > swap round, not by this audit) showed the symbol had **VIN/VOUT and GND/QOD
    > transposed**; the board was **fixed 2026-07-02** (pads renetted to TI truth, schematic
    > pin numbers corrected, local copper reworked). Details in
    > `../solar-glow-drh-design-notes.md`, U6 pin-map addendum.

@@ -1,0 +1,103 @@
+(footprint "TPS22916_YFP0004"
+	(version 20240108)
+	(generator "solarglow")
+	(generator_version "1.0")
+	(layer "F.Cu")
+	(descr "TI TPS22916C DSBGA-4, YFP0004 (drawing 4223507/A): body 0.75-0.81 sq, 0.5 mm MAX height incl. balls. Land generated+verified from the datasheet example layout (SLVSDO5F p.25): 4x diam 0.23 NSMD on 0.4 mm pitch, mask opening +0.05/side. Pad-to-pad air gap 0.17 clears the board 0.152 floor. Ball map (top/marking view, Fig 5-1): B2 ON top-left, B1 GND top-right, A2 VIN bottom-left, A1 VOUT bottom-right.")
+	(tags "DSBGA WCSP load switch TPS22916")
+	(attr smd)
+	(fp_text reference "REF**"
+		(at 0 -1.3 0)
+		(layer "F.SilkS")
+		(uuid "354cf85e-f42e-55c1-8430-deb2bc3ea0e0")
+		(effects
+			(font
+				(size 0.6 0.6)
+				(thickness 0.12)
+			)
+		)
+	)
+	(fp_text value "TPS22916C"
+		(at 0 1.3 0)
+		(layer "F.Fab")
+		(uuid "e6e4644b-c351-5467-a2ea-4cf93f5b0ff3")
+		(effects
+			(font
+				(size 0.6 0.6)
+				(thickness 0.12)
+			)
+		)
+	)
+	(fp_rect
+		(start -0.405 -0.405)
+		(end 0.405 0.405)
+		(stroke
+			(width 0.08)
+			(type default)
+		)
+		(fill none)
+		(layer "F.Fab")
+		(uuid "dc608571-25b3-526f-a9f8-f34533211aff")
+	)
+	(fp_circle
+		(center 0.55 0.55)
+		(end 0.6 0.55)
+		(stroke
+			(width 0.1)
+			(type default)
+		)
+		(fill solid)
+		(layer "F.Fab")
+		(uuid "99b2dc8e-cd9a-556f-9cc7-756939f30466")
+	)
+	(fp_rect
+		(start -0.66 -0.66)
+		(end 0.66 0.66)
+		(stroke
+			(width 0.05)
+			(type default)
+		)
+		(fill none)
+		(layer "F.CrtYd")
+		(uuid "63623755-6c83-586a-8047-b52840ad93b0")
+	)
+	(pad "B2" smd circle
+		(at -0.2 -0.2)
+		(size 0.23 0.23)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(solder_mask_margin 0.05)
+		(uuid "97b3b654-eb86-5efa-9aaa-f391ed93275d")
+	)
+	(pad "B1" smd circle
+		(at 0.2 -0.2)
+		(size 0.23 0.23)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(solder_mask_margin 0.05)
+		(uuid "894b6cd7-02ff-5c65-967a-921709c566d9")
+	)
+	(pad "A2" smd circle
+		(at -0.2 0.2)
+		(size 0.23 0.23)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(solder_mask_margin 0.05)
+		(uuid "ac9e6769-a688-5bf1-987c-995dab15ce00")
+	)
+	(pad "A1" smd circle
+		(at 0.2 0.2)
+		(size 0.23 0.23)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(solder_mask_margin 0.05)
+		(uuid "de5f3023-ae80-5546-b3a2-ff5a7e095ac1")
+	)
+	(model "${KIPRJMOD}/solarglow.3dshapes/TI_DSBGA4_YFP.step"
+		(offset
+			(xyz 0 0 0)
+		)
+		(scale
+			(xyz 1 1 1)
+		)
+		(rotate
+			(xyz 0 0 0)
+		)
+	)
+)

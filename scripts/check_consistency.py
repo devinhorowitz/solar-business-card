@@ -1487,6 +1487,26 @@ def board_footprints():
     return out
 
 
+# Declared, deliberate sch->board footprint transients. The split workflow --
+# part swaps land in the SCHEMATIC first, DRH does the copper rework in a later
+# upload -- makes the mismatch a STATE of the flow, not a mistake, but only for
+# the exact (sch_fp, board_fp) pair declared here with its reason. The check
+# below reports a ledgered pair as a note and errors on anything else, and a
+# STALE entry (the board synced, or either side changed) is itself an error, so
+# an entry must be removed in the same commit that completes the board round.
+PENDING_FOOTPRINT_SYNC = {
+    "U6": ("solarglow:TPS22916_YFP0004", "Package_TO_SOT_SMD:SOT-363_SC-70-6",
+           "2026-08-06 ultrathin swap: TPS22916CYFPR (DSBGA-4, 0.5 max) sch-side landed; "
+           "SC-70 copper awaits DRH's rework"),
+    "Q2": ("Package_TO_SOT_SMD:SOT-523", "Package_TO_SOT_SMD:SOT-23",
+           "2026-08-06 low-profile respin: DMG1012T-7 (0.90 max) sch-side landed; "
+           "SOT-23 copper awaits DRH's rework"),
+    "C9": ("Capacitor_SMD:C_0603_1608Metric", "Capacitor_SMD:C_0805_2012Metric",
+           "2026-08-06 low-profile respin: QSCP251Q470G1GV001T (0603 S-series High-Q, "
+           "0.89 max) sch-side landed; 0805 copper awaits DRH's rework"),
+}
+
+
 def check_board_sch_parity(comps, sch_fps):
     """Guard the schematic <-> board boundary.
 
@@ -1517,11 +1537,15 @@ def check_board_sch_parity(comps, sch_fps):
     if sch_only:
         warn("in the schematic but not placed on the board: " + " ".join(sch_only))
     # footprint assignment disagreements: a sync moves pads
-    bad = []
+    bad, pending = [], []
     for ref, sch_fp in sorted(sch_fps.items()):
         entry = board.get(ref)
         if entry and entry[0] != sch_fp:
-            bad.append(f"{ref}: sch={sch_fp} board={entry[0]}")
+            led = PENDING_FOOTPRINT_SYNC.get(ref)
+            if led and led[0] == sch_fp and led[1] == entry[0]:
+                pending.append(f"{ref}: {entry[0]} -> {sch_fp} ({led[2]})")
+            else:
+                bad.append(f"{ref}: sch={sch_fp} board={entry[0]}")
     if bad:
         # A hard error since 2026-07-26: U7 was the last known-open disagreement
         # and it is settled (board and library land turned out to be the SAME
@@ -1531,7 +1555,19 @@ def check_board_sch_parity(comps, sch_fps):
             "with footprint replacement enabled will MOVE these pads): "
             + "; ".join(bad))
     else:
-        ok("schematic and board agree on every footprint assignment")
+        ok("schematic and board agree on every footprint assignment"
+           + (f" ({len(pending)} declared pending sync)" if pending else ""))
+    for p in pending:
+        print("  note:   pending footprint sync (declared in PENDING_FOOTPRINT_SYNC): " + p)
+    # A ledger entry whose mismatch is gone (or different) is itself an error,
+    # so the ledger dies in the same commit that lands the board sync -- the
+    # FRONT_SIDE-snapshot shape. It cannot become a standing waiver.
+    for ref, (sch_fp, board_fp, why) in sorted(PENDING_FOOTPRINT_SYNC.items()):
+        entry = board.get(ref)
+        if not entry or entry[0] == sch_fp or sch_fps.get(ref) != sch_fp:
+            err(f"PENDING_FOOTPRINT_SYNC entry for {ref} is STALE (the board "
+                f"synced, or the pair changed) -- remove it in this commit and "
+                f"flow the swap down (heights, colours, docs): {why}")
 
 
 # --- [16] the enclosure's mount table IS the board's mount drills ---------------------
@@ -1826,6 +1862,10 @@ OPAQUE_PN_LEDGER = {
                                                  #            verified live 2026-08-06
                                                  #            (348,003 in stock, cut tape)
     ("DFE252010F-100M", "490-13039-1-ND"),       # L2         DigiKey legacy numeric
+    ("TPS22916CYFPR", "296-50065-1-ND"),         # U6         DigiKey legacy numeric,
+                                                 #            verified live 2026-08-06
+                                                 #            (42,386 in stock, cut tape;
+                                                 #            the DSBGA ultrathin swap)
     ("GRT188R61C106KE13D", "490-12317-1-ND"),    # C4/C13     DigiKey legacy numeric
     ("NT3H2211W0FHKH", "568-12901-1-ND"),        # U5         DigiKey legacy numeric
     ("5879", "485-5879"),                        # PRG1       Adafruit via Mouser; 4-char

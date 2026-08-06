@@ -91,18 +91,16 @@ HEIGHTS = {
     # datasheet. C26/C27 escaped only by luck -- they are declared 1.45 against the same
     # 1.25 model, an overshoot the check permits. The gap class is: a part whose datasheet
     # max EXCEEDS its generic package model, declared at the model's height.
-    # C25-C27 are DECIDED (2026-08-06) to move to the low-profile 1206 Murata GRM319
-    # (0.85 +/-0.10 -> 0.95 MAX; schematic + solarglow:C_1206_3216Metric_LP085 +
-    # MURATA_GRM319_1206LP.step all landed). These three entries flip to 0.95 ONLY when the
-    # board actually carries the 1206 bodies -- the C9/C25 sequencing rule: check [7]
-    # measures each number against the model ON THE BOARD, so the height waits for the body.
-    "C25": 1.45,                                          # 0805, TDK 1.25 +/-0.20 -> 1.45 max
-    # C26/C27 re-picked 2026-07-30 (audit #2): Samsung CL21B106KOQNNNG, 10uF 16V X7R --
-    # the old Murata went stock-zero at both distributors. The Samsung body is 1.40 max,
-    # taller than the 1.25 package-generic figure these carried, so the declared height
-    # rises with the re-pick (pocket deepens: safe direction, air). Against the generic
-    # 1.25 model this is a 0.20 overshoot, inside OVERSHOOT_MAX -- deliberate air.
-    "C26": 1.45, "C27": 1.45,                                          # 0805, 1.40 part max
+    # C25-C27 moved to the low-profile 1206 Murata GRM319 on 2026-08-06 (0.85 +/-0.10 ->
+    # 0.95 MAX) -- the case-size escape from the 1.45 wall, on the room the SB/R12 deletion
+    # made. DRH placed the stock HandSolder land; the repo footprint
+    # (solarglow:C_1206_3216Metric_HS_LP085) is that land verbatim with the model swapped to
+    # MURATA_GRM319_1206LP.step at the 0.95 max, so declaration and model agree exactly and
+    # check [7] measures rather than tolerates these. Flipped 1.45 -> 0.95 in the same round
+    # the bodies landed on the board -- the C9/C25 sequencing rule, both halves this time.
+    "C25": 0.95,                                          # 1206 LP, GRM319 0.85 +/-0.10 -> 0.95 max
+    # C26/C27: same 2026-08-06 move as C25 above (were Samsung 0805 X7R at 1.40/1.45).
+    "C26": 0.95, "C27": 0.95,                             # 1206 LP, GRM319 0.85 +/-0.10 -> 0.95 max
     # C9, the NFC tank trim, went 0402 -> 0805 on 2026-07-30 for hand-rework and Q. 1.25 is the
     # PACKAGE-GENERIC 0805 number C26/C27 already use, deliberately NOT the chosen part's own
     # 1.17 max (Johanson QSCT251Q820G1GV001E): check [7] measures this against the generic
