@@ -76,9 +76,30 @@ on:
       - 'enclosure/**'
       - 'BOM/**'
       - '.github/workflows/consistency.yml'
+  # THE RE-VERDICT TRIGGER (2026-08-06). A BOM-changing merge always went red here and
+  # stayed red: this job runs on the merge sha against the PREVIOUS Generated/ (checks
+  # [2]/[15] compare the CI BOM to the netlist), kibot then regenerates and commits back
+  # with [skip ci] — so the healing commit never gets a verdict, and main's newest
+  # consistency status is a transition error that no longer exists in the tree. Three
+  # merges hit some flavour of this race (#195's, #200's, #201's). This trigger re-runs
+  # the suite AFTER "PCB CI" completes on main — for workflow_run events GITHUB_SHA is
+  # the default branch head at event time, which includes the commit-back — so the
+  # verdict that sticks is the one measured against the tree as it actually is. The
+  # push/pull_request runs above still fire first and still catch real drift early; a
+  # red there followed by green here is the transition signature, and a red here is real.
+  # No loop risk: this job pushes nothing, and PCB CI does not trigger on it.
+  workflow_run:
+    workflows: ["PCB CI"]
+    types: [completed]
+  # Manual re-verdict, for repainting main after an out-of-band fix.
+  workflow_dispatch:
 
 jobs:
   check:
+    # For the re-verdict trigger, run only for successful PCB CI runs on main — a failed
+    # kibot run means no commit-back landed, so there is nothing new to re-measure, and
+    # branch runs get their verdict from the pull_request trigger instead.
+    if: github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main')
     runs-on: ubuntu-latest
     container: ghcr.io/inti-cmnb/kicad10_auto_full@sha256:dd3b846da945f204fa7b61916df34a99170b2a2095b49c3879cd96d414b8a7b8
     steps:
