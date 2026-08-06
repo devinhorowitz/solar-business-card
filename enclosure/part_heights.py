@@ -111,7 +111,7 @@ HEIGHTS = {
 # ---- by refdes prefix -------------------------------------------------------------
 PREFIX = {
     "D":  0.83,    # LA_P47F amber LEDs
-    "SW": 0.80, "SB": 0.80, "SJ": 0.80,   # switch + solder-bridge blobs (budgeted)
+    "SW": 0.80, "SJ": 0.80,   # switch + solder-bridge blobs (budgeted; SB1-4 deleted 2026-08-05)
     "J":  0.20, "JP": 0.20, "TC": 0.20, "TP": 0.20,   # bare pads / unpopulated headers
     "R":  0.55, "C":  0.55,   # 0402 default. Every larger R/C is explicit above, and
                               # check [7] catches a new one that is not.

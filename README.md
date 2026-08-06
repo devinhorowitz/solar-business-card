@@ -104,9 +104,9 @@ all lives on the back, ready for an optional machined-metal back-shell.
 | Harvest PMIC | **e-peas AEM10300** (U8, QFN-28 4×4) | MPPT buck-boost that merges both panels at SRC and charges the supercap tank (STO) - replaces the v3 per-panel blocking diodes |
 | Storage | **2× SCHURTER 3-153-440** (SS17, 1.8 F) + **2× 3-153-438** (WS17, 1.0 F) | hybrid tank, 2.75 V/cell, wired 2S2P as **two EQUAL 2.8 F stages** (SC1∥SC2 `STO`→`MID`, SC3∥SC4 `MID`→`GND`) → **1.40 F @ 5.5 V**; ≈ 21 J nameplate, **15.1 J stored** at the AEM's strapped 4.65 V ceiling, **9.8 J spendable** above the 2.75 V glow floor. AEM holds MID against *leakage* mismatch between the two identical stages — not a capacitance imbalance; there isn't one |
 | Midpoint balance | **AEM10300 (U8) BAL** | the harvester balances the 2S supercap midpoint (MID net) - replaces the v3 ALD910025 dual SAB MOSFET |
-| Rail regulator | **TI TPS7A0233** (U9, SOT-23-5) | nanopower LDO (~25 nA Iq) regulates STO down to the fixed **3.3 V VS rail** the MCU + accel run on - replaces the v3 TLV3011 + PNP shunt clamp |
+| Rail regulator | **TI TPS7A0233PDQNR** (U9, X2SON-4 since 2026-08-05) | nanopower LDO (~25 nA Iq) regulates STO down to the fixed **3.3 V VS rail** the MCU + accel run on - replaces the v3 TLV3011 + PNP shunt clamp |
 | LEDs | **4× ams OSRAM LA P47F** (amber) | reverse-mount; glow through the FR4 window, **150 Ω** ballast each |
-| LED master switch | **SW2** (solder-bridge) + **R12** | OFF / ON / TINY — TINY routes the LEDs through a 220 Ω ballast for a dim, long-runtime glow |
+| LED master switch | **SW2** (solder-bridge) | OFF / ON — bridged feeds `ANODE` straight from `STO`, open is a true hardware off _(the TINY dim position and its R12 shared ballast were deleted 2026-08-05; PWM duty owns dimming)_ |
 | Motion | **ADI ADXL367** | 3-axis accel; tap / double-tap wakes the MCU via interrupts; 0.89 µA (swapped from LIS2DH12 on backorder) |
 | Light sense | **R5 / R6 divider → PD2** | SRC ÷ 2 off the *merged solar input* (not the rail) - tracks light directly; doubles as wake-on-light |
 | NFC | **NXP NT3H2211** (NTAG I²C plus 2K) | present from v3.0 - a contact **vCard** a phone taps to save; field-detect (FD, PA6) also wakes the glow - I²C `0x55`, shares the accel's bus; VCC **power-gated by `U6`** (`NFC_EN`/PA7, off by default); the **U7 MB85RC512TY FRAM** (I²C 0x50, C28) rides always-on VS parked in its 0.2 µA I²C Sleep mode (the 2026-07-23 back-power fix - see design notes) |
@@ -114,7 +114,8 @@ all lives on the back, ready for an optional machined-metal back-shell.
 **Breakouts and features:** a **TC2030** Tag-Connect pad (`TC1`) for hands-free UPDI
 programming, a backup UPDI header (`J1`), a **5-pad bench strip** on the back east edge
 (`TP1` SRC + `JP1` GND/STO/SCL/SDA - bare SMD probe pads for bench power injection and an I²C
-tap; pinout in `solar-glow-drh-v2-hardware.md`), per-LED disable jumpers (`SB1–4`), and **eight grounded M2 mounting holes** (four corners + four panel-corner at the E/W mid-edges). (The DD-era
+tap; pinout in `solar-glow-drh-v2-hardware.md`), and **eight grounded M2 mounting holes** (four corners + four panel-corner at the E/W mid-edges). (The `SB1–4`
+bridges — per-LED **force-on**, not "disable" as this line long said — were deleted with TINY mode on 2026-08-05. The DD-era
 VDDIO2 tie jumper `SJ1` is gone — DNP'd at the AVR-EA swap, deleted from the schematic and board outright on 2026-07-30. The v2-era
 `JP1`/`JP2` 2.54 mm breakout headers are gone; the `JP1` name is reused for the strip.)
 
@@ -251,7 +252,7 @@ The board is a KiCad project — open it, run DRC, and export the fab set:
    the window used to close before the board was even finished. See the warning box in
    [`PCB/README.md`](PCB/README.md).
 4. **Hand-solder last** — the solar cells (heat-sensitive: ≤ 260 °C / 2 s, no IPA), and set the
-   **SW2** bridge for OFF / ON / TINY.
+   **SW2** bridge: bridged = ON, open = OFF.
 
 ---
 

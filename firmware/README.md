@@ -286,19 +286,13 @@ cost is one accel Z read per poll.
    3.3 V) — below emission but a bias ams-OSRAM's datasheet says to avoid (slow
    migration risk). Firmware mitigates it (the Hi-Z idle park below) but can't zero
    it while the rail is high; SW2 **OFF** floats the anodes and removes the bias
-   entirely, so a card in a drawer for months isn't held under bias. (TINY does **not**
-   help — same DC endpoint through R12.)
-   *TINY is a low-fidelity mode by design.* SW2 = **TINY** feeds all four anodes
-   through one **shared** 220 Ω (`R12`) -- unlike **ON**, which ties the common
-   anode straight to STO (the supercap tank) and leaves each LED independent on its own 150 Ω cathode
-   ballast. Sharing R12 makes per-LED brightness depend on how many channels are
-   lit at once (a single lit LED sees ~3× the current of all four lit), so a
-   `led_breathe` (all four together) and the tail of a `led_sweep` (one at a time)
-   won't match in TINY the way they do in ON. The firmware **cannot** correct this:
-   it can't sense SW2, and scaling duty by active-channel count would wreck ON mode
-   (where no correction is wanted). TINY is the dim/long-runtime hack; treat animation
-   fidelity as an ON-mode property. *(v4: move the ballast to the individual cathodes
-   so TINY is linear -- see design notes.)*
+   entirely, so a card in a drawer for months isn't held under bias.
+   *(SW2 is a two-pad bridge since 2026-08-05: bridged = ON, open = OFF. The old
+   third position — TINY, all four anodes through one shared 220 Ω `R12` — was
+   deleted with R12 itself: the shared ballast made per-LED brightness depend on
+   how many channels were lit, firmware can't sense SW2 to correct it, and the
+   dim/long-runtime role it served is better done in PWM duty. History in git and
+   the design notes.)*
 2. The **accelerometer is the only actuator** on this card. A physical button is
    **deliberately not fitted**. To add one in a future revision, wire **pin 3 (PA5)**
    to a momentary switch to **GND** — `gpio_init` already enables PA5's internal

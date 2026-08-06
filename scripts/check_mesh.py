@@ -60,8 +60,16 @@ BASELINE = {
     # 2070.29 to the hundredth; interference_drc and assembly_drc (skipped when the step
     # died) were run on that geometry and pass. Same transition note as above: the
     # committed STL stays at the old volume until the merge-run rebuild.
+    #
+    # Re-ledgered again 2026-08-05 (same day), 2070.29 -> 2084.47: DRH deleted SB1-SB4
+    # and R12 (TINY mode removed with them), so the brace's pocket count fell 53 -> 48
+    # and the five voids' volume returned to resin (+14.18 mm3 total). R3 and R18 moved
+    # in the same session -- their pockets relocate but keep their geometry, net ~0.
+    # interference_drc (worst margin +0.16, D2) and assembly_drc (0/0) were run on the
+    # regenerated solid. Transition note as above: the committed STL reads 2070.29
+    # until the merge-run rebuild.
     "solar-glow-drh-diffuser-brace.stl": dict(
-        volume_mm3=2070.29, bbox=(-22.85, -42.4, 0.0, 24.35, 42.4, 1.8),
+        volume_mm3=2084.47, bbox=(-22.85, -42.4, 0.0, 24.35, 42.4, 1.8),
         max_boundary_edges=0, max_open_len_mm=0.0, max_degenerate=0),
 }
 VOL_TOL = 0.005

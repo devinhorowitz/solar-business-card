@@ -5023,116 +5023,6 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "solarglow:R12"
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(in_pos_files yes)
-			(duplicate_pin_numbers_are_jumpers no)
-			(property "Reference" "R12"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value" "TINY ballast"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Footprint" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Datasheet" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Description" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(symbol "R12_1_1"
-				(rectangle
-					(start 2.54 2.54)
-					(end 20.32 -7.62)
-					(stroke
-						(width 0.2)
-						(type default)
-					)
-					(fill
-						(type background)
-					)
-				)
-				(pin passive line
-					(at 0 0 0)
-					(length 2.54)
-					(name "1"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 0 -5.08 0)
-					(length 2.54)
-					(name "2"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
 		(symbol "solarglow:R14"
 			(exclude_from_sim no)
 			(in_bom yes)
@@ -6563,446 +6453,6 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "solarglow:SB1"
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(in_pos_files yes)
-			(duplicate_pin_numbers_are_jumpers no)
-			(property "Reference" "SB1"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value" "LED1 jmp"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Footprint" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Datasheet" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Description" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(symbol "SB1_1_1"
-				(rectangle
-					(start 2.54 2.54)
-					(end 20.32 -7.62)
-					(stroke
-						(width 0.2)
-						(type default)
-					)
-					(fill
-						(type background)
-					)
-				)
-				(pin passive line
-					(at 0 0 0)
-					(length 2.54)
-					(name "1"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 0 -5.08 0)
-					(length 2.54)
-					(name "2"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
-		(symbol "solarglow:SB2"
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(in_pos_files yes)
-			(duplicate_pin_numbers_are_jumpers no)
-			(property "Reference" "SB2"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value" "LED2 jmp"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Footprint" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Datasheet" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Description" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(symbol "SB2_1_1"
-				(rectangle
-					(start 2.54 2.54)
-					(end 20.32 -7.62)
-					(stroke
-						(width 0.2)
-						(type default)
-					)
-					(fill
-						(type background)
-					)
-				)
-				(pin passive line
-					(at 0 0 0)
-					(length 2.54)
-					(name "1"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 0 -5.08 0)
-					(length 2.54)
-					(name "2"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
-		(symbol "solarglow:SB3"
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(in_pos_files yes)
-			(duplicate_pin_numbers_are_jumpers no)
-			(property "Reference" "SB3"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value" "LED3 jmp"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Footprint" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Datasheet" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Description" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(symbol "SB3_1_1"
-				(rectangle
-					(start 2.54 2.54)
-					(end 20.32 -7.62)
-					(stroke
-						(width 0.2)
-						(type default)
-					)
-					(fill
-						(type background)
-					)
-				)
-				(pin passive line
-					(at 0 0 0)
-					(length 2.54)
-					(name "1"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 0 -5.08 0)
-					(length 2.54)
-					(name "2"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
-		(symbol "solarglow:SB4"
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(in_pos_files yes)
-			(duplicate_pin_numbers_are_jumpers no)
-			(property "Reference" "SB4"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value" "LED4 jmp"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Footprint" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Datasheet" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Description" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(symbol "SB4_1_1"
-				(rectangle
-					(start 2.54 2.54)
-					(end 20.32 -7.62)
-					(stroke
-						(width 0.2)
-						(type default)
-					)
-					(fill
-						(type background)
-					)
-				)
-				(pin passive line
-					(at 0 0 0)
-					(length 2.54)
-					(name "1"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 0 -5.08 0)
-					(length 2.54)
-					(name "2"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
 		(symbol "solarglow:SC1"
 			(exclude_from_sim no)
 			(in_bom yes)
@@ -7505,7 +6955,7 @@
 			(symbol "SW2_1_1"
 				(rectangle
 					(start 2.54 2.54)
-					(end 20.32 -12.7)
+					(end 20.32 -7.62)
 					(stroke
 						(width 0.2)
 						(type default)
@@ -7543,24 +6993,6 @@
 						)
 					)
 					(number "2"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 0 -10.16 0)
-					(length 2.54)
-					(name "3"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-					(number "3"
 						(effects
 							(font
 								(size 1 1)
@@ -10593,11 +10025,7 @@
 		(at 410.21 134.62)
 		(uuid "47fb82dc-ff3d-4c2a-8f93-cea3b362c797")
 	)
-	(no_connect
-		(at 490.22 387.35)
-		(uuid "59dda182-75f5-4f48-ac76-0b7885e398ef")
-	)
-	(no_connect
+		(no_connect
 		(at 209.55 114.3)
 		(uuid "627796f3-3d60-403a-ba9b-8fa9d354d6ce")
 	)
@@ -10949,16 +10377,6 @@
 	)
 	(wire
 		(pts
-			(xy 279.4 83.82) (xy 274.32 83.82)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "1dd8d187-d1ad-4b8c-ae51-bd9d78cca460")
-	)
-	(wire
-		(pts
 			(xy 459.74 504.19) (xy 454.66 504.19)
 		)
 		(stroke
@@ -10986,16 +10404,6 @@
 			(type default)
 		)
 		(uuid "26470f22-a4a0-4ed8-8fb6-63ea27a14981")
-	)
-	(wire
-		(pts
-			(xy 279.4 312.42) (xy 274.32 312.42)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "270e2f1e-ad69-4a10-a04f-5de579acd30b")
 	)
 	(wire
 		(pts
@@ -11279,16 +10687,6 @@
 	)
 	(wire
 		(pts
-			(xy 279.4 266.7) (xy 274.32 266.7)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "4f9f57e5-67f3-417b-aed3-733c683ea390")
-	)
-	(wire
-		(pts
 			(xy 350.52 43.18) (xy 345.44 43.18)
 		)
 		(stroke
@@ -11296,16 +10694,6 @@
 			(type default)
 		)
 		(uuid "50e37d7c-cfcf-4f1e-9f9f-11f627d614c9")
-	)
-	(wire
-		(pts
-			(xy 279.4 261.62) (xy 274.32 261.62)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "514f1da9-ace5-4b5c-abcf-17b8ac16e7f5")
 	)
 	(wire
 		(pts
@@ -11779,16 +11167,6 @@
 	)
 	(wire
 		(pts
-			(xy 279.4 307.34) (xy 274.32 307.34)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "84b8bcd2-0793-4b31-9fa1-cdd43b6635ae")
-	)
-	(wire
-		(pts
 			(xy 855.98 387.35) (xy 850.9 387.35)
 		)
 		(stroke
@@ -11869,16 +11247,6 @@
 	)
 	(wire
 		(pts
-			(xy 279.4 205.74) (xy 274.32 205.74)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "8db03c55-e076-4410-bf89-748d44aae572")
-	)
-	(wire
-		(pts
 			(xy 934.72 391.16) (xy 929.64 391.16)
 		)
 		(stroke
@@ -11906,16 +11274,6 @@
 			(type default)
 		)
 		(uuid "8f930dfc-9fda-4b85-a035-cda9d26ab492")
-	)
-	(wire
-		(pts
-			(xy 279.4 139.7) (xy 274.32 139.7)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "906f0513-b373-4db4-8b5c-2d532ab2f7e2")
 	)
 	(wire
 		(pts
@@ -11966,16 +11324,6 @@
 			(type default)
 		)
 		(uuid "9531030b-692f-4618-b10f-d9c5e1d3cdbb")
-	)
-	(wire
-		(pts
-			(xy 279.4 144.78) (xy 274.32 144.78)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "9583a12d-fa72-405f-a74e-0bab52ceab93")
 	)
 	(wire
 		(pts
@@ -12099,26 +11447,6 @@
 	)
 	(wire
 		(pts
-			(xy 279.4 78.74) (xy 274.32 78.74)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "ad1d4d91-be2c-4fce-bcfa-5584a5309799")
-	)
-	(wire
-		(pts
-			(xy 279.4 200.66) (xy 274.32 200.66)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "ad585d1a-d041-4582-b9a7-7ebd4a19ff0c")
-	)
-	(wire
-		(pts
 			(xy 934.72 382.27) (xy 929.64 382.27)
 		)
 		(stroke
@@ -12226,16 +11554,6 @@
 			(type default)
 		)
 		(uuid "b7e660b1-3513-498b-901d-5489c6287308")
-	)
-	(wire
-		(pts
-			(xy 279.4 292.1) (xy 274.32 292.1)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "b80ddcc1-ffff-4e5f-981c-41139308897a")
 	)
 	(wire
 		(pts
@@ -13167,27 +12485,6 @@
 			)
 		)
 	)
-	(global_label "TINY"
-		(shape bidirectional)
-		(at 274.32 292.1 0)
-		(effects
-			(font
-				(size 1 1)
-			)
-		)
-		(uuid "15f49816-54fd-458f-aad3-98309a77c3b1")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 274.32 292.1 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-	)
 	(global_label "ANODE"
 		(shape bidirectional)
 		(at 274.32 220.98 0)
@@ -13305,27 +12602,6 @@
 		(uuid "1cb0b574-2c06-425d-ac6a-65f68732c733")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 115.57 170.18 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-	)
-	(global_label "LDRV1"
-		(shape bidirectional)
-		(at 274.32 78.74 0)
-		(effects
-			(font
-				(size 1 1)
-			)
-		)
-		(uuid "1cd55f18-13ca-453b-b182-8333f9ea31ff")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 274.32 78.74 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -13655,27 +12931,6 @@
 			)
 		)
 	)
-	(global_label "GND"
-		(shape bidirectional)
-		(at 274.32 266.7 0)
-		(effects
-			(font
-				(size 1 1)
-			)
-		)
-		(uuid "34c2f727-b17b-4e75-be54-e36fcc080008")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 274.32 266.7 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-	)
 	(global_label "SRC"
 		(shape bidirectional)
 		(at 454.66 377.19 0)
@@ -13836,27 +13091,6 @@
 		(uuid "41160b05-6af8-40e8-a8e4-6afe59a19f34")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 929.64 372.11 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-	)
-	(global_label "GND"
-		(shape bidirectional)
-		(at 274.32 144.78 0)
-		(effects
-			(font
-				(size 1 1)
-			)
-		)
-		(uuid "4390d760-326f-4c25-a1b7-221e6dbee5fd")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 274.32 144.78 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -14390,27 +13624,6 @@
 		(uuid "5f07f4f6-b6c4-40bb-a000-99b42bbea586")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 850.9 382.27 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-	)
-	(global_label "LDRV2"
-		(shape bidirectional)
-		(at 274.32 139.7 0)
-		(effects
-			(font
-				(size 1 1)
-			)
-		)
-		(uuid "5f461c00-bc86-49d9-8467-2b073db95c37")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 274.32 139.7 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -15550,27 +14763,6 @@
 			)
 		)
 	)
-	(global_label "GND"
-		(shape bidirectional)
-		(at 274.32 205.74 0)
-		(effects
-			(font
-				(size 1 1)
-			)
-		)
-		(uuid "935cb1f5-33f1-4d0d-884b-4f6f8acebd53")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 274.32 205.74 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-	)
 	(global_label "ANODE"
 		(shape bidirectional)
 		(at 115.57 165.1 0)
@@ -15668,27 +14860,6 @@
 		(uuid "9df45b92-40c4-4e46-a8ce-8355833b77ab")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 345.44 93.98 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-	)
-	(global_label "STO"
-		(shape bidirectional)
-		(at 274.32 312.42 0)
-		(effects
-			(font
-				(size 1 1)
-			)
-		)
-		(uuid "9e71410d-fcb2-4e93-8391-50f83e78f1c4")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 274.32 312.42 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -15848,27 +15019,6 @@
 			)
 		)
 	)
-	(global_label "GND"
-		(shape bidirectional)
-		(at 274.32 83.82 0)
-		(effects
-			(font
-				(size 1 1)
-			)
-		)
-		(uuid "a6dd722a-0c51-44ed-8f25-d79ecc07b7f2")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 274.32 83.82 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-	)
 	(global_label "SRC"
 		(shape bidirectional)
 		(at 20.32 48.26 0)
@@ -15923,27 +15073,6 @@
 		(uuid "a8fc0697-1a7c-4b74-ab4b-9adaa4b249e4")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 485.14 372.11 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-	)
-	(global_label "LDRV3"
-		(shape bidirectional)
-		(at 274.32 200.66 0)
-		(effects
-			(font
-				(size 1 1)
-			)
-		)
-		(uuid "a9827ed3-1c79-4633-913b-6a19262f2610")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 274.32 200.66 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -16560,27 +15689,6 @@
 		(uuid "c7509528-9d19-43ad-bf01-05cf1c964264")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 789.94 372.11 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-	)
-	(global_label "LDRV4"
-		(shape bidirectional)
-		(at 274.32 261.62 0)
-		(effects
-			(font
-				(size 1 1)
-			)
-		)
-		(uuid "ca1cb223-8094-44fa-aff0-0a0670321c7f")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 274.32 261.62 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -17216,27 +16324,6 @@
 		(uuid "ec017a02-f4a8-474c-b938-9337acd9a9f0")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 345.44 154.94 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-	)
-	(global_label "TINY"
-		(shape bidirectional)
-		(at 274.32 307.34 0)
-		(effects
-			(font
-				(size 1 1)
-			)
-		)
-		(uuid "f067cd32-d2ee-4749-b1e6-865183985410")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 274.32 307.34 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -19624,92 +18711,6 @@
 		)
 	)
 	(symbol
-		(lib_id "solarglow:SB3")
-		(at 279.4 200.66 0)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom no)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp yes)
-		(uuid "4f8289bb-7d37-453a-b152-bcc205de3ef3")
-		(property "Reference" "SB3"
-			(at 290.4 205.74 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "LED3 jmp"
-			(at 290.4 210.82 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "solarglow:SB3"
-			(at 290.4 215.9 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 279.4 200.66 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "Per-LED force-on jumper (solder bridge)"
-			(at 279.4 200.66 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "MPN" "(PCB bridge - no part)"
-			(at 279.4 200.66 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "ea5289d1-58f4-4e4d-a73d-4ef9c5b8b58b")
-		)
-		(pin "2"
-			(uuid "b1e0f55b-ddec-4be0-85b3-d881afec5aa0")
-		)
-		(instances
-			(project "solar-glow-drh-v4_0"
-				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
-					(reference "SB3")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "solarglow:MH2")
 		(at 469.9 129.54 0)
 		(unit 1)
@@ -21524,92 +20525,6 @@
 		)
 	)
 	(symbol
-		(lib_id "solarglow:SB4")
-		(at 279.4 261.62 0)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom no)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp yes)
-		(uuid "7719f7ee-e589-4b5e-84af-d5e203f75176")
-		(property "Reference" "SB4"
-			(at 290.4 266.7 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "LED4 jmp"
-			(at 290.4 271.78 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "solarglow:SB4"
-			(at 290.4 276.86 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 279.4 261.62 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "Per-LED force-on jumper (solder bridge)"
-			(at 279.4 261.62 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "MPN" "(PCB bridge - no part)"
-			(at 279.4 261.62 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "2"
-			(uuid "35a8aa50-6d67-46bf-8144-68e2d2949fcd")
-		)
-		(pin "1"
-			(uuid "a4b69953-7684-46ef-8e1c-3cd29264421b")
-		)
-		(instances
-			(project "solar-glow-drh-v4_0"
-				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
-					(reference "SB4")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "solarglow:C8")
 		(at 560.07 95.25 0)
 		(unit 1)
@@ -21987,125 +20902,6 @@
 			(project "solar-glow-drh-v4_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "R5")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "solarglow:R12")
-		(at 279.4 307.34 0)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(uuid "7d0ecaaa-313b-48a2-bc94-7b4fa2edd527")
-		(property "Reference" "R12"
-			(at 290.4 312.42 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "220R"
-			(at 290.4 317.5 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "solarglow:R12"
-			(at 290.4 322.58 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 279.4 307.34 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "TINY-mode ballast 220 ohm"
-			(at 279.4 307.34 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "MPN" "AC0402FR-07220RL"
-			(at 279.4 307.34 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Manufacturer" "Yageo"
-			(at 459.74 372.11 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Supplier" "DigiKey"
-			(at 459.74 372.11 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Supplier P/N" "YAG3456CT-ND"
-			(at 459.74 372.11 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "2"
-			(uuid "6d8aad3a-6725-412c-92ef-d4b0e3234702")
-		)
-		(pin "1"
-			(uuid "3a34d7d0-aabe-4325-92c4-7d19b70ccfbf")
-		)
-		(instances
-			(project "solar-glow-drh-v4_0"
-				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
-					(reference "R12")
 					(unit 1)
 				)
 			)
@@ -22736,7 +21532,7 @@
 				)
 			)
 		)
-		(property "Description" "LED master switch OFF/ON/TINY (solder bridge)"
+		(property "Description" "LED master switch OFF/ON (solder bridge)"
 			(at 279.4 281.94 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -22758,9 +21554,6 @@
 		)
 		(pin "2"
 			(uuid "28e9f552-2ab1-411a-8538-a31b68729abc")
-		)
-		(pin "3"
-			(uuid "c8ffcc76-74f6-44a5-8003-015e7ac32e7a")
 		)
 		(pin "1"
 			(uuid "78f89901-c072-4ff5-a506-3b7d314e39fc")
@@ -24401,92 +23194,6 @@
 		)
 	)
 	(symbol
-		(lib_id "solarglow:SB2")
-		(at 279.4 139.7 0)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom no)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp yes)
-		(uuid "d187c3a3-023a-4ac7-87ef-8da2ab3ccd0b")
-		(property "Reference" "SB2"
-			(at 290.4 144.78 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "LED2 jmp"
-			(at 290.4 149.86 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "solarglow:SB2"
-			(at 290.4 154.94 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 279.4 139.7 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "Per-LED force-on jumper (solder bridge)"
-			(at 279.4 139.7 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "MPN" "(PCB bridge - no part)"
-			(at 279.4 139.7 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "005b956e-7718-4984-af3c-8bab7c29be0e")
-		)
-		(pin "2"
-			(uuid "0389616e-ec78-436c-baf2-6d52d1988eb2")
-		)
-		(instances
-			(project "solar-glow-drh-v4_0"
-				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
-					(reference "SB2")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "solarglow:TP1")
 		(at 410.21 372.11 0)
 		(unit 1)
@@ -26021,92 +24728,6 @@
 			(project "solar-glow-drh-v4_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "#FLG2")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "solarglow:SB1")
-		(at 279.4 78.74 0)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom no)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp yes)
-		(uuid "f8eb2374-adca-4f7e-960b-f6fa5e7ab738")
-		(property "Reference" "SB1"
-			(at 290.4 83.82 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "LED1 jmp"
-			(at 290.4 88.9 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "solarglow:SB1"
-			(at 290.4 93.98 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 279.4 78.74 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "Per-LED force-on jumper (solder bridge)"
-			(at 279.4 78.74 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "MPN" "(PCB bridge - no part)"
-			(at 279.4 78.74 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "2305d465-0a8f-4e11-bac6-bcdff17e2756")
-		)
-		(pin "2"
-			(uuid "5414e84d-4e9b-4b71-af71-6494caa82fef")
-		)
-		(instances
-			(project "solar-glow-drh-v4_0"
-				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
-					(reference "SB1")
 					(unit 1)
 				)
 			)

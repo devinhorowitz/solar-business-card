@@ -1816,7 +1816,6 @@ def check_plating_bus():
 OPAQUE_PN_LEDGER = {
     ("AC0402FR-07150RL", "YAG3443CT-ND"),        # R1-R4      Yageo catalog code
     ("AC0402FR-071ML", "YAG3450CT-ND"),          # R14/17/18  Yageo catalog code
-    ("AC0402FR-07220RL", "YAG3456CT-ND"),        # R12        Yageo catalog code
     ("AC0402FR-074K7L", "YAG3497CT-ND"),         # R10/R11    Yageo catalog code
     ("RT0603BRD071ML", "YAG4498CT-ND"),          # R5/R6/R16  Yageo catalog code
     ("BLM18PG221SN1D", "490-5221-1-ND"),         # FB1        DigiKey legacy numeric
