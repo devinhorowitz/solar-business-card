@@ -190,6 +190,19 @@ SPECS = {
         body=(0.81, 0.81, 0.50), tab=None,
         desc="U6 TPS22916CYFPR, DSBGA-4 YFP0004 (4223507/A) — 0.75-0.81 sq, 0.5 MAX incl. balls",
     ),
+    # Q2's SOT-523 (2026-08-06 low-profile respin) — the missing-stock-model failure mode's
+    # THIRD arrival, U7's and U9's exact shape: KiCad's Package_TO_SOT_SMD:SOT-523 footprint
+    # names `Package_TO_SOT_SMD.3dshapes/SOT-523.step`, and kicad-packages3D ships no such
+    # file, so Q2 landed on the board already bodiless and check [5] said so. Own solid at
+    # the datasheet maximum: Diodes DMG1012T sheet (Feb 2022, in datasheets/), SOT523 table —
+    # height A1 0.10 max + A2 0.80 max = 0.90, lead span E 1.75 max (across X, the KiCad
+    # SOT axis), body D 1.70 max (along Y). Envelope worst-case in every axis, the only
+    # question the brace and interference_drc ask.
+    "DIODES_SOT523": dict(
+        color=COL_IC,
+        body=(1.75, 1.70, 0.90), tab=None,
+        desc="Q2 DMG1012T-7, SOT-523 — E 1.75 max lead span x D 1.70 max x 0.90 max (A1+A2)",
+    ),
 }
 
 # refdes -> (model path as KiCad should store it, Z rotation in degrees)
@@ -227,6 +240,9 @@ ATTACH = {
     # "X2SON - 0.4 mm max height", body 0.95-1.05 square. Modelled at 1.05 x 1.05 x 0.40 so the
     # envelope is the worst case in every axis, which is the only question the brace asks.
     "U9": (f"{PRJ}/TI_X2SON4_DQN.step", 0),
+    # Q2: the stock SOT-523 footprint's model path dangles upstream (see the DIODES_SOT523
+    # spec comment). Box is 180-symmetric, so the footprint's placement rotation is free.
+    "Q2": (f"{PRJ}/DIODES_SOT523.step", 0),
 }
 
 
