@@ -558,7 +558,10 @@ the one step where somebody actually buys parts.)_ The design was reworked for t
 **U6 (TPS22917DBVT since the 2026-07-23 dark-current swap) and R14 (1 M `NFC_EN` pulldown) added**, the stale **JP1/JP2 rows dropped** (the `JP1` designator is reused for the v3.0 bench pad strip — bare pads, not a BOM part)
 (those headers left the board in v3.0), and **most passives converted to 0402** to match the board's placed lands — the v2.2 file still
 listed 0805 MPNs for most R/C. _(Updated 2026-07-25: the 2026-07-23 longevity/precision passes moved
-several off 0402 — **0603**: C4, C13, C25, C22, C23, R5, R6, R15, R16, **FB1**; **0805**: C26, C27.
+several off 0402 — **0603**: C4, C13, C22, C23, R5, R6, R15, R16, **FB1**; **0805**: C9. (This
+size census has moved twice since it was written: 2026-07-30 took C25 0603→0805 and C9 0402→0805,
+and **2026-08-06 took C25, C26 and C27 to the low-profile 1206** — Murata GRM319, 0.95 mm max —
+for the enclosure height wall. The table below is the current truth.)
 (FB1's 0402-land lag is **resolved** — BOM, schematic and board all carry the 0603 land now,
 verified against the committed board 2026-08-01; the TODO item this note used to point at is gone.)
 SJ1 is **gone
@@ -621,8 +624,8 @@ Summary of the **orderable** lines:
 | C22 | 1 | 1 uF, 25 V, 0603, X7R | 0603 (C_0603_1608Metric) | `GRT188R71E105KE13D` |
 | C23 | 1 | 2.2 µF, 25 V, 0603, X7R | 0603 (C_0603_1608Metric) | `GRM188Z71E225ME43D` |
 | C24 | 1 | 100 nF, 0402, X7R | 0402 | `GRT155R71H104KE01D` |
-| C25 | 1 | 22 uF, 10 V, 0603, X5R | 0603 | `GRT188R61A226ME13D` |
-| C26, C27 | 2 | 10 µF, 10 V, 0805, X7R | 0805 (C_0805_2012Metric) | `GRM21BR71A106KA73L` |
+| C25 | 1 | 22 uF, 16 V, 1206 low-profile (0.95 max), X5R | 1206 (`solarglow:C_1206_3216Metric_LP085`) | `GRM319R61C226KE15D` |
+| C26, C27 | 2 | 10 µF, 25 V, 1206 low-profile (0.95 max), X5R | 1206 (`solarglow:C_1206_3216Metric_LP085`) | `GRM319R61E106KA12D` |
 | C28 | 1 | 100 nF, 0402, X7R | 0402 | `GRT155R71H104KE01D` |
 | R15 | 1 | 2 M, 0603, ±0.1%, 25 ppm | 0603 (R_0603_1608Metric) | `MCT0603MD2004BP500` |
 | R16 | 1 | 1 M, 0603, ±0.1%, 25 ppm | 0603 (R_0603_1608Metric) | `RT0603BRD071ML` |

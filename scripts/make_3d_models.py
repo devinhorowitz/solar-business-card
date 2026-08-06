@@ -116,6 +116,7 @@ OUT = ROOT / "PCB" / "solarglow.3dshapes"
 COL_SOLAR   = (0.045, 0.055, 0.090)   # monocrystalline cell: near-matte black, hint of blue
 COL_IC      = (0.100, 0.100, 0.105)   # moulded black epoxy/polymer IC body
 COL_SUPERCAP = (0.580, 0.590, 0.610)  # SCPC can: bright silver, below the raytracer's clip
+COL_MLCC    = (0.520, 0.420, 0.300)   # fired ceramic MLCC body: light tan, safely off the clip
 
 SPECS = {
     "SCHURTER_SCPC_SS17": dict(
@@ -166,6 +167,18 @@ SPECS = {
         color=COL_IC,
         body=(1.05, 1.05, 0.40), tab=None,
         desc="U9 TPS7A0233PDQNR, X2SON-4 DQN0004A — 1.05 max square x 0.40 MAX height",
+    ),
+    # The low-profile 1206 the C25-C27 respin rides on (decided 2026-08-06): Murata GRM319
+    # is 3.2 x 1.6 x 0.85 +/-0.10, so 0.95 MAX — modelled at the max, same doctrine as U9/U8:
+    # the envelope is the worst case in every axis, which is the only question the brace and
+    # interference_drc ask. KiCad's generic C_1206_3216Metric body measures ~1.6, which would
+    # (a) fail check [7] against a 0.95 declaration and (b) false-fail interference_drc's
+    # ray-cast against a pocket cut for 0.95 — the reason this model exists rather than a
+    # MODEL_NOTES waiver (the C9 lesson: waivers are keyed by model and blind every user of it).
+    "MURATA_GRM319_1206LP": dict(
+        color=COL_MLCC,
+        body=(3.2, 1.6, 0.95), tab=None,
+        desc="C25/C26/C27 Murata GRM319 low-profile 1206 — 3.2 x 1.6 x 0.85 +/-0.10 (0.95 MAX)",
     ),
 }
 

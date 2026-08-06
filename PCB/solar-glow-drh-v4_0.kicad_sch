@@ -17072,7 +17072,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
+		(property "Footprint" "solarglow:C_1206_3216Metric_LP085"
 			(at 592.66 387.35 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -17092,7 +17092,7 @@
 				)
 			)
 		)
-		(property "Description" "22uF 16V 0805 X5R, AEM CSRC buffer at BUFSRC (aem10300 Table 6: min 13uF EFFECTIVE - footnote 1 names DC-bias derating). Re-picked 2026-07-30 (audit #2) from 0603/10V GRT188R61A226ME13D, which held only ~9-12uF at the 3.1-4.15V MPP bias. 16V 0805 holds ~15-17uF. 1.25mm max. Fits in place (gaps SC3 0.529/L2 0.575/SB2 0.776mm); 1206 does NOT fit."
+		(property "Description" "22uF 16V 1206 X5R LOW-PROFILE (GRM319: 0.85 +/-0.10 -> 0.95 MAX), AEM CSRC buffer at BUFSRC (aem10300 Table 6: min 13uF EFFECTIVE - footnote 1 names tolerance + DC-bias derating). Re-picked 2026-08-06 off the height wall (was TDK 0805, 1.45 max): K-tol worst 19.8uF; even -25% bias at the 4.15V Voc worst case plus 5% aging leaves ~14.1uF >= 13. Same 16V/X5R point as the incumbent, and a 1206 derates LESS than the 0805 it replaces. The 2026-07-30 note that 1206 does NOT fit was bounded by SB2, deleted 2026-08-05; refit is the board round. Confirm the exact bias curve on SimSurfing there."
 			(at 581.66 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -17102,7 +17102,7 @@
 				)
 			)
 		)
-		(property "MPN" "C2012X5R1C226M125AC"
+		(property "MPN" "GRM319R61C226KE15D"
 			(at 581.66 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -17112,7 +17112,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "TDK"
+		(property "Manufacturer" "Murata"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -17134,7 +17134,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "445-7647-1-ND"
+		(property "Supplier P/N" "490-GRM319R61C226KE15DCT-ND"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -17831,7 +17831,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
+		(property "Footprint" "solarglow:C_1206_3216Metric_LP085"
 			(at 623.14 387.35 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -17851,7 +17851,7 @@
 				)
 			)
 		)
-		(property "Description" "10uF 16V 0805 X7R, AEM VINT buffer. Re-picked 2026-07-30 (audit #2): GRM21BR71A106KA73L went stock-zero at DigiKey AND Mouser, auto sibling NRND. 16V also margins the family. 1.40mm max -> part_heights C26/C27 = 1.45."
+		(property "Description" "10uF 25V 1206 X5R LOW-PROFILE (GRM319: 0.85 +/-0.10 -> 0.95 MAX), AEM VINT buffer (min 5uF EFFECTIVE). VINT sits at 2.2V = 9 pct of rating, derating ~nil: K-tol worst ~8.7uF effective. Re-picked 2026-08-06 off the height wall (was Samsung 0805 X7R, 1.40 max). X5R is DELIBERATE: no low-profile 10uF true-X7R exists in any case size (all 1.8mm+), and the supercaps already cap the system at +85C -- exactly X5R's window. 25V rating vs the incumbent 16V."
 			(at 612.14 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -17861,7 +17861,7 @@
 				)
 			)
 		)
-		(property "MPN" "CL21B106KOQNNNG"
+		(property "MPN" "GRM319R61E106KA12D"
 			(at 612.14 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -17871,7 +17871,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "Samsung Electro-Mechanics"
+		(property "Manufacturer" "Murata"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -17882,7 +17882,7 @@
 				)
 			)
 		)
-		(property "Supplier" "Mouser"
+		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -17893,7 +17893,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "187-CL21B106KOQNNNG"
+		(property "Supplier P/N" "490-5525-1-ND"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -20223,7 +20223,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
+		(property "Footprint" "solarglow:C_1206_3216Metric_LP085"
 			(at 653.62 387.35 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -20243,7 +20243,7 @@
 				)
 			)
 		)
-		(property "Description" "10uF 16V 0805 X7R, STO local bulk/decoupling. Re-picked 2026-07-30 (audit #2): GRM21BR71A106KA73L went stock-zero at DigiKey AND Mouser, auto sibling NRND. 16V halves the DC-bias loss at STO's 5.5V max (was 55% of a 10V rating). 1.40mm max -> part_heights 1.45."
+		(property "Description" "10uF 25V 1206 X5R LOW-PROFILE (GRM319: 0.85 +/-0.10 -> 0.95 MAX), STO local bulk/decoupling. STO 5.5V max = 22 pct of rating -> ~8uF effective worst case, ABOVE the 16V 0805 X7R it replaces (5.5V was 34 pct of that rating). X5R deliberate -- see C26: the system is +85C-capped by the supercaps. Was one of the three 1.4mm-plus parts holding the enclosure height wall; 0.95 max drops the trio off it."
 			(at 642.62 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -20253,7 +20253,7 @@
 				)
 			)
 		)
-		(property "MPN" "CL21B106KOQNNNG"
+		(property "MPN" "GRM319R61E106KA12D"
 			(at 642.62 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -20263,7 +20263,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "Samsung Electro-Mechanics"
+		(property "Manufacturer" "Murata"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -20274,7 +20274,7 @@
 				)
 			)
 		)
-		(property "Supplier" "Mouser"
+		(property "Supplier" "DigiKey"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -20285,7 +20285,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "187-CL21B106KOQNNNG"
+		(property "Supplier P/N" "490-5525-1-ND"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
