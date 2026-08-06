@@ -71,6 +71,10 @@ COLORS = {
     # Indoor amorphous-Si PV. Very dark blue-black -- an indoor cell absorbs almost everything
     # it can see, which is the point of it.
     "SM141K06TF":         ((0.045, 0.055, 0.090), "indoor PV cell, dark blue-black a-Si"),
+
+    # The C25-C27 low-profile 1206 (2026-08-06): fired-ceramic MLCC body, light tan. Exported
+    # with this colour by make_3d_models.py; recorded here so check [10] gates it like the rest.
+    "MURATA_GRM319_1206LP": ((0.520, 0.420, 0.300), "MLCC ceramic body, GRM319 LP 1206 (C25-C27)"),
 }
 
 # \s* between the components: STEP wraps long lines, and several of these files split the

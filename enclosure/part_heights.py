@@ -91,6 +91,11 @@ HEIGHTS = {
     # datasheet. C26/C27 escaped only by luck -- they are declared 1.45 against the same
     # 1.25 model, an overshoot the check permits. The gap class is: a part whose datasheet
     # max EXCEEDS its generic package model, declared at the model's height.
+    # C25-C27 are DECIDED (2026-08-06) to move to the low-profile 1206 Murata GRM319
+    # (0.85 +/-0.10 -> 0.95 MAX; schematic + solarglow:C_1206_3216Metric_LP085 +
+    # MURATA_GRM319_1206LP.step all landed). These three entries flip to 0.95 ONLY when the
+    # board actually carries the 1206 bodies -- the C9/C25 sequencing rule: check [7]
+    # measures each number against the model ON THE BOARD, so the height waits for the body.
     "C25": 1.45,                                          # 0805, TDK 1.25 +/-0.20 -> 1.45 max
     # C26/C27 re-picked 2026-07-30 (audit #2): Samsung CL21B106KOQNNNG, 10uF 16V X7R --
     # the old Murata went stock-zero at both distributors. The Samsung body is 1.40 max,

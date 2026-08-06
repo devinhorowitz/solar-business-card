@@ -509,10 +509,17 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
   deliberately to escape it, so this reopens a closed decision.
 
   **Neither buys thickness while C25/C26/C27 hold 1.45.** Decide on leakage, price, AEC-Q100 and
-  area, not on millimetres.
+  area, not on millimetres. _(2026-08-06: that hold broke — C25–C27 moved to the low-profile
+  1206 GRM319 at 0.95 max, so the non-supercap wall is now C9/Q2 at 1.25/1.20.)_
 
-- [ ] **[PCB — CLOSED, do not re-derive] C26/C27 cannot be thinned; and the incumbent is nearly out of stock**
-  _(2026-08-05. Recorded so this is not researched a third time.)_
+- [ ] **[PCB — CLOSED, do not re-derive] C26/C27 cannot be thinned *in 0805*; and the old incumbent is nearly out of stock**
+  _(2026-08-05. Recorded so this is not researched a third time. 2026-08-06: ESCAPED BY CASE
+  SIZE, which this item's verdict never covered — C25–C27 moved to the low-profile **1206**
+  Murata GRM319 (22 µF 16 V X5R `GRM319R61C226KE15D`; 10 µF 25 V X5R `GRM319R61E106KA12D`;
+  0.85 ±0.10 → 0.95 max, both Active, live-verified). The X7R→X5R trade is deliberate: no
+  low-profile 10 µF true-X7R exists in ANY case size, and the supercaps cap the system at
+  +85 °C — exactly X5R's window. Everything below stands as the 0805 record, including the
+  ORDER-BLOCKING note, which is now MOOT — the CL21B106KOQNNNG is no longer bought.)_
   **No vendor makes a 10 µF / 16 V / true-X7R / 0805 thinner than 1.40 mm max, and our Samsung
   `CL21B106KOQNNNG` is the thinnest that exists.** Every such part industry-wide is the same 1.25 mm
   nominal; only the tolerance grade differs (Samsung ±0.15 → 1.40; everyone else ±0.20 → 1.45). TDK

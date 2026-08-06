@@ -1819,7 +1819,12 @@ OPAQUE_PN_LEDGER = {
     ("AC0402FR-074K7L", "YAG3497CT-ND"),         # R10/R11    Yageo catalog code
     ("RT0603BRD071ML", "YAG4498CT-ND"),          # R5/R6/R16  Yageo catalog code
     ("BLM18PG221SN1D", "490-5221-1-ND"),         # FB1        DigiKey legacy numeric
-    ("C2012X5R1C226M125AC", "445-7647-1-ND"),    # C25        DigiKey legacy numeric
+    # C25's TDK pair ("C2012X5R1C226M125AC", "445-7647-1-ND") left 2026-08-06 with the
+    # low-profile-1206 re-pick; its GRM319 successor's P/N is self-describing. C26/C27's
+    # successor is not:
+    ("GRM319R61E106KA12D", "490-5525-1-ND"),     # C26/C27    DigiKey legacy numeric,
+                                                 #            verified live 2026-08-06
+                                                 #            (348,003 in stock, cut tape)
     ("DFE252010F-100M", "490-13039-1-ND"),       # L2         DigiKey legacy numeric
     ("GRT188R61C106KE13D", "490-12317-1-ND"),    # C4/C13     DigiKey legacy numeric
     ("NT3H2211W0FHKH", "568-12901-1-ND"),        # U5         DigiKey legacy numeric
