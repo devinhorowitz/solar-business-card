@@ -9,7 +9,7 @@
 > Refresh: `python3 BOM/check_stock.py` (needs `DIGIKEY_CLIENT_ID`,
 > `DIGIKEY_CLIENT_SECRET`, `MOUSER_PART_API_KEY` in the environment; ~1 min).
 
-**Checked: 2026-08-06 11:05 UTC** · DigiKey Product Information v4 + Mouser Search API, queried by MPN (stored distributor P/Ns are shown as found live, not trusted from the sheet).
+**Checked: 2026-08-06 11:24 UTC** · DigiKey Product Information v4 + Mouser Search API, queried by MPN (stored distributor P/Ns are shown as found live, not trusted from the sheet).
 
 **29 of 29 lines fully available** · 0 on substitute only · **0 dead (❌)** · 0 unverifiable this run · 0 manual-order.
 
@@ -81,11 +81,11 @@ The `datasheets/` naming convention embeds a `$price` — a copy of a live numbe
 | ✅ | `U1  AVR64EA28-E-STX  $1.23.pdf` | U1 | $1.23 | $1.23 |
 | ✅ | `U3  ADXL367BCCZ-RL7  $7.50.pdf` | U3 | $7.50 | $7.80 |
 | ✅ | `U5  NT3H2211W0FHKH  $1.56.pdf` | U5 | $1.56 | $1.56 |
-| ❓ | `U6  TPS22917DBVT  $1.14.pdf` | (secondary/reference doc) (no live match) | $1.14 | — |
+| ✅ | `U6  TPS22919DCKR  $0.23.pdf` | U6 | $0.23 | $0.23 |
 | — | `U6-alt  TPS22918TDBVRQ1  (AEC-Q100).pdf` | U6 sub (no price segment) | — | $0.75 |
 | ✅ | `U7  MB85RC512TYPN-GS-AWEWE1  $10.19.pdf` | U7 | $10.19 | $10.19 |
 | ✅ | `U8  10AEM10300C0000  $3.77.pdf` | U8 | $3.77 | $3.77 |
-| ❓ | `U9  TPS7A0233PDBVR  $0.84.pdf` | (secondary/reference doc) (no live match) | $0.84 | — |
+| ✅ | `U9  TPS7A0233PDQNR  $0.89.pdf` | U9 | $0.89 | $0.89 |
 
 All priced names within ±5% of live.
 

@@ -614,10 +614,10 @@ Summary of the **orderable** lines:
 | C9 | 1 | 47 pF, C0G/NP0, ±2 %, 250 V, High-Q | 0805 | `QSCT251Q470G1GV001E` |
 | C13 | 1 | 10 µF, X5R, 16 V | 0603 | `GRT188R61C106KE13D` |
 | L1 | 1 | 2.76 µH design value | PCB copper — no package | **(no part — PCB feature)** |
-| U6 | 1 | Ultra-low-leakage load switch | SC-70-6 (DCK) — **was SOT-23-6 (DBV); board sync pending** | `TPS22919DCKR` |
+| U6 | 1 | Ultra-low-leakage load switch | SC-70-6 (DCK) — was SOT-23-6 (DBV) until the 2026-08-05 swap; board synced | `TPS22919DCKR` |
 | R14 | 1 | 1 MΩ, ±1% | 0402 | `AC0402FR-071ML` |
 | U8 | 1 | AEM10300 | QFN-28 (4x4 mm, EP land 2.30) | `10AEM10300C0000` |
-| U9 | 1 | TPS7A0233, 3.3 V, ~25 nA Iq | SOT-23-5 | `TPS7A0233PDBVR` |
+| U9 | 1 | TPS7A0233, 3.3 V, ~25 nA Iq | X2SON-4 (DQN, 1×1 mm, 0.4 max) — was SOT-23-5 (DBV) until the 2026-08-05 swap | `TPS7A0233PDQNR` |
 | U7 | 1 | MB85RC512TY | DFN-8 LCC-8P-M05 (5.0×6.0×0.90 mm MAX, 1.27 mm pitch) | `MB85RC512TYPN-GS-AWEWE1` |
 | L2 | 1 | 10 uH | 1008/2520 (L_1008_2520Metric), 2.5x2.0 mm | `DFE252010F-100M` |
 | FB1 | 1 | 0603 bead | 0603 (`L_0603_1608Metric` — **board still draws the 0402 land**, see TODO.md) | `BLM18PG221SN1D` |
@@ -962,8 +962,11 @@ and the glow-window mask staying open (Step 3) — a tented window kills the opt
    > defaults hard-off while PA7 floats during reset / UPDI. Still drive PA7 low early in
    > init as belt-and-suspenders. The **U6 pin-map check is done** — TI SLVSD76C
    > (`../datasheets/U6  TPS22918DBVR  $0.55.pdf` — the *then*-fitted part, its sheet culled
-   > 2026-08-01 with the other replaced-part datasheets, git history; U6 is now the
-   > pin-identical `TPS22917DBVT`, see `../datasheets/U6  TPS22917DBVT  $1.14.pdf`) showed the symbol had **VIN/VOUT and GND/QOD
+   > 2026-08-01 with the other replaced-part datasheets, git history; the pin-identical
+   > `TPS22917DBVT` that followed it was itself replaced by the SC-70 `TPS22919DCKR` on
+   > 2026-08-05, its sheet culled 2026-08-06 the same way, git history — the current sheet is
+   > `../datasheets/U6  TPS22919DCKR  $0.23.pdf`, a different package whose pin map was
+   > verified in the swap round, not by this audit) showed the symbol had **VIN/VOUT and GND/QOD
    > transposed**; the board was **fixed 2026-07-02** (pads renetted to TI truth, schematic
    > pin numbers corrected, local copper reworked). Details in
    > `../solar-glow-drh-design-notes.md`, U6 pin-map addendum.
