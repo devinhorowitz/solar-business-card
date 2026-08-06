@@ -75,6 +75,7 @@ COLORS = {
     # The C25-C27 low-profile 1206 (2026-08-06): fired-ceramic MLCC body, light tan. Exported
     # with this colour by make_3d_models.py; recorded here so check [10] gates it like the rest.
     "MURATA_GRM319_1206LP": ((0.520, 0.420, 0.300), "MLCC ceramic body, GRM319 LP 1206 (C25-C27)"),
+    "TI_DSBGA4_YFP":      ((0.100, 0.100, 0.105), "load switch, bare-die DSBGA (U6 ultrathin swap)"),
 }
 
 # \s* between the components: STEP wraps long lines, and several of these files split the

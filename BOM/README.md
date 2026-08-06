@@ -9,7 +9,7 @@
 > Refresh: `python3 BOM/check_stock.py` (needs `DIGIKEY_CLIENT_ID`,
 > `DIGIKEY_CLIENT_SECRET`, `MOUSER_PART_API_KEY` in the environment; ~1 min).
 
-**Checked: 2026-08-06 12:26 UTC** · DigiKey Product Information v4 + Mouser Search API, queried by MPN (stored distributor P/Ns are shown as found live, not trusted from the sheet).
+**Checked: 2026-08-06 12:51 UTC** · DigiKey Product Information v4 + Mouser Search API, queried by MPN (stored distributor P/Ns are shown as found live, not trusted from the sheet).
 
 **29 of 29 lines fully available** · 0 on substitute only · **0 dead (❌)** · 0 unverifiable this run · 0 manual-order.
 
@@ -36,7 +36,7 @@
 | ✅ | U5 | 1 | NXP Semiconductors | `NT3H2211W0FHKH` | `568-12901-1-ND` | DigiKey | Active | 15,030 | $1.56 |
 | ✅ | C9 | 1 | Johanson Technology | `QSCP251Q470G1GV001T` | `712-QSCP251Q470G1GV001TCT-ND` | DigiKey | Active | 43,680 | $0.37 |
 | ✅ | R5, R6, R16 | 3 | Yageo | `RT0603BRD071ML` | `YAG4498CT-ND` | DigiKey | Active | 136,042 | $0.11 |
-| ✅ | U6 | 1 | Texas Instruments | `TPS22919DCKR` | `296-TPS22919DCKRCT-ND` | DigiKey | Active | 44,746 | $0.23 |
+| ✅ | U6 | 1 | Texas Instruments | `TPS22916CYFPR` | `296-50065-1-ND` | DigiKey | Active | 42,386 | $0.55 |
 | ✅ | U9 | 1 | Texas Instruments | `TPS7A0233PDQNR` | `296-TPS7A0233PDQNRCT-ND` | DigiKey | Active | 2,244 | $0.89 |
 | ✅ | U8 | 1 | e-peas | `10AEM10300C0000` | `120-AEM10300-QFN` | Mouser | Active (listed) | 533 | $3.77 |
 | ✅ | PV1, PV2 | 2 | ANYSOLAR | `SM141K06TF` | `2994-SM141K06TF-ND` | DigiKey | Active | 423 | $7.61 |
@@ -83,7 +83,7 @@ The `datasheets/` naming convention embeds a `$price` — a copy of a live numbe
 | ✅ | `U1  AVR64EA28-E-STX  $1.23.pdf` | U1 | $1.23 | $1.23 |
 | ✅ | `U3  ADXL367BCCZ-RL7  $7.50.pdf` | U3 | $7.50 | $7.80 |
 | ✅ | `U5  NT3H2211W0FHKH  $1.56.pdf` | U5 | $1.56 | $1.56 |
-| ✅ | `U6  TPS22919DCKR  $0.23.pdf` | U6 | $0.23 | $0.23 |
+| ✅ | `U6  TPS22916CYFPR  $0.55.pdf` | U6 | $0.55 | $0.55 |
 | — | `U6-alt  TPS22918TDBVRQ1  (AEC-Q100).pdf` | U6 sub (no price segment) | — | $0.75 |
 | ✅ | `U7  MB85RC512TYPN-GS-AWEWE1  $10.19.pdf` | U7 | $10.19 | $10.19 |
 | ✅ | `U8  10AEM10300C0000  $3.77.pdf` | U8 | $3.77 | $3.77 |

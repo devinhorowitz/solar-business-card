@@ -123,9 +123,10 @@ Full part numbers, pricing, and per-part datasheet links are in
 **[`BOM/README.md`](BOM/README.md)** - the live availability table (generated; there is no spreadsheet
 master, both `*-BOM.xlsx` files were culled 2026-08-02 into git history): every orderable line carries a
 live-verified distributor P/N, stock and price, re-checked by `BOM/check_stock.py` rather than typed. **U6 is moving to
-TPS22919DCKR** (SC-70-6, 1.10 mm; schematic done 2026-08-05, board sync pending — see `TODO.md`. Pin-for-pin
-with the outgoing `TPS22917DBVT` on every net used; 5× better guaranteed leakage at 25 °C, $0.23 vs $1.14,
-and the only one of the two with an AEC-Q100 orderable) with **R14 (1 M `NFC_EN` pulldown)**; the stale
+TPS22916CYFPR** (DSBGA-4 YFP, 0.5 mm max — the 2026-08-06 ultrathin swap; schematic done, board sync pending — see
+`PCB/README.md`'s BOM table. It succeeds the TPS22919 SC-70 that landed 2026-08-05 — itself the leakage upgrade over
+the `TPS22917DBVT` — trading +8 nA typical OFF-state leakage for 0.6 mm of height and a 16× better ON-state IQ,
+so every component clears 1.1 mm for the ultrathin-card option) with **R14 (1 M `NFC_EN` pulldown)**; the stale
 JP1/JP2 rows are dropped (the `JP1` designator is reused in v3.0 for the bench pad strip - bare pads,
 no BOM part). Passives are X7R / AEC-Q200 / precision grade: most on **0402** lands, with the
 stability upsizes on 0603 (C22/C23, R5/R6, R15/R16, plus the bulk caps C4/C13/C25) and 0805

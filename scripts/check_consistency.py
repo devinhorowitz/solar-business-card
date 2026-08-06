@@ -1495,6 +1495,9 @@ def board_footprints():
 # STALE entry (the board synced, or either side changed) is itself an error, so
 # an entry must be removed in the same commit that completes the board round.
 PENDING_FOOTPRINT_SYNC = {
+    "U6": ("solarglow:TPS22916_YFP0004", "Package_TO_SOT_SMD:SOT-363_SC-70-6",
+           "2026-08-06 ultrathin swap: TPS22916CYFPR (DSBGA-4, 0.5 max) sch-side landed; "
+           "SC-70 copper awaits DRH's rework"),
     "Q2": ("Package_TO_SOT_SMD:SOT-523", "Package_TO_SOT_SMD:SOT-23",
            "2026-08-06 low-profile respin: DMG1012T-7 (0.90 max) sch-side landed; "
            "SOT-23 copper awaits DRH's rework"),
@@ -1859,6 +1862,10 @@ OPAQUE_PN_LEDGER = {
                                                  #            verified live 2026-08-06
                                                  #            (348,003 in stock, cut tape)
     ("DFE252010F-100M", "490-13039-1-ND"),       # L2         DigiKey legacy numeric
+    ("TPS22916CYFPR", "296-50065-1-ND"),         # U6         DigiKey legacy numeric,
+                                                 #            verified live 2026-08-06
+                                                 #            (42,386 in stock, cut tape;
+                                                 #            the DSBGA ultrathin swap)
     ("GRT188R61C106KE13D", "490-12317-1-ND"),    # C4/C13     DigiKey legacy numeric
     ("NT3H2211W0FHKH", "568-12901-1-ND"),        # U5         DigiKey legacy numeric
     ("5879", "485-5879"),                        # PRG1       Adafruit via Mouser; 4-char

@@ -614,7 +614,7 @@ Summary of the **orderable** lines:
 | C9 | 1 | 47 pF, C0G/NP0, ±2 %, 250 V, High-Q (S-series) | 0603 (`Capacitor_SMD:C_0603_1608Metric`, 0.89 max) — **was 0805 High-Q `QSCT251Q470G1GV001E` (1.17) until the 2026-08-06 low-profile respin; same purpose-built family one case down (no flat RF 1206 exists); board sync pending** | `QSCP251Q470G1GV001T` |
 | C13 | 1 | 10 µF, X5R, 16 V | 0603 | `GRT188R61C106KE13D` |
 | L1 | 1 | 2.76 µH design value | PCB copper — no package | **(no part — PCB feature)** |
-| U6 | 1 | Ultra-low-leakage load switch | SC-70-6 (DCK) — was SOT-23-6 (DBV) until the 2026-08-05 swap; board synced | `TPS22919DCKR` |
+| U6 | 1 | Ultra-low-leakage load switch (ISD 10 nA typ, IQ 0.5 µA, QOD, RCB) | DSBGA-4 (`solarglow:TPS22916_YFP0004`, 0.4 mm pitch, 0.5 max) — **was SC-70-6 `TPS22919DCKR` until the 2026-08-06 ultrathin swap; board sync pending** | `TPS22916CYFPR` |
 | R14 | 1 | 1 MΩ, ±1% | 0402 | `AC0402FR-071ML` |
 | U8 | 1 | AEM10300 | QFN-28 (4x4 mm, EP land 2.30) | `10AEM10300C0000` |
 | U9 | 1 | TPS7A0233, 3.3 V, ~25 nA Iq | X2SON-4 (DQN, 1×1 mm, 0.4 max) — was SOT-23-5 (DBV) until the 2026-08-05 swap | `TPS7A0233PDQNR` |
@@ -963,10 +963,11 @@ and the glow-window mask staying open (Step 3) — a tented window kills the opt
    > init as belt-and-suspenders. The **U6 pin-map check is done** — TI SLVSD76C
    > (`../datasheets/U6  TPS22918DBVR  $0.55.pdf` — the *then*-fitted part, its sheet culled
    > 2026-08-01 with the other replaced-part datasheets, git history; the pin-identical
-   > `TPS22917DBVT` that followed it was itself replaced by the SC-70 `TPS22919DCKR` on
-   > 2026-08-05, its sheet culled 2026-08-06 the same way, git history — the current sheet is
-   > `../datasheets/U6  TPS22919DCKR  $0.23.pdf`, a different package whose pin map was
-   > verified in the swap round, not by this audit) showed the symbol had **VIN/VOUT and GND/QOD
+   > `TPS22917DBVT` that followed was replaced by the SC-70 `TPS22919DCKR` on 2026-08-05, and
+   > that by the DSBGA `TPS22916CYFPR` on 2026-08-06 — each superseded sheet culled the same
+   > way, git history. The current sheet is `../datasheets/U6  TPS22916CYFPR  $0.55.pdf`, a
+   > different package whose ball map was verified against SLVSDO5F Fig 5-1/5-2 in its own
+   > swap round, not by this audit) showed the symbol had **VIN/VOUT and GND/QOD
    > transposed**; the board was **fixed 2026-07-02** (pads renetted to TI truth, schematic
    > pin numbers corrected, local copper reworked). Details in
    > `../solar-glow-drh-design-notes.md`, U6 pin-map addendum.

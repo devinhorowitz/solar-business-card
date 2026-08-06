@@ -8781,7 +8781,7 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "solarglow:U6"
+		(symbol "solarglow:U6_TPS22916"
 			(exclude_from_sim no)
 			(in_bom yes)
 			(on_board yes)
@@ -8797,7 +8797,7 @@
 					)
 				)
 			)
-			(property "Value" "TPS22919"
+			(property "Value" "TPS22916C"
 				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -8840,7 +8840,7 @@
 					)
 				)
 			)
-			(symbol "U6_1_1"
+			(symbol "U6_TPS22916_1_1"
 				(rectangle
 					(start 2.54 2.54)
 					(end 20.32 -27.94)
@@ -8862,7 +8862,7 @@
 							)
 						)
 					)
-					(number "1"
+					(number "A2"
 						(effects
 							(font
 								(size 1 1)
@@ -8880,7 +8880,7 @@
 							)
 						)
 					)
-					(number "2"
+					(number "B1"
 						(effects
 							(font
 								(size 1 1)
@@ -8898,43 +8898,7 @@
 							)
 						)
 					)
-					(number "3"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 0 -15.24 0)
-					(length 2.54)
-					(name "NC"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-					(number "4"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 0 -20.32 0)
-					(length 2.54)
-					(name "QOD"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-					(number "5"
+					(number "B2"
 						(effects
 							(font
 								(size 1 1)
@@ -8952,7 +8916,7 @@
 							)
 						)
 					)
-					(number "6"
+					(number "A1"
 						(effects
 							(font
 								(size 1 1)
@@ -10002,10 +9966,6 @@
 		(uuid "0a4c937d-6165-4219-8426-7c9a5acbc380")
 	)
 	(no_connect
-		(at 650.24 91.44)
-		(uuid "1b71bf97-47bb-4569-bf97-efa4cc4fa66b")
-	)
-	(no_connect
 		(at 459.74 499.11)
 		(uuid "1d0ea163-035f-449c-ac79-3d6868507c58")
 	)
@@ -10254,16 +10214,6 @@
 			(type default)
 		)
 		(uuid "16a034ba-f9dd-474a-9537-ba296dbb057f")
-	)
-	(wire
-		(pts
-			(xy 650.24 96.52) (xy 645.16 96.52)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "17e9e287-a044-46e5-b573-d0e988c45623")
 	)
 	(wire
 		(pts
@@ -15848,27 +15798,6 @@
 			)
 		)
 	)
-	(global_label "VNFC"
-		(shape bidirectional)
-		(at 645.16 96.52 0)
-		(effects
-			(font
-				(size 1 1)
-			)
-		)
-		(uuid "d630ecc5-c657-4b79-8ca0-b7e64ab038ef")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 645.16 96.52 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-	)
 	(global_label "LDRV1"
 		(shape bidirectional)
 		(at 274.32 63.5 0)
@@ -16777,7 +16706,7 @@
 		)
 	)
 	(symbol
-		(lib_id "solarglow:U6")
+		(lib_id "solarglow:U6_TPS22916")
 		(at 650.24 76.2 0)
 		(unit 1)
 		(body_style 1)
@@ -16797,7 +16726,7 @@
 				)
 			)
 		)
-		(property "Value" "TPS22919"
+		(property "Value" "TPS22916C"
 			(at 661.67 81.28 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -16807,7 +16736,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Package_TO_SOT_SMD:SOT-363_SC-70-6"
+		(property "Footprint" "solarglow:TPS22916_YFP0004"
 			(at 661.67 86.36 0)
 			(hide yes)
 			(show_name no)
@@ -16818,7 +16747,7 @@
 				)
 			)
 		)
-		(property "Datasheet" "SLVSEN5B"
+		(property "Datasheet" "SLVSDO5F"
 			(at 650.24 76.2 0)
 			(hide yes)
 			(show_name no)
@@ -16829,7 +16758,7 @@
 				)
 			)
 		)
-		(property "Description" "NFC VNFC high-side load switch - TPS22919 (SC-70-6). ISD 2nA typ / 20nA max @25C vs the 917's 10nA typ / 100nA max, so better where the card lives; its 800nA max applies only at +125C, where the 917 specifies nothing at all. IQ 8uA typ while ON is a one-shot, not a standing cost: provisioning runs once at cold boot (~157ms), i.e. 3.9uJ against a 9.8J tank. Pin-for-pin with the 917 on every net used - pin4 CT-float becomes NC-float, QOD->VOUT sanctioned (internal 24 ohm), active-HIGH ON. Losses: no reverse-current blocking, and a fixed 1.75ms ramp (NFC_SOFTSTART_US raised to 2000). AEC-Q100 exists as TPS22919QDCKRQ1; the 917 has no -Q1 in any package."
+		(property "Description" "Ultra-low-leakage load switch for the NFC tag rail. TPS22916C DSBGA-4 YFP (0.4 mm pitch, 0.5 max height -- the 2026-08-06 ultrathin swap; was TPS22919 SC-70-6, 1.1). C version = active-high ON, 150R QOD, slow inrush-limited ramp, reverse-current blocking. ISD 10 nA typ/100 nA max vs the 22919 2 nA typ -- +8 nA typ on the dominant OFF state, bought back 16x in ON-state IQ (0.5 uA vs 8 uA); ball map A1 VOUT, A2 VIN, B1 GND, B2 ON per SLVSDO5F Fig 5-2."
 			(at 650.24 76.2 0)
 			(hide yes)
 			(show_name no)
@@ -16840,7 +16769,7 @@
 				)
 			)
 		)
-		(property "MPN" "TPS22919DCKR"
+		(property "MPN" "TPS22916CYFPR"
 			(at 650.24 76.2 0)
 			(hide yes)
 			(show_name no)
@@ -16873,7 +16802,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "296-TPS22919DCKRCT-ND"
+		(property "Supplier P/N" "296-50065-1-ND"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -16895,23 +16824,17 @@
 				)
 			)
 		)
-		(pin "1"
-			(uuid "b7ad4d3e-f4e7-4866-a0ba-55ab169c8f1a")
+		(pin "A1"
+			(uuid "9833dbfc-1c65-5aa7-aa59-d11674428d79")
 		)
-		(pin "2"
-			(uuid "0d755d50-0791-4b86-a2b0-7674c819c0dc")
+		(pin "A2"
+			(uuid "7f920637-5725-5d9c-ad7a-8af290e54612")
 		)
-		(pin "3"
-			(uuid "27c5d13c-48eb-4773-b27d-1249b45f729d")
+		(pin "B1"
+			(uuid "1ca6c6a0-9a3b-5b9d-8fca-eb3a3e4231f8")
 		)
-		(pin "4"
-			(uuid "5f848bb0-2862-4d4d-b3ae-f8a74a17dfc7")
-		)
-		(pin "5"
-			(uuid "c38f39d2-d5bc-473f-9ebe-168ebf252d2d")
-		)
-		(pin "6"
-			(uuid "bac9a359-b71a-4696-b73d-61e637bd2225")
+		(pin "B2"
+			(uuid "39a1a629-832e-5a4e-9637-ef55f7448b5b")
 		)
 		(instances
 			(project "solar-glow-drh-v4_0"
