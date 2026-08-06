@@ -12,18 +12,17 @@ Row,Description,Part,References,Value,Footprint,Quantity Per PCB,Status,Datashee
 11,"10uH 1.76A power inductor, AEM10300 LDCDC ('U8  10AEM10300C0000  $3.77.pdf' Table 11 = DFE252010F-100M); DFE252010 = 2.5x2.0mm on a 1008/2520 land (L_1008_2520Metric) - re-run Update-PCB then route",L2,L2,10uH,L_1008_2520Metric,1, ,,DFE252010F-100M,Murata,DigiKey,490-13039-1-ND,SMD_2terminal_chip_molded,
 12,"N-ch MOSFET SOT-23 -- EN_STO_CH low-side charge-disable buffer: gate<-PA4 (CHG_DIS_G), drain->EN_STO_CH, source->GND (cold-start-deadlock fix)",Q2,Q2,BSS138LT1G,SOT-23,1, ,,BSS138LT1G,onsemi,DigiKey,BSS138LT1GOSCT-ND,package/gullwing,
 13,LED ballast 150 ohm,R1,R1 R2 R3 R4,150R,R1,4, ,,AC0402FR-07150RL,Yageo,DigiKey,YAG3443CT-ND,,
-14,TINY-mode ballast 220 ohm,R12,R12,220R,R12,1, ,,AC0402FR-07220RL,Yageo,DigiKey,YAG3456CT-ND,,
-15,I2C pull-up 4.7 kohm,R10,R10 R11,4.7k,R10,2, ,,AC0402FR-074K7L,Yageo,DigiKey,YAG3497CT-ND,,
-16,NFC_EN pulldown 1 Mohm 1M 0402 EN_STO_CH pull-up to VINT 1M 0402 Q2 gate pulldown -- holds charge ENABLED while the MCU is dead/resetting (cold-start-deadlock fix),R14,R14 R17 R18,1M,R14,3, ,,AC0402FR-071ML,Yageo,DigiKey,YAG3450CT-ND,,
-17,"VSENSE divider 1 Mohm - 0603 thin film 0.1% 25ppm (matched with R6) VSENSE divider 1 Mohm - 0603 thin film 0.1% 25ppm (matched with R5) 1M 0603 thin film 0.1% 25ppm, STO sense divider bottom (STO_SNS->GND)",R5,R5 R6 R16,1M,R_0603_1608Metric,3, ,,RT0603BRD071ML,Yageo,DigiKey,YAG4498CT-ND,SMD_2terminal_chip_molded,
-18,"2M 0603 thin film 0.1% 25ppm, STO sense divider top (STO->STO_SNS)",R15,R15,2M,R_0603_1608Metric,1, ,,MCT0603MD2004BP500,Vishay,DigiKey,541-MCT0603MD2004BP500CT-ND,SMD_2terminal_chip_molded,
-19,3-axis accelerometer (tap/double-tap wake),U3,U3,ADXL367,ADXL367 CC-12-4_ADI,1, ,datasheets/U3  ADXL367BCCZ-RL7  $7.50.pdf,ADXL367BCCZ-RL7,Analog Devices,DigiKey,505-ADXL367BCCZ-RL7CT-ND,,
-20,"AEM10300 buck-boost ambient energy harvester PMIC (MPPT), QFN-28 4x4",U8,U8,AEM10300,U8_QFN28,1, ,datasheets/U8  10AEM10300C0000  $3.77.pdf,10AEM10300C0000,e-peas,Mouser,120-AEM10300-QFN,,
-21,"MCU - 8-bit AVR-EA (PWM, I2C, charge/sleep logic); EXTENDED -40..125C. Diff 12-bit ADC+PGA, 512B EEPROM, 80nA base sleep. Pin-compatible with the DD28 copper except pin 10, which is PD0/AIN0 on the EA, not VDDIO2 (no MVIO: DS40002443A Table 3-1). The DD-era SJ1 strap is REMOVED from this schematic - bridging it would have tied a GPIO to VS. FIRMWARE PORT REQUIRED - see TODO.",U1,U1,AVR64EA28 (VQFN28),U1,1, ,datasheets/U1  AVR64EA28-E-STX  $1.23.pdf,AVR64EA28-E/STX,Microchip Technology,DigiKey,150-AVR64EA28-E/STX-ND,,
-22,"512kbit I2C FeRAM 0x50, on always-on VS and parked in I2C Sleep (2026-07-23 back-power fix; VNFC now gates the tag alone); DFN LCC-8P-M05 5.0x6.0mm, 0.90mm MAX (was SOP-8 1.75mm)",U7,U7,MB85RC512TY,U7_DFN8,1, ,datasheets/U7  MB85RC512TYPN-GS-AWEWE1  $10.19.pdf,MB85RC512TYPN-GS-AWEWE1,RAMXEED,DigiKey,865-MB85RC512TYPN-GS-AWEWE1CT-ND,package/gullwing,.\
-23,NFC tag - NTAG I2C plus 2K,U5,U5,NT3H2211,U5,1, ,datasheets/U5  NT3H2211W0FHKH  $1.56.pdf,NT3H2211W0FHKH,NXP Semiconductors,DigiKey,568-12901-1-ND,,
-24,"NFC VNFC high-side load switch - TPS22919 (SC-70-6). ISD 2nA typ / 20nA max @25C vs the 917's 10nA typ / 100nA max, so better where the card lives; its 800nA max applies only at +125C, where the 917 specifies nothing at all. IQ 8uA typ while ON is a one-shot, not a standing cost: provisioning runs once at cold boot (~157ms), i.e. 3.9uJ against a 9.8J tank. Pin-for-pin with the 917 on every net used - pin4 CT-float becomes NC-float, QOD->VOUT sanctioned (internal 24 ohm), active-HIGH ON. Losses: no reverse-current blocking, and a fixed 1.75ms ramp (NFC_SOFTSTART_US raised to 2000). AEC-Q100 exists as TPS22919QDCKRQ1; the 917 has no -Q1 in any package.",U6,U6,TPS22919,SOT-363_SC-70-6,1, ,SLVSEN5B,TPS22919DCKR,Texas Instruments,DigiKey,296-TPS22919DCKRCT-ND,package/gullwing,
-25,"TPS7A0233 nanopower LDO, 3.3V fixed, ~25nA Iq (VS rail)",U9,U9,TPS7A0233PDQNR,Texas_X2SON-4_1x1mm_P0.65mm,1, ,,TPS7A0233PDQNR,Texas Instruments,DigiKey,296-TPS7A0233PDQNRCT-ND,package/gullwing,
+14,I2C pull-up 4.7 kohm,R10,R10 R11,4.7k,R10,2, ,,AC0402FR-074K7L,Yageo,DigiKey,YAG3497CT-ND,,
+15,NFC_EN pulldown 1 Mohm 1M 0402 EN_STO_CH pull-up to VINT 1M 0402 Q2 gate pulldown -- holds charge ENABLED while the MCU is dead/resetting (cold-start-deadlock fix),R14,R14 R17 R18,1M,R14,3, ,,AC0402FR-071ML,Yageo,DigiKey,YAG3450CT-ND,,
+16,"VSENSE divider 1 Mohm - 0603 thin film 0.1% 25ppm (matched with R6) VSENSE divider 1 Mohm - 0603 thin film 0.1% 25ppm (matched with R5) 1M 0603 thin film 0.1% 25ppm, STO sense divider bottom (STO_SNS->GND)",R5,R5 R6 R16,1M,R_0603_1608Metric,3, ,,RT0603BRD071ML,Yageo,DigiKey,YAG4498CT-ND,SMD_2terminal_chip_molded,
+17,"2M 0603 thin film 0.1% 25ppm, STO sense divider top (STO->STO_SNS)",R15,R15,2M,R_0603_1608Metric,1, ,,MCT0603MD2004BP500,Vishay,DigiKey,541-MCT0603MD2004BP500CT-ND,SMD_2terminal_chip_molded,
+18,3-axis accelerometer (tap/double-tap wake),U3,U3,ADXL367,ADXL367 CC-12-4_ADI,1, ,datasheets/U3  ADXL367BCCZ-RL7  $7.50.pdf,ADXL367BCCZ-RL7,Analog Devices,DigiKey,505-ADXL367BCCZ-RL7CT-ND,,
+19,"AEM10300 buck-boost ambient energy harvester PMIC (MPPT), QFN-28 4x4",U8,U8,AEM10300,U8_QFN28,1, ,datasheets/U8  10AEM10300C0000  $3.77.pdf,10AEM10300C0000,e-peas,Mouser,120-AEM10300-QFN,,
+20,"MCU - 8-bit AVR-EA (PWM, I2C, charge/sleep logic); EXTENDED -40..125C. Diff 12-bit ADC+PGA, 512B EEPROM, 80nA base sleep. Pin-compatible with the DD28 copper except pin 10, which is PD0/AIN0 on the EA, not VDDIO2 (no MVIO: DS40002443A Table 3-1). The DD-era SJ1 strap is REMOVED from this schematic - bridging it would have tied a GPIO to VS. FIRMWARE PORT REQUIRED - see TODO.",U1,U1,AVR64EA28 (VQFN28),U1,1, ,datasheets/U1  AVR64EA28-E-STX  $1.23.pdf,AVR64EA28-E/STX,Microchip Technology,DigiKey,150-AVR64EA28-E/STX-ND,,
+21,"512kbit I2C FeRAM 0x50, on always-on VS and parked in I2C Sleep (2026-07-23 back-power fix; VNFC now gates the tag alone); DFN LCC-8P-M05 5.0x6.0mm, 0.90mm MAX (was SOP-8 1.75mm)",U7,U7,MB85RC512TY,U7_DFN8,1, ,datasheets/U7  MB85RC512TYPN-GS-AWEWE1  $10.19.pdf,MB85RC512TYPN-GS-AWEWE1,RAMXEED,DigiKey,865-MB85RC512TYPN-GS-AWEWE1CT-ND,package/gullwing,.\
+22,NFC tag - NTAG I2C plus 2K,U5,U5,NT3H2211,U5,1, ,datasheets/U5  NT3H2211W0FHKH  $1.56.pdf,NT3H2211W0FHKH,NXP Semiconductors,DigiKey,568-12901-1-ND,,
+23,"NFC VNFC high-side load switch - TPS22919 (SC-70-6). ISD 2nA typ / 20nA max @25C vs the 917's 10nA typ / 100nA max, so better where the card lives; its 800nA max applies only at +125C, where the 917 specifies nothing at all. IQ 8uA typ while ON is a one-shot, not a standing cost: provisioning runs once at cold boot (~157ms), i.e. 3.9uJ against a 9.8J tank. Pin-for-pin with the 917 on every net used - pin4 CT-float becomes NC-float, QOD->VOUT sanctioned (internal 24 ohm), active-HIGH ON. Losses: no reverse-current blocking, and a fixed 1.75ms ramp (NFC_SOFTSTART_US raised to 2000). AEC-Q100 exists as TPS22919QDCKRQ1; the 917 has no -Q1 in any package.",U6,U6,TPS22919,SOT-363_SC-70-6,1, ,SLVSEN5B,TPS22919DCKR,Texas Instruments,DigiKey,296-TPS22919DCKRCT-ND,package/gullwing,
+24,"TPS7A0233 nanopower LDO, 3.3V fixed, ~25nA Iq (VS rail)",U9,U9,TPS7A0233PDQNR,Texas_X2SON-4_1x1mm_P0.65mm,1, ,,TPS7A0233PDQNR,Texas Instruments,DigiKey,296-TPS7A0233PDQNRCT-ND,package/gullwing,
 
 
 
@@ -36,8 +35,8 @@ Revision:,v4.0
 Date:,2026-08-04
 KiCad Version:,10.0.5-unknown-202607221313~667fa36054~ubuntu25.10.1
 Statistics:
-Component Groups:,25
-Component Count:,47
-Fitted Components:,47
+Component Groups:,24
+Component Count:,46
+Fitted Components:,46
 Number of PCBs:,1
-Total Components:,47
+Total Components:,46
