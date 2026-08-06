@@ -17072,7 +17072,7 @@
 				)
 			)
 		)
-		(property "Footprint" "solarglow:C_1206_3216Metric_LP085"
+		(property "Footprint" "solarglow:C_1206_3216Metric_HS_LP085"
 			(at 592.66 387.35 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -17831,7 +17831,7 @@
 				)
 			)
 		)
-		(property "Footprint" "solarglow:C_1206_3216Metric_LP085"
+		(property "Footprint" "solarglow:C_1206_3216Metric_HS_LP085"
 			(at 623.14 387.35 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -20223,7 +20223,7 @@
 				)
 			)
 		)
-		(property "Footprint" "solarglow:C_1206_3216Metric_LP085"
+		(property "Footprint" "solarglow:C_1206_3216Metric_HS_LP085"
 			(at 653.62 387.35 0)
 			(show_name no)
 			(do_not_autoplace no)

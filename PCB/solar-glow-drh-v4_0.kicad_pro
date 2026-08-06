@@ -84,30 +84,6 @@
           ""
         ],
         [
-          "footprint_symbol_field_mismatch|25930000|54230000|680665e5-74b1-4460-8239-d4b72d97ef59|00000000-0000-0000-0000-000000000000",
-          "fix this - i used kicad's version"
-        ],
-        [
-          "footprint_symbol_field_mismatch|2710000|48510000|60dab45f-ee84-4de9-8b47-7c02442b78b5|00000000-0000-0000-0000-000000000000",
-          "fix this - i used kicad's version"
-        ],
-        [
-          "footprint_symbol_field_mismatch|35570000|53290000|739b4083-583c-40be-88f6-117e7350b0eb|00000000-0000-0000-0000-000000000000",
-          "fix this - i used kicad's version"
-        ],
-        [
-          "footprint_symbol_mismatch|25930000|54230000|680665e5-74b1-4460-8239-d4b72d97ef59|00000000-0000-0000-0000-000000000000",
-          "fix this - i used kicad's version"
-        ],
-        [
-          "footprint_symbol_mismatch|2710000|48510000|60dab45f-ee84-4de9-8b47-7c02442b78b5|00000000-0000-0000-0000-000000000000",
-          "fix this - i used kicad's version"
-        ],
-        [
-          "footprint_symbol_mismatch|35570000|53290000|739b4083-583c-40be-88f6-117e7350b0eb|00000000-0000-0000-0000-000000000000",
-          "fix this - i used kicad's version"
-        ],
-        [
           "npth_inside_courtyard|10760000|14360000|ca8145ff-0217-4d2a-8243-0455ad9fbfa3|030ffafb-c195-49aa-b14c-a5f47412f78a",
           ""
         ],

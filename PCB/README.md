@@ -624,8 +624,8 @@ Summary of the **orderable** lines:
 | C22 | 1 | 1 uF, 25 V, 0603, X7R | 0603 (C_0603_1608Metric) | `GRT188R71E105KE13D` |
 | C23 | 1 | 2.2 µF, 25 V, 0603, X7R | 0603 (C_0603_1608Metric) | `GRM188Z71E225ME43D` |
 | C24 | 1 | 100 nF, 0402, X7R | 0402 | `GRT155R71H104KE01D` |
-| C25 | 1 | 22 uF, 16 V, 1206 low-profile (0.95 max), X5R | 1206 (`solarglow:C_1206_3216Metric_LP085`) | `GRM319R61C226KE15D` |
-| C26, C27 | 2 | 10 µF, 25 V, 1206 low-profile (0.95 max), X5R | 1206 (`solarglow:C_1206_3216Metric_LP085`) | `GRM319R61E106KA12D` |
+| C25 | 1 | 22 uF, 16 V, 1206 low-profile (0.95 max), X5R | 1206 (`solarglow:C_1206_3216Metric_HS_LP085`) | `GRM319R61C226KE15D` |
+| C26, C27 | 2 | 10 µF, 25 V, 1206 low-profile (0.95 max), X5R | 1206 (`solarglow:C_1206_3216Metric_HS_LP085`) | `GRM319R61E106KA12D` |
 | C28 | 1 | 100 nF, 0402, X7R | 0402 | `GRT155R71H104KE01D` |
 | R15 | 1 | 2 M, 0603, ±0.1%, 25 ppm | 0603 (R_0603_1608Metric) | `MCT0603MD2004BP500` |
 | R16 | 1 | 1 M, 0603, ±0.1%, 25 ppm | 0603 (R_0603_1608Metric) | `RT0603BRD071ML` |
