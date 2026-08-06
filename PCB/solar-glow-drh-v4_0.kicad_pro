@@ -72,6 +72,18 @@
       "diff_pair_dimensions": [],
       "drc_exclusions": [
         [
+          "clearance|3902886|55215147|d11d953d-4f02-46b2-b659-11bba8a11808|2defd1bb-73c3-47ec-9e52-edd4a6728d6b",
+          "fix this"
+        ],
+        [
+          "clearance|4277114|55999497|db701988-8d97-45b3-a0aa-2fd35ae9bb4c|2defd1bb-73c3-47ec-9e52-edd4a6728d6b",
+          "fix this"
+        ],
+        [
+          "clearance|4469289|55407322|348160f9-bf21-453f-8f95-94a01b01ab13|2defd1bb-73c3-47ec-9e52-edd4a6728d6b",
+          "fix this"
+        ],
+        [
           "copper_edge_clearance|25400000|0|5c2f09c5-11fe-458c-879b-209c9eb360ea|2589c71e-59bc-4680-a98e-8c9dffa4074a",
           ""
         ],
@@ -82,6 +94,22 @@
         [
           "courtyards_overlap|12703106|14935000|030ffafb-c195-49aa-b14c-a5f47412f78a|f398ac91-7d5c-49ce-bb63-67eb1603adf1",
           ""
+        ],
+        [
+          "footprint_symbol_field_mismatch|4090000|55607322|f7c25313-0d4f-4eb0-8535-18fd5a04ea9d|00000000-0000-0000-0000-000000000000",
+          "fix this"
+        ],
+        [
+          "footprint_symbol_field_mismatch|4642500|7420000|5a6d6382-0e79-4467-be80-72a35e5a2208|00000000-0000-0000-0000-000000000000",
+          "fix this"
+        ],
+        [
+          "footprint_symbol_mismatch|4090000|55607322|f7c25313-0d4f-4eb0-8535-18fd5a04ea9d|00000000-0000-0000-0000-000000000000",
+          "fix this"
+        ],
+        [
+          "net_conflict|26350800|50368200|1ff4e5d3-0e64-45f4-8d23-af7949f3cfc0|00000000-0000-0000-0000-000000000000",
+          "fix this - i removed tinymode. "
         ],
         [
           "npth_inside_courtyard|10760000|14360000|ca8145ff-0217-4d2a-8243-0455ad9fbfa3|030ffafb-c195-49aa-b14c-a5f47412f78a",
