@@ -8853,6 +8853,24 @@
 					)
 				)
 				(pin passive line
+					(at 0 -25.4 0)
+					(length 2.54)
+					(name "VOUT"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+					(number "A1"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+				)
+				(pin passive line
 					(at 0 0 0)
 					(length 2.54)
 					(name "VIN"
@@ -8899,24 +8917,6 @@
 						)
 					)
 					(number "B2"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 0 -25.4 0)
-					(length 2.54)
-					(name "VOUT"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-					(number "A1"
 						(effects
 							(font
 								(size 1 1)
@@ -9985,7 +9985,7 @@
 		(at 410.21 134.62)
 		(uuid "47fb82dc-ff3d-4c2a-8f93-cea3b362c797")
 	)
-		(no_connect
+	(no_connect
 		(at 209.55 114.3)
 		(uuid "627796f3-3d60-403a-ba9b-8fa9d354d6ce")
 	)
@@ -10032,38 +10032,6 @@
 	(no_connect
 		(at 410.21 171.45)
 		(uuid "ee775f49-53f7-4015-ad8d-ca7f047137e7")
-	)
-	(wire
-		(pts
-			(xy 490.22 387.35) (xy 485.14 387.35)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "ba41d94f-0670-5f60-86e2-bd6056ca9ddc")
-	)
-	(global_label "STO_LDO"
-		(shape passive)
-		(at 485.14 387.35 0)
-		(effects
-			(font
-				(size 1 1)
-			)
-			(justify left)
-		)
-		(uuid "dca2ee67-c1a7-5694-925a-a2e0d3aa421c")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 485.14 387.35 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 	)
 	(wire
 		(pts
@@ -11514,6 +11482,16 @@
 			(type default)
 		)
 		(uuid "b8d9f2b9-12e3-4854-81cb-929f977132d0")
+	)
+	(wire
+		(pts
+			(xy 490.22 387.35) (xy 485.14 387.35)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "ba41d94f-0670-5f60-86e2-bd6056ca9ddc")
 	)
 	(wire
 		(pts
@@ -15999,6 +15977,28 @@
 		(uuid "dc7860fd-e832-49e6-80b9-1df244051646")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 405.13 246.38 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
+	(global_label "STO_LDO"
+		(shape passive)
+		(at 485.14 387.35 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+			(justify left)
+		)
+		(uuid "dca2ee67-c1a7-5694-925a-a2e0d3aa421c")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 485.14 387.35 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
