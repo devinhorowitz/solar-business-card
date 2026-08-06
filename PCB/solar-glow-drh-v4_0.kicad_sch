@@ -17699,7 +17699,7 @@
 				)
 			)
 		)
-		(property "Value" "BSS138LT1G"
+		(property "Value" "DMG1012T"
 			(at 945.94 382.27 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -17709,7 +17709,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Package_TO_SOT_SMD:SOT-23"
+		(property "Footprint" "Package_TO_SOT_SMD:SOT-523"
 			(at 945.94 387.35 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -17729,7 +17729,7 @@
 				)
 			)
 		)
-		(property "Description" "N-ch MOSFET SOT-23 -- EN_STO_CH low-side charge-disable buffer: gate<-PA4 (CHG_DIS_G), drain->EN_STO_CH, source->GND (cold-start-deadlock fix)"
+		(property "Description" "N-ch MOSFET SOT-523 (DMG1012T, 0.90 max -- low-profile respin 2026-08-06; was BSS138 SOT-23, 1.20) -- EN_STO_CH low-side charge-disable buffer: gate<-PA4 (CHG_DIS_G), drain->EN_STO_CH, source->GND (cold-start-deadlock fix). Same G/S/D pad order as SOT-23; Vth 1.0 max, Idss 100 nA max, VGSS +/-6 (ESD-protected gate)"
 			(at 934.72 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -17739,7 +17739,7 @@
 				)
 			)
 		)
-		(property "MPN" "BSS138LT1G"
+		(property "MPN" "DMG1012T-7"
 			(at 934.72 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -17749,7 +17749,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "onsemi"
+		(property "Manufacturer" "Diodes Incorporated"
 			(at 934.72 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -17771,7 +17771,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "BSS138LT1GOSCT-ND"
+		(property "Supplier P/N" "DMG1012T-7DICT-ND"
 			(at 934.72 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -21598,7 +21598,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
+		(property "Footprint" "solarglow:C_1206_3216Metric_HS_LP085"
 			(at 571.5 129.54 0)
 			(hide yes)
 			(show_name no)
@@ -21620,7 +21620,7 @@
 				)
 			)
 		)
-		(property "Description" "NFC tank trim, 0805 high-Q C0G +/-2% (Johanson S-series, ultra-low ESR). PLACED at assembly as of 2026-07-30 - value derived, not trimmed: coil L = 0.958 uH by Greenhouse on the board's 7 rails, ferrite-loaded 1.05-1.30 uH, tag Ci = 50 pF (NT3H2211 Table 42), antenna Cc = 6 pF (AN11276 Table 2). 47 pF lands the enclosed resonance at 14.45 MHz against AN11276 4.2.1's 14.5 MHz single-tag target and stays above the 13.56 carrier across the whole ferrite range. Was 82 pF + DNP, which sat at 12.5 MHz enclosed - under the carrier, the wrong side to miss on."
+		(property "Description" "NFC tank trim, 1206 C0G 500 V +/-2% (Kyocera KGM31B, 0.94 max -- low-profile respin 2026-08-06; was Johanson 0805 High-Q QSCT, 1.17 max: raw cap-Q spec is lower than the RF-grade part but the tank's loaded Q is coil-dominated, and V doubles). PLACED at assembly as of 2026-07-30 - value derived, not trimmed: coil L = 0.958 uH by Greenhouse on the board's 7 rails, ferrite-loaded 1.05-1.30 uH, tag Ci = 50 pF (NT3H2211 Table 42), antenna Cc = 6 pF (AN11276 Table 2). 47 pF lands the enclosed resonance at 14.45 MHz against AN11276 4.2.1's 14.5 MHz single-tag target and stays above the 13.56 carrier across the whole ferrite range. Was 82 pF + DNP, which sat at 12.5 MHz enclosed - under the carrier, the wrong side to miss on."
 			(at 560.07 119.38 0)
 			(hide yes)
 			(show_name no)
@@ -21631,7 +21631,7 @@
 				)
 			)
 		)
-		(property "MPN" "QSCT251Q470G1GV001E"
+		(property "MPN" "KGM31BCG2H470GT"
 			(at 560.07 119.38 0)
 			(hide yes)
 			(show_name no)
@@ -21642,7 +21642,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "Johanson Technology"
+		(property "Manufacturer" "KYOCERA AVX"
 			(at 560.07 119.38 0)
 			(hide yes)
 			(show_name no)
@@ -21664,7 +21664,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "712-QSCT251Q470G1GV001ETR-ND"
+		(property "Supplier P/N" "478-KGM31BCG2H470GTCT-ND"
 			(at 560.07 119.38 0)
 			(hide yes)
 			(show_name no)

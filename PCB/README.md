@@ -611,7 +611,7 @@ Summary of the **orderable** lines:
 | MH1–MH4 | 4 | M2 | 2.2 mm plated | **(no part — drill)** |
 | U5 | 1 | NTAG I²C plus, 2 KB, I²C 0x55 | XQFN8 (SOT902-3, 1.6×1.6×0.5 mm) | `NT3H2211W0FHKH` |
 | C8 | 1 | 100 nF, X7R, 50 V | 0402 | `GRT155R71H104KE01D` |
-| C9 | 1 | 47 pF, C0G/NP0, ±2 %, 250 V, High-Q | 0805 | `QSCT251Q470G1GV001E` |
+| C9 | 1 | 47 pF, C0G/NP0, ±2 %, 500 V | 1206 (`solarglow:C_1206_3216Metric_HS_LP085`, 0.94 max) — **was 0805 High-Q `QSCT251Q470G1GV001E` until the 2026-08-06 low-profile respin; board sync pending** | `KGM31BCG2H470GT` |
 | C13 | 1 | 10 µF, X5R, 16 V | 0603 | `GRT188R61C106KE13D` |
 | L1 | 1 | 2.76 µH design value | PCB copper — no package | **(no part — PCB feature)** |
 | U6 | 1 | Ultra-low-leakage load switch | SC-70-6 (DCK) — was SOT-23-6 (DBV) until the 2026-08-05 swap; board synced | `TPS22919DCKR` |
@@ -630,7 +630,7 @@ Summary of the **orderable** lines:
 | R15 | 1 | 2 M, 0603, ±0.1%, 25 ppm | 0603 (R_0603_1608Metric) | `MCT0603MD2004BP500` |
 | R16 | 1 | 1 M, 0603, ±0.1%, 25 ppm | 0603 (R_0603_1608Metric) | `RT0603BRD071ML` |
 | R17, R18 | 2 | 1 M, 0402, ±1% | 0402 | `AC0402FR-071ML` |
-| Q2 | 1 | N-ch MOSFET, 60 V, logic-level | SOT-23 | `BSS138LT1G` |
+| Q2 | 1 | N-ch MOSFET, 20 V, logic-level (Vth 1.0 max) | SOT-523 (0.90 max) — **was SOT-23 `BSS138LT1G` until the 2026-08-06 low-profile respin; board sync pending** | `DMG1012T-7` |
 
 **No ordered part — these are board features, not BOM line items:**
 - **SW2** (LED OFF/ON) is a **solder bridge** on the PCB. _(SB1–SB4, the per-LED force-on

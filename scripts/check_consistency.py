@@ -1487,6 +1487,23 @@ def board_footprints():
     return out
 
 
+# Declared, deliberate sch->board footprint transients. The split workflow --
+# part swaps land in the SCHEMATIC first, DRH does the copper rework in a later
+# upload -- makes the mismatch a STATE of the flow, not a mistake, but only for
+# the exact (sch_fp, board_fp) pair declared here with its reason. The check
+# below reports a ledgered pair as a note and errors on anything else, and a
+# STALE entry (the board synced, or either side changed) is itself an error, so
+# an entry must be removed in the same commit that completes the board round.
+PENDING_FOOTPRINT_SYNC = {
+    "Q2": ("Package_TO_SOT_SMD:SOT-523", "Package_TO_SOT_SMD:SOT-23",
+           "2026-08-06 low-profile respin: DMG1012T-7 (0.90 max) sch-side landed; "
+           "SOT-23 copper awaits DRH's rework"),
+    "C9": ("solarglow:C_1206_3216Metric_HS_LP085", "Capacitor_SMD:C_0805_2012Metric",
+           "2026-08-06 low-profile respin: KGM31BCG2H470GT (1206, 0.94 max) sch-side "
+           "landed; 0805 copper awaits DRH's rework"),
+}
+
+
 def check_board_sch_parity(comps, sch_fps):
     """Guard the schematic <-> board boundary.
 
@@ -1517,11 +1534,15 @@ def check_board_sch_parity(comps, sch_fps):
     if sch_only:
         warn("in the schematic but not placed on the board: " + " ".join(sch_only))
     # footprint assignment disagreements: a sync moves pads
-    bad = []
+    bad, pending = [], []
     for ref, sch_fp in sorted(sch_fps.items()):
         entry = board.get(ref)
         if entry and entry[0] != sch_fp:
-            bad.append(f"{ref}: sch={sch_fp} board={entry[0]}")
+            led = PENDING_FOOTPRINT_SYNC.get(ref)
+            if led and led[0] == sch_fp and led[1] == entry[0]:
+                pending.append(f"{ref}: {entry[0]} -> {sch_fp} ({led[2]})")
+            else:
+                bad.append(f"{ref}: sch={sch_fp} board={entry[0]}")
     if bad:
         # A hard error since 2026-07-26: U7 was the last known-open disagreement
         # and it is settled (board and library land turned out to be the SAME
@@ -1531,7 +1552,19 @@ def check_board_sch_parity(comps, sch_fps):
             "with footprint replacement enabled will MOVE these pads): "
             + "; ".join(bad))
     else:
-        ok("schematic and board agree on every footprint assignment")
+        ok("schematic and board agree on every footprint assignment"
+           + (f" ({len(pending)} declared pending sync)" if pending else ""))
+    for p in pending:
+        print("  note:   pending footprint sync (declared in PENDING_FOOTPRINT_SYNC): " + p)
+    # A ledger entry whose mismatch is gone (or different) is itself an error,
+    # so the ledger dies in the same commit that lands the board sync -- the
+    # FRONT_SIDE-snapshot shape. It cannot become a standing waiver.
+    for ref, (sch_fp, board_fp, why) in sorted(PENDING_FOOTPRINT_SYNC.items()):
+        entry = board.get(ref)
+        if not entry or entry[0] == sch_fp or sch_fps.get(ref) != sch_fp:
+            err(f"PENDING_FOOTPRINT_SYNC entry for {ref} is STALE (the board "
+                f"synced, or the pair changed) -- remove it in this commit and "
+                f"flow the swap down (heights, colours, docs): {why}")
 
 
 # --- [16] the enclosure's mount table IS the board's mount drills ---------------------
