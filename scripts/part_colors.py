@@ -76,6 +76,7 @@ COLORS = {
     # with this colour by make_3d_models.py; recorded here so check [10] gates it like the rest.
     "MURATA_GRM319_1206LP": ((0.520, 0.420, 0.300), "MLCC ceramic body, GRM319 LP 1206 (C25-C27)"),
     "TI_DSBGA4_YFP":      ((0.100, 0.100, 0.105), "load switch, bare-die DSBGA (U6 ultrathin swap)"),
+    "DIODES_SOT523":      ((0.100, 0.100, 0.105), "Q2 gate FET, moulded SOT-523 (missing-stock-model class, 3rd arrival)"),
 }
 
 # \s* between the components: STEP wraps long lines, and several of these files split the

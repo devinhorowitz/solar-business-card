@@ -45,11 +45,12 @@ HEIGHTS = {
     "U1":  1.00,   # AVR64EA28 VQFN-28 4x4
     "U3":  0.87,   # ADXL367 CC-12-4 (ADI datasheet Rev.B: 2.2 x 2.3 x 0.87)
     "U5":  0.50,   # NT3H2211 XQFN-8
-    # U6 moved SOT-23-6 -> SC-70-6 (DCK) on 2026-08-05 with the TPS22917 -> TPS22919 swap.
-    # 1.10 is TI SLVSEN5B package outline DCK0006A, sheet titled "SOT - 1.1 max height", and
-    # the vendored stock model measures exactly 1.100 -- declaration and model agree to the
-    # micron, so check [7] measures rather than tolerates this one.
-    "U6":  1.10,   # SC-70-6 (DCK), 1.1 max height
+    # U6 moved SC-70-6 -> DSBGA-4 (YFP0004) on 2026-08-06 with the TPS22919 -> TPS22916C
+    # ultrathin swap. 0.50 is TI SLVSDO5F's "DSBGA - 0.5 mm max height" INCLUDING balls
+    # (4223507/A), and the model is ours (TI_DSBGA4_YFP via scripts/make_3d_models.py),
+    # authored to that max -- declaration and model agree by construction, and check [7]
+    # measures rather than tolerates this one. Was 1.10 (SC-70 DCK, SLVSEN5B).
+    "U6":  0.50,   # DSBGA-4 (YFP0004), 0.5 max height incl. balls
     "U7":  0.90,   # MB85RC512TY FRAM DFN-8. WAS 1.75 here for a SOIC-8 that the v4
                    # rework removed; 1.75 cut this pocket clean through the brace.
     "U8":  0.90,   # AEM10300 QFN-28 4x4 (modelled 0.85)
@@ -60,7 +61,8 @@ HEIGHTS = {
     # grew TI_X2SON4_DQN. At 0.40 U9 is now the SHORTEST B-side part on the board.
     "U9":  0.40,   # X2SON-4 (DQN), 0.4 max height
     "L2":  1.00,   # Murata DFE252010F-100M, 2.5 x 2.0 x 1.0 -- see MODEL_NOTES
-    "Q2":  1.20,   # SOT-23. Was falling through to the 0.60 default.
+    "Q2":  0.90,   # SOT-523 (DMG1012T-7, 0.90 max) -- 2026-08-06 low-profile respin; was
+                   # 1.20 SOT-23, and before that falling through to the 0.60 default.
     "FB1": 0.80,   # 0603 ferrite bead. Was falling through to the 0.60 default.
     # Capacitors above 0402 -- the prefix rule below is the 0402 number and undershoots
     # these. Each is set to cover its modelled body with a little air.
@@ -101,14 +103,15 @@ HEIGHTS = {
     "C25": 0.95,                                          # 1206 LP, GRM319 0.85 +/-0.10 -> 0.95 max
     # C26/C27: same 2026-08-06 move as C25 above (were Samsung 0805 X7R at 1.40/1.45).
     "C26": 0.95, "C27": 0.95,                             # 1206 LP, GRM319 0.85 +/-0.10 -> 0.95 max
-    # C9, the NFC tank trim, went 0402 -> 0805 on 2026-07-30 for hand-rework and Q. 1.25 is the
-    # PACKAGE-GENERIC 0805 number C26/C27 already use, deliberately NOT the chosen part's own
-    # 1.17 max (Johanson QSCT251Q820G1GV001E): check [7] measures this against the generic
-    # C_0805_2012Metric model, so a part-specific figure would fail against a body it does not
-    # describe. Until this line existed C9 fell through the "C" prefix default of 0.55 and the
-    # check said so -- "the enclosure pocket interferes with the part by 0.70 mm", which is
-    # exactly the silent-undershoot failure the module docstring above was written about.
-    "C9":  1.25,                                                       # 0805 (1.25)
+    # C9, the NFC tank trim: 0402 -> 0805 (2026-07-30, hand-rework and Q) -> 0603
+    # (2026-08-06 low-profile respin, Johanson QSCP251Q470G1GV001T S-series High-Q,
+    # 0.89 max -> 0.90 declared). The 0805 era declared the generic model's 1.25 because
+    # the part's own max (1.17) sat UNDER the model and would fail check [7]; the 0603
+    # flips that -- part max 0.89 over the generic C_0603_1608Metric body (0.80), the
+    # C26/C27-style overshoot the check permits, so the DATASHEET number wins. (The
+    # original sin, for the record: before any entry existed C9 fell through the "C"
+    # prefix default of 0.55 and the check said "interferes with the part by 0.70 mm".)
+    "C9":  0.90,                                                       # 0603, QSCP 0.89 max
 }
 
 # ---- by refdes prefix -------------------------------------------------------------

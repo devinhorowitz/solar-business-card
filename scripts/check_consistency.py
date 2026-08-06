@@ -1495,15 +1495,9 @@ def board_footprints():
 # STALE entry (the board synced, or either side changed) is itself an error, so
 # an entry must be removed in the same commit that completes the board round.
 PENDING_FOOTPRINT_SYNC = {
-    "U6": ("solarglow:TPS22916_YFP0004", "Package_TO_SOT_SMD:SOT-363_SC-70-6",
-           "2026-08-06 ultrathin swap: TPS22916CYFPR (DSBGA-4, 0.5 max) sch-side landed; "
-           "SC-70 copper awaits DRH's rework"),
-    "Q2": ("Package_TO_SOT_SMD:SOT-523", "Package_TO_SOT_SMD:SOT-23",
-           "2026-08-06 low-profile respin: DMG1012T-7 (0.90 max) sch-side landed; "
-           "SOT-23 copper awaits DRH's rework"),
-    "C9": ("Capacitor_SMD:C_0603_1608Metric", "Capacitor_SMD:C_0805_2012Metric",
-           "2026-08-06 low-profile respin: QSCP251Q470G1GV001T (0603 S-series High-Q, "
-           "0.89 max) sch-side landed; 0805 copper awaits DRH's rework"),
+    # (empty -- the 2026-08-06 U6/Q2/C9 round closed the same day: DRH's rework upload
+    # landed the Q2/C9 lands and the U6 DSBGA went in with the board round. The shape of
+    # an entry, for the next swap: "REF": (sch_fp, board_fp, "date + why + what awaits").)
 }
 
 

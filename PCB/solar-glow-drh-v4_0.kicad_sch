@@ -24792,7 +24792,7 @@
 		)
 		(uuid "bd4eb070-92d6-4e51-8080-1ed6c6eaf520")
 	)
-	(global_label "SDA"
+	(global_label "SCL"
 		(shape bidirectional)
 		(at 405.13 139.7 0)
 		(effects
@@ -24823,7 +24823,7 @@
 		)
 		(uuid "d8e394d4-485c-4628-909a-73ec8f68f944")
 	)
-	(global_label "SCL"
+	(global_label "SDA"
 		(shape bidirectional)
 		(at 405.13 144.78 0)
 		(effects
@@ -24885,7 +24885,7 @@
 		)
 		(uuid "97161779-901f-4611-aedc-1de78c9e8cb6")
 	)
-	(global_label "SDA"
+	(global_label "SCL"
 		(shape bidirectional)
 		(at 405.13 171.45 0)
 		(effects
@@ -24916,7 +24916,7 @@
 		)
 		(uuid "08a4e308-04c9-42c1-b478-225f9953bcf2")
 	)
-	(global_label "SCL"
+	(global_label "SDA"
 		(shape bidirectional)
 		(at 405.13 176.53 0)
 		(effects
