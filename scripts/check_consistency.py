@@ -1498,9 +1498,9 @@ PENDING_FOOTPRINT_SYNC = {
     "Q2": ("Package_TO_SOT_SMD:SOT-523", "Package_TO_SOT_SMD:SOT-23",
            "2026-08-06 low-profile respin: DMG1012T-7 (0.90 max) sch-side landed; "
            "SOT-23 copper awaits DRH's rework"),
-    "C9": ("solarglow:C_1206_3216Metric_HS_LP085", "Capacitor_SMD:C_0805_2012Metric",
-           "2026-08-06 low-profile respin: KGM31BCG2H470GT (1206, 0.94 max) sch-side "
-           "landed; 0805 copper awaits DRH's rework"),
+    "C9": ("Capacitor_SMD:C_0603_1608Metric", "Capacitor_SMD:C_0805_2012Metric",
+           "2026-08-06 low-profile respin: QSCP251Q470G1GV001T (0603 S-series High-Q, "
+           "0.89 max) sch-side landed; 0805 copper awaits DRH's rework"),
 }
 
 

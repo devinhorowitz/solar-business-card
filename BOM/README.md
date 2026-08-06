@@ -9,7 +9,7 @@
 > Refresh: `python3 BOM/check_stock.py` (needs `DIGIKEY_CLIENT_ID`,
 > `DIGIKEY_CLIENT_SECRET`, `MOUSER_PART_API_KEY` in the environment; ~1 min).
 
-**Checked: 2026-08-06 12:01 UTC** · DigiKey Product Information v4 + Mouser Search API, queried by MPN (stored distributor P/Ns are shown as found live, not trusted from the sheet).
+**Checked: 2026-08-06 12:26 UTC** · DigiKey Product Information v4 + Mouser Search API, queried by MPN (stored distributor P/Ns are shown as found live, not trusted from the sheet).
 
 **29 of 29 lines fully available** · 0 on substitute only · **0 dead (❌)** · 0 unverifiable this run · 0 manual-order.
 
@@ -30,11 +30,11 @@
 | ✅ | C1, C3, C5, C6, C7, C8, C12, C24, C28, C29 | 10 | Murata | `GRT155R71H104KE01D` | `490-GRT155R71H104KE01DCT-ND` | DigiKey | Active | 387,844 | $0.11 |
 | ✅ | C4, C13 | 2 | Murata | `GRT188R61C106KE13D` | `490-12317-1-ND` | DigiKey | Active | 780,000 | $0.29 |
 | ✅ | C22 | 1 | Murata | `GRT188R71E105KE13D` | `490-GRT188R71E105KE13DCT-ND` | DigiKey | Active | 90,020 | $0.14 |
-| ✅ | C9 | 1 | KYOCERA AVX | `KGM31BCG2H470GT` | `478-KGM31BCG2H470GTCT-ND` | DigiKey | Active | 1,163 | $1.34 |
 | ✅ | D2, D3, D4, D5 | 4 | ams-OSRAM | `LA P47F-V2BB-24-3B5A-30-R18-Z` | `475-LAP47F-V2BB-24-3B5A-30-R18-ZCT-ND` | DigiKey | Active | 11,303 | $0.43 |
 | ✅ | U7 | 1 | RAMXEED | `MB85RC512TYPN-GS-AWEWE1` | `865-MB85RC512TYPN-GS-AWEWE1CT-ND` | DigiKey | Active | 1,500 | $10.19 |
 | ✅ | R15 | 1 | Vishay | `MCT0603MD2004BP500` | `541-MCT0603MD2004BP500CT-ND` | DigiKey | Active | 35,424 | $0.22 |
 | ✅ | U5 | 1 | NXP Semiconductors | `NT3H2211W0FHKH` | `568-12901-1-ND` | DigiKey | Active | 15,030 | $1.56 |
+| ✅ | C9 | 1 | Johanson Technology | `QSCP251Q470G1GV001T` | `712-QSCP251Q470G1GV001TCT-ND` | DigiKey | Active | 43,680 | $0.37 |
 | ✅ | R5, R6, R16 | 3 | Yageo | `RT0603BRD071ML` | `YAG4498CT-ND` | DigiKey | Active | 136,042 | $0.11 |
 | ✅ | U6 | 1 | Texas Instruments | `TPS22919DCKR` | `296-TPS22919DCKRCT-ND` | DigiKey | Active | 44,746 | $0.23 |
 | ✅ | U9 | 1 | Texas Instruments | `TPS7A0233PDQNR` | `296-TPS7A0233PDQNRCT-ND` | DigiKey | Active | 2,244 | $0.89 |
@@ -55,9 +55,9 @@ Hand-kept sourcing knowledge — availability shown live. Older entries were tra
 |---|---|---|---|---|---|
 | U1 | `AVR64EA28T-E/STX` | Active (DigiKey) | 3,300 | $1.25 | tape-reel variant, same die (U1 row note) |
 | C23 | `GRT188R61E225KE13D` | Active (DigiKey) | 20,397 | $0.31 | AEC-Q200 alternate; X5R, the dielectric trade the master documents (C23 row note) |
+| U7 | `MB85RC512TYPNGA1` | Restricted Availability (Mouser) | 0 | -- | same die, Mouser listing (U7 row note) |
 | C9 | `QSCT251Q390G1GV001E` | Active (DigiKey) | 808 | $1.20 | 39 pF same-series ladder -- raises the enclosed resonance if the first card tunes low (C9 row note) |
 | C9 | `QSCT251Q560G1GV001E` | Active (DigiKey) | 11,258 | $1.40 | 56 pF same-series ladder -- lowers it if the first card tunes high (C9 row note) |
-| U7 | `MB85RC512TYPNGA1` | Restricted Availability (Mouser) | 0 | -- | same die, Mouser listing (U7 row note) |
 | U6 | `TPS22918TDBVRQ1` | Active (DigiKey) | 0 | $0.75 | pin-identical AEC-Q100 sibling, ~50x the OFF leakage -- last resort only; NEVER TPS22917L (inverted EN) (U6 row note) |
 | FER1 | `3641014` | Active (DigiKey) | 303 | $4.19 | 0.14 mm sheet -- stack 3x for equivalent ferrite thickness (FER1 row note) |
 | FER1 | `MHLL6060-300` | Active (DigiKey) | 4,722 | $5.22 | Laird 0.09 mm -- weakest shielding, last resort (FER1 row note) |
@@ -69,7 +69,7 @@ The `datasheets/` naming convention embeds a `$price` — a copy of a live numbe
 
 | | File | Maps to | $ in name | $ live |
 |---|---|---|---|---|
-| ✅ | `C9  KGM31BCG2H470GT  $1.34.pdf` | C9 | $1.34 | $1.34 |
+| ✅ | `C9  QSCP251Q470G1GV001T  $0.37.pdf` | C9 | $0.37 | $0.37 |
 | ✅ | `D2-D5  LA P47F-V2BB-24-3B5A-30-R18-Z  $0.43.pdf` | D2, D3, D4, D5 | $0.43 | $0.43 |
 | ✅ | `FER1  Wurth WE-FSFS 364006  $13.18.pdf` | FER1 | $13.18 | $13.18 |
 | ✅ | `FER1-alt  Laird MHLL6060-300  $5.22.pdf` | FER1 sub | $5.22 | $5.22 |

@@ -611,7 +611,7 @@ Summary of the **orderable** lines:
 | MH1–MH4 | 4 | M2 | 2.2 mm plated | **(no part — drill)** |
 | U5 | 1 | NTAG I²C plus, 2 KB, I²C 0x55 | XQFN8 (SOT902-3, 1.6×1.6×0.5 mm) | `NT3H2211W0FHKH` |
 | C8 | 1 | 100 nF, X7R, 50 V | 0402 | `GRT155R71H104KE01D` |
-| C9 | 1 | 47 pF, C0G/NP0, ±2 %, 500 V | 1206 (`solarglow:C_1206_3216Metric_HS_LP085`, 0.94 max) — **was 0805 High-Q `QSCT251Q470G1GV001E` until the 2026-08-06 low-profile respin; board sync pending** | `KGM31BCG2H470GT` |
+| C9 | 1 | 47 pF, C0G/NP0, ±2 %, 250 V, High-Q (S-series) | 0603 (`Capacitor_SMD:C_0603_1608Metric`, 0.89 max) — **was 0805 High-Q `QSCT251Q470G1GV001E` (1.17) until the 2026-08-06 low-profile respin; same purpose-built family one case down (no flat RF 1206 exists); board sync pending** | `QSCP251Q470G1GV001T` |
 | C13 | 1 | 10 µF, X5R, 16 V | 0603 | `GRT188R61C106KE13D` |
 | L1 | 1 | 2.76 µH design value | PCB copper — no package | **(no part — PCB feature)** |
 | U6 | 1 | Ultra-low-leakage load switch | SC-70-6 (DCK) — was SOT-23-6 (DBV) until the 2026-08-05 swap; board synced | `TPS22919DCKR` |
