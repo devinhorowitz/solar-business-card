@@ -68,13 +68,13 @@ BOM rather than the prose docs:
 2. **NFC FD interrupt-storm bleed** -- *real, low-severity; **fixed**.* A phone parked in-field keeps
    polling and re-toggles FD; every rising edge fired a fresh ack breath. Bounded by the rail floor
    (no brownout/brick) but a real slow bleed -> shipped `USE_NFC_ACK_COOLDOWN` (one ack per few s).
-3. **TINY shared-ballast droop** -- *real physics, not firmware-fixable; documented.* SW2 = TINY
-   shares one 220 R (`R12`) across all anodes, so per-LED brightness varies with channel count. The
-   firmware can't sense SW2 and can't correct without wrecking ON mode; TINY is a dim hack by design.
-   Documented as low-fidelity in `README`. *(2026-08-02 sift: the "move the ballast to the cathodes"
-   fix this note asked of v4 is BUILT — R1–R4 are 150 R per-cathode ballasts on the v4 board
-   (`board.h` pin table). Residual droop from the still-shared R12 remains, N× smaller; TINY stays a
-   dim hack by design.)*
+3. **TINY shared-ballast droop** -- *MOOT: TINY mode was deleted 2026-08-05.* SW2 = TINY
+   shared one 220 R (`R12`) across all anodes, so per-LED brightness varied with channel count. The
+   firmware couldn't sense SW2 and couldn't correct without wrecking ON mode. *(2026-08-02 sift: the
+   "move the ballast to the cathodes" fix this note asked of v4 was BUILT — R1–R4 are 150 R
+   per-cathode ballasts (`board.h` pin table) — which left TINY only its N×-smaller residual droop.
+   2026-08-05: DRH deleted the third SW2 pad and R12 outright; SW2 is a 2-pad ON/OFF bridge and PWM
+   duty owns dimming, where it is linear and per-channel.)*
 4. **Titanium eddy currents kill NFC** -- *already solved.* The `FER1` ferrite (Würth WE-FSFS 364006)
    sits in a dedicated brace channel between coil and shell; physics + no-ferrite fallback are in
    `../PCB/PCB-side-notes-brace-direction.md` §3. Underlying concern correct; the design already

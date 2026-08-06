@@ -50,7 +50,7 @@ the layer you cannot see; these are datasheet-verified maxima in mm:
 | D2–D5 (reverse-mount LEDs) | 16.10 / 22.40 / 28.70 / 34.70, y 43.90 | 0.83 | Inside the window bay — see §6 |
 | U5 (XQFN8, NFC) | 35.05, 34.00 | 0.5 | SOT902-3, 1.6 × 1.6 × 0.5 verbatim |
 | All 0402 R/C | various | 0.55 budget | Includes solder |
-| SW2, SB1–SB4, SJ1 solder-bridge pads | SW2 26.35, 50.37; others per CPL | **0.8 budget, variable** | Bare pads until an operator bridges them; blob height is uncontrolled. Generous cutouts; never load-bearing. |
+| SW2 solder-bridge pads (SB1–SB4 and SJ1 deleted — 2026-08-05 and 2026-07-30) | SW2 26.35, 50.37 | **0.8 budget, variable** | Bare pads until an operator bridges them; blob height is uncontrolled. Generous cutout; never load-bearing. |
 | C9 (0402 trim, NFC tank) | 35.66, 39.14 | 0.55 | Bench-fitted — see §5 |
 | ~~U6 (SOT-23-6)~~ | ~~6.34, 32.2~~ → **3.91, 7.31** | 1.45 | TI DBV, with leads. **Not in the brace zone** — it sits at y 7.31, in the top third. Kept here only so the old row is not silently dropped; the brace does not clear it because the brace never reaches it |
 

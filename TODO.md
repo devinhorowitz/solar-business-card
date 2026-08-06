@@ -540,36 +540,6 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
   **ORDER-BLOCKING:** `CL21B106KOQNNNG` is **0 stock at DigiKey**, 394 at Mouser. You need 20 for a
   10-card build. Buy them with the order, not after.
 
-- [ ] **[PCB — KiCad, do it with the supercap lands] Move the two plating-bus stubs to B.Cu**
-  _(2026-08-04. The panel half is DONE and landed; this is the board half, and it needs KiCad.)_
-  Today both stubs are net-GND copper `gr_line`s **on F.Cu**, crossing the outline at x = 25.4:
-  `(25.4, 1.25)→(25.4, −0.4)` and `(25.4, 87.65)→(25.4, 89.3)`, width 0.4. Depanelling therefore
-  leaves a 0.4 mm **gold nub on the card FACE** at both short-edge midpoints — on the one surface
-  of this board meant to be looked at. On B.Cu the nub is under the titanium shell and invisible.
-
-  **Change: set both `gr_line`s' layer to `B.Cu`.** Nothing else. Then save (KiCad refills), and
-  update the fab request's `**TOP side (F.Cu)**` to `**BOTTOM side (B.Cu)**` in the *same* commit —
-  check [19] fails until you do, by design.
-
-  **Why it still plates.** Both stubs land on the board's main F.Cu GND island (1939 mm², the one
-  carrying the gold set and 4 M2 mounts), and that island holds **19 GND vias** down to B.Cu. So
-  the path becomes rack → ring → spur → B.Cu GND → those 19 vias → the F.Cu gold set. Measured,
-  not assumed. Via stitching is already load-bearing here: the F.Cu GND copper is in 5 islands and
-  only one of them ever touched a stub, so the other four have *always* been fed through vias.
-
-  **Room on the back is not tight.** At x = 25.4 the nearest non-GND B.Cu copper is **3.92 mm**
-  (top edge) and **24.48 mm** (bottom); the B.Cu GND pour reaches to within 0.382 mm of the edge.
-  Start the B-side line deep enough inside the pour to catch solid copper — the pour is hatched
-  there, and y ≈ 3.5 (top) / 85.4 (bottom) sits on fill rather than in a hatch gap.
-
-  **Do NOT do this by text surgery**, for the reason in the supercap box: a copper edit invalidates
-  the stored zone fills and nothing outside KiCad regenerates them. A bare `pcbnew` load/save is
-  not a substitute either — measured 2026-08-04, it churns **22,984 lines** with zero edits.
-
-  No flag day: `scripts/panelize.py` reads the stubs' layer off the board and emits the tab spur to
-  match, so the panel is correct before and after. Verified both ways — panel DRC is **247
-  violations, identical census**, with the stubs on F.Cu and on B.Cu.
-
 - [ ] **[PCB/CI — fab hazard] The PANEL config has no `check_zone_fills`, and the panel is what you upload**
   _(2026-08-04, found by an adversarial re-check of a board change I had already called clean.)_
   `PCB/solar-glow-drh.kibot.yaml:18` sets `check_zone_fills: true`, with a comment naming exactly
@@ -598,66 +568,11 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
   step, and the boxed-in-C1 numbers live in that same box so nobody re-derives them.)_
 
   What stays open is the reason nothing caught this: `missing_courtyard` is `"ignore"` in
-  `PCB/solar-glow-drh-v4_0.kicad_pro`, and **44 of 78 footprints carry no courtyard at all,
-  20 of them machine-placed** (C1, C11, C12, C24, C29, C3, C5, C6, C7, C8, R1, R10, R11, R12,
-  R14, R17, R18, R2, R3, R4). Turning the rule on without drawing those courtyards just trades
+  `PCB/solar-glow-drh-v4_0.kicad_pro`, and **39 of 73 footprints carry no courtyard at all,
+  19 of them machine-placed** (C1, C11, C12, C24, C29, C3, C5, C6, C7, C8, R1, R10, R11,
+  R14, R17, R18, R2, R3, R4 — recounted 2026-08-05: 39 of 73 courtyard-less after SB1–4/R12 left). Turning the rule on without drawing those courtyards just trades
   one silence for 20 false alarms, so it is a two-part job: give the library 0402s courtyards,
   then set the rule to `warning`.
-
-- [ ] **[PCB — respin] Delete `SB1`–`SB4`, the per-LED force-on bridges**
-  _(2026-08-04, DRH's call after an analysis pass. Was "bundle with the supercap-land re-route";
-  that landed 2026-08-05 without this — bundle with the next board-edit window instead, e.g. the
-  B.Cu plating-stub move.)_
-
-  **What they are, because the docs disagree and one of them is wrong.** The chain is
-  `ANODE → Dn → Kn → Rn (150 Ω) → LDRVn → U1 pin`, and `SBn` shorts `LDRVn` to **GND** —
-  bypassing the MCU pin so the LED is on whenever `ANODE` is powered. They are **force-on**.
-  `PCB/README.md` says so correctly; **`README.md` calls them "per-LED disable jumpers", which
-  is backwards**, and that is worth fixing whether or not the parts go.
-
-  **Why remove them: the ballast makes this mode unusable, not merely wasteful.** Rn is sized
-  for the PWM *peak*, and a bridge just holds that peak DC:
-
-  | V_STO | per LED | all four | power |
-  |---:|---:|---:|---:|
-  | 4.65 V | 17.67 mA | 70.67 mA | 329 mW |
-  | 3.50 V | 10.00 mA | 40.00 mA | 140 mW |
-
-  70.67 mA is *exactly* this design's own ~71 mA peak figure, 4 × (4.65 − 2.0)/150. Against a
-  1.4 F tank holding 15.1 J (**10.4 J** spendable to a 2.6 V floor): **one LED forced on flattens
-  the card in ~2.1 minutes, all four in ~32 seconds.** On the board whose #1 open question is
-  whether harvest keeps up with duty-cycled glow, that is a stopwatch rather than a mode. It also
-  defeats the PWM `INVEN` polarity that the dark idle state depends on.
-
-  **The space argument does NOT hold, and that matters for expectations.** Removing all four
-  frees **5.40 mm² in four scattered pockets** (1.35 mm² each) spanning x 5.6→35.0, y 49.5→52.3 —
-  never one usable region. And they sit **6.6–8.3 mm away from the corrected-land bands**, so
-  none of it helps the supercap respin. Do this for the electrical reason and for four fewer
-  bare pads an assembler can bridge by accident; do not expect board area from it.
-
-  **Note `SW2` already provides the useful version** — `ANODE ← STO` (on), `← TINY` through R12
-  (dimmed), or open (true hardware off), i.e. a master enable at the anode rail where one
-  belongs. A single replacement jumper would duplicate SW2 unless it does something SW2 cannot,
-  and nothing here does. **Recommend removing the four and adding nothing.**
-
-  **Scope — the removal touches these and nothing else.** The parts are `dnp` +
-  `exclude_from_bom` + `exclude_from_pos`, verified on the board, so **no fab file changes**:
-  checks [2] and [15] are unaffected and PCBWay is neither sold nor asked to place anything.
-  - schematic: 4 symbols + their `LDRVn`/`GND` wires (`kicad-cli sch erc` after)
-  - board: 4 footprints + only the `LDRVn → SBn` stubs; the `LDRVn` nets themselves stay
-    (12.7 / 32.5 / 42.0 / 41.6 mm to the MCU, unchanged). Re-pour B.Cu.
-  - library: `solarglow:SB1`–`SB4` symbols + footprints become cullable (four separate
-    entries, one per bridge)
-  - **check [12]'s `FRONT_SIDE` snapshot** — it counts footprints (78 today); dropping four
-    must update the snapshot in the same commit, the exclusion-ledger shape
-  - `enclosure/part_heights.py:85` — the `"SB": 0.80` prefix entry can go once no `SB*` remains
-    (leave `"SW": 0.80`, SW2 stays), and the brace stops cutting those pockets
-  - docs: `README.md` (fix the wrong "disable" wording), `PCB/README.md` ×5 (feature list, the
-    BOM table row, the force-on description, the "Not placed" list, and Step 4 "SB1–SB4: leave
-    open"), `CLAUDE.md`'s `dnp` roster, `PCB/PCB-side-notes-brace-direction.md`'s height table.
-    `docs/solar-glow-drh-v2-hardware.md` is v2-era history — leave it.
-  - then: ERC, DRC, `scripts/mask_art.py --check`, the consistency suite, and let CI
-    regenerate the brace + fab set.
 
 - [ ] **[PCB — respin] Route `U5` pin 7 (`VOUT`) — NFC energy harvesting, currently unconnected**
   _(2026-08-03. Was "bundle with the supercap-land re-route"; that landed 2026-08-05 without

@@ -6,8 +6,9 @@ Three figures:
   Generated/docs/<stem>-led-orientation.png   D2-D5 reverse-mount polarity (the check the
                                               assembler runs before reflow: anode side,
                                               cathode side, rotation, board side)
-  Generated/docs/<stem>-sw2-selector.png      the SW2 LED master bridge: which pad pair is
-                                              ON, which is TINY, and through what
+  Generated/docs/<stem>-sw2-selector.png      the SW2 LED master bridge: bridged = ON,
+                                              open = OFF (TINY and its R12 dim path were
+                                              deleted 2026-08-05; SW2 is a 2-pad bridge now)
   Generated/docs/<stem>-thickness-scale.png   the assembled 3.55 mm at hand scale, next to
                                               3 pennies / 10 business cards / an iPhone 17
                                               Pro -- the card's own number MEASURED from the
@@ -18,12 +19,12 @@ They replaced two hand-uploaded v2-era PNGs (PCB/led-orientation-D2-D5.png,
 PCB/sw2-anode-selector.png, culled 2026-08-01) that had gone stale three ways at once with
 nothing to notice: a ghost SJ1 (removed from schematic and board 2026-07-30), SW2/R12 drawn
 at pre-move positions, and dead net names ("In2", "VS") from two rail redesigns ago. Every
-geometric and electrical fact below -- positions, pad offsets, rotations, sides, net names,
-R12's value and what it bridges -- is read out of the one committed .kicad_pcb, so the
+geometric and electrical fact below -- positions, pad offsets, rotations, sides, net names --
+is read out of the one committed .kicad_pcb, so the
 figures cannot silently disagree with the board. What little prose they carry (what ON/OFF
 *mean* for the supercap) is copy, not data.
 
-The asserts are the point: if a re-route rotates an LED, moves the dim path off R12, or
+The asserts are the point: if a re-route rotates an LED, regrows SW2 a third pad, or
 renames the anode rail, this script fails the CI job loudly instead of drawing yesterday's
 board with today's date. Fix the figure's assumptions, not the assert.
 
@@ -120,26 +121,22 @@ def pad(fp, name):
 _b = open(BOARD).read()
 LEDS = [footprint(_b, r) for r in ("D2", "D3", "D4", "D5")]
 SW2 = footprint(_b, "SW2")
-R12 = footprint(_b, "R12")
 
 # ---- the facts both figures assert before drawing ------------------------------------------
 ANODE_NET = pad(SW2, "2")["net"]
 for led in LEDS:
     assert pad(led, "A")["net"] == ANODE_NET, (
-        f'{led["ref"]} anode is on "{pad(led, "A")["net"]}", not the SW2 center-pad rail '
+        f'{led["ref"]} anode is on "{pad(led, "A")["net"]}", not the SW2 rail '
         f'"{ANODE_NET}" -- the master-switch story changed; redraw, do not patch'
     )
-assert len(SW2["pads"]) == 3, f'SW2 has {len(SW2["pads"])} pads, the 3-pad bridge story is dead'
-ON_NET, TINY_NET = pad(SW2, "1")["net"], pad(SW2, "3")["net"]
-_r12_nets = {p["net"] for p in R12["pads"]}
-assert _r12_nets == {TINY_NET, ON_NET}, (
-    f"R12 bridges {sorted(_r12_nets)}, not the TINY->{ON_NET} dim path the figure explains"
-)
+# 2 pads since 2026-08-05: TINY (the third pad, via R12 220R) was deleted with R12 itself.
+assert len(SW2["pads"]) == 2, f'SW2 has {len(SW2["pads"])} pads, the 2-pad bridge story is dead'
+ON_NET = pad(SW2, "1")["net"]
 
 _rots = {led["rot"] for led in LEDS}
 assert len(_rots) == 1, f"D2-D5 no longer share one rotation ({_rots}); give each its own label"
 LED_ROT = _rots.pop()
-_layers = {led["layer"] for led in LEDS} | {SW2["layer"], R12["layer"]}
+_layers = {led["layer"] for led in LEDS} | {SW2["layer"]}
 assert _layers == {"B.Cu"}, f"expected everything here on B.Cu, found {_layers}"
 SIDE_NOTE = "back side, board coords -- as drawn in KiCad; mirror left-right when holding the board back-up"
 
@@ -218,46 +215,39 @@ def sw2_selector():
     fig, ax = plt.subplots(figsize=(10.5, 5.2))
     ax.set_aspect("equal")
 
-    for fp, col in ((SW2, "#3a7ca5"), (R12, "#b0813a")):
-        xs = [p["gx"] for p in fp["pads"]]
-        ys = [p["gy"] for p in fp["pads"]]
-        bw, bh = (max(xs) - min(xs)) + 1.1, (max(ys) - min(ys)) + 1.1
-        ax.add_patch(Rectangle((fp["x"] - bw / 2, fp["y"] - bh / 2), bw, bh,
-                               facecolor="none", edgecolor=col, lw=1.4, zorder=1))
-        label = fp["ref"] if fp is SW2 else f'{fp["ref"]} ({fp["value"]})'
-        ax.text(fp["x"], fp["y"] + bh / 2 + 0.35, label, ha="center", va="top",
-                fontsize=11, fontweight="bold", color=col)
-        for p in fp["pads"]:
-            ax.add_patch(Rectangle((p["gx"] - p["w"] / 2, p["gy"] - p["h"] / 2), p["w"], p["h"],
-                                   facecolor=col, edgecolor="black", lw=0.5, alpha=0.85, zorder=2))
-            # rotated so 0.9 mm-pitch neighbours cannot collide
-            ax.annotate(f'{p["name"]}: {p["net"]}', (p["gx"], p["gy"] - p["h"] / 2 - 0.25),
-                        ha="left", va="bottom", fontsize=9.5, fontweight="bold",
-                        rotation=40, rotation_mode="anchor")
+    col = "#3a7ca5"
+    xs = [p["gx"] for p in SW2["pads"]]
+    ys = [p["gy"] for p in SW2["pads"]]
+    bw, bh = (max(xs) - min(xs)) + 1.1, (max(ys) - min(ys)) + 1.1
+    ax.add_patch(Rectangle((SW2["x"] - bw / 2, SW2["y"] - bh / 2), bw, bh,
+                           facecolor="none", edgecolor=col, lw=1.4, zorder=1))
+    ax.text(SW2["x"], SW2["y"] + bh / 2 + 0.35, SW2["ref"], ha="center", va="top",
+            fontsize=11, fontweight="bold", color=col)
+    for p in SW2["pads"]:
+        ax.add_patch(Rectangle((p["gx"] - p["w"] / 2, p["gy"] - p["h"] / 2), p["w"], p["h"],
+                               facecolor=col, edgecolor="black", lw=0.5, alpha=0.85, zorder=2))
+        # rotated so 0.9 mm-pitch neighbours cannot collide
+        ax.annotate(f'{p["name"]}: {p["net"]}', (p["gx"], p["gy"] - p["h"] / 2 - 0.25),
+                    ha="left", va="bottom", fontsize=9.5, fontweight="bold",
+                    rotation=40, rotation_mode="anchor")
 
-    p1, p2, p3 = (pad(SW2, n) for n in ("1", "2", "3"))
-    for pa, pb, txt, dy in (
-        (p1, p2, f"bridge = ON   ({ANODE_NET} → {ON_NET}, full rail)", 1.15),
-        (p2, p3, f"bridge = TINY   ({ANODE_NET} → {TINY_NET} → R12 {R12['value']} → {ON_NET})", 2.15),
-    ):
-        mx = (pa["gx"] + pb["gx"]) / 2
-        ax.annotate("", (pa["gx"], pa["gy"] + 0.55), (pb["gx"], pb["gy"] + 0.55),
-                    arrowprops=dict(arrowstyle="-", color="black", lw=2.4,
-                                    connectionstyle="arc3,rad=-0.55"))
-        ax.annotate(txt, (mx, SW2["y"] + dy), ha="center", va="top", fontsize=10.5)
+    p1, p2 = pad(SW2, "1"), pad(SW2, "2")
+    mx = (p1["gx"] + p2["gx"]) / 2
+    ax.annotate("", (p1["gx"], p1["gy"] + 0.55), (p2["gx"], p2["gy"] + 0.55),
+                arrowprops=dict(arrowstyle="-", color="black", lw=2.4,
+                                connectionstyle="arc3,rad=-0.55"))
+    ax.annotate(f"bridge = ON   ({ANODE_NET} → {ON_NET}, full rail)",
+                (mx, SW2["y"] + 1.15), ha="center", va="top", fontsize=10.5)
 
-    rt = next(p for p in R12["pads"] if p["net"] == TINY_NET)
-    ax.plot([p3["gx"], rt["gx"]], [p3["gy"], rt["gy"]], ls=":", color="#3a7ca5", lw=1.4, zorder=0)
-
-    ax.set_title(f"{STEM}  —  SW2 LED master selector  ({SIDE_NOTE})", fontsize=12)
+    ax.set_title(f"{STEM}  —  SW2 LED master switch  ({SIDE_NOTE})", fontsize=12)
     ax.set_xlabel("board x (mm)")
     ax.set_ylabel("board y (mm)")
     ax.text(0.5, -0.24,
             f"unbridged = OFF — a true hardware off, supercap-safe for storage; "
             f"firmware cannot sense SW2 (board dark? check SW2 first)",
             transform=ax.transAxes, ha="center", va="top", fontsize=10)
-    x0 = min(p["gx"] for p in SW2["pads"] + R12["pads"]) - 2.2
-    x1 = max(p["gx"] for p in SW2["pads"] + R12["pads"]) + 2.2
+    x0 = min(p["gx"] for p in SW2["pads"]) - 2.2
+    x1 = max(p["gx"] for p in SW2["pads"]) + 2.2
     ax.set_xlim(x0, x1)
     ax.set_ylim(SW2["y"] + 3.4, SW2["y"] - 3.4)  # inverted: KiCad +y is down the board
     ax.grid(True, lw=0.3, alpha=0.5)

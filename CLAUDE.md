@@ -259,8 +259,9 @@ red, the check itself fails.
 - **A `dnp` part's model resolves too — and is still not drawn.** Same blind spot, opposite cause:
   the body is absent from every populated render *correctly*, because the assembled board will not
   have the part, but "resolved and drawn" and "resolved and deliberately absent" look identical —
-  an empty land. The class is currently EMPTY on this board (2026-08-01 sift: 16 `dnp`
-  footprints — TC1, TC1/b1, SW2, J1, JP1, SB1–4, TP1–7 — and none carries a model), but it was
+  an empty land. The class is currently EMPTY on this board (2026-08-05 recount: 12 `dnp`
+  footprints — TC1, TC1/b1, SW2, J1, JP1, TP1–7, after SB1–4 left with TINY mode — and none
+  carries a model), but it was
   not always: **C9** was the dnp-with-a-model until it was placed at 47 pF on 2026-07-30, and
   confirming its 0402→0805 upsize had landed meant re-rendering with `dnp` cleared and diffing:
   528 px, 20×37, an 0805 turned 90°. `render.py` names the DNP set beside the resolve count so
@@ -315,9 +316,11 @@ red, the check itself fails.
   zones, not tracks, so a `GetTracks()` sweep silently misses them and flatters the answer:
   on the 2026-08-04 board, cathode-to-ANODE for D3/D4/D5 read 2.5216 mm tracks-only and
   **1.5749 / 1.0775 / 0.5513** once teardrop copper was in — D5's real number was 4.6× worse
-  than the tracks-only figure. The 2026-08-05 supercap-land re-route re-fed the ANODE tree
-  through that corridor; the current teardrop-inclusive gaps are **D2 0.3740, D3 0.4249,
-  D4 0.3634, D5 0.5116** (`PCB/README.md`'s supercap box owns them now).
+  than the tracks-only figure. **And gate on the IN-APERTURE gap** (both nets clipped to the
+  window rectangle): a +2 mm pickup margin conflates masked, DRC-legal gaps outside the window
+  with the no-mask-dam hazard inside it, which is how a legal 0.178 outside the window briefly
+  read as a D4 regression on 2026-08-05. `PCB/README.md`'s supercap box owns the current
+  numbers.
   **Zero come from F.Mask**, so the front art is clean. A *new* F.Mask hit is a real find.
   **Do not treat the hit COUNT as a constant, and never gate on it.** It is not deterministic:
   two runs on byte-identical inputs (same board, `.kicad_pro`, `.kicad_dru` and the same pinned

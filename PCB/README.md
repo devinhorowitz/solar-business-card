@@ -33,10 +33,10 @@ fitted at this stage; that is the fab's deliverable, not an omission.
 
 ![Assembled card, hero angle](https://raw.githubusercontent.com/devinhorowitz/solar-business-card/main/Generated/docs/solar-glow-drh-v4_0-populated-hero.png)
 
-The same board with its components on: 53 of the 78 footprints carry a 3D body, which is every part
-that actually gets populated (recounted 2026-08-01 — the old "72/19" predated the six TP2–TP7
-test pads and `TC1/b`). The other 25 are the drill/mount set (MH1–4, MP1–4, `NPTH_mech`), the
-solder bridges (SW2, SB1–4), the bare programming and probe lands (TC1, `TC1/b`, TP1–TP7, JP1),
+The same board with its components on: 52 of the 73 footprints carry a 3D body, which is every part
+that actually gets populated (recounted 2026-08-05 after SB1–4 and R12 left with TINY mode; the
+2026-08-01 count was "53 of 78"). The other 21 are the drill/mount set (MH1–4, MP1–4, `NPTH_mech`),
+the SW2 solder bridge, the bare programming and probe lands (TC1, `TC1/b`, TP1–TP7, JP1),
 and **J1**, which is DNP.
 
 > **Read the big grey slabs as ENVELOPES, not as photographs.** The four supercaps, the two solar
@@ -359,10 +359,10 @@ region). Change the board; the panel follows. Never edit the panel and expect it
 **Depanel:** snap the two tabs, then file the edge flat at x ≈ 25.4 on both short edges. The
 filing is not optional and not a defect — a gold-plated bus nub is left behind by design, and
 dressing it flush is the last step of the plating scheme. Expect to touch up the mask/edge there.
-**The nub is on whichever face the stubs run on** — F.Cu today, which puts it on the card face at
-both short-edge midpoints; B.Cu once the TODO's stub move lands, which puts it under the shell.
-Check [19] warns about this every run until it moves, and check [19] also holds the fab request's
-stated side to the board so the two cannot drift apart.
+**The nub is on whichever face the stubs run on** — **B.Cu since 2026-08-05** (DRH moved both
+stubs in KiCad), which puts it on the back, under the titanium shell, at both short-edge
+midpoints. Check [19] holds the fab request's stated side to the board so the two cannot drift
+apart; its every-run warning retired with the move.
 
 **Why 1-up and not 2-up (costed 2026-08-04, for a 10-card / 2-assembled order).** Two cards
 side by side — sharing a moat, long edges adjacent — would be **118.8 × 103.7 mm**: half the
@@ -411,7 +411,7 @@ a PCBWay DFM reviewer asks — their absence is a decision, not an oversight.
   > itself is under solder mask across ~90% of its area and is not a plating surface — it is a
   > decorative texture meant to be read THROUGH the mask, so please do not open mask over it or add
   > extra mask thickness to 'even it out'. The two 0.4 mm traces crossing the board outline at
-  > x=25.4 (top and bottom edges) are plating-bus connections and run on the **TOP side (F.Cu)**;
+  > x=25.4 (top and bottom edges) are plating-bus connections and run on the **BOTTOM side (B.Cu)**;
   > they cross the break tabs onto the panel frame's bus ring, which is where the plating rack
   > should clip. Please retain them through plating and rout at depanel. **The frame's bus ring is
   > on BOTH faces, mask-opened on both, and stitched together with six vias — clip either face.**
@@ -589,7 +589,6 @@ Summary of the **orderable** lines:
 | SC2, SC4 | 2 | 1.0 F, 2.75 V (WS17) | WS17 (diagonal under-body P/N pads, 28.5 mm) | `3-153-438` |
 | D2–D5 | 4 | Amber 617 nm, Vf≈2.25 V | SMD, 3.4x1.9 mm | `LA P47F-V2BB-24-3B5A-30-R18-Z` |
 | R1–R4 | 4 | 150 Ω, ±1% | 0402 | `AC0402FR-07150RL` |
-| R12 | 1 | 220 Ω, ±1% | 0402 | `AC0402FR-07220RL` |
 | R5, R6 | 2 | 1 MΩ, ±0.1%, 25 ppm, 0603 | 0603 (R_0603_1608Metric) | `RT0603BRD071ML` |
 | C5 | 1 | 100 nF, X7R, 50 V | 0402 | `GRT155R71H104KE01D` |
 | U3 | 1 | I²C 0x1D, ±2–8 g | LGA-12 CC-12-4 (2.2×2.3×0.87 mm) | `ADXL367BCCZ-RL7` |
@@ -601,8 +600,7 @@ Summary of the **orderable** lines:
 | C11 | 1 | 0.22 µF (220 nF), X7R, 16 V | 0402 | `GRT155R71C224KE01D` |
 | C12 | 1 | 100 nF, X7R, 50 V | 0402 | `GRT155R71H104KE01D` |
 | C7 | 1 | 100 nF, X7R, 50 V | 0402 | `GRT155R71H104KE01D` |
-| SW2 | 1 | 3-pad bridge | solder-bridge | **(none — PCB bridge)** |
-| SB1–SB4 | 4 | solder-bridge | solder-bridge | **(none — PCB bridge)** |
+| SW2 | 1 | 2-pad bridge (was 3-pad until TINY left, 2026-08-05) | solder-bridge | **(none — PCB bridge)** |
 | TC1 | 1 | TC2030-MCP-FP | TC2030 legged land | **(no part — pogo interface)** |
 | J1 | 1 | 1×3, 0.1″ | 0.1″ THT pads | **(unpopulated / 0.1″ header)** |
 | JP1 | 1 | 4× bare SMD pads | 1.7 mm sq, 2.54 mm pitch, B side | **(bare pads — no component)** |
@@ -632,7 +630,8 @@ Summary of the **orderable** lines:
 | Q2 | 1 | N-ch MOSFET, 60 V, logic-level | SOT-23 | `BSS138LT1G` |
 
 **No ordered part — these are board features, not BOM line items:**
-- **SW2** (LED OFF/ON/TINY) and **SB1–SB4** (per-LED force-on) are **solder bridges** on the PCB.
+- **SW2** (LED OFF/ON) is a **solder bridge** on the PCB. _(SB1–SB4, the per-LED force-on
+  bridges, and the TINY dim position with its R12 ballast were deleted 2026-08-05.)_
 - **The NFC antenna is etched copper** — no wound coil to buy, and it stays **under soldermask**.
   Opening the mask over it was tried on 2026-07-29 and reverted the same day: exposed copper gets
   ENIG, and nickel in an RF conductor costs Q (~7× copper's resistivity, ferromagnetic, and at
@@ -680,8 +679,9 @@ them on the **back**; the front stays naked until you fit the cells. You finish 
 types by hand afterward.
 
 **The split**
-- **PCBWay machine-places** (reflow, bottom) — **47 parts, computed from the board 2026-08-01**
-  (smd, not DNP, not bare-land): U1, U3, U5–U9, Q2, D2–D5, R1–R6, R10–R12, R14–R18, L2, FB1,
+- **PCBWay machine-places** (reflow, bottom) — **46 parts** (47 computed from the board
+  2026-08-01, minus R12, deleted 2026-08-05 with TINY mode)
+  (smd, not DNP, not bare-land): U1, U3, U5–U9, Q2, D2–D5, R1–R6, R10, R11, R14–R18, L2, FB1,
   C1, C3–C9, C11–C13, C22–C29. (The old list said "recompute from the v4 board" — done: it gained
   **C9**, placed 2026-07-30, and **C29**, the 100 nF at (11.575, 44.625) from the 2026-08-01 board
   sync. The v3 clamp/comparator parts - U2, U4, Q1, D1, D9–D11, R7–R9, C2, C10 - remain gone.)
@@ -691,13 +691,14 @@ types by hand afterward.
   R18 added** — the charge-disable buffer from the cold-start-deadlock fix. **U7 is correctly in this
   list**: it carried a stray DNP attribute in the .kicad_pcb, now cleared so the board agrees with the
   schematic. That flag did not affect this project's fab output — the CI pick+place CSV is informational
-  and already listed U7 — but the two files must agree, since a schematic sync overwrites the board.)* `../BOM/solar-glow-drh-v4_0-BOM-assembly.xlsx` is
-  that trimmed file — rebuilt 2026-07-30 and verified 2026-08-01 to carry exactly this 47-part set
-  (37 line items), so the old "regenerate from the v4 board" instruction here is discharged.
+  and already listed U7 — but the two files must agree, since a schematic sync overwrites the board.)* `../BOM/solar-glow-drh-v4_0-BOM-assembly.xlsx` was
+  that trimmed file — rebuilt 2026-07-30 and verified 2026-08-01 to carry exactly the then-47-part
+  set (37 line items) before both xlsx masters were culled 2026-08-02; the generated
+  `Generated/fabdocs/` CSVs own the split now and pick up R12's departure automatically.
 - **You hand-solder afterward:** SC1–SC4 supercaps and PV1–PV2 solar cells. They are kept
   **off** the PCBA BOM on purpose — the supercaps are manual-solder only (SCHURTER SCPC),
   and the cells are heat-sensitive.
-- **Not placed:** SW2, SB1–SB4 (solder bridges you set), TC1 (Tag-Connect pad), J1
+- **Not placed:** SW2 (solder bridge you set; SB1–SB4 deleted 2026-08-05), TC1 (Tag-Connect pad), J1
   (optional header), MH1–MH4 **and MP1–MP4** (all eight mounting holes). *(C9 was on this list
   until 2026-07-30; it is now a placed 47 pF part. This line said "MH1–MH4" until 2026-08-04 —
   the four-versus-eight miscount again, in the list that tells the assembler what NOT to
@@ -883,8 +884,15 @@ Work outside-in by heat sensitivity:
    >
    > Verified on the corrected board, both DRC modes: 0 unconnected, 0 clearance, 0 dangling,
    > exact exclusion ledger, 0 parity issues; mask art MATCH; glow-window gaps re-measured
-   > teardrop-inclusive — **D2 0.3740, D3 0.4249, D4 0.3634, D5 0.5116 mm** (D2 unchanged, the
-   > others now reflect the re-fed ANODE tree). **Teardrops in the re-routed pockets were deleted
+   > teardrop-inclusive, **IN-APERTURE** (both nets clipped to the window rectangle — the metric
+   > the no-mask-dam hazard actually gates on): **D2 0.3740, D3 1.2033, D4 1.8112, D5 0.7580 mm**
+   > (2026-08-05, post SB/R12 deletion and DRH's R3 move). D2's pinch is the one genuinely inside
+   > the aperture; the others' closest approaches all sit OUTSIDE it, under mask — e.g. R3's K4
+   > copper passes 0.1780 from the ANODE tree at (27.9, 48.0), y > the window's 47.0 edge, legal
+   > and dammed. _(The 2026-08-05 morning numbers — D3 0.4249 / D4 0.3634 / D5 0.5116 — were
+   > region measurements with a +2 mm pickup margin; they conflated masked, DRC-legal gaps with
+   > the in-window hazard. Both metrics come from the same teardrop-inclusive sweep; gate on the
+   > in-aperture one.)_ **Teardrops in the re-routed pockets were deleted
    > with the copper they hugged and are NOT re-added** — run *Tools → Add Teardrops* in the next
    > GUI session; the refill on save will keep the fills honest.
    >
@@ -909,14 +917,19 @@ Work outside-in by heat sensitivity:
    >
    > Electrically free: at the cell's ~**44 mA** max-power current, four 0.4 mm spokes give
    > **0.79 A/mm²**, an order of magnitude inside anything that matters.
-3. **Set the LED master switch SW2** (3-pad bridge): center–left = **ON** (`ANODE` straight
-   to `STO`), center–right = **TINY** (dim: `ANODE` → `TINY` → R12 220 Ω → `STO`),
-   unbridged = **OFF** (a true hardware off — supercap-safe for storage).
+3. **Set the LED master switch SW2** (2-pad bridge): bridged = **ON** (`ANODE` straight
+   to `STO`), unbridged = **OFF** (a true hardware off — supercap-safe for storage).
+   _(Until 2026-08-05 SW2 had a third pad — **TINY**, `ANODE` → R12 220 Ω → `STO`, a shared-
+   ballast dim mode. Deleted with R12: one shared ballast made per-LED brightness depend on
+   how many channels were lit, firmware cannot sense SW2 to compensate, and PWM duty does
+   the dim job linearly.)_
 
    ![SW2 LED master selector, drawn from the board by scripts/ref_figures.py](../Generated/docs/solar-glow-drh-v4_0-sw2-selector.png)
-4. **SB1–SB4: leave open.** Each is a per-LED *force-on* bridge that shorts that LED's drive
-   node (LDRVn) to GND. Open is the normal state (the MCU drives the LED); bridge one only to
-   force that LED hard-on without firmware.
+4. **SB1–SB4 no longer exist — nothing to set.** (Historical: per-LED *force-on* bridges
+   shorting that LED's drive node LDRVn to GND, deleted 2026-08-05. SW2 already provides the
+   master enable where one belongs, and the 150 Ω cathode ballast is sized for MCU drive, so
+   force-on mode was never usable for more than a smoke test. If you find SB lands, you are
+   holding a pre-2026-08-05 board — leave them open.)
 5. **SJ1 no longer exists — nothing to set.** (Historical: SJ1 was the DD-era VDDIO2→VS tie.
    On the **AVR64EA28 pin 10 is plain `PD0`**, not VDDIO2 — no MVIO, no I/O-supply pin to feed —
    so bridging it would have tied a GPIO to VS. It was DNP'd with the 2026-07 EA swap and the
@@ -936,7 +949,7 @@ and the glow-window mask staying open (Step 3) — a tented window kills the opt
    second board, put the cells under your **actual target lighting** and measure **harvest
    current vs. LED draw**. That single number sizes the duty cycle and the feature set. See
    `../solar-glow-drh-design-notes.md` §2 and the open-question section in `../README.md`.
-2. **Confirm SW2 is ON or TINY.** If SW2 is OFF, no firmware and no PWM will light the LEDs —
+2. **Confirm SW2 is ON.** If SW2 is OFF, no firmware and no PWM will light the LEDs —
    that is the hardware master switch by design.
 3. **Flash firmware over UPDI.** Use a **TC2030-MCP** pogo cable on `TC1` (hands-free), or
    solder a 3-pin header on `J1` as the backup. Firmware lives in **`../firmware/`**; its

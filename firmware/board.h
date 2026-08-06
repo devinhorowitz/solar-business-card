@@ -38,7 +38,7 @@
  *
  * LED channel map (D1/D9/D10/D11 Schottkys removed in v4; only D2..D5 remain):
  *   D2->LDRV1->PA3/WO3 ; D3->LDRV2->PA2/WO2 ; D4->LDRV3->PA1/WO1 ; D5->LDRV4->PA0/WO0
- *   each LED: anode->ANODE common->SW2->STO (ON) or ->R12(220R)->STO (TINY) ; cathode->Kn->150R ballast->LDRV net->pin (see map above)
+ *   each LED: anode->ANODE common->SW2->STO (ON; bridge open = OFF) ; cathode->Kn->150R ballast->LDRV net->pin (see map above)
  */
 #ifndef BOARD_H
 #define BOARD_H
@@ -180,8 +180,7 @@
 
 /* LED glow.  BARE-CARD values: re-check with the diffuser brace + Ti shell
  * installed -- the white LED-hug diffuser backing makes the window brighter and
- * more even, so the PWM duty (and the hardware TINY mode) want a first-light
- * re-check enclosed. */
+ * more even, so the PWM duty wants a first-light re-check enclosed. */
 #define GLOW_PEAK       220   /* 0..255 peak duty per LED at full bright.
                                  Ballast (150R) sets the PEAK current ceiling;
                                  the LED anode is fed from the STO supercap tank
