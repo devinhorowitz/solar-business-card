@@ -42,7 +42,9 @@ BASELINE = {
         # re-ledgered 2026-08-07 (cap scoot + part-aware ring reliefs, fit_rules.RING --
     # the ring gave up 191.3 mm2 x 1.8 around ten parts, six of which it had been
     # CRUSHING; volume was 5620.24 pre-scoot):
-    volume_mm3=5257.58, bbox=(-26.35, -45.4, -0.15, 26.35, 45.4, 3.4),
+    # re-ledgered 2026-08-07 evening (DRH center consolidation; ring reliefs follow the
+    # moved caps; was 5257.58 after the scoot, 5620.24 before):
+    volume_mm3=5265.16, bbox=(-26.35, -45.4, -0.15, 26.35, 45.4, 3.4),
         max_boundary_edges=1, max_open_len_mm=0.001, max_degenerate=3),
     "solar-glow-drh-pogo-testplate.stl": dict(
         volume_mm3=50860.32, bbox=(-10.4, -10.4, -17.8, 61.2, 99.3, 10.0),
@@ -110,7 +112,9 @@ BASELINE = {
     # the C7 note wherever that lands; it is a board-geometry question, not a mesh one.)
     "solar-glow-drh-diffuser-brace.stl": dict(
         # re-ledgered 2026-08-07 (cap scoot: footprint 1413.8 -> 1486.7 mm2; was 2102.49):
-    volume_mm3=2227.07, bbox=(-22.85, -42.4, 0.0, 24.35, 42.4, 1.8),
+    # re-ledgered 2026-08-07 evening (center consolidation: footprint 1486.7 -> 1374.8,
+    # leg area traded to the horizontal cap scoots by design; was 2227.07):
+    volume_mm3=2054.09, bbox=(-22.85, -42.4, 0.0, 24.35, 42.4, 1.8),
         max_boundary_edges=0, max_open_len_mm=0.0, max_degenerate=0),
     # ---- the 2026-08-07 enclosure variants (fit_rules.VARIANTS) --------------------------
     # Ledgered from local builds in the variants commit itself -- the chicken-and-egg rule:
@@ -127,23 +131,26 @@ BASELINE = {
         # 0.15 below z0. No fins, no medallion (physics-forced: valley 0.60 / coin floors
         # would cut a 0.60 floor through).
         # re-ledgered 2026-08-07 (cap scoot + ring reliefs; was 4130.76):
-        volume_mm3=3899.32, bbox=(-26.35, -45.4, -0.15, 26.35, 45.4, 2.42),
+        volume_mm3=3904.45, bbox=(-26.35, -45.4, -0.15, 26.35, 45.4, 2.42),
         max_boundary_edges=1, max_open_len_mm=0.001, max_degenerate=1),
     "solar-glow-drh-frame-air-316L.stl": dict(
         # air: OPEN frame, no floor -- walls + recess + 8 bosses only, z 0..1.80 exactly
         # (nothing below the resting plane; the M2x1.6 tip hides 0.20 inside the boss
         # spotface). Verified open: a ray up through the card centre hits zero surfaces.
         # re-ledgered 2026-08-07 (cap scoot + ring reliefs; was 1182.62):
-        volume_mm3=954.90, bbox=(-26.35, -45.4, 0.0, 26.35, 45.4, 1.8),
+        volume_mm3=959.91, bbox=(-26.35, -45.4, 0.0, 26.35, 45.4, 1.8),
         max_boundary_edges=1, max_open_len_mm=0.001, max_degenerate=1),
     "solar-glow-drh-diffuser-brace-lite.stl": dict(
         # the lite brace: gap 1.22, span 0.60, 31 pockets, 0 through-holes, single piece
-        # (277.0 mm2 dropped in 3 islands post-scoot -- recovery plan: TODO.md's lite-brace
+        # (307.2 mm2 dropped post-consolidation -- recovery plan: TODO.md's lite-brace
         # relocation entry). bbox y1 is NOT the cavity edge: the main piece only reaches
-        # board y ~59 -- the north corridors are the dropped islands.
+        # the full cavity span -- the center spine is continuous since the 2026-08-07 consolidation.
         # re-ledgered 2026-08-07 (cap scoot: footprint 935.7 -> 1078.2 mm2, dropped islands
         # 344.6 -> 277.0 in 3; main piece now reaches board y 59.2; was 935.48):
-        volume_mm3=1098.51, bbox=(-22.85, -42.4, 0.0, 24.35, 14.76, 1.22),
+        # re-ledgered 2026-08-07 evening: the consolidation CONNECTED the north corridors --
+        # the lite main piece now spans the full cavity length (bbox y1 14.76 -> 42.4),
+        # one continuous center spine; was 1098.51:
+        volume_mm3=1109.00, bbox=(-22.85, -42.4, 0.0, 24.35, 42.4, 1.22),
         max_boundary_edges=0, max_open_len_mm=0.0, max_degenerate=0),
 }
 VOL_TOL = 0.005

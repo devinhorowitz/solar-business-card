@@ -40,8 +40,8 @@
         "other_text_upright": false,
         "pads": {
           "drill": 0.0,
-          "height": 0.23,
-          "width": 0.23
+          "height": 0.66,
+          "width": 0.59
         },
         "silk_line_width": 0.1,
         "silk_text_italic": false,
@@ -80,8 +80,8 @@
           ""
         ],
         [
-          "courtyards_overlap|12703106|14935000|030ffafb-c195-49aa-b14c-a5f47412f78a|f398ac91-7d5c-49ce-bb63-67eb1603adf1",
-          ""
+          "courtyards_overlap|11970000|14935000|030ffafb-c195-49aa-b14c-a5f47412f78a|f398ac91-7d5c-49ce-bb63-67eb1603adf1",
+          "TC1/b1 under SC1 BY DESIGN: bare programming pads beneath the cap body, nothing fitted while programming. Re-keyed by SC1 moves; the design intent is unchanged (see PCB/README + CLAUDE.md ledger)"
         ],
         [
           "npth_inside_courtyard|10760000|14360000|ca8145ff-0217-4d2a-8243-0455ad9fbfa3|030ffafb-c195-49aa-b14c-a5f47412f78a",
@@ -125,7 +125,7 @@
         ],
         [
           "tracks_crossing|41000000|38000000|3d02959a-52d1-4b3d-a148-36df4aae42e1|463118eb-0e6d-49d0-868f-c633afd66f71",
-          ""
+          "NOT a short: the LA/LB net boundary inside the drawn antenna spiral. The coil IS the LA-to-LB conductor; the rewire moved the netlist boundary mid-copper. Coil gate (nfc_coil --check / check [13]) verifies the spiral is intact"
         ]
       ],
       "meta": {

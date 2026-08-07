@@ -308,7 +308,10 @@ def _mk_variants():
             material="Ti Gr5 (reference; brass or 6061 acceptable -- non-magnetic, machinable)",
             shell_name="solar-glow-drh-v3_0-backshell-0p6b-brace-Ti-max",
             brace_name="solar-glow-drh-diffuser-brace",
-            coverage_floor=0.35,   # ledgered min (measures 0.372 after the 2026-08-07 cap scoot; was 0.33/0.354 pre-scoot)
+            coverage_floor=0.33,   # ledgered min (measures 0.343 after DRH's 2026-08-07 center
+                                   # consolidation: the horizontal cap scoots traded LEG area for
+                                   # center room BY DESIGN -- legs are lip/cap/cell-backstopped;
+                                   # the center band y40-48.9 holds at 91% braced)
         ),
         "lite": dict(
             cap_h=_SUPERCAP_H_THIN, cavity=cav_lite, floor=0.60, wall_th=1.00, border_h=0.15,
@@ -318,7 +321,7 @@ def _mk_variants():
             material="Ti Gr5 (thinned floor; the 0.60 is the shop-minimum conversation)",
             shell_name="solar-glow-drh-shell-lite-Ti",
             brace_name="solar-glow-drh-diffuser-brace-lite",
-            coverage_floor=0.25,   # ledgered min (measures 0.270 after the 2026-08-07 cap scoot; was 0.21/0.234 pre-scoot)
+            coverage_floor=0.25,   # ledgered min (measures 0.264 post-consolidation; center band 73.5%)
         ),
         "air": dict(
             cap_h=_SUPERCAP_H_THIN, cavity=depth_air, floor=0.00, wall_th=1.00, border_h=0.00,
