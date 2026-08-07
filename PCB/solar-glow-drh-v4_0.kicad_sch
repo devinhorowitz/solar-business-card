@@ -2211,6 +2211,116 @@
 			)
 			(embedded_fonts no)
 		)
+		(symbol "solarglow:C30"
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "C30"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "DNP-trim"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "C30_1_1"
+				(rectangle
+					(start 2.54 2.54)
+					(end 20.32 -7.62)
+					(stroke
+						(width 0.2)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+				(pin passive line
+					(at 0 0 0)
+					(length 2.54)
+					(name "1"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -5.08 0)
+					(length 2.54)
+					(name "2"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
 		(symbol "solarglow:D1"
 			(exclude_from_sim no)
 			(in_bom yes)
@@ -21590,6 +21700,129 @@
 		)
 	)
 	(symbol
+		(lib_id "solarglow:C30")
+		(at 560.07 135.89 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board yes)
+		(in_pos_files no)
+		(dnp yes)
+		(uuid "f8010154-e8ed-4db3-8110-34d5bd2fed5e")
+		(property "Reference" "C30"
+			(at 571.5 135.89 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "DNP-trim"
+			(at 571.5 140.97 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Capacitor_SMD:C_0402_1005Metric"
+			(at 571.5 129.54 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 560.07 135.89 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "C9 tank trim pad, DNP (2026-08-07). Parallel with C9 across LA/LB: bench granularity for the paper-tune ladder, and headroom for the AIR variant retune -- the open 316L frame drops the ferrite, L falls toward the bare 0.958 uH, f0 rises, and the fix is MORE C in parallel: exactly what this pad adds. Fit a High-Q C0G 0402 chosen at the bench; stays out of every buy document until a value exists (dnp + exclude_from_bom + exclude_from_pos_files)."
+			(at 560.07 135.89 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "MPN" "QSCP251Q470G1GV001T"
+			(at 560.07 135.89 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Manufacturer" "Johanson Technology"
+			(at 560.07 135.89 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Supplier" "DigiKey"
+			(at 560.07 135.89 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Supplier P/N" "712-QSCP251Q470G1GV001TCT-ND"
+			(at 560.07 135.89 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "a8daff55-8ce4-4ffd-b20b-4328473ea8ae")
+		)
+		(pin "2"
+			(uuid "6f1470ea-6418-48bd-b0ed-a12fcd75f091")
+		)
+		(instances
+			(project "solar-glow-drh-v4_0"
+				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
+					(reference "C30")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "solarglow:SC1")
 		(at 80.01 38.1 0)
 		(unit 1)
@@ -24936,6 +25169,68 @@
 				)
 			)
 		)
+	)
+	(global_label "LA"
+		(shape bidirectional)
+		(at 554.99 135.89 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "8fd56acd-ac4f-466a-8546-01089efb2a48")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 554.99 135.89 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
+	(global_label "LB"
+		(shape bidirectional)
+		(at 554.99 140.97 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "fdb57ad5-7211-4c7e-903f-3eaa4f539fbd")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 554.99 140.97 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
+	(wire
+		(pts
+			(xy 560.07 135.89) (xy 554.99 135.89)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "119619ed-25df-450c-9fcb-fe8b3952b3f1")
+	)
+	(wire
+		(pts
+			(xy 560.07 140.97) (xy 554.99 140.97)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "b4d6fc4c-5fad-46e2-8393-97c544c2be72")
 	)
 	(sheet_instances
 		(path "/"
