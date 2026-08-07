@@ -11,11 +11,11 @@ Row,Description,Part,References,Value,Footprint,Quantity Per PCB,Status,Datashee
 10,"Ferrite bead 0603, STO island feed filter",FB1,FB1,ferrite,L_0603_1608Metric,1, ,,BLM18PG221SN1D,Murata,DigiKey,490-5221-1-ND,SMD_2terminal_chip_molded,
 11,"10uH 1.76A power inductor, AEM10300 LDCDC ('U8  10AEM10300C0000  $3.77.pdf' Table 11 = DFE252010F-100M); DFE252010 = 2.5x2.0mm on a 1008/2520 land (L_1008_2520Metric) - re-run Update-PCB then route",L2,L2,10uH,L_1008_2520Metric,1, ,,DFE252010F-100M,Murata,DigiKey,490-13039-1-ND,SMD_2terminal_chip_molded,
 12,"N-ch MOSFET SOT-523 (DMG1012T, 0.90 max -- low-profile respin 2026-08-06; was BSS138 SOT-23, 1.20) -- EN_STO_CH low-side charge-disable buffer: gate<-PA4 (CHG_DIS_G), drain->EN_STO_CH, source->GND (cold-start-deadlock fix). Same G/S/D pad order as SOT-23; Vth 1.0 max, Idss 100 nA max, VGSS +/-6 (ESD-protected gate)",Q2,Q2,DMG1012T,SOT-523,1, ,,DMG1012T-7,Diodes Incorporated,DigiKey,DMG1012T-7DICT-ND,,
-13,LED ballast 150 ohm,R1,R1 R2 R3 R4,150R,R1,4, ,,AC0402FR-07150RL,Yageo,DigiKey,YAG3443CT-ND,,
-14,I2C pull-up 4.7 kohm,R10,R10 R11,4.7k,R10,2, ,,AC0402FR-074K7L,Yageo,DigiKey,YAG3497CT-ND,,
-15,NFC_EN pulldown 1 Mohm 1M 0402 EN_STO_CH pull-up to VINT 1M 0402 Q2 gate pulldown -- holds charge ENABLED while the MCU is dead/resetting (cold-start-deadlock fix),R14,R14 R17 R18,1M,R14,3, ,,AC0402FR-071ML,Yageo,DigiKey,YAG3450CT-ND,,
-16,"VSENSE divider 1 Mohm - 0603 thin film 0.1% 25ppm (matched with R6) VSENSE divider 1 Mohm - 0603 thin film 0.1% 25ppm (matched with R5) 1M 0603 thin film 0.1% 25ppm, STO sense divider bottom (STO_SNS->GND)",R5,R5 R6 R16,1M,R_0603_1608Metric,3, ,,RT0603BRD071ML,Yageo,DigiKey,YAG4498CT-ND,SMD_2terminal_chip_molded,
-17,"2M 0603 thin film 0.1% 25ppm, STO sense divider top (STO->STO_SNS)",R15,R15,2M,R_0603_1608Metric,1, ,,MCT0603MD2004BP500,Vishay,DigiKey,541-MCT0603MD2004BP500CT-ND,SMD_2terminal_chip_molded,
+13,I2C pull-up 4.7 kohm,R10,R10 R11,4.7k,R10,2, ,,AC0402FR-074K7L,Yageo,DigiKey,YAG3497CT-ND,,
+14,NFC_EN pulldown 1 Mohm 1M 0402 EN_STO_CH pull-up to VINT 1M 0402 Q2 gate pulldown -- holds charge ENABLED while the MCU is dead/resetting (cold-start-deadlock fix),R14,R14 R17 R18,1M,R14,3, ,,AC0402FR-071ML,Yageo,DigiKey,YAG3450CT-ND,,
+15,"VSENSE divider 1 Mohm - 0603 thin film 0.1% 25ppm (matched with R6) VSENSE divider 1 Mohm - 0603 thin film 0.1% 25ppm (matched with R5) 1M 0603 thin film 0.1% 25ppm, STO sense divider bottom (STO_SNS->GND)",R5,R5 R6 R16,1M,R_0603_1608Metric,3, ,,RT0603BRD071ML,Yageo,DigiKey,YAG4498CT-ND,SMD_2terminal_chip_molded,
+16,"2M 0603 thin film 0.1% 25ppm, STO sense divider top (STO->STO_SNS)",R15,R15,2M,R_0603_1608Metric,1, ,,MCT0603MD2004BP500,Vishay,DigiKey,541-MCT0603MD2004BP500CT-ND,SMD_2terminal_chip_molded,
+17,"4x150R isolated ballast array replacing discrete R1-R4 (DRH consolidation 2026-08-07). Panasonic EXB-28V151JX: 0804 convex, elements pair pins 1-8/2-7/3-6/4-5 CONFIRMED from the catalog's printed pin diagram and matched by the board (every K opposite its documented LDRV -- a different pairing convention would permute the LED channels). AEC-Q200 Grade 1 in the CURRENT catalog; 0.45 max height (0.15 under the lite brace's 0.60 span); J +/-5% is the buyable ceiling in this land (the only F-grade, Yageo YC124-FR, is marketplace-only 10k MOQ; KOA CN1E4 EOL; four-LED matching rests on same-substrate construction). Runner-up: Yageo YC124-JR-07150RL (lost on withdrawn AEC claim + height margin). Land: KiCad R_Array_Convex_4x0402 with inner pads slimmed to 0.294 -- see PCB/README's re-link warning.",RN1,RN1,150R,R_Array_Convex_4x0402,1, ,,EXB-28V151JX,Panasonic,DigiKey,Y7151CT-ND,,
 18,3-axis accelerometer (tap/double-tap wake),U3,U3,ADXL367,ADXL367 CC-12-4_ADI,1, ,datasheets/U3  ADXL367BCCZ-RL7  $7.50.pdf,ADXL367BCCZ-RL7,Analog Devices,DigiKey,505-ADXL367BCCZ-RL7CT-ND,,
 19,"AEM10300 buck-boost ambient energy harvester PMIC (MPPT), QFN-28 4x4",U8,U8,AEM10300,U8_QFN28,1, ,datasheets/U8  10AEM10300C0000  $3.77.pdf,10AEM10300C0000,e-peas,Mouser,120-AEM10300-QFN,,
 20,"MCU - 8-bit AVR-EA (PWM, I2C, charge/sleep logic); EXTENDED -40..125C. Diff 12-bit ADC+PGA, 512B EEPROM, 80nA base sleep. Pin-compatible with the DD28 copper except pin 10, which is PD0/AIN0 on the EA, not VDDIO2 (no MVIO: DS40002443A Table 3-1). The DD-era SJ1 strap is REMOVED from this schematic - bridging it would have tied a GPIO to VS. FIRMWARE PORT REQUIRED - see TODO.",U1,U1,AVR64EA28 (VQFN28),U1,1, ,datasheets/U1  AVR64EA28-E-STX  $1.23.pdf,AVR64EA28-E/STX,Microchip Technology,DigiKey,150-AVR64EA28-E/STX-ND,,
@@ -36,7 +36,7 @@ Date:,2026-08-04
 KiCad Version:,10.0.5-unknown-202607221313~667fa36054~ubuntu25.10.1
 Statistics:
 Component Groups:,24
-Component Count:,46
-Fitted Components:,46
+Component Count:,43
+Fitted Components:,43
 Number of PCBs:,1
-Total Components:,46
+Total Components:,43
