@@ -272,7 +272,7 @@ red, the check itself fails.
   have the part, but "resolved and drawn" and "resolved and deliberately absent" look identical —
   an empty land. The class is currently EMPTY on this board (2026-08-05 recount: 12 `dnp`
   footprints — TC1, TC1/b1, SW2, J1, JP1, TP1–7, after SB1–4 left with TINY mode — and none
-  carries a model), but it was
+  carries a model; 13 since 2026-08-07 — C30, the C9 tank-trim pad, added model-less BY CHOICE to keep the class empty), but it was
   not always: **C9** was the dnp-with-a-model until it was placed at 47 pF on 2026-07-30, and
   confirming its 0402→0805 upsize had landed meant re-rendering with `dnp` cleared and diffing:
   528 px, 20×37, an 0805 turned 90°. `render.py` names the DNP set beside the resolve count so

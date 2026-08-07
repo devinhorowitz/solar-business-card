@@ -936,6 +936,15 @@ Work outside-in by heat sensitivity:
    > established idiom — `INT1`↔`VSENSE` sit at 0.152 exactly). **The corridor is now
    > SATURATED**: any future move of SC1, the interrupt fan, or `VSENSE` in this region
    > requires re-fanning the corridor, not nudging it.
+
+   > **C30 (2026-08-07): a DNP 0402 trim pad in parallel with C9**, 1.36 mm west, stubbed to
+   > C9's own pads across `LA`/`LB`. Two jobs: finer bench granularity than swapping C9
+   > outright, and the AIR variant's retune — the open frame drops the ferrite, L falls
+   > toward the bare 0.958 µH, f0 rises, and the correction is MORE parallel C, exactly what
+   > this pad adds. Fit a High-Q C0G 0402 chosen at the bench (same S-series family note as
+   > C9). It is dnp + excluded from BOM and CPL: no buy document mentions it until a value
+   > exists, and it carries NO 3D model deliberately — the dnp-with-a-model render blind spot
+   > stays an empty class.
 2. **Solar cells PV1 / PV2 last (most fragile).** Iron **≤ 260 °C, ≤ 2 s per joint**, and
    **do not clean with IPA**. Mind cell polarity to the custom land.
 
