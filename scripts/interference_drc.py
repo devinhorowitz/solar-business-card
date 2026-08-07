@@ -73,11 +73,21 @@ def main():
     ray = trimesh.ray.ray_triangle.RayMeshIntersector(mesh)
     from part_heights import part_height
 
-    # The six east-lip parts sit in the documented tight strip past the bare cavity
-    # rectangle (C22/FB1 are the ledgered 0.95 mm edge cluster) -- the shell's lip
-    # geometry accommodates them and all are sub-millimetre bodies. Ledgered, so a
-    # NEW part escaping the rectangle still fails. (Exclusion-ledger doctrine.)
-    EDGE_LEDGER = {"U6", "C27", "U9", "FB1", "C22", "R15"}
+    # The edge parts sit in the documented tight strip past the bare cavity rectangle
+    # (C22/FB1 are the ledgered 0.95 mm edge cluster) -- the shell's lip geometry
+    # accommodates them and all are sub-millimetre bodies. Ledgered, so a NEW part
+    # escaping the rectangle still fails. (Exclusion-ledger doctrine.)
+    #
+    # C7 joined 2026-08-07, and it is the smallest entry here by a wide margin. DRH's
+    # rework moved it (5.25, 12.45) -> (2.96, 10.07); its body now starts at x = 2.4600
+    # against the cavity's west wall at x = 2.5000, so it escapes by 0.0400 mm --
+    # 0.0672 mm2 of body outside the rectangle. It is the SAME west edge FB1 and C22
+    # already overhang by 1.2976 / 1.3000 mm with the lip accommodating them, i.e. C7 is
+    # 32x further inside the envelope this ledger was written for. Measured, not assumed:
+    # its 3D ray-cast margin never enters the tightest-six, and assembly_drc is 0/0 on the
+    # same geometry. Ledgered rather than nudged so DRH's copper is not re-terminated for
+    # 40 um -- if C7 ever moves again, this entry should be re-measured, not inherited.
+    EDGE_LEDGER = {"U6", "C27", "U9", "FB1", "C22", "R15", "C7"}
 
     fails, rows, skipped = [], [], []
     for ref, poly, h, source in board_parts.parts("B"):
