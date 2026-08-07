@@ -1928,7 +1928,7 @@ def check_plating_bus():
 # the FRONT_SIDE-snapshot shape. A new opaque pairing gets one live lookup and one line
 # here.
 OPAQUE_PN_LEDGER = {
-    ("AC0402FR-07150RL", "YAG3443CT-ND"),        # R1-R4      Yageo catalog code
+    ("EXB-28V151JX", "Y7151CT-ND"),             # RN1        Panasonic Digi-Key code, verified live 2026-08-07 (136,179 in stock)
     ("AC0402FR-071ML", "YAG3450CT-ND"),          # R14/17/18  Yageo catalog code
     ("AC0402FR-074K7L", "YAG3497CT-ND"),         # R10/R11    Yageo catalog code
     ("RT0603BRD071ML", "YAG4498CT-ND"),          # R5/R6/R16  Yageo catalog code

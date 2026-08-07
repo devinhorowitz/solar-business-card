@@ -101,6 +101,9 @@ HEIGHTS = {
     # check [7] measures rather than tolerates these. Flipped 1.45 -> 0.95 in the same round
     # the bodies landed on the board -- the C9/C25 sequencing rule, both halves this time.
     "C25": 0.95,                                          # 1206 LP, GRM319 0.85 +/-0.10 -> 0.95 max
+    "RN1": 0.45,   # EXB-28V151JX 4x150R ballast array (catalog T 0.35+/-0.10 -> 0.45 MAX;
+                   # DigiKey seated-height max agrees. 0.15 under the lite 0.60 span limit.
+                   # Replaced R1-R4, 2026-08-07)
     # C26/C27: same 2026-08-06 move as C25 above (were Samsung 0805 X7R at 1.40/1.45).
     "C26": 0.95, "C27": 0.95,                             # 1206 LP, GRM319 0.85 +/-0.10 -> 0.95 max
     # C9, the NFC tank trim: 0402 -> 0805 (2026-07-30, hand-rework and Q) -> 0603
