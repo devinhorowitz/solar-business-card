@@ -68,8 +68,45 @@ BASELINE = {
     # interference_drc (worst margin +0.16, D2) and assembly_drc (0/0) were run on the
     # regenerated solid. Transition note as above: the committed STL reads 2070.29
     # until the merge-run rebuild.
+    # Re-ledgered 2026-08-07, 2084.47 -> 2102.49, and ITEMISED by rebuilding the brace on
+    # each intermediate state rather than copying the failing run's number. The baseline
+    # state (b953334's board + b953334's part_heights) rebuilds to 2084.19 here, 0.28 mm3
+    # (0.013%) off the ledgered 2084.47 -- tessellation noise, well inside VOL_TOL -- so
+    # the decomposition below starts from a reproduced baseline, not an assumed one:
+    #
+    #   -8.02  the BOARD alone (current board, b953334 heights = 2076.17). Dominated by
+    #          C25-C27's 0805 -> low-profile 1206 lands: physically bigger footprints, and
+    #          at the then-declared 1.45 they were still THROUGH-holes, so the bigger
+    #          voids removed more resin. U6's SC-70 -> DSBGA and Q2's SOT-23 -> SOT-523
+    #          land shrinkage push the other way but are much smaller.
+    #  +22.30  C25/C26/C27 1.45 -> 0.95 (the low-profile 1206 respin). THE DOMINANT TERM,
+    #          and it is a state change, not a depth change: 1.45 > SPAN_LIMIT 1.18 made
+    #          each a through-hole; 0.95 < 1.18 makes each a blind pocket with a resin
+    #          roof. Three roofs came back.
+    #   +2.90  C9 1.25 -> 0.90 (0805 -> 0603 respin). Same threshold crossing: one more
+    #          through-hole became a blind pocket.
+    #   +1.12  U6 1.10 -> 0.50 (SC-70 -> DSBGA). Already a pocket either way; this is just
+    #          0.60 mm less depth over the DSBGA's small footprint.
+    #   +0.00  Q2 1.20 -> 0.90 -- EXACTLY zero, measured, not assumed. Q2 sits OUTSIDE
+    #          brace_footprint() (it falls in the NFC coil notch, east of COIL_EAST), so
+    #          it has no pocket and the brace never reads its height. Reverting Q2 alone
+    #          reproduces 2102.49 to the hundredth. Its part_heights entry is still
+    #          correct and load-bearing for check [7] and interference_drc -- just not
+    #          for this solid.
+    #
+    # Net 2084.19 -> 2102.49 = +18.30. The drift again spans SEVERAL board changes rather
+    # than one, for the same reason as the 2026-08-05 entry above: every kibot run between
+    # the C25-C27 respin and now died before reaching this gate -- first at schematic
+    # parity, then at the 5h29m GitHub Actions outage of 2026-08-06. This was the first run
+    # to get here, so it carried the whole accumulation.
+    #
+    # Transition note, as above: the COMMITTED STL still reads 2084.47 until the merge-run
+    # rebuild, so a local check_mesh is red for exactly this one transition. Verified on
+    # the regenerated solid: watertight, 0 open edges, 0 degenerate, bbox unchanged, and
+    # assembly_drc 0/0. (interference_drc has its own NEW, unrelated failure on C7 -- see
+    # the C7 note wherever that lands; it is a board-geometry question, not a mesh one.)
     "solar-glow-drh-diffuser-brace.stl": dict(
-        volume_mm3=2084.47, bbox=(-22.85, -42.4, 0.0, 24.35, 42.4, 1.8),
+        volume_mm3=2102.49, bbox=(-22.85, -42.4, 0.0, 24.35, 42.4, 1.8),
         max_boundary_edges=0, max_open_len_mm=0.0, max_degenerate=0),
 }
 VOL_TOL = 0.005
