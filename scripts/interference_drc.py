@@ -34,7 +34,10 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-BRACE_STL = ROOT / "enclosure" / "brace" / "solar-glow-drh-diffuser-brace.stl"
+# Since 2026-08-07 the gate loops every variant that HAS a brace (fit_rules.VARIANTS):
+# each brace STL is ray-cast against ITS OWN cavity depth. One hardcoded STL here used
+# to be the whole gate -- the consumer map's "gating silently shrinks to a fraction of
+# what ships" hazard.
 SAMPLE_MM = 1.0
 EPS = 1e-3
 # The assembly tolerance stack (RSS): body-height datasheet tolerance (+-0.10 worst
@@ -47,7 +50,19 @@ WC_STACK = 0.16
 
 
 def main():
+    rc = 0
     sys.path.insert(0, str(ROOT / "enclosure"))
+    import fit_rules
+    for vname, v in fit_rules.VARIANTS.items():
+        if not v["brace"]:
+            print(f"  [{vname}] no brace by design (open frame) -- nothing to ray-cast")
+            continue
+        print(f"== variant {vname}: {v['brace_name']}.stl vs cavity {v['cavity']} ==")
+        rc |= check_variant(vname, v)
+    return rc
+
+
+def check_variant(vname, v):
     import numpy as np
     import trimesh
     from shapely.geometry import Point
@@ -55,20 +70,34 @@ def main():
     import fit_rules
 
     cav = fit_rules.cavity_rect()
-    cavity_h = fit_rules.CAVITY
-    mesh = trimesh.load(str(BRACE_STL), force="mesh")
+    cavity_h = v["cavity"]
+    mesh = trimesh.load(str(ROOT / "enclosure" / "brace" / (v["brace_name"] + ".stl")),
+                        force="mesh")
     (mx0, my0, _z0), (mx1, my1, mz1) = mesh.bounds
     if abs(mz1 - cavity_h) > 0.05:
-        print(f"  FAIL: brace mesh height {mz1:.2f} != CAVITY {cavity_h} -- frame is wrong")
+        print(f"  FAIL: brace mesh height {mz1:.2f} != cavity {cavity_h} -- frame is wrong")
         return 1
     cx0, cy0, cx1, cy1 = cav.bounds
-    off = ((cx0 + cx1) / 2 - (mx0 + mx1) / 2, (cy0 + cy1) / 2 - (my0 + my1) / 2)
+    # The board->mesh transform is DEFINITIONAL, not derived: the brace CAD builds at
+    # wx/wy = board - (W/2, H/2). It used to be inferred from bbox centres, which is
+    # correct only while the brace happens to span the full cavity envelope -- the lite
+    # brace does not (its main piece stops at board y 58.4), and the inferred offset
+    # would have ray-cast every pocket half a card away from its part.
+    off = (fit_rules.W / 2, fit_rules.H / 2)
+    if not (mx0 >= cx0 - off[0] - 0.5 and mx1 <= cx1 - off[0] + 0.5
+            and my0 >= cy0 - off[1] - 0.5 and my1 <= cy1 - off[1] + 0.5):
+        print(f"  FAIL: brace mesh bbox falls outside the cavity under the definitional "
+              f"board-centre transform -- generator frame broke")
+        return 1
+    if v["cap_h"] != fit_rules._SUPERCAP_H:
+        print(f"  note: thin-cap variant -- SC1-SC4 assumed {v['cap_h']:.2f} mm "
+              f"(PROVISIONAL, no MPN/model yet; this gate cannot measure them)")
 
     inflate = {}
     for tok in os.environ.get("INTERFERENCE_TEST_INFLATE", "").split(","):
         if ":" in tok:
-            r, v = tok.split(":")
-            inflate[r] = float(v)
+            _iref, _imm = tok.split(":")     # NOT r/v -- v is the variant row here
+            inflate[_iref] = float(_imm)
 
     ray = trimesh.ray.ray_triangle.RayMeshIntersector(mesh)
     from part_heights import part_height
@@ -141,7 +170,7 @@ def main():
         for f in fails:
             print(f"  FAIL: {f}")
         return 1
-    print(f"interference_drc: every B-side body clears the emitted brace/cavity "
+    print(f"interference_drc[{vname}]: every B-side body clears the emitted brace/cavity "
           f"(worst margin {rows[0][0]:+.2f} mm on {rows[0][1]})")
     return 0
 

@@ -65,12 +65,26 @@ OFF_BOARD = [
     # $13.18 vs $17.43 and 119 in stock vs 41. Same Würth part either way.
     ("FER1",  1, "364006",                 "Würth Elektronik",  "Mouser",   "710-364006",
      "Wurth WE-FSFS ferrite sheet behind the coil -- load-bearing for the NFC tune"),
-    # Qty is 8, and check [16] now asserts it equals len(fit_rules.MOUNTS). It read 4 until
+    # Qty is 8, and check [16] asserts it equals len(fit_rules.MOUNTS). It read 4 until
     # 2026-08-04 -- the same four-versus-eight miscount that check [14] was written after,
     # in the one document that decides how many screws you actually buy. The enclosure has
     # eight M2 mounts (MH1-4 corners + MP1-4 panel-corners) and always has.
+    #
+    # SCREW LENGTH IS PER ENCLOSURE VARIANT (2026-08-07, fit_rules.VARIANTS -- check [16]
+    # asserts each HW row's length against the table): the tip must land inside the stack.
+    # An M2x3 in the lite shell stands 0.58 mm proud of its back; in the air frame it
+    # stands 1.20 mm past the resting plane -- the card would sit on its screw tips.
+    # Buy the set for the variant(s) you are building; one card uses ONE set of 8.
     ("HW1",   8, "DIN 84 M2x3 brass",      "",                  None,       "",
-     "shell screws, one per mount; any DIN 84 M2x3 -- source locally, not a distributor line"),
+     "shell screws for the MAX shell (stack 3.40), one per mount; any DIN 84 M2x3 -- "
+     "source locally, not a distributor line"),
+    ("HW2",   8, "ISO 7045 M2x2 A2/A4",    "",                  None,       "",
+     "shell screws for the LITE shell (stack 2.42; an M2x3 tip stands 0.58 proud) -- "
+     "source locally, not a distributor line"),
+    ("HW3",   8, "ISO 7045 M2x1.6 A4/316", "",                  None,       "",
+     "frame screws for the AIR frame (stack 1.80; tip hides 0.20 in the boss spotface, "
+     "1.0 mm engagement in 316 -- fine for a frame clamping a 6 g card) -- micro-fastener "
+     "houses stock M2x1.6; source with the frame"),
     ("INS1",  1, "polyimide film 0.05 mm", "",                  None,       "",
      "insulator; cut from stock film -- not a distributor line"),
 ]

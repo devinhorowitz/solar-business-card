@@ -67,8 +67,14 @@ OUT = os.path.join(HERE, "_frames")
 os.makedirs(OUT, exist_ok=True)
 
 W, H = fr.W, fr.H
-FLOOR, CAVITY, BOARD = 1.00, fr.CAVITY, fr.BOARD_TH
-SCREW_LEN, BOSS_R, PILOT_R = 3.0, fr.BOSS_R, fr.PILOT_R
+# This render shows the MAX assembly, deliberately -- it is the reference build the README
+# photographs. Its floor and screw length come from fit_rules.VARIANTS['max'] rather than
+# the literals that used to sit here (the FLOOR-triplication hazard from the 2026-08-07
+# consumer map: three uncoordinated 1.00s, the MOUNTS-incident shape). Rendering the lite/
+# air stacks would mean loading their STLs too -- a deliberate future change, not a knob.
+_V = fr.VARIANTS["max"]
+FLOOR, CAVITY, BOARD = _V["floor"], _V["cavity"], fr.BOARD_TH
+SCREW_LEN, BOSS_R, PILOT_R = _V["screw_len"], fr.BOSS_R, fr.PILOT_R
 Z_BOARD = FLOOR + CAVITY                     # board underside
 Z_FRONT = Z_BOARD + BOARD                    # show face
 
@@ -322,8 +328,8 @@ def cyl(x, y, z0, dz, r, res=28):
 
 
 # ---- the four things ------------------------------------------------------------------
-shell_pd = stl(f"{ROOT}/enclosure/solar-glow-drh-v3_0-backshell-0p6b-brace-Ti-max.stl")
-brace_pd = stl(f"{ROOT}/enclosure/brace/solar-glow-drh-diffuser-brace.stl", dz=FLOOR)
+shell_pd = stl(f"{ROOT}/enclosure/{_V['shell_name']}.stl")
+brace_pd = stl(f"{ROOT}/enclosure/brace/{_V['brace_name']}.stl", dz=FLOOR)
 
 # ---- FER1, the ferrite sheet behind the NFC coil ----------------------------------------
 # It was missing from this animation entirely, which made the stack a lie by omission: the

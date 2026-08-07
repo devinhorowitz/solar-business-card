@@ -48,9 +48,18 @@ from board_parts import parts as board_parts   # noqa: E402
 
 # ---- board / cavity -------------------------------------------------------------------
 W, H = 50.80, 88.90
-CAVITY = 1.80              # cap-limited: SUPERCAP_H 1.70 + 0.10 air
 BOARD_TH = 0.60
 TOOL_R = 1.0               # dia 2.0 finisher -> R1.0 internal corners
+CAP_AIR = 0.10             # air over the CAVITY-SETTING parts (the caps in max; the shell
+                           # CAD's cav_margin was this same number restated -- collapsed
+                           # here 2026-08-07, the CAVITY-two-homes fix)
+
+# CAVITY is DERIVED, never hand-written. Until 2026-08-07 this line read `CAVITY = 1.80`
+# -- a literal copy of part_heights.SUPERCAP_H + 0.10 that agreed with the shell CAD's own
+# independent derivation only numerically. The duplicate-constant class that produced the
+# 0.1838 mm mount-pattern failure, one file over. The import is the fix.
+from part_heights import SUPERCAP_H as _SUPERCAP_H, SUPERCAP_H_THIN as _SUPERCAP_H_THIN  # noqa: E402
+CAVITY = round(_SUPERCAP_H + CAP_AIR, 2)      # 1.80 -- the MAX variant, cap-limited
 
 # ---- brace ----------------------------------------------------------------------------
 GAP = CAVITY               # the brace fills the cavity
@@ -92,7 +101,9 @@ def air_for(ref):
 CLR = 0.25                 # in-plane clearance around a part
 SLA_WEB = 0.40             # thinnest resin that may remain OVER a pocket
 SLA_WALL = 0.60            # thinnest in-plane feature we will print
-SPAN_LIMIT = GAP - AIR - SLA_WEB          # 1.28
+SPAN_LIMIT = GAP - AIR - SLA_WEB          # 1.18 (comment said 1.28 until 2026-08-07 --
+                                          # written when AIR was 0.12 and never updated;
+                                          # the number here is DERIVED, trust the formula)
 MIN_PIECE = 25.0           # smaller than this is print debris, not support
 SINGLE_PIECE = True        # ship one part; see brace_footprint()
 DROPPED_AREA = 0.0         # set by brace_footprint(): support given up to stay single-piece
@@ -143,15 +154,22 @@ def _cached_parts(_cache={}):
     return _cache["B"]
 
 
-def blockers(ps=None):
-    """Parts the brace cannot cover: taller than SPAN_LIMIT, or with no height at all."""
+def blockers(ps=None, span=None):
+    """Parts the brace cannot cover: taller than the span limit, or with no height at all.
+
+    `span` defaults to the module SPAN_LIMIT (the max variant). Per-variant callers pass
+    variant_span(name) EXPLICITLY -- there is deliberately no mutable configure(): the
+    2026-08-07 consumer map showed both CAD generators freeze fit_rules values at import,
+    so mutated module state would build one variant's geometry under another's name."""
     ps = ps or _cached_parts()
-    return [(r, p) for r, p, h, _s in ps if h is None or h > SPAN_LIMIT]
+    lim = SPAN_LIMIT if span is None else span
+    return [(r, p) for r, p, h, _s in ps if h is None or h > lim]
 
 
-def spannable(ps=None):
+def spannable(ps=None, span=None):
     ps = ps or _cached_parts()
-    return [(r, p, h) for r, p, h, _s in ps if h is not None and h <= SPAN_LIMIT]
+    lim = SPAN_LIMIT if span is None else span
+    return [(r, p, h) for r, p, h, _s in ps if h is not None and h <= lim]
 
 
 def cavity_rect():
@@ -163,10 +181,14 @@ def cavity_rect():
     return c
 
 
-def brace_footprint():
-    """[polygon] -- the pieces the brace is actually made of, largest first."""
+def brace_footprint(span=None):
+    """[polygon] -- the pieces the brace is actually made of, largest first.
+
+    `span=None` is the max variant (module SPAN_LIMIT); per-variant callers pass
+    variant_span(name). DROPPED_AREA/DROPPED_COUNT describe the LAST call -- a
+    per-variant caller should read them immediately, before any other call."""
     cav = cavity_rect().buffer(-WALL_FIT, join_style=1, resolution=64)
-    keep = unary_union([p.buffer(CLR, join_style=2) for _r, p in blockers()])
+    keep = unary_union([p.buffer(CLR, join_style=2) for _r, p in blockers(span=span)])
     boss = unary_union([Point(b).buffer(RELIEF_R, resolution=64) for b in MOUNTS])
     fp = cav.difference(keep).difference(boss)
     t = SLA_WALL / 2.0
@@ -186,6 +208,106 @@ def brace_footprint():
     DROPPED_AREA = sum(g.area for g in pieces[1:])
     DROPPED_COUNT = len(pieces) - 1
     return pieces[:1]
+
+
+# ---- enclosure VARIANTS (2026-08-07) ----------------------------------------------------
+# The single home for what distinguishes max / lite / air. Everything here is either
+# DERIVED (cavity, screw length, span) or a per-variant DECISION with its reason beside it.
+# No geometry lives in this table -- MOUNTS, lips, the cavity rectangle and the board are
+# shared and live above. There is deliberately NO configure(): the generators freeze
+# fit_rules values at import (consumer map, 2026-08-07), so per-variant numbers flow as
+# EXPLICIT arguments from this table into build()/footprint calls, never as module state.
+#
+# Cavity rules differ BY LIMITER, not by formula fudging:
+#   max  -- cap-limited:        SUPERCAP_H 1.70 + CAP_AIR 0.10             = 1.80
+#   lite -- component-limited:  max(thin cap 1.00 + CAP_AIR,
+#                                   tallest part 1.00 + AIR 0.22)          = 1.22
+#           (AIR, not CAP_AIR: 1.22 is the smallest cavity whose span limit
+#            1.22 - AIR - SLA_WEB = 0.60 still covers the 0.55/0.60 passive
+#            field -- at cap-limited 1.10 the span falls to 0.48, the blocker
+#            set explodes 24 -> 50 and the brace collapses. Measured, not
+#            asserted: 935.7 mm2 vs a fragmented remnant.)
+#   air  -- open frame, resting-clearance-limited: tallest part 1.00 + 2*CAP_AIR = 1.20
+#           (no floor, no brace; the 0.20 is table-to-component daylight)
+#
+# Screw lengths are CHOSEN from stock sizes by the same rule everywhere: the longest
+# length whose tip stays >= 0.15 inside the stack (max spotfaces the tip; air's tip must
+# never pass the resting plane). part_heights.SUPERCAP_H_THIN is PROVISIONAL until the
+# thin-cap MPN lands -- see its comment.
+
+def _tallest_part_h():
+    """Tallest measured B-side body (the caps are height-None by design)."""
+    return max(h for _r, _p, h, _s in _cached_parts() if h is not None)
+
+
+_SCREW_STOCK = (3.0, 2.5, 2.0, 1.6)   # lengths we can actually buy (M2, under-head, mm)
+
+
+def _pick_screw(stack):
+    for L in _SCREW_STOCK:
+        if stack - L >= 0.15 - 1e-9:
+            return L
+    raise ValueError(f"no stock M2 length fits a {stack:.2f} stack")
+
+
+def _mk_variants():
+    tall = _tallest_part_h()                                   # 1.00 today (U1/L2)
+    cav_max = CAVITY                                            # 1.80, derived above
+    cav_lite = round(max(_SUPERCAP_H_THIN + CAP_AIR, tall + AIR), 2)   # 1.22
+    # air clears BOTH the tallest measured part and the thin caps -- the caps are
+    # height-None in the parts table (by design), so _tallest_part_h() alone would let a
+    # >1.00 thin-cap MPN stand past the resting clearance. (2026-08-07 review finding:
+    # without the max() the one-edit re-derivation promise held for lite but not air.)
+    depth_air = round(max(tall, _SUPERCAP_H_THIN) + 2 * CAP_AIR, 2)    # 1.20
+    v = {
+        "max": dict(
+            cap_h=_SUPERCAP_H, cavity=cav_max, floor=1.00, wall_th=1.00, border_h=0.15,
+            open_back=False, brace=True, medallion=True, fins=True,
+            material="Ti Gr5 (reference; brass or 6061 acceptable -- non-magnetic, machinable)",
+            shell_name="solar-glow-drh-v3_0-backshell-0p6b-brace-Ti-max",
+            brace_name="solar-glow-drh-diffuser-brace",
+            coverage_floor=0.33,   # ledgered min coverage (check [8] measures 0.354, WALL_FIT-buffered)
+        ),
+        "lite": dict(
+            cap_h=_SUPERCAP_H_THIN, cavity=cav_lite, floor=0.60, wall_th=1.00, border_h=0.15,
+            open_back=False, brace=True, medallion=False, fins=False,
+            # medallion/fins are PHYSICS-forced off, not styling: the fin valley is 0.60
+            # deep and the coin floors ~0.55-0.75 -- both cut a 0.60 floor clean through.
+            material="Ti Gr5 (thinned floor; the 0.60 is the shop-minimum conversation)",
+            shell_name="solar-glow-drh-shell-lite-Ti",
+            brace_name="solar-glow-drh-diffuser-brace-lite",
+            coverage_floor=0.21,   # ledgered min coverage (check [8] measures 0.234, WALL_FIT-buffered)
+        ),
+        "air": dict(
+            cap_h=_SUPERCAP_H_THIN, cavity=depth_air, floor=0.00, wall_th=1.00, border_h=0.00,
+            open_back=True, brace=False, medallion=False, fins=False,
+            # 316L austenitic stainless, DELIBERATELY not a free choice: mu_r ~1.02. A
+            # ferromagnetic steel beside the NFC coil adds hysteresis loss the ferrite
+            # cannot shield (there is no ferrite pocket here) -- the ENIG-over-coil
+            # lesson, one material over. Bench re-tune note lives in enclosure/README.
+            material="316L stainless (austenitic, mu_r~1.02 -- NOT carbon/martensitic steel)",
+            shell_name="solar-glow-drh-frame-air-316L",
+            # NOTE the name dodges 'backshell' ON PURPOSE: scripts/ref_figures.py asserts
+            # exactly one enclosure/*backshell*.stl and dies inside the fab job otherwise.
+            brace_name=None,       # nothing retains a brace without a floor
+            coverage_floor=None,
+        ),
+    }
+    for name, d in v.items():
+        d["stack"] = round(d["floor"] + d["cavity"] + BOARD_TH, 2)   # 3.40 / 2.42 / 1.80
+        d["screw_len"] = _pick_screw(d["stack"])                     # 3.0  / 2.0  / 1.6
+        d["span"] = round(d["cavity"] - AIR - SLA_WEB, 2) if d["brace"] else None
+    return v
+
+
+VARIANTS = _mk_variants()
+
+
+def variant_span(name):
+    s = VARIANTS[name]["span"]
+    if s is None:
+        raise ValueError(f"variant '{name}' has no brace, so no span limit")
+    return s
 
 
 def _lip_reach(edge, lo, hi, ps=None):

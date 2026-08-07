@@ -64,7 +64,7 @@ PCB = os.path.join(os.path.dirname(__file__), "..", "..", "PCB", "solar-glow-drh
 # Write next to this script by default (override with $OUT_DIR) -- see the backshell
 # generator for why the old hardcoded /mnt/user-data/outputs/ had to go.
 OUT = os.environ.get("OUT_DIR") or os.path.join(os.path.dirname(os.path.abspath(__file__)), "")
-BASE = "solar-glow-drh-diffuser-brace"
+# (BASE retired 2026-08-07: output names come from fit_rules.VARIANTS[...]["brace_name"])
 
 # The five literal rectangles that used to define the footprint (BX*/RAIL_W/RAIL_E_*) are
 # GONE, with the in_fp rectangle test that went with them. They encoded supercap bays ending
@@ -72,7 +72,7 @@ BASE = "solar-glow-drh-diffuser-brace"
 # brace put 593 mm3 of solid resin inside three 1.70 mm cans and could not be installed.
 # The footprint is computed from the board now; see enclosure/fit_rules.py.
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
-from fit_rules import GAP, CLR, AIR, air_for, export_step_stable                                          # noqa: E402
+from fit_rules import CLR, air_for, export_step_stable   # GAP/AIR deliberately NOT imported by value -- per-variant/air_for(), see the loop                                          # noqa: E402
 GLOW  = (14.95, 40.8, 35.85, 47.0)
 FER   = (36.9, 31.5, 48.9, 57.5)   # 12 WIDE (x, CRITICAL -- edge-limited) x 26 LONG (y, nominal; length is
                                    # forgiving -- open-ended channel, may run long/short and extend slightly past the brace).
@@ -130,149 +130,163 @@ _KEEPOUT = {ref: poly for ref, poly, _h, _src in _board_parts("B")}
 # and the opening deletes anything narrower than SLA_WALL and rounds the necks it leaves.
 # ---------------------------------------------------------------------------------------
 from shapely.geometry import box as _bx2                                     # noqa: E402
+# VARIANT-AWARE since 2026-08-07: the per-variant numbers come as EXPLICIT values from
+# fit_rules.VARIANTS -- never as from-imported module constants, which freeze at import
+# and would build one variant's geometry under another's name (the consumer-map hazard
+# this refactor exists to dodge). GAP/SPAN_LIMIT are deliberately NOT imported by value.
 from fit_rules import (brace_footprint as _brace_footprint, cavity_rect as _cavity_rect,
-                       blockers as _fit_blockers, SPAN_LIMIT, SLA_WEB, SLA_WALL,
-                       WALL_FIT as _WCLR, RELIEF_R, BOSS_R)                   # noqa: E402
+                       blockers as _fit_blockers, SLA_WEB, SLA_WALL,
+                       WALL_FIT as _WCLR, VARIANTS)                           # noqa: E402
+import fit_rules as _fit                                                      # noqa: E402
 
 # The rules live in enclosure/fit_rules.py, shared with the shell generator and asserted by
 # check_consistency [8]. They are NOT restated here: the copy that used to sit in this file
 # is what went stale against the supercaps.
-_pieces = _brace_footprint()
 _cav = _cavity_rect().buffer(-_WCLR, join_style=1, resolution=64)
-_blockers = _fit_blockers()
-# The ferrite channel and the window backing below are still expressed relative to the
-# brace's outer extent, so publish it -- derived from the computed footprint rather than
-# from the retired hand-placed band constants of the same name.
-BX0, BY0, BX1, BY1 = _pieces[0].bounds
 
-brace=None
-for _g in _pieces:
-    _solid=(cq.Workplane("XY")
-            .polyline([(wx(x),wy(y)) for x,y in list(_g.exterior.coords)]).close()
-            .extrude(GAP))
-    for _ring in _g.interiors:
-        _solid=_solid.cut(cq.Workplane("XY").workplane(offset=-0.1)
-                          .polyline([(wx(x),wy(y)) for x,y in list(_ring.coords)]).close()
-                          .extrude(GAP+0.2))
-    brace=_solid if brace is None else brace.union(_solid)
 
-def in_fp(x0,x1,y0,y1):
-    """Is any of this part's keep-out actually under the brace? (was a rectangle test that
-    tied on L2 at exactly y57.400000 and silently gave it no pocket)"""
-    return any(g.intersects(_bx2(x0,y0,x1,y1)) for g in _pieces)
+def _build(vname):
+    v = VARIANTS[vname]
+    gap, span, base = v["cavity"], v["span"], v["brace_name"]
+    _pieces = _brace_footprint(span=span)
+    dropped_area, dropped_count = _fit.DROPPED_AREA, _fit.DROPPED_COUNT   # read IMMEDIATELY
+    _blockers = _fit_blockers(span=span)
+    # The ferrite channel and the window backing below are still expressed relative to the
+    # brace's outer extent, so publish it -- derived from the computed footprint rather than
+    # from the retired hand-placed band constants of the same name.
+    BX0, BY0, BX1, BY1 = _pieces[0].bounds
 
-cut_log=[]; pk=[]
-for ref,x0,x1,y0,y1 in comps:
-    h=part_height(ref)
-    if h is None: continue
-    if not in_fp(x0,x1,y0,y1): continue                 # only parts under the H (band + rails); SCs/TC1 in the open middle are skipped
-    px0,px1,py0,py1=x0-CLR,x1+CLR,y0-CLR,y1+CLR         # full pad box + CLR; the cut is a no-op where there is no brace
-    depth=h+air_for(ref); through=(GAP-depth) < SLA_WEB       # THROUGH whenever the blind web would be
-                                                     # unprintable. This was hardcoded `or ref=="U6"`,
-                                                     # so U9 -- same 1.45 SOT-23-6, same 1.57 pocket --
-                                                     # silently kept a 0.23 mm ceiling the code itself
-                                                     # calls too thin. The rule now names the reason,
-                                                     # not the part.
-    zc=(GAP-depth) if not through else -0.05; dz=(depth+0.05) if not through else GAP+0.10
-    brace=brace.cut(cq.Workplane("XY").box(px1-px0,py1-py0,dz,centered=(False,False,False)).translate((wx(px0),wy(py0),zc)))
-    cut_log.append((ref,round(depth,2),"THRU" if through else "pkt")); pk.append((ref,px0,px1,py0,py1,round(depth,2),through))
+    brace = None
+    for _g in _pieces:
+        _solid = (cq.Workplane("XY")
+                  .polyline([(wx(x), wy(y)) for x, y in list(_g.exterior.coords)]).close()
+                  .extrude(gap))
+        for _ring in _g.interiors:
+            _solid = _solid.cut(cq.Workplane("XY").workplane(offset=-0.1)
+                                .polyline([(wx(x), wy(y)) for x, y in list(_ring.coords)]).close()
+                                .extrude(gap + 0.2))
+        brace = _solid if brace is None else brace.union(_solid)
 
-# THIN-WALL ELIMINATION: any two pockets separated by a sub-SLA-min wall would print as a fragile fin (or fail
-# to form and shed into the pocket). Bridge each such pair so it merges into one clean recess. The wall stands
-# full fin-height on the solid base, so the bridge goes to the DEEPER pocket's depth (through, if either neighbour
-# is a through-pocket -> the blind recess opens into that hole). Only clearance pockets are merged; the window
-# diffuser backing is untouched (it is solid resin OUTSIDE these pocket boxes). Threshold 0.40 sits in the clean
-# gap between the real thin walls (<=0.16) and the next-nearest (>=0.49), so marginal-but-printable walls stay.
-WALL_MIN=0.40; nbridge=0; _bl=[]; bridges=[]
-for i in range(len(pk)):
-    for j in range(i+1,len(pk)):
-        ra,ax0,ax1,ay0,ay1,da,ta=pk[i]; rb,bx0,bx1,by0,by1,db,tb=pk[j]
-        ox=min(ax1,bx1)-max(ax0,bx0); oy=min(ay1,by1)-max(ay0,by0)
-        if ox>=0 and oy>=0: continue                                  # already touching/overlapping -> no wall
-        gx=max(0.0,max(ax0,bx0)-min(ax1,bx1)); gy=max(0.0,max(ay0,by0)-min(ay1,by1))
-        wall=(gx*gx+gy*gy)**0.5
-        if not (0.0<wall<WALL_MIN): continue
-        if ta or tb: bz,bdz=-0.05,GAP+0.10                            # through neighbour -> full-height bridge
-        else: bd=max(da,db); bz,bdz=GAP-bd,bd+0.05                    # blind -> deeper pocket depth (removes full fin)
-        if oy>0 and gx>0:   bxr=(min(ax1,bx1)-0.02,max(ax0,bx0)+0.02); byr=(max(ay0,by0),min(ay1,by1))   # x-wall
-        elif ox>0 and gy>0: bxr=(max(ax0,bx0),min(ax1,bx1)); byr=(min(ay1,by1)-0.02,max(ay0,by0)+0.02)   # y-wall
-        else: continue                                                # diagonal corner nick, not a face wall
-        w=bxr[1]-bxr[0]; hh=byr[1]-byr[0]
-        if w<=0 or hh<=0: continue
-        brace=brace.cut(cq.Workplane("XY").box(w,hh,bdz,centered=(False,False,False)).translate((wx(bxr[0]),wy(byr[0]),bz)))
-        nbridge+=1; _bl.append(f"{ra}-{rb}({wall:.2f})"); bridges.append((bxr[0],byr[0],w,hh))
-print(f"thin-wall bridges (<{WALL_MIN}mm): {nbridge}  {_bl}")
-# ferrite pocket = OPEN CHANNEL: WIDTH (x) walled (critical, edge-limited); LENGTH (y) OPEN at both ends
-# so the ferrite can be cut long/short and extend slightly past the brace. Two walls + PSA + the clamped
-# PCB overhead retain it (PCB: full 4-edge capture unnecessary).
-fx0,fx1 = max(FER[0]-FER_CLR, BX0+0.2), min(FER[2]+FER_CLR, BX1)   # width walls (east meets the brace edge)
-fy0,fy1 = BY0-1.0, BY1+1.0                                          # y open: the cut clears both brace edges
-brace=brace.cut(cq.Workplane("XY").box(fx1-fx0,fy1-fy0,FER_POCKET_DEPTH+0.05,centered=(False,False,False))
-                  .translate((wx(fx0),wy(fy0),GAP-FER_POCKET_DEPTH)))
-# window = LED-HUG DIFFUSER BACKING (replaces the open tape bay): NO aperture, NO tape recess. The white
-# resin now fills the window region right up behind the FR4, minus the tight D2-D5 LED pockets (0.25 clr,
-# cut in the component loop above). It backs the thin FR4 window, scatters as an even lightbox back-panel,
-# and recovers FR4 backscatter locally. The LED pocket clearance doubles as the reservoir if a viscous
-# optical gel is pre-filled at final assembly (optional: index-match + diffuse at the die; not needed to iterate).
-# (13,35) = round Ø3.2 datum; (33,55) = SLOT Ø3.2 x 4.0 along the 45deg pin-pair axis. Round+slot (not two
-# round holes) releases center-distance tolerance (SLA XY shrink + CNC pillar pos + board-in-shell play over
-# the 28.3mm span) while the round hole holds the X-Y datum and the slot width holds rotation.
-for sx,sy in STUBS:
-    wpr=cq.Workplane("XY").workplane(offset=-0.01).moveTo(wx(sx),wy(sy))
-    prof=wpr.slot2D(4.0, RECESS_R*2, 45) if (sx,sy)==(33.0,55.0) else wpr.circle(RECESS_R)
-    brace=brace.cut(prof.extrude(RECESS_DEPTH+0.01))
+    def in_fp(x0, x1, y0, y1):
+        """Is any of this part's keep-out actually under the brace? (was a rectangle test that
+        tied on L2 at exactly y57.400000 and silently gave it no pocket)"""
+        return any(g.intersects(_bx2(x0, y0, x1, y1)) for g in _pieces)
 
-export_step_stable(brace, OUT+BASE+".step")
-cq.exporters.export(brace, OUT+BASE+".stl", tolerance=0.03, angularTolerance=0.2)
-try:
-    from OCP.GProp import GProp_GProps
-    from OCP.BRepGProp import BRepGProp
-    g=GProp_GProps(); BRepGProp.VolumeProperties_s(brace.val().wrapped,g)
-    print(f"brace volume {g.Mass()/1000:.2f} cm^3 (~{g.Mass()/1000*1.15:.1f} g tough white SLA)")
-except Exception as e: print("vol:",e)
-print(f"brace {len(_pieces)} piece(s), {sum(g.area for g in _pieces):.1f} mm2 = "
-      f"{100*sum(g.area for g in _pieces)/_cav.area:.1f}% of the {_cav.area:.0f} mm2 cavity floor; "
-      f"{len(cut_log)} pockets; footprint COMPUTED from the board (blockers: "
-      f"{', '.join(r for r,_ in _blockers)})")
-print(f"through-holes: {[c[0] for c in cut_log if c[2]=='THRU']}")
-print(f"ferrite CHANNEL {fx1-fx0:.1f} wide (walled) x open-ended x {FER_POCKET_DEPTH} deep; ferrite {FER[2]-FER[0]:.0f}x{FER[3]-FER[1]:.0f} nominal (width critical / length forgiving, may overhang)")
+    cut_log = []; pk = []
+    for ref, x0, x1, y0, y1 in comps:
+        h = part_height(ref)
+        if h is None: continue
+        if not in_fp(x0, x1, y0, y1): continue          # only parts under the footprint
+        px0, px1, py0, py1 = x0-CLR, x1+CLR, y0-CLR, y1+CLR   # full pad box + CLR
+        depth = h + air_for(ref); through = (gap - depth) < SLA_WEB   # THROUGH whenever the blind
+                                                        # web would be unprintable. The rule names
+                                                        # the reason, not the part (see history in
+                                                        # the git log for the `or ref=="U6"` era).
+        zc = (gap - depth) if not through else -0.05; dz = (depth + 0.05) if not through else gap + 0.10
+        brace = brace.cut(cq.Workplane("XY").box(px1-px0, py1-py0, dz, centered=(False, False, False)).translate((wx(px0), wy(py0), zc)))
+        cut_log.append((ref, round(depth, 2), "THRU" if through else "pkt")); pk.append((ref, px0, px1, py0, py1, round(depth, 2), through))
 
-import matplotlib; matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-from matplotlib.patches import Rectangle, Circle
-import matplotlib.patches as mp
-fig,ax=plt.subplots(figsize=(9,5)); ax.set_facecolor("#0d0d10"); fig.patch.set_facecolor("#0d0d10")
-# the pocket map draws the ACTUAL computed footprint, not the retired FP rectangles -- the
-# map disagreeing with the part is how a wrong pocket stays invisible to review
-for _g in _pieces:
-    ax.add_patch(mp.Polygon(list(_g.exterior.coords), closed=True,
-                            fc="#e8e4d8", ec="#fff", lw=1.5, alpha=0.28))
-for _tx,_ty,_lb in [(4.3,17.0,"PV1 N-tab"),(46.5,17.0,"PV1 P-tab"),(4.3,71.9,"PV2 N-tab"),(46.5,71.9,"PV2 P-tab")]:
-    ax.plot(_tx,_ty,marker="*",ms=9,color="#ff5252",zorder=8); ax.text(_tx,_ty+2.0,_lb,color="#ff8a80",ha="center",va="bottom",fontsize=4.2,zorder=8)
-ax.text((BX0+BX1)/2,BY1-0.9,f"WHITE RESIN BRACE ({len(_pieces)} piece(s), computed from the board)",color="#eee",ha="center",fontsize=7,fontweight="bold")
-ax.add_patch(Rectangle((FER[0]-FER_CLR,BY0),FER[2]-FER[0]+2*FER_CLR,BY1-BY0,fc="#2a2140",ec="#7e57c2",lw=0.9,ls=(0,(3,2)),alpha=0.6))   # open channel (walled x, open y)
-ax.add_patch(Rectangle((FER[0],FER[1]),FER[2]-FER[0],FER[3]-FER[1],fc="#3a2b55",ec="#b39ddb",lw=1.3,alpha=0.9))                                # ferrite 12x26 (runs past the brace y-edges)
-ax.text((FER[0]+FER[2])/2,(FER[1]+FER[3])/2,"FERRITE 12x26\nwidth CRITICAL\nlength forgiving\n(open channel)",color="#d1c4e9",ha="center",va="center",fontsize=5.2,fontweight="bold")
-ax.add_patch(Rectangle((GLOW[0],GLOW[1]),GLOW[2]-GLOW[0],GLOW[3]-GLOW[1],fc="#f5efdc",ec="#d9c98a",lw=1.0,alpha=0.20))   # SOLID white resin backing behind the FR4 window (LEDs hug into it)
-ax.text((GLOW[0]+GLOW[2])/2,GLOW[3]+0.5,"LED-HUG DIFFUSER BACKING (solid resin; no aperture, no tape)",color="#d9c98a",ha="center",va="top",fontsize=4.7,fontweight="bold")
-for ref,x0,x1,y0,y1 in comps:
-    h=part_height(ref)
-    if h is None: continue
-    if not in_fp(x0,x1,y0,y1): continue
-    depth=h+air_for(ref); thru=depth>=GAP-0.05
-    col="#e0483a" if thru else ("#e08a3a" if depth>1.0 else "#43a047")
-    ax.add_patch(Rectangle((x0-CLR,y0-CLR),(x1-x0)+2*CLR,(y1-y0)+2*CLR,fc=col,ec="#222",lw=0.3,alpha=0.9))
-    if (x1-x0)>1.8 and (y1-y0)>1.3: ax.text((x0+x1)/2,(y0+y1)/2,ref,color="#111",ha="center",va="center",fontsize=4.6)
-for _bx0,_by0,_bw,_bh in bridges:                       # thin-wall bridges: where sub-0.4mm walls were merged out
-    if _bw<0.35: _bx0-=(0.35-_bw)/2; _bw=0.35
-    if _bh<0.35: _by0-=(0.35-_bh)/2; _bh=0.35
-    ax.add_patch(Rectangle((_bx0,_by0),_bw,_bh,fc="#00e5ff",ec="#fff",lw=1.0,alpha=0.95,zorder=6))
-for sx,sy in STUBS:
-    ax.add_patch(Circle((sx,sy),RECESS_R,fc="#4a86e8",ec="#fff",lw=0.8)); ax.text(sx,sy+1.9,"pillar\nhole",color="#8ab",ha="center",fontsize=4.6)
-leg=[mp.Patch(fc="#e0483a",label="through-hole (U7, tall)"),mp.Patch(fc="#e08a3a",label="deep (U6 1.45, U1/U3 1.0)"),
-     mp.Patch(fc="#43a047",label="shallow (0402, LEDs hug window, bridges)"),mp.Patch(fc="#3a2b55",label="ferrite pocket"),mp.Patch(fc="#00e5ff",label=f"thin-wall bridge (merged, {len(bridges)})")]
-ax.legend(handles=leg,loc="upper left",fontsize=5.2,facecolor="#1a1a1f",edgecolor="#444",labelcolor="#ddd",framealpha=0.9)
-ax.set_xlim(-1,52); ax.set_ylim(12,77); ax.set_aspect("equal"); ax.invert_yaxis(); ax.axis("off")
-ax.set_title("Diffuser brace rev C - H-brace (board-facing face)\nband + outboard rails backing the 4 panel solder tabs; ferrite pocket; thin-wall bridges",color="#d9a23a",fontsize=8)
-fig.tight_layout(); fig.savefig(OUT+BASE+"-pocket-map.png",dpi=150,facecolor="#0d0d10")
-print("saved pocket map")
+    # THIN-WALL ELIMINATION: any two pockets separated by a sub-SLA-min wall would print as a
+    # fragile fin (or fail to form and shed into the pocket). Bridge each such pair so it merges
+    # into one clean recess. Threshold 0.40 sits in the clean gap between the real thin walls
+    # (<=0.16) and the next-nearest (>=0.49) on the max build; re-verify per variant in the log.
+    WALL_MIN = 0.40; nbridge = 0; _bl = []; bridges = []
+    for i in range(len(pk)):
+        for j in range(i+1, len(pk)):
+            ra, ax0, ax1, ay0, ay1, da, ta = pk[i]; rb, bx0, bx1, by0, by1, db, tb = pk[j]
+            ox = min(ax1, bx1) - max(ax0, bx0); oy = min(ay1, by1) - max(ay0, by0)
+            if ox >= 0 and oy >= 0: continue                              # already touching -> no wall
+            gx = max(0.0, max(ax0, bx0) - min(ax1, bx1)); gy = max(0.0, max(ay0, by0) - min(ay1, by1))
+            wall = (gx*gx + gy*gy) ** 0.5
+            if not (0.0 < wall < WALL_MIN): continue
+            if ta or tb: bz, bdz = -0.05, gap + 0.10                      # through neighbour -> full-height bridge
+            else: bd = max(da, db); bz, bdz = gap - bd, bd + 0.05         # blind -> deeper pocket depth
+            if oy > 0 and gx > 0:   bxr = (min(ax1, bx1)-0.02, max(ax0, bx0)+0.02); byr = (max(ay0, by0), min(ay1, by1))   # x-wall
+            elif ox > 0 and gy > 0: bxr = (max(ax0, bx0), min(ax1, bx1)); byr = (min(ay1, by1)-0.02, max(ay0, by0)+0.02)   # y-wall
+            else: continue                                                # diagonal corner nick, not a face wall
+            w = bxr[1]-bxr[0]; hh = byr[1]-byr[0]
+            if w <= 0 or hh <= 0: continue
+            brace = brace.cut(cq.Workplane("XY").box(w, hh, bdz, centered=(False, False, False)).translate((wx(bxr[0]), wy(byr[0]), bz)))
+            nbridge += 1; _bl.append(f"{ra}-{rb}({wall:.2f})"); bridges.append((bxr[0], byr[0], w, hh))
+    print(f"[{vname}] thin-wall bridges (<{WALL_MIN}mm): {nbridge}  {_bl}")
+    # ferrite pocket = OPEN CHANNEL: WIDTH (x) walled (critical, edge-limited); LENGTH (y) OPEN at
+    # both ends so the ferrite can be cut long/short and extend slightly past the brace.
+    fx0, fx1 = max(FER[0]-FER_CLR, BX0+0.2), min(FER[2]+FER_CLR, BX1)   # width walls
+    fy0, fy1 = BY0-1.0, BY1+1.0                                          # y open
+    brace = brace.cut(cq.Workplane("XY").box(fx1-fx0, fy1-fy0, FER_POCKET_DEPTH+0.05, centered=(False, False, False))
+                      .translate((wx(fx0), wy(fy0), gap-FER_POCKET_DEPTH)))
+    for sx, sy in STUBS:
+        wpr = cq.Workplane("XY").workplane(offset=-0.01).moveTo(wx(sx), wy(sy))
+        prof = wpr.slot2D(4.0, RECESS_R*2, 45) if (sx, sy) == (33.0, 55.0) else wpr.circle(RECESS_R)
+        brace = brace.cut(prof.extrude(RECESS_DEPTH+0.01))
+
+    export_step_stable(brace, OUT+base+".step")
+    cq.exporters.export(brace, OUT+base+".stl", tolerance=0.03, angularTolerance=0.2)
+    try:
+        from OCP.GProp import GProp_GProps
+        from OCP.BRepGProp import BRepGProp
+        g = GProp_GProps(); BRepGProp.VolumeProperties_s(brace.val().wrapped, g)
+        print(f"[{vname}] brace volume {g.Mass()/1000:.2f} cm^3 (~{g.Mass()/1000*1.15:.1f} g tough white SLA)")
+    except Exception as e: print("vol:", e)
+    print(f"[{vname}] brace {len(_pieces)} piece(s), {sum(g.area for g in _pieces):.1f} mm2 = "
+          f"{100*sum(g.area for g in _pieces)/_cav.area:.1f}% of the {_cav.area:.0f} mm2 cavity floor "
+          f"(gap {gap}, span {span}; dropped {dropped_area:.1f} mm2 in {dropped_count}); "
+          f"{len(cut_log)} pockets; footprint COMPUTED from the board (blockers: "
+          f"{', '.join(r for r, _ in _blockers)})")
+    print(f"[{vname}] through-holes: {[c[0] for c in cut_log if c[2] == 'THRU']}")
+    print(f"[{vname}] ferrite CHANNEL {fx1-fx0:.1f} wide (walled) x open-ended x {FER_POCKET_DEPTH} deep; "
+          f"ferrite {FER[2]-FER[0]:.0f}x{FER[3]-FER[1]:.0f} nominal (width critical / length forgiving, may overhang)")
+
+    # ---- pocket map (per variant; legend counts are COMPUTED, the 'U6 1.45' era literals are gone)
+    import matplotlib; matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    from matplotlib.patches import Rectangle, Circle
+    import matplotlib.patches as mp
+    fig, ax = plt.subplots(figsize=(9, 5)); ax.set_facecolor("#0d0d10"); fig.patch.set_facecolor("#0d0d10")
+    for _g in _pieces:
+        ax.add_patch(mp.Polygon(list(_g.exterior.coords), closed=True,
+                                fc="#e8e4d8", ec="#fff", lw=1.5, alpha=0.28))
+    for _tx, _ty, _lb in [(4.3, 17.0, "PV1 N-tab"), (46.5, 17.0, "PV1 P-tab"), (4.3, 71.9, "PV2 N-tab"), (46.5, 71.9, "PV2 P-tab")]:
+        ax.plot(_tx, _ty, marker="*", ms=9, color="#ff5252", zorder=8); ax.text(_tx, _ty+2.0, _lb, color="#ff8a80", ha="center", va="bottom", fontsize=4.2, zorder=8)
+    ax.text((BX0+BX1)/2, BY1-0.9, f"WHITE RESIN BRACE [{vname}] ({len(_pieces)} piece(s), computed from the board)", color="#eee", ha="center", fontsize=7, fontweight="bold")
+    ax.add_patch(Rectangle((FER[0]-FER_CLR, BY0), FER[2]-FER[0]+2*FER_CLR, BY1-BY0, fc="#2a2140", ec="#7e57c2", lw=0.9, ls=(0, (3, 2)), alpha=0.6))
+    ax.add_patch(Rectangle((FER[0], FER[1]), FER[2]-FER[0], FER[3]-FER[1], fc="#3a2b55", ec="#b39ddb", lw=1.3, alpha=0.9))
+    ax.text((FER[0]+FER[2])/2, (FER[1]+FER[3])/2, "FERRITE 12x26\nwidth CRITICAL\nlength forgiving\n(open channel)", color="#d1c4e9", ha="center", va="center", fontsize=5.2, fontweight="bold")
+    ax.add_patch(Rectangle((GLOW[0], GLOW[1]), GLOW[2]-GLOW[0], GLOW[3]-GLOW[1], fc="#f5efdc", ec="#d9c98a", lw=1.0, alpha=0.20))
+    ax.text((GLOW[0]+GLOW[2])/2, GLOW[3]+0.5, "LED-HUG DIFFUSER BACKING (solid resin; no aperture, no tape)", color="#d9c98a", ha="center", va="top", fontsize=4.7, fontweight="bold")
+    n_thru = n_deep = n_shal = 0
+    for ref, x0, x1, y0, y1 in comps:
+        h = part_height(ref)
+        if h is None: continue
+        if not in_fp(x0, x1, y0, y1): continue
+        depth = h + air_for(ref); thru = depth >= gap - 0.05
+        col = "#e0483a" if thru else ("#e08a3a" if depth > 1.0 else "#43a047")
+        if thru: n_thru += 1
+        elif depth > 1.0: n_deep += 1
+        else: n_shal += 1
+        ax.add_patch(Rectangle((x0-CLR, y0-CLR), (x1-x0)+2*CLR, (y1-y0)+2*CLR, fc=col, ec="#222", lw=0.3, alpha=0.9))
+        if (x1-x0) > 1.8 and (y1-y0) > 1.3: ax.text((x0+x1)/2, (y0+y1)/2, ref, color="#111", ha="center", va="center", fontsize=4.6)
+    for _bx0, _by0, _bw, _bh in bridges:
+        if _bw < 0.35: _bx0 -= (0.35-_bw)/2; _bw = 0.35
+        if _bh < 0.35: _by0 -= (0.35-_bh)/2; _bh = 0.35
+        ax.add_patch(Rectangle((_bx0, _by0), _bw, _bh, fc="#00e5ff", ec="#fff", lw=1.0, alpha=0.95, zorder=6))
+    for sx, sy in STUBS:
+        ax.add_patch(Circle((sx, sy), RECESS_R, fc="#4a86e8", ec="#fff", lw=0.8)); ax.text(sx, sy+1.9, "pillar\nhole", color="#8ab", ha="center", fontsize=4.6)
+    leg = [mp.Patch(fc="#e0483a", label=f"through-hole ({n_thru})"), mp.Patch(fc="#e08a3a", label=f"deep pocket >1.0 ({n_deep})"),
+           mp.Patch(fc="#43a047", label=f"shallow pocket ({n_shal})"), mp.Patch(fc="#3a2b55", label="ferrite pocket"),
+           mp.Patch(fc="#00e5ff", label=f"thin-wall bridge (merged, {len(bridges)})")]
+    ax.legend(handles=leg, loc="upper left", fontsize=5.2, facecolor="#1a1a1f", edgecolor="#444", labelcolor="#ddd", framealpha=0.9)
+    ax.set_xlim(-1, 52); ax.set_ylim(12, 77); ax.set_aspect("equal"); ax.invert_yaxis(); ax.axis("off")
+    ax.set_title(f"Diffuser brace [{vname}] - gap {gap} / span {span} (board-facing face)\n"
+                 f"footprint computed from the board; ferrite channel; thin-wall bridges", color="#d9a23a", fontsize=8)
+    fig.tight_layout(); fig.savefig(OUT+base+"-pocket-map.png", dpi=150, facecolor="#0d0d10")
+    plt.close(fig)
+    print(f"[{vname}] saved pocket map")
+
+
+# Every variant that HAS a brace builds here, in one run -- one process, no reconfiguration,
+# each build handed its numbers explicitly. Adding a variant to fit_rules.VARIANTS with a
+# brace_name adds its brace (and its check_mesh ledger obligation) automatically.
+for _vname, _v in VARIANTS.items():
+    if _v["brace"]:
+        _build(_vname)

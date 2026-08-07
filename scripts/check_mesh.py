@@ -108,6 +108,35 @@ BASELINE = {
     "solar-glow-drh-diffuser-brace.stl": dict(
         volume_mm3=2102.49, bbox=(-22.85, -42.4, 0.0, 24.35, 42.4, 1.8),
         max_boundary_edges=0, max_open_len_mm=0.0, max_degenerate=0),
+    # ---- the 2026-08-07 enclosure variants (fit_rules.VARIANTS) --------------------------
+    # Ledgered from local builds in the variants commit itself -- the chicken-and-egg rule:
+    # an unledgered STL fails inside the same kibot job that first creates it. The STL
+    # FILES land via CI's commit-back (kibot builds before this gate runs, so CI is never
+    # missing them); a LOCAL run between the variants commit and that commit-back reports
+    # the three new files missing -- build them locally or wait for the merge run, the
+    # same transition every re-ledgered volume above documents. Both new shells carry the
+    # SAME zero-length rim pinch class as Ti-max (1 boundary edge, 0.0000 mm open) plus
+    # one degenerate sliver from the tessellator; a real hole (nonzero open length) still
+    # goes red.
+    "solar-glow-drh-shell-lite-Ti.stl": dict(
+        # lite: floor 0.60 + cavity 1.22 (component-limited) + recess 0.60 = 2.42, border
+        # 0.15 below z0. No fins, no medallion (physics-forced: valley 0.60 / coin floors
+        # would cut a 0.60 floor through).
+        volume_mm3=4130.76, bbox=(-26.35, -45.4, -0.15, 26.35, 45.4, 2.42),
+        max_boundary_edges=1, max_open_len_mm=0.001, max_degenerate=1),
+    "solar-glow-drh-frame-air-316L.stl": dict(
+        # air: OPEN frame, no floor -- walls + recess + 8 bosses only, z 0..1.80 exactly
+        # (nothing below the resting plane; the M2x1.6 tip hides 0.20 inside the boss
+        # spotface). Verified open: a ray up through the card centre hits zero surfaces.
+        volume_mm3=1182.62, bbox=(-26.35, -45.4, 0.0, 26.35, 45.4, 1.8),
+        max_boundary_edges=1, max_open_len_mm=0.001, max_degenerate=1),
+    "solar-glow-drh-diffuser-brace-lite.stl": dict(
+        # the lite brace: gap 1.22, span 0.60, 31 pockets, 0 through-holes, single piece
+        # (344.3 mm2 dropped in 4 islands -- the recovery plan is TODO.md's lite-brace
+        # relocation entry). bbox y1 is NOT the cavity edge: the main piece only reaches
+        # board y 58.4 -- the north corridors are the dropped islands.
+        volume_mm3=935.48, bbox=(-22.85, -42.4, 0.0, 24.35, 13.91, 1.22),
+        max_boundary_edges=0, max_open_len_mm=0.0, max_degenerate=0),
 }
 VOL_TOL = 0.005
 BBOX_TOL = 0.01

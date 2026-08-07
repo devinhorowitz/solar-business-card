@@ -133,6 +133,16 @@ SKIP = ("SC",)
 SUPERCAP_H = 1.70   # SS17 (SC1/SC3) and WS17 (SC2/SC4) are different lengths but the same
                     # 1.70 mm max thickness -- solar-glow-drh-design-notes.md line 219.
 
+# The LITE/AIR enclosure variants (2026-08-07) substitute thin supercaps. PROVISIONAL:
+# 1.00 is DRH's working number for a part not yet chosen -- no MPN, no datasheet, so
+# unlike every other figure in this file it is NOT verified against a source, and
+# check [7] cannot measure it (SC is in SKIP; the one committed board carries the 1.70
+# cans). When the MPN lands: verify the max thickness from its datasheet, replace this
+# number, and the variant cavities re-derive from it (fit_rules.VARIANTS) -- one edit.
+# The pogo testplate deliberately does NOT read this: it pins to SUPERCAP_H (the max
+# build) so the bench fixture always clears the tallest caps it could meet.
+SUPERCAP_H_THIN = 1.00   # PROVISIONAL -- thin-cap MPN pending (TODO.md carries the item)
+
 # ---- known generic-model overshoot ------------------------------------------------
 # check [7] compares each height against its 3D model's z-extent and errors when the
 # height is SHORT. These models are drawn taller than the part's datasheet maximum, so

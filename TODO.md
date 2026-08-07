@@ -928,6 +928,19 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
 
 ## Enclosure — `enclosure/…-backshell-…-cad.py`, `enclosure/brace/`
 
+- [ ] **[SOURCING — lite/air] Pick the thin supercap MPN**
+  _(2026-08-07, opened with the three-variant round.)_ `part_heights.SUPERCAP_H_THIN = 1.00`
+  is **PROVISIONAL — DRH's working number, no MPN, no datasheet behind it**, unlike every
+  other figure in that file. The lite cavity (1.22) happens to be component-limited so a
+  small thickness change is free, but **anything over 1.00 starts moving the lite/air
+  numbers** (`fit_rules.VARIANTS` re-derives them — one edit, everything follows: cavity,
+  stack, screw pick, ledgers). When chosen: verify max thickness from the datasheet, land
+  the number + the datasheet in `datasheets/`, and note the 2+2 capacity split question —
+  the buy documents today describe the ONE committed board, which is the 1.70 build;
+  thin-cap purchasing for lite/air builds is a manual substitution until then. Also the
+  **air NFC re-tune** rides this: open back = no titanium behind the coil = C9's 47 pF
+  needs the bench again (`enclosure/README.md` variants table carries the warning).
+
 - [x] **[ENCLOSURE/TOOLING] The 3D interference DRC — CLOSED 2026-08-01, built as
   `scripts/interference_drc.py`** _(the tier the mesh gate parked, built the same day.)_
   Ray-casts the emitted brace STL against every B-side body polygon (`board_parts.parts`) +
