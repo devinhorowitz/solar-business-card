@@ -38,7 +38,9 @@
  *
  * LED channel map (D1/D9/D10/D11 Schottkys removed in v4; only D2..D5 remain):
  *   D2->LDRV1->PA3/WO3 ; D3->LDRV2->PA2/WO2 ; D4->LDRV3->PA1/WO1 ; D5->LDRV4->PA0/WO0
- *   each LED: anode->ANODE common->SW2->STO (ON; bridge open = OFF) ; cathode->Kn->150R ballast->LDRV net->pin (see map above)
+ *   each LED: anode->ANODE common->SW2->STO (ON; bridge open = OFF) ; cathode->Kn->RN1 element->LDRV net->pin (see map above).
+ *   RN1 is the 4x150R array that replaced discrete R1-R4 (2026-08-07): elements pair pins 1-8/2-7/3-6/4-5,
+ *   wired so every K meets its documented LDRV -- the channel map above is unchanged.
  */
 #ifndef BOARD_H
 #define BOARD_H

@@ -912,6 +912,16 @@ Work outside-in by heat sensitivity:
    > deliberately keeps `x = 0`. And check CLEARANCE, not just overlap — `SC3.P` overlapped
    > nothing and still broke the hard floor.
    >
+   > **Same warning for RN1** (Panasonic **EXB-28V151JX**, the 4×150R ballast array,
+   > 2026-08-07 — AEC-Q200 Grade 1, 0.45 max, the buyable ceiling in this land; the sourcing
+   > record lives in RN1's own Description field): its land is KiCad's
+   > `R_Array_Convex_4x0402` with the four INNER pads slimmed 0.300 → **0.294** along-row —
+   > the stock land's own inter-pad gap is 0.150, 2 µm under the 0.152 hard floor, and the
+   > slim opens it to 0.153 legally instead of carrying four exclusions. *Update Footprints
+   > from Library* would silently restore 0.300 and re-break DRC. Element pairing is
+   > 1↔8 / 2↔7 / 3↔6 / 4↔5 (IC-style numbering) — the schematic and board both encode it;
+   > a replacement part with a different pairing convention PERMUTES the LED channels.
+   >
    > **2026-08-06 re-verification (DRH's Q2/C9/TC1 rework + the U6 DSBGA round):** same sweep,
    > same metric — in-aperture gaps **bit-identical**: D2 0.3740, D3 1.2033, D4 1.8112,
    > D5 0.7580 mm. Neither the C9 0603 land (2.4 mm north of the window) nor the TC1 wiring

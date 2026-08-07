@@ -2211,6 +2211,224 @@
 			)
 			(embedded_fonts no)
 		)
+		(symbol "solarglow:RN1"
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "RN1"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "150R"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(hide yes)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(hide yes)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(hide yes)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "RN1_1_1"
+				(rectangle
+					(start 2.54 2.54)
+					(end 20.32 -17.78)
+					(stroke
+						(width 0.2)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+				(pin passive line
+					(at 0 0 0)
+					(length 2.54)
+					(name "1"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -5.08 0)
+					(length 2.54)
+					(name "2"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -10.16 0)
+					(length 2.54)
+					(name "3"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -15.24 0)
+					(length 2.54)
+					(name "4"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+					(number "4"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 22.86 -15.24 180)
+					(length 2.54)
+					(name "5"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+					(number "5"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 22.86 -10.16 180)
+					(length 2.54)
+					(name "6"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+					(number "6"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 22.86 -5.08 180)
+					(length 2.54)
+					(name "7"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+					(number "7"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 22.86 0 180)
+					(length 2.54)
+					(name "8"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+					(number "8"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
 		(symbol "solarglow:C30"
 			(exclude_from_sim no)
 			(in_bom yes)
@@ -4803,116 +5021,7 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "solarglow:R1"
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(in_pos_files yes)
-			(duplicate_pin_numbers_are_jumpers no)
-			(property "Reference" "R1"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value" "LED ballast"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Footprint" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Datasheet" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Description" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(symbol "R1_1_1"
-				(rectangle
-					(start 2.54 2.54)
-					(end 20.32 -7.62)
-					(stroke
-						(width 0.2)
-						(type default)
-					)
-					(fill
-						(type background)
-					)
-				)
-				(pin passive line
-					(at 0 0 0)
-					(length 2.54)
-					(name "1"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 0 -5.08 0)
-					(length 2.54)
-					(name "2"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
+		
 		(symbol "solarglow:R10"
 			(exclude_from_sim no)
 			(in_bom yes)
@@ -5683,336 +5792,9 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "solarglow:R2"
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(in_pos_files yes)
-			(duplicate_pin_numbers_are_jumpers no)
-			(property "Reference" "R2"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value" "LED ballast"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Footprint" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Datasheet" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Description" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(symbol "R2_1_1"
-				(rectangle
-					(start 2.54 2.54)
-					(end 20.32 -7.62)
-					(stroke
-						(width 0.2)
-						(type default)
-					)
-					(fill
-						(type background)
-					)
-				)
-				(pin passive line
-					(at 0 0 0)
-					(length 2.54)
-					(name "1"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 0 -5.08 0)
-					(length 2.54)
-					(name "2"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
-		(symbol "solarglow:R3"
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(in_pos_files yes)
-			(duplicate_pin_numbers_are_jumpers no)
-			(property "Reference" "R3"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value" "LED ballast"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Footprint" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Datasheet" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Description" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(symbol "R3_1_1"
-				(rectangle
-					(start 2.54 2.54)
-					(end 20.32 -7.62)
-					(stroke
-						(width 0.2)
-						(type default)
-					)
-					(fill
-						(type background)
-					)
-				)
-				(pin passive line
-					(at 0 0 0)
-					(length 2.54)
-					(name "1"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 0 -5.08 0)
-					(length 2.54)
-					(name "2"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
-		(symbol "solarglow:R4"
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(in_pos_files yes)
-			(duplicate_pin_numbers_are_jumpers no)
-			(property "Reference" "R4"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value" "LED ballast"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Footprint" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Datasheet" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Description" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(symbol "R4_1_1"
-				(rectangle
-					(start 2.54 2.54)
-					(end 20.32 -7.62)
-					(stroke
-						(width 0.2)
-						(type default)
-					)
-					(fill
-						(type background)
-					)
-				)
-				(pin passive line
-					(at 0 0 0)
-					(length 2.54)
-					(name "1"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 0 -5.08 0)
-					(length 2.54)
-					(name "2"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
+		
+		
+		
 		(symbol "solarglow:R5"
 			(exclude_from_sim no)
 			(in_bom yes)
@@ -10301,16 +10083,7 @@
 		)
 		(uuid "16a034ba-f9dd-474a-9537-ba296dbb057f")
 	)
-	(wire
-		(pts
-			(xy 279.4 241.3) (xy 274.32 241.3)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "184cdf00-793a-42ee-b267-6ff33b3afce1")
-	)
+	
 	(wire
 		(pts
 			(xy 604.52 85.09) (xy 599.44 85.09)
@@ -10421,16 +10194,7 @@
 		)
 		(uuid "1ef84b60-5bbc-40e0-ad97-5ff44ac81652")
 	)
-	(wire
-		(pts
-			(xy 279.4 119.38) (xy 274.32 119.38)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "21727f2f-6a69-416e-b252-ec7499e5054c")
-	)
+	
 	(wire
 		(pts
 			(xy 490.22 382.27) (xy 485.14 382.27)
@@ -10881,16 +10645,7 @@
 		)
 		(uuid "6cb1b3c9-ce50-4cd2-8496-e39ec3aa9274")
 	)
-	(wire
-		(pts
-			(xy 279.4 185.42) (xy 274.32 185.42)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "6d53d9db-d87e-4304-b492-da59fce6c832")
-	)
+	
 	(wire
 		(pts
 			(xy 459.74 417.83) (xy 454.66 417.83)
@@ -11141,16 +10896,7 @@
 		)
 		(uuid "7f285ccc-97c6-4981-bff1-b5fe0684fbe5")
 	)
-	(wire
-		(pts
-			(xy 279.4 246.38) (xy 274.32 246.38)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "80d3bafb-33dd-4a92-9709-4021513ed64a")
-	)
+	
 	(wire
 		(pts
 			(xy 350.52 154.94) (xy 345.44 154.94)
@@ -11651,36 +11397,9 @@
 		)
 		(uuid "bdd959db-288d-4a9d-b353-56b919641aca")
 	)
-	(wire
-		(pts
-			(xy 279.4 63.5) (xy 274.32 63.5)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "be64605a-37f7-4b2b-9c26-3e4711255258")
-	)
-	(wire
-		(pts
-			(xy 279.4 58.42) (xy 274.32 58.42)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "bee7aab6-469a-4743-911d-92ab1c31868c")
-	)
-	(wire
-		(pts
-			(xy 279.4 124.46) (xy 274.32 124.46)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "bf4836dc-8050-4b57-988c-2e1f0b153b5d")
-	)
+	
+	
+	
 	(wire
 		(pts
 			(xy 279.4 43.18) (xy 274.32 43.18)
@@ -12171,16 +11890,7 @@
 		)
 		(uuid "fbbdc325-4062-4c13-b39f-98652dd70ae4")
 	)
-	(wire
-		(pts
-			(xy 279.4 180.34) (xy 274.32 180.34)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "fd64e1fc-2131-4d68-a4d0-dfe76a789806")
-	)
+	
 	(global_label "INT2"
 		(shape bidirectional)
 		(at 345.44 63.5 0)
@@ -12457,27 +12167,7 @@
 			)
 		)
 	)
-	(global_label "K3"
-		(shape bidirectional)
-		(at 274.32 119.38 0)
-		(effects
-			(font
-				(size 1 1)
-			)
-		)
-		(uuid "08e76b28-c1af-4c63-9d86-5ce261f211e8")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 274.32 119.38 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-	)
+	
 	(global_label "GND"
 		(shape bidirectional)
 		(at 607.06 377.19 0)
@@ -12840,27 +12530,7 @@
 			)
 		)
 	)
-	(global_label "LDRV4"
-		(shape bidirectional)
-		(at 274.32 246.38 0)
-		(effects
-			(font
-				(size 1 1)
-			)
-		)
-		(uuid "2e645c14-e79b-4b04-9e4e-01cabc575fd9")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 274.32 246.38 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-	)
+	
 	(global_label "STO"
 		(shape bidirectional)
 		(at 74.93 43.18 0)
@@ -13585,27 +13255,7 @@
 			)
 		)
 	)
-	(global_label "K5"
-		(shape bidirectional)
-		(at 274.32 241.3 0)
-		(effects
-			(font
-				(size 1 1)
-			)
-		)
-		(uuid "5a3a6d23-4954-4bb4-be95-c104261af027")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 274.32 241.3 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-	)
+	
 	(global_label "GND"
 		(shape bidirectional)
 		(at 454.66 478.79 0)
@@ -14416,27 +14066,7 @@
 			)
 		)
 	)
-	(global_label "LDRV2"
-		(shape bidirectional)
-		(at 274.32 124.46 0)
-		(effects
-			(font
-				(size 1 1)
-			)
-		)
-		(uuid "819d542a-dba0-430c-96ee-54d88331905d")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 274.32 124.46 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-	)
+	
 	(global_label "GND"
 		(shape bidirectional)
 		(at 464.82 114.3 0)
@@ -14479,27 +14109,7 @@
 			)
 		)
 	)
-	(global_label "K4"
-		(shape bidirectional)
-		(at 274.32 180.34 0)
-		(effects
-			(font
-				(size 1 1)
-			)
-		)
-		(uuid "85bf08ae-6b08-4707-9bbf-95d601369153")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 274.32 180.34 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-	)
+	
 	(global_label "LX_LOUT"
 		(shape passive)
 		(at 405.13 392.43 180)
@@ -14565,27 +14175,7 @@
 			)
 		)
 	)
-	(global_label "K2"
-		(shape bidirectional)
-		(at 274.32 58.42 0)
-		(effects
-			(font
-				(size 1 1)
-			)
-		)
-		(uuid "88db87b0-f06e-410f-8919-cf3a05ebb516")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 274.32 58.42 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-	)
+	
 	(global_label "EN_STO_CH"
 		(shape bidirectional)
 		(at 820.42 377.19 0)
@@ -15884,48 +15474,8 @@
 			)
 		)
 	)
-	(global_label "LDRV1"
-		(shape bidirectional)
-		(at 274.32 63.5 0)
-		(effects
-			(font
-				(size 1 1)
-			)
-		)
-		(uuid "d6988feb-c875-443e-bc09-45df305673d3")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 274.32 63.5 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-	)
-	(global_label "LDRV3"
-		(shape bidirectional)
-		(at 274.32 185.42 0)
-		(effects
-			(font
-				(size 1 1)
-			)
-		)
-		(uuid "d7ad3d9f-c317-43cf-826a-aadc9129e93f")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 274.32 185.42 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-	)
+	
+	
 	(global_label "GND"
 		(shape bidirectional)
 		(at 850.9 372.11 0)
@@ -19315,125 +18865,7 @@
 			)
 		)
 	)
-	(symbol
-		(lib_id "solarglow:R4")
-		(at 279.4 241.3 0)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(uuid "5d81085c-44ca-4814-8044-db6b743df85e")
-		(property "Reference" "R4"
-			(at 290.4 246.38 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "150R"
-			(at 290.4 251.46 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "solarglow:R4"
-			(at 290.4 256.54 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 279.4 241.3 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "LED ballast 150 ohm"
-			(at 279.4 241.3 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "MPN" "AC0402FR-07150RL"
-			(at 279.4 241.3 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Manufacturer" "Yageo"
-			(at 459.74 372.11 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Supplier" "DigiKey"
-			(at 459.74 372.11 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Supplier P/N" "YAG3443CT-ND"
-			(at 459.74 372.11 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "2"
-			(uuid "393d8d14-eba5-4051-b674-ffb07e237ced")
-		)
-		(pin "1"
-			(uuid "7e3437b0-8b77-4e4f-86d0-4c41b62dc83f")
-		)
-		(instances
-			(project "solar-glow-drh-v4_0"
-				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
-					(reference "R4")
-					(unit 1)
-				)
-			)
-		)
-	)
+	
 	(symbol
 		(lib_id "solarglow:C7")
 		(at 139.7 149.86 0)
@@ -19999,125 +19431,7 @@
 			)
 		)
 	)
-	(symbol
-		(lib_id "solarglow:R2")
-		(at 279.4 119.38 0)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(uuid "6d23238a-0238-4dc8-bf37-88a46659bfef")
-		(property "Reference" "R2"
-			(at 290.4 124.46 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "150R"
-			(at 290.4 129.54 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "solarglow:R2"
-			(at 290.4 134.62 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 279.4 119.38 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "LED ballast 150 ohm"
-			(at 279.4 119.38 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "MPN" "AC0402FR-07150RL"
-			(at 279.4 119.38 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Manufacturer" "Yageo"
-			(at 459.74 372.11 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Supplier" "DigiKey"
-			(at 459.74 372.11 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Supplier P/N" "YAG3443CT-ND"
-			(at 459.74 372.11 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "9b46e688-c2b0-4c46-8422-764ecb45586a")
-		)
-		(pin "2"
-			(uuid "e7649108-5569-4659-a71a-40c639ff78c2")
-		)
-		(instances
-			(project "solar-glow-drh-v4_0"
-				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
-					(reference "R2")
-					(unit 1)
-				)
-			)
-		)
-	)
+	
 	(symbol
 		(lib_id "solarglow:TP1")
 		(at 410.21 351.79 0)
@@ -21823,6 +21137,162 @@
 		)
 	)
 	(symbol
+		(lib_id "solarglow:RN1")
+		(at 279.4 58.42 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "4e81b917-afea-480f-9038-80bd48e1ea61")
+		(property "Reference" "RN1"
+			(at 290.83 53.34 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "150R"
+			(at 290.83 79.6 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Resistor_SMD:R_Array_Convex_4x0402"
+			(at 571.5 129.54 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 279.4 58.42 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "4x150R isolated ballast array replacing discrete R1-R4 (DRH consolidation 2026-08-07). Panasonic EXB-28V151JX: 0804 convex, elements pair pins 1-8/2-7/3-6/4-5 CONFIRMED from the catalog's printed pin diagram and matched by the board (every K opposite its documented LDRV -- a different pairing convention would permute the LED channels). AEC-Q200 Grade 1 in the CURRENT catalog; 0.45 max height (0.15 under the lite brace's 0.60 span); J +/-5% is the buyable ceiling in this land (the only F-grade, Yageo YC124-FR, is marketplace-only 10k MOQ; KOA CN1E4 EOL; four-LED matching rests on same-substrate construction). Runner-up: Yageo YC124-JR-07150RL (lost on withdrawn AEC claim + height margin). Land: KiCad R_Array_Convex_4x0402 with inner pads slimmed to 0.294 -- see PCB/README's re-link warning."
+			(at 279.4 58.42 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "MPN" "EXB-28V151JX"
+			(at 279.4 58.42 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Manufacturer" "Panasonic"
+			(at 279.4 58.42 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Supplier P/N" "Y7151CT-ND"
+			(at 279.4 58.42 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "MPN" "QSCP251Q470G1GV001T"
+			(at 279.4 58.42 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Manufacturer" "Johanson Technology"
+			(at 279.4 58.42 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Supplier" "DigiKey"
+			(at 279.4 58.42 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Supplier P/N" "712-QSCP251Q470G1GV001TCT-ND"
+			(at 279.4 58.42 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "e1856ae5-b925-4e97-853c-50b85bfa3581")
+		)
+		(pin "2"
+			(uuid "7a582889-5143-4279-afb3-fb6a4541d92b")
+		)
+		(instances
+			(project "solar-glow-drh-v4_0"
+				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
+					(reference "RN1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "solarglow:SC1")
 		(at 80.01 38.1 0)
 		(unit 1)
@@ -21941,244 +21411,8 @@
 			)
 		)
 	)
-	(symbol
-		(lib_id "solarglow:R3")
-		(at 279.4 180.34 0)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(uuid "9ded08e8-42b9-47af-a65d-7ac5ddebb55a")
-		(property "Reference" "R3"
-			(at 290.4 185.42 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "150R"
-			(at 290.4 190.5 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "solarglow:R3"
-			(at 290.4 195.58 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 279.4 180.34 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "LED ballast 150 ohm"
-			(at 279.4 180.34 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "MPN" "AC0402FR-07150RL"
-			(at 279.4 180.34 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Manufacturer" "Yageo"
-			(at 459.74 372.11 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Supplier" "DigiKey"
-			(at 459.74 372.11 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Supplier P/N" "YAG3443CT-ND"
-			(at 459.74 372.11 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "17b261bb-86fd-4dcc-8969-dafe4c3c6e55")
-		)
-		(pin "2"
-			(uuid "67965ec2-8c58-4397-aad9-94500c57ca08")
-		)
-		(instances
-			(project "solar-glow-drh-v4_0"
-				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
-					(reference "R3")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "solarglow:R1")
-		(at 279.4 58.42 0)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(uuid "a7b4e2cc-d1b1-4541-8199-cb7d69ecd0e8")
-		(property "Reference" "R1"
-			(at 290.4 63.5 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "150R"
-			(at 290.4 68.58 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "solarglow:R1"
-			(at 290.4 73.66 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 279.4 58.42 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "LED ballast 150 ohm"
-			(at 279.4 58.42 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "MPN" "AC0402FR-07150RL"
-			(at 279.4 58.42 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Manufacturer" "Yageo"
-			(at 459.74 372.11 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Supplier" "DigiKey"
-			(at 459.74 372.11 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Supplier P/N" "YAG3443CT-ND"
-			(at 459.74 372.11 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "462234ac-817f-4629-8d22-2878d04d0cd1")
-		)
-		(pin "2"
-			(uuid "53c5eb66-b96b-49d1-bb36-978395d32318")
-		)
-		(instances
-			(project "solar-glow-drh-v4_0"
-				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
-					(reference "R1")
-					(unit 1)
-				)
-			)
-		)
-	)
+	
+	
 	(symbol
 		(lib_id "solarglow:TP1")
 		(at 410.21 422.91 0)
@@ -25231,6 +24465,254 @@
 			(type default)
 		)
 		(uuid "b4d6fc4c-5fad-46e2-8393-97c544c2be72")
+	)
+	(wire
+		(pts
+			(xy 279.4 58.42) (xy 274.32 58.42)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a818f37c-a7d5-4af9-bbb1-d5bacd249d53")
+	)
+	(global_label "K3"
+		(shape bidirectional)
+		(at 274.32 58.42 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "2db8923c-fb5e-42f8-a245-4e8e7aa5b563")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 274.32 104.14 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
+	(wire
+		(pts
+			(xy 279.4 63.5) (xy 274.32 63.5)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a02825d2-9ace-434e-bb12-cdafaadb3d9c")
+	)
+	(global_label "K2"
+		(shape bidirectional)
+		(at 274.32 63.5 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "b6d2aadc-a9d6-4ba5-9876-8478492189d2")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 274.32 104.14 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
+	(wire
+		(pts
+			(xy 279.4 68.58) (xy 274.32 68.58)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "f1ee8929-1e6c-4e8a-98f5-2bc979abc6d7")
+	)
+	(global_label "K4"
+		(shape bidirectional)
+		(at 274.32 68.58 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "b6e2d00d-6a84-47e6-b6f0-3061a7eca7dd")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 274.32 104.14 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
+	(wire
+		(pts
+			(xy 279.4 73.66) (xy 274.32 73.66)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "fe651995-6a16-4c4a-8bfd-303d2292600f")
+	)
+	(global_label "K5"
+		(shape bidirectional)
+		(at 274.32 73.66 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "09c56c49-bc35-4548-bda5-f734eca17e0c")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 274.32 104.14 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
+	(wire
+		(pts
+			(xy 302.26 58.42) (xy 307.34 58.42)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "7b036d19-f67e-4da2-8296-bbba69d0b739")
+	)
+	(global_label "LDRV2"
+		(shape bidirectional)
+		(at 307.34 58.42 180)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "4980cfaf-0c59-4842-a622-2786fa342884")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 274.32 104.14 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
+	(wire
+		(pts
+			(xy 302.26 63.5) (xy 307.34 63.5)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "615e86ee-de8b-43bf-8213-5ac17778259f")
+	)
+	(global_label "LDRV1"
+		(shape bidirectional)
+		(at 307.34 63.5 180)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "68bc703b-5b5e-4d1e-873c-aa62da97af75")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 274.32 104.14 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
+	(wire
+		(pts
+			(xy 302.26 68.58) (xy 307.34 68.58)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "7e2e0645-426a-4877-8650-22486d6fe667")
+	)
+	(global_label "LDRV3"
+		(shape bidirectional)
+		(at 307.34 68.58 180)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "b904372b-b16e-4a8a-8305-05bef251f244")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 274.32 104.14 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
+	(wire
+		(pts
+			(xy 302.26 73.66) (xy 307.34 73.66)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "f963d784-64fd-42dc-b621-78166353b67f")
+	)
+	(global_label "LDRV4"
+		(shape bidirectional)
+		(at 307.34 73.66 180)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "dcec6485-a604-415b-b700-74bbf974926e")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 274.32 104.14 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 	)
 	(sheet_instances
 		(path "/"
