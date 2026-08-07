@@ -485,6 +485,21 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
   - Standing rules still apply to the session that does the moves: `mask_art.py --apply` after any
     front re-route (check [6]), and the teardrop-inclusive in-aperture sweep if anything approaches
     the glow window (`PCB/README.md` supercap box).
+  - _2026-08-07 addendum: the CAP SCOOT landed first (all four supercaps to a uniform 1.00 mm body
+    standoff from their board edge; the shell's lip ring is now part-aware — fit_rules `RING` +
+    `ring_reliefs()` — after six probed ring-vs-part collisions). Post-scoot baselines: **max 1486.7
+    mm² / 37.1 %**, **lite 1078.2 / 26.9 %** (dropped 277.0 in 3 islands — island 3's corridor
+    mouth widened but U3 still severs it). The ranked what-ifs above (U3/C23/L2 gains) were measured
+    on the PRE-scoot board — re-derive them before acting; the method line above is unchanged._
+  - _2026-08-07 evening: DRH's CENTER CONSOLIDATION superseded most of this plan — eleven parts
+    (the U6/C4/C6/C7/R14/TP2 west cluster, the R5/R6/Q2/R18/C5 east cluster) moved into the center
+    column x≈25–27, and SC1/SC2/SC4 scooted horizontally (SC1 −1.91, SC2 +1.70, SC4 +0.36). The
+    trade, measured and accepted: total brace **max 34.3 % / lite 26.4 %** (leg area given up to
+    the cap scoots — legs are lip/cap/cell-backstopped by design) while the **center band y40–48.9
+    holds at 91 % (max) / 73.5 % (lite)** — the band was already brace-saturated, so consolidation
+    cleaned the legs rather than adding center coverage. C4 and Q2 (0.90) are now mid-board
+    lite-blockers, both OUTSIDE the critical band. The U3/C23 island-recovery moves above remain
+    UNEXECUTED and the numbers need re-deriving on this board before acting._
 
 - [ ] **[PCB — superseded reference] U6 alternatives considered**
   _(2026-08-05. The first-pass answer said "no clean option"; that was wrong — it searched inside

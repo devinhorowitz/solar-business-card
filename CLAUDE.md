@@ -359,7 +359,14 @@ red, the check itself fails.
   session was deliberately NOT kept — the schematic gained a real `TC1/b1` symbol instead, so a
   future sync that loses it goes red rather than silent. The list is 14 → 11 errors plus 5
   `silk_over_copper` warnings (was 3; two new hits arrived with the same GUI session — one B-silk
-  segment at (22.93, 48.62) clipping both C13 pads. Cosmetic, ledgered 2026-08-01). Verify the
+  segment at (22.93, 48.62) clipping both C13 pads. Cosmetic, ledgered 2026-08-01).
+  **Recomposed 2026-08-07 with DRH's center-consolidation rewire, still 11 errors**: the seven
+  `npth_inside_courtyard` re-keyed to SC1's new position, and a `tracks_crossing` joined —
+  the `LA`/`LB` net boundary now sits MID-SPIRAL at (41.0, 38.0) instead of on a pad. It is
+  the coil doing its job, not a short (the spiral IS the LA→LB conductor; the coil gate
+  proves it intact), and the exclusion carries that reason. Silk is now **4** — the C13 pair
+  left with the rewire; D2/D3/D4 window clips excluded + Q2's circle at (26.26, 62.34)
+  UNexcluded, cosmetic, awaiting its UUID-keyed exclusion in the next GUI session. Verify the
   number against `Generated/solar-glow-drh-v4_0-drc.html`, which CI writes, rather than trusting
   this line.)_
 - **`mask_art.py`'s `generate()` is the single definition of what it writes** — and

@@ -920,6 +920,14 @@ Work outside-in by heat sensitivity:
    > window at exactly the clearance floor. Mid-track copper, no pads, no paste: not the
    > no-mask-dam hazard class (nothing can solder there), recorded so the next sweep knows
    > the floor-exact reading is the standing state, not a regression.
+   >
+   > **2026-08-07 re-verification (DRH's center consolidation + cap scoot rewire):** the window
+   > interior was re-routed (new teardrop set, D2/D3/D4 silk clips), so the per-LED numbers
+   > moved — and all still clear the 0.3740 precedent: **ANODE↔K2 1.4337, ↔K3 0.4375,
+   > ↔K4 0.6582, ↔K5 0.6496, ↔LDRV2 0.4018 mm**, teardrop-inclusive, in-aperture. The
+   > floor-exact mid-track pair is now **`INT1`↔`VSENSE` at 0.1520** (the rewire re-partnered
+   > it; same recorded class as the INT1↔INT2 reading above — no pads, no paste, no dam
+   > needed). Nine nets cross the aperture this round (was six); GND touches at zero area.
 2. **Solar cells PV1 / PV2 last (most fragile).** Iron **≤ 260 °C, ≤ 2 s per joint**, and
    **do not clean with IPA**. Mind cell polarity to the custom land.
 
