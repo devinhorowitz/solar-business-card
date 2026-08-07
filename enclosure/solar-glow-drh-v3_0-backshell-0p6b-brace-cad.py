@@ -82,11 +82,18 @@ board_th  = 0.60
 # day. One home now, verified against the part's 3D model by check_consistency [7].
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from part_heights import HEIGHTS as _PART_H, SUPERCAP_H as _CAPH  # noqa: E402
+from fit_rules import VARIANTS  # noqa: E402  (single home for per-variant numbers, 2026-08-07)
 U7_H       = _PART_H["U7"]         # 0.90
-cap_H      = _CAPH                 # WS17 supercaps (locked): the tallest B-side parts (x4) -> set the GENERAL cavity
+cap_H      = _CAPH                 # WS17 supercaps: the tallest B-side parts (x4) -> set the MAX cavity
 kapton_th  = 0.00                  # DROPPED (all contacts on bare laminate). set 0.05 to reinstate.
-cav_margin = 0.10                  # air over the cavity-setting parts. general cavity 1.80 = cap_H + air. Reduced 0.15->0.10 now the brace + cell-sandwiches carry the board: cavity 1.80 +-0.05 -> 1.75 worst-case, minus WS17 1.70 MAX (datasheet Case WS17: height max 1.7) = 0.05 non-contact. The freed 0.05 goes into the floor.
-cavity     = round(cap_H + kapton_th + cav_margin, 3)   # 1.80 general (cap-limited); toleranced 1.80 +-0.05 -> 1.75 min
+# The cavity is NOT derived here any more. This file held its own `cap_H + kapton + 0.10`
+# formula beside fit_rules' hand-written 1.80 -- two derivations that agreed only
+# numerically, the CAVITY-two-homes hazard the 2026-08-07 consumer map named. One home now:
+# fit_rules.VARIANTS carries every variant's cavity with its limiter rule spelled out
+# (max cap-limited, lite component-limited, air resting-clearance). The 0.10 air over the
+# cavity-setting parts lives there as CAP_AIR; the toleranced story (1.80 +-0.05 -> 1.75
+# worst-case, minus WS17 1.70 MAX = 0.05 non-contact) is unchanged and lives with it.
+cavity     = VARIANTS["max"]["cavity"]   # 1.80 -- module default; per-variant jobs pass their own
 # LOCAL RELIEF POCKET -- computed, and as of 2026-07-28 it computes to ZERO, so no pocket is cut.
 # The mechanism: if one part stands taller than the cap-limited general cavity, dip the floor locally
 # by exactly that excess so it keeps the same air gap, while the GENERAL floor stays thick for
@@ -127,7 +134,7 @@ boss_r     = 2.60                  # M2 boss / back annulus outer radius
 pilot_r    = 0.80                  # M2 tap-drill hole, CLEAN THROUGH. Boss is TAPPED M2 (brass is soft --
                                    # never let a brass screw thread-form into Ti; cut the threads first).
 # corner fasteners: brass M2x3, pan head <= Ø4.0 (cell-limited; absolute Ø5.3 touches the cell at 2.66 mm).
-SCREW_LEN  = 3.0                   # under-head length (M2x3). Head seats on the PCB front.
+SCREW_LEN  = VARIANTS["max"]["screw_len"]   # bare-build() fallback = the max variant; jobs pass per-variant (was a literal 3.0 -- second-home class)
 CBORE_D    = 3.0                   # back spotface dia at each hole; depth auto-set so the M2x3 tip is flush.
 
 # glow-window reflector registration frame (on the cavity FLOOR): a LASER-MARKED outline showing where
@@ -344,7 +351,26 @@ def _maker_text(txt, lx, cy, capH, fontpath):
 _LIPSUM = {e: len(lip_bands(e)) for e in ('W', 'E', 'S', 'N')}
 
 
-def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pillars=False, locators=False, prog_window=False, glow_marker=True, maker_mark=True, tool_relief=False, fins=True):
+def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pillars=False, locators=False, prog_window=False, glow_marker=True, maker_mark=True, tool_relief=False, fins=True, cavity=cavity, screw_len=None):
+    # `cavity` and `screw_len` are per-variant since 2026-08-07 -- passed EXPLICITLY from
+    # fit_rules.VARIANTS by the jobs loop, never smuggled through module state. The
+    # defaults are the max variant, so a bare build() means what it always meant.
+    if screw_len is None:
+        screw_len = SCREW_LEN
+    # Floor-stock guards (physics, not policy): the fin valleys are FIN_VALLEY deep and
+    # the medallion floors ~0.55-0.75 -- a thinned floor cannot take either. These were
+    # unguarded until 2026-08-07; a lite row with the old defaults would have shipped a
+    # sieve that was still watertight enough to pass every mesh gate.
+    if fins and border_h > 0:
+        assert floor - FIN_VALLEY >= 0.40 - 1e-9, \
+            f"fins need floor >= {FIN_VALLEY + 0.40:.2f} (valley {FIN_VALLEY} + 0.40 web); got {floor}"
+    if maker_mark and border_h > 0:
+        assert floor >= 1.00 - 1e-9, f"medallion needs the full 1.00 floor; got {floor}"
+    if floor == 0:
+        assert border_h == 0 and not fins and not maker_mark and not glow_marker, \
+            "open frame (floor 0) has no back face: border/fins/medallion/glow marker must be off"
+        assert (floor + cavity + board_th) - screw_len >= 0.15 - 1e-9, \
+            f"M2x{screw_len} tip would pass the open frame's resting plane"
     bb = floor + cavity                       # board-back / boss-top / lip-top / rib-top plane
     wt = bb + board_th
     outW, outH, outR = cavW + 2*wall_th, cavH + 2*wall_th, cavR + wall_th
@@ -358,7 +384,10 @@ def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pill
                     .extrude(board_th + 0.02).edges("|Z").fillet(cavR))
     if edge_ease > 0:                                   # ease the recess mouth to match the outer rim (board lead-in)
         res = res.cut(_recess_mouth_ease(wt, edge_ease))
-    res = res.cut(_poly_solid(_cavity_void_poly(), floor, cavity))
+    # At floor 0 (the open air frame) the void cut must start BELOW z0, or the cut face is
+    # coincident with the block bottom and OCC's boolean gets to choose what that means.
+    _vz0 = floor if floor > 0 else -0.20
+    res = res.cut(_poly_solid(_cavity_void_poly(), _vz0, cavity + (floor - _vz0)))
     # corner relief (recess depth)
     cwp = cq.Workplane("XY").workplane(offset=bb - 0.01)
     for ccx, ccy in [(R, R), (W - R, R), (R, H - R), (W - R, H - R)]:
@@ -445,7 +474,7 @@ def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pill
     # so the tip sits FLUSH in the spotface while the annulus ring stays proud around it (Ti takes
     # the wear, not the soft brass). Bottom z = front - SCREW_LEN (~0.40 below the back face at this
     # stack); the depth tracks the screw + stack so the fit stays intentional, never almost.
-    sf_bottom = (floor + cavity + board_th) - SCREW_LEN          # z the tip reaches (head seats on PCB front)
+    sf_bottom = (floor + cavity + board_th) - screw_len          # z the tip reaches (head seats on PCB front)
     sf_start  = -border_h - 0.4
     sfp = cq.Workplane("XY").workplane(offset=sf_start)
     for mx, my in mounts:
@@ -556,35 +585,41 @@ def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pill
 # Write next to this script by default. This used to be a hardcoded /mnt/user-data/outputs/ that
 # does not exist in a plain checkout, so the generator could not actually regenerate its own STEP.
 OUT = os.environ.get("OUT_DIR") or os.path.join(os.path.dirname(os.path.abspath(__file__)), "")
-B = "solar-glow-drh-v3_0-backshell-0p6b-brace"
-jobs = [
-    # name                 floor wall  border ribs  prog   note
-    ("Ti-max",             1.00, 1.00, 0.15, False, False, "0.6mm-board DUMB BOX for the resin brace: TRUE 1.00 floor (cavity 1.80, cap gap 0.10) + NO relief pocket (true uniform floor) + 1.0 walls + 8 bosses (4 corner + 4 panel-corner). NO locator pillars (retired: the H-brace registers by fitment). NO ribs (the brace carries center support). Overall 3.55."),
-    # Ti-max-progwindow RETIRED 2026-08-01. Its O11 re-flash window at board (13.3, 16.9)
-    # opens onto SC1's can on any assembled card (SC1 body spans (7,1.75)-(24,40.75), fully
-    # covering both the window and the TC1/b land beneath), so the variant shipped a false
-    # affordance -- and its second medallion boolean was roughly half of CI's ~6.7 min CAD
-    # step, paid on every board push. One line here (plus prog_window=True) brings it back
-    # if the window or the land ever moves out from under the supercap; the retired STEP/STL
-    # live in git history.
-
-]
+# The jobs are the VARIANTS (fit_rules owns the numbers; this loop owns only the flags
+# that are shell-build mechanics). Names come from the table -- note the max variant keeps
+# its historical filename (every ledger, render input and doc points at it), and the air
+# frame's name dodges the 'backshell' substring on purpose: scripts/ref_figures.py asserts
+# exactly one enclosure/*backshell*.stl and would kill the fab job otherwise.
+#
+# Ti-max-progwindow RETIRED 2026-08-01 (false affordance over SC1's can + half the CAD
+# minutes; one jobs row plus prog_window=True brings it back -- STEP/STL in git history).
 # Ti-conservative (0.60 floor / 1.60 wall) struck: if the shop cannot hold the floor we
 # re-issue to whatever minimum they will hold, so a pre-baked 0.60 fallback is dead weight.
-print(f"cavity={cavity} general (cap {cap_H}+air {cav_margin}; kapton {kapton_th}); U7 pocket {U7_POCKET} deep "
+jobs = []
+for _vn, _v in VARIANTS.items():
+    jobs.append((
+        _vn, _v["shell_name"], _v["floor"], _v["wall_th"], _v["border_h"], _v["cavity"],
+        _v["screw_len"],
+        not _v["open_back"] and _v["medallion"],          # maker_mark drives the medallion
+        not _v["open_back"] and _v["fins"],
+        not _v["open_back"],                              # glow marker needs a floor
+        _v["material"],
+    ))
+print(f"cavity={cavity} general (max; per-variant from fit_rules.VARIANTS); U7 pocket {U7_POCKET} deep "
       f"({'NO POCKET -- uniform floor' if U7_POCKET == 0 else 'local relief'})  lip PER-BAND from the board (W {_LIPSUM['W']} / E {_LIPSUM['E']} / S {_LIPSUM['S']} / N {_LIPSUM['N']} bands)  "
       f"braces=OFF (removed; {len(BRACE)} defs retained) ribs={len(RIBS)}  border=0.15  "
       f"cavity tool R{TOOL_R} (Ø{2*TOOL_R}) / back tool R{BACK_TOOL_R} (Ø{2*BACK_TOOL_R}) / fin groove tool Ø0.6 (grooves 0.8, its work alone) / "
       f"medallion Ø0.4 coin + Ø0.3 rest (islands, vertical walls; crests ON the bearing plane -- lap after blast)  "
       f"deburr: outer rim {edge_ease}, ends {EDGE_BREAK}  reflector-frame {GLOW_WIN[2]-GLOW_WIN[0]:.1f}x{GLOW_WIN[3]-GLOW_WIN[1]:.1f} laser-marked (full floor under it)  "
       f"relief: OFF (concave junctions left sharp -> clean analytic STEP; round tool leaves its radius)")
-for name_suf, fl, wl, bd, rb, pw, note in jobs:
-    solid = build(floor=fl, wall_th=wl, border_h=bd, ribs=rb, prog_window=pw)
-    field = fl + cavity + board_th
+for _vn, name, fl, wl, bd, cav_v, sl, mk, fn, gm, mat in jobs:
+    solid = build(floor=fl, wall_th=wl, border_h=bd, cavity=cav_v, screw_len=sl,
+                  maker_mark=mk, fins=fn, glow_marker=gm)
+    field = fl + cav_v + board_th                       # per-variant, NOT the module cavity
     foot = (W + 2*edge_fit + 2*wl)
-    name = f"{B}-{name_suf}"
     export_step_stable(solid, OUT + name + ".step")
     cq.exporters.export(solid, OUT + name + ".stl", tolerance=0.04, angularTolerance=0.2)
-    print(f"  {name:34s} floor={fl:.2f} wall={wl:.2f} field={field:.2f} at-frame={field+bd:.2f} foot={foot:.1f}mm "
-          f"ribs={rb} prog={pw} | {note}")
+    print(f"  {name:38s} [{_vn}] floor={fl:.2f} cavity={cav_v:.2f} wall={wl:.2f} "
+          f"field={field:.2f} at-frame={field+bd:.2f} foot={foot:.1f}mm M2x{sl} "
+          f"medallion={mk} fins={fn} | {mat}")
 print("done")

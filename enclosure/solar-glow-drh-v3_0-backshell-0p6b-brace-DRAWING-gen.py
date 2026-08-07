@@ -1,6 +1,21 @@
 #!/usr/bin/env python3
-"""2D fab drawing for the Ti back-shell v3.0 0.6mm-board DUMB BOX (1.00 floor, 0.60 board, U7 pocket, NO ribs, NO locator
-pillars -- the resin H-brace carries center support + registers by fitment) -> PDF + PNG."""
+"""2D fab drawings for the back-shell family -- ONE sheet PER VARIANT in fit_rules.VARIANTS
+(max / lite / air) -> PDF + PNG each.
+
+This sheet was single-variant (the Ti max "dumb box": 1.00 floor, 1.80 cavity, M2x3) with
+every one of those numbers hand-typed into dimension strings. 2026-08-07: the shells went
+per-variant in fit_rules.VARIANTS (the single home: cavity / floor / screw / material per
+variant, each with its limiter rule spelled out), the shell CAD grew a jobs loop over that
+table, and this generator follows the same pattern: every dimension string is an f-string
+of the variant's values, passed EXPLICITLY from VARIANTS -- never a second copy. The max
+sheet keeps its exact historical filename (enclosure/README and the ledgers point at it);
+lite/air derive theirs from VARIANTS[v]['shell_name'] + '-DRAWING'.
+
+The air frame is structurally different, not merely re-dimensioned: floor 0.00, so no rear
+art (no fins, no medallion, no back border), no brace, and the back-face art block
+collapses to a note rather than an empty region. Its spotface story also inverts: with no
+floor stock there is nothing for the screw tip to sit flush IN, so the M2x1.6 tip lands
+0.20 above the resting plane inside the boss spotface."""
 import numpy as np, matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -28,17 +43,18 @@ import fit_rules as _fr        # noqa: E402
 import medallion as _mdl       # noqa: E402
 _MCY = sum(_fr.fin_band()) / 2.0                  # medallion centre = the clear-band centre
 
-W,H,R = 50.80,88.90,3.0
-wall,lip_w,floor,cavity,board,border = 1.0,2.5,1.00,1.80,0.60,0.15   # lip_w here = WEST lip shown in Section A-A
+# Shared geometry, ONE home each: board rect, board thickness, boss radii and the back
+# border come from fit_rules (this sheet held its own literals for them until 2026-08-07).
+# R (card corner radius) and the lip scalars shown in Section A-A stay local drawing
+# annotation, as before; the lip is per-band from the board in fit_rules and note 8 tells
+# the prose story.
+W, H, R = _fr.W, _fr.H, 3.0
+board   = _fr.BOARD_TH                       # 0.60
 lip_W,lip_N,lip_S,lip_E,lip_Ew = 2.5,2.0,2.0,1.0,2.5
-bbw = 2.0                                   # SYMMETRIC exterior back-border width (uniform 4 sides); front lip stays asymmetric
-Wb,Hb = 50.80,88.90
-boss_r,pilot_r,cbore,ease = 2.60,0.80,3.0,0.10
-ef=-0.05
-cavW,cavH,cavR = W+2*ef,H+2*ef,R+ef
-outW,outH,outR = cavW+2*wall,cavH+2*wall,cavR+wall
-bb,wt = floor+cavity, floor+cavity+board
-lb = 0.10                                  # light interior edge-breaks (felt, not seen), 45deg
+lip_w   = lip_W                              # WEST lip shown in Section A-A
+bbw     = _fr.BACK_BORDER                    # SYMMETRIC exterior back-border width (4 sides)
+boss_r, pilot_r, cbore, ease = _fr.BOSS_R, _fr.PILOT_R, 3.0, 0.10
+lb = 0.10                                    # light interior edge-breaks (felt, not seen), 45deg
 # Mounts and EVERY dimension derived from them come from fit_rules -- the same one home the
 # shell CAD reads. This sheet held its own literal copy until 2026-08-03, alongside six
 # hardcoded dimension strings, and when the board's mounts were nudged 0.13 mm diagonally the
@@ -49,250 +65,382 @@ lb = 0.10                                  # light interior edge-breaks (felt, n
 mounts = _fr.MOUNTS
 _mx = sorted({m[0] for m in mounts})        # 2 columns
 _my = sorted({m[1] for m in mounts})        # 4 rows
-oxmin,oymin = -0.95,-0.95
-_oxmax = 51.75                              # outline east edge, the datum the edge dims run to
 
 INK="#111111"; GRY="#9a9a9a"; HATCH="#e8e8e8"
-fig=plt.figure(figsize=(420/25.4,297/25.4))
-ax=fig.add_axes([0,0,1,1]); ax.set_xlim(0,420); ax.set_ylim(0,297)
-ax.set_aspect("equal"); ax.axis("off"); fig.patch.set_facecolor("white")
-ax.add_patch(Rectangle((8,8),404,281,fill=False,ec=INK,lw=1.2))
-ax.add_patch(Rectangle((10,10),400,277,fill=False,ec=INK,lw=0.4))
-
-def rrect(x,y,w,h,r,n=12):
-    p=[]; cs=[(x+w-r,y+r),(x+w-r,y+h-r),(x+r,y+h-r),(x+r,y+r)]; a0=[-90,0,90,180]
-    for (cx,cy),a in zip(cs,a0):
-        for t in np.linspace(np.radians(a),np.radians(a+90),n): p.append((cx+r*np.cos(t),cy+r*np.sin(t)))
-    return p
-def dim(p0,p1,off,text,vert=False,fs=7,side=1,txtoff=1.6):
-    (x0,y0),(x1,y1)=p0,p1
-    if vert:
-        xd=off
-        ax.plot([x0,xd+1.6*side],[y0,y0],lw=0.4,color=INK); ax.plot([x1,xd+1.6*side],[y1,y1],lw=0.4,color=INK)
-        ax.annotate("",xy=(xd,y0),xytext=(xd,y1),arrowprops=dict(arrowstyle="<|-|>",lw=0.5,color=INK,mutation_scale=8,shrinkA=0,shrinkB=0))
-        ax.text(xd-txtoff*side,(y0+y1)/2,text,ha="right" if side>0 else "left",va="center",fontsize=fs,rotation=90,color=INK)
-    else:
-        yd=off
-        ax.plot([x0,x0],[y0,yd+1.6*side],lw=0.4,color=INK); ax.plot([x1,x1],[y1,yd+1.6*side],lw=0.4,color=INK)
-        ax.annotate("",xy=(x0,yd),xytext=(x1,yd),arrowprops=dict(arrowstyle="<|-|>",lw=0.5,color=INK,mutation_scale=8,shrinkA=0,shrinkB=0))
-        ax.text((x0+x1)/2,yd+txtoff*side,text,ha="center",va="bottom" if side>0 else "top",fontsize=fs,color=INK)
-def leader(xp,yp,xt,yt,text,ha="left",fs=6.6,va="center"):
-    ax.annotate("",xy=(xp,yp),xytext=(xt,yt),arrowprops=dict(arrowstyle="-|>",lw=0.45,color=INK,mutation_scale=7,shrinkA=0,shrinkB=2))
-    ax.text(xt+(0.8 if ha=='left' else -0.8),yt,text,ha=ha,va=va,fontsize=fs,color=INK)
-def fcf(x,y,cells,h=4.6,fs=6.6):
-    cx=x
-    for c in cells:
-        w=max(7.0,2.6+len(c)*1.95); ax.add_patch(Rectangle((cx,y),w,h,fill=False,ec=INK,lw=0.5))
-        ax.text(cx+w/2,y+h/2,c,ha="center",va="center",fontsize=fs,color=INK); cx+=w
-    return cx,y+h/2
-
-# ===================== PLAN (back face) =====================
-S1=1.5; Px,Py=42,112
-X=lambda bx:Px+(bx-oxmin)*S1; Y=lambda by:Py+(by-oymin)*S1
-ax.add_patch(MplPoly(rrect(X(oxmin),Y(oymin),outW*S1,outH*S1,outR*S1),closed=True,fill=False,ec=INK,lw=1.0))
-ax.add_patch(MplPoly(rrect(X(oxmin)+wall*S1,Y(oymin)+wall*S1,cavW*S1,cavH*S1,cavR*S1),closed=True,fill=False,ec=GRY,lw=0.5))
-_afw,_afh = cavW-2*bbw, cavH-2*bbw          # symmetric recessed art field (equal 2.0 border all sides)
-ax.add_patch(MplPoly(rrect(X(0.05+bbw),Y(0.05+bbw),_afw*S1,_afh*S1,max(cavR-bbw,0.3)*S1),closed=True,fill=False,ec=INK,lw=0.8))
-for lx,ly,rot in [(0.05+bbw/2,44,90),(Wb-0.05-bbw/2,44,90),(25.4,0.05+bbw/2,0),(25.4,Hb-0.05-bbw/2,0)]:
-    ax.text(X(lx),Y(ly),"2.0",ha="center",va="center",fontsize=4.8,color="#2f5bd0",rotation=rot)
-for mx,my in mounts:
-    ax.add_patch(plt.Circle((X(mx),Y(my)),boss_r*S1,fill=False,ec=GRY,lw=0.5))
-    ax.add_patch(plt.Circle((X(mx),Y(my)),cbore/2*S1,fill=False,ec=GRY,lw=0.5))
-    ax.add_patch(plt.Circle((X(mx),Y(my)),pilot_r*S1,fill=False,ec=INK,lw=0.9))
-    ax.plot([X(mx)-1.6*S1,X(mx)+1.6*S1],[Y(my),Y(my)],lw=0.4,color=INK)
-    ax.plot([X(mx),X(mx)],[Y(my)-1.6*S1,Y(my)+1.6*S1],lw=0.4,color=INK)
-# REAR ART (reference): the two reeded fin fields and the medallion, drawn from their own
-# sources. Zones dashed, every rib outlined from fit_rules.fin_ribs() (the real stadium
-# polygons, boss wraps and all), medallion circles from medallion.py's constants. STEP governs.
-for _zone, _cys in _fr.fin_runs():
-    for _zp in (_zone.geoms if _zone.geom_type == "MultiPolygon" else [_zone]):
-        ax.add_patch(MplPoly([(X(px), Y(py)) for px, py in _zp.exterior.coords],
-                             closed=True, fill=False, ec=GRY, lw=0.4, ls=(0, (3, 1.6))))
-for _rp in _fr.fin_ribs():
-    ax.add_patch(MplPoly([(X(px), Y(py)) for px, py in _rp.exterior.coords],
-                         closed=True, fill=False, ec=GRY, lw=0.22))
-ax.add_patch(plt.Circle((X(25.4), Y(_MCY)), (_mdl.COIN_R + _mdl.RIM_W) * S1,
-                        fill=False, ec=GRY, lw=0.55))
-for _rr in (_mdl.COIN_R, sum(_mdl.HOOP) / 2.0, _mdl.R_TEXT):
-    ax.add_patch(plt.Circle((X(25.4), Y(_MCY)), _rr * S1,
-                            fill=False, ec=GRY, lw=0.28, ls=(0, (3, 1.6))))
-leader(X(25.4 + 9.4), Y(_MCY - 9.4), 124, 196, "MEDALLION (REF — REAR ART BLOCK)", fs=5.2)
-leader(X(46.0), Y(75.0), 124, 228, "REEDED FIELDS ×2 (REF — REAR ART BLOCK)", fs=5.2)
-
-# U7 relief pocket (cavity-floor recess; hidden in back-face view -> dashed).
-# Drawn ONLY if the arithmetic still calls for one -- see the import block above.
-u7x,u7y,pw,ph = 28.1,37.3,7.8,5.4
-if U7_POCKET > 0:
-    ax.add_patch(MplPoly(rrect(X(u7x-pw/2),Y(u7y-ph/2),pw*S1,ph*S1,1.0*S1),closed=True,fill=False,ec=GRY,lw=0.6,ls=(0,(4,2))))
-    leader(X(u7x-pw/2),Y(u7y-ph/2),100,150,"U7 RELIEF POCKET  (NOTE 7)",ha="left",fs=5.8)
-dim((X(oxmin),Y(oymin)),(X(51.75),Y(oymin)),Py-20,"52.70",fs=8,side=-1)
-dim((X(oxmin),Y(_my[0])),(X(_mx[0]),Y(_my[0])),Py-8,f"{_mx[0]-oxmin:.2f}",fs=6.3,side=-1)
-dim((X(_mx[0]),Y(_my[0])),(X(_mx[-1]),Y(_my[0])),Py-8,f"{_mx[-1]-_mx[0]:.2f} ±0.05",fs=6.3,side=-1)
-dim((X(_mx[-1]),Y(_my[0])),(X(_oxmax),Y(_my[0])),Py-8,f"{_oxmax-_mx[-1]:.2f}",fs=6.3,side=-1)
-dim((X(oxmin),Y(89.85)),(X(oxmin),Y(oymin)),Px-22,"90.80",vert=True,fs=8,side=1)
-# 8-mount y-pattern: 4 rows -> chained pitch (each row ±0.05, per C3). Rows AND pitches are
-# derived from MOUNTS; they were four typed literals until 2026-08-03.
-for _a,_b in zip(_my[:-1],_my[1:]):
-    dim((X(_mx[0]),Y(_b)),(X(_mx[0]),Y(_a)),Px-10,f"{_b-_a:.2f}",vert=True,fs=6.0,side=1)
-dim((X(_mx[0]),Y(_my[-1])),(X(_mx[0]),Y(_my[0])),Px-17,
-    f"{_my[-1]-_my[0]:.2f} ±0.05 (corners)",vert=True,fs=5.6,side=1)
-ax.text(X(25.4),Y(89.85)+5,"BACK FACE (outer)   SCALE 1.5:1",ha="center",fontsize=8.5,fontweight="bold",color=INK)
-# hole FCF + callout (middle column)
-fcf(150,182,["POS","\u00d80.10 (M)","A","B"])
-leader(X(_mx[-1]),Y(_my[-1]),150,186.3,"",ha="left")
-ax.text(150,172,"8\u00d7  M2 THREAD, THRU",fontsize=7.2,fontweight="bold",color=INK)
-ax.text(150,167,"\u00d81.6 TAP DRILL  \u2022  TAP FROM BACK FACE",fontsize=6.8,color=INK)
-ax.text(150,162,"\u00d83.0 SPOTFACE, BACK (depth per Detail B)",fontsize=6.8,color=INK)
-ax.text(150,156,"C3 = hole-pattern pitch \u00b10.05   C4 = M2 thread",fontsize=6.0,color=GRY,style="italic")
-ax.text(150,148,"SECTION A-A \u2192 edge profile      DETAIL B \u2192 corner boss",fontsize=6.2,color=GRY,style="italic")
-
-# ===================== REAR ART (machined-in; reference block) =====================
-ax.text(150,140,"REAR ART \u2014 MACHINED-IN GEOMETRY  (REFERENCE; STEP GOVERNS)",fontsize=6.8,fontweight="bold",color=INK)
-_ra=[
- "REEDED FIN FIELDS \u00d72 (PLAN, dashed zones):  %d RIBS/FIELD, %.2f WIDE" % (_fr.FIN_ROWS,_fr.FIN_RIB_W),
- "ON %.3f PITCH; GROOVES \u00d80.6 END-MILL ONLY (%.2f WIDE), VALLEY %.2f" % (_fr.FIN_PITCH,_fr.FIN_GROOVE,_fr.FIN_VALLEY),
- "BELOW ART FIELD (0.40 WEB); RIB TOPS +%.2f \u2014 0.05 UNDER BEARING PLANE." % _fr.FIN_PROUD,
- "",
- "MEDALLION (PLAN, circles):  \u00d8%.1f COIN SUNK %.2f BELOW ART FIELD (\u00d80.4" % (2*(_mdl.COIN_R+_mdl.RIM_W),_mdl.COIN_D),
- "END MILL), COUNTERS/REST %.2f (\u00d80.3 REST PASS); CRESTS (RING TEXT, RIM," % _mdl.REST_D,
- "HOOP, MONOGRAM, SERIAL) LEFT AT THE FRAME'S BEARING PLANE (\u22120.15),",
- "VERTICAL WALLS, NO DETACHED ISLAND UNDER %.2f. DO NOT EDGE-BREAK" % _mdl.MIN_ISLAND,
- "CREST EDGES. SERIAL (\u201cNo %s\u201d) IS PER-UNIT VARIABLE TEXT." % _mdl.SERIAL,
- "",
- "OP ORDER: ALL BACK-FACE FEATURES BEFORE CAVITY HOLLOW (SOLID-STOCK",
- "RULE). STRESS-RELIEVED STOCK \u2014 STATE CONDITION ON QUOTE.",
-]
-_ry=135.5
-for _rl in _ra: ax.text(150,_ry,_rl,fontsize=5.6,color=INK); _ry-=3.1
-
-# ===================== EDGE SECTION A-A =====================
-S2=13.0; EX,EY=265,202
-xl=lambda v:EX+v*S2; zl=lambda z:EY+(z+border)*S2
-prof=[(0.10,0.0),(wall,0.0),(wall,-border+lb),(wall+lb,-border),(wall+bbw-lb,-border),(wall+bbw,-border+lb),(wall+bbw,0.0),
-      (8.5,0.0),(8.5,floor),(wall+lip_w,floor),(wall+lip_w,bb-lb),(wall+lip_w-lb,bb),(wall,bb),
-      (wall,wt-ease),(wall-ease,wt),(ease,wt),(0.0,wt-ease),(0.0,0.10)]
-ax.add_patch(MplPoly([(xl(x),zl(z)) for x,z in prof],closed=True,fc=HATCH,ec=INK,lw=0.8,hatch="////"))
-dim((xl(0.0),zl(-border)),(xl(0.0),zl(wt)),xl(0.0)-7,"3.55",vert=True,fs=7,side=1)
-dim((xl(8.5),zl(0.0)),(xl(8.5),zl(floor)),xl(8.5)+7,"1.00",vert=True,fs=6.6,side=-1)
-dim((xl(8.5),zl(floor)),(xl(8.5),zl(bb)),xl(8.5)+7,"1.80 ±0.05",vert=True,fs=7,side=-1)
-dim((xl(0.0),zl(0.0)),(xl(wall),zl(0.0)),zl(-border)-5,"1.0",fs=6.4,side=-1)
-dim((xl(wall),zl(bb)),(xl(wall+lip_w),zl(bb)),zl(bb)+7,"2.5 W-LIP (front; note 8)",fs=5.2,side=1,txtoff=1.0)
-leader(xl(2.0),zl(-border+0.06),xl(4.6),zl(-border)-6.5,"2.0 BACK BORDER (UNIFORM, 4 PL)",ha="left",fs=5.0)
-dim((xl(wall+lip_w+0.25),zl(-border)),(xl(wall+lip_w+0.25),zl(0.0)),xl(wall+lip_w)+3.0,"0.15",vert=True,fs=5.8,side=-1,txtoff=1.0)
-leader(xl(0.05),zl(wt-0.06),xl(1.7),zl(wt)+4.5,"0.10\u00d745\u00b0 RIM (top)",ha="left",fs=5.2)
-leader(xl(0.90),zl(wt-0.06),xl(4.2),zl(wt)+9.5,"0.10\u00d745\u00b0 MOUTH",ha="left",fs=5.2)
-fcf(xl(3.4),zl(bb)+8,["FLAT","0.05"]); leader(xl(2.2),zl(bb),xl(3.4),zl(bb)+8+2.3,"",ha="left")
-leader(xl(3.36),zl(bb-0.04),xl(5.7),zl(2.05),"0.10\u00d745\u00b0 LIP",ha="left",fs=5.2)
-leader(xl(0.05),zl(0.06),xl(-2.6),zl(0.55),"0.10\u00d745\u00b0 RIM (btm)",ha="right",fs=5.0)
-leader(xl(1.08),zl(-0.10),xl(1.35),zl(-border)-9,"0.10\u00d745\u00b0 FRAME (2 PL)",ha="left",fs=5.0)
-leader(xl(3.42),zl(-0.10),xl(1.35),zl(-border)-9,"",ha="left")
-ax.text(xl(0.06),zl(floor)+0.8,
-        ("  floor %.2f TRUE (%.2f local under the U7 pocket, note 7)   •   PCB recess 0.60 (0.60 mm board)"
-         % (floor, floor-U7_POCKET)) if U7_POCKET > 0 else
-        ("  floor %.2f TRUE, UNIFORM (no local relief)   •   PCB recess 0.60 (0.60 mm board)" % floor),
-        fontsize=5.7,color=GRY,va="bottom")
-ax.text(EX+2,EY-11,"SECTION A-A  (edge)   SCALE 13:1",fontsize=8.5,fontweight="bold",color=INK)
-ax.text(EX+2,EY-16.5,"C1 = cavity depth    C2 = PCB-rest-plane flatness    (back face down; PCB drops in from top)",fontsize=6,color=GRY,style="italic")
-
-# ===================== DETAIL B (corner boss, section) =====================
-S3=13.0; BX,BY=312,112
-bx=lambda v:BX+v*S3; bz=lambda z:BY+(z+border)*S3
-ax.add_patch(MplPoly([(bx(-4),bz(0)),(bx(4),bz(0)),(bx(4),bz(floor)),(bx(-4),bz(floor))],closed=True,fc=HATCH,ec=INK,lw=0.6,hatch="////"))
-for s in (1,-1):
-    ax.add_patch(MplPoly([(bx(x),bz(z)) for x,z in [(s*0.8,0.20),(s*1.5,0.20),(s*1.5,bb),(s*0.8,bb)]],closed=True,fc=HATCH,ec=INK,lw=0.7,hatch="////"))
-    ax.add_patch(MplPoly([(bx(x),bz(z)) for x,z in [(s*1.5,-border+lb),(s*(1.5+lb),-border),(s*(2.6-lb),-border),(s*2.6,-border+lb),(s*2.6,bb),(s*1.5,bb)]],closed=True,fc=HATCH,ec=INK,lw=0.7,hatch="////"))
-ax.add_patch(Rectangle((bx(-4),bz(bb)),8*S3,board*S3,fill=False,ec=GRY,lw=0.6,ls=(0,(5,3))))
-ax.add_patch(Rectangle((bx(-1.0),bz(wt)),2.0*S3,1.6*S3,fill=False,ec=GRY,lw=0.6,ls=(0,(5,3))))
-ax.add_patch(Rectangle((bx(-0.9),bz(0.20)),1.8*S3,(wt-0.20)*S3,fill=False,ec=GRY,lw=0.6,ls=(0,(5,3))))
-ax.plot([bx(0),bx(0)],[bz(-border)-3,bz(wt)+1.6*S3+3],lw=0.4,color=INK,ls=(0,(8,3,1,3)))
-dim((bx(-2.6),bz(-border)),(bx(2.6),bz(-border)),bz(-border)-12,"\u00d85.20",fs=6.8,side=-1)
-dim((bx(-1.5),bz(-border)),(bx(1.5),bz(-border)),bz(-border)-5,"\u00d83.0 SPOTFACE (BACK)",fs=6.3,side=-1)
-dim((bx(2.6),bz(-border)),(bx(2.6),bz(0.0)),bx(2.6)+3,"0.15",vert=True,fs=5.8,side=-1,txtoff=1.0)
-leader(bx(0.0),bz(1.5),bx(4.6),bz(1.9),"M2 THREAD\n\u00d81.6 TAP DRILL, THRU\nTAP FROM BACK",ha="left",fs=6.2)
-leader(bx(1.0),bz(0.20),bx(3.0),bz(0.20)-7,"spotface bottom = M2\u00d73\nscrew-tip plane (flush)",ha="left",fs=5.7)
-ax.text(bx(0),bz(wt)+1.6*S3+4,"PCB + M2\u00d73 BRASS SCREW \u2014 REF, NOT THIS PART",ha="center",fontsize=5.7,color=GRY,style="italic")
-leader(bx(2.6),bz(-0.07),bx(4.4),bz(-border)-2,"0.10\u00d745\u00b0 BOSS/SPOTFACE (typ)",ha="left",fs=5.0)
-ax.text(BX-92,BY-25,"DETAIL B   (corner boss)   13:1",fontsize=8.5,fontweight="bold",color=INK)
-
-# ===================== CRITICAL DIMS + NOTES =====================
-ax.text(20,78,"CRITICAL DIMENSIONS  \u2014  C1 & C3 TOLERANCED \u00b10.05 (MARKED ON VIEWS); ALL OTHER FEATURES PER ISO 2768-1 (MEDIUM)",fontsize=7.4,fontweight="bold",color=INK)
-ct=[["C1","Cavity depth  (boss-top plane \u2192 cavity floor)","1.80  ±0.05"],
-    ["C2","PCB-rest plane flatness  (lip + 8 bosses)","FLAT  0.05"],
-    ["C3",f"8\u00d7 mounting holes  (x {_mx[-1]-_mx[0]:.2f}; y rows "
-          f"{'/'.join(f'{v:g}' for v in _my)})","\u00b10.05  (linear)"],
-    ["C4","Mounting holes \u2014 tapped, thru, from back","M2   /   \u00d81.6 drill"]]
-yy=72.5
-for r in ct:
-    ax.text(20,yy,r[0],fontsize=6.7,fontweight="bold",color=INK)
-    ax.text(28,yy,r[1],fontsize=6.5,color=INK); ax.text(120,yy,r[2],fontsize=6.5,color=INK); yy-=4.2
-ax.text(20,52.5,"NOTES",fontsize=7.4,fontweight="bold",color=INK)
-notes=[
- "1. MATERIAL: TITANIUM Gr5 (TC4) = Ti-6Al-4V GRADE 5.",
- "2. FINISH: BEAD-BLAST MATTE, ALL OVER. NO MARKING SERVICE — THE REAR ART (REEDED FIELDS + MEDALLION) IS MACHINED-IN, IN THE STEP (SEE REAR ART BLOCK). BEARING PLANE (FRAME + MEDALLION CRESTS) HAND-LAPPED BY CUSTOMER AFTER BLAST — NO SHOP ACTION.",
- "3. GENERAL TOLERANCE PER ISO 2768-1 (MEDIUM). C1-C4 TOLERANCED AS LISTED; C1 & C3 = ±0.05. DATUMS: A = LEFT EDGE, B = BOTTOM EDGE, C = PCB-REST PLANE.",
- "4. BRACE REGISTRATION: THE RESIN H-BRACE REGISTERS TO THIS SHELL BY FITMENT - ITS 4 OUTBOARD RAILS + THE COMPONENT POCKETS + THE BOARD PRESS-FIT. NO LOCATOR PILLARS; THE CAVITY FLOOR IS A FULL 1.00 EVERYWHERE.",
- "5. EDGE BREAKS - ALL 0.10x45°, FELT NOT SEEN, MODELED.  CALLED OUT ON SEC A-A / DETAIL B:  RIM = outer rim (top & bottom);  MOUTH = recess mouth (around PCB);  LIP = inner (cavity-side) lip edge;  FRAME = proud back-frame bottom edges;  BOSS = boss + spotface bottom edges (Detail B).  BREAK ALL OTHER EXPOSED EDGES 0.10x45°.  CONCAVE JUNCTION CORNERS (BOSS-TO-WALL + EAST-LIP STEPS) LEFT SHARP IN THE MODEL: FINISH WITH A Ø2.0 mm TOOL = R1.0 AS-MILLED. THE RESIN BRACE IS RELIEVED TO CLEAR R1.0 AT THESE CORNERS.",
- ("6. FLOOR IS A TRUE %.2f (%.2f LOCAL UNDER THE U7 POCKET), AT THE ~1.0 Ti MIN-WALL GUIDANCE SO IT ALSO CLEARS ALUMINIUM / COPPER / STAINLESS." % (floor, floor-U7_POCKET))
-   if U7_POCKET > 0 else
-   ("6. FLOOR IS A TRUE %.2f, UNIFORM ACROSS THE CAVITY, AT THE ~1.0 Ti MIN-WALL GUIDANCE SO IT ALSO CLEARS ALUMINIUM / COPPER / STAINLESS." % floor),
- "    CAVITY 1.80 +-0.05 -> 1.75 WORST-CASE, MINUS WS17 1.70 MAX (DATASHEET CASE WS17 HEIGHT) = 0.05 NON-CONTACT; THE BRACE + SOLAR-CELL SANDWICHES CARRY THE BOARD.",
- ("7. U7 RELIEF POCKET: 7.8 x 5.4 CENTERED (28.1, 37.3) ON THE CAVITY FLOOR, %.2f DEEP (LOCAL FLOOR %.2f) - U7 (%.2f) KEEPS 0.10 AIR. GENERAL FLOOR %.2f. MODELED IN THE STEP."
-   % (U7_POCKET, floor-U7_POCKET, U7_H, floor))
-   if U7_POCKET > 0 else
-   ("7. NO U7 RELIEF POCKET. U7 IS THE %.2f mm MB85RC512TY DFN-8, WELL UNDER THE %.2f CAP-LIMITED CAVITY, SO THE FLOOR IS UNIFORM %.2f. (A POCKET EXISTED FOR A 1.75 SOIC-8 THE v4 BOARD DOES NOT CARRY.)"
-   % (U7_H, _CAPH, floor)),
- "8. FRONT SUPPORT LIP IS ASYMMETRIC (SECTION A-A): WEST 2.5 / NORTH 2.0 / SOUTH 2.0 FOR PCB RIGIDITY; EAST 1.0 CLEARING THE JP1/TP1 PADS, THE NFC COIL (A GROUNDED LIP WOULD DETUNE IT), AND C7 (x49.55, THE ONE EAST-EDGE PART LEFT AFTER v4 REMOVED THE Q1/U4/R7/R9 CLAMP CLUSTER + D9/D10/D11); WIDENING TO 2.5 ONLY AT THE SOUTH END (y0-10, CLEAR OF ALL). THE EXTERIOR BACK BORDER (PLAN) IS INDEPENDENT AND UNIFORM 2.0 ON ALL 4 SIDES.",
- "9. NO INTERNAL RIBS OR SUPPORT POSTS: THE RESIN BRACE (SEPARATE PART) CARRIES CENTER SUPPORT. A PCB LAYOUT CHANGE = A BRACE REPRINT, NOT A SHELL RE-MACHINE.",
- "10. PCB RECESS = 0.60 DEEP (RECEIVES THE 0.60 mm BOARD; SLIP FIT, NOT A PRESS FIT). 3D STEP GOVERNS ALL GEOMETRY; STL NOT FOR CNC.",
- "11. PART = BACK-SHELL ONLY. PCB, RESIN BRACE, AND 8× M2×3 BRASS SLOTTED-CHEESE SCREWS (HEAD Ø3.8) SUPPLIED SEPARATELY.",
-]
-yy=48.0
-for n in notes: ax.text(20,yy,n,fontsize=5.85,color=INK); yy-=3.32
-
-# ===================== TITLE BLOCK =====================
-tb_x,tb_y,tb_w,tb_h=288,12,120,46
-ax.add_patch(Rectangle((tb_x,tb_y),tb_w,tb_h,fill=False,ec=INK,lw=0.9))
-for yl in (tb_y+34,tb_y+24,tb_y+15,tb_y+8): ax.plot([tb_x,tb_x+tb_w],[yl,yl],lw=0.4,color=INK)
-ax.plot([tb_x+60,tb_x+60],[tb_y,tb_y+15],lw=0.4,color=INK)
-ax.text(tb_x+tb_w/2,tb_y+40,"SOLAR-GLOW DRH v3.0  —  Ti BACK-SHELL (0.6mm-BOARD DUMB BOX)",ha="center",va="center",fontsize=7.5,fontweight="bold",color=INK)
-ax.text(tb_x+3,tb_y+29,"DWG  solar-glow-drh-v3_0-backshell-0p6b-brace",fontsize=5.9,va="center",color=INK)
-ax.text(tb_x+tb_w-3,tb_y+29,"REV  v3.0",ha="right",fontsize=6.6,va="center",color=INK)
-ax.text(tb_x+3,tb_y+19.5,"MATERIAL  Ti Gr5 (TC4)",fontsize=6.6,va="center",color=INK)
-ax.text(tb_x+tb_w-3,tb_y+19.5,"FINISH  BEAD-BLAST + LAP (CUSTOMER)",ha="right",fontsize=6.6,va="center",color=INK)
-ax.text(tb_x+3,tb_y+11.2,"UNITS  mm",fontsize=6.4,va="center",color=INK)
-ax.text(tb_x+63,tb_y+11.2,"SCALE  AS NOTED",fontsize=6.4,va="center",color=INK)
-ax.text(tb_x+3,tb_y+4,"BBOX 52.70 x 90.80 x 3.55   3rd-angle",fontsize=6.0,va="center",color=INK)
-ax.text(tb_x+tb_w-3,tb_y+4,"SHEET 1/1",ha="right",fontsize=6.4,va="center",color=INK)
-
-# ===================== TOLERANCE BLOCK (above title block) =====================
-tx,ty,tw,th=288,61,120,33
-ax.add_patch(Rectangle((tx,ty),tw,th,fill=False,ec=INK,lw=0.9))
-ax.plot([tx,tx+tw],[ty+th-6.5,ty+th-6.5],lw=0.4,color=INK)
-ax.text(tx+tw/2,ty+th-3.3,"GENERAL TOLERANCES  (UNLESS OTHERWISE NOTED, mm)",ha="center",va="center",fontsize=6.2,fontweight="bold",color=INK)
-tol=[("LINEAR & HOLE-POSITION DIMS","ISO 2768-m"),
-     ("CAVITY DEPTH  C1  (SECTION A-A)","1.80 \u00b10.05"),
-     ("HOLE-PATTERN PITCH  C3  (8 HOLES)",
-      f"x {_mx[-1]-_mx[0]:.2f} / y "
-      f"{'-'.join(f'{b-a:g}' for a,b in zip(_my[:-1],_my[1:]))}  \u00b10.05"),
-     ("PCB-REST FLATNESS  C2","FLAT 0.05")]
-yt=ty+th-11.5
-for lab,val in tol:
-    ax.text(tx+3,yt,lab,fontsize=5.85,va="center",color=INK)
-    ax.text(tx+tw-3,yt,val,ha="right",fontsize=5.85,va="center",fontweight="bold",color=INK)
-    yt-=5.3
 
 # Write next to this script by default (override with $OUT_DIR). This used to be a hardcoded
 # /mnt/user-data/outputs/, which exists only on the machine this was first authored on, so a
 # plain checkout could not regenerate the sheet -- same fix as the backshell generator.
-import os as _o
-_OUT = _o.environ.get("OUT_DIR") or _o.path.dirname(_o.path.abspath(__file__))
-_o.makedirs(_OUT, exist_ok=True)
-# CreationDate=None: matplotlib stamps a write time into the PDF, so an unchanged drawing
-# rewrote itself on every run. That is not cosmetic once CI regenerates these -- a job that
-# commits its outputs would produce a "changed drawing" commit for every board edit that did
-# not touch the drawing at all, and a real change would be invisible among them. PNG carries
-# no such stamp and is already reproducible.
-fig.savefig(_o.path.join(_OUT,"solar-glow-drh-v3_0-backshell-0p6b-brace-DRAWING.pdf"),facecolor="white",
-            metadata={"CreationDate": None})
-fig.savefig(_o.path.join(_OUT,"solar-glow-drh-v3_0-backshell-0p6b-brace-DRAWING.png"),dpi=150,facecolor="white")
-print("saved")
+OUT = _o.environ.get("OUT_DIR") or _o.path.dirname(_o.path.abspath(__file__))
+_o.makedirs(OUT, exist_ok=True)
+
+
+def sheet(vname, v):
+    """Draw one variant's sheet. Every per-variant number is read from `v` (a
+    fit_rules.VARIANTS row) HERE, once; only f-strings of these locals reach the page."""
+    floor, cavity, border = v["floor"], v["cavity"], v["border_h"]
+    wall      = v["wall_th"]
+    screw     = v["screw_len"]
+    cap_h     = v["cap_h"]
+    open_back = v["open_back"]
+    has_brace = bool(v["brace"])
+    has_fins  = bool(v["fins"]) and not open_back
+    has_med   = bool(v["medallion"]) and not open_back
+    material  = v["material"]
+    is_ti     = material.startswith("Ti")
+    stack     = v["stack"]                     # floor + cavity + board (fit_rules derives it)
+    overall   = round(stack + border, 2)       # + proud back frame (0 on the open frame)
+    sf        = round(stack - screw, 2)        # spotface bottom = screw-tip plane above z=0
+    u7_pocket = 0.0 if open_back else U7_POCKET   # a pocket needs a floor to be cut into
+    bb, wt = floor + cavity, floor + cavity + board
+    ef = -0.05
+    cavW,cavH,cavR = W+2*ef,H+2*ef,R+ef
+    outW,outH,outR = cavW+2*wall,cavH+2*wall,cavR+wall
+    oxmin = oymin = -(wall + ef)                                 # outline SW corner (-0.95)
+    _oxmax, _oymax = W + wall + ef, H + wall + ef                # outline NE corner (datums)
+
+    # ---- NOTES, assembled first so every "note N" reference on the views is computed ----
+    notes = []          # [(key, [line, continuation-line...])] -- numbered at render time
+    if is_ti:
+        notes.append(("mat", [f"MATERIAL: TITANIUM Gr5 (TC4) = Ti-6Al-4V GRADE 5.  [{material}]"]))
+    else:
+        notes.append(("mat", [f"MATERIAL: {material.upper()}."]))
+    if has_med and has_fins:
+        notes.append(("fin", ["FINISH: BEAD-BLAST MATTE, ALL OVER. NO MARKING SERVICE — THE REAR ART (REEDED FIELDS + MEDALLION) IS MACHINED-IN, IN THE STEP (SEE REAR ART BLOCK). BEARING PLANE (FRAME + MEDALLION CRESTS) HAND-LAPPED BY CUSTOMER AFTER BLAST — NO SHOP ACTION."]))
+    elif not open_back:
+        notes.append(("fin", ["FINISH: BEAD-BLAST MATTE, ALL OVER. NO MARKING SERVICE. NO REAR ART — THE %.2f FLOOR CANNOT TAKE THE FIN VALLEYS (%.2f DEEP) OR THE MEDALLION FLOORS (~0.55-0.75); BOTH PHYSICS-FORCED OFF (fit_rules.VARIANTS)." % (floor, _fr.FIN_VALLEY)]))
+    else:
+        notes.append(("fin", ["FINISH: BEAD-BLAST MATTE, ALL OVER. NO MARKING SERVICE — OPEN FRAME: NO BACK FACE, NO REAR ART."]))
+    notes.append(("tol", ["GENERAL TOLERANCE PER ISO 2768-1 (MEDIUM). C1-C4 TOLERANCED AS LISTED; C1 & C3 = ±0.05. DATUMS: A = LEFT EDGE, B = BOTTOM EDGE, C = PCB-REST PLANE."]))
+    if has_brace:
+        notes.append(("brace", ["BRACE REGISTRATION: THE RESIN H-BRACE REGISTERS TO THIS SHELL BY FITMENT - ITS 4 OUTBOARD RAILS + THE COMPONENT POCKETS + THE BOARD PRESS-FIT. NO LOCATOR PILLARS; THE CAVITY FLOOR IS A FULL %.2f EVERYWHERE." % floor]))
+    else:
+        notes.append(("brace", ["NO BRACE: AN OPEN FRAME HAS NO FLOOR TO RETAIN ONE (fit_rules.VARIANTS: brace_name=None). THE PCB REGISTERS IN THE %.2f RECESS AND ON THE 8 BOSSES." % board]))
+    if is_ti:
+        notes.append(("edge", ["EDGE BREAKS - ALL 0.10x45°, FELT NOT SEEN, MODELED.  CALLED OUT ON SEC A-A / DETAIL B:  RIM = outer rim (top & bottom);  MOUTH = recess mouth (around PCB);  LIP = inner (cavity-side) lip edge;  FRAME = proud back-frame bottom edges;  BOSS = boss + spotface bottom edges (Detail B).  BREAK ALL OTHER EXPOSED EDGES 0.10x45°.  CONCAVE JUNCTION CORNERS (BOSS-TO-WALL + EAST-LIP STEPS) LEFT SHARP IN THE MODEL: FINISH WITH A Ø2.0 mm TOOL = R1.0 AS-MILLED." + (" THE RESIN BRACE IS RELIEVED TO CLEAR R1.0 AT THESE CORNERS." if has_brace else "")]))
+    else:
+        notes.append(("edge", ["EDGE BREAKS - ALL 0.10x45°, FELT NOT SEEN, MODELED.  CALLED OUT ON SEC A-A / DETAIL B:  RIM = outer rim (top & bottom);  MOUTH = recess mouth (around PCB);  LIP = inner (cavity-side) lip edge;  BOSS = boss + spotface bottom edges (Detail B).  BREAK ALL OTHER EXPOSED EDGES 0.10x45°.  CONCAVE JUNCTION CORNERS LEFT SHARP IN THE MODEL: FINISH WITH A Ø2.0 mm TOOL = R1.0 AS-MILLED.  DEBURR 316L WITH SHARP TOOLS, SINGLE PASSES - AUSTENITIC STAINLESS WORK-HARDENS UNDER A RUBBING DEBURR."]))
+    if not open_back:
+        _guide = ("AT THE ~1.0 Ti MIN-WALL GUIDANCE SO IT ALSO CLEARS ALUMINIUM / COPPER / STAINLESS."
+                  if floor >= 1.0 - 1e-9 else
+                  "BELOW THE ~1.0 Ti MIN-WALL GUIDANCE - THE %.2f IS THE SHOP-MINIMUM CONVERSATION (fit_rules.VARIANTS); CONFIRM THE SHOP HOLDS IT BEFORE QUOTING." % floor)
+        _fl_main = (("FLOOR IS A TRUE %.2f (%.2f LOCAL UNDER THE U7 POCKET), %s" % (floor, floor - u7_pocket, _guide))
+                    if u7_pocket > 0 else
+                    ("FLOOR IS A TRUE %.2f, UNIFORM ACROSS THE CAVITY, %s" % (floor, _guide)))
+        _cap_desc = (f"WS17 {cap_h:.2f} MAX (DATASHEET CASE WS17 HEIGHT)" if abs(cap_h - _CAPH) < 1e-9
+                     else f"THIN CAP {cap_h:.2f} MAX (PROVISIONAL — part_heights.SUPERCAP_H_THIN)")
+        notes.append(("floor", [_fl_main,
+                                f"CAVITY {cavity:.2f} ±0.05 -> {cavity-0.05:.2f} WORST-CASE, MINUS {_cap_desc} = {cavity-0.05-cap_h:.2f} NON-CONTACT; THE BRACE + SOLAR-CELL SANDWICHES CARRY THE BOARD."]))
+        notes.append(("u7", [("U7 RELIEF POCKET: 7.8 x 5.4 CENTERED (28.1, 37.3) ON THE CAVITY FLOOR, %.2f DEEP (LOCAL FLOOR %.2f) - U7 (%.2f) KEEPS 0.10 AIR. GENERAL FLOOR %.2f. MODELED IN THE STEP." % (u7_pocket, floor - u7_pocket, U7_H, floor))
+                             if u7_pocket > 0 else
+                             ("NO U7 RELIEF POCKET. U7 IS THE %.2f mm MB85RC512TY DFN-8, WELL UNDER THE %.2f CAVITY, SO THE FLOOR IS UNIFORM %.2f. (A POCKET EXISTED FOR A 1.75 SOIC-8 THE v4 BOARD DOES NOT CARRY.)" % (U7_H, cavity, floor))]))
+    else:
+        notes.append(("floor", ["NO FLOOR - OPEN FRAME. THE BACK OF EVERY B-SIDE COMPONENT FACES THE TABLE; THE FRAME'S RESTING PLANE (BOTTOM FACE) CARRIES THE ASSEMBLY.",
+                                f"DEPTH {cavity:.2f} = TALLEST B-SIDE PART {cavity - 2*_fr.CAP_AIR:.2f} + 2×{_fr.CAP_AIR:.2f} RESTING CLEARANCE (fit_rules.VARIANTS: resting-clearance-limited)."]))
+    notes.append(("lip", ["FRONT SUPPORT LIP IS ASYMMETRIC (SECTION A-A): WEST 2.5 / NORTH 2.0 / SOUTH 2.0 FOR PCB RIGIDITY; EAST 1.0 CLEARING THE JP1/TP1 PADS, THE NFC COIL (A GROUNDED LIP WOULD DETUNE IT), AND C7 (x49.55, THE ONE EAST-EDGE PART LEFT AFTER v4 REMOVED THE Q1/U4/R7/R9 CLAMP CLUSTER + D9/D10/D11); WIDENING TO 2.5 ONLY AT THE SOUTH END (y0-10, CLEAR OF ALL)." + (" THE EXTERIOR BACK BORDER (PLAN) IS INDEPENDENT AND UNIFORM %.1f ON ALL 4 SIDES." % bbw if border > 0 else " NO EXTERIOR BACK BORDER — THE OPEN FRAME HAS NO BACK FACE.")]))
+    if has_brace:
+        notes.append(("ribs", ["NO INTERNAL RIBS OR SUPPORT POSTS: THE RESIN BRACE (SEPARATE PART) CARRIES CENTER SUPPORT. A PCB LAYOUT CHANGE = A BRACE REPRINT, NOT A SHELL RE-MACHINE."]))
+    else:
+        notes.append(("ribs", ["NO INTERNAL RIBS, SUPPORT POSTS, OR BRACE: OPEN FRAME. THE BOARD SPANS FREE BETWEEN THE LIP AND THE 8 BOSSES — HANDLE THE ASSEMBLY ACCORDINGLY."]))
+    notes.append(("recess", ["PCB RECESS = %.2f DEEP (RECEIVES THE %.2f mm BOARD; SLIP FIT, NOT A PRESS FIT). 3D STEP GOVERNS ALL GEOMETRY; STL NOT FOR CNC." % (board, board)]))
+    notes.append(("part", [f"PART = {'BACK-SHELL' if not open_back else 'OPEN FRAME'} ONLY. PCB, {'RESIN BRACE, ' if has_brace else ''}AND 8× M2×{screw:g} BRASS SLOTTED-CHEESE SCREWS (HEAD Ø3.8) SUPPLIED SEPARATELY."]))
+    note_no = {k: i + 1 for i, (k, _) in enumerate(notes)}
+
+    fig=plt.figure(figsize=(420/25.4,297/25.4))
+    ax=fig.add_axes([0,0,1,1]); ax.set_xlim(0,420); ax.set_ylim(0,297)
+    ax.set_aspect("equal"); ax.axis("off"); fig.patch.set_facecolor("white")
+    ax.add_patch(Rectangle((8,8),404,281,fill=False,ec=INK,lw=1.2))
+    ax.add_patch(Rectangle((10,10),400,277,fill=False,ec=INK,lw=0.4))
+
+    def rrect(x,y,w,h,r,n=12):
+        p=[]; cs=[(x+w-r,y+r),(x+w-r,y+h-r),(x+r,y+h-r),(x+r,y+r)]; a0=[-90,0,90,180]
+        for (cx,cy),a in zip(cs,a0):
+            for t in np.linspace(np.radians(a),np.radians(a+90),n): p.append((cx+r*np.cos(t),cy+r*np.sin(t)))
+        return p
+    def dim(p0,p1,off,text,vert=False,fs=7,side=1,txtoff=1.6):
+        (x0,y0),(x1,y1)=p0,p1
+        if vert:
+            xd=off
+            ax.plot([x0,xd+1.6*side],[y0,y0],lw=0.4,color=INK); ax.plot([x1,xd+1.6*side],[y1,y1],lw=0.4,color=INK)
+            ax.annotate("",xy=(xd,y0),xytext=(xd,y1),arrowprops=dict(arrowstyle="<|-|>",lw=0.5,color=INK,mutation_scale=8,shrinkA=0,shrinkB=0))
+            ax.text(xd-txtoff*side,(y0+y1)/2,text,ha="right" if side>0 else "left",va="center",fontsize=fs,rotation=90,color=INK)
+        else:
+            yd=off
+            ax.plot([x0,x0],[y0,yd+1.6*side],lw=0.4,color=INK); ax.plot([x1,x1],[y1,yd+1.6*side],lw=0.4,color=INK)
+            ax.annotate("",xy=(x0,yd),xytext=(x1,yd),arrowprops=dict(arrowstyle="<|-|>",lw=0.5,color=INK,mutation_scale=8,shrinkA=0,shrinkB=0))
+            ax.text((x0+x1)/2,yd+txtoff*side,text,ha="center",va="bottom" if side>0 else "top",fontsize=fs,color=INK)
+    def leader(xp,yp,xt,yt,text,ha="left",fs=6.6,va="center"):
+        ax.annotate("",xy=(xp,yp),xytext=(xt,yt),arrowprops=dict(arrowstyle="-|>",lw=0.45,color=INK,mutation_scale=7,shrinkA=0,shrinkB=2))
+        ax.text(xt+(0.8 if ha=='left' else -0.8),yt,text,ha=ha,va=va,fontsize=fs,color=INK)
+    def fcf(x,y,cells,h=4.6,fs=6.6):
+        cx=x
+        for c in cells:
+            w=max(7.0,2.6+len(c)*1.95); ax.add_patch(Rectangle((cx,y),w,h,fill=False,ec=INK,lw=0.5))
+            ax.text(cx+w/2,y+h/2,c,ha="center",va="center",fontsize=fs,color=INK); cx+=w
+        return cx,y+h/2
+
+    # ===================== PLAN (back face / frame from the back) =====================
+    S1=1.5; Px,Py=42,112
+    X=lambda bx:Px+(bx-oxmin)*S1; Y=lambda by:Py+(by-oymin)*S1
+    ax.add_patch(MplPoly(rrect(X(oxmin),Y(oymin),outW*S1,outH*S1,outR*S1),closed=True,fill=False,ec=INK,lw=1.0))
+    ax.add_patch(MplPoly(rrect(X(oxmin)+wall*S1,Y(oymin)+wall*S1,cavW*S1,cavH*S1,cavR*S1),closed=True,fill=False,ec=GRY,lw=0.5))
+    if border > 0:
+        _afw,_afh = cavW-2*bbw, cavH-2*bbw      # symmetric recessed art field (equal border all sides)
+        ax.add_patch(MplPoly(rrect(X(0.05+bbw),Y(0.05+bbw),_afw*S1,_afh*S1,max(cavR-bbw,0.3)*S1),closed=True,fill=False,ec=INK,lw=0.8))
+        for lx,ly,rot in [(0.05+bbw/2,44,90),(W-0.05-bbw/2,44,90),(25.4,0.05+bbw/2,0),(25.4,H-0.05-bbw/2,0)]:
+            ax.text(X(lx),Y(ly),f"{bbw:.1f}",ha="center",va="center",fontsize=4.8,color="#2f5bd0",rotation=rot)
+    for mx,my in mounts:
+        ax.add_patch(plt.Circle((X(mx),Y(my)),boss_r*S1,fill=False,ec=GRY,lw=0.5))
+        ax.add_patch(plt.Circle((X(mx),Y(my)),cbore/2*S1,fill=False,ec=GRY,lw=0.5))
+        ax.add_patch(plt.Circle((X(mx),Y(my)),pilot_r*S1,fill=False,ec=INK,lw=0.9))
+        ax.plot([X(mx)-1.6*S1,X(mx)+1.6*S1],[Y(my),Y(my)],lw=0.4,color=INK)
+        ax.plot([X(mx),X(mx)],[Y(my)-1.6*S1,Y(my)+1.6*S1],lw=0.4,color=INK)
+    # REAR ART (reference): the two reeded fin fields and the medallion, drawn from their own
+    # sources -- ONLY on the variant that carries them. Zones dashed, every rib outlined from
+    # fit_rules.fin_ribs() (the real stadium polygons, boss wraps and all), medallion circles
+    # from medallion.py's constants. STEP governs.
+    if has_fins:
+        for _zone, _cys in _fr.fin_runs():
+            for _zp in (_zone.geoms if _zone.geom_type == "MultiPolygon" else [_zone]):
+                ax.add_patch(MplPoly([(X(px), Y(py)) for px, py in _zp.exterior.coords],
+                                     closed=True, fill=False, ec=GRY, lw=0.4, ls=(0, (3, 1.6))))
+        for _rp in _fr.fin_ribs():
+            ax.add_patch(MplPoly([(X(px), Y(py)) for px, py in _rp.exterior.coords],
+                                 closed=True, fill=False, ec=GRY, lw=0.22))
+        leader(X(46.0), Y(75.0), 124, 228, "REEDED FIELDS ×2 (REF — REAR ART BLOCK)", fs=5.2)
+    if has_med:
+        ax.add_patch(plt.Circle((X(25.4), Y(_MCY)), (_mdl.COIN_R + _mdl.RIM_W) * S1,
+                                fill=False, ec=GRY, lw=0.55))
+        for _rr in (_mdl.COIN_R, sum(_mdl.HOOP) / 2.0, _mdl.R_TEXT):
+            ax.add_patch(plt.Circle((X(25.4), Y(_MCY)), _rr * S1,
+                                    fill=False, ec=GRY, lw=0.28, ls=(0, (3, 1.6))))
+        leader(X(25.4 + 9.4), Y(_MCY - 9.4), 124, 196, "MEDALLION (REF — REAR ART BLOCK)", fs=5.2)
+
+    # U7 relief pocket (cavity-floor recess; hidden in back-face view -> dashed).
+    # Drawn ONLY if the arithmetic still calls for one -- see the import block above.
+    u7x,u7y,pw,ph = 28.1,37.3,7.8,5.4
+    if u7_pocket > 0:
+        ax.add_patch(MplPoly(rrect(X(u7x-pw/2),Y(u7y-ph/2),pw*S1,ph*S1,1.0*S1),closed=True,fill=False,ec=GRY,lw=0.6,ls=(0,(4,2))))
+        leader(X(u7x-pw/2),Y(u7y-ph/2),100,150,f"U7 RELIEF POCKET  (NOTE {note_no['u7']})",ha="left",fs=5.8)
+    dim((X(oxmin),Y(oymin)),(X(_oxmax),Y(oymin)),Py-20,f"{outW:.2f}",fs=8,side=-1)
+    dim((X(oxmin),Y(_my[0])),(X(_mx[0]),Y(_my[0])),Py-8,f"{_mx[0]-oxmin:.2f}",fs=6.3,side=-1)
+    dim((X(_mx[0]),Y(_my[0])),(X(_mx[-1]),Y(_my[0])),Py-8,f"{_mx[-1]-_mx[0]:.2f} ±0.05",fs=6.3,side=-1)
+    dim((X(_mx[-1]),Y(_my[0])),(X(_oxmax),Y(_my[0])),Py-8,f"{_oxmax-_mx[-1]:.2f}",fs=6.3,side=-1)
+    dim((X(oxmin),Y(_oymax)),(X(oxmin),Y(oymin)),Px-22,f"{outH:.2f}",vert=True,fs=8,side=1)
+    # 8-mount y-pattern: 4 rows -> chained pitch (each row ±0.05, per C3). Rows AND pitches are
+    # derived from MOUNTS; they were four typed literals until 2026-08-03.
+    for _a,_b in zip(_my[:-1],_my[1:]):
+        dim((X(_mx[0]),Y(_b)),(X(_mx[0]),Y(_a)),Px-10,f"{_b-_a:.2f}",vert=True,fs=6.0,side=1)
+    dim((X(_mx[0]),Y(_my[-1])),(X(_mx[0]),Y(_my[0])),Px-17,
+        f"{_my[-1]-_my[0]:.2f} ±0.05 (corners)",vert=True,fs=5.6,side=1)
+    ax.text(X(25.4),Y(_oymax)+5,
+            "BACK FACE (outer)   SCALE 1.5:1" if not open_back else
+            "PLAN — FROM THE BACK (OPEN FRAME, NO BACK FACE)   SCALE 1.5:1",
+            ha="center",fontsize=8.5,fontweight="bold",color=INK)
+    # hole FCF + callout (middle column)
+    fcf(150,182,["POS","Ø0.10 (M)","A","B"])
+    leader(X(_mx[-1]),Y(_my[-1]),150,186.3,"",ha="left")
+    ax.text(150,172,"8×  M2 THREAD, THRU",fontsize=7.2,fontweight="bold",color=INK)
+    ax.text(150,167,"Ø1.6 TAP DRILL  •  TAP FROM " + ("BACK FACE" if not open_back else "RESTING FACE (BACK)"),fontsize=6.8,color=INK)
+    ax.text(150,162,f"Ø{cbore:g} SPOTFACE, BACK (depth per Detail B)",fontsize=6.8,color=INK)
+    ax.text(150,156,"C3 = hole-pattern pitch ±0.05   C4 = M2 thread",fontsize=6.0,color=GRY,style="italic")
+    ax.text(150,148,"SECTION A-A → edge profile      DETAIL B → corner boss",fontsize=6.2,color=GRY,style="italic")
+
+    # ===================== REAR ART (machined-in; reference block) =====================
+    # The block only exists on the variant that carries the art; where the whole view
+    # collapses (lite: physics-forced off; air: no back face at all) it is REPLACED by a
+    # note that says so, rather than left as an empty region.
+    if has_fins and has_med:
+        ax.text(150,140,"REAR ART — MACHINED-IN GEOMETRY  (REFERENCE; STEP GOVERNS)",fontsize=6.8,fontweight="bold",color=INK)
+        _ra=[
+         "REEDED FIN FIELDS ×2 (PLAN, dashed zones):  %d RIBS/FIELD, %.2f WIDE" % (_fr.FIN_ROWS,_fr.FIN_RIB_W),
+         "ON %.3f PITCH; GROOVES Ø0.6 END-MILL ONLY (%.2f WIDE), VALLEY %.2f" % (_fr.FIN_PITCH,_fr.FIN_GROOVE,_fr.FIN_VALLEY),
+         "BELOW ART FIELD (0.40 WEB); RIB TOPS +%.2f — 0.05 UNDER BEARING PLANE." % _fr.FIN_PROUD,
+         "",
+         "MEDALLION (PLAN, circles):  Ø%.1f COIN SUNK %.2f BELOW ART FIELD (Ø0.4" % (2*(_mdl.COIN_R+_mdl.RIM_W),_mdl.COIN_D),
+         "END MILL), COUNTERS/REST %.2f (Ø0.3 REST PASS); CRESTS (RING TEXT, RIM," % _mdl.REST_D,
+         "HOOP, MONOGRAM, SERIAL) LEFT AT THE FRAME'S BEARING PLANE (−0.15),",
+         "VERTICAL WALLS, NO DETACHED ISLAND UNDER %.2f. DO NOT EDGE-BREAK" % _mdl.MIN_ISLAND,
+         "CREST EDGES. SERIAL (“No %s”) IS PER-UNIT VARIABLE TEXT." % _mdl.SERIAL,
+         "",
+         "OP ORDER: ALL BACK-FACE FEATURES BEFORE CAVITY HOLLOW (SOLID-STOCK",
+         "RULE). STRESS-RELIEVED STOCK — STATE CONDITION ON QUOTE.",
+        ]
+    elif not open_back:
+        ax.text(150,140,"REAR ART — NONE ON THIS VARIANT",fontsize=6.8,fontweight="bold",color=INK)
+        _ra=[
+         "THE %.2f FLOOR CANNOT TAKE THE FIN VALLEYS (%.2f DEEP) OR THE" % (floor,_fr.FIN_VALLEY),
+         "MEDALLION FLOORS (~0.55-0.75) — PHYSICS-FORCED OFF IN fit_rules.VARIANTS,",
+         "NOT STYLING. BACK FACE = PLAIN RECESSED ART FIELD INSIDE THE %.1f" % bbw,
+         "BORDER + 8 BOSS ANNULI, NOTHING ELSE.",
+        ]
+    else:
+        ax.text(150,140,"REAR ART / BACK-FACE VIEW — NONE",fontsize=6.8,fontweight="bold",color=INK)
+        _ra=[
+         "OPEN FRAME — NO BACK FACE. THE PLAN ABOVE SHOWS THE FRAME FROM THE",
+         "BACK; THE OPENING IS THE CAVITY VOID, CLEAN THROUGH (NO FLOOR, NO",
+         "BORDER, NO FINS, NO MEDALLION).",
+        ]
+    _ry=135.5
+    for _rl in _ra: ax.text(150,_ry,_rl,fontsize=5.6,color=INK); _ry-=3.1
+
+    # ===================== EDGE SECTION A-A =====================
+    S2=13.0; EX,EY=265,202
+    xl=lambda v_:EX+v_*S2; zl=lambda z:EY+(z+border)*S2
+    if not open_back:
+        prof=[(0.10,0.0),(wall,0.0),(wall,-border+lb),(wall+lb,-border),(wall+bbw-lb,-border),(wall+bbw,-border+lb),(wall+bbw,0.0),
+              (8.5,0.0),(8.5,floor),(wall+lip_w,floor),(wall+lip_w,bb-lb),(wall+lip_w-lb,bb),(wall,bb),
+              (wall,wt-ease),(wall-ease,wt),(ease,wt),(0.0,wt-ease),(0.0,0.10)]
+    else:
+        # open frame: wall + lip only -- no floor to draw, no proud back frame
+        prof=[(0.10,0.0),(wall+lip_w,0.0),(wall+lip_w,bb-lb),(wall+lip_w-lb,bb),(wall,bb),
+              (wall,wt-ease),(wall-ease,wt),(ease,wt),(0.0,wt-ease),(0.0,0.10)]
+    ax.add_patch(MplPoly([(xl(x),zl(z)) for x,z in prof],closed=True,fc=HATCH,ec=INK,lw=0.8,hatch="////"))
+    dim((xl(0.0),zl(-border)),(xl(0.0),zl(wt)),xl(0.0)-7,f"{overall:.2f}",vert=True,fs=7,side=1)
+    if floor > 0:
+        dim((xl(8.5),zl(0.0)),(xl(8.5),zl(floor)),xl(8.5)+7,f"{floor:.2f}",vert=True,fs=6.6,side=-1)
+        dim((xl(8.5),zl(floor)),(xl(8.5),zl(bb)),xl(8.5)+7,f"{cavity:.2f} ±0.05",vert=True,fs=7,side=-1)
+    else:
+        dim((xl(wall+lip_w),zl(0.0)),(xl(wall+lip_w),zl(bb)),xl(wall+lip_w)+7,f"{cavity:.2f} ±0.05",vert=True,fs=7,side=-1)
+    dim((xl(0.0),zl(0.0)),(xl(wall),zl(0.0)),zl(-border)-5,f"{wall:.1f}",fs=6.4,side=-1)
+    dim((xl(wall),zl(bb)),(xl(wall+lip_w),zl(bb)),zl(bb)+7,f"{lip_w:g} W-LIP (front; note {note_no['lip']})",fs=5.2,side=1,txtoff=1.0)
+    if border > 0:
+        leader(xl(2.0),zl(-border+0.06),xl(4.6),zl(-border)-6.5,f"{bbw:.1f} BACK BORDER (UNIFORM, 4 PL)",ha="left",fs=5.0)
+        dim((xl(wall+lip_w+0.25),zl(-border)),(xl(wall+lip_w+0.25),zl(0.0)),xl(wall+lip_w)+3.0,f"{border:.2f}",vert=True,fs=5.8,side=-1,txtoff=1.0)
+    leader(xl(0.05),zl(wt-0.06),xl(1.7),zl(wt)+4.5,"0.10×45° RIM (top)",ha="left",fs=5.2)
+    leader(xl(0.90),zl(wt-0.06),xl(4.2),zl(wt)+9.5,"0.10×45° MOUTH",ha="left",fs=5.2)
+    fcf(xl(3.4),zl(bb)+8,["FLAT","0.05"]); leader(xl(2.2),zl(bb),xl(3.4),zl(bb)+8+2.3,"",ha="left")
+    leader(xl(3.36),zl(bb-0.04),xl(5.7),zl(bb+0.25),"0.10×45° LIP",ha="left",fs=5.2)
+    leader(xl(0.05),zl(0.06),xl(-2.6),zl(0.55),"0.10×45° RIM (btm)",ha="right",fs=5.0)
+    if border > 0:
+        leader(xl(1.08),zl(-0.10),xl(1.35),zl(-border)-9,"0.10×45° FRAME (2 PL)",ha="left",fs=5.0)
+        leader(xl(3.42),zl(-0.10),xl(1.35),zl(-border)-9,"",ha="left")
+    if not open_back:
+        ax.text(xl(0.06),zl(floor)+0.8,
+                ("  floor %.2f TRUE (%.2f local under the U7 pocket, note %d)   •   PCB recess %.2f (%.2f mm board)"
+                 % (floor, floor-u7_pocket, note_no['u7'], board, board)) if u7_pocket > 0 else
+                ("  floor %.2f TRUE, UNIFORM (no local relief)   •   PCB recess %.2f (%.2f mm board)" % (floor, board, board)),
+                fontsize=5.7,color=GRY,va="bottom")
+    else:
+        ax.text(xl(6.4),zl(0.55),
+                "open frame — no floor, no back face (note %d)\nPCB recess %.2f (%.2f mm board)"
+                % (note_no['floor'], board, board),
+                fontsize=5.7,color=GRY,va="center")
+    ax.text(EX+2,EY-11,"SECTION A-A  (edge)   SCALE 13:1",fontsize=8.5,fontweight="bold",color=INK)
+    ax.text(EX+2,EY-16.5,
+            "C1 = cavity depth    C2 = PCB-rest-plane flatness    (back face down; PCB drops in from top)" if not open_back else
+            "C1 = frame depth    C2 = PCB-rest-plane flatness    (open frame; PCB drops in from top)",
+            fontsize=6,color=GRY,style="italic")
+
+    # ===================== DETAIL B (corner boss, section) =====================
+    S3=13.0; BX,BY=312,112
+    bx=lambda v_:BX+v_*S3; bz=lambda z:BY+(z+border)*S3
+    if floor > 0:
+        ax.add_patch(MplPoly([(bx(-4),bz(0)),(bx(4),bz(0)),(bx(4),bz(floor)),(bx(-4),bz(floor))],closed=True,fc=HATCH,ec=INK,lw=0.6,hatch="////"))
+    for s in (1,-1):
+        # boss stock between the tap hole and the spotface starts at the spotface bottom,
+        # which is COMPUTED (stack - screw length): 0.40 here on max. The old sheet drew it
+        # at a hand-typed 0.20 that matched no shipped stack -- a stale literal, silent
+        # because no dimension string quoted it.
+        ax.add_patch(MplPoly([(bx(x),bz(z)) for x,z in [(s*0.8,sf),(s*1.5,sf),(s*1.5,bb),(s*0.8,bb)]],closed=True,fc=HATCH,ec=INK,lw=0.7,hatch="////"))
+        if border > 0:
+            ax.add_patch(MplPoly([(bx(x),bz(z)) for x,z in [(s*1.5,-border+lb),(s*(1.5+lb),-border),(s*(2.6-lb),-border),(s*2.6,-border+lb),(s*2.6,bb),(s*1.5,bb)]],closed=True,fc=HATCH,ec=INK,lw=0.7,hatch="////"))
+        else:
+            ax.add_patch(MplPoly([(bx(x),bz(z)) for x,z in [(s*1.5,0.0),(s*2.6,0.0),(s*2.6,bb),(s*1.5,bb)]],closed=True,fc=HATCH,ec=INK,lw=0.7,hatch="////"))
+    ax.add_patch(Rectangle((bx(-4),bz(bb)),8*S3,board*S3,fill=False,ec=GRY,lw=0.6,ls=(0,(5,3))))
+    ax.add_patch(Rectangle((bx(-1.0),bz(wt)),2.0*S3,1.6*S3,fill=False,ec=GRY,lw=0.6,ls=(0,(5,3))))
+    ax.add_patch(Rectangle((bx(-0.9),bz(sf)),1.8*S3,(wt-sf)*S3,fill=False,ec=GRY,lw=0.6,ls=(0,(5,3))))
+    ax.plot([bx(0),bx(0)],[bz(-border)-3,bz(wt)+1.6*S3+3],lw=0.4,color=INK,ls=(0,(8,3,1,3)))
+    dim((bx(-2.6),bz(-border)),(bx(2.6),bz(-border)),bz(-border)-12,f"Ø{2*boss_r:.2f}",fs=6.8,side=-1)
+    dim((bx(-1.5),bz(-border)),(bx(1.5),bz(-border)),bz(-border)-5,f"Ø{cbore:g} SPOTFACE (BACK)",fs=6.3,side=-1)
+    if border > 0:
+        dim((bx(2.6),bz(-border)),(bx(2.6),bz(0.0)),bx(2.6)+3,f"{border:.2f}",vert=True,fs=5.8,side=-1,txtoff=1.0)
+    leader(bx(0.0),bz(bb*0.55),bx(4.6),bz(bb*0.7),"M2 THREAD\nØ1.6 TAP DRILL, THRU\nTAP FROM BACK",ha="left",fs=6.2)
+    if not open_back:
+        leader(bx(1.0),bz(sf),bx(3.2),bz(sf)-13,f"spotface bottom = M2×{screw:g}\nscrew-tip plane (flush)",ha="left",fs=5.7)
+    else:
+        leader(bx(1.0),bz(sf),bx(3.2),bz(sf)-13,f"spotface bottom = M2×{screw:g} tip plane\n(tip {sf:.2f} ABOVE the resting plane)",ha="left",fs=5.7)
+    ax.text(bx(0),bz(wt)+1.6*S3+4,f"PCB + M2×{screw:g} BRASS SCREW — REF, NOT THIS PART",ha="center",fontsize=5.7,color=GRY,style="italic")
+    leader(bx(2.6),bz(-0.07),bx(4.4),bz(-border)-2,"0.10×45° BOSS/SPOTFACE (typ)",ha="left",fs=5.0)
+    ax.text(BX-92,BY-25,"DETAIL B   (corner boss)   13:1",fontsize=8.5,fontweight="bold",color=INK)
+
+    # ===================== CRITICAL DIMS + NOTES =====================
+    ax.text(20,78,"CRITICAL DIMENSIONS  —  C1 & C3 TOLERANCED ±0.05 (MARKED ON VIEWS); ALL OTHER FEATURES PER ISO 2768-1 (MEDIUM)",fontsize=7.4,fontweight="bold",color=INK)
+    ct=[["C1",
+         "Cavity depth  (boss-top plane → cavity floor)" if not open_back else
+         "Frame depth  (PCB-rest plane → resting plane; OPEN FRAME)",
+         f"{cavity:.2f}  ±0.05"],
+        ["C2","PCB-rest plane flatness  (lip + 8 bosses)","FLAT  0.05"],
+        ["C3",f"8× mounting holes  (x {_mx[-1]-_mx[0]:.2f}; y rows "
+              f"{'/'.join(f'{v_:g}' for v_ in _my)})","±0.05  (linear)"],
+        ["C4","Mounting holes — tapped, thru, from back","M2   /   Ø1.6 drill"]]
+    yy=72.5
+    for r in ct:
+        ax.text(20,yy,r[0],fontsize=6.7,fontweight="bold",color=INK)
+        ax.text(28,yy,r[1],fontsize=6.5,color=INK); ax.text(120,yy,r[2],fontsize=6.5,color=INK); yy-=4.2
+    ax.text(20,52.5,"NOTES",fontsize=7.4,fontweight="bold",color=INK)
+    yy=48.0
+    for _i,(_k,_lines) in enumerate(notes):
+        for _j,_ln in enumerate(_lines):
+            ax.text(20,yy,(f"{_i+1}. {_ln}" if _j==0 else f"    {_ln}"),fontsize=5.85,color=INK); yy-=3.32
+
+    # ===================== TITLE BLOCK =====================
+    tb_x,tb_y,tb_w,tb_h=288,12,120,46
+    ax.add_patch(Rectangle((tb_x,tb_y),tb_w,tb_h,fill=False,ec=INK,lw=0.9))
+    for yl in (tb_y+34,tb_y+24,tb_y+15,tb_y+8): ax.plot([tb_x,tb_x+tb_w],[yl,yl],lw=0.4,color=INK)
+    ax.plot([tb_x+60,tb_x+60],[tb_y,tb_y+15],lw=0.4,color=INK)
+    if vname == "max":
+        _title = "SOLAR-GLOW DRH v3.0  —  Ti BACK-SHELL (0.6mm-BOARD DUMB BOX)"
+        _dwg, _rev = "solar-glow-drh-v3_0-backshell-0p6b-brace", "v3.0"
+    else:
+        _dwg, _rev = v["shell_name"], vname
+        _title = (f"SOLAR-GLOW DRH  —  Ti BACK-SHELL LITE ({floor:.2f} FLOOR, THINNED)" if is_ti
+                  else f"SOLAR-GLOW DRH  —  AIR OPEN FRAME ({material.split()[0]}, NO BACK FACE)")
+    ax.text(tb_x+tb_w/2,tb_y+40,_title,ha="center",va="center",fontsize=7.0,fontweight="bold",color=INK)
+    ax.text(tb_x+3,tb_y+29,f"DWG  {_dwg}",fontsize=5.4,va="center",color=INK)
+    ax.text(tb_x+tb_w-3,tb_y+29,f"REV  {_rev}",ha="right",fontsize=6.6,va="center",color=INK)
+    ax.text(tb_x+3,tb_y+19.5,"MATERIAL  " + ("Ti Gr5 (TC4)" if is_ti else "316L stainless"),fontsize=6.6,va="center",color=INK)
+    ax.text(tb_x+tb_w-3,tb_y+19.5,"FINISH  " + ("BEAD-BLAST + LAP (CUSTOMER)" if has_med else "BEAD-BLAST MATTE"),ha="right",fontsize=6.6,va="center",color=INK)
+    ax.text(tb_x+3,tb_y+11.2,"UNITS  mm",fontsize=6.4,va="center",color=INK)
+    ax.text(tb_x+63,tb_y+11.2,"SCALE  AS NOTED",fontsize=6.4,va="center",color=INK)
+    ax.text(tb_x+3,tb_y+4,f"BBOX {outW:.2f} x {outH:.2f} x {overall:.2f}   3rd-angle",fontsize=6.0,va="center",color=INK)
+    ax.text(tb_x+tb_w-3,tb_y+4,"SHEET 1/1",ha="right",fontsize=6.4,va="center",color=INK)
+
+    # ===================== TOLERANCE BLOCK (above title block) =====================
+    tx,ty,tw,th=288,61,120,33
+    ax.add_patch(Rectangle((tx,ty),tw,th,fill=False,ec=INK,lw=0.9))
+    ax.plot([tx,tx+tw],[ty+th-6.5,ty+th-6.5],lw=0.4,color=INK)
+    ax.text(tx+tw/2,ty+th-3.3,"GENERAL TOLERANCES  (UNLESS OTHERWISE NOTED, mm)",ha="center",va="center",fontsize=6.2,fontweight="bold",color=INK)
+    tol=[("LINEAR & HOLE-POSITION DIMS","ISO 2768-m"),
+         (("CAVITY DEPTH  C1  (SECTION A-A)" if not open_back else "FRAME DEPTH  C1  (SECTION A-A)"),
+          f"{cavity:.2f} ±0.05"),
+         ("HOLE-PATTERN PITCH  C3  (8 HOLES)",
+          f"x {_mx[-1]-_mx[0]:.2f} / y "
+          f"{'-'.join(f'{b-a:g}' for a,b in zip(_my[:-1],_my[1:]))}  ±0.05"),
+         ("PCB-REST FLATNESS  C2","FLAT 0.05")]
+    yt=ty+th-11.5
+    for lab,val in tol:
+        ax.text(tx+3,yt,lab,fontsize=5.85,va="center",color=INK)
+        ax.text(tx+tw-3,yt,val,ha="right",fontsize=5.85,va="center",fontweight="bold",color=INK)
+        yt-=5.3
+
+    # The max variant keeps its EXACT historical filenames (enclosure/README + the STEP
+    # freshness ledger cite them); lite/air derive theirs from shell_name, the same rule
+    # the shell CAD uses for its STEP/STL.
+    stem = ("solar-glow-drh-v3_0-backshell-0p6b-brace-DRAWING" if vname == "max"
+            else v["shell_name"] + "-DRAWING")
+    # CreationDate=None: matplotlib stamps a write time into the PDF, so an unchanged drawing
+    # rewrote itself on every run. That is not cosmetic once CI regenerates these -- a job that
+    # commits its outputs would produce a "changed drawing" commit for every board edit that did
+    # not touch the drawing at all, and a real change would be invisible among them. PNG carries
+    # no such stamp and is already reproducible.
+    fig.savefig(_o.path.join(OUT,stem+".pdf"),facecolor="white",metadata={"CreationDate": None})
+    fig.savefig(_o.path.join(OUT,stem+".png"),dpi=150,facecolor="white")
+    plt.close(fig)
+    print(f"saved {stem}.pdf/.png  [{vname}] floor={floor:.2f} cavity={cavity:.2f} "
+          f"border={border:.2f} overall={overall:.2f} M2x{screw:g} tip-plane z={sf:.2f} | {material}")
+
+
+for _vn, _v in _fr.VARIANTS.items():
+    sheet(_vn, _v)
+print("done")

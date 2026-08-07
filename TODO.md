@@ -456,28 +456,35 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
 
 ## PCB — `PCB/solar-glow-drh-v4_0.kicad_pcb` / `.kicad_sch`
 
-- [ ] **[BUG — `part_heights.py`] C25 is declared 1.25 mm and the part is 1.45 mm max**
-  _(2026-08-05, found by the thinning sweep. Not urgent — nothing on the bench is broken — but it is
-  a wrong number in a single-source-of-truth file, and every thickness calculation reads it.)_
-  `enclosure/part_heights.py:65` carries `"C25": 1.25` with the comment "1.25 max". The part is TDK
-  `C2012X5R1C226M125AC`, and **TDK's thickness code is the NOMINAL, not the maximum**: T = 1.25 ±0.20
-  → **1.45 mm max**. Verified twice — TDK's own dimension table, and DigiKey's `Thickness (Max):
-  0.057" (1.45mm)`. The same convention check: the `085` code part reads `Thickness (Max): 1.00mm`,
-  i.e. 0.85 nominal +0.15. So `125` never meant 1.25 max.
-
-  **No physical interference today.** `SPAN_LIMIT` is 1.180, so C25 is a THROUGH-hole in the brace at
-  both 1.25 and 1.45 — there is no pocket ceiling to hit. (An earlier draft of this finding claimed
-  the pocket was 0.20 mm too shallow; that was wrong, and the through-hole is why.)
-
-  **What it does break is the arithmetic.** C25 belongs on the 1.45 wall with C26/C27, not in the
-  1.25 tier. Any thinning plan that treats it as 1.25 is wrong by 0.20 mm.
-
-  **Why no gate caught it, which is the durable part.** Check [7] compares the DECLARED height against
-  the part's **3D model**, and C25 resolves to KiCad's generic `C_0805_2012Metric` (body 1.25).
-  Declared 1.25 against a 1.25 model is an exact match and passes green forever. **Nothing anywhere
-  compares the model against the datasheet.** C26/C27 escaped only by accident — they are declared
-  1.45 against the same 1.25 model, an overshoot the check permits. The gap class is: *a part whose
-  datasheet max exceeds its generic package model, declared at the model's height.* Worth a gate.
+- [ ] **[LAYOUT — lite-brace headroom] Component moves that buy back the lite brace's lost third**
+  _(2026-08-07, from the enclosure-variants round. DRH does the moves manually; everything downstream
+  regenerates from the board — brace, shells, drawings, renders are all functions of it, so a pushed
+  board re-derives the lot with no hand step beyond `mask_art --apply` if front copper moves.)_
+  The **lite** variant's cavity is **1.22** (component-limited: thin 1.00 caps + U1/L2 at 1.00 + AIR
+  0.22), so `SPAN_LIMIT` falls 1.18 → **0.60** and 24 parts become blockers. The brace drops from
+  1413.8 mm² / 35.2 % of the cavity floor (max) to **935.7 / 23.3 %**, giving up **344.6 mm² in four
+  islands** — the N/S corridors between the supercap pad zones, each severed at its mouth by one or
+  two movable parts. Ranked by measured main-piece gain (re-derive any of this from
+  `fit_rules.brace_footprint()` with `CAVITY/GAP/SPAN_LIMIT` set to the lite values; the what-if is
+  "exclude the ref from `blockers()` and re-measure"):
+  - **U3 (accel) +75.6 mm²** — reconnects island 3 (67 mm², the N corridor between SC1/SC2). The
+    freest mover on the board: I²C + INT1/INT2 only, and tap sensing works anywhere on a rigid card.
+  - **C23 +103.2 mm²** — reconnects island 0 (100 mm², W corridor at SC3). Constraint: it is U9's
+    rail cap — move it **as the U9 cluster**, not alone.
+  - **L2 +109.3 mm²** — reconnects island 1 (96 mm², center corridor). Hardest constraint: the
+    AEM10300's LX loop inductor — moves only **as a pair with U8** (U8 itself is +30.5 more).
+  - U7 +40.9, U1 +29.8: widen the main band only; no island rescue.
+  - **Island 2 (81 mm², E corridor) is unrecoverable** — severed by SC4's own pad zone, the max
+    variant's known ~85 mm² island wearing its lite face.
+  - Combined, measured: U3+C23 → 27.8 %; **U3+C23+L2 → 30.5 %**; all six → 33.0 % (max is 35.2 %).
+  - **Bare pads do NOT block the brace** (their 0.20 budget is under even the 0.60 span limit) — the
+    pad problem is the **lips**: J1 (optional header), JP1 (bench strip), and TP1/TP2/TP7 sit inside
+    lip strips (W edge: 7 bands pinched by J1/TP2/TP7 + the west cap row; E edge: single band, JP1 +
+    TP1 inside it, already coil-capped at x 49.55). Moving or deleting those bare-pad items widens
+    the lip bands on every variant; moving the four supercaps' zones is the design itself, not a move.
+  - Standing rules still apply to the session that does the moves: `mask_art.py --apply` after any
+    front re-route (check [6]), and the teardrop-inclusive in-aperture sweep if anything approaches
+    the glow window (`PCB/README.md` supercap box).
 
 - [ ] **[PCB — superseded reference] U6 alternatives considered**
   _(2026-08-05. The first-pass answer said "no clean option"; that was wrong — it searched inside
@@ -920,6 +927,19 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
   order-time hazards. Until then, re-check it whenever the BOM changes.
 
 ## Enclosure — `enclosure/…-backshell-…-cad.py`, `enclosure/brace/`
+
+- [ ] **[SOURCING — lite/air] Pick the thin supercap MPN**
+  _(2026-08-07, opened with the three-variant round.)_ `part_heights.SUPERCAP_H_THIN = 1.00`
+  is **PROVISIONAL — DRH's working number, no MPN, no datasheet behind it**, unlike every
+  other figure in that file. The lite cavity (1.22) happens to be component-limited so a
+  small thickness change is free, but **anything over 1.00 starts moving the lite/air
+  numbers** (`fit_rules.VARIANTS` re-derives them — one edit, everything follows: cavity,
+  stack, screw pick, ledgers). When chosen: verify max thickness from the datasheet, land
+  the number + the datasheet in `datasheets/`, and note the 2+2 capacity split question —
+  the buy documents today describe the ONE committed board, which is the 1.70 build;
+  thin-cap purchasing for lite/air builds is a manual substitution until then. Also the
+  **air NFC re-tune** rides this: open back = no titanium behind the coil = C9's 47 pF
+  needs the bench again (`enclosure/README.md` variants table carries the warning).
 
 - [x] **[ENCLOSURE/TOOLING] The 3D interference DRC — CLOSED 2026-08-01, built as
   `scripts/interference_drc.py`** _(the tier the mesh gate parked, built the same day.)_

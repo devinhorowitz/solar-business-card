@@ -243,6 +243,13 @@ red, the check itself fails.
   wrapper and leave KiCad floating.
 
 ## Gotchas
+- **The enclosure ships in three variants — max / lite / air — and `enclosure/fit_rules.py`'s
+  `VARIANTS` table is their single home** (2026-08-07): cavity (with its limiter rule), floor,
+  screw length, material, and the brace/medallion/fins flags all derive there. There is
+  deliberately **no `configure()`** — the generators freeze fit_rules values at import, so
+  per-variant numbers flow as explicit arguments; never add a mutable variant switch. The
+  thin-cap height (`part_heights.SUPERCAP_H_THIN`) is PROVISIONAL until its MPN lands
+  (TODO.md), and the air frame is 316L for the coil's sake — never carbon steel.
 - **Component heights live in `enclosure/part_heights.py`, once.** Every enclosure pocket depth
   is a function of them, and a wrong one prints an unusable part rather than failing: U7 kept a
   removed SOIC-8's 1.75 and the brace cut it clean *through*; Q2/FB1/the 0603-0805 caps fell

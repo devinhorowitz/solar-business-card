@@ -429,22 +429,41 @@ def check_enclosure_fit():
 
     # 1. Anything the brace covers must leave a printable web above it. This is the real
     #    constraint; SPAN_LIMIT is just its cached form, and a wrong SPAN_LIMIT fails here.
-    pieces = fr.brace_footprint()
-    for ref, poly, h, _src in ps:
-        if not any(g.intersects(poly) for g in pieces):
+    #    Since 2026-08-07 this runs PER BRACE VARIANT (fit_rules.VARIANTS) -- one loop, no
+    #    module-state mutation, each variant handed its own gap/span explicitly. It also
+    #    gates COVERAGE against the ledgered floor: the lite brace's footprint fragments
+    #    hard (span 0.60), and before this gate nothing would have noticed the brace
+    #    quietly collapsing to a sliver -- DROPPED_AREA was printed and never checked.
+    _var_cov = {}
+    for _vn, _vv in fr.VARIANTS.items():
+        if not _vv["brace"]:
             continue
-        a = sum(g.intersection(poly).area for g in pieces)
-        if a <= 1e-6:
-            continue
-        if h is None:
-            err(f"brace covers {ref} by {a:.3f} mm2 but {ref} has no height, so the resin "
-                f"web over it is unknown")
-            bad += 1
-            continue
-        web = fr.GAP - (h + fr.AIR)
-        if web < fr.SLA_WEB - 1e-9:
-            err(f"brace covers {ref} ({h:.2f} mm) over {a:.2f} mm2, leaving a {web:.2f} mm "
-                f"web -- below the {fr.SLA_WEB} mm printable minimum")
+        pieces = fr.brace_footprint(span=_vv["span"])
+        gap = _vv["cavity"]
+        for ref, poly, h, _src in ps:
+            if not any(g.intersects(poly) for g in pieces):
+                continue
+            a = sum(g.intersection(poly).area for g in pieces)
+            if a <= 1e-6:
+                continue
+            if h is None:
+                err(f"[{_vn}] brace covers {ref} by {a:.3f} mm2 but {ref} has no height, "
+                    f"so the resin web over it is unknown")
+                bad += 1
+                continue
+            web = gap - (h + fr.AIR)
+            if web < fr.SLA_WEB - 1e-9:
+                err(f"[{_vn}] brace covers {ref} ({h:.2f} mm) over {a:.2f} mm2, leaving a "
+                    f"{web:.2f} mm web -- below the {fr.SLA_WEB} mm printable minimum")
+                bad += 1
+        _cavq = fr.cavity_rect().buffer(-fr.WALL_FIT, join_style=1, resolution=64)
+        _cov = sum(g.area for g in pieces) / _cavq.area
+        _var_cov[_vn] = (len(pieces), _cov)
+        if _vv["coverage_floor"] is not None and _cov < _vv["coverage_floor"] - 1e-9:
+            err(f"[{_vn}] brace coverage collapsed to {100*_cov:.1f}% of the cavity floor "
+                f"(ledgered minimum {100*_vv['coverage_floor']:.0f}%) -- a board change "
+                f"fragmented the footprint; re-measure and either recover the area or "
+                f"re-ledger coverage_floor WITH the reason")
             bad += 1
 
     # 2. Every lip band must stand off the nearest part it runs past. Asserted on the BAND
@@ -507,11 +526,10 @@ def check_enclosure_fit():
             bad += 1
 
     if not bad:
-        cav = fr.cavity_rect().buffer(-fr.WALL_FIT, join_style=1, resolution=64)
-        cov = 100 * sum(g.area for g in pieces) / cav.area
-        ok(f"brace {len(pieces)} piece(s), {cov:.1f}% of cavity, every covered part keeps a "
-           f">={fr.SLA_WEB} mm web; {sum(len(fr.lip_bands(e)) for e in 'WESN')} lip bands all "
-           f"stand off their parts and clear the coil; 8 bosses clear, thread intact")
+        _covtxt = ", ".join(f"{vn} {n}pc {100*c:.1f}%" for vn, (n, c) in _var_cov.items())
+        ok(f"braces [{_covtxt}] above their ledgered coverage floors, every covered part "
+           f"keeps a >={fr.SLA_WEB} mm web; {sum(len(fr.lip_bands(e)) for e in 'WESN')} lip "
+           f"bands all stand off their parts and clear the coil; 8 bosses clear, thread intact")
 
 
 def check_doc_file_refs():
@@ -1677,17 +1695,54 @@ def check_mount_parity():
     try:
         import bom_split
     except Exception as e:                     # pragma: no cover -- import guard, as elsewhere
-        warn(f"HW1 screw count not checked -- {type(e).__name__}: {e}")
+        warn(f"screw rows not checked -- {type(e).__name__}: {e}")
     else:
-        hw = [r for r in getattr(bom_split, "OFF_BOARD", []) if r and r[0] == "HW1"]
-        if not hw:
-            warn("no HW1 row in bom_split.OFF_BOARD -- the shell-screw line has moved or gone")
-        elif hw[0][1] != len(fr.MOUNTS):
-            err(f"bom_split.OFF_BOARD sells {hw[0][1]} of HW1 (shell screws) for an enclosure "
-                f"with {len(fr.MOUNTS)} mounts -- one screw per mount, or the shell does not "
-                f"close. Fix the quantity, not this check.")
+        # One screw row PER ENCLOSURE VARIANT since 2026-08-07 (fit_rules.VARIANTS): each
+        # row must sell len(MOUNTS) screws AND name the length the variant's stack derived
+        # (a wrong length here is a card standing on its screw tips -- the air frame's
+        # whole point inverted). The row's description must contain 'M2x<len>' matching
+        # VARIANTS[...]['screw_len'], so a table change orphans the stale row loudly.
+        hw_rows = [r for r in getattr(bom_split, "OFF_BOARD", [])
+                   if r and str(r[0]).startswith("HW")]
+        want = {vn: v["screw_len"] for vn, v in fr.VARIANTS.items()}
+        if len(hw_rows) != len(want):
+            err(f"bom_split.OFF_BOARD carries {len(hw_rows)} HW screw row(s) for "
+                f"{len(want)} enclosure variants -- one set of 8 per variant "
+                f"({', '.join(f'{k}: M2x{v}' for k, v in want.items())})")
         else:
-            ok(f"the hand-buy list sells {hw[0][1]} shell screws for {len(fr.MOUNTS)} mounts")
+            # Matched PER VARIANT, not as a multiset: each row's note must NAME its
+            # variant, and that variant's stack-derived length must appear as M2x<len>
+            # in the row's part string. (First cut compared sorted length lists --
+            # swapped lengths between variants would have passed. Review find,
+            # 2026-08-07.)
+            import re as _re
+            hw_bad = 0
+            claimed = {}
+            for r in hw_rows:
+                if r[1] != len(fr.MOUNTS):
+                    err(f"bom_split.OFF_BOARD row {r[0]} sells {r[1]} screws for an "
+                        f"enclosure with {len(fr.MOUNTS)} mounts")
+                    hw_bad += 1
+                blob = (str(r[2]) + " " + str(r[6] if len(r) > 6 else "")).upper()
+                vn = next((k for k in want if k.upper() in blob), None)
+                m = _re.search(r"M2X([\d.]+)", blob)
+                if vn is None or m is None:
+                    err(f"screw row {r[0]} names no variant or no M2x length -- each row "
+                        f"must say which shell it closes and with what")
+                    hw_bad += 1
+                elif vn in claimed:
+                    err(f"screw rows {claimed[vn]} and {r[0]} both claim the {vn} variant")
+                    hw_bad += 1
+                elif float(m.group(1)) != want[vn]:
+                    err(f"screw row {r[0]} sells M2x{m.group(1)} for the {vn} shell, whose "
+                        f"stack derives M2x{want[vn]} (fit_rules.VARIANTS) -- fix the "
+                        f"OFF_BOARD row, not this check")
+                    hw_bad += 1
+                else:
+                    claimed[vn] = r[0]
+            if not hw_bad and len(claimed) == len(want):
+                ok(f"{len(hw_rows)} screw rows x {len(fr.MOUNTS)}, each matched to its "
+                   f"variant: " + ", ".join(f"{k} M2x{v}" for k, v in want.items()))
 
 
 # --- [18] the fab package identifies itself ------------------------------------------
