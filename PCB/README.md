@@ -928,6 +928,14 @@ Work outside-in by heat sensitivity:
    > floor-exact mid-track pair is now **`INT1`↔`VSENSE` at 0.1520** (the rewire re-partnered
    > it; same recorded class as the INT1↔INT2 reading above — no pads, no paste, no dam
    > needed). Nine nets cross the aperture this round (was six); GND touches at zero area.
+   >
+   > **2026-08-07 late (the SC1 flush-to-1.00 nudge):** moving SC1 outboard 0.026 consumed the
+   > last slack in the interrupt-fan corridor NE of `SC1.P` — the corridor between the pad
+   > corner and `INT1` is sized for exactly one floor-legal track. `INT2`'s approach was
+   > re-bent (steeper final leg, floor-exact per the pinned KiCad's own DRC; the fan's
+   > established idiom — `INT1`↔`VSENSE` sit at 0.152 exactly). **The corridor is now
+   > SATURATED**: any future move of SC1, the interrupt fan, or `VSENSE` in this region
+   > requires re-fanning the corridor, not nudging it.
 2. **Solar cells PV1 / PV2 last (most fragile).** Iron **≤ 260 °C, ≤ 2 s per joint**, and
    **do not clean with IPA**. Mind cell polarity to the custom land.
 
