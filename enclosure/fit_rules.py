@@ -117,6 +117,48 @@ BOSS_CLR = 0.20            # Ti boss to part/pad
 THREAD_KEEP = 1.30         # never scallop inside this: the M2 thread lives at r0.80..~1.0
 LIP_CLR = 0.30             # lip edge to nearest part body or pad
 LIP_MAX = {"W": 2.5, "E": 2.5, "S": 2.0, "N": 2.0}
+
+# ---- the shell's GUARANTEED lip ring (2026-08-07) --------------------------------------
+# The back-shell unions a scalar lip ring on top of the per-band lip system -- the ring is
+# the guaranteed minimum board seat on each edge. Until 2026-08-07 its widths lived only in
+# the shell CAD, sized against a v3-era measurement ("body max edge ~2.35 from the board
+# edge"), and the v4 relayout walked SIX parts into it: the ring CRUSHED SC1/SC3/SC4
+# (0.25/0.08/0.15 mm plan overlap, full cap height) and C27/C22/FB1 (up to 1.35 mm deep on
+# the west edge) on every committed shell variant. Found by probing the committed STL;
+# invisible to every gate because interference_drc SKIPs SC and nothing compared part
+# bodies to the ring. The fix is cavity_void_poly's stuck-clause discipline applied to the
+# ring: any part whose poly comes within LIP_CLR of ring metal gets a relief cut, buffered
+# by LIP_CLR + TOOL_R so the cut is tool-reachable by construction. The shell cuts
+# ring_reliefs() from the ring solid before the union; check [8] asserts the RESULT clears
+# every part and self-tests the mechanism with a synthetic in-ring part. The ring widths
+# are deliberately NOT shrunk: the relief yields locally, the seat stays maximal everywhere
+# parts allow, and a future part move is handled by construction instead of by comment.
+RING = {"W": 2.5, "N": 2.0, "S": 2.0, "E": 1.0}   # guaranteed ring widths (were shell-local)
+
+
+def ring_metal_poly():
+    """Board-coords union of the guaranteed lip-ring metal: four strips. (The shell's
+    east wide-END blocks are NOT here: `_east_blocks` in the shell CAD is defined but
+    never called -- the wide east ends migrated into the per-band system and the def is
+    a fossil, so modelling them would assert metal that does not exist.)"""
+    return unary_union([box(0.0, 0.0, RING["W"], H), box(W - RING["E"], 0.0, W, H),
+                        box(0.0, 0.0, W, RING["S"]), box(0.0, H - RING["N"], W, H)])
+
+
+def ring_reliefs(ps=None):
+    """Relief polygons the shell must cut from the ring: one per REAL BODY (src "model")
+    whose poly comes within LIP_CLR of ring metal, buffered LIP_CLR + TOOL_R
+    (tool-reachable by construction, the same rule cavity_void_poly applies to its stuck
+    parts). Bare-pad items (src "pads" -- J1, JP1, TP*, dnp SW2) are deliberately NOT
+    relieved: flat copper under or beside the ring cannot be crushed, and the east lip's
+    0.20 standoff from the JP1/TP1 pads is a recorded design decision this mechanism must
+    not undo. `ps` takes the parts-list shape so the check can feed a synthetic part."""
+    ring = ring_metal_poly()
+    out = []
+    for _r, p, _h, src in (ps if ps is not None else _cached_parts()):
+        if src == "model" and p.distance(ring) < LIP_CLR:
+            out.append(p.buffer(LIP_CLR + TOOL_R, join_style=1, resolution=48))
+    return out
 COIL_CLR = 1.00            # grounded metal to coil copper. Raised from 0.30 on request:
                            # the east lip is the only grounded feature that comes near the
                            # antenna, and 1.00 gives 3.3x the standoff while still leaving a
@@ -266,7 +308,7 @@ def _mk_variants():
             material="Ti Gr5 (reference; brass or 6061 acceptable -- non-magnetic, machinable)",
             shell_name="solar-glow-drh-v3_0-backshell-0p6b-brace-Ti-max",
             brace_name="solar-glow-drh-diffuser-brace",
-            coverage_floor=0.33,   # ledgered min coverage (check [8] measures 0.354, WALL_FIT-buffered)
+            coverage_floor=0.35,   # ledgered min (measures 0.372 after the 2026-08-07 cap scoot; was 0.33/0.354 pre-scoot)
         ),
         "lite": dict(
             cap_h=_SUPERCAP_H_THIN, cavity=cav_lite, floor=0.60, wall_th=1.00, border_h=0.15,
@@ -276,7 +318,7 @@ def _mk_variants():
             material="Ti Gr5 (thinned floor; the 0.60 is the shop-minimum conversation)",
             shell_name="solar-glow-drh-shell-lite-Ti",
             brace_name="solar-glow-drh-diffuser-brace-lite",
-            coverage_floor=0.21,   # ledgered min coverage (check [8] measures 0.234, WALL_FIT-buffered)
+            coverage_floor=0.25,   # ledgered min (measures 0.270 after the 2026-08-07 cap scoot; was 0.21/0.234 pre-scoot)
         ),
         "air": dict(
             cap_h=_SUPERCAP_H_THIN, cavity=depth_air, floor=0.00, wall_th=1.00, border_h=0.00,

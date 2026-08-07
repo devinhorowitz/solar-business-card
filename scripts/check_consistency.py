@@ -504,7 +504,8 @@ def check_enclosure_fit():
 
     # 4. No part inside a boss, and the scallops must not eat the tapped thread.
     import math
-    from shapely.geometry import Point as _P
+    from shapely.geometry import Point as _P, box as _box
+    from shapely.ops import unary_union
     for mx, my in fr.MOUNTS:
         island = fr.boss_island(mx, my)
         for ref, poly, _h, _src in ps:
@@ -525,11 +526,39 @@ def check_enclosure_fit():
                 f"{fr.THREAD_KEEP} mm M2 thread keep-out")
             bad += 1
 
+    # 8.5 -- the GUARANTEED lip ring must never win against a part (2026-08-07). The shell
+    # unions fit_rules.RING as a minimum board seat and cuts ring_reliefs() out of it; this
+    # asserts the RESULT clears every real body by LIP_CLR. Born from six probed collisions
+    # on the committed shells (SC1/SC3/SC4 caps, C27/C22/FB1 west edge): the ring widths
+    # carried a v3-era measurement, the v4 relayout falsified it, and every gate was blind
+    # because interference_drc SKIPs SC and nothing compared bodies to ring metal.
+    _ring = fr.ring_metal_poly()
+    _reliefs = fr.ring_reliefs()
+    _final_ring = _ring.difference(unary_union([r for r in _reliefs])) if _reliefs else _ring
+    for ref, poly, _h, _src in ps:
+        if _src != "model":
+            continue                      # bare pads cannot be crushed; JP1/TP1's 0.55 east
+        d = poly.distance(_final_ring)    # standoff is a recorded decision, not a defect
+        if d < fr.LIP_CLR - 1e-6:
+            err(f"ring metal stands {d:.3f} mm from {ref} (< LIP_CLR {fr.LIP_CLR}) -- the "
+                f"guaranteed lip ring is not relieved around it; the shell would crush it")
+            bad += 1
+    # mechanism self-test: a synthetic part planted inside the S ring MUST yield a relief.
+    # This never rots with the board (unlike asserting the historical offenders, which a
+    # future legitimate move would falsify).
+    _fake = [("SELFTEST", _box(20.0, 0.5, 24.0, 1.5), 0.9, "model")]
+    if not fr.ring_reliefs(_fake):
+        err("ring_reliefs() returned nothing for a synthetic part planted inside the S "
+            "ring -- the relief mechanism is broken and the shells will crush parts again")
+        bad += 1
+
     if not bad:
         _covtxt = ", ".join(f"{vn} {n}pc {100*c:.1f}%" for vn, (n, c) in _var_cov.items())
         ok(f"braces [{_covtxt}] above their ledgered coverage floors, every covered part "
            f"keeps a >={fr.SLA_WEB} mm web; {sum(len(fr.lip_bands(e)) for e in 'WESN')} lip "
-           f"bands all stand off their parts and clear the coil; 8 bosses clear, thread intact")
+           f"bands all stand off their parts and clear the coil; 8 bosses clear, thread "
+           f"intact; guaranteed ring relieved around {len(_reliefs)} part(s), all bodies "
+           f">={fr.LIP_CLR} clear of it")
 
 
 def check_doc_file_refs():

@@ -1587,7 +1587,7 @@
 	(footprint "solarglow:SCHURTER_SCPC_SS17"
 		(layer "B.Cu")
 		(uuid "030ffafb-c195-49aa-b14c-a5f47412f78a")
-		(at 15.5 21.25)
+		(at 15.5 20.5)
 		(descr "SCHURTER SCPC Case SS17 prismatic supercapacitor (P/N 3-153-440), 1.8 F 2.75 V, ESR 25 mOhm. Flat prismatic cell 39.0 x 17.0 mm, 1.70 mm max thick. Under-body solder pads only: N 12.25 x 3.5 and P 7.75 x 3.5, centred +/-16.25 mm from cell centre (outer edge 1.5 mm in from each end). Asymmetric pad widths are the polarity key (N wider than P). The end tabs (drawn on F.Fab, ~2.75 mm past each end) are finish-coated locators, NOT solder pads. Derived from the locked WS17 land (solarglow:SC1): pad geometry identical, pads moved +/-11 -> +/-16.25 and body 28.5 -> 39.0 for the SS17 case.")
 		(tags "supercapacitor SCHURTER SCPC SS17 3-153-440 prismatic")
 		(property "Reference" "SC1"
@@ -9417,7 +9417,7 @@
 	(footprint "solarglow:SCHURTER_SCPC_SS17"
 		(layer "B.Cu")
 		(uuid "a09ffc56-bfc0-4760-8e84-0fdf21994975")
-		(at 15.6464 67.4803 180)
+		(at 15.6464 68.4003 180)
 		(descr "SCHURTER SCPC Case SS17 prismatic supercapacitor (P/N 3-153-440), 1.8 F 2.75 V, ESR 25 mOhm. Flat prismatic cell 39.0 x 17.0 mm, 1.70 mm max thick. Under-body solder pads only: N 12.25 x 3.5 and P 7.75 x 3.5, centred +/-16.25 mm from cell centre (outer edge 1.5 mm in from each end). Asymmetric pad widths are the polarity key (N wider than P). The end tabs (drawn on F.Fab, ~2.75 mm past each end) are finish-coated locators, NOT solder pads. Derived from the locked WS17 land (solarglow:SC1): pad geometry identical, pads moved +/-11 -> +/-16.25 and body 28.5 -> 39.0 for the SS17 case.")
 		(tags "supercapacitor SCHURTER SCPC SS17 3-153-440 prismatic")
 		(property "Reference" "SC3"
@@ -12777,7 +12777,7 @@
 	(footprint "solarglow:SCHURTER_SCPC_WS17"
 		(layer "B.Cu")
 		(uuid "da2cfd36-f7ee-41f2-99e9-304f93937281")
-		(at 36.8 72.8 180)
+		(at 36.8 73.65 180)
 		(descr "SCHURTER SCPC Case WS17 prismatic supercapacitor (P/N 3-153-438), 1.0 F 2.75 V, ESR 40 mOhm. Flat prismatic cell 28.5 x 17.0 mm, 1.70 mm max thick. Under-body solder pads only: N 12.25 x 3.5 and P 7.75 x 3.5, centred +/-11.0 mm from cell centre (outer edge 1.5 mm in from each end). Asymmetric pad widths are the polarity key (N wider than P). The end tabs (drawn on F.Fab, ~2.75 mm past each end) are finish-coated locators, NOT solder pads. Pads are byte-identical to the locked embedded land (solarglow:SC1); this bordered version only ADDS the F.Fab body, locator tabs, and courtyard so DRC/visual can catch encroaching parts.")
 		(tags "supercapacitor SCHURTER SCPC WS17 3-153-438 prismatic")
 		(property "Reference" "SC4"
@@ -13571,7 +13571,7 @@
 	(footprint "solarglow:SCHURTER_SCPC_WS17"
 		(layer "B.Cu")
 		(uuid "e06a2026-0dcf-47be-8ed3-63d076a96c6c")
-		(at 35.3 16.9)
+		(at 35.3 15.25)
 		(descr "SCHURTER SCPC Case WS17 prismatic supercapacitor (P/N 3-153-438), 1.0 F 2.75 V, ESR 40 mOhm. Flat prismatic cell 28.5 x 17.0 mm, 1.70 mm max thick. Under-body solder pads only: N 12.25 x 3.5 and P 7.75 x 3.5, centred +/-11.0 mm from cell centre (outer edge 1.5 mm in from each end). Asymmetric pad widths are the polarity key (N wider than P). The end tabs (drawn on F.Fab, ~2.75 mm past each end) are finish-coated locators, NOT solder pads. Pads are byte-identical to the locked embedded land (solarglow:SC1); this bordered version only ADDS the F.Fab body, locator tabs, and courtyard so DRC/visual can catch encroaching parts.")
 		(tags "supercapacitor SCHURTER SCPC WS17 3-153-438 prismatic")
 		(property "Reference" "SC2"

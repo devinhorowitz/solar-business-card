@@ -117,8 +117,18 @@ EDGE_BREAK = 0.10                  # Ti deburr: break the sharp END-FACE edges (
                                    # Ti edges chip and cut; an edge-break also resists nicking. ~0.1 mm.
 # ASYMMETRIC support lip (per side) -- wider = more board-edge support = stiffer PCB. Widths bounded
 # by the nearest B-side part on each edge (v3.0 board, measured):
-lip_W, lip_N, lip_S = 2.5, 2.0, 2.0   # W: long west edge, nearest B-part R14/J1 ~3.4 -> 2.5 clears by ~0.9 (big rigidity gain). N/S: bounded by SC1-4 caps (body max edge ~2.35 from the board edge; datasheet WS17 body 28.5 +0.5/-0.0 long) -> 2.0 clears by ~0.35.
-lip_E      = 1.0                       # E stays narrow through the JP1/TP1 pads (reach x49.6) AND clear of the NFC coil (~x49): lip_E=1.0 -> wall x49.8, east of both. A grounded Ti lip over the coil would detune it.
+from fit_rules import RING as _RING                        # noqa: E402 -- single home; the
+                                                           # main fit_rules import sits below
+                                                           # the geometry helpers, after these
+                                                           # scalars are needed
+lip_W, lip_N, lip_S = _RING["W"], _RING["N"], _RING["S"]
+lip_E      = _RING["E"]                # E stays narrow through the JP1/TP1 pads (reach x49.6) AND clear of the NFC coil (~x49): lip_E=1.0 -> wall x49.8, east of both. A grounded Ti lip over the coil would detune it.
+# The old hand-typed 2.5/2.0/2.0 carried a v3-era justification ("body max edge ~2.35 from
+# the board edge... 2.0 clears by ~0.35") that the v4 relayout silently falsified: SC1
+# reached y1.75 and the ring CRUSHED three caps and three west-edge passives on every
+# committed shell (probed 2026-08-07 on the STL). The widths now live in fit_rules.RING,
+# and build() cuts fit_rules.ring_reliefs() out of the ring -- a part-aware relief, sized
+# LIP_CLR + TOOL_R, that follows the board. check [8] gates the result.
 lip_E_wide = 2.5                       # E END zones (clear of pads+coil) widen to match the west
 EAST_WIDE_Y = [(0.0, 10.0)]   # board-y bands the E lip widens to 2.5 (else pinched to 1.0, wall x49.8).
 # 2026-07-11: NORTH wide band (72,88.9) REMOVED -> east lip is now pinched (1.0, wall x49.8) over all of
@@ -203,11 +213,21 @@ IR = max(cavR - lip_E, 0.5)            # cavity inner-corner radius (>= tool R);
 # ---- asymmetric cavity: per-side lips + east-END wide-lip blocks. Round-tool-friendly: every concave
 # junction (block-to-wall, boss-to-wall) is left SHARP so the STEP stays analytic and the finisher just
 # leaves its own radius there (nothing mates in those corners); no acute pockets, no step-down tooling. ----
-def _cav_inner(z0, dz):
-    """asymmetric inner cavity void (per-side lips), corners filleted to IR."""
+def _cav_inner(z0, dz, grow=0.0):
+    """asymmetric inner cavity void (per-side lips), corners filleted to IR. `grow` moves
+    every inner face outward by that much -- the ring cut passes RING_FUSE_EPS so the BUILT
+    ring is a hair slimmer than fit_rules.RING: the W/N/S ring faces otherwise land exactly
+    on the plane where full-reach lip bands end (both derive from the same width), and once
+    ring reliefs segment the ring, OCC's fuse leaves an open seam along the split coincident
+    plane -- measured 2026-08-07 as a 27.69 mm boundary edge at x2.500/z1.000. Slimmer-than-
+    model is the safe direction: check [8] asserts part clearance against the WIDER model."""
     cx, cy = wx((lip_W + W - lip_E)/2.0), wy((lip_N + H - lip_S)/2.0)
     return (cq.Workplane("XY").workplane(offset=z0).center(cx, cy)
-              .rect(W - lip_E - lip_W, H - lip_S - lip_N).extrude(dz).edges("|Z").fillet(IR))
+              .rect(W - lip_E - lip_W + 2*grow, H - lip_S - lip_N + 2*grow)
+              .extrude(dz).edges("|Z").fillet(IR))
+
+
+RING_FUSE_EPS = 0.01
 def _east_blocks(z0, dz):
     """solid east-END wide-lip blocks: fill x[W-lip_E_wide, W-lip_E] over the EAST_WIDE_Y bands."""
     out = None
@@ -277,6 +297,7 @@ def _recess_mouth_ease(wt, c):
 # check_consistency [8]. See that module for why they are not four scalars any more.
 from fit_rules import (lip_bands, cavity_void_poly as _cavity_void_poly,
                        boss_island as _boss_island, LIP_CLR, LIP_MAX, COIL_EAST,
+                       ring_reliefs as _ring_reliefs,
                        BOSS_CLR, THREAD_KEEP, export_step_stable,
                        fin_region as _fin_region, fin_ribs as _fin_ribs,
                        FIN_PROUD, FIN_VALLEY,
@@ -396,7 +417,12 @@ def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pill
     # INNER supports: perimeter lip
     lip = (cq.Workplane("XY").workplane(offset=floor).rect(cavW, cavH)
              .extrude(cavity).edges("|Z").fillet(cavR))
-    lip = lip.cut(_cav_inner(floor - 0.01, cavity + 0.02))
+    lip = lip.cut(_cav_inner(floor - 0.01, cavity + 0.02, grow=RING_FUSE_EPS))
+    # part-aware ring reliefs (2026-08-07): the ring is a guaranteed-minimum seat, but it
+    # must never win against a part. Cut BEFORE the union so only ring metal is given up --
+    # the per-band lip metal (block minus void) already stands LIP_CLR off every part.
+    for _rp in _ring_reliefs():
+        lip = lip.cut(_poly_solid(_rp, floor - 0.01, cavity + 0.02))
     res = res.union(lip)
     # interior lip edge-break, cut BEFORE the bosses. _lip_break_cut is a solid frustum spanning the whole
     # cavity interior, so with the bosses already placed it slices 0.10 off their tops. Cutting it while the

@@ -485,6 +485,12 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
   - Standing rules still apply to the session that does the moves: `mask_art.py --apply` after any
     front re-route (check [6]), and the teardrop-inclusive in-aperture sweep if anything approaches
     the glow window (`PCB/README.md` supercap box).
+  - _2026-08-07 addendum: the CAP SCOOT landed first (all four supercaps to a uniform 1.00 mm body
+    standoff from their board edge; the shell's lip ring is now part-aware — fit_rules `RING` +
+    `ring_reliefs()` — after six probed ring-vs-part collisions). Post-scoot baselines: **max 1486.7
+    mm² / 37.1 %**, **lite 1078.2 / 26.9 %** (dropped 277.0 in 3 islands — island 3's corridor
+    mouth widened but U3 still severs it). The ranked what-ifs above (U3/C23/L2 gains) were measured
+    on the PRE-scoot board — re-derive them before acting; the method line above is unchanged._
 
 - [ ] **[PCB — superseded reference] U6 alternatives considered**
   _(2026-08-05. The first-pass answer said "no clean option"; that was wrong — it searched inside
