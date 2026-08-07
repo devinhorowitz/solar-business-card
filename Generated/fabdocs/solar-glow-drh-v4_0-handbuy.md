@@ -10,7 +10,9 @@ never reach a pick-and-place.
 | SC2, SC4 | 2 | `3-153-438` | SCHURTER | Mouser | 693-3-153-438 | WS17 1F 2.75V |
 | SC1, SC3 | 2 | `3-153-440` | SCHURTER | Mouser | 693-3-153-440 | SS17 1.8F 2.75V |
 | FER1 | 1 | `364006` | Würth Elektronik | Mouser | 710-364006 | Wurth WE-FSFS ferrite sheet behind the coil -- load-bearing for the NFC tune |
-| HW1 | 8 | `DIN 84 M2x3 brass` | — | — | — | shell screws, one per mount; any DIN 84 M2x3 -- source locally, not a distributor line |
+| HW1 | 8 | `DIN 84 M2x3 brass` | — | — | — | shell screws for the MAX shell (stack 3.40), one per mount; any DIN 84 M2x3 -- source locally, not a distributor line |
+| HW2 | 8 | `ISO 7045 M2x2 A2/A4` | — | — | — | shell screws for the LITE shell (stack 2.42; an M2x3 tip stands 0.58 proud) -- source locally, not a distributor line |
+| HW3 | 8 | `ISO 7045 M2x1.6 A4/316` | — | — | — | frame screws for the AIR frame (stack 1.80; tip hides 0.20 in the boss spotface, 1.0 mm engagement in 316 -- fine for a frame clamping a 6 g card) -- micro-fastener houses stock M2x1.6; source with the frame |
 | INS1 | 1 | `polyimide film 0.05 mm` | — | — | — | insulator; cut from stock film -- not a distributor line |
 
 **Bought once for the project, not per board:**
