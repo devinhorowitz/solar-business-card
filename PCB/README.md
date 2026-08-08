@@ -591,18 +591,17 @@ Summary of the **orderable** lines:
 | SC1, SC3 | 2 | 1.8 F, 2.75 V (SS17) | SS17 (diagonal under-body P/N pads, 39 mm) | `3-153-440` |
 | SC2, SC4 | 2 | 1.0 F, 2.75 V (WS17) | WS17 (diagonal under-body P/N pads, 28.5 mm) | `3-153-438` |
 | D2–D5 | 4 | Amber 617 nm, Vf≈2.25 V | SMD, 3.4x1.9 mm | `LA P47F-V2BB-24-3B5A-30-R18-Z` |
-| R1–R4 | 4 | 150 Ω, ±1% | 0402 | `AC0402FR-07150RL` |
-| R5, R6 | 2 | 1 MΩ, ±0.1%, 25 ppm, 0603 | 0603 (R_0603_1608Metric) | `RT0603BRD071ML` |
+| RN1 | 1 | 4×150 Ω isolated array, ±5% (J is the buyable ceiling; matching rides the shared substrate) | 0804 convex (`R_Array_Convex_4x0402`, inner pads slimmed to 0.294 — see the re-link warning below) | `EXB-28V151JX` |
+| R5, R6 | 2 | 2 MΩ, ±0.1%, 25 ppm **guaranteed at 2M** (the 2026-08-08 bump: halves the divider's permanent SRC bleed; Yageo's 2M variant is 50 ppm and stockless, so the MPN moved to the MCT family R15 already uses) | 0603 (R_0603_1608Metric) | `MCT0603MD2004BP500` |
 | C5 | 1 | 100 nF, X7R, 50 V | 0402 | `GRT155R71H104KE01D` |
 | U3 | 1 | I²C 0x1D, ±2–8 g | LGA-12 CC-12-4 (2.2×2.3×0.87 mm) | `ADXL367BCCZ-RL7` |
-| R10, R11 | 2 | 4.7 kΩ, ±1% | 0402 | `AC0402FR-074K7L` |
+| RN2 | 1 | 2×4.7 kΩ isolated array, ±5% (I²C pull-ups need no matching — placement consolidation, 2026-08-08) | 0404 convex (`R_Array_Convex_2x0402`, stock land — see the re-link warning below) | `EXB-24V472JX` |
 | C1 | 1 | 100 nF, X7R, 50 V | 0402 | `GRT155R71H104KE01D` |
 | C3 | 1 | 100 nF, X7R, 50 V | 0402 | `GRT155R71H104KE01D` |
 | C4 | 1 | 10 µF, X5R, 16 V | 0603 | `GRT188R61C106KE13D` |
 | C6 | 1 | 100 nF, X7R, 50 V | 0402 | `GRT155R71H104KE01D` |
 | C11 | 1 | 0.22 µF (220 nF), X7R, 16 V | 0402 | `GRT155R71C224KE01D` |
 | C12 | 1 | 100 nF, X7R, 50 V | 0402 | `GRT155R71H104KE01D` |
-| C7 | 1 | 100 nF, X7R, 50 V | 0402 | `GRT155R71H104KE01D` |
 | SW2 | 1 | 2-pad bridge (was 3-pad until TINY left, 2026-08-05) | solder-bridge | **(none — PCB bridge)** |
 | TC1 | 1 | TC2030-MCP-FP | TC2030 legged land | **(no part — pogo interface)** |
 | J1 | 1 | 1×3, 0.1″ | 0.1″ THT pads | **(unpopulated / 0.1″ header)** |
@@ -632,6 +631,17 @@ Summary of the **orderable** lines:
 | R17, R18 | 2 | 1 M, 0402, ±1% | 0402 | `AC0402FR-071ML` |
 | Q2 | 1 | N-ch MOSFET, 20 V, logic-level (Vth 1.0 max) | SOT-523 (0.90 max) — **was SOT-23 `BSS138LT1G` until the 2026-08-06 low-profile respin; board sync pending** | `DMG1012T-7` |
 
+**The 100 nF census (2026-08-08, DRH's ask — "I think we have at least one too many"):** nine
+decouplers after the round, and each one now has a named pin. Per-pin: **C1 → U1.24 VS**
+(2.62 mm) and **C29 → U1.18 VS** (1.46 mm) — the AVR has TWO VS pins, so these are NOT
+redundant; **C3 → U1.10 VDDIO2** (2.86); **C12 → U3.12 VS** (1.39); **C28 → U7.8 VS** (2.43);
+**C6 → U6.A2 VS** (2.01); **C8 → U5.6 VNFC**. C5 (VSENSE) and C24 (STO_SNS) share the MPN but
+are divider FILTERS, not decoupling — distance rules don't apply to them. The one-too-many was
+**C7**: both C6 and C7 sat nearest the same U6.A2 pin — a leftover from U6's SC-70 era that
+survived two package swaps — deleted 2026-08-08. **Standing flag: C8 sits 5.25 mm from the pin
+it decouples** (U5.6 VNFC) — far for a decoupler; relocation is copper work, queued for DRH's
+next GUI session.
+
 **No ordered part — these are board features, not BOM line items:**
 - **SW2** (LED OFF/ON) is a **solder bridge** on the PCB. _(SB1–SB4, the per-LED force-on
   bridges, and the TINY dim position with its R12 ballast were deleted 2026-08-05.)_
@@ -657,7 +667,7 @@ Summary of the **orderable** lines:
   the two middle pads is the manual wake gesture), **5 = `SCL`**, **6 = `SDA`** (same pad →
   same net on both sides, the mirror rule). One cable now programs (UPDI), powers (STO),
   talks I²C, and wakes the card. Two cautions: an external I²C master must be **open-drain
-  against `VS`** (R10/R11 pull there — never push-pull from 3.3/5 V) and should hold the AVR
+  against `VS`** (RN2 pulls there — never push-pull from 3.3/5 V) and should hold the AVR
   in UPDI reset while it owns the bus; `BTN` has **no external pull-up by design** — the
   line floats until firmware enables PA5's internal pull-up with the pin-change interrupt.
 - **J1** is an **optional** 0.1″ UPDI header — TC1 is the primary programming path.
@@ -690,10 +700,11 @@ them on the **back**; the front stays naked until you fit the cells. You finish 
 types by hand afterward.
 
 **The split**
-- **PCBWay machine-places** (reflow, bottom) — **46 parts** (47 computed from the board
-  2026-08-01, minus R12, deleted 2026-08-05 with TINY mode)
-  (smd, not DNP, not bare-land): U1, U3, U5–U9, Q2, D2–D5, R1–R6, R10, R11, R14–R18, L2, FB1,
-  C1, C3–C9, C11–C13, C22–C29. (The old list said "recompute from the v4 board" — done: it gained
+- **PCBWay machine-places** (reflow, bottom) — **41 parts** (46 until 2026-08-08: R1–R4 → RN1
+  landed with DRH's ballast-array copper, then R10/R11 → RN2 and the C7 deletion in the same
+  consolidation round — 7 parts out, 2 arrays in)
+  (smd, not DNP, not bare-land): U1, U3, U5–U9, Q2, D2–D5, RN1, RN2, R5, R6, R14–R18, L2, FB1,
+  C1, C3–C6, C8, C9, C11–C13, C22–C29. (The old list said "recompute from the v4 board" — done: it gained
   **C9**, placed 2026-07-30, and **C29**, the 100 nF at (11.575, 44.625) from the 2026-08-01 board
   sync. The v3 clamp/comparator parts - U2, U4, Q1, D1, D9–D11, R7–R9, C2, C10 - remain gone.)
   *(Corrected 2026-07-26: **SJ1 removed** from this list — it was then DNP/not-ordered and never
@@ -921,6 +932,19 @@ Work outside-in by heat sensitivity:
    > from Library* would silently restore 0.300 and re-break DRC. Element pairing is
    > 1↔8 / 2↔7 / 3↔6 / 4↔5 (IC-style numbering) — the schematic and board both encode it;
    > a replacement part with a different pairing convention PERMUTES the LED channels.
+   >
+   > **RN2** (Panasonic **EXB-24V472JX**, the 2×4.7k I²C pull-up array replacing R10/R11,
+   > 2026-08-08 — same EXB family and tape as RN1; second source Yageo YC122-JR-074K7L, and
+   > note Yageo's YC1 prefix is convex / TC1 is concave): its land is the STOCK KiCad
+   > `R_Array_Convex_2x0402` — with only two pads per row the along-row gap is 0.300, no
+   > slimming needed. Element pairing is **1↔4 / 2↔3**; on the board pins 1/2 are the VS row
+   > and 4/3 the signal row (SDA east, SCL west), and the schematic's labels match that order
+   > — a re-annotation that "fixes" the pin numbers to put signals on pins 1/2 permutes
+   > nothing electrically but breaks parity against this copper. **Pad-angle trap** (cost one
+   > DRC round here): in the board file a pad's stored angle is the TOTAL rotation, so a pad
+   > written without an angle on this −90° footprint sits axis-aligned — 0.5 mm wide where
+   > the land wants 0.4 — and shaved the SDA-trunk gap to 0.124. All four pads carry `270`
+   > now; anything that regenerates them must keep it.
    >
    > **2026-08-06 re-verification (DRH's Q2/C9/TC1 rework + the U6 DSBGA round):** same sweep,
    > same metric — in-aperture gaps **bit-identical**: D2 0.3740, D3 1.2033, D4 1.8112,

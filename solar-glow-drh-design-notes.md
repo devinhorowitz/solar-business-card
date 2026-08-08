@@ -1249,8 +1249,10 @@ mitigating it.
 **Retraction.** The earlier addendum's mitigation (a) -- "firmware bus-park, drive PC2/PC3 low
 between transactions" -- is withdrawn. With R10/R11 (4.7 k) on VS, a *driven-low* bus dissipates
 3.3 V across both pull-ups continuously: ~0.7 mA/line, ~1.4 mA total -- worse than the fault it
-addressed. (The workable cousin -- re-home R10/R11's high side to a spare GPIO so the idle bus
-*settles* low at zero standing current -- survives as ranked option B below.)
+addressed. (The workable cousin -- re-home the pull-ups' high side to a spare GPIO so the idle bus
+*settles* low at zero standing current -- survives as ranked option B below. Still true after
+R10/R11 consolidated into RN2 on 2026-08-08: the array's elements are isolated, its VS row is
+two pads on one body, and one stub move re-homes both.)
 
 **Verdict: treat the clamp as real until a bench measurement proves otherwise.** The question was
 whether the MB85RC512TY's SDA/SCL have a VDD-referenced clamp diode (fatal: bus back-powers the die,

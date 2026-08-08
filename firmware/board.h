@@ -138,7 +138,7 @@
  * that leakage flows from VS through the pull-up essentially always, independent
  * of the pull-up's value. Unbudgeted, it is +56% typ / +370% max against the
  * README's ~2.7 uA dark-standby sum; the same table specs SDA/SCL IL at 10 uA max
- * each through R10/R11 while VCC is gated. BENCH (beside the FRAM back-power
+ * each through RN2 (ne R10/R11, 2026-08-08) while VCC is gated. BENCH (beside the FRAM back-power
  * item): meter VS with FD pulled up vs grounded (VCC off, no field) to pin the
  * real leakage, and re-check FD's VIH margin at measured IL x pull-up R. */
 #define FD_PORT         PORTA
