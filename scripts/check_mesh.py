@@ -123,7 +123,11 @@ BASELINE = {
     # re-ledgered 2026-08-08 (LDO-island migration + DRH's Q2/R18/RN1/SW2 re-spread:
     # footprint 1374.3 -> 1316.7 mm2, coverage 34.4% -> 32.9%, floor re-ledgered 0.33 -> 0.32
     # in fit_rules WITH the trade named -- the same round raised the LITE brace; was 2058.35):
-    volume_mm3=1938.74, bbox=(-22.85, -42.4, 0.0, 24.35, 42.4, 1.8),
+    # re-ledgered 2026-08-08 late (DRH's post-shrink compaction: SC3 -0.457 west restoring
+    # the cap-scoot standoff -- SC3 is a brace BLOCKER, so the footprint recomputed
+    # 1316.7 -> 1329.6 mm2, coverage 32.9% -> 33.2%, 50 pockets; value is the pinned CI
+    # run's own measurement, local rebuild agreed to the digit; was 1938.74):
+    volume_mm3=1962.40, bbox=(-22.85, -42.4, 0.0, 24.35, 42.4, 1.8),
         max_boundary_edges=0, max_open_len_mm=0.0, max_degenerate=0),
     # ---- the 2026-08-07 enclosure variants (fit_rules.VARIANTS) --------------------------
     # Ledgered from local builds in the variants commit itself -- the chicken-and-egg rule:
@@ -168,7 +172,11 @@ BASELINE = {
         # re-ledgered 2026-08-08 (the island's blockers left the west corridor for the
         # SC bay: footprint 1060.2 -> 1087.2 mm2, coverage 26.5% -> 27.2% -- the campaign's
         # target variant GAINED; was 1114.04):
-        volume_mm3=1147.82, bbox=(-22.85, -42.4, 0.0, 24.35, 42.4, 1.22),
+        # re-ledgered 2026-08-08 late (DRH's post-shrink compaction: SC3 -0.457 west, a
+        # lite-brace blocker too -- footprint 1087.2 -> 1100.2 mm2, coverage 27.2% -> 27.5%,
+        # still 30 pockets; the target variant gained AGAIN. Value is the pinned CI run's
+        # own measurement, local rebuild agreed to the digit; was 1147.82):
+        volume_mm3=1163.91, bbox=(-22.85, -42.4, 0.0, 24.35, 42.4, 1.22),
         max_boundary_edges=0, max_open_len_mm=0.0, max_degenerate=0),
 }
 VOL_TOL = 0.005
