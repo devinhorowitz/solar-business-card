@@ -171,8 +171,10 @@ belongs in KiCad** (push-shove router, real thermal reliefs, exact mask expansio
   divider, program pads, tank caps). The ferrite passes DC (sub-ohm DCR) so the LDO never starves
   during LED bursts. *(FB1 originally sat with both pads shorted on STO -- non-functional; the
   `STO_LDO` split makes it a real series element. **The board copper re-route is done** -- FB1.1 on
-  STO, FB1.2 on STO_LDO, routed to U9.1/C22.1. What is still open on FB1 is its **land**: the 0603
-  choice above never reached the copper, which still draws the 0402 land. Tracked in `TODO.md`.)*
+  STO, FB1.2 on STO_LDO, routed to U9.1/C22.1. **The land landed too, 2026-08-08**: DRH swapped
+  the copper to the true `L_0603_1608Metric` land during the island's migration to the SC3/SC4
+  bay -- nothing about FB1 is open anymore. The island now sits on its own moated B-side ground
+  patch, single-tied at SC3.N; see PCB/README's island note.)*
 - **Why VQFN, not SSOP-28:** height is irrelevant (U7 (FRAM) then set the cavity floor at 1.75 mm; the QFN is
   0.9 mm). _(2026-07-23: U7 is now the 0.90 mm DFN, so the FRAM no longer sets the floor — the
   argument stands, only the example part changed.)_ The binding constraint is **X/Y footprint** — with the cells eating ~43% of the board, the

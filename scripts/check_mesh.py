@@ -45,7 +45,9 @@ BASELINE = {
     # re-ledgered 2026-08-07 night (RN1 array consolidation: R1-R4 keepouts returned,
     # RN1 0.45 pocket cut; prior: center consolidation; ring reliefs follow the
     # moved caps; was 5257.58 after the scoot, 5620.24 before):
-    volume_mm3=5266.02, bbox=(-26.35, -45.4, -0.15, 26.35, 45.4, 3.4),
+    # re-ledgered 2026-08-08 (moat round: SC3 -1.52 mm west + the LDO island's move into
+    # the SC3/SC4 bay re-carved the S-band ring reliefs; was 5266.02):
+    volume_mm3=5289.20, bbox=(-26.35, -45.4, -0.15, 26.35, 45.4, 3.4),
         max_boundary_edges=1, max_open_len_mm=0.001, max_degenerate=3),
     "solar-glow-drh-pogo-testplate.stl": dict(
         volume_mm3=50860.32, bbox=(-10.4, -10.4, -17.8, 61.2, 99.3, 10.0),
@@ -118,7 +120,10 @@ BASELINE = {
     # re-ledgered 2026-08-08 (RN2 consolidation + the C8 scoot to U5's west quadrant:
     # R10/R11/C7 pockets out, RN2 pocket in, C8's pocket moved -- and the RN2-C8
     # thin-wall bridge left with it; 48 pockets, footprint 1374.3 mm2; was 2055.08):
-    volume_mm3=2058.35, bbox=(-22.85, -42.4, 0.0, 24.35, 42.4, 1.8),
+    # re-ledgered 2026-08-08 (LDO-island migration + DRH's Q2/R18/RN1/SW2 re-spread:
+    # footprint 1374.3 -> 1316.7 mm2, coverage 34.4% -> 32.9%, floor re-ledgered 0.33 -> 0.32
+    # in fit_rules WITH the trade named -- the same round raised the LITE brace; was 2058.35):
+    volume_mm3=1938.74, bbox=(-22.85, -42.4, 0.0, 24.35, 42.4, 1.8),
         max_boundary_edges=0, max_open_len_mm=0.0, max_degenerate=0),
     # ---- the 2026-08-07 enclosure variants (fit_rules.VARIANTS) --------------------------
     # Ledgered from local builds in the variants commit itself -- the chicken-and-egg rule:
@@ -135,14 +140,17 @@ BASELINE = {
         # 0.15 below z0. No fins, no medallion (physics-forced: valley 0.60 / coin floors
         # would cut a 0.60 floor through).
         # re-ledgered 2026-08-07 (cap scoot + ring reliefs; was 4130.76):
-        volume_mm3=3905.03, bbox=(-26.35, -45.4, -0.15, 26.35, 45.4, 2.42),
+        # re-ledgered 2026-08-08 (moat round, same reliefs story as max; was 3905.03):
+        volume_mm3=3920.73, bbox=(-26.35, -45.4, -0.15, 26.35, 45.4, 2.42),
         max_boundary_edges=1, max_open_len_mm=0.001, max_degenerate=1),
     "solar-glow-drh-frame-air-316L.stl": dict(
         # air: OPEN frame, no floor -- walls + recess + 8 bosses only, z 0..1.80 exactly
         # (nothing below the resting plane; the M2x1.6 tip hides 0.20 inside the boss
         # spotface). Verified open: a ray up through the card centre hits zero surfaces.
         # re-ledgered 2026-08-07 (cap scoot + ring reliefs; was 1182.62):
-        volume_mm3=960.49, bbox=(-26.35, -45.4, 0.0, 26.35, 45.4, 1.8),
+        # re-ledgered 2026-08-08 (moat round: SC3 nudge re-keyed the frame's ring reliefs;
+        # was 960.49):
+        volume_mm3=975.93, bbox=(-26.35, -45.4, 0.0, 26.35, 45.4, 1.8),
         max_boundary_edges=1, max_open_len_mm=0.001, max_degenerate=1),
     "solar-glow-drh-diffuser-brace-lite.stl": dict(
         # the lite brace: gap 1.22, span 0.60, 31 pockets, 0 through-holes, single piece
@@ -157,7 +165,10 @@ BASELINE = {
         # re-ledgered 2026-08-08 (RN2 consolidation + the C8 scoot: R10/R11/C7 pockets
         # out, RN2 pocket in, C8's pocket moved; 30 pockets, footprint 1060.2 mm2,
         # dropped 307.2 in 4; was 1111.05):
-        volume_mm3=1114.04, bbox=(-22.85, -42.4, 0.0, 24.35, 42.4, 1.22),
+        # re-ledgered 2026-08-08 (the island's blockers left the west corridor for the
+        # SC bay: footprint 1060.2 -> 1087.2 mm2, coverage 26.5% -> 27.2% -- the campaign's
+        # target variant GAINED; was 1114.04):
+        volume_mm3=1147.82, bbox=(-22.85, -42.4, 0.0, 24.35, 42.4, 1.22),
         max_boundary_edges=0, max_open_len_mm=0.0, max_degenerate=0),
 }
 VOL_TOL = 0.005

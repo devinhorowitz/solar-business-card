@@ -308,10 +308,14 @@ def _mk_variants():
             material="Ti Gr5 (reference; brass or 6061 acceptable -- non-magnetic, machinable)",
             shell_name="solar-glow-drh-v3_0-backshell-0p6b-brace-Ti-max",
             brace_name="solar-glow-drh-diffuser-brace",
-            coverage_floor=0.33,   # ledgered min (measures 0.343 after DRH's 2026-08-07 center
-                                   # consolidation: the horizontal cap scoots traded LEG area for
-                                   # center room BY DESIGN -- legs are lip/cap/cell-backstopped;
-                                   # the center band y40-48.9 holds at 91% braced)
+            coverage_floor=0.32,   # ledgered min (measures 0.329 after the 2026-08-08 LDO-island
+                                   # migration to the SC3/SC4 bay: the island's five pockets and
+                                   # DRH's Q2/R18/RN1/SW2 re-spread cost the max brace 58 mm2 of
+                                   # field BY DESIGN -- the same round RAISED the lite brace
+                                   # 26.5% -> 27.2%, the variant the campaign optimizes for.
+                                   # Was 0.33 (measured 0.343 after the 2026-08-07 center
+                                   # consolidation: cap scoots traded LEG area for center room;
+                                   # legs are lip/cap/cell-backstopped)
         ),
         "lite": dict(
             cap_h=_SUPERCAP_H_THIN, cavity=cav_lite, floor=0.60, wall_th=1.00, border_h=0.15,
@@ -321,7 +325,9 @@ def _mk_variants():
             material="Ti Gr5 (thinned floor; the 0.60 is the shop-minimum conversation)",
             shell_name="solar-glow-drh-shell-lite-Ti",
             brace_name="solar-glow-drh-diffuser-brace-lite",
-            coverage_floor=0.25,   # ledgered min (measures 0.264 post-consolidation; center band 73.5%)
+            coverage_floor=0.25,   # ledgered min (measures 0.272 after the 2026-08-08 island
+                                   # migration -- UP from 0.264: the island's blockers left the
+                                   # west corridor for the SC bay; floor deliberately kept at 0.25)
         ),
         "air": dict(
             cap_h=_SUPERCAP_H_THIN, cavity=depth_air, floor=0.00, wall_th=1.00, border_h=0.00,
