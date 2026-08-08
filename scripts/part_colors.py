@@ -57,6 +57,16 @@ COLORS = {
     "TI_X2SON4_DQN":      ((0.100, 0.100, 0.105), "LDO, matte black epoxy X2SON"),
     "NT3H2211_XQFN8":     ((0.100, 0.100, 0.105), "NFC tag, matte black epoxy XQFN"),
     "ADXL367_CC12":       ((0.100, 0.100, 0.105), "accelerometer, LGA/CC ceramic-black"),
+    # The two EXB resistor arrays, 2026-08-08: these REPLACED the vendored KiCad-library
+    # models (R_Array_Convex_*.step, multi-colour, 113/221 colour entities). Those were
+    # "pre-coloured" and therefore lived outside this table -- and their near-black bodies
+    # rendered indistinguishable from bare mask at README scale, so both arrays READ AS
+    # EMPTY LANDS in every populated view. The LA_P47F lesson, one ring out: a model can
+    # carry colour and still be illegible, and only a table entry gives it a gate. House
+    # 6-face bodies now, white-ceramic like the real EXB substrate (and like the discrete
+    # R bodies, which is why those always read).
+    "EXB28V_4x0402":      ((0.850, 0.850, 0.820), "RN1 4x150R ballast array, EXB white ceramic"),
+    "EXB24V_2x0402":      ((0.850, 0.850, 0.820), "RN2 2x4.7k pull-up array, EXB white ceramic"),
 
     # THE FIX. Amber InGaAlP LED in a water-clear-to-amber lens. This is the one part whose
     # colour is the product: four of them backlight the monogram. It carried no colour entity

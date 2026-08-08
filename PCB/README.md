@@ -967,6 +967,15 @@ Work outside-in by heat sensitivity:
    > the land wants 0.4 — and shaved the SDA-trunk gap to 0.124. All four pads carry `270`
    > now; anything that regenerates them must keep it.
    >
+   > **Both arrays' 3D models are house bodies since 2026-08-08** —
+   > `solarglow.3dshapes/EXB28V_4x0402.step` / `EXB24V_2x0402.step`, single-colour 6-face,
+   > gated by `part_colors` check [10]. The KiCad-library models they replaced were
+   > "pre-coloured" (and so lived outside the table) with near-black bodies that rendered
+   > indistinguishable from bare mask at README scale — both arrays READ AS EMPTY LANDS in
+   > every populated view while resolving perfectly. The LA_P47F lesson, one ring out: a
+   > model can carry colour and still be illegible; only a table entry gives it a gate.
+   > `PCB/kicad-3dmodels/` is back to being purely the stock-library mirror.
+   >
    > **2026-08-06 re-verification (DRH's Q2/C9/TC1 rework + the U6 DSBGA round):** same sweep,
    > same metric — in-aperture gaps **bit-identical**: D2 0.3740, D3 1.2033, D4 1.8112,
    > D5 0.7580 mm. Neither the C9 0603 land (2.4 mm north of the window) nor the TC1 wiring
