@@ -991,6 +991,20 @@ Work outside-in by heat sensitivity:
    > established idiom — `INT1`↔`VSENSE` sit at 0.152 exactly). **The corridor is now
    > SATURATED**: any future move of SC1, the interrupt fan, or `VSENSE` in this region
    > requires re-fanning the corridor, not nudging it.
+   >
+   > **2026-08-08 re-verification (the island/moat round: RN1 −6 mm west, SW2 flip, SC3
+   > nudge):** full-pairs, teardrop-inclusive, in-aperture. Improved: **K2 1.5010, K3 0.5136,
+   > K4 2.0740, LDRV2 >1 mm** (off the table). Held exactly: **`INT1`↔`VSENSE` 0.1520** — the
+   > fan's recorded idiom survived the rework untouched. `INT2` left the window entirely.
+   > **The one give-back: `ANODE`↔`K5` 0.6496 → 0.3052 mm**, below the 0.3740 precedent — a
+   > boundary-entry pinch at (33.76, 47.50), both runs crossing the south rim side by side;
+   > 2× the copper floor, no pad and no paste at the pinch, but it is the window's new worst
+   > and the only number this round moved the wrong way. A ~0.1 mm spread of K5's entry at
+   > the rim restores the precedent — flagged for DRH's next GUI pass, not blocking. Also new
+   > this round: **GND now enters the aperture with real area** (the refilled pour reaches the
+   > rim; four pour-clearance kisses at 0.1525 against ANODE/K2/K3/K5, all at the window
+   > edges, mid-copper, no paste — the recorded INT-pair class, not the no-dam hazard class).
+   > Nine nets cross (INT2 out, GND in).
 
    > **C30 (2026-08-07): a DNP 0402 trim pad in parallel with C9**, 1.36 mm west, stubbed to
    > C9's own pads across `LA`/`LB`. Two jobs: finer bench granularity than swapping C9
