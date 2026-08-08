@@ -3405,7 +3405,7 @@
 			(uuid "008cddfb-eb73-47a5-97f1-180390ac3051")
 		)
 		(embedded_fonts no)
-		(model "${KIPRJMOD}/kicad-3dmodels/Resistor_SMD.3dshapes/R_Array_Convex_2x0402.step"
+		(model "${KIPRJMOD}/solarglow.3dshapes/EXB24V_2x0402.step"
 			(offset
 				(xyz 0 0 0)
 			)
@@ -10031,7 +10031,7 @@
 			(uuid "dc75e49d-0f57-445e-a584-7ea40104a5a9")
 		)
 		(embedded_fonts no)
-		(model "${KIPRJMOD}/kicad-3dmodels/Resistor_SMD.3dshapes/R_Array_Convex_4x0402.step"
+		(model "${KIPRJMOD}/solarglow.3dshapes/EXB28V_4x0402.step"
 			(offset
 				(xyz 0 0 0)
 			)
