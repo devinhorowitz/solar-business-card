@@ -619,7 +619,7 @@ Summary of the **orderable** lines:
 | U9 | 1 | TPS7A0233, 3.3 V, ~25 nA Iq | X2SON-4 (DQN, 1×1 mm, 0.4 max) — was SOT-23-5 (DBV) until the 2026-08-05 swap | `TPS7A0233PDQNR` |
 | U7 | 1 | MB85RC512TY | DFN-8 LCC-8P-M05 (5.0×6.0×0.90 mm MAX, 1.27 mm pitch) | `MB85RC512TYPN-GS-AWEWE1` |
 | L2 | 1 | 10 uH | 1008/2520 (L_1008_2520Metric), 2.5x2.0 mm | `DFE252010F-100M` |
-| FB1 | 1 | 0603 bead | 0603 (`L_0603_1608Metric` — **board still draws the 0402 land**, see TODO.md) | `BLM18PG221SN1D` |
+| FB1 | 1 | 0603 bead | 0603 (`L_0603_1608Metric` — the true 0603 land since DRH's 2026-08-08 island round; the 0402-land debt is paid) | `BLM18PG221SN1D` |
 | C22 | 1 | 1 uF, 25 V, 0603, X7R | 0603 (C_0603_1608Metric) | `GRT188R71E105KE13D` |
 | C23 | 1 | 2.2 µF, 25 V, 0603, X7R | 0603 (C_0603_1608Metric) | `GRM188Z71E225ME43D` |
 | C24 | 1 | 100 nF, 0402, X7R | 0402 | `GRT155R71H104KE01D` |
@@ -638,9 +638,30 @@ redundant; **C3 → U1.10 VDDIO2** (2.86); **C12 → U3.12 VS** (1.39); **C28 �
 **C6 → U6.A2 VS** (2.01); **C8 → U5.6 VNFC**. C5 (VSENSE) and C24 (STO_SNS) share the MPN but
 are divider FILTERS, not decoupling — distance rules don't apply to them. The one-too-many was
 **C7**: both C6 and C7 sat nearest the same U6.A2 pin — a leftover from U6's SC-70 era that
-survived two package swaps — deleted 2026-08-08. **Standing flag: C8 sits 5.25 mm from the pin
-it decouples** (U5.6 VNFC) — far for a decoupler; relocation is copper work, queued for DRH's
-next GUI session.
+survived two package swaps — deleted 2026-08-08. C8 flagged the same day at 5.25 mm from its
+pin, parked by Claude at (33.1, 34.5) pads-unrouted, then **finished by DRH at (35.6, 31.86)**
+— north of U5, 1.4 mm pad-to-pin, fully routed. The census is closed: every decoupler within
+2.9 mm of its pin except C3 (VDDIO2, 3.5 mm — a µA rail, accepted).
+
+**The STO_LDO island is MOATED (2026-08-08, DRH's build + Claude's plumbing).** The LDO block —
+FB1, C22, U9, C23, TP7 — lives at the foot of the SC3/SC4 bay (x 23.4–28, y 79.9–86.4) on its
+own B-side ground patch, the zone **`GND_B_LDO_ISLAND`**, separated from the main `GND_B` pour
+by four pour-keepout rule areas (**`MOAT_N/S/E/W`**, 0.85 mm band: pours blocked, tracks
+allowed, vias blocked). The island touches system ground at **exactly one point**: the drawn
+GND tie from **SC3.N — the supercap bank's own ground foot at (14.12, 85.95)** — landing on
+C22.2. Why: the AEM's ≥10 MHz buck-boost hash rides raw STO, FB1 blocks it on the hot side at
+the moat boundary, and the isolated patch keeps the same hash from re-entering around the bead
+through shared ground copper — the LDO's reference wiggles with nothing, and VS (which the
+AVR's ADC measures against) stays clean above where the TPS7A02's PSRR has rolled off. The
+crossings are exactly two: STO in through FB1, VS out beside the tie so trace and return run
+together. **The audit that must stay true** (run it after any rework here): delete the tie
+trace, refill, and the island must fall OFF the net — 2026-08-08 baseline: with the tie cut,
+`GND_B_LDO_ISLAND` and all four island ground pads go unconnected, proving no pour leaks
+across the ring. If they ever stay connected with the tie cut, something bridged the moat.
+Do NOT add a second tie (a bridge turns the island into a through-route for LED-pulse return
+current), and do NOT drop GND stitching vias inside the ring. Cost/benefit as ledgered in
+`fit_rules`: the max brace paid 58 mm² of field (coverage floor re-ledgered 0.33 → 0.32); the
+lite brace — the variant the consolidation campaign optimizes — GAINED, 26.5% → 27.2%.
 
 **No ordered part — these are board features, not BOM line items:**
 - **SW2** (LED OFF/ON) is a **solder bridge** on the PCB. _(SB1–SB4, the per-LED force-on
