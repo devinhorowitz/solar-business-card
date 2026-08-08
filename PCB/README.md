@@ -1058,6 +1058,21 @@ Work outside-in by heat sensitivity:
    > teardrop pass the pocket re-route above already queued; the refill on save keeps the
    > fills honest.
 
+   > **2026-08-08 latest (DRH's post-shrink compaction re-route):** the teardrop debt is
+   > PAID — 238 → 328 teardrop zones (the moat round's deleted pocket teardrops came back
+   > with the pass), and every via teardrop re-anchors at the 0.277 pad circle; the two
+   > stale-outline caveats above are history. Only SC3 (−0.457 west, restoring the
+   > cap-scoot 0.755 courtyard standoff the island round's nudge had broken) and TP7
+   > (+0.61) moved; everything else is re-route (894 → 887 segments). Same sweep, same
+   > metric: **`ANODE`↔`K5` 0.3052 → 0.3285** — the rebuilt via teardrop giving back its
+   > radius at the rim, still 0.045 short of the 0.3740 precedent, so the ~0.1 mm rim
+   > spread stays queued. K3 0.5058, everything else ≥ 0.57 or off the table;
+   > **`INT1`↔`VSENSE` 0.1520 held exactly** through a third consecutive rework. And the
+   > shrink did its job where it was aimed: floor-tight pinches involving a via fell
+   > **44 → 8** (segment-level, both layers) and at-floor vias **14 → 3**, while
+   > track-track floor pinches rose 140 → 152 — the freed room was spent on legal
+   > compaction, which is the point.
+
    > **C30 (2026-08-07): a DNP 0402 trim pad in parallel with C9**, 1.36 mm west, stubbed to
    > C9's own pads across `LA`/`LB`. Two jobs: finer bench granularity than swapping C9
    > outright, and the AIR variant's retune — the open frame drops the ferrite, L falls
