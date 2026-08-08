@@ -68,9 +68,12 @@
   (severity error)
   (constraint track_width (min 0.152mm)))
 
-# Uniform 0.6/0.3 vias sit at exactly 0.150 mm annular by construction, which is EXACTLY
-# PCBWay's stated minimum -- zero margin. Left as-is because widening the via pad to 0.65 would
-# cost clearance everywhere on a board that is already being re-spaced; flagged in TODO instead.
+# The via fleet is uniform 0.554/0.254 (2026-08-08; was 0.6/0.3) -- the smallest via this
+# three-fab envelope permits: OSH Park's 0.254 drill floor plus PCBWay's 0.150 ring on each
+# side. The annular is EXACTLY 0.150 by construction, zero margin against PCBWay -- unchanged
+# from the old fleet, because the shrink moved pad and drill together and the ring never moved.
+# (The panel frame's six plating-bus stitching vias in scripts/panelize.py stay 0.6/0.3 on
+# purpose: PCBWay-only scrap carrying plating current, where beefier is simply better.)
 (rule "annular-hard-floor"
   (severity error)
   (constraint annular_width (min 0.1499mm)))

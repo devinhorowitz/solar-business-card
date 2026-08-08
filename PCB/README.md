@@ -228,10 +228,12 @@ Order parameters, from the committed board:
 | Plated mount holes | Ø **2.2 mm** ×8 (M2 — 4 corner MH1–4 + 4 panel-corner MP1–4, tied to GND) |
 | Castellations | **None** (verified — only the corner mount holes sit within 1.5 mm of the rim) |
 
-**Run PCBWay's DFM check against these.** The binding features are the **0.127 mm spacing**
-and **0.15 mm tracks** — inside PCBWay's stated 0.1 mm/4 mil 2-layer capability, but worth a
-glance at their sheet. There are no fine vias on this board (the whole board runs the one 0.30/0.60
-via), and no controlled-impedance nets to declare.
+**Run PCBWay's DFM check against these.** The binding features are the **0.152 mm clearance
+and track floors** (the OSH-governed envelope minimum, which the routing reaches in hundreds
+of places) — inside PCBWay's stated 0.1 mm/4 mil 2-layer capability, but worth a glance at
+their sheet. There are no fine vias on this board (the whole board runs the one **0.254/0.554**
+via — since 2026-08-08 the smallest the three-fab envelope permits, OSH Park's drill floor
+wearing PCBWay's 0.150 ring), and no controlled-impedance nets to declare.
 
 > ### Three fabs, one board file (2026-07-27; JLCPCB added 2026-08-08)
 >
@@ -1041,6 +1043,20 @@ Work outside-in by heat sensitivity:
    > rim; four pour-clearance kisses at 0.1525 against ANODE/K2/K3/K5, all at the window
    > edges, mid-copper, no paste — the recorded INT-pair class, not the no-dam hazard class).
    > Nine nets cross (INT2 out, GND in).
+
+   > **2026-08-08 later (the via-fleet shrink, 0.6/0.3 → 0.554/0.254):** same sweep, same
+   > metric — **bit-identical to the entry above**: K2 1.5010, K3 0.5136, K4 2.0740,
+   > K5 0.3052, `INT1`↔`VSENSE` 0.1520. Six via pads touch the aperture rim, but no via is a
+   > binding item on any gated pair, so nothing the window gates on moved. One thing the next
+   > sweep must know: **the 136 via teardrops still carry outlines built for the 0.6 pad.**
+   > KiCad's zone filler refills teardrop zones but does not re-derive their outlines, and the
+   > repo will not hand-roll a second implementation of KiCad's teardrop geometry (the
+   > mask_art `emit(build())` lesson). So teardrop-inclusive measurements near via junctions
+   > read as 0.6-era copper — honest for the artifact, conservative for the design — and the
+   > shrink's clearance gain near teardropped junctions is unrealized until the next GUI
+   > session runs *Edit → Edit Teardrops* over the whole board. Fold that into the same
+   > teardrop pass the pocket re-route above already queued; the refill on save keeps the
+   > fills honest.
 
    > **C30 (2026-08-07): a DNP 0402 trim pad in parallel with C9**, 1.36 mm west, stubbed to
    > C9's own pads across `LA`/`LB`. Two jobs: finer bench granularity than swapping C9
