@@ -29,9 +29,9 @@ transforms matter:
 
   * For midnight, the stackup colours are repainted (black core, near-clear mask), the board
     thickness goes 0.6 -> 1.6 mm, and the two plating-bus stubs at x = 25.4 are deleted. That
-    stub deletion is the documented OSH Park delta — see PCB/README.md "Two fabs, one board
-    file". Rendering them would show copper crossing the outline, which is exactly the thing
-    that variant does not have.
+    stub deletion is the documented ENIG-fab delta (OSH Park and JLCPCB take the same stub-less
+    upload) — see PCB/README.md "Three fabs, one board file". Rendering them would show copper
+    crossing the outline, which is exactly the thing that variant does not have.
 
 The board file itself is never modified. Verify with `git status` after a run.
 """

@@ -228,39 +228,68 @@ Order parameters, from the committed board:
 | Plated mount holes | Ø **2.2 mm** ×8 (M2 — 4 corner MH1–4 + 4 panel-corner MP1–4, tied to GND) |
 | Castellations | **None** (verified — only the corner mount holes sit within 1.5 mm of the rim) |
 
-**Run PCBWay's DFM check against these.** The binding features are the **0.127 mm spacing**
-and **0.15 mm tracks** — inside PCBWay's stated 0.1 mm/4 mil 2-layer capability, but worth a
-glance at their sheet. There are no fine vias on this board (the whole board runs the one 0.30/0.60
-via), and no controlled-impedance nets to declare.
+**Run PCBWay's DFM check against these.** The binding features are the **0.152 mm clearance
+and track floors** (the OSH-governed envelope minimum, which the routing reaches in hundreds
+of places) — inside PCBWay's stated 0.1 mm/4 mil 2-layer capability, but worth a glance at
+their sheet. There are no fine vias on this board (the whole board runs the one **0.254/0.554**
+via — since 2026-08-08 the smallest the three-fab envelope permits, OSH Park's drill floor
+wearing PCBWay's 0.150 ring), and no controlled-impedance nets to declare.
 
-> ### Two fabs, one board file (2026-07-27)
+> ### Three fabs, one board file (2026-07-27; JLCPCB added 2026-08-08)
 >
-> The design rules in `solar-glow-drh-v4_0.kicad_dru` are the **intersection of PCBWay and OSH Park**,
-> so this board can be ordered from either without re-checking anything: PCBWay for fast, cheap,
-> local prototypes and small batches, OSH Park **After Dark** (black FR4 + clear soldermask, ENIG,
-> 1.6 mm) for the naked "midnight" variant.
+> The design rules in `solar-glow-drh-v4_0.kicad_dru` are the **per-parameter intersection of
+> PCBWay, OSH Park and JLCPCB**, so this board can be ordered from any of the three without
+> re-checking anything: PCBWay for fast local prototypes and the hard-gold production panel,
+> OSH Park **After Dark** (black FR4 + clear soldermask, ENIG, 1.6 mm) for the naked "midnight"
+> variant, and JLCPCB as the volume alternate — the one ENIG-only fab that stocks the
+> **production 0.6 mm thickness**, so it is the cheapest way to prototype the real stack
+> (After Dark is 1.6 mm only).
 >
-> | | PCBWay | OSH Park | governs |
-> |---|---|---|---|
-> | trace / space | 0.100 mm | **0.1524 mm** | OSH Park |
-> | drill | 0.200 mm | **0.254 mm** | OSH Park |
-> | annular ring | **0.150 mm** | 0.127 mm | **PCBWay** |
-> | copper → board edge | not stated | **0.381 mm** | OSH Park |
+> | | PCBWay | OSH Park | JLCPCB | governs |
+> |---|---|---|---|---|
+> | trace / space | 0.100 mm | **0.1524 mm** | 0.100 mm | OSH Park |
+> | drill (plated) | 0.200 mm | **0.254 mm** | 0.150 mm | OSH Park |
+> | via annular ring | **0.150 mm** | 0.127 mm | 0.050 mm | **PCBWay** |
+> | copper → board edge | not stated | **0.381 mm** | 0.200 mm | OSH Park |
+> | PTH pad annular ring | 0.150 mm | 0.127 mm | **0.180 mm** | **JLCPCB** |
+> | PTH hole → other copper | not stated | not stated | **0.280 mm** | **JLCPCB** |
+> | hole → hole, pad involved | not stated | not stated | **0.450 mm** | **JLCPCB** |
+> | NPTH drill | not stated | not stated | **0.500 mm** | **JLCPCB** |
 >
-> Annular ring inverts — OSH Park is the *looser* one there. Do not relax it to 0.127 on the strength
-> of their spec page; that breaks PCBWay.
+> Two inversions now, not one. OSH Park is the *looser* fab on via annular ring (do not relax it
+> to 0.127 on the strength of their spec page; that breaks PCBWay), and JLCPCB — looser than
+> everyone on trace/space/drill — is the *tightest* on every hole-adjacency number: 1 oz PTH pads
+> need 0.18 mm of ring where its vias need only 0.05, plated holes want 0.28 mm to foreign copper,
+> any hole pair involving a pad wants 0.45 mm wall-to-wall, and it drills no NPTH under 0.50 mm.
+> Those four axes had no gate before because neither earlier fab published a limit the board could
+> get near; they are now **conditioned rules** in the `.kicad_dru` (the via fleet keeps its
+> PCBWay-governed 0.1499 ring, untouched by the pad rule). The board clears all four with room —
+> measured 2026-08-08: mount-pad annular 0.700, worst PTH-hole-to-copper 0.894 (MP4), worst
+> pad-involved hole pair 0.530 (NPTH↔via), smallest NPTH 0.991 — so the rules are insurance
+> against future edits, not corrections.
 >
-> **The single thing that cannot satisfy both fabs** is the pair of 0.4 mm plating-bus stubs
-> crossing the outline at x = 25.4. They are *required* at PCBWay to feed electrolytic hard gold and
-> *prohibited* at OSH Park, which needs 0.381 mm of copper pullback from the edge and offers ENIG
-> only. **The OSH Park upload deletes those two objects and nothing else** — everything else in the
-> board is common to both. (OSH Park also cannot do the selective hard gold at all, so the midnight
-> variant's monogram table is ENIG rather than hard gold; the bus has no job there regardless.)
+> **The single thing that cannot satisfy all three fabs** is the pair of 0.4 mm plating-bus stubs
+> crossing the outline at x = 25.4. They are *required* at PCBWay to feed electrolytic hard gold
+> and *prohibited* at both ENIG-only fabs — OSH Park by its 0.381 mm edge pullback, JLCPCB by its
+> 0.2 mm one, and neither offers selective hard gold at all (JLCPCB finishes are HASL/ENIG/OSP),
+> so the monogram table is ENIG there and the bus has no job regardless. **The OSH Park and JLCPCB
+> uploads are the SAME artifact: the plain 1-up set with the two stubs deleted, and nothing else**
+> — one deletion procedure covers both ENIG fabs, and everything else in the board is common to
+> all three.
 >
 > Since 2026-07-28 that difference is a **build step, not an edit**: PCBWay gets the panel
 > (`Generated/panel/`, see below), whose frame carries the bus the stubs were always drawn for;
-> OSH Park gets the plain 1-up set from `Generated/gerbers/` with the two stubs deleted. Both come
-> out of the same committed board.
+> the ENIG fabs get the plain 1-up set from `Generated/gerbers/` with the two stubs deleted. All
+> orders come out of the same committed board.
+>
+> Two JLC-specific soft notes, neither of which gates. **Silk text height:** six back-silk labels
+> (`ON`, `DRH v4.0`, `SDA`, `SCL`, `STO`, `SRC`) are set at 0.8 mm against JLCPCB's recommended
+> 1.0 mm minimum — they will print, but JLC's DFM will flag legibility; cosmetic, and the labels
+> live under the shell anyway. **PTH drill tolerance:** JLC's finished-hole tolerance is
+> +0.13/−0.08 mm, so a Ø2.20 mount hole can finish at 2.12 and the radial slack against the M2
+> screw drops from 0.100 to 0.060 mm — the screws still fit, but a JLC batch has less of the slack
+> the 2026-08-03 mount-shift story was measured against. (JLC's V-cut minimum of 0.6 mm sits
+> exactly at the production thickness, but it is moot: JLC gets the 1-up, not the panel.)
 >
 > Variant differences are otherwise fab *order options*, not artwork: soldermask colour, substrate
 > colour, board thickness, and whether the Ti back-shell is fitted.
@@ -1014,6 +1043,20 @@ Work outside-in by heat sensitivity:
    > rim; four pour-clearance kisses at 0.1525 against ANODE/K2/K3/K5, all at the window
    > edges, mid-copper, no paste — the recorded INT-pair class, not the no-dam hazard class).
    > Nine nets cross (INT2 out, GND in).
+
+   > **2026-08-08 later (the via-fleet shrink, 0.6/0.3 → 0.554/0.254):** same sweep, same
+   > metric — **bit-identical to the entry above**: K2 1.5010, K3 0.5136, K4 2.0740,
+   > K5 0.3052, `INT1`↔`VSENSE` 0.1520. Six via pads touch the aperture rim, but no via is a
+   > binding item on any gated pair, so nothing the window gates on moved. One thing the next
+   > sweep must know: **the 136 via teardrops still carry outlines built for the 0.6 pad.**
+   > KiCad's zone filler refills teardrop zones but does not re-derive their outlines, and the
+   > repo will not hand-roll a second implementation of KiCad's teardrop geometry (the
+   > mask_art `emit(build())` lesson). So teardrop-inclusive measurements near via junctions
+   > read as 0.6-era copper — honest for the artifact, conservative for the design — and the
+   > shrink's clearance gain near teardropped junctions is unrealized until the next GUI
+   > session runs *Edit → Edit Teardrops* over the whole board. Fold that into the same
+   > teardrop pass the pocket re-route above already queued; the refill on save keeps the
+   > fills honest.
 
    > **C30 (2026-08-07): a DNP 0402 trim pad in parallel with C9**, 1.36 mm west, stubbed to
    > C9's own pads across `LA`/`LB`. Two jobs: finer bench granularity than swapping C9
