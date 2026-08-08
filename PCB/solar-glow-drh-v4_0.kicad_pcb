@@ -143,6 +143,275 @@
 			(outputdirectory "")
 		)
 	)
+	(footprint "Resistor_SMD:R_Array_Convex_2x0402"
+	(layer "B.Cu")
+	(uuid "3d247490-a120-438b-bba1-8cab46762834")
+	(at 28.4 32.95 -90)
+	(layer "B.Cu")
+	(descr "Chip Resistor Network, ROHM MNR02 (see mnr_g.pdf)")
+	(tags "resistor array")
+	(property "Reference" "RN2"
+		(at -2 -0.3 0)
+		(layer "B.SilkS")
+		(uuid "1930ef78-8dd9-49bb-993a-a7a8bd64adb3")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+			(justify mirror)
+		)
+	)
+	(property "Value" "4.7k"
+		(at 0 1.8 0)
+		(layer "B.Fab")
+		(uuid "5c4b7bb8-4ad7-4f59-b8c1-8d1bee411e40")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+			(justify mirror)
+		)
+	)
+	(property "Datasheet" ""
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "B.Fab")
+		(hide yes)
+		(uuid "1c2975ef-43b6-4013-a790-b7cdd1d66ce7")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Description" "2x4.7k I2C pull-up array replacing discrete R10/R11 (consolidation 2026-08-07). Panasonic EXB-24V472JX, 0404 convex, elements pair pins 1-4/2-3 (verified against the EXB catalog and the KiCad land). Same EXB family/tape as RN1. Second source: Yageo YC122-JR-074K7L. Pull-ups need no matching; this is a placement consolidation. Note one body now carries BOTH bus pulls."
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "B.Fab")
+		(hide yes)
+		(uuid "efd03296-5e9c-4b96-a786-dd7c2b0b146a")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.15)
+			)
+			(justify mirror)
+		)
+	)
+	(property "MPN" "EXB-24V472JX"
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "B.Fab")
+		(hide yes)
+		(uuid "d1a6cb18-b164-41e3-a735-2e7fb38c4183")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+			(justify mirror)
+		)
+	)
+	(property "Manufacturer" "Panasonic"
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "B.Fab")
+		(hide yes)
+		(uuid "cac52259-3ddf-4721-864c-ece542dde1b4")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+			(justify mirror)
+		)
+	)
+	(property "Supplier" "DigiKey"
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "B.Fab")
+		(hide yes)
+		(uuid "794a4d02-c369-4df6-a844-94357073daca")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+			(justify mirror)
+		)
+	)
+	(property "Supplier P/N" "Y5472CT-ND"
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "B.Fab")
+		(hide yes)
+		(uuid "86c4bed4-1aeb-4fab-99e5-35ee5bfa639a")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+			(justify mirror)
+		)
+	)
+	(attr smd)
+	(duplicate_pad_numbers_are_jumpers no)
+	(fp_line
+		(start 0.25 -0.78)
+		(end -0.25 -0.78)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "B.SilkS")
+		(uuid "bf5f74f4-17ba-4426-86a4-7c87ccced9de")
+	)
+	(fp_line
+		(start 0.25 0.78)
+		(end -0.25 0.78)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "B.SilkS")
+		(uuid "c8726428-aad8-4efd-a9d2-72311102ebe1")
+	)
+	(fp_line
+		(start -1 -0.95)
+		(end -1 0.95)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "B.CrtYd")
+		(uuid "4bb4ff2d-050f-48a8-b524-12654e0db4bf")
+	)
+	(fp_line
+		(start -1 -0.95)
+		(end 1 -0.95)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "B.CrtYd")
+		(uuid "1941aac0-a21d-49b9-99e5-14cb0b37e262")
+	)
+	(fp_line
+		(start 1 0.95)
+		(end -1 0.95)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "B.CrtYd")
+		(uuid "d22b86b9-1def-4bf7-9bb2-5c8f9da47915")
+	)
+	(fp_line
+		(start 1 0.95)
+		(end 1 -0.95)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "B.CrtYd")
+		(uuid "e386e132-895b-47bc-a038-87dc43199f02")
+	)
+	(fp_line
+		(start -0.5 -0.7)
+		(end -0.5 0.7)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "B.Fab")
+		(uuid "e1bea47b-7e6a-4c04-80ee-952601c5b0dd")
+	)
+	(fp_line
+		(start -0.5 0.7)
+		(end 0.5 0.7)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "B.Fab")
+		(uuid "9489cc23-631d-43cd-a359-ad4af02dd836")
+	)
+	(fp_line
+		(start 0.5 -0.7)
+		(end -0.5 -0.7)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "B.Fab")
+		(uuid "92562312-5f56-4d9b-8f21-179479e1c024")
+	)
+	(fp_line
+		(start 0.5 0.7)
+		(end 0.5 -0.7)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "B.Fab")
+		(uuid "17bcfb9f-b638-4927-b982-5df915b985c2")
+	)
+	(fp_text user "${REFERENCE}"
+		(at 0 -1.75 0)
+		(layer "B.Fab")
+		(uuid "7421fbb1-2578-4d57-adf3-25f831e58b02")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+			(justify mirror)
+		)
+	)
+	(pad "1" smd rect
+		(at -0.5 -0.35 270)
+		(size 0.5 0.4)
+		(layers "B.Cu" "B.Mask" "B.Paste")
+		(net "VS")
+		(uuid "f88c90b3-2bc4-4e2e-bef9-772f36168afa")
+	)
+	(pad "2" smd rect
+		(at -0.5 0.35 270)
+		(size 0.5 0.4)
+		(layers "B.Cu" "B.Mask" "B.Paste")
+		(net "VS")
+		(uuid "7accc150-c393-4d26-98f3-a188bf49f7c0")
+	)
+	(pad "3" smd rect
+		(at 0.5 0.35 270)
+		(size 0.5 0.4)
+		(layers "B.Cu" "B.Mask" "B.Paste")
+		(net "SCL")
+		(uuid "c4661ba8-0975-4ada-8fb4-0c9a7dfff161")
+	)
+	(pad "4" smd rect
+		(at 0.5 -0.35 270)
+		(size 0.5 0.4)
+		(layers "B.Cu" "B.Mask" "B.Paste")
+		(net "SDA")
+		(uuid "008cddfb-eb73-47a5-97f1-180390ac3051")
+	)
+	(embedded_fonts no)
+	(model "${KIPRJMOD}/kicad-3dmodels/Resistor_SMD.3dshapes/R_Array_Convex_2x0402.step"
+		(offset
+			(xyz 0 0 0)
+		)
+		(scale
+			(xyz 1 1 1)
+		)
+		(rotate
+			(xyz 0 0 0)
+		)
+	)
+)
 	(footprint "solarglow:MH3"
 		(locked yes)
 		(layer "F.Cu")
@@ -1914,177 +2183,7 @@
 			)
 		)
 	)
-	(footprint "solarglow:R10"
-		(layer "B.Cu")
-		(uuid "170bce1a-0a89-4b3c-a83c-41e2ce7828a1")
-		(at 30.47 32.3 180)
-		(property "Reference" "R10"
-			(at 0 1.3 0)
-			(layer "B.SilkS")
-			(hide yes)
-			(uuid "1c293176-e42e-4773-84e2-351976d5620d")
-			(effects
-				(font
-					(size 1 1)
-				)
-				(justify mirror)
-			)
-		)
-		(property "Value" "4.7k"
-			(at 0 0 0)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "a862a8d0-903b-4c15-ac53-010a09d8874a")
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 0 0 0)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "fde3191f-0056-4bde-bc49-e1e2c8974d22")
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "I2C pull-up 4.7 kohm"
-			(at 0 0 0)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "2a179ad4-1be9-4d5a-baff-4903293d7754")
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "MPN" "AC0402FR-074K7L"
-			(at 0 0 180)
-			(unlocked yes)
-			(layer "B.Fab")
-			(hide yes)
-			(uuid "11deb03d-7462-42c2-a6a2-a43fb2a9b815")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-				(justify mirror)
-			)
-		)
-		(property "Manufacturer" "Yageo"
-			(at 0 0 180)
-			(unlocked yes)
-			(layer "B.Fab")
-			(hide yes)
-			(uuid "0927d587-a188-5128-8ca8-d3efb7b88551")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-				(justify mirror)
-			)
-		)
-		(property "Supplier" "DigiKey"
-			(at 0 0 180)
-			(unlocked yes)
-			(layer "B.Fab")
-			(hide yes)
-			(uuid "afb8e1d0-f9ee-4369-9c5a-ef1080eccfa3")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-				(justify mirror)
-			)
-		)
-		(property "Supplier P/N" "YAG3497CT-ND"
-			(at 0 0 180)
-			(unlocked yes)
-			(layer "B.Fab")
-			(hide yes)
-			(uuid "e1ce780e-3c47-45b6-865f-a1f0049e01ba")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-				(justify mirror)
-			)
-		)
-		(path "/0df20dbc-e304-4935-8cf9-616976cfeb2d")
-		(sheetname "/")
-		(sheetfile "solar-glow-drh-v4_0.kicad_sch")
-		(units
-			(unit
-				(name "A")
-				(pins "1" "2")
-			)
-		)
-		(attr smd)
-		(duplicate_pad_numbers_are_jumpers no)
-		(pad "1" smd roundrect
-			(at -0.51 0 180)
-			(size 0.59 0.66)
-			(layers "B.Cu" "B.Mask" "B.Paste")
-			(roundrect_rratio 0.25)
-			(net "SDA")
-			(pinfunction "1_1")
-			(pintype "passive")
-			(teardrops
-				(best_length_ratio 0.5)
-				(max_length 1)
-				(best_width_ratio 1)
-				(max_width 2)
-				(curved_edges yes)
-				(filter_ratio 0.9)
-				(enabled yes)
-				(allow_two_segments yes)
-				(prefer_zone_connections yes)
-			)
-			(uuid "000f4e27-fe30-4bae-b72d-e7d779aa64a4")
-		)
-		(pad "2" smd roundrect
-			(at 0.51 0 180)
-			(size 0.59 0.66)
-			(layers "B.Cu" "B.Mask" "B.Paste")
-			(roundrect_rratio 0.25)
-			(net "VS")
-			(pinfunction "2_2")
-			(pintype "passive")
-			(teardrops
-				(best_length_ratio 0.5)
-				(max_length 1)
-				(best_width_ratio 1)
-				(max_width 2)
-				(curved_edges yes)
-				(filter_ratio 0.9)
-				(enabled yes)
-				(allow_two_segments yes)
-				(prefer_zone_connections yes)
-			)
-			(uuid "7981ea94-f199-42c1-bc18-2a2eb667e182")
-		)
-		(embedded_fonts no)
-		(model "${KICAD10_3DMODEL_DIR}/Resistor_SMD.3dshapes/R_0402_1005Metric.step"
-			(offset
-				(xyz 0 0 0)
-			)
-			(scale
-				(xyz 1 1 1)
-			)
-			(rotate
-				(xyz 0 0 0)
-			)
-		)
-	)
+	
 	(footprint "solarglow:TPS22916_YFP0004"
 		(layer "B.Cu")
 		(uuid "17120a41-c768-49b7-814e-cb0f8f10b10a")
@@ -5239,7 +5338,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" "C9 tank trim pad, DNP -- see schematic"
+		(property "Description" "C9 tank trim pad, DNP (2026-08-07). Parallel with C9 across LA/LB: bench granularity for the paper-tune ladder, and headroom for the AIR variant retune -- the open 316L frame drops the ferrite, L falls toward the bare 0.958 uH, f0 rises, and the fix is MORE C in parallel: exactly what this pad adds. Fit a High-Q C0G 0402 chosen at the bench; stays out of every buy document until a value exists (dnp + exclude_from_bom + exclude_from_pos_files)."
 			(at 0 0 180)
 			(layer "B.Fab")
 			(hide yes)
@@ -8669,7 +8768,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "1M"
+		(property "Value" "2M"
 			(at 0 -1.43 90)
 			(layer "B.Fab")
 			(hide yes)
@@ -8694,7 +8793,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" "VSENSE divider 1 Mohm - 0603 thin film 0.1% 25ppm (matched with R5)"
+		(property "Description" "VSENSE divider 2 Mohm - 0603 thin film 0.1% 25ppm GUARANTEED at 2M (matched with R5). Vishay Beyschlag MCT 0603 AT: the only 0603 that holds 25ppm at 2M (Yageo RT0603 2M is 50ppm and stockless). 2026-08-08 bump 1M->2M halves the divider's permanent SRC bleed; AEC-Q200, anti-sulfur ASTM B809."
 			(at 0 0 90)
 			(layer "B.Fab")
 			(hide yes)
@@ -8719,7 +8818,7 @@
 				(justify mirror)
 			)
 		)
-		(property "MPN" "RT0603BRD071ML"
+		(property "MPN" "MCT0603MD2004BP500"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -8733,7 +8832,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Manufacturer" "Yageo"
+		(property "Manufacturer" "Vishay"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -8761,7 +8860,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Supplier P/N" "YAG4498CT-ND"
+		(property "Supplier P/N" "541-MCT0603MD2004BP500CT-ND"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -9689,6 +9788,20 @@
 			(layer "B.Fab")
 			(hide yes)
 			(uuid "32f285c5-0600-42c0-8e55-1bfa5df08bd4")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
+		(property "Supplier" "DigiKey"
+			(at 32.03 49.84 0)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "94d75c9e-a20a-4528-9070-458f5ff160ed")
 			(effects
 				(font
 					(size 1 1)
@@ -11765,177 +11878,7 @@
 			)
 		)
 	)
-	(footprint "solarglow:R11"
-		(layer "B.Cu")
-		(uuid "c1901968-637b-4c94-bccf-d4f016b95ac4")
-		(at 28.433633 33.168887 90)
-		(property "Reference" "R11"
-			(at 0 1.3 90)
-			(layer "B.SilkS")
-			(hide yes)
-			(uuid "ae1cec45-767f-4e7d-b0c2-a649fca1b890")
-			(effects
-				(font
-					(size 1 1)
-				)
-				(justify mirror)
-			)
-		)
-		(property "Value" "4.7k"
-			(at 0 0 90)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "2a23f189-25a4-4aa6-aa66-1bbb281f3954")
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 0 0 90)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "c006e1c5-4fcf-47ba-aaa3-291a2a887973")
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "I2C pull-up 4.7 kohm"
-			(at 0 0 90)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "6710242d-5b00-43ec-ba02-afe45d979302")
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "MPN" "AC0402FR-074K7L"
-			(at 0 0 90)
-			(unlocked yes)
-			(layer "B.Fab")
-			(hide yes)
-			(uuid "df6b0c5f-8d24-4976-9bac-a6b46f56af7f")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-				(justify mirror)
-			)
-		)
-		(property "Manufacturer" "Yageo"
-			(at 0 0 90)
-			(unlocked yes)
-			(layer "B.Fab")
-			(hide yes)
-			(uuid "ad4291d4-3e86-50ee-b937-8a78669700c0")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-				(justify mirror)
-			)
-		)
-		(property "Supplier" "DigiKey"
-			(at 0 0 90)
-			(unlocked yes)
-			(layer "B.Fab")
-			(hide yes)
-			(uuid "0d0dc8db-3a94-4c0b-a59e-c9597f774473")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-				(justify mirror)
-			)
-		)
-		(property "Supplier P/N" "YAG3497CT-ND"
-			(at 0 0 90)
-			(unlocked yes)
-			(layer "B.Fab")
-			(hide yes)
-			(uuid "0d3913a2-5ba8-4164-ac6a-0cd57b6d69c9")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-				(justify mirror)
-			)
-		)
-		(path "/65c5e362-6efc-4b30-8a37-a992c7ca190d")
-		(sheetname "/")
-		(sheetfile "solar-glow-drh-v4_0.kicad_sch")
-		(units
-			(unit
-				(name "A")
-				(pins "1" "2")
-			)
-		)
-		(attr smd)
-		(duplicate_pad_numbers_are_jumpers no)
-		(pad "1" smd roundrect
-			(at -0.51 0 90)
-			(size 0.59 0.66)
-			(layers "B.Cu" "B.Mask" "B.Paste")
-			(roundrect_rratio 0.25)
-			(net "SCL")
-			(pinfunction "1_1")
-			(pintype "passive")
-			(teardrops
-				(best_length_ratio 0.5)
-				(max_length 1)
-				(best_width_ratio 1)
-				(max_width 2)
-				(curved_edges yes)
-				(filter_ratio 0.9)
-				(enabled yes)
-				(allow_two_segments yes)
-				(prefer_zone_connections yes)
-			)
-			(uuid "eeca903c-653a-42f8-9bbc-1649337841c6")
-		)
-		(pad "2" smd roundrect
-			(at 0.51 0 90)
-			(size 0.59 0.66)
-			(layers "B.Cu" "B.Mask" "B.Paste")
-			(roundrect_rratio 0.25)
-			(net "VS")
-			(pinfunction "2_2")
-			(pintype "passive")
-			(teardrops
-				(best_length_ratio 0.5)
-				(max_length 1)
-				(best_width_ratio 1)
-				(max_width 2)
-				(curved_edges yes)
-				(filter_ratio 0.9)
-				(enabled yes)
-				(allow_two_segments yes)
-				(prefer_zone_connections yes)
-			)
-			(uuid "6f59814b-2cc4-4204-804f-64283dc9b1f1")
-		)
-		(embedded_fonts no)
-		(model "${KICAD10_3DMODEL_DIR}/Resistor_SMD.3dshapes/R_0402_1005Metric.step"
-			(offset
-				(xyz 0 0 0)
-			)
-			(scale
-				(xyz 1 1 1)
-			)
-			(rotate
-				(xyz 0 0 0)
-			)
-		)
-	)
+	
 	(footprint "solarglow:TPB"
 		(layer "B.Cu")
 		(uuid "c2a2d9c4-35ab-400b-88f4-7ca993336cc1")
@@ -12126,177 +12069,7 @@
 		)
 		(embedded_fonts no)
 	)
-	(footprint "solarglow:C7"
-		(layer "B.Cu")
-		(uuid "c8958894-517a-4ae6-8b41-78c96cc339ca")
-		(at 26.67 13.82 -90)
-		(property "Reference" "C7"
-			(at -1.7 0 0)
-			(layer "B.SilkS")
-			(hide yes)
-			(uuid "959a66b9-eeac-47c4-b8d0-ee2d1d131866")
-			(effects
-				(font
-					(size 1 1)
-				)
-				(justify mirror)
-			)
-		)
-		(property "Value" "100nF"
-			(at 0 0 0)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "6f03b4fb-f176-4f43-89ea-efd6032a90f3")
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 0 0 0)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "78a1af24-0275-4718-b434-8c2e1a0b6647")
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "100 nF X7R decoupling"
-			(at 0 0 0)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "7e80abe1-e6f3-4e18-92f0-28f396ed9238")
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "MPN" "GRT155R71H104KE01D"
-			(at 0 0 270)
-			(unlocked yes)
-			(layer "B.Fab")
-			(hide yes)
-			(uuid "3d750d6c-656e-442e-b346-8056c136495b")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-				(justify mirror)
-			)
-		)
-		(property "Manufacturer" "Murata"
-			(at 0 0 270)
-			(unlocked yes)
-			(layer "B.Fab")
-			(hide yes)
-			(uuid "808ac289-5360-5cc9-99e8-7f31feda8379")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-				(justify mirror)
-			)
-		)
-		(property "Supplier" "DigiKey"
-			(at 0 0 270)
-			(unlocked yes)
-			(layer "B.Fab")
-			(hide yes)
-			(uuid "4c53d491-051d-46ee-93d7-bcfe5a1c0ac0")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-				(justify mirror)
-			)
-		)
-		(property "Supplier P/N" "490-GRT155R71H104KE01DCT-ND"
-			(at 0 0 270)
-			(unlocked yes)
-			(layer "B.Fab")
-			(hide yes)
-			(uuid "2fa2537c-0eb3-4bb4-a433-5acab3fe70e8")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-				(justify mirror)
-			)
-		)
-		(path "/61200917-e4f2-428d-b6b1-5290e11376e5")
-		(sheetname "/")
-		(sheetfile "solar-glow-drh-v4_0.kicad_sch")
-		(units
-			(unit
-				(name "A")
-				(pins "1" "2")
-			)
-		)
-		(attr smd)
-		(duplicate_pad_numbers_are_jumpers no)
-		(pad "1" smd roundrect
-			(at 0 -0.51 180)
-			(size 0.66 0.59)
-			(layers "B.Cu" "B.Mask" "B.Paste")
-			(roundrect_rratio 0.25)
-			(net "VS")
-			(pinfunction "1_1")
-			(pintype "passive")
-			(teardrops
-				(best_length_ratio 0.5)
-				(max_length 1)
-				(best_width_ratio 1)
-				(max_width 2)
-				(curved_edges yes)
-				(filter_ratio 0.9)
-				(enabled yes)
-				(allow_two_segments yes)
-				(prefer_zone_connections yes)
-			)
-			(uuid "aadd6645-38e8-4b78-818b-b8e90195134e")
-		)
-		(pad "2" smd roundrect
-			(at 0 0.51 180)
-			(size 0.66 0.59)
-			(layers "B.Cu" "B.Mask" "B.Paste")
-			(roundrect_rratio 0.25)
-			(net "GND")
-			(pinfunction "2_2")
-			(pintype "passive")
-			(teardrops
-				(best_length_ratio 0.5)
-				(max_length 1)
-				(best_width_ratio 1)
-				(max_width 2)
-				(curved_edges yes)
-				(filter_ratio 0.9)
-				(enabled yes)
-				(allow_two_segments yes)
-				(prefer_zone_connections yes)
-			)
-			(uuid "2aebca21-b28f-421f-b427-f034eca84c5e")
-		)
-		(embedded_fonts no)
-		(model "${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_0402_1005Metric.step"
-			(offset
-				(xyz 0 0 0)
-			)
-			(scale
-				(xyz 1 1 1)
-			)
-			(rotate
-				(xyz 0 0 0)
-			)
-		)
-	)
+	
 	(footprint "Capacitor_SMD:C_0402_1005Metric"
 		(layer "B.Cu")
 		(uuid "d65362b7-9303-47d1-b523-e3f6baca0e1f")
@@ -13906,7 +13679,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "1M"
+		(property "Value" "2M"
 			(at 0 -1.43 90)
 			(layer "B.Fab")
 			(hide yes)
@@ -13931,7 +13704,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" "VSENSE divider 1 Mohm - 0603 thin film 0.1% 25ppm (matched with R6)"
+		(property "Description" "VSENSE divider 2 Mohm - 0603 thin film 0.1% 25ppm GUARANTEED at 2M (matched with R6). Vishay Beyschlag MCT 0603 AT: the only 0603 that holds 25ppm at 2M (Yageo RT0603 2M is 50ppm and stockless). 2026-08-08 bump 1M->2M halves the divider's permanent SRC bleed; AEC-Q200, anti-sulfur ASTM B809."
 			(at 0 0 90)
 			(layer "B.Fab")
 			(hide yes)
@@ -13956,7 +13729,7 @@
 				(justify mirror)
 			)
 		)
-		(property "MPN" "RT0603BRD071ML"
+		(property "MPN" "MCT0603MD2004BP500"
 			(at 0 0 90)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -13970,7 +13743,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Manufacturer" "Yageo"
+		(property "Manufacturer" "Vishay"
 			(at 0 0 90)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -13998,7 +13771,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Supplier P/N" "YAG4498CT-ND"
+		(property "Supplier P/N" "541-MCT0603MD2004BP500CT-ND"
 			(at 0 0 90)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -27765,6 +27538,38 @@
 		)
 	)
 	(segment
+		(start 28.75 32.45)
+		(end 28.314239 32.539493)
+		(width 0.152)
+		(layer "B.Cu")
+		(net "VS")
+		(uuid "48d2b188-c683-47e6-a96d-fdc215d67687")
+	)
+	(segment
+		(start 28.05 32.45)
+		(end 28.314239 32.45)
+		(width 0.152)
+		(layer "B.Cu")
+		(net "VS")
+		(uuid "98c7cf89-0e0d-4058-b104-11921108d709")
+	)
+	(segment
+		(start 28.05 33.45)
+		(end 28.16 33.55)
+		(width 0.152)
+		(layer "B.Cu")
+		(net "SCL")
+		(uuid "e2d3eb3e-b940-4685-a4bf-45de1e950ded")
+	)
+	(segment
+		(start 28.75 33.45)
+		(end 29.25 33.4)
+		(width 0.152)
+		(layer "B.Cu")
+		(net "SDA")
+		(uuid "95ab452d-b8bd-46ca-adc6-7c40add50d11")
+	)
+	(segment
 		(start 49.55 85.05)
 		(end 49.55 58.694)
 		(width 0.152)
@@ -33039,14 +32844,6 @@
 		(uuid "f754d3bb-b407-4447-ba3f-961da6d7040f")
 	)
 	(segment
-		(start 29.156765 30.776685)
-		(end 28.651651 30.776685)
-		(width 0.152)
-		(layer "B.Cu")
-		(net "VS")
-		(uuid "03bb9406-5d4a-4335-8c87-0f85e9a90bc8")
-	)
-	(segment
 		(start 26.226 28.326)
 		(end 17.844 28.326)
 		(width 0.152)
@@ -33134,14 +32931,7 @@
 		(net "VS")
 		(uuid "33aa48d3-fca2-4a05-b734-43c7f10b4291")
 	)
-	(segment
-		(start 27.805128 13.82)
-		(end 27.18 13.82)
-		(width 0.152)
-		(layer "B.Cu")
-		(net "VS")
-		(uuid "3783f8c9-a541-40e1-93bb-49c2c8b3d4bb")
-	)
+	
 	(segment
 		(start 26.682128 17.376436)
 		(end 26.4 17.094308)
@@ -33287,14 +33077,6 @@
 		(uuid "775d9423-f25f-4039-bd69-33b80a0a2ffc")
 	)
 	(segment
-		(start 28.651651 30.776685)
-		(end 28.314239 31.114097)
-		(width 0.152)
-		(layer "B.Cu")
-		(net "VS")
-		(uuid "788de140-8ec8-4458-b2ac-990bd66506e5")
-	)
-	(segment
 		(start 4.94 56.45)
 		(end 4.598422 56.791578)
 		(width 0.152)
@@ -33325,14 +33107,6 @@
 		(layer "B.Cu")
 		(net "VS")
 		(uuid "82ba3fb4-6bcf-4328-9b4e-dcb9c1691a20")
-	)
-	(segment
-		(start 27.835128 13.79)
-		(end 27.805128 13.82)
-		(width 0.152)
-		(layer "B.Cu")
-		(net "VS")
-		(uuid "833f2e87-b7c7-4041-a25e-7c251025303e")
 	)
 	(segment
 		(start 28.314239 31.2)
@@ -33398,14 +33172,7 @@
 		(net "VS")
 		(uuid "b9116c50-c701-4407-b337-39c154e059bc")
 	)
-	(segment
-		(start 29.96 32.3)
-		(end 29.96 31.579921)
-		(width 0.152)
-		(layer "B.Cu")
-		(net "VS")
-		(uuid "b9e04659-50d8-460f-bcb4-b7fde0e9057a")
-	)
+	
 	(segment
 		(start 10.73 40.4)
 		(end 10.8 40.47)
@@ -33437,14 +33204,6 @@
 		(layer "B.Cu")
 		(net "VS")
 		(uuid "cfda21d5-f2d8-4634-b348-3cde321ae3ea")
-	)
-	(segment
-		(start 29.96 31.579921)
-		(end 29.156765 30.776685)
-		(width 0.152)
-		(layer "B.Cu")
-		(net "VS")
-		(uuid "d69919c0-ae5a-47f0-932c-36fed1511c69")
 	)
 	(segment
 		(start 9.487609 40.397609)

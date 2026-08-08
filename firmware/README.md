@@ -385,7 +385,7 @@ things here diverge from the hardware doc's §6:
   tag's FD pin specs **IL 1.5 µA typ / 10 µA max** (NT3H2211 Table 42) flowing
   from VS through PA6's pull-up whenever FD idles high — i.e. essentially always
   (+56% typ on the sum; board.h's FD block carries the bench item), plus up to
-  10 µA/pin spec'd on gated-VCC SDA/SCL through R10/R11. After the swap
+  10 µA/pin spec'd on gated-VCC SDA/SCL through RN2 (né R10/R11). After the swap
   *no single part dominates*: the accel (≥0.89 µA), the FD leakage (~1.5 µA typ),
   the MCU power-down (sub-µA — the
   EA's base power-down is spec'd at 0.08 µA before the WDT/PIT/sampled-BOD adders), and the

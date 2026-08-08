@@ -121,116 +121,7 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "solarglow:C10"
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(in_pos_files yes)
-			(duplicate_pin_numbers_are_jumpers no)
-			(property "Reference" "C10"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value" "100nF"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Footprint" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Datasheet" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Description" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(symbol "C10_1_1"
-				(rectangle
-					(start 2.54 2.54)
-					(end 20.32 -7.62)
-					(stroke
-						(width 0.2)
-						(type default)
-					)
-					(fill
-						(type background)
-					)
-				)
-				(pin passive line
-					(at 0 0 0)
-					(length 2.54)
-					(name "1"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 0 -5.08 0)
-					(length 2.54)
-					(name "2"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
+		
 		(symbol "solarglow:C11"
 			(exclude_from_sim no)
 			(in_bom yes)
@@ -451,116 +342,7 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "solarglow:C2"
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(in_pos_files yes)
-			(duplicate_pin_numbers_are_jumpers no)
-			(property "Reference" "C2"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value" "100nF"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Footprint" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Datasheet" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Description" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(symbol "C2_1_1"
-				(rectangle
-					(start 2.54 2.54)
-					(end 20.32 -7.62)
-					(stroke
-						(width 0.2)
-						(type default)
-					)
-					(fill
-						(type background)
-					)
-				)
-				(pin passive line
-					(at 0 0 0)
-					(length 2.54)
-					(name "1"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 0 -5.08 0)
-					(length 2.54)
-					(name "2"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
+		
 		(symbol "solarglow:C22"
 			(exclude_from_sim no)
 			(in_bom yes)
@@ -1881,116 +1663,7 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "solarglow:C7"
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(in_pos_files yes)
-			(duplicate_pin_numbers_are_jumpers no)
-			(property "Reference" "C7"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value" "100nF"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Footprint" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Datasheet" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Description" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(symbol "C7_1_1"
-				(rectangle
-					(start 2.54 2.54)
-					(end 20.32 -7.62)
-					(stroke
-						(width 0.2)
-						(type default)
-					)
-					(fill
-						(type background)
-					)
-				)
-				(pin passive line
-					(at 0 0 0)
-					(length 2.54)
-					(name "1"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 0 -5.08 0)
-					(length 2.54)
-					(name "2"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
+		
 		(symbol "solarglow:C8"
 			(exclude_from_sim no)
 			(in_bom yes)
@@ -2427,6 +2100,158 @@
 					)
 				)
 			)
+			(embedded_fonts no)
+		)
+		(symbol "solarglow:RN2"
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "RN2"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "4.7k"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(hide yes)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(hide yes)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(hide yes)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "RN2_1_1"
+				(rectangle
+					(start 2.54 2.54)
+					(end 20.32 -7.62)
+					(stroke
+						(width 0.2)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+				(pin passive line
+					(at 0 0 0)
+					(length 2.54)
+					(name "1"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -5.08 0)
+					(length 2.54)
+					(name "2"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+				)
+				
+				
+				
+				
+				
+				
+			)
+			(pin passive line
+					(at 22.86 0 180)
+					(length 2.54)
+					(name "4"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+					(number "4"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 22.86 -5.08 180)
+					(length 2.54)
+					(name "3"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1 1)
+							)
+						)
+					)
+				)
 			(embedded_fonts no)
 		)
 		(symbol "solarglow:C30"
@@ -5022,226 +4847,8 @@
 			(embedded_fonts no)
 		)
 		
-		(symbol "solarglow:R10"
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(in_pos_files yes)
-			(duplicate_pin_numbers_are_jumpers no)
-			(property "Reference" "R10"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value" "4.7k"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Footprint" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Datasheet" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Description" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(symbol "R10_1_1"
-				(rectangle
-					(start 2.54 2.54)
-					(end 20.32 -7.62)
-					(stroke
-						(width 0.2)
-						(type default)
-					)
-					(fill
-						(type background)
-					)
-				)
-				(pin passive line
-					(at 0 0 0)
-					(length 2.54)
-					(name "1"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 0 -5.08 0)
-					(length 2.54)
-					(name "2"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
-		(symbol "solarglow:R11"
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(in_pos_files yes)
-			(duplicate_pin_numbers_are_jumpers no)
-			(property "Reference" "R11"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value" "4.7k"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Footprint" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Datasheet" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Description" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(symbol "R11_1_1"
-				(rectangle
-					(start 2.54 2.54)
-					(end 20.32 -7.62)
-					(stroke
-						(width 0.2)
-						(type default)
-					)
-					(fill
-						(type background)
-					)
-				)
-				(pin passive line
-					(at 0 0 0)
-					(length 2.54)
-					(name "1"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 0 -5.08 0)
-					(length 2.54)
-					(name "2"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1 1)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
+		
+		
 		(symbol "solarglow:R14"
 			(exclude_from_sim no)
 			(in_bom yes)
@@ -10063,16 +9670,7 @@
 		)
 		(uuid "12483eda-1290-4bd9-be16-34f438205d51")
 	)
-	(wire
-		(pts
-			(xy 350.52 129.54) (xy 345.44 129.54)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "12cdcc76-bd9c-4937-9fa7-38c59fadd0cf")
-	)
+	
 	(wire
 		(pts
 			(xy 734.06 377.19) (xy 728.98 377.19)
@@ -10435,16 +10033,7 @@
 		)
 		(uuid "45b4e522-f94d-4681-a9f1-234eb17d9984")
 	)
-	(wire
-		(pts
-			(xy 350.52 149.86) (xy 345.44 149.86)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "46cffd23-e6c2-46ce-afd4-c2e88778b354")
-	)
+	
 	(wire
 		(pts
 			(xy 350.52 109.22) (xy 345.44 109.22)
@@ -10897,16 +10486,7 @@
 		(uuid "7f285ccc-97c6-4981-bff1-b5fe0684fbe5")
 	)
 	
-	(wire
-		(pts
-			(xy 350.52 154.94) (xy 345.44 154.94)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "8189c9c3-c9b8-46b7-b0ff-74d5b1e77326")
-	)
+	
 	(wire
 		(pts
 			(xy 80.01 83.82) (xy 74.93 83.82)
@@ -11127,16 +10707,7 @@
 		)
 		(uuid "9618ead9-2dc0-498c-b1c3-e9a78cb8c4d4")
 	)
-	(wire
-		(pts
-			(xy 139.7 154.94) (xy 134.62 154.94)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "96e32582-6fe0-4a9c-8ce4-f7db272aec76")
-	)
+	
 	(wire
 		(pts
 			(xy 469.9 114.3) (xy 464.82 114.3)
@@ -11590,16 +11161,7 @@
 		)
 		(uuid "d5966882-a72b-4b82-ba5b-ceb00c4b9135")
 	)
-	(wire
-		(pts
-			(xy 139.7 149.86) (xy 134.62 149.86)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "d7089b79-bcbf-4820-8381-73b802b2c2f6")
-	)
+	
 	(wire
 		(pts
 			(xy 459.74 458.47) (xy 454.66 458.47)
@@ -11640,16 +11202,7 @@
 		)
 		(uuid "db32bec5-da9e-41b8-a6a2-613080d0eb08")
 	)
-	(wire
-		(pts
-			(xy 350.52 134.62) (xy 345.44 134.62)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "dd9f1d0b-1fa5-49a0-8bca-f18ed3f0fde3")
-	)
+	
 	(wire
 		(pts
 			(xy 459.74 483.87) (xy 454.66 483.87)
@@ -13107,27 +12660,7 @@
 			)
 		)
 	)
-	(global_label "VS"
-		(shape bidirectional)
-		(at 134.62 149.86 0)
-		(effects
-			(font
-				(size 1 1)
-			)
-		)
-		(uuid "53c9bbf9-419e-4354-a81a-c323e5243e07")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 134.62 149.86 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-	)
+	
 	(global_label "SRC"
 		(shape bidirectional)
 		(at 20.32 53.34 0)
@@ -13557,27 +13090,7 @@
 			)
 		)
 	)
-	(global_label "GND"
-		(shape bidirectional)
-		(at 134.62 154.94 0)
-		(effects
-			(font
-				(size 1 1)
-			)
-		)
-		(uuid "6cff0bf0-5930-473a-bc59-a33df0d92f24")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 134.62 154.94 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-	)
+	
 	(global_label "GND"
 		(shape bidirectional)
 		(at 485.14 377.19 0)
@@ -14198,27 +13711,7 @@
 			)
 		)
 	)
-	(global_label "VS"
-		(shape bidirectional)
-		(at 345.44 134.62 0)
-		(effects
-			(font
-				(size 1 1)
-			)
-		)
-		(uuid "8a5fe0b4-7ddf-4cee-9b03-7507889fa925")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 345.44 134.62 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-	)
+	
 	(global_label "LB"
 		(shape bidirectional)
 		(at 599.44 105.41 0)
@@ -14283,27 +13776,7 @@
 			)
 		)
 	)
-	(global_label "SDA"
-		(shape bidirectional)
-		(at 345.44 129.54 0)
-		(effects
-			(font
-				(size 1 1)
-			)
-		)
-		(uuid "8c442f17-22c2-4af3-8fb3-6cb9be7f645a")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 345.44 129.54 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-	)
+	
 	(global_label "SCL"
 		(shape bidirectional)
 		(at 405.13 332.74 0)
@@ -15282,27 +14755,7 @@
 			)
 		)
 	)
-	(global_label "SCL"
-		(shape bidirectional)
-		(at 345.44 149.86 0)
-		(effects
-			(font
-				(size 1 1)
-			)
-		)
-		(uuid "c733bc58-ef6e-4aa0-a40f-29a3d68bc90f")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 345.44 149.86 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-	)
+	
 	(global_label "STO_SNS"
 		(shape passive)
 		(at 789.94 372.11 0)
@@ -15878,27 +15331,7 @@
 			)
 		)
 	)
-	(global_label "VS"
-		(shape bidirectional)
-		(at 345.44 154.94 0)
-		(effects
-			(font
-				(size 1 1)
-			)
-		)
-		(uuid "ec017a02-f4a8-474c-b938-9337acd9a9f0")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 345.44 154.94 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-	)
+	
 	(global_label "BUFSRC"
 		(shape passive)
 		(at 576.58 372.11 0)
@@ -16730,125 +16163,7 @@
 			)
 		)
 	)
-	(symbol
-		(lib_id "solarglow:R10")
-		(at 350.52 129.54 0)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(uuid "0df20dbc-e304-4935-8cf9-616976cfeb2d")
-		(property "Reference" "R10"
-			(at 361.52 134.62 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "4.7k"
-			(at 361.52 139.7 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "solarglow:R10"
-			(at 361.52 144.78 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 350.52 129.54 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "I2C pull-up 4.7 kohm"
-			(at 350.52 129.54 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "MPN" "AC0402FR-074K7L"
-			(at 350.52 129.54 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Manufacturer" "Yageo"
-			(at 459.74 372.11 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Supplier" "DigiKey"
-			(at 459.74 372.11 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Supplier P/N" "YAG3497CT-ND"
-			(at 459.74 372.11 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "2"
-			(uuid "71e24a4d-c0cc-4893-9dd7-1d79ae29822e")
-		)
-		(pin "1"
-			(uuid "d407dfb8-db72-41b0-9b67-d76e16eac353")
-		)
-		(instances
-			(project "solar-glow-drh-v4_0"
-				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
-					(reference "R10")
-					(unit 1)
-				)
-			)
-		)
-	)
+	
 	(symbol
 		(lib_id "solarglow:TC1")
 		(at 410.21 119.38 0)
@@ -18866,244 +18181,8 @@
 		)
 	)
 	
-	(symbol
-		(lib_id "solarglow:C7")
-		(at 139.7 149.86 0)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(uuid "61200917-e4f2-428d-b6b1-5290e11376e5")
-		(property "Reference" "C7"
-			(at 150.7 154.94 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "100nF"
-			(at 150.7 160.02 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "solarglow:C7"
-			(at 150.7 165.1 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 139.7 149.86 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "100 nF X7R decoupling"
-			(at 139.7 149.86 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "MPN" "GRT155R71H104KE01D"
-			(at 139.7 149.86 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Manufacturer" "Murata"
-			(at 459.74 372.11 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Supplier" "DigiKey"
-			(at 459.74 372.11 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Supplier P/N" "490-GRT155R71H104KE01DCT-ND"
-			(at 459.74 372.11 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "cc6ca071-a2a1-478c-832d-81122cacb789")
-		)
-		(pin "2"
-			(uuid "0cd03e90-e689-4976-927c-f7c69ba654f3")
-		)
-		(instances
-			(project "solar-glow-drh-v4_0"
-				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
-					(reference "C7")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "solarglow:R11")
-		(at 350.52 149.86 0)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(uuid "65c5e362-6efc-4b30-8a37-a992c7ca190d")
-		(property "Reference" "R11"
-			(at 361.52 154.94 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "4.7k"
-			(at 361.52 160.02 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "solarglow:R11"
-			(at 361.52 165.1 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 350.52 149.86 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "I2C pull-up 4.7 kohm"
-			(at 350.52 149.86 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "MPN" "AC0402FR-074K7L"
-			(at 350.52 149.86 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Manufacturer" "Yageo"
-			(at 459.74 372.11 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Supplier" "DigiKey"
-			(at 459.74 372.11 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Supplier P/N" "YAG3497CT-ND"
-			(at 459.74 372.11 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "2"
-			(uuid "92dcde2a-73eb-49e4-9a75-c40b09471e56")
-		)
-		(pin "1"
-			(uuid "24e7a0fb-6ace-41cb-9187-11e9eceb6007")
-		)
-		(instances
-			(project "solar-glow-drh-v4_0"
-				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
-					(reference "R11")
-					(unit 1)
-				)
-			)
-		)
-	)
+	
+	
 	(symbol
 		(lib_id "solarglow:C24")
 		(at 734.06 372.11 0)
@@ -20132,7 +19211,7 @@
 				)
 			)
 		)
-		(property "Value" "1M"
+		(property "Value" "2M"
 			(at 421.21 190.5 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -20162,7 +19241,7 @@
 				)
 			)
 		)
-		(property "Description" "VSENSE divider 1 Mohm - 0603 thin film 0.1% 25ppm (matched with R6)"
+		(property "Description" "VSENSE divider 2 Mohm - 0603 thin film 0.1% 25ppm GUARANTEED at 2M (matched with R6). Vishay Beyschlag MCT 0603 AT: the only 0603 that holds 25ppm at 2M (Yageo RT0603 2M is 50ppm and stockless). 2026-08-08 bump 1M->2M halves the divider's permanent SRC bleed; AEC-Q200, anti-sulfur ASTM B809."
 			(at 410.21 180.34 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -20172,7 +19251,7 @@
 				)
 			)
 		)
-		(property "MPN" "RT0603BRD071ML"
+		(property "MPN" "MCT0603MD2004BP500"
 			(at 410.21 180.34 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -20182,7 +19261,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "Yageo"
+		(property "Manufacturer" "Vishay"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -20204,7 +19283,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "YAG4498CT-ND"
+		(property "Supplier P/N" "541-MCT0603MD2004BP500CT-ND"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -21077,50 +20156,6 @@
 				)
 			)
 		)
-		(property "MPN" "QSCP251Q470G1GV001T"
-			(at 560.07 135.89 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Manufacturer" "Johanson Technology"
-			(at 560.07 135.89 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Supplier" "DigiKey"
-			(at 560.07 135.89 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Supplier P/N" "712-QSCP251Q470G1GV001TCT-ND"
-			(at 560.07 135.89 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(pin "1"
 			(uuid "a8daff55-8ce4-4ffd-b20b-4328473ea8ae")
 		)
@@ -21222,39 +20257,6 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "Y7151CT-ND"
-			(at 279.4 58.42 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "MPN" "QSCP251Q470G1GV001T"
-			(at 279.4 58.42 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Manufacturer" "Johanson Technology"
-			(at 279.4 58.42 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(property "Supplier" "DigiKey"
 			(at 279.4 58.42 0)
 			(hide yes)
@@ -21266,7 +20268,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "712-QSCP251Q470G1GV001TCT-ND"
+		(property "Supplier P/N" "Y7151CT-ND"
 			(at 279.4 58.42 0)
 			(hide yes)
 			(show_name no)
@@ -21287,6 +20289,129 @@
 			(project "solar-glow-drh-v4_0"
 				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
 					(reference "RN1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "solarglow:RN2")
+		(at 279.4 96.52 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "5804cff4-f52a-49ab-b759-886602b3e327")
+		(property "Reference" "RN2"
+			(at 290.83 91.44 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "4.7k"
+			(at 290.83 111.76 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Resistor_SMD:R_Array_Convex_2x0402"
+			(at 571.5 129.54 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 279.4 96.52 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "2x4.7k I2C pull-up array replacing discrete R10/R11 (consolidation 2026-08-07). Panasonic EXB-24V472JX, 0404 convex, elements pair pins 1-4/2-3 (verified against the EXB catalog and the KiCad land). Same EXB family/tape as RN1. Second source: Yageo YC122-JR-074K7L. Pull-ups need no matching; this is a placement consolidation. Note one body now carries BOTH bus pulls."
+			(at 279.4 96.52 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "MPN" "EXB-24V472JX"
+			(at 279.4 96.52 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Manufacturer" "Panasonic"
+			(at 279.4 96.52 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Supplier" "DigiKey"
+			(at 279.4 96.52 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Supplier P/N" "Y5472CT-ND"
+			(at 279.4 96.52 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "cd64bff8-f01c-4f2c-87b1-f09514502a65")
+		)
+		(pin "2"
+			(uuid "60f83fab-d718-4f01-9935-229ee530f7cd")
+		)
+		(instances
+			(project "solar-glow-drh-v4_0"
+				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
+					(reference "RN2")
 					(unit 1)
 				)
 			)
@@ -23104,7 +22229,7 @@
 				)
 			)
 		)
-		(property "Value" "1M"
+		(property "Value" "2M"
 			(at 421.21 210.82 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -23134,7 +22259,7 @@
 				)
 			)
 		)
-		(property "Description" "VSENSE divider 1 Mohm - 0603 thin film 0.1% 25ppm (matched with R5)"
+		(property "Description" "VSENSE divider 2 Mohm - 0603 thin film 0.1% 25ppm GUARANTEED at 2M (matched with R5). Vishay Beyschlag MCT 0603 AT: the only 0603 that holds 25ppm at 2M (Yageo RT0603 2M is 50ppm and stockless). 2026-08-08 bump 1M->2M halves the divider's permanent SRC bleed; AEC-Q200, anti-sulfur ASTM B809."
 			(at 410.21 200.66 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -23144,7 +22269,7 @@
 				)
 			)
 		)
-		(property "MPN" "RT0603BRD071ML"
+		(property "MPN" "MCT0603MD2004BP500"
 			(at 410.21 200.66 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -23154,7 +22279,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "Yageo"
+		(property "Manufacturer" "Vishay"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -23176,7 +22301,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "YAG4498CT-ND"
+		(property "Supplier P/N" "541-MCT0603MD2004BP500CT-ND"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -24702,6 +23827,130 @@
 			)
 		)
 		(uuid "dcec6485-a604-415b-b700-74bbf974926e")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 274.32 104.14 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
+	(wire
+		(pts
+			(xy 279.4 96.52) (xy 274.32 96.52)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "5c307730-2a06-4285-b359-70cbe4a363b0")
+	)
+	(global_label "VS"
+		(shape bidirectional)
+		(at 274.32 96.52 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "31062bc9-e0d9-410b-818d-60509b01a9dc")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 274.32 104.14 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
+	(wire
+		(pts
+			(xy 279.4 101.6) (xy 274.32 101.6)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "aa10d3cc-05b2-4881-ae22-34f51e625e22")
+	)
+	(global_label "VS"
+		(shape bidirectional)
+		(at 274.32 101.6 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "45590f8c-807d-4ec3-a3d6-fcc1d8d92900")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 274.32 104.14 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
+	(wire
+		(pts
+			(xy 302.26 96.52) (xy 307.34 96.52)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "15d84f9c-40ae-4b75-a2d3-7949ed7979dd")
+	)
+	(global_label "SDA"
+		(shape bidirectional)
+		(at 307.34 96.52 180)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "14999213-9912-4717-86b7-059ac97e71f4")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 274.32 104.14 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
+	(wire
+		(pts
+			(xy 302.26 101.6) (xy 307.34 101.6)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "d7045dc8-e759-4452-938c-8a29c432c480")
+	)
+	(global_label "SCL"
+		(shape bidirectional)
+		(at 307.34 101.6 180)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "e6c6d117-d1ca-4dee-bbf8-9f923f8cee9d")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 274.32 104.14 0)
 			(hide yes)

@@ -246,7 +246,7 @@ Hookup, from the wire-wrap tails below the plate:
 | Function | Tails | Notes |
 |---|---|---|
 | UPDI programming | `UPDI` + `GND` (J1 column), VTG ref → `VS` | SNAP / PICkit / Atmel-ICE; TC1 from the top stays the alternative |
-| I²C tap | `SCL` / `SDA` / `GND` (JP1 column) | bus pull-ups (R10/R11, 4.7 k → VS) are on-board |
+| I²C tap | `SCL` / `SDA` / `GND` (JP1 column) | bus pull-ups (RN2, 2×4.7 k array → VS) are on-board |
 | Bench power injection | `STO` (either column) + `GND` return | two STO landings = a free Kelvin pair (force one, sense the other) |
 | Harvest chain scope | `SRC`, `MID`, `LX_LOUT`, `VINT`, `BUFSRC`, `STO_LDO`, `VS` | the bring-up order from the test-pad audit |
 
