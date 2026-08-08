@@ -1,27 +1,44 @@
 (version 1)
 
-# SOLAR-GLOW DRH v4.0 — DUAL-FAB ENVELOPE (PCBWay ∩ OSH Park)
+# SOLAR-GLOW DRH v4.0 — TRIPLE-FAB ENVELOPE (PCBWay ∩ OSH Park ∩ JLCPCB)
 #
-# Retargeted 2026-07-27. These floors are no longer "PCBWay with margin"; they are the
-# INTERSECTION of two fabs, so one board file can be ordered from either without re-checking
-# anything. The point is interchangeability: PCBWay for fast, cheap, local prototypes and small
-# batches; OSH Park After Dark (black FR4 + clear mask) for the naked "midnight" variant.
+# Retargeted 2026-07-27 (PCBWay ∩ OSH Park), extended 2026-08-08 to include JLCPCB. These floors
+# are the per-parameter INTERSECTION of three fabs, so one board file can be ordered from any of
+# them without re-checking anything. The point is interchangeability: PCBWay for fast, cheap
+# prototypes and the hard-gold production run; OSH Park After Dark (black FR4 + clear mask) for
+# the naked "midnight" variant; JLCPCB as the ENIG-only volume alternate — and, uniquely among
+# the ENIG-only pair, the one that stocks the production 0.6 mm thickness.
 #
-#   parameter        PCBWay      OSH Park     governs      gate here
-#   ---------------  ----------  -----------  -----------  ---------
-#   trace width      0.100 mm    0.1524 mm    OSH Park     0.152 mm
-#   clearance        0.100 mm    0.1524 mm    OSH Park     0.152 mm
-#   drill            0.200 mm    0.254 mm     OSH Park     0.254 mm
-#   annular ring     0.150 mm    0.127 mm     >> PCBWay << 0.1499 mm
-#   copper -> edge   (n/s)       0.381 mm     OSH Park     0.381 mm
+#   parameter           PCBWay      OSH Park     JLCPCB      governs       gate here
+#   ------------------  ----------  -----------  ----------  ------------  ---------
+#   trace width         0.100 mm    0.1524 mm    0.100 mm    OSH Park      0.152 mm
+#   clearance           0.100 mm    0.1524 mm    0.100 mm    OSH Park      0.152 mm
+#   drill (plated)      0.200 mm    0.254 mm     0.150 mm    OSH Park      0.254 mm
+#   via annular ring    0.150 mm    0.127 mm     0.050 mm    >> PCBWay <<  0.1499 mm
+#   copper -> edge      (n/s)       0.381 mm     0.200 mm    OSH Park      0.381 mm
+#   PTH pad annular     0.150 mm    0.127 mm     0.180 mm    >> JLCPCB <<  0.1799 mm  (conditioned)
+#   PTH hole -> copper  (n/s)       (n/s)        0.280 mm    >> JLCPCB <<  0.2799 mm  (conditioned)
+#   pad hole -> hole    (n/s)       (n/s)        0.450 mm    >> JLCPCB <<  0.4499 mm  (conditioned)
+#   NPTH drill          (n/s)       (n/s)        0.500 mm    >> JLCPCB <<  0.4999 mm  (conditioned)
 #
-# Note the inversion on annular ring: OSH Park is LOOSER there (5 mil vs PCBWay's 6 mil), so the
-# envelope is a genuine per-parameter intersection, not simply "OSH Park's rule sheet". Anyone
-# tempted to relax annular to 0.127 because that is what the OSH Park page says would put the
-# board out of spec at PCBWay.
+# Two inversions now, not one. OSH Park is LOOSER on annular ring (5 mil vs PCBWay's 6 mil), so
+# PCBWay governs vias; and JLCPCB is LOOSER than everyone on trace/space/drill but TIGHTER on
+# every hole-adjacency number — its 1 oz PTH pads need 0.18 mm of ring where a via needs only
+# 0.05, its plated holes want 0.28 mm to foreign copper, any hole pair involving a pad wants
+# 0.45 mm wall-to-wall, and it will not drill an NPTH under 0.50 mm at all. Those four are
+# genuinely new axes: neither earlier fab published a limit the board could get near, so nothing
+# gated them. Each JLC rule below is CONDITIONED so it binds only the object class JLC constrains
+# — the via fleet keeps its PCBWay-governed 0.1499 ring and is untouched by the 0.1799 pad rule.
 #
-# Sources: OSH Park docs (two-layer + After Dark service pages, read 2026-07-27) and PCBWay's
-# stated 2-layer capability as recorded in this file's previous revision.
+# Where the board actually sits on the four new axes (measured 2026-08-08, pcbnew sweep): the
+# only PTH pads are the eight M2 mounts at 0.700 mm annular (3.9x the JLC floor); worst plated
+# hole edge to foreign copper is 0.894 mm at MP4 (3.2x); worst pad-involved hole pair is an
+# NPTH-to-via 0.530 mm (1.2x); smallest NPTH drill is 0.991 mm (2.0x). The rules are insurance
+# gates, not corrections — the board was already inside JLC's envelope everywhere.
+#
+# Sources: OSH Park docs (two-layer + After Dark service pages, read 2026-07-27), PCBWay's
+# stated 2-layer capability as recorded in this file's previous revision, and
+# jlcpcb.com/capabilities/pcb-capabilities (2-layer 1 oz table, read 2026-08-08).
 #
 # SINGLE-TIER HARD FLOORS — the reasoning below is retained because it still governs.
 #
@@ -66,8 +83,10 @@
 # clear it (0.5005 mm measured), and the board's own min_copper_edge_clearance is 0.5 mm, which is
 # stricter still. The known and deliberate exception is the pair of 0.4 mm plating-bus stubs that
 # cross the outline at x=25.4 to feed electrolytic hard gold at PCBWay -- they are REQUIRED there
-# and PROHIBITED at OSH Park, so they are the one object that cannot satisfy both fabs. See
-# PCB/README.md: the OSH Park upload deletes those two stubs, and nothing else.
+# and PROHIBITED everywhere else, so they are the one object that cannot satisfy all three fabs.
+# See PCB/README.md: the OSH Park upload deletes those two stubs, and nothing else. JLCPCB offers
+# no selective hard gold either (HASL/ENIG/OSP only), so it takes the SAME stub-less 1-up upload
+# as OSH Park -- one deletion procedure covers both ENIG-only fabs.
 #
 # Those stubs are only complete inside the PCBWay panel (scripts/panelize.py), where they cross a
 # break tab onto the frame's bus ring. This DRC gate deliberately runs on the 1-up board and not on
@@ -76,3 +95,41 @@
 (rule "edge-clearance-floor"
   (severity error)
   (constraint edge_clearance (min 0.381mm)))
+
+# ---------------------------------------------------------------------------------------------
+# JLCPCB-governed floors (2026-08-08). Each is conditioned to the object class JLC constrains,
+# so the unconditioned floors above keep governing everything else. Values sit a hair under the
+# published limit per the float-safety doctrine at the top of this file.
+# ---------------------------------------------------------------------------------------------
+
+# JLC's 1 oz through-hole pads need >= 0.18 mm of annular ring — more than a via (0.05 at JLC,
+# 0.1499 gated above by PCBWay). Only the eight M2 mount pads match this condition; they carry
+# 0.700 mm.
+(rule "jlc-pth-pad-annular-floor"
+  (severity error)
+  (condition "A.Type == 'Pad' && A.Pad_Type == 'Through-hole'")
+  (constraint annular_width (min 0.1799mm)))
+
+# JLC wants 0.28 mm from a plated hole's wall to foreign copper (vias only need 0.2, which the
+# board's own hole-clearance setting already enforces). Worst case on this board: 0.894 mm at MP4.
+(rule "jlc-pth-hole-to-copper-floor"
+  (severity error)
+  (condition "A.Type == 'Pad' && A.Pad_Type == 'Through-hole'")
+  (constraint hole_clearance (min 0.2799mm)))
+
+# JLC allows via-to-via hole walls at 0.2 mm but wants 0.45 mm the moment a pad's hole is one of
+# the pair (PTH or NPTH — both are pads in KiCad, so 'A or B is a Pad' is exactly JLC's class).
+# Deliberately NOT applied to via-via pairs: the fleet's measured minimum is 0.458 mm and gating
+# it at 0.4499 would leave 9 um of air under every future re-route for no fab reason.
+# Worst pad-involved pair on this board: an NPTH-to-via at 0.530 mm.
+(rule "jlc-pad-hole-to-hole-floor"
+  (severity error)
+  (condition "A.Type == 'Pad' || B.Type == 'Pad'")
+  (constraint hole_to_hole (min 0.4499mm)))
+
+# JLC drills no NPTH under 0.50 mm (its 0.15 mm floor gated above is for PLATED holes only).
+# The board's seven NPTH are 0.991 and 2.375 mm.
+(rule "jlc-npth-drill-floor"
+  (severity error)
+  (condition "A.Type == 'Pad' && A.Pad_Type == 'NPTH, mechanical'")
+  (constraint hole_size (min 0.4999mm)))
