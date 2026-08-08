@@ -638,9 +638,13 @@ redundant; **C3 → U1.10 VDDIO2** (2.86); **C12 → U3.12 VS** (1.39); **C28 �
 **C6 → U6.A2 VS** (2.01); **C8 → U5.6 VNFC**. C5 (VSENSE) and C24 (STO_SNS) share the MPN but
 are divider FILTERS, not decoupling — distance rules don't apply to them. The one-too-many was
 **C7**: both C6 and C7 sat nearest the same U6.A2 pin — a leftover from U6's SC-70 era that
-survived two package swaps — deleted 2026-08-08. **Standing flag: C8 sits 5.25 mm from the pin
-it decouples** (U5.6 VNFC) — far for a decoupler; relocation is copper work, queued for DRH's
-next GUI session.
+survived two package swaps — deleted 2026-08-08. C8 flagged the same day at 5.25 mm from its
+pin and **re-placed at (33.1, 34.5)** — U5's west quadrant, 2.27 mm pad-to-pin, the closest
+pocket that touches no existing copper (east is the LA coil-feed tree under the ferrite
+channel; north is the 0.66 mm SDA/VNFC channel; the LA escape via guards the near-west).
+**Its pads are deliberately UNROUTED** — placement by Claude, traces reserved for DRH — so
+until that pass lands, DRC's expected state is 2 unconnected items (C8.1→VNFC, C8.2→GND) plus
+one dangling VNFC spur at the old (31.03, 33.26) location, left as re-route feedstock.
 
 **No ordered part — these are board features, not BOM line items:**
 - **SW2** (LED OFF/ON) is a **solder bridge** on the PCB. _(SB1–SB4, the per-LED force-on

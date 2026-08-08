@@ -115,9 +115,10 @@ BASELINE = {
         # re-ledgered 2026-08-07 (cap scoot: footprint 1413.8 -> 1486.7 mm2; was 2102.49):
     # re-ledgered 2026-08-07 evening (center consolidation: footprint 1486.7 -> 1374.8,
     # leg area traded to the horizontal cap scoots by design; was 2227.07):
-    # re-ledgered 2026-08-08 (RN2 consolidation: R10/R11/C7 pockets out, RN2 pocket in,
-    # 48 pockets, footprint 1374.3 mm2; was 2055.08):
-    volume_mm3=2057.25, bbox=(-22.85, -42.4, 0.0, 24.35, 42.4, 1.8),
+    # re-ledgered 2026-08-08 (RN2 consolidation + the C8 scoot to U5's west quadrant:
+    # R10/R11/C7 pockets out, RN2 pocket in, C8's pocket moved -- and the RN2-C8
+    # thin-wall bridge left with it; 48 pockets, footprint 1374.3 mm2; was 2055.08):
+    volume_mm3=2058.35, bbox=(-22.85, -42.4, 0.0, 24.35, 42.4, 1.8),
         max_boundary_edges=0, max_open_len_mm=0.0, max_degenerate=0),
     # ---- the 2026-08-07 enclosure variants (fit_rules.VARIANTS) --------------------------
     # Ledgered from local builds in the variants commit itself -- the chicken-and-egg rule:
@@ -153,9 +154,10 @@ BASELINE = {
         # re-ledgered 2026-08-07 evening: the consolidation CONNECTED the north corridors --
         # the lite main piece now spans the full cavity length (bbox y1 14.76 -> 42.4),
         # one continuous center spine; was 1098.51:
-        # re-ledgered 2026-08-08 (RN2 consolidation: R10/R11/C7 pockets out, RN2 pocket
-        # in, 30 pockets, footprint 1060.2 mm2, dropped 307.2 in 4; was 1111.05):
-        volume_mm3=1113.61, bbox=(-22.85, -42.4, 0.0, 24.35, 42.4, 1.22),
+        # re-ledgered 2026-08-08 (RN2 consolidation + the C8 scoot: R10/R11/C7 pockets
+        # out, RN2 pocket in, C8's pocket moved; 30 pockets, footprint 1060.2 mm2,
+        # dropped 307.2 in 4; was 1111.05):
+        volume_mm3=1114.04, bbox=(-22.85, -42.4, 0.0, 24.35, 42.4, 1.22),
         max_boundary_edges=0, max_open_len_mm=0.0, max_degenerate=0),
 }
 VOL_TOL = 0.005
