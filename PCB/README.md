@@ -690,8 +690,13 @@ was wrong by 10×: the scratch copy had the `.kicad_pcb` and `.kicad_pro` but **
 copy all three files or you will compare two different rule sets.)
 
 **Why here and nowhere else.** The area is MCU fanout — 114 B.Cu segments across 20 nets — so the
-island fills only **27.9 %** of its outline, the sparsest of the three patches (DC-DC 46.8 %, LDO
-37.2 %). The gain is contiguity, not copper mass. The southwest notch is deliberate: it keeps the
+island fills **40.3 %** of its outline, the sparsest of the three patches (DC-DC 55.5 %, LDO
+62.9 %). The gain is contiguity, not copper mass. _(These three percentages were first published
+as 27.9 / 46.8 / 37.2 — measured, on 2026-08-09, with the very `.kicad_dru` omission described in
+the paragraph above, in the same commit that documented the trap. Looser default clearances make
+a solid pour fill **less**, not more, because it must back further off every trace. Corrected the
+same day, from a run inside the repo directory where the rules load. If you quote a fill
+percentage, say which rule set produced it.)_ The southwest notch is deliberate: it keeps the
 island off **R15 (2 MΩ) / R16 (1 MΩ) / C24**, the STO sense divider. Wrapping a megohm node in
 extra ground buys nothing and adds adjacent-edge surface-leakage path on a board whose dark
 budget is single-digit nA. The other six ICs were considered and rejected — see the hatch note
