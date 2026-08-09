@@ -51,6 +51,7 @@ HEIGHTS = {
     # authored to that max -- declaration and model agree by construction, and check [7]
     # measures rather than tolerates this one. Was 1.10 (SC-70 DCK, SLVSEN5B).
     "U6":  0.50,   # DSBGA-4 (YFP0004), 0.5 max height incl. balls
+    "U10": 0.50,   # DSBGA-4 (YFP0004), same TPS22916C as U6 -- the STO sense-divider gate
     "U7":  0.90,   # MB85RC512TY FRAM DFN-8. WAS 1.75 here for a SOIC-8 that the v4
                    # rework removed; 1.75 cut this pocket clean through the brace.
     "U8":  0.90,   # AEM10300 QFN-28 4x4 (modelled 0.85)

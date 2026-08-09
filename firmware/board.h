@@ -20,7 +20,7 @@
  *     3 PA5      BTN      button pin -- deliberately NO-FIT; a future button = PA5->switch->GND (active-low)
  *     4 PA6      FD       NFC field-detect in (NT3H2211)  FD-wake, both edges; field-powered (works VCC-off)
  *     5 PA7      NFC_EN   NFC VCC load-switch enable (active-HIGH)  output, LOW = NFC off
- *     6 PC0      PC0      spare GPIO  -- deliberately unrouted, no breakout
+ *     6 PC0      SNS_EN   STO sense-divider gate (U10 ON, active-HIGH)  output, LOW = divider off
  *     7 PC1      PC1      spare GPIO  -- deliberately unrouted, no breakout
  *     8 PC2      SDA      TWI0 host SDA  (TWIROUTEA=ALT2)  ext 4.7k to VS
  *     9 PC3      SCL      TWI0 host SCL  (TWIROUTEA=ALT2)  ext 4.7k to VS
@@ -75,6 +75,34 @@
  * PD2 = AIN2 (ADC MUXPOS 0x02) and AINP0 (AC0 MUXPOS 0x00). */
 #define VSENSE_AIN          ADC_MUXPOS_AIN2_gc        /* 0x02 */
 #define VSENSE_DIVIDER      2                          /* VIN = VSENSE * 2   */
+
+/* ---- STO sense-divider GATE on PC0 (net SNS_EN -> U10 TPS22916C ON) ----
+ * 2026-08-09. R15/R16 used to hang permanently across STO: 3 M at the 4.65 V VOVCH ceiling
+ * is 1.55 uA drawn from the TANK, every second of every day, awake or asleep -- larger than
+ * any other single line in the standby ledger (accel 0.89, MCU+RTC 1.25, NFC FD 1.5) and
+ * comparable to the supercaps' own leakage. U10 is a high-side load switch between STO and
+ * R15, so the divider only exists while we are actually converting.
+ *
+ * HIGH-side, deliberately. Gating the LOW leg with a GPIO looks cheaper and is wrong: with
+ * the bottom open, C24 charges through R15 and STO_SNS floats to STO (4.65 V), which is
+ * above VDD and forward-biases PD1's upper ESD clamp -- so it would still bleed ~0.4 uA AND
+ * inject current into an ADC pin. Switching the top leaves R16 pulling STO_SNS to GND, so
+ * the pin sits at 0 V and reads a clean, fail-safe zero when the gate is off.
+ *
+ * NO external pulldown is needed on SNS_EN (unlike R14 on U6/NFC_EN): the TPS22916 has a
+ * SMART ON-pin pulldown -- 750 kOhm typ while ON <= VIL, automatically disconnected once ON
+ * is driven high, so it costs nothing once enabled (datasheet SLVSDO5F, Features). That
+ * holds the divider OFF while PC0 tristates during reset / UPDI / brown-out. */
+#define SNS_EN_PORT         PORTC
+#define SNS_EN_PIN_bm       PIN0_bm
+/* Settle before converting: C24 (10 nF, shrunk from 100 nF for exactly this) through the
+ * divider's 667k Thevenin = 6.7 ms tau; 5 tau = 33 ms to 0.7%. At 100 nF this would have been
+ * 335 ms and every tap would have gained a visible lead-in before the glow. */
+#define STO_SNS_SETTLE_MS   33
+/* Busy-wait, not sleep: ~33 ms of 1 MHz active current (~1 mA) is ~33 uC per read, against
+ * the 5.6 mC/hour the ungated divider burned -- so the gate still wins by ~2 orders of
+ * magnitude at any plausible event rate. Sleeping through the settle is the obvious next
+ * refinement (same lever the EEPROM-write busy-wait already has open in the notes). */
 
 /* ---- supercap-state sense on PD1 (AEM10300 STO via divide-by-3) ----
  * VS is now the regulated 3.3 V LDO output (constant), so the old VDD/10 read no longer tracks

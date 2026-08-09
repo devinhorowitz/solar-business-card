@@ -643,6 +643,7 @@ Summary of the **orderable** lines:
 | C13 | 1 | 10 µF, X5R, 16 V | 0603 | `GRT188R61C106KE13D` |
 | L1 | 1 | 2.76 µH design value | PCB copper — no package | **(no part — PCB feature)** |
 | U6 | 1 | Ultra-low-leakage load switch (ISD 10 nA typ, IQ 0.5 µA, QOD, RCB) | DSBGA-4 (`solarglow:TPS22916_YFP0004`, 0.4 mm pitch, 0.5 max) — **was SC-70-6 `TPS22919DCKR` until the 2026-08-06 ultrathin swap; on the board since the same day's rework round** | `TPS22916CYFPR` |
+| U10 | 1 | Ultra-low-leakage load switch — **the STO sense-divider gate** (2026-08-09). Second instance of U6's part. Feeds R15 from STO only while a conversion is in flight, so the 3 MΩ divider stops drawing **1.55 µA from the tank** around the clock. **High-side by necessity**: gating the low leg would let C24 float `STO_SNS` to STO, above VDD, forward-biasing PD1's ESD clamp — still ~0.4 µA *and* injecting into an ADC pin. Needs **no external pulldown** (cf. R14 on U6): the TPS22916 has a smart 750 kΩ ON pulldown that auto-disconnects once driven high. | DSBGA-4 (`solarglow:TPS22916_YFP0004`, 0.4 mm pitch, 0.5 max) | `TPS22916CYFPR` |
 | R14 | 1 | 1 MΩ, ±1% | 0402 | `AC0402FR-071ML` |
 | U8 | 1 | AEM10300 | QFN-28 (4x4 mm, EP land 2.30) | `10AEM10300C0000` |
 | U9 | 1 | TPS7A0233, 3.3 V, ~25 nA Iq | X2SON-4 (DQN, 1×1 mm, 0.4 max) — was SOT-23-5 (DBV) until the 2026-08-05 swap | `TPS7A0233PDQNR` |
@@ -651,7 +652,7 @@ Summary of the **orderable** lines:
 | FB1 | 1 | 0603 bead | 0603 (`L_0603_1608Metric` — the true 0603 land since DRH's 2026-08-08 island round; the 0402-land debt is paid) | `BLM18PG221SN1D` |
 | C22 | 1 | 1 uF, 25 V, 0603, X7R | 0603 (C_0603_1608Metric) | `GRT188R71E105KE13D` |
 | C23 | 1 | 2.2 µF, 25 V, 0603, X7R | 0603 (C_0603_1608Metric) | `GRM188Z71E225ME43D` |
-| C24 | 1 | 100 nF, 0402, X7R | 0402 | `GRT155R71H104KE01D` |
+| C24 | 1 | **10 nF**, 0402, X7R — ADC reservoir on `STO_SNS`, shrunk from 100 nF on 2026-08-09 so the **gated** divider settles in ~33 ms instead of ~335 ms (still ~2000× the ADC sample cap) | 0402 | `GRT155R71H103KE01D` |
 | C25 | 1 | 22 uF, 16 V, 1206 low-profile (0.95 max), X5R | 1206 (`solarglow:C_1206_3216Metric_HS_LP085`) | `GRM319R61C226KE15D` |
 | C26, C27 | 2 | 10 µF, 25 V, 1206 low-profile (0.95 max), X5R | 1206 (`solarglow:C_1206_3216Metric_HS_LP085`) | `GRM319R61E106KA12D` |
 | C28 | 1 | 100 nF, 0402, X7R | 0402 | `GRT155R71H104KE01D` |
