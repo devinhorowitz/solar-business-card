@@ -673,6 +673,60 @@ pin, parked by Claude at (33.1, 34.5) pads-unrouted, then **finished by DRH at (
 — north of U5, 1.4 mm pad-to-pin, fully routed. The census is closed: every decoupler within
 2.9 mm of its pin except C3 (VDDIO2, 3.5 mm — a µA rail, accepted).
 
+**The AVR sits on a solid island too (`GND_B_AVR_ISLAND`, 2026-08-09).** Third and last of the
+solid B-side patches, and unlike the other two it is *not* moated — it is a plain solid pour at
+priority 1 over the hatch, net GND, outline **x 5.2–14.0, y 39.8–49.0 with the southwest corner
+notched back to y 46.9 below x 8.0**. It covers U1 and all four of its decouplers (C1, C29 = VS;
+C3 = VDDIO2; C5 = VSENSE), and **all 7 of their GND pads land on island copper** — U1's two GND
+pins, U1's exposed pad, and the four cap returns — so the MCU's EP and every decoupling return
+share one contiguous plane instead of a 49 % mesh.
+
+Measured, `--refill-zones`, custom `.kicad_dru` loaded on both sides: inside that 75.08 mm²
+outline the island converts **21.64 mm² of `GND_B` hatch into 30.27 mm² of solid**, a net
+**+8.63 mm²** and ~**1.40×** the ground copper — with `GND_B_DCDC_SOLID` and `GND_B_LDO_ISLAND`
+reading **+0.00** as the control that the measurement is sound. (An earlier pass of this number
+was wrong by 10×: the scratch copy had the `.kicad_pcb` and `.kicad_pro` but **not** the
+`.kicad_dru`, so the "before" board filled against default clearances. If you re-measure this,
+copy all three files or you will compare two different rule sets.)
+
+**Why here and nowhere else.** The area is MCU fanout — 114 B.Cu segments across 20 nets — so the
+island fills only **27.9 %** of its outline, the sparsest of the three patches (DC-DC 46.8 %, LDO
+37.2 %). The gain is contiguity, not copper mass. The southwest notch is deliberate: it keeps the
+island off **R15 (2 MΩ) / R16 (1 MΩ) / C24**, the STO sense divider. Wrapping a megohm node in
+extra ground buys nothing and adds adjacent-edge surface-leakage path on a board whose dark
+budget is single-digit nA. The other six ICs were considered and rejected — see the hatch note
+below.
+
+**Committed outline-only.** The zone carries no `filled_polygon`; KiBot's `check_zone_fills`
+preflight fills before DRC *and* before plotting and then restores the board, so gerbers and DRC
+both see real copper. The file's own fills refresh on the next GUI save.
+
+**Why the B-side pour is HATCHED — reconstructed 2026-08-09, intent never recorded.** Read this
+as reasoning with its evidence, not as the original decision; if the real reason differs, correct
+it *here*. Both pours are hatch 0.2 mm line / 0.5 mm gap = 0.7 mm pitch, **49 % copper**, `GND_A`
+at 45° and `GND_B` at 0°. For `GND_A` the reason is written down elsewhere in this file and it is
+cosmetic: the texture only reads because the mask telegraphs the 35 µm copper step. **That reason
+cannot apply to `GND_B`** — the back of the card lives inside the titanium shell and is never
+seen — so the back hatch is a functional choice, and nothing in `PCB/README.md`,
+`solar-glow-drh-design-notes.md` or `scripts/nfc_coil.py` says what it is.
+
+The mechanism that fits the evidence is the coil. The spiral is on B.Cu, the reader's field
+crosses the whole card, and a continuous plane in that field carries circulating eddy currents
+that load the antenna; breaking the plane into 0.7 mm cells cuts the area enclosed per loop and
+so the induced loss. Meshing or clearing ground near an NFC antenna is standard practice, and the
+board already spends real estate on the stronger form of it — `NFC_COIL_POUR_KEEPOUT` (B.Cu,
+12.2 × 27.0 mm) and `NFC_COIL_KEEPOUT` (F.Cu) hold *all* pour off the coil, on both faces. The
+hatch reads as the same intent applied to the rest of the card. The 45°/0° offset between layers
+also stops the two meshes from registering into a more continuous composite, though that may
+equally be aesthetic on the front.
+
+**This is a hypothesis with a falsifiable test, and it has not been run.** Nothing here is a
+measured Q or read-range figure, and `nfc_coil.py --check` measures geometry and inductance, not
+plane loss. The bench settles it: read range and tank Q with the board as built versus a solid
+B-side pour. Until then, treat "the back hatch is for the coil" as the best available
+explanation, and note that the three solid islands are each small, local, and — except the AVR
+one at 28 mm — kept well clear of the coil keepout, which is the conservative reading either way.
+
 **The STO_LDO island is MOATED (2026-08-08, DRH's build + Claude's plumbing).** The LDO block —
 FB1, C22, U9, C23, TP7 — lives at the foot of the SC3/SC4 bay (x 23.4–28, y 79.9–86.4) on its
 own B-side ground patch, the zone **`GND_B_LDO_ISLAND`**, separated from the main `GND_B` pour
