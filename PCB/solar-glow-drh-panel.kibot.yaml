@@ -14,10 +14,30 @@
 #     versions are generated from the 1-up board. Duplicating them panel-shaped would
 #     give two answers to one question.
 #
-# Output of this config = the zip you actually upload to PCBWay.
+# It DOES take check_zone_fills, and the reasoning above is exactly why that was missed:
+# "panelising adds frame geometry, it does not move a single board object" is true and
+# says nothing about zone FILLS, which are not objects panelize moves but state the board
+# file carries. Without the preflight this config plots the board's STORED fill, so a zone
+# whose fill is absent or stale reaches the fab as missing copper.
+#
+# Not theoretical, twice over. A pad moved by text surgery with stale fills left 6.9709 mm2
+# of GND pour shorting SC4.P (net MID): the 1-up gerbers were clean because that config
+# refills, and the panel carried the identical 6.9709 mm2. Then on 2026-08-09 the
+# GND_B_AVR_ISLAND zone landed outline-only -- deliberately, since KiBot refills before
+# plotting -- and the same regen moved 8,305 lines of the 1-up B.Cu gerber and FOUR lines
+# of the panel's, all header. The island simply was not in the panel copper.
+#
+# Output of this config = the zip you actually upload to PCBWay, so of the two fab sets it
+# is the one that must be right, and it was the one that was wrong.
 
 kibot:
   version: 1
+
+preflight:
+  # Fill zones before plotting, then restore the source PCB -- same call and same reason as
+  # the 1-up config. It cannot rewrite the panel board (which is a gitignored intermediate
+  # anyway); it only makes the plotted copper match the routing.
+  check_zone_fills: true
 
 global:
   output: '%f-%i.%x'
