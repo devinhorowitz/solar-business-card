@@ -120,6 +120,10 @@
           ""
         ],
         [
+          "silk_over_copper|26260000|62052500|17394b2c-b2f5-4cc5-ab54-1facd345664c|95dcf272-b9bd-4712-9208-8f60e88c170b",
+          "COSMETIC, measured: Q2's pin-1 dot (filled, r 0.150) overhangs the +y edge of R18 pad 1's mask opening by 0.0150 mm over a 0.1308 mm chord. That clips 0.00132 of 0.07069 mm2 = 1.87% of the dot, leaving 0.285 of its 0.300 mm height -- the orientation mark stays unmistakable. Board mask expansion is 0 (pad_to_mask_clearance 0, no local margin on R18) and min_silk_clearance is 0, so this fires on true overlap, not on a clearance band. NOTE the key's x|y is the DRC MARKER position (26.26, 62.0525) -- KiCad's collide point, NOT either item's reported position; scripts/drc_exclusion_key.py derives it. Re-measure if Q2 or R18 moves"
+        ],
+        [
           "silk_over_copper|30700000|43100000|3eee9f71-d812-533a-9a73-05b79e972886|7fb1bd4e-108d-479d-aa95-546f61ea5316",
           ""
         ],
