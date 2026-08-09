@@ -282,10 +282,10 @@ uint8_t sense_glow_peak(uint8_t peak)
     uint16_t mv = sense_vdd_mv();
     if (mv < VS_GLOW_FLOOR_MV) return 0;                      /* below floor: dark, let it charge */
 #if USE_BALLAST_GUARD
-    /* HIGH-side clamp (the R1-R4 audit item): at an abuse-corner STO (bench
+    /* HIGH-side clamp (the RN1 audit item): at an abuse-corner STO (bench
      * supply, over-voltage -- the AEM's own VOVCH 4.65 V never reaches the
-     * threshold) a held 100% duty into a min-Vf LED pushes the 0402 1/16 W
-     * ballasts to ~110% of rating. Cap the duty so worst-corner average power
+     * threshold) a held 100% duty into a min-Vf LED pushes RN1's 1/16 W
+     * elements to ~110% of rating. Cap the duty so worst-corner average power
      * stays under 62.5 mW; see GLOW_CLAMP_STO_MV in board.h for the numbers.
      * Costs nothing here -- the STO read is already in hand. */
     if (mv > GLOW_CLAMP_STO_MV && peak > GLOW_CLAMP_PEAK)

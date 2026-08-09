@@ -491,8 +491,19 @@
 #  error "USE_FACEDOWN_DEEPSLEEP needs USE_FACEDOWN_DORMANT: dormancy is what detects face-down and drives both transitions. Turn both off, or both on."
 #endif
 
-/* R1-R4 ballast power guard: clamp the glow duty when STO sits above GLOW_CLAMP_STO_MV.
- * The ballasts are AC0402FR-07150RL (0402, 1/16 W = 62.5 mW). Worst DC corner from the
+/* RN1 ballast power guard: clamp the glow duty when STO sits above GLOW_CLAMP_STO_MV.
+ * The ballast is RN1 -- ONE Panasonic EXB-28V151JX 4-element array (0804 convex) since the
+ * 2026-08-07 consolidation, NOT the four discrete AC0402FR-07150RL this comment named until
+ * 2026-08-09. Every number below survives that swap unchanged, which is why it went unnoticed:
+ * an EXB28V element is rated 0.063 W at 70 C, the same 1/16 W the discretes carried (Panasonic
+ * AOC0000C14). What DID change is that four elements now dissipate into one 2.0 x 1.0 mm body.
+ * Panasonic publishes no PACKAGE total for EXB28V (it prints one for EXB18V and EXB2HV, so the
+ * silence is deliberate); the structural twin -- Bourns CAY10-xxxJ4, same convex 0804, same
+ * 62.5 mW/element -- publishes 0.250 W/package, i.e. exactly 4x per-element, no package
+ * derating in this geometry. At the clamp that leaves 4 x 61.8 = 247 mW against 250 mW, ~1%.
+ * The convex termination is load-bearing for that: the CONCAVE 0804 equivalent (EXBN8V /
+ * CAT10) is rated half, 31 mW/element, where these currents would be ~118% of rating.
+ * Worst DC corner from the
  * PCB audit: STO 5.5 V (the supercap RATING -- the AEM's own VOVCH ceiling is 4.65 V, so
  * this corner needs an external/bench supply or abuse, never normal harvest), min-bin
  * Vf 1.9 V (LA P47F 3B bin), VOL ~0.4 V -> I ~21 mA -> ~68-70 mW at 100% duty = ~110%
@@ -501,7 +512,12 @@
  * the worst-corner AVERAGE stays under rating (70 mW x 225/255 = 61.8 mW < 62.5 mW).
  * Applied inside sense_glow_peak(), the one chokepoint every glow's peak passes through
  * (main.c routes the sweep peak through it too). Free: the STO read is already in hand.
- * 1 = on. Alternative if the board is ever re-laid: 0402 -> 0603 (0.1 W) ballasts. */
+ * 1 = on. Alternative if the board is ever re-laid: EXB-38V151JV -- same family, same
+ * 0.063 W/element, same AEC-Q200 Grade 1 and tape, but a 1206 body with 2.56x the substrate
+ * area (5.12 vs 2.00 mm2) purely for thermal headroom; re-check its element pairing against
+ * RN1's 1-8/2-7/3-6/4-5. (Panasonic's only higher-per-element array, EXB-S8V151J at 0.100 W,
+ * is non-AEC, a concave land, and 19-week lead / 10k minimum.) This line read "0402 -> 0603
+ * (0.1 W) ballasts" until 2026-08-09 -- the discrete-era answer, which no longer applies. */
 #define USE_BALLAST_GUARD   1
 #define GLOW_CLAMP_STO_MV   5200   /* above this STO, clamp duty (VOVCH 4.65 V never trips it) */
 #define GLOW_CLAMP_PEAK     225    /* max peak while clamped: 70 mW x 225/255 < 62.5 mW rating  */

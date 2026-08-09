@@ -656,7 +656,7 @@ Summary of the **orderable** lines:
 | C26, C27 | 2 | 10 µF, 25 V, 1206 low-profile (0.95 max), X5R | 1206 (`solarglow:C_1206_3216Metric_HS_LP085`) | `GRM319R61E106KA12D` |
 | C28 | 1 | 100 nF, 0402, X7R | 0402 | `GRT155R71H104KE01D` |
 | R15 | 1 | 2 M, 0603, ±0.1%, 25 ppm | 0603 (R_0603_1608Metric) | `MCT0603MD2004BP500` |
-| R16 | 1 | 1 M, 0603, ±0.1%, 25 ppm | 0603 (R_0603_1608Metric) | `RT0603BRD071ML` |
+| R16 | 1 | 1 M, 0603, ±0.1%, 25 ppm — **same Vishay MC AT film system as R15** (2026-08-09; was Yageo `RT0603BRD071ML`) | 0603 (R_0603_1608Metric) | `MCT0603MD1004BP500` |
 | R17, R18 | 2 | 1 M, 0402, ±1% | 0402 | `AC0402FR-071ML` |
 | Q2 | 1 | N-ch MOSFET, 20 V, logic-level (Vth 1.0 max) | SOT-523 (0.90 max) — **was SOT-23 `BSS138LT1G` until the 2026-08-06 low-profile respin; board sync pending** | `DMG1012T-7` |
 

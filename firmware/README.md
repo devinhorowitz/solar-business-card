@@ -681,8 +681,10 @@ both the light and strong-sun predicates (`sense_vin_flags()`, raw-count, no mV 
   `USE_DOUBLE_TAP` either way.
 - **`USE_BALLAST_GUARD`** (0/1, default 1) **/ `GLOW_CLAMP_STO_MV`** (5200) **/
   `GLOW_CLAMP_PEAK`** (225): clamp every glow's peak duty when STO sits above 5.2 V, so the
-  0402 1/16 W ballasts R1–R4 stay under rating even at the abuse corner (STO at the 5.5 V
-  supercap rating × min-bin V<sub>f</sub> × 100 % duty ≈ 110 % of rating). Normal harvest
+  four 1/16 W elements of **RN1** (the `EXB-28V151JX` array — the discrete R1–R4 this line
+  named until 2026-08-09 left with the 2026-08-07 consolidation; the per-element rating is
+  identical, so the guard's numbers did not move) stay under rating even at the abuse corner
+  (STO at the 5.5 V supercap rating × min-bin V<sub>f</sub> × 100 % duty ≈ 110 % of rating). Normal harvest
   never trips it — the AEM's VOVCH ceiling is 4.65 V — it is insurance for bench supplies
   and over-voltage, applied in `sense_glow_peak()` (the sweep now routes through it too).
 - **Core clock** is 1 MHz OSCHF (`clocks_init`, see Robustness for the why and the
