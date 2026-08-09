@@ -364,11 +364,30 @@ red, the check itself fails.
   `npth_inside_courtyard` re-keyed to SC1's new position, and a `tracks_crossing` joined —
   the `LA`/`LB` net boundary now sits MID-SPIRAL at (41.0, 38.0) instead of on a pad. It is
   the coil doing its job, not a short (the spiral IS the LA→LB conductor; the coil gate
-  proves it intact), and the exclusion carries that reason. Silk is now **4** — the C13 pair
-  left with the rewire; D2/D3/D4 window clips excluded + Q2's circle at (26.26, 62.34)
-  UNexcluded, cosmetic, awaiting its UUID-keyed exclusion in the next GUI session. Verify the
-  number against `Generated/solar-glow-drh-v4_0-drc.html`, which CI writes, rather than trusting
-  this line.)_
+  proves it intact), and the exclusion carries that reason. Silk is now **4, all four excluded
+  since 2026-08-09** — the C13 pair left with the rewire; D2/D3/D4's window clips, plus Q2's
+  pin-1 dot at (26.26, 62.34), where R18 pad 1's mask opening clips the dot by 0.0150 mm over a
+  0.1308 mm chord: **1.87 % of its area**, leaving 0.285 of its 0.300 mm height, so the
+  orientation mark stays unmistakable. The ledger is **15 entries = 11 errors + 4 silk
+  warnings**. Verify the number against `Generated/solar-glow-drh-v4_0-drc.html`, which CI
+  writes, rather than trusting this line.)_
+- **A DRC exclusion key is NOT hand-authorable, and a wrong one fails SILENTLY** (2026-08-09).
+  The `.kicad_pro` entry is `rule|x|y|main_uuid|aux_uuid` (`PCB_MARKER::SerializeToString`), and
+  both UUIDs sit in the `.kicad_pcb` while the DRC report prints both items' positions — so it
+  looks like something you can type. It is not: `x|y` is the **DRC marker** position, which the
+  test provider takes from the collision itself (`refShape->Collide(testShape, …, &pos)`), not
+  from either item. For a straight silk segment inside a big mask polygon that point lands on
+  the segment's own start, which is exactly why D2/D3/D4's window-clip keys *look* like "first
+  item's position" and appear to confirm the theory. For Q2's round pin-1 dot against R18's
+  roundrect pad it lands at **(26.26, 62.0525)** — 0.28 mm from the circle centre the report
+  prints, and *inside the pad*. A hand-typed key matches nothing, and nothing tells you: the
+  violation just stays in the report as though you never ledgered it. A 14,946-point sweep of
+  the plausible window in both UUID orders found it nowhere. `scripts/drc_exclusion_key.py`
+  takes the number from KiCad instead of retyping it (`--pair A B --rule R --verify`), and
+  `--check-dead` flags any entry matching no current violation — canaried by nudging a key
+  1 nm, which it names and nothing else. Rules whose marker is not the collide point
+  (`copper_edge_clearance`, `courtyards_overlap`) still belong to the GUI; `--verify` is how
+  you find out which case you are in.
 - **`mask_art.py`'s `generate()` is the single definition of what it writes** — and
   `generate()` is the single definition of what it writes. Check [6] calls that same function.
   It used to rebuild `emit(build(board))` itself, which was a quieter second copy: correct while
