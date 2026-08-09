@@ -219,19 +219,50 @@ uint8_t sense_vin_flags(void)
 }
 
 /* ---------- STO sense-divider gate (U10 on SNS_EN/PC0) ----------
- * R15/R16 only exist while we convert. Deliberately STATELESS -- enable, settle, read,
- * disable, every time -- so no caller can be ordered wrong and silently read a divider
- * that was never switched on. The cost is one STO_SNS_SETTLE_MS per read; STO reads are
- * event-driven (a glow is about to run for seconds), never on the 1 Hz poll path, so the
- * duty cycle a card in a drawer sees is ZERO. See board.h SNS_EN_PORT for why the gate is
- * high-side and why no external pulldown is needed. */
+ * R15/R16 only exist while we convert. There are TWO ways to use the gate, and the split
+ * is a power decision, not a style one.
+ *
+ * sto_raw() -- the EVENT path. Stateless: enable, settle, read, disable, every time, so no
+ * caller can be ordered wrong and silently read a divider that was never switched on. It
+ * pays STO_SNS_SETTLE_MS of BUSY-WAIT, which is only acceptable because these reads happen
+ * on tap / sweep / EEPROM-safety branches where a glow is about to burn ~0.4 J: two gated
+ * reads cost ~119 uC, about 0.14% of that, and the 66 ms of added tap->glow latency is
+ * imperceptible.
+ *
+ * sense_vmin_tick() -- the PERIODIC path, which must NOT busy-wait. This comment used to
+ * claim STO reads were "never on the 1 Hz poll path, so the duty a card in a drawer sees is
+ * ZERO". That was FALSE and it cost real power: USE_HEALTH_LOG's rail-min sampler runs every
+ * VMIN_SAMPLE_POLLS (16 s), before the dormancy gate, so a card face-down in a drawer sat in
+ * _delay_ms for 33 ms every 16 s. At ~1.8 mA active that is 59 uC/sample = 3.71 uA average,
+ * against the 1.55 uA the gate saves -- the gate was a NET LOSS of ~2.2 uA. Fixed 2026-08-09
+ * by DEFERRING that read across ticks: arm the gate on one poll, sample on the next. The
+ * ~1 s gap is 30x the settle and it elapses while the MCU is ASLEEP, so the cost is the
+ * divider's own 1.55 uA for one poll in seventeen = ~0.09 uA, with zero extra awake time.
+ * That is 38x better than the busy-wait and self-scaling: face-down deep sleep only
+ * lengthens the PIT period, so the 1-in-VMIN_SAMPLE_POLLS duty holds at any poll rate.
+ *
+ * See board.h SNS_EN_PORT for why the gate is high-side and needs no external pulldown. */
+static uint8_t sto_armed;      /* gate left ON by the deferred path, awaiting its sample */
+
 static uint16_t sto_raw(void)
 {
     SNS_EN_PORT.OUTSET = SNS_EN_PIN_bm;      /* divider connected to STO */
     _delay_ms(STO_SNS_SETTLE_MS);            /* C24 through the 667k Thevenin, 5 tau */
     uint16_t raw = adc_read_raw(STO_SNS_AIN);
     SNS_EN_PORT.OUTCLR = SNS_EN_PIN_bm;      /* back to zero tank draw */
+    /* An event read collapses the node, so any deferred sample still pending has been
+     * invalidated -- it would otherwise read a partly-discharged divider on the next tick
+     * and record a phantom "new low" into EEPROM. Disarm; the sampler simply re-arms. */
+    sto_armed = 0;
     return raw;
+}
+
+/* Raw STO-divider count -> STO millivolts. One home for the scaling, shared by the busy-wait
+ * path and the deferred one so they can never disagree. */
+static uint16_t sto_mv_from_raw(uint16_t raw)
+{
+    uint32_t mv = ((uint32_t)raw * ADC_VREF_MV) >> 12;
+    return (uint16_t)(mv * STO_DIVIDER);                    /* undo the divider -> STO mV */
 }
 
 uint16_t sense_vdd_mv(void)
@@ -239,9 +270,7 @@ uint16_t sense_vdd_mv(void)
     /* v4: VS is now the regulated LDO rail (constant), so read the supercap top STO
      * instead -- via the R15/R16 (2M/1M) divider on PD1/AIN1 (pin sees STO/STO_DIVIDER).
      * Same divider-pin form as sense_vin_mv(): STO_mv = pin_mv * STO_DIVIDER. */
-    uint32_t res = sto_raw();               /* PD1/AIN1 = STO / STO_DIVIDER */
-    uint32_t mv  = (res * ADC_VREF_MV) >> 12;
-    return (uint16_t)(mv * STO_DIVIDER);                    /* undo the divider -> STO mV */
+    return sto_mv_from_raw(sto_raw());      /* PD1/AIN1 = STO / STO_DIVIDER */
 }
 
 /* Rail-floor threshold as a raw STO-divider count, folded at COMPILE time (same
@@ -537,16 +566,31 @@ static uint16_t vmin_ram = 0xFFFF;      /* lowest rail this power session, RAM-t
 
 void sense_vmin_tick(void)
 {
+    /* DEFERRED read, in two halves across consecutive polls -- see the sto_raw() header for
+     * why this path must never busy-wait. Second half first: the gate was armed on the last
+     * poll and has been settling ever since, through a whole sleep, so just convert and
+     * release. No _delay_ms, no extra awake time. */
+    if (sto_armed) {
+        uint16_t mv = sto_mv_from_raw(adc_read_raw(STO_SNS_AIN));
+        SNS_EN_PORT.OUTCLR = SNS_EN_PIN_bm;       /* divider off -> back to zero tank draw */
+        sto_armed = 0;
+        if (mv == 0) return;                      /* stuck ADC -> skip */
+        if (mv < vmin_ram) vmin_ram = mv;         /* track the true low in RAM -- wear-free */
+        /* commit only from a healthy rail, so the write never lands on the sag itself (the
+         * corruption window); erased 0xFFFF is the ceiling -> the first real low wins. */
+        if (mv >= EE_WRITE_FLOOR_MV && vmin_ram < eeprom_read_word(EE_VMIN_ADDR))
+            eeprom_update_word(EE_VMIN_ADDR, vmin_ram);
+        return;
+    }
+
     if (++vmin_ctr < VMIN_SAMPLE_POLLS)
         return;                                   /* not time to sample yet */
     vmin_ctr = 0;
-    uint16_t mv = sense_vdd_mv();
-    if (mv == 0) return;                          /* stuck ADC -> skip */
-    if (mv < vmin_ram) vmin_ram = mv;             /* track the true low in RAM -- always safe, wear-free */
-    /* commit only from a healthy rail, so the write never lands on the sag itself (the corruption
-     * window); erased 0xFFFF is the ceiling -> the first real low wins. */
-    if (mv >= EE_WRITE_FLOOR_MV && vmin_ram < eeprom_read_word(EE_VMIN_ADDR))
-        eeprom_update_word(EE_VMIN_ADDR, vmin_ram);
+    /* First half: arm and leave. The settle happens during the sleep to the next poll.
+     * If an event read (sto_raw) intervenes it disarms us and we simply re-arm later --
+     * a missed health sample is free, a phantom low written to EEPROM is not. */
+    SNS_EN_PORT.OUTSET = SNS_EN_PIN_bm;
+    sto_armed = 1;
 }
 
 uint16_t sense_vmin_get(void)

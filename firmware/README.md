@@ -117,10 +117,11 @@ cd firmware
 make DFP=/path/to/Microchip/AVR-Ex_DFP/<version>
 ```
 Produces `solar-glow.hex`; the `avr-size` line reports usage (the part has 64 KB
-flash / 6 KB RAM, so this firmware — 4,978 B flash, 29 B RAM (4970 text + 8 data +
-21 bss, measured 2026-08-02 after the audit-findings batch: ADC time bound,
-accel data-valid window, wear-levelled tap ring, clean bus-clear STOP, ballast
-guard, dark dormancy and face-down deep sleep) — leaves room to spare).
+flash / 6 KB RAM, so this firmware — 5,034 B flash, 30 B RAM (5026 text + 8 data +
+22 bss, measured 2026-08-09 after the STO sense-divider gate and its deferred-read
+fix; the batch before it was the 2026-08-02 audit findings: ADC time bound, accel
+data-valid window, wear-levelled tap ring, clean bus-clear STOP, ballast guard,
+dark dormancy and face-down deep sleep) — leaves room to spare).
 
 ### 3. Wire UPDI and power the board
 UPDI is a single wire on **pin 23**, broken out to the **TC2030 pad (TC1)** (a

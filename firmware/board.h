@@ -99,10 +99,18 @@
  * divider's 667k Thevenin = 6.7 ms tau; 5 tau = 33 ms to 0.7%. At 100 nF this would have been
  * 335 ms and every tap would have gained a visible lead-in before the glow. */
 #define STO_SNS_SETTLE_MS   33
-/* Busy-wait, not sleep: ~33 ms of 1 MHz active current (~1 mA) is ~33 uC per read, against
- * the 5.6 mC/hour the ungated divider burned -- so the gate still wins by ~2 orders of
- * magnitude at any plausible event rate. Sleeping through the settle is the obvious next
- * refinement (same lever the EEPROM-write busy-wait already has open in the notes). */
+/* This settle is paid TWO different ways, and getting that split wrong cost real power once
+ * already (2026-08-09 audit):
+ *   EVENT reads busy-wait it in sto_raw(). Fine: they ride tap / sweep / EEPROM-safety
+ *   branches where a glow is about to spend ~0.4 J, so ~119 uC for two reads is ~0.14% of
+ *   that, and 66 ms of extra tap->glow latency is imperceptible.
+ *   The PERIODIC read (sense_vmin_tick, every VMIN_SAMPLE_POLLS) must NOT busy-wait. It
+ *   originally did, and at 16 s spacing that was 59 uC/sample = 3.71 uA average -- MORE than
+ *   the 1.55 uA the gate saves, i.e. the whole change was a net loss. It now arms the gate on
+ *   one poll and samples on the next, so the settle elapses while the MCU is ASLEEP: cost is
+ *   the divider's own current for 1 poll in 17 = ~0.09 uA, and zero extra awake time.
+ * Anything new that reads STO on a RECURRING schedule must use the deferred pattern, not
+ * sto_raw(). The busy-wait is only cheap next to an animation. */
 
 /* ---- supercap-state sense on PD1 (AEM10300 STO via divide-by-3) ----
  * VS is now the regulated 3.3 V LDO output (constant), so the old VDD/10 read no longer tracks
