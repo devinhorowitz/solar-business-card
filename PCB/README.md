@@ -702,9 +702,30 @@ extra ground buys nothing and adds adjacent-edge surface-leakage path on a board
 budget is single-digit nA. The other six ICs were considered and rejected — see the hatch note
 below.
 
-**Committed outline-only.** The zone carries no `filled_polygon`; KiBot's `check_zone_fills`
-preflight fills before DRC *and* before plotting and then restores the board, so gerbers and DRC
-both see real copper. The file's own fills refresh on the next GUI save.
+**Committed outline-only — and that was two-thirds safe, not safe.** The zone carries no
+`filled_polygon`. KiBot's `check_zone_fills` preflight fills before DRC *and* before plotting and
+then **restores** the board, so gerbers and DRC both see real copper and the fab output is right.
+The imagery was not: `scripts/render.py` shells out to `kicad-cli pcb render`, which has **no
+refill option** and draws the fills as *stored*, so the first regen after the island landed
+produced correct gerbers, a correct DRC report, and **renders of the previous board** — max pixel
+delta in the island window 12/255, indistinguishable from two control regions that had not
+changed. Nothing failed. Check [9] cannot see this: it asserts an image came from a generator CI
+runs, never that the generator saw current copper.
+
+Fixed at the generator, 2026-08-09: `render.py` now refills zones on the temp copy it already
+makes (`refill_zones()`), so imagery is a function of the routing rather than of whether someone
+remembered to save a fill. Proven with the renderer itself — same file, same command, before and
+after a refill: 3.5 % of pixels change in the island window while a control region is
+**bit-identical** (max delta 0, which also establishes that `kicad-cli pcb render` is
+deterministic and the earlier whole-board churn was CI-to-CI environment noise). The `.kicad_dru`
+is copied beside that temp board before the refill, for the reason in the measurement note above.
+The file's own fills still refresh on the next GUI save; nothing downstream depends on it now.
+
+_(The same pass found `strip_plating_stubs()` in that file hardcoding `(layer "F.Cu")` while the
+stubs had moved to B.Cu — matching nothing, removing nothing, and logging "removed 0 plating
+stubs" while the OSH Park midnight render kept a bus that variant must not show. It now reads the
+layer through `panelize.stub_layer()`, the same reader check [19] and the panel's tab spur use, so
+a future stub move cannot leave one consumer behind. Reads "removed 2" now.)_
 
 **Why the B-side pour is HATCHED — reconstructed 2026-08-09, intent never recorded.** Read this
 as reasoning with its evidence, not as the original decision; if the real reason differs, correct
