@@ -120776,6 +120776,30 @@
 		)
 	)
 	(zone
+		(net "GND")
+		(layer "B.Cu")
+		(uuid "762add9f-8dc0-4730-8466-ed905cec2659")
+		(name "GND_B_AVR_ISLAND")
+		(hatch edge 0.508)
+		(priority 1)
+		(connect_pads
+			(clearance 0.254)
+		)
+		(min_thickness 0.15)
+		(fill yes
+			(thermal_gap 0.2)
+			(thermal_bridge_width 0.25)
+			(smoothing chamfer)
+			(radius 1)
+			(island_removal_mode 0)
+		)
+		(polygon
+			(pts
+				(xy 5.2 39.8) (xy 14.0 39.8) (xy 14.0 49.0) (xy 8.0 49.0) (xy 8.0 46.9) (xy 5.2 46.9)
+			)
+		)
+	)
+	(zone
 		(net "VS")
 		(layer "B.Cu")
 		(hatch none 0.1)
