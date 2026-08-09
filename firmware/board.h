@@ -20,7 +20,7 @@
  *     3 PA5      BTN      button pin -- deliberately NO-FIT; a future button = PA5->switch->GND (active-low)
  *     4 PA6      FD       NFC field-detect in (NT3H2211)  FD-wake, both edges; field-powered (works VCC-off)
  *     5 PA7      NFC_EN   NFC VCC load-switch enable (active-HIGH)  output, LOW = NFC off
- *     6 PC0      PC0      spare GPIO  -- deliberately unrouted, no breakout
+ *     6 PC0      SNS_EN   STO sense-divider gate (U10 ON, active-HIGH)  output, LOW = divider off
  *     7 PC1      PC1      spare GPIO  -- deliberately unrouted, no breakout
  *     8 PC2      SDA      TWI0 host SDA  (TWIROUTEA=ALT2)  ext 4.7k to VS
  *     9 PC3      SCL      TWI0 host SCL  (TWIROUTEA=ALT2)  ext 4.7k to VS
@@ -75,6 +75,34 @@
  * PD2 = AIN2 (ADC MUXPOS 0x02) and AINP0 (AC0 MUXPOS 0x00). */
 #define VSENSE_AIN          ADC_MUXPOS_AIN2_gc        /* 0x02 */
 #define VSENSE_DIVIDER      2                          /* VIN = VSENSE * 2   */
+
+/* ---- STO sense-divider GATE on PC0 (net SNS_EN -> U10 TPS22916C ON) ----
+ * 2026-08-09. R15/R16 used to hang permanently across STO: 3 M at the 4.65 V VOVCH ceiling
+ * is 1.55 uA drawn from the TANK, every second of every day, awake or asleep -- larger than
+ * any other single line in the standby ledger (accel 0.89, MCU+RTC 1.25, NFC FD 1.5) and
+ * comparable to the supercaps' own leakage. U10 is a high-side load switch between STO and
+ * R15, so the divider only exists while we are actually converting.
+ *
+ * HIGH-side, deliberately. Gating the LOW leg with a GPIO looks cheaper and is wrong: with
+ * the bottom open, C24 charges through R15 and STO_SNS floats to STO (4.65 V), which is
+ * above VDD and forward-biases PD1's upper ESD clamp -- so it would still bleed ~0.4 uA AND
+ * inject current into an ADC pin. Switching the top leaves R16 pulling STO_SNS to GND, so
+ * the pin sits at 0 V and reads a clean, fail-safe zero when the gate is off.
+ *
+ * NO external pulldown is needed on SNS_EN (unlike R14 on U6/NFC_EN): the TPS22916 has a
+ * SMART ON-pin pulldown -- 750 kOhm typ while ON <= VIL, automatically disconnected once ON
+ * is driven high, so it costs nothing once enabled (datasheet SLVSDO5F, Features). That
+ * holds the divider OFF while PC0 tristates during reset / UPDI / brown-out. */
+#define SNS_EN_PORT         PORTC
+#define SNS_EN_PIN_bm       PIN0_bm
+/* Settle before converting: C24 (10 nF, shrunk from 100 nF for exactly this) through the
+ * divider's 667k Thevenin = 6.7 ms tau; 5 tau = 33 ms to 0.7%. At 100 nF this would have been
+ * 335 ms and every tap would have gained a visible lead-in before the glow. */
+#define STO_SNS_SETTLE_MS   33
+/* Busy-wait, not sleep: ~33 ms of 1 MHz active current (~1 mA) is ~33 uC per read, against
+ * the 5.6 mC/hour the ungated divider burned -- so the gate still wins by ~2 orders of
+ * magnitude at any plausible event rate. Sleeping through the settle is the obvious next
+ * refinement (same lever the EEPROM-write busy-wait already has open in the notes). */
 
 /* ---- supercap-state sense on PD1 (AEM10300 STO via divide-by-3) ----
  * VS is now the regulated 3.3 V LDO output (constant), so the old VDD/10 read no longer tracks
@@ -237,10 +265,23 @@
  * circuit voltage: "the voltage on SRC is regulated by an internal Maximum Power
  * Point Tracking (MPPT) module ... as a given fraction of the open-circuit voltage"
  * (AEM10300 sec 8.4), the fraction being R_ZMPP = V_MPP/V_OC, set by the R_MPP[2:0]
- * straps. This board straps R_MPP[2:0] = H,L,L (read off the .kicad_pcb: R_MPP2 ->
- * VINT, R_MPP1 -> GND, R_MPP0 -> GND) = 80% (Table 9).
+ * straps. This board straps R_MPP[2:0] = L,H,L (read off the .kicad_pcb: R_MPP2 ->
+ * GND, R_MPP1 -> VINT, R_MPP0 -> GND) = 70% (Table 9).
  *
- * So while CHARGING, SRC = 0.80 x Voc. Reaching 3600 mV would need Voc >= 4500 mV,
+ * WAS H,L,L = 80% until 2026-08-09. 80% is exactly right for this panel AT STC --
+ * the SM141K06TF's own Vmp/Voc is 3.35/4.15 = 80.7% -- but that is a FULL-SUN number,
+ * and this card is designed for room light. Vmp/Voc tracks fill factor, and measured
+ * mono-Si fill factor collapses from 59-67% at 7200 lux to 36-42% at 220 lux, which
+ * drags the true MPP well below 80% of Voc indoors. Operating ABOVE the true Vmp is
+ * the expensive side of the curve (current falls off a cliff there; below Vmp you are
+ * in the near-constant-current region and lose roughly linearly), so the error is
+ * asymmetric and 80% sat on the wrong side of it in the design condition. 70% is one
+ * conservative step: a real move toward the indoor optimum that is still defensible in
+ * sun, where there is surplus anyway. It is an INFERENCE, not a measurement -- the
+ * bench item that settles it is Vmp/Voc at 200 and 500 lux, the same sweep TODO.md
+ * already wants for SWEEP_SUN_VIN_MV.
+ *
+ * So while CHARGING, SRC = 0.70 x Voc. Reaching 3600 mV would need Voc >= 5143 mV,
  * above the SM141K06TF's 4.15 V Voc -- so in ordinary charging this threshold is
  * UNREACHABLE in any light, however bright. It trips in only two situations:
  *   1. Caps full. At VOVCH the DCDC stops and "the SRC pin is set to high impedance"
@@ -400,11 +441,23 @@
  * assert is unsourced AND contradicts the range asserted for the SAME node in the
  * SWEEP_SUN_VIN_MV block above ("indoor VIN ~0.8-2.1 V") by about 3x once you account for
  * pin-vs-node. Neither figure has a measurement behind it. What IS sourced is the shape:
- * while the AEM is charging it holds SRC at 0.80 x Voc (R_MPP straps; see the
+ * while the AEM is charging it holds SRC at 0.70 x Voc (R_MPP straps; see the
  * SWEEP_SUN_VIN_MV block), and Voc rises with illumination, so this threshold is a
  * genuine dark/light discriminator even though its exact trip point is a guess. Both
- * ranges are bench items; do not quote either as fact. */
-#define LIGHT_THRESH_MV    400
+ * ranges are bench items; do not quote either as fact.
+ *
+ * RESCALED 400 -> 350 on 2026-08-09 with the R_MPP 80% -> 70% strap change, and this
+ * is a correction, not a re-tune. While charging VSENSE = (R_MPP ratio) x Voc / 2, so
+ * dropping the ratio drops this node 12.5% for the SAME illumination. Left at 400 the
+ * card would silently have needed ~2.5x more light to call itself "lit" (Voc moves only
+ * ~360 mV per decade of illumination across these 6 series cells, so a 143 mV shift in
+ * the implied Voc trip is a large light change). 400 x 70/80 = 350 holds the trip at the
+ * same Voc -- i.e. the same actual light level -- as before the strap moved.
+ * NOTE this scaling applies ONLY to thresholds read while CHARGING. SWEEP_SUN_VIN_MV is
+ * deliberately NOT rescaled: both of its trip paths (caps full -> SRC high-Z, and the
+ * MPP evaluation window) put the RAW Voc on the pin with the ratio out of circuit, so
+ * it is unaffected by the strap. */
+#define LIGHT_THRESH_MV    350
 
 /* baseline poll period (option B), seconds (RTC PIT). 1 or 2. */
 #define POLL_PERIOD_S      1
@@ -491,8 +544,19 @@
 #  error "USE_FACEDOWN_DEEPSLEEP needs USE_FACEDOWN_DORMANT: dormancy is what detects face-down and drives both transitions. Turn both off, or both on."
 #endif
 
-/* R1-R4 ballast power guard: clamp the glow duty when STO sits above GLOW_CLAMP_STO_MV.
- * The ballasts are AC0402FR-07150RL (0402, 1/16 W = 62.5 mW). Worst DC corner from the
+/* RN1 ballast power guard: clamp the glow duty when STO sits above GLOW_CLAMP_STO_MV.
+ * The ballast is RN1 -- ONE Panasonic EXB-28V151JX 4-element array (0804 convex) since the
+ * 2026-08-07 consolidation, NOT the four discrete AC0402FR-07150RL this comment named until
+ * 2026-08-09. Every number below survives that swap unchanged, which is why it went unnoticed:
+ * an EXB28V element is rated 0.063 W at 70 C, the same 1/16 W the discretes carried (Panasonic
+ * AOC0000C14). What DID change is that four elements now dissipate into one 2.0 x 1.0 mm body.
+ * Panasonic publishes no PACKAGE total for EXB28V (it prints one for EXB18V and EXB2HV, so the
+ * silence is deliberate); the structural twin -- Bourns CAY10-xxxJ4, same convex 0804, same
+ * 62.5 mW/element -- publishes 0.250 W/package, i.e. exactly 4x per-element, no package
+ * derating in this geometry. At the clamp that leaves 4 x 61.8 = 247 mW against 250 mW, ~1%.
+ * The convex termination is load-bearing for that: the CONCAVE 0804 equivalent (EXBN8V /
+ * CAT10) is rated half, 31 mW/element, where these currents would be ~118% of rating.
+ * Worst DC corner from the
  * PCB audit: STO 5.5 V (the supercap RATING -- the AEM's own VOVCH ceiling is 4.65 V, so
  * this corner needs an external/bench supply or abuse, never normal harvest), min-bin
  * Vf 1.9 V (LA P47F 3B bin), VOL ~0.4 V -> I ~21 mA -> ~68-70 mW at 100% duty = ~110%
@@ -501,7 +565,12 @@
  * the worst-corner AVERAGE stays under rating (70 mW x 225/255 = 61.8 mW < 62.5 mW).
  * Applied inside sense_glow_peak(), the one chokepoint every glow's peak passes through
  * (main.c routes the sweep peak through it too). Free: the STO read is already in hand.
- * 1 = on. Alternative if the board is ever re-laid: 0402 -> 0603 (0.1 W) ballasts. */
+ * 1 = on. Alternative if the board is ever re-laid: EXB-38V151JV -- same family, same
+ * 0.063 W/element, same AEC-Q200 Grade 1 and tape, but a 1206 body with 2.56x the substrate
+ * area (5.12 vs 2.00 mm2) purely for thermal headroom; re-check its element pairing against
+ * RN1's 1-8/2-7/3-6/4-5. (Panasonic's only higher-per-element array, EXB-S8V151J at 0.100 W,
+ * is non-AEC, a concave land, and 19-week lead / 10k minimum.) This line read "0402 -> 0603
+ * (0.1 W) ballasts" until 2026-08-09 -- the discrete-era answer, which no longer applies. */
 #define USE_BALLAST_GUARD   1
 #define GLOW_CLAMP_STO_MV   5200   /* above this STO, clamp duty (VOVCH 4.65 V never trips it) */
 #define GLOW_CLAMP_PEAK     225    /* max peak while clamped: 70 mW x 225/255 < 62.5 mW rating  */

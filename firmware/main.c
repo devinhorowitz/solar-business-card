@@ -154,7 +154,11 @@ static void gpio_init(void)
     ENSTOCH_PORT.OUTCLR = ENSTOCH_PIN_bm;    /* gate low = charging enabled */
     ENSTOCH_PORT.DIRSET = ENSTOCH_PIN_bm;    /* push-pull from here on */
     PORTA.PIN5CTRL = PORT_PULLUPEN_bm;   /* PA5/BTN no-fit button pin: pull-up is the active-low hold for a future PA5->GND switch */
-    PORTC.PIN0CTRL = PORT_PULLUPEN_bm;   /* PC0 spare, unrouted */
+    /* PC0 = SNS_EN, the STO sense-divider gate (U10). Output, driven LOW = divider
+     * disconnected. No pull-up: it is a driven output now, and U10's own smart pulldown
+     * covers the window where this pin tristates during reset/UPDI. */
+    SNS_EN_PORT.OUTCLR = SNS_EN_PIN_bm;
+    SNS_EN_PORT.DIRSET = SNS_EN_PIN_bm;
     PORTC.PIN1CTRL = PORT_PULLUPEN_bm;   /* PC1 spare, unrouted */
     PORTD.PIN0CTRL = PORT_PULLUPEN_bm;   /* PD0/3-7 unused      */
     PORTD.PIN1CTRL = PORT_ISC_INPUT_DISABLE_gc;   /* PD1 = AIN1 STO_SNS analog in (R15/R16 divider) */

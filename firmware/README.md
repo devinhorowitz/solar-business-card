@@ -117,7 +117,7 @@ cd firmware
 make DFP=/path/to/Microchip/AVR-Ex_DFP/<version>
 ```
 Produces `solar-glow.hex`; the `avr-size` line reports usage (the part has 64 KB
-flash / 6 KB RAM, so this firmware — 4,938 B flash, 29 B RAM (4930 text + 8 data +
+flash / 6 KB RAM, so this firmware — 4,978 B flash, 29 B RAM (4970 text + 8 data +
 21 bss, measured 2026-08-02 after the audit-findings batch: ADC time bound,
 accel data-valid window, wear-levelled tap ring, clean bus-clear STOP, ballast
 guard, dark dormancy and face-down deep sleep) — leaves room to spare).
@@ -219,7 +219,8 @@ AVR64EA28, VQFN-28, on the **back** of the board.
 | 8 | PC2 | SDA | TWI0 host (PORTMUX **ALT2**), ext 4.7k → VS |
 | 9 | PC3 | SCL | TWI0 host (ALT2), ext 4.7k → VS |
 | 10 | PD0 | VDDIO2 | plain EA GPIO on the DD's old VDDIO2 pad; `SJ1` deleted outright 2026-07-30, but `C3` (100 nF → GND, the DD-era decoupler) still hangs on the net — no DC hold, so the internal pull-up in `gpio_init` still does that job (and charges C3 once at boot). *(This row said "SJ1 = DNP, so the pin floats" until the 2026-08-01 pressure test — doubly stale.)* |
-| 11 | PD1 | STO_SNS | supercap sense: STO/3 (R15/R16) into ADC AIN1 |
+| 6 | PC0 | SNS_EN | **STO sense-divider gate** (2026-08-09): drives `U10` (TPS22916C) ON, active-HIGH; init LOW = divider disconnected. R15/R16 only draw from the tank while a conversion is in flight. High-side by necessity — gating the low leg would float `STO_SNS` to STO and forward-bias PD1's ESD clamp. No external pulldown: the TPS22916's smart ON pulldown (750 kΩ, auto-disconnecting) covers the reset/UPDI tristate window. |
+| 11 | PD1 | STO_SNS | supercap sense: STO/3 (R15/R16) into ADC AIN1 — **gated by `SNS_EN`/PC0**, C24 = 10 nF for a ~33 ms settle |
 | 12 | PD2 | VSENSE | light/rail sense: ADC AIN2 + AC0 AINP0 |
 | 20 | PF0 | INT1 | accel tap in (rising) |
 | 21 | PF1 | INT2 | accel motion in (rising) |
@@ -232,7 +233,7 @@ LEDs are **low-side**: each lights when its PA pin pulls LOW, current set by a
 (4.65−2.25)/150, STO topping at the AEM10300 VOVCH of 4.65 V). PWM only trims the
 average below that ballasted ceiling. The only D-parts on the v4 board are the LEDs D2–D5.
 
-Spare/free: PC0, PC1 (**deliberately unrouted — no breakout**); PA5 (`BTN`, no-fit button pin — see *Behaviour*);
+Spare/free: PC1 (**deliberately unrouted — no breakout**); PA5 (`BTN`, no-fit button pin — see *Behaviour*);
 PD3–PD7, PF6/RST. (PA6 = NFC `FD`, PA7 = `NFC_EN`.) All of these unused pins
 get internal pull-ups in `gpio_init` so a floating input can't leak current — see
 *Power notes*.
@@ -455,7 +456,7 @@ sleep-current question the old design flagged is **closed in code**; the bench
 run now just *confirms* it (expect the analog domain to be a rounding error in
 power-down) rather than deciding whether there is a bug to gate.
 
-**Unused pins don't float.** Every pin the firmware doesn't drive - PA5, PC0,
+**Unused pins don't float.** Every pin the firmware doesn't drive - PA5,
 PC1 and the PORTD spares — is given an internal pull-up in `gpio_init` (PD2, the
 analog sense pin, instead has its digital input buffer disabled). A floating CMOS
 input draws shoot-through current in its input buffer whenever it drifts near
@@ -681,8 +682,10 @@ both the light and strong-sun predicates (`sense_vin_flags()`, raw-count, no mV 
   `USE_DOUBLE_TAP` either way.
 - **`USE_BALLAST_GUARD`** (0/1, default 1) **/ `GLOW_CLAMP_STO_MV`** (5200) **/
   `GLOW_CLAMP_PEAK`** (225): clamp every glow's peak duty when STO sits above 5.2 V, so the
-  0402 1/16 W ballasts R1–R4 stay under rating even at the abuse corner (STO at the 5.5 V
-  supercap rating × min-bin V<sub>f</sub> × 100 % duty ≈ 110 % of rating). Normal harvest
+  four 1/16 W elements of **RN1** (the `EXB-28V151JX` array — the discrete R1–R4 this line
+  named until 2026-08-09 left with the 2026-08-07 consolidation; the per-element rating is
+  identical, so the guard's numbers did not move) stay under rating even at the abuse corner
+  (STO at the 5.5 V supercap rating × min-bin V<sub>f</sub> × 100 % duty ≈ 110 % of rating). Normal harvest
   never trips it — the AEM's VOVCH ceiling is 4.65 V — it is insurance for bench supplies
   and over-voltage, applied in `sense_glow_peak()` (the sweep now routes through it too).
 - **Core clock** is 1 MHz OSCHF (`clocks_init`, see Robustness for the why and the

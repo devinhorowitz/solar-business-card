@@ -26,6 +26,7 @@
 #include <avr/sleep.h>
 #include "board.h"
 #include "sense.h"
+#include <util/delay.h>
 
 /* ADC reference -> mV per LSb at 12-bit = ADC_VREF_MV/4096. Every threshold in
  * this file is folded from this constant at compile time, so the reference and
@@ -90,9 +91,10 @@ void sense_adc_init(void)
     ADC0.CTRLC   = ADC_REFSEL_2V048_gc;
 
     /* Long sample time. NOTE the often-quoted reason -- "the 1M//1M divider is
-     * ~500k source impedance" -- is NOT what governs here: BOTH analog nodes carry a
-     * 100 nF reservoir (C5 on VSENSE, C24 on STO_SNS, verified against the board), and
-     * 100 nF utterly dominates the few-pF sample capacitor, so charge sharing settles
+     * ~500k source impedance" -- is NOT what governs here: both analog nodes carry a
+     * reservoir cap (C5 = 100 nF on VSENSE; C24 = 10 nF on STO_SNS since the 2026-08-09
+     * divider gate -- shrunk so the GATED divider settles in ~33 ms rather than ~335 ms,
+     * and still ~2000x the few-pF sample capacitor), so charge sharing settles
      * in well under a microsecond regardless of the divider. The real reasons to keep
      * SAMPDUR = 31 (62 us) are that it costs nothing at a 1 Hz poll and that the temp
      * sensor REQUIRES >= 32 us (DS40002443 31.3.3.7). The higher-impedance channel is
@@ -216,12 +218,28 @@ uint8_t sense_vin_flags(void)
     return f;
 }
 
+/* ---------- STO sense-divider gate (U10 on SNS_EN/PC0) ----------
+ * R15/R16 only exist while we convert. Deliberately STATELESS -- enable, settle, read,
+ * disable, every time -- so no caller can be ordered wrong and silently read a divider
+ * that was never switched on. The cost is one STO_SNS_SETTLE_MS per read; STO reads are
+ * event-driven (a glow is about to run for seconds), never on the 1 Hz poll path, so the
+ * duty cycle a card in a drawer sees is ZERO. See board.h SNS_EN_PORT for why the gate is
+ * high-side and why no external pulldown is needed. */
+static uint16_t sto_raw(void)
+{
+    SNS_EN_PORT.OUTSET = SNS_EN_PIN_bm;      /* divider connected to STO */
+    _delay_ms(STO_SNS_SETTLE_MS);            /* C24 through the 667k Thevenin, 5 tau */
+    uint16_t raw = adc_read_raw(STO_SNS_AIN);
+    SNS_EN_PORT.OUTCLR = SNS_EN_PIN_bm;      /* back to zero tank draw */
+    return raw;
+}
+
 uint16_t sense_vdd_mv(void)
 {
     /* v4: VS is now the regulated LDO rail (constant), so read the supercap top STO
      * instead -- via the R15/R16 (2M/1M) divider on PD1/AIN1 (pin sees STO/STO_DIVIDER).
      * Same divider-pin form as sense_vin_mv(): STO_mv = pin_mv * STO_DIVIDER. */
-    uint32_t res = adc_read_raw(STO_SNS_AIN);               /* PD1/AIN1 = STO / STO_DIVIDER */
+    uint32_t res = sto_raw();               /* PD1/AIN1 = STO / STO_DIVIDER */
     uint32_t mv  = (res * ADC_VREF_MV) >> 12;
     return (uint16_t)(mv * STO_DIVIDER);                    /* undo the divider -> STO mV */
 }
@@ -237,7 +255,7 @@ uint8_t sense_rail_ok(void)
 {
     /* raw STO-divider (PD1/AIN1) count vs compile-time floor -- same result as sense_vdd_mv() >= floor,
      * same fail-safe (a stuck ADC reads 0 -> not ok -> no glow). */
-    return (adc_read_raw(STO_SNS_AIN) >= RAIL_COUNT) ? 1u : 0u;
+    return (sto_raw() >= RAIL_COUNT) ? 1u : 0u;
 }
 
 /* Caps-full gate for the in-sun sweep: STO at/above SWEEP_CAPS_FULL_MV. Same STO-divider
@@ -249,7 +267,7 @@ uint8_t sense_rail_ok(void)
 
 uint8_t sense_caps_full(void)
 {
-    return (adc_read_raw(STO_SNS_AIN) >= CAPS_FULL_COUNT) ? 1u : 0u;
+    return (sto_raw() >= CAPS_FULL_COUNT) ? 1u : 0u;
 }
 
 /* EEPROM write-safety gate: rail at/above EE_WRITE_FLOOR_MV, so a ~4 ms EEPROM write can start and
@@ -263,7 +281,7 @@ uint8_t sense_caps_full(void)
 
 static uint8_t sense_ee_safe(void)
 {
-    return (adc_read_raw(STO_SNS_AIN) >= EE_SAFE_COUNT) ? 1u : 0u;
+    return (sto_raw() >= EE_SAFE_COUNT) ? 1u : 0u;
 }
 
 /* ---------- rail-adaptive glow brightness (brownout stretch) ---------- */
@@ -282,10 +300,10 @@ uint8_t sense_glow_peak(uint8_t peak)
     uint16_t mv = sense_vdd_mv();
     if (mv < VS_GLOW_FLOOR_MV) return 0;                      /* below floor: dark, let it charge */
 #if USE_BALLAST_GUARD
-    /* HIGH-side clamp (the R1-R4 audit item): at an abuse-corner STO (bench
+    /* HIGH-side clamp (the RN1 audit item): at an abuse-corner STO (bench
      * supply, over-voltage -- the AEM's own VOVCH 4.65 V never reaches the
-     * threshold) a held 100% duty into a min-Vf LED pushes the 0402 1/16 W
-     * ballasts to ~110% of rating. Cap the duty so worst-corner average power
+     * threshold) a held 100% duty into a min-Vf LED pushes RN1's 1/16 W
+     * elements to ~110% of rating. Cap the duty so worst-corner average power
      * stays under 62.5 mW; see GLOW_CLAMP_STO_MV in board.h for the numbers.
      * Costs nothing here -- the STO read is already in hand. */
     if (mv > GLOW_CLAMP_STO_MV && peak > GLOW_CLAMP_PEAK)

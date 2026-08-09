@@ -1933,8 +1933,11 @@ OPAQUE_PN_LEDGER = {
     ("AC0402FR-071ML", "YAG3450CT-ND"),          # R14/17/18  Yageo catalog code
     # R10/R11's ("AC0402FR-074K7L", "YAG3497CT-ND") left 2026-08-08 with the RN2
     # consolidation; R5/R6 left the RT0603 pair the same day for the 2M MCT bump
-    # (541-MCT0603MD2004BP500CT-ND is self-describing, no entry needed):
-    ("RT0603BRD071ML", "YAG4498CT-ND"),          # R16        Yageo catalog code
+    # (541-MCT0603MD2004BP500CT-ND is self-describing, no entry needed). R16's
+    # ("RT0603BRD071ML", "YAG4498CT-ND") left 2026-08-09 for the same reason: it moved to
+    # MCT0603MD1004BP500 so both legs of the STO divider share one film system, and
+    # 541-MCT0603MD1004BP500CT-ND is self-describing too. The whole divider is now
+    # opaque-free -- which is the direction this ledger wants to shrink in.
     ("BLM18PG221SN1D", "490-5221-1-ND"),         # FB1        DigiKey legacy numeric
     # C25's TDK pair ("C2012X5R1C226M125AC", "445-7647-1-ND") left 2026-08-06 with the
     # low-profile-1206 re-pick; its GRM319 successor's P/N is self-describing. C26/C27's

@@ -78,9 +78,18 @@ COLORS = {
     "SCHURTER_SCPC_WS17": ((0.580, 0.590, 0.610), "supercap, bare aluminium can"),
     "SCHURTER_SCPC_SS17": ((0.580, 0.590, 0.610), "supercap, bare aluminium can"),
 
-    # Indoor amorphous-Si PV. Very dark blue-black -- an indoor cell absorbs almost everything
-    # it can see, which is the point of it.
-    "SM141K06TF":         ((0.045, 0.055, 0.090), "indoor PV cell, dark blue-black a-Si"),
+    # MONOCRYSTALLINE silicon (ANYSOLAR IXOLAR SolarMD). This said "indoor amorphous-Si PV"
+    # until 2026-08-09 and was wrong on BOTH counts, in the inverted direction: c-Si is not
+    # a-Si, and it is the WRONG absorber for room light, not a cell chosen for it. ~35-40% of
+    # its photocurrent comes from beyond 700 nm, where LED and fluorescent lighting emit
+    # essentially nothing, and at indoor irradiance its fill factor collapses (measured
+    # mono-Si: 59-67% at 7200 lux -> 36-42% at 220 lux). ANYSOLAR publishes NO indoor or
+    # low-lux data for any IXOLAR part -- the "low light" line is marketing with no datasheet
+    # behind it. Kept as a comment rather than deleted because a render colour table is
+    # exactly where a wrong part story survives unchallenged.
+    # The COLOUR is unchanged and still correct: an AR-coated mono cell is near-black with a
+    # blue cast, which is what these numbers say.
+    "SM141K06TF":         ((0.045, 0.055, 0.090), "monocrystalline PV cell, dark blue-black"),
 
     # The C25-C27 low-profile 1206 (2026-08-06): fired-ceramic MLCC body, light tan. Exported
     # with this colour by make_3d_models.py; recorded here so check [10] gates it like the rest.

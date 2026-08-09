@@ -11486,7 +11486,7 @@
 			)
 		)
 	)
-	(global_label "PC0"
+	(global_label "SNS_EN"
 		(shape bidirectional)
 		(at 204.47 63.5 0)
 		(effects
@@ -11955,7 +11955,7 @@
 			)
 		)
 	)
-	(global_label "VINT"
+	(global_label "GND"
 		(shape passive)
 		(at 454.66 407.67 0)
 		(effects
@@ -12896,7 +12896,7 @@
 			)
 		)
 	)
-	(global_label "GND"
+	(global_label "VINT"
 		(shape bidirectional)
 		(at 454.66 412.75 0)
 		(effects
@@ -13388,7 +13388,7 @@
 			)
 		)
 	)
-	(global_label "STO"
+	(global_label "STO_SNS_PWR"
 		(shape bidirectional)
 		(at 759.46 372.11 0)
 		(effects
@@ -15913,7 +15913,270 @@
 				)
 			)
 		)
+	)	(symbol
+		(lib_id "solarglow:U6_TPS22916")
+		(at 650.24 160.02 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "b0eb117e-8c4a-48e9-a0da-2f72211c03aa")
+		(property "Reference" "U10"
+			(at 661.67 160.02 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "TPS22916C"
+			(at 661.67 165.1 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "solarglow:TPS22916_YFP0004"
+			(at 661.67 170.18 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" "SLVSDO5F"
+			(at 650.24 160.02 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "STO sense-divider gate: high-side load switch, so R15/R16 draw from the tank only during a conversion"
+			(at 650.24 160.02 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "MPN" "TPS22916CYFPR"
+			(at 650.24 160.02 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Manufacturer" "Texas Instruments"
+			(at 459.74 455.93 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Supplier" "DigiKey"
+			(at 459.74 455.93 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Supplier P/N" "296-50065-1-ND"
+			(at 459.74 455.93 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "KiLib_Generator" "package/gullwing"
+			(at 650.24 160.02 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "A1"
+			(uuid "9bc1cec4-e901-4b5e-b91b-5667d0bd1f9f")
+		)
+		(pin "A2"
+			(uuid "e505484a-f6d8-4f29-b991-21ecdb8b0c89")
+		)
+		(pin "B1"
+			(uuid "c2847645-db5c-4eaf-a747-52a380fd7dca")
+		)
+		(pin "B2"
+			(uuid "53913966-774e-4f3e-9965-ffc9f244e816")
+		)
+		(instances
+			(project "solar-glow-drh-v4_0"
+				(path "/bf17630f-b49b-49a7-9335-83fa0a7a44d0"
+					(reference "U10")
+					(unit 1)
+				)
+			)
+		)
+	)	(global_label "STO"
+		(shape bidirectional)
+		(at 645.16 160.02 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "5d4e7138-d25e-47f8-93df-4c667ece7889")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 645.16 81.28 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 	)
+	(wire
+		(pts
+			(xy 645.16 160.02) (xy 650.24 160.02)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "72c19bef-23d1-4107-b6fb-8a1f906728bf")
+	)
+	(global_label "GND"
+		(shape bidirectional)
+		(at 645.16 165.1 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "a036abd1-fb57-4560-ac27-7593d6ded191")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 645.16 81.28 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
+	(wire
+		(pts
+			(xy 645.16 165.1) (xy 650.24 165.1)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "73cee6f4-c3d3-48ee-829b-6982e1f4e12e")
+	)
+	(global_label "SNS_EN"
+		(shape bidirectional)
+		(at 645.16 170.18 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "a0020013-7fcb-40e1-9fc8-91afc3571b4f")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 645.16 81.28 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
+	(wire
+		(pts
+			(xy 645.16 170.18) (xy 650.24 170.18)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "54343194-d753-461a-8e7d-a9de83669567")
+	)
+	(global_label "STO_SNS_PWR"
+		(shape bidirectional)
+		(at 645.16 185.42 0)
+		(effects
+			(font
+				(size 1 1)
+			)
+		)
+		(uuid "03763000-8e4f-4081-8b95-5e5998d1b632")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 645.16 81.28 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+	)
+	(wire
+		(pts
+			(xy 645.16 185.42) (xy 650.24 185.42)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "b6981cdc-8595-41ba-a825-934b0d02179c")
+	)
+
 	(symbol
 		(lib_id "solarglow:C3")
 		(at 410.21 281.94 0)
@@ -18112,7 +18375,7 @@
 				)
 			)
 		)
-		(property "Description" "1M 0603 thin film 0.1% 25ppm, STO sense divider bottom (STO_SNS->GND)"
+		(property "Description" "1M 0603 thin film 0.1% 25ppm, STO sense divider bottom (STO_SNS->GND); Vishay MC AT to share R15's film system"
 			(at 795.02 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -18122,7 +18385,7 @@
 				)
 			)
 		)
-		(property "MPN" "RT0603BRD071ML"
+		(property "MPN" "MCT0603MD1004BP500"
 			(at 795.02 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -18132,7 +18395,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "Yageo"
+		(property "Manufacturer" "Vishay"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -18154,7 +18417,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "YAG4498CT-ND"
+		(property "Supplier P/N" "541-MCT0603MD1004BP500CT-ND"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -18204,7 +18467,7 @@
 				)
 			)
 		)
-		(property "Value" "100nF"
+		(property "Value" "10nF"
 			(at 745.06 382.27 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -18234,7 +18497,7 @@
 				)
 			)
 		)
-		(property "Description" "100 nF X7R decoupling"
+		(property "Description" "10 nF X7R ADC reservoir on STO_SNS -- sized so the GATED divider settles in ~33 ms, not ~335 ms"
 			(at 734.06 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -18244,7 +18507,7 @@
 				)
 			)
 		)
-		(property "MPN" "GRT155R71H104KE01D"
+		(property "MPN" "GRT155R71H103KE01D"
 			(at 734.06 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -18276,7 +18539,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "490-GRT155R71H104KE01DCT-ND"
+		(property "Supplier P/N" "490-GRT155R71H103KE01DCT-ND"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
