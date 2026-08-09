@@ -928,7 +928,15 @@ Three genuine contenders, each winning a different axis:
   without stressing the cells.
 - **Dark power:** IQ **~6 nA** on STO (DS Table 5) -- ~80x better than BQ (488 nA), ~300x the NEH7100 (2 µA).
 - **SRC compatibility (the EM8504 killer, re-checked):** SRC abs max **5.5 V**, operating VSRC to 4.5 V --
-  our 4.15 V panels fit with margin. `R_MPP[2:0] = HLL` sets 80% Voc, the right ratio for silicon.
+  our 4.15 V panels fit with margin. `R_MPP[2:0] = LHL` sets **70% Voc** (2026-08-09; was `HLL`
+  = 80%). 80% is the right ratio for silicon **at STC** — the SM141K06TF's own Vmp/Voc is
+  3.35/4.15 = 80.7% — but that is a full-sun figure and this card is designed for room light,
+  where fill factor collapses (measured mono-Si: 59–67% at 7200 lux → 36–42% at 220 lux) and
+  drags the true MPP well below 80% of Voc. The error is asymmetric — above Vmp the current
+  falls off a cliff, below it you lose roughly linearly — so 80% sat on the expensive side in
+  the design condition. 70% is one conservative step, still defensible in sun. **Inference, not
+  measurement**: the bench item that settles it is Vmp/Voc at 200 and 500 lux. `firmware/board.h`
+  carries the full derivation and the coupled `LIGHT_THRESH_MV` rescale (400 → 350).
 - **The one weak axis -- noise:** the DCDC switches at **>=10 MHz** (DS §9.8.2), near the 13.56 MHz NFC band.
   Handled by layout + gating (below), not by rejecting the part.
 

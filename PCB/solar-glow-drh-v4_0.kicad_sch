@@ -11955,7 +11955,7 @@
 			)
 		)
 	)
-	(global_label "VINT"
+	(global_label "GND"
 		(shape passive)
 		(at 454.66 407.67 0)
 		(effects
@@ -12896,7 +12896,7 @@
 			)
 		)
 	)
-	(global_label "GND"
+	(global_label "VINT"
 		(shape bidirectional)
 		(at 454.66 412.75 0)
 		(effects

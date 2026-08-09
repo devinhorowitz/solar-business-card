@@ -237,10 +237,23 @@
  * circuit voltage: "the voltage on SRC is regulated by an internal Maximum Power
  * Point Tracking (MPPT) module ... as a given fraction of the open-circuit voltage"
  * (AEM10300 sec 8.4), the fraction being R_ZMPP = V_MPP/V_OC, set by the R_MPP[2:0]
- * straps. This board straps R_MPP[2:0] = H,L,L (read off the .kicad_pcb: R_MPP2 ->
- * VINT, R_MPP1 -> GND, R_MPP0 -> GND) = 80% (Table 9).
+ * straps. This board straps R_MPP[2:0] = L,H,L (read off the .kicad_pcb: R_MPP2 ->
+ * GND, R_MPP1 -> VINT, R_MPP0 -> GND) = 70% (Table 9).
  *
- * So while CHARGING, SRC = 0.80 x Voc. Reaching 3600 mV would need Voc >= 4500 mV,
+ * WAS H,L,L = 80% until 2026-08-09. 80% is exactly right for this panel AT STC --
+ * the SM141K06TF's own Vmp/Voc is 3.35/4.15 = 80.7% -- but that is a FULL-SUN number,
+ * and this card is designed for room light. Vmp/Voc tracks fill factor, and measured
+ * mono-Si fill factor collapses from 59-67% at 7200 lux to 36-42% at 220 lux, which
+ * drags the true MPP well below 80% of Voc indoors. Operating ABOVE the true Vmp is
+ * the expensive side of the curve (current falls off a cliff there; below Vmp you are
+ * in the near-constant-current region and lose roughly linearly), so the error is
+ * asymmetric and 80% sat on the wrong side of it in the design condition. 70% is one
+ * conservative step: a real move toward the indoor optimum that is still defensible in
+ * sun, where there is surplus anyway. It is an INFERENCE, not a measurement -- the
+ * bench item that settles it is Vmp/Voc at 200 and 500 lux, the same sweep TODO.md
+ * already wants for SWEEP_SUN_VIN_MV.
+ *
+ * So while CHARGING, SRC = 0.70 x Voc. Reaching 3600 mV would need Voc >= 5143 mV,
  * above the SM141K06TF's 4.15 V Voc -- so in ordinary charging this threshold is
  * UNREACHABLE in any light, however bright. It trips in only two situations:
  *   1. Caps full. At VOVCH the DCDC stops and "the SRC pin is set to high impedance"
@@ -400,11 +413,23 @@
  * assert is unsourced AND contradicts the range asserted for the SAME node in the
  * SWEEP_SUN_VIN_MV block above ("indoor VIN ~0.8-2.1 V") by about 3x once you account for
  * pin-vs-node. Neither figure has a measurement behind it. What IS sourced is the shape:
- * while the AEM is charging it holds SRC at 0.80 x Voc (R_MPP straps; see the
+ * while the AEM is charging it holds SRC at 0.70 x Voc (R_MPP straps; see the
  * SWEEP_SUN_VIN_MV block), and Voc rises with illumination, so this threshold is a
  * genuine dark/light discriminator even though its exact trip point is a guess. Both
- * ranges are bench items; do not quote either as fact. */
-#define LIGHT_THRESH_MV    400
+ * ranges are bench items; do not quote either as fact.
+ *
+ * RESCALED 400 -> 350 on 2026-08-09 with the R_MPP 80% -> 70% strap change, and this
+ * is a correction, not a re-tune. While charging VSENSE = (R_MPP ratio) x Voc / 2, so
+ * dropping the ratio drops this node 12.5% for the SAME illumination. Left at 400 the
+ * card would silently have needed ~2.5x more light to call itself "lit" (Voc moves only
+ * ~360 mV per decade of illumination across these 6 series cells, so a 143 mV shift in
+ * the implied Voc trip is a large light change). 400 x 70/80 = 350 holds the trip at the
+ * same Voc -- i.e. the same actual light level -- as before the strap moved.
+ * NOTE this scaling applies ONLY to thresholds read while CHARGING. SWEEP_SUN_VIN_MV is
+ * deliberately NOT rescaled: both of its trip paths (caps full -> SRC high-Z, and the
+ * MPP evaluation window) put the RAW Voc on the pin with the ratio out of circuit, so
+ * it is unaffected by the strap. */
+#define LIGHT_THRESH_MV    350
 
 /* baseline poll period (option B), seconds (RTC PIT). 1 or 2. */
 #define POLL_PERIOD_S      1

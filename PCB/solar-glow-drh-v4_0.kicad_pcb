@@ -3971,7 +3971,8 @@
 			(size 0.2 0.8)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
-			(net "VINT")
+			(net "GND")
+			(zone_connect 2)
 			(pinfunction "R_MPP2_8")
 			(pintype "passive")
 			(teardrops
@@ -3992,7 +3993,7 @@
 			(size 0.2 0.8)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
-			(net "GND")
+			(net "VINT")
 			(pinfunction "R_MPP1_9")
 			(pintype "passive")
 			(zone_connect 2)
@@ -28046,6 +28047,14 @@
 		)
 	)
 	(segment
+		(start 30.4 56)
+		(end 30.8 56)
+		(width 0.152)
+		(layer "B.Cu")
+		(net "VINT")
+		(uuid "c103efac-a603-4506-8170-bc88adb353e2")
+	)
+	(segment
 		(start 7.4 15.75)
 		(end 6.13363 17.0164)
 		(width 0.152)
@@ -34432,14 +34441,6 @@
 		(uuid "7d7f8f8a-c05b-4c18-8fcd-8d0ef4b6a949")
 	)
 	(segment
-		(start 30 56.687941)
-		(end 30.8 56.687941)
-		(width 0.152)
-		(layer "B.Cu")
-		(net "VINT")
-		(uuid "809b71b6-417b-4ce8-8d14-2f6ad4a855a5")
-	)
-	(segment
 		(start 35.965762 57.643612)
 		(end 36.205409 57.403965)
 		(width 0.152)
@@ -34488,14 +34489,6 @@
 		(uuid "b094fced-5586-43ac-9017-17f53b1aa478")
 	)
 	(segment
-		(start 30 56)
-		(end 30 56.356352)
-		(width 0.152)
-		(layer "B.Cu")
-		(net "VINT")
-		(uuid "b3dd515a-e0af-4f43-bfe5-b1896ed9dc08")
-	)
-	(segment
 		(start 36.205409 57.403965)
 		(end 36.205409 56.793839)
 		(width 0.152)
@@ -34526,14 +34519,6 @@
 		(layer "B.Cu")
 		(net "VINT")
 		(uuid "cb431964-e6fb-48ec-9fe3-ff80f62f6794")
-	)
-	(segment
-		(start 30 56.356352)
-		(end 30 56.687941)
-		(width 0.152)
-		(layer "B.Cu")
-		(net "VINT")
-		(uuid "cba7ee2e-c049-48ed-9b0d-64fed7800734")
 	)
 	(segment
 		(start 32.776475 57.570065)
