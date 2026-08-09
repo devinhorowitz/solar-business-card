@@ -103,11 +103,25 @@ def strip_models(src: str) -> tuple[str, int]:
 
 
 def strip_plating_stubs(src: str) -> tuple[str, int]:
-    """The two 0.4 mm F.Cu gr_line stubs that cross the outline at x = 25.4."""
+    """The two 0.4 mm plating-bus gr_line stubs that cross the outline at x = 25.4.
+
+    The LAYER IS READ FROM THE BOARD, never named here. This function hardcoded
+    `(layer "F.Cu")` until 2026-08-09, and the stubs had moved to B.Cu -- so it matched
+    nothing, removed nothing, and reported "removed 0 plating stubs" while the midnight
+    render (an OSH Park 1-up, which must not show the panel's bus) kept them. It failed
+    the way a wrong literal always fails here: quietly, with a plausible-looking log
+    line and no gate.
+
+    `panelize.stub_layer()` is the one reader of this fact -- check [19] already holds
+    the fab request to it, and the panel's tab spur already follows it. Third consumer,
+    same reader, so a future stub move cannot leave one of them behind.
+    """
+    from panelize import card_polygon, stub_layer
+    layer = stub_layer(src, card_polygon(src))
     spans = [
         (i, j)
         for i, j in sexpr_blocks(src, "gr_line")
-        if '(layer "F.Cu")' in src[i:j]
+        if f'(layer "{layer}")' in src[i:j]
         and re.search(r"\(start 25\.4 ", src[i:j])
         and re.search(r"\(end 25\.4 (-0\.4|89\.3)\)", src[i:j])
     ]
@@ -378,7 +392,45 @@ def build_input(name: str, spec: dict, workdir: Path) -> Path:
     shapes = BOARD.parent / "solarglow.3dshapes"
     if shapes.is_dir():
         shutil.copytree(shapes, workdir / shapes.name, dirs_exist_ok=True)
+    refill_zones(dest)
     return dest
+
+
+def refill_zones(pcb: Path) -> None:
+    """Fill the zones on the temp COPY before it is raytraced.
+
+    `kicad-cli pcb render` has no `--refill-zones`: it draws the fills as STORED in
+    the file. KiBot's `check_zone_fills` preflight covers DRC and the gerber plot and
+    then restores the board, so a zone committed without a `filled_polygon` is correct
+    in the fab output and INVISIBLE in every render -- silently, because check [9] only
+    asserts that an image came from a generator CI runs, never that the generator saw
+    current copper.
+
+    That is exactly what `GND_B_AVR_ISLAND` did on 2026-08-09: right gerbers, right
+    DRC, imagery of the previous board. Proven, not inferred -- same file and same
+    command rendered before and after a refill differ across 3.5% of the pixels in the
+    island window while a control region is BIT-IDENTICAL (max delta 0, so the
+    renderer itself is deterministic).
+
+    Filling here, rather than trusting whatever fill state was last saved, makes the
+    imagery a function of the routing and closes the class for every future zone edit.
+    Saving is safe *because this is a throwaway copy in a temp dir* -- pcbnew's writer
+    reformats ~26k lines of the source board, which is why `PCB/*.kicad_pcb` is never
+    round-tripped through it.
+
+    The `.kicad_dru` must already sit beside the copy when this runs (the loop above
+    puts it there). Zone fills back off every trace by the ruleset's clearance, so
+    filling without the board's own rules yields different -- looser, therefore
+    SMALLER -- copper: this island fills 20.91 mm2 under defaults vs 30.27 mm2 under
+    the board's rules.
+    """
+    import pcbnew
+    board = pcbnew.LoadBoard(str(pcb))
+    zones = list(board.Zones())
+    pcbnew.ZONE_FILLER(board).Fill(zones)
+    board.Save(str(pcb))
+    area = sum(z.GetFilledArea() for z in zones) / 1e12
+    print(f"  refilled {len(zones)} zones -> {area:,.1f} mm2 filled copper")
 
 
 def render(pcb: Path, out: Path, cam: list[str], w: int, h: int) -> bool:
@@ -409,6 +461,11 @@ def main() -> int:
 
     if not shutil.which("kicad-cli"):
         sys.exit("render: kicad-cli not found — this needs KiCad 10 (CI runs it in the KiBot image)")
+    try:
+        import pcbnew  # noqa: F401  — refill_zones needs it; fail now, not 12 min in
+    except ImportError:
+        sys.exit("render: the pcbnew Python module is not importable — needed to refill zones "
+                 "before rendering (see refill_zones). Same KiCad 10 install as kicad-cli.")
 
     OUTDIR.mkdir(parents=True, exist_ok=True)
     todo = {args.only: TARGETS[args.only]} if args.only else TARGETS
