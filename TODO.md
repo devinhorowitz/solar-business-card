@@ -632,6 +632,47 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
   GRM319 (0.95 mm max). The X7R→X5R trade is deliberate: no low-profile 10 µF true-X7R exists in
   ANY case size, and the supercaps cap the system at +85 °C — exactly X5R's window.
 - Board electrically frozen; PCB change = brace reprint, not shell re-machine.
+- **TWO LAYERS, 0.6 mm — locked 2026-08-10 after an adversarial re-examination. Cost is not the
+  reason, and "a dedicated ground plane cuts noise" does not survive contact with this board.**
+  The case for 4 layers is the standard one and it is sound in general. It fails here on three
+  board-specific facts, two of which a general grounding principle cannot see:
+  - **An inner plane sits IN THE LIGHT PATH.** `optical_window` is a copper keepout on **both**
+    F.Cu and B.Cu — **144.9 mm², 3.2 % of the board** — because D2–D5 are on B.Cu and backlight
+    the front monogram *through the bare FR4*. On 4 layers In1/In2 are physically between the LEDs
+    and the monogram: copper there means no glow. So the plane cannot be both dedicated and
+    continuous — it must carry the same **21.6 mm-wide slot across the middle of the card**, which
+    forces every north–south return in that band to detour around it. That is the exact
+    return-path discontinuity a ground plane exists to remove.
+  - **It fights the antenna, and read range is an OPEN first-article gate.** The coil is on B.Cu
+    and the board already spends ~**7 % of each face** holding copper off it (`NFC_COIL_KEEPOUT`
+    317 mm², `NFC_COIL_POUR_KEEPOUT` 330 mm²). At 0.6 mm total, inner layers sit **0.1–0.2 mm**
+    from the coil instead of 0.6 — worse coupling per unit area, on all four faces instead of two.
+    Four layers does nothing for the energy budget and actively threatens the coil; those are the
+    two gates the first article exists to close.
+  - **There is no noise for it to fix — and it would UNDERMINE the isolation that is already
+    there.** The fast content of this board is: an AVR at **1.25 MHz** on the internal oscillator
+    (no crystal), I²C at ~**100 kHz**, LED PWM at ~16 mA, a megohm DC sense divider — and exactly
+    one real source, the AEM10300's ≥10 MHz hash. That source is already handled by a LOCAL solid
+    island (`GND_B_DCDC_SOLID`) plus the LDO's **moated** island with a single-point tie and a
+    ferrite, whose whole purpose is to deny the hash a shared-copper path back in. A continuous
+    inner plane would hand it a low-impedance path to everywhere. For a board with one fast
+    circuit, local islands are the better topology, and they are built.
+
+  **Manufacturing, secondarily:** 0.6 mm is locked, so 4 layers means ~0.1 mm dielectrics — a
+  specialty tier, not a standard one, at all three fabs — and the triple-fab envelope
+  (PCBWay ∩ OSH Park ∩ JLC, in `PCB/solar-glow-drh-v4_0.kicad_dru`) was derived against **2-layer**
+  capability, so its drill/annular/spacing floors would need re-deriving. Selective hard gold
+  narrows the vendor set again. This is re-opening the manufacturing envelope, not paying more for
+  the same board. **Cost is the WEAKEST argument against it** — bare PCB is a small fraction of a
+  build carrying hard gold, titanium and assembly; if 4 layers were technically right it would be
+  worth buying.
+
+  **Reopen only on a measurement, and all three are available from the first article:** an EMC
+  pre-compliance failure traceable to ground (that item's measured half is still open); scope
+  evidence of AEM switching hash on `VS` or `STO_SNS`; or the design acquiring a genuinely fast
+  bus. A 10-card run is an INSTRUMENT — its job is to say what is actually wrong. Buying layers
+  now is insurance against an unobserved failure, bought by degrading a function already known to
+  be marginal.
 - Enclosure STEP stays **analytic-sharp**: r1.0 internal corners are a DRAWING
   spec; do **not** enable `tool_relief` (produces a faceted STEP the fab rejects).
 - East cavity lip pinched to 1.0 mm over y10–72 (NFC detune) — do not widen.
