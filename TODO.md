@@ -89,6 +89,28 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   glanceable desk answer to "can this light run the card?"). Sequence when picked up: fixture
   first (characterize V_mp), then set the blinker's window from it (its §5).
 
+- [ ] **[BENCH/CROSS-DOMAIN — first-article gate] Measure NFC read range, in the shell**
+  _(2026-08-09. Added when the U5 VOUT decline was Locked and its reopen condition turned out to
+  name a number nobody was scheduled to produce. Searching the tracker for "read range" returned
+  the Locked entry and nothing else.)_
+  The card's contact story is Locked as **offline-first**: the vCard is embedded in the tag and read
+  RF-powered with the supercap flat. That premise assumes a 13.56 MHz link that survives a ferrite
+  sheet and a **titanium** back shell, and no one has put a number on it. It is the second-riskiest
+  physics on the card after the energy budget, and unlike the energy budget it has no entry.
+  Measure, at bring-up, with the brace removable (already Locked as a requirement) and the C9 ladder
+  in play:
+  - **Baseline sweep:** bare board, then + ferrite, then + shell — max / lite / **air** (the air frame
+    is 316L specifically for the coil; this is the run that shows whether that choice paid).
+  - Report **millimetres of read distance** per configuration against 2–3 real phones, plus the
+    resonance the coil actually lands on. `scripts/nfc_coil.py --check` gives bare-copper L and a
+    predicted f0; the ferrite raises L ~1.3–1.5×. **The bench owns the real number** — this is the
+    measurement that closes that gap.
+  - Record the margin, not just pass/fail. Margin is what every future range-costing decision gets
+    judged against, and right now there is nothing to judge against.
+
+  **Gates:** the Locked `U5` VOUT decline reopens only on a margin figure from this; the C9 trim
+  value; and whether the air variant earns its existence.
+
 - [ ] **[BENCH — BLOCKS the pogo rig] The test plate has no hold-down, only registration**
   _(2026-08-04. Raised by DRH while costing the panel; the numbers below confirm it.)_
   `enclosure/solar-glow-drh-pogo-testplate-cad.py` asserts **14 probe pads** (TP1–TP7 + JP1 ×4 +
@@ -631,6 +653,13 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
     … between VOUT and GND close to the terminals." So "give VOUT its own small reservoir" is not
     permitted as written — 220 nF at 2 V is 0.44 µJ, ~4000× short of one 1.8 mJ blink. A real
     reservoir has to sit behind isolation.
+  - **A tap cannot even pay for the glow it triggers.** One glow costs **~0.4 J**
+    (`firmware/sense.c:228`), so a full 15.14 J tank is only **38 glows**. A 1 s tap at the
+    features-page 15 mW collects 15 mJ = **3.75 % of one glow**; at §8.6's realistic 10 mW it is
+    2.5 %. That is **~27 taps to fund a single glow** (40 at the honest figure) — and the tap IS
+    the actuator, so every harvest event triggers the spend that dwarfs it. Harvesting here is net
+    negative by roughly thirtyfold. (The older "1000 taps to fill the tank" framing was true and
+    too kind: it compared against the reservoir instead of against what the card actually does.)
   - **The harvested rail is at or below the LED's forward voltage.** VOUT is typically **2.0 V at
     5 mA** with a phone (§8.6; the "up to 15 mW" figure is the front-page feature bullet, and the
     electrical table's 3.3 V is at **1 mA** into a Class 5 antenna at 14 A/m). `LA P47F` VF is
