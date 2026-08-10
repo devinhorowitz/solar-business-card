@@ -67,6 +67,7 @@ from __future__ import annotations
 import argparse
 import math
 import re
+import shutil
 import sys
 import uuid
 from pathlib import Path
@@ -616,6 +617,29 @@ def main() -> int:
     with open(dest, "w", newline="") as f:
         f.write(panel.replace("\n", nl) if nl != "\n" else panel)
     print(f"wrote {dest}  ({len(panel):,} bytes)")
+
+    # The RULES have to travel with the board, or the panel is filled by a different rulebook.
+    #
+    # KiCad finds both of these by BASENAME beside the .kicad_pcb, and zone fills read from both:
+    # netclass clearances live in the .kicad_pro, the custom floors in the .kicad_dru. Emit them
+    # and a refill of the panel reproduces the card's copper; omit them and it silently falls back
+    # to KiCad defaults, which are LOOSER -- so a solid pour backs further off every trace and
+    # comes out SMALLER. Measured on GND_B_AVR_ISLAND: 20.91 mm2 with defaults vs 30.27 mm2 with
+    # the board's own rules, a 31% shortfall, and every other pour shifted with it.
+    #
+    # This was the second half of the 2026-08-09 panel bug. The first half was that
+    # solar-glow-drh-panel.kibot.yaml had no check_zone_fills at all, so the panel plotted the
+    # board's STORED fill and shipped without the island entirely. Adding the preflight made the
+    # panel refill -- against defaults, because these two files were not here. Two fab sets that
+    # agree on geometry and disagree on the rulebook is a quieter version of the same fault, and
+    # the panel zip is the one that gets uploaded.
+    for ext in ("kicad_pro", "kicad_dru"):
+        src = args.board.with_suffix("." + ext)
+        if src.exists():
+            shutil.copy(src, dest.with_suffix("." + ext))
+            print(f"  + {dest.with_suffix('.' + ext).name}  (fills need the same rulebook as the card)")
+        else:
+            print(f"  ! {src.name} missing -- the panel will fill against KiCad DEFAULTS, not the board's rules")
     return 0
 
 
