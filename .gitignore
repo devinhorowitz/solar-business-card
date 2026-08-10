@@ -7,6 +7,16 @@
 # Need the panel board itself? Rebuild it:  python3 scripts/panelize.py
 Generated/panel/*.kicad_pcb
 
+# ...and its RULEBOOK, copied beside it by panelize.py since 2026-08-10. KiCad resolves both
+# by basename next to the .kicad_pcb, and zone fills read from both -- netclass clearances from
+# the .kicad_pro, the custom floors from the .kicad_dru. They exist so KiBot's check_zone_fills
+# refills the panel against the CARD's rules; without them it silently falls back to KiCad
+# defaults, which are looser, so every solid pour comes out smaller (GND_B_AVR_ISLAND: 20.91 mm2
+# vs 30.27). Derived copies of files already committed under PCB/ -- ignore them for the same
+# reason as the panel board itself.
+Generated/panel/*.kicad_pro
+Generated/panel/*.kicad_dru
+
 # kicad-cli drops a .kicad_prl (per-user VIEW STATE -- active layer, opacities) beside any
 # board it opens, including the uncommitted panel board above. The commit-back's
 # `git add -A Generated` swept one in once; it is not a fab artifact, and without this line
