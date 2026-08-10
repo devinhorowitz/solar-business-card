@@ -88,8 +88,18 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1   # v7.0.1
       - name: Compose the drift report
         id: report
+        # THE `shell:` LINE IS LOAD-BEARING -- do not delete it as noise.
+        # Actions' default is `bash -e {0}`, and `-e` on the invocation CANNOT be undone by a
+        # `set +e` inside the script. This step's whole design is that every probe is
+        # best-effort and a failure becomes a report ROW; with the default shell, plus the
+        # `pipefail` below, the first probe whose pipeline returned non-zero killed the job
+        # instead. That is not theory: on 2026-08-10 this job died 1.6 s in, having emitted
+        # ZERO rows -- while both canaries were green and nothing had actually rotted. A red
+        # `sweep` is also the one thing that must not happen, because the doctrine's only
+        # signal is "red canary = rot = act now"; a reporter that can go red destroys it.
+        shell: bash {0}
         run: |
-          set -uo pipefail   # deliberately no -e: every probe is best-effort, failures become report lines
+          set -uo pipefail   # no -e ON PURPOSE (see the shell: line above) -- probes report, never abort
           R=report.md
           {
             echo "# Weekly freshness report"
@@ -97,6 +107,8 @@ jobs:
             echo "_Updated $(date -u +'%Y-%m-%d %H:%M UTC') by \`.github/workflows/weekly-freshness.yml\` run [${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})._"
             echo
             echo "**Canaries this run:** firmware-canary = **${{ needs.firmware-canary.result }}**, consistency-canary = **${{ needs.consistency-canary.result }}** (failure = the pinned world broke: act now, that is rot, not drift)."
+            echo
+            echo "<!--PROBE-BANNER-->"
             echo
             echo "| component | pinned | upstream now | verdict |"
             echo "|---|---|---|---|"
@@ -203,6 +215,38 @@ jobs:
             echo "Drift (🔻) = schedule a bump whose CI diff you actually read — for KiCad, the merge run's"
             echo "\`Generated/\` diff is the blast radius."
           } >> "$R"
+
+          # ---- make a DEGRADED sweep legible ------------------------------------------------
+          # A probe that could not reach upstream reports "probe failed" in its own row, which is
+          # correct and easy to miss in a table of twenty. The failure mode that matters is
+          # reading a failed probe as "no drift" -- silence where there should be a question. So
+          # the count is hoisted to the top of the issue body, above the table, and says what an
+          # unreached probe MEANS rather than just that it happened.
+          #
+          # The job stays GREEN when probes fail, deliberately. Red is reserved for the canaries,
+          # where it means rot. A reporter that can also go red is what sent a human chasing a
+          # rotted pin on 2026-08-10 when nothing had rotted.
+          # Every banner is built with printf and \n escapes rather than a multi-line shell
+          # string: a continuation line starting in column 1 ENDS the YAML block scalar, and
+          # indenting it instead would put leading spaces in front of the `>` and turn the
+          # blockquote into a code block. Keep them one line each.
+          ROWS=$(grep -c '^| ' "$R"); ROWS=$(( ROWS > 2 ? ROWS - 2 : 0 ))   # minus header + separator
+          FAILED=$(grep -c 'probe failed\|unreachable\|could not inspect' "$R" || true)
+          if [ "$ROWS" -eq 0 ]; then
+            BANNER=$(printf '> ❌ **SWEEP PRODUCED NO ROWS.** The report step ran but emitted nothing, so this body says\n> NOTHING about your pins — treat every verdict below as ABSENT, not as clean. Read the run log:\n> this is a bug in the reporter, not necessarily in a pin.')
+          elif [ "$FAILED" -gt 0 ]; then
+            BANNER=$(printf '> ⚠️ **SWEEP DEGRADED — %s of %s probes could not reach upstream this run.**\n> Those rows are **UNKNOWN, not "current"**: a probe that never answered cannot tell you a pin has\n> not drifted. Re-run before concluding anything about them. The canary line above is unaffected —\n> it is what says whether the pinned world still builds.' "$FAILED" "$ROWS")
+          else
+            BANNER=$(printf '**Probes:** all %s reached upstream this run.' "$ROWS")
+          fi
+          # awk, not a python heredoc: heredoc BODY lines would have to start in column 1, which
+          # ends the YAML block scalar (this file broke that way twice while being written), and
+          # indenting them to stay inside it makes the Python invalid. Passing the banner through
+          # the ENVIRONMENT also sidesteps quoting it into an awk program, and carries its
+          # embedded newlines intact.
+          BANNER="$BANNER" awk '{ if ($0 == "<!--PROBE-BANNER-->") print ENVIRON["BANNER"]; else print }' "$R" > "$R.tmp" && mv "$R.tmp" "$R"
+          echo "probe_failures=$FAILED" >> "$GITHUB_OUTPUT"
+          echo "probe_rows=$ROWS"       >> "$GITHUB_OUTPUT"
           cat "$R"
 
       - name: Upsert the standing issue

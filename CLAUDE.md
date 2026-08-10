@@ -219,6 +219,17 @@ red, the check itself fails.
   bridge is dispatching it with `bump_kicad=true`, which opens a DRAFT PR moving the KiCad
   digest in all three workflows together, and the merge run's `Generated/` diff is the
   upgrade's blast radius, per the pinning doctrine below.
+  **RED ON THIS WORKFLOW MEANS ROT, AND ONLY ROT** — that is the whole signal, so the `sweep`
+  job must never be the thing that is red. It was, on 2026-08-10: its script opens with
+  `set -uo pipefail   # deliberately no -e`, the step carried no `shell:`, and Actions' default
+  is `bash -e {0}` — which `set` inside the script cannot undo. With `pipefail` also on, the
+  first best-effort probe that returned non-zero killed the job **1.6 s in, having emitted zero
+  rows**, while both canaries were green and nothing had rotted. It cost a real investigation
+  into a rotted pin that did not exist. The step now pins `shell: bash {0}`; that line is
+  load-bearing, not noise. A probe that cannot reach upstream reports a row and the job stays
+  green, with the count hoisted to the TOP of the issue body saying what an unreached probe
+  means — **UNKNOWN, not "current"** — because a silent probe read as "no drift" is the failure
+  this report exists to prevent.
 - `consistency.yml` — runs the drift guard on doc/board/firmware changes, plus
   `scripts/mask_art.py` (check [6] regenerates the mask art through it), `scripts/part_colors.py`
   (check [10]), `scripts/panelize.py` (check [19] imports its `stub_layer()`), `kibot.yml`
