@@ -450,25 +450,6 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
   one silence for 20 false alarms, so it is a two-part job: give the library 0402s courtyards,
   then set the rule to `warning`.
 
-- [ ] **[PCB — respin] Route `U5` pin 7 (`VOUT`) — NFC energy harvesting, currently unconnected**
-  _(2026-08-03. Was "bundle with the supercap-land re-route"; that landed 2026-08-05 without
-  this — still respin-only, bundle with the next board-edit window.)_
-  `U5 pad 7 VOUT_7 -> unconnected-(U5-VOUT-Pad7)`. The NT3H2211 can deliver **up to 15 mW out of
-  the reader's field** (datasheet §"Energy harvesting"), and on this board that pin goes nowhere.
-  **Size it as a WAKE, not as a charger** — the arithmetic is not close:
-  the tank is SC3∥SC4 (2.8 F) in series with SC1∥SC2 (2.8 F) = **1.4 F**, and to the AEM's 4.65 V
-  VOVCH ceiling that is **15.1 J**. One tap at the datasheet *maximum* 15 mW for ~1 s is **15 mJ
-  — 0.1 % of a full tank, ~1000 taps to fill it from empty**, and 15 mW is best-case Class-5
-  coupling that a phone will not deliver. The datasheet also warns that drawing VOUT current
-  *reduces read range*, so it is not free even when it works.
-  What it IS good for: **~8 LED blinks** (16 mA x 2.25 V x 50 ms = 1.8 mJ each) — a real
-  "the card is never dead" flash — and powering the MCU long enough that the **SRAM pass-through
-  works on a flat card**, which is what unblocks the HOTP item above.
-  **Do not wire it into the tank.** Two reasons: `Vout,max` is **3.3 V** and STO runs to 4.65 V,
-  so it cannot push into the top of the stack without a boost; and `MID` is the AEM10300's
-  **`BAL`** pin (U8 pad 13), so charge injected into the lower cell alone is partly burned back
-  off by the balancer. Give VOUT its own small reservoir feeding the MCU/LED path instead.
-
 - [ ] **[PCB/BENCH — cheap, any time] Feel coupons: bare same-size boards at 0.4 and 0.2 mm**
   _(2026-08-02, born from the thickness decision.)_ Order the cheapest possible bare PCBs at the
   card's exact outline (50.8 × 88.9 mm, any copper, any colour) in **0.4 mm and 0.2 mm** — plus
@@ -636,6 +617,35 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
 - Supercap footprints are a **hybrid**: SC1/SC3 = SS17 land (3-153-440, 39 mm), SC2/SC4 = WS17
   land (3-153-438, 28.5 mm); flat under-body pads, asymmetric widths = polarity key. The old REV-J diagonal-pad land is WRONG -- never reuse.
 - Ti-6Al-4V (Grade 5); grounded M2 bosses tie the body to GND.
+- **`U5` pin 7 (`VOUT`) stays UNCONNECTED — declined 2026-08-09 after an independent datasheet
+  check, do not re-open without a bench number.** NFC energy harvesting was carried as a respin
+  item; the arithmetic in it was right and the conclusion was still wrong, because the cost was
+  never priced. **Harvesting current reduces read range** — NT3H2211 datasheet §8.6, verbatim:
+  *"increasing the output current on Vout decreases the NFC communication range."* Read range is
+  this card's scarcest resource: the coil sits behind a ferrite sheet inside a titanium shell, and
+  the offline vCard read on a FLAT card (the entry above) is the one NFC function that must work.
+  Trading it for a novelty flash, to unblock a feature (HOTP) that is itself parked, is backwards.
+  The three engineering facts that finished the argument, all from the datasheet rather than from
+  the item's summary of it:
+  - **The VOUT capacitor is mandatory AND capped**: "typically 150 nF up to **220 nF maximum**
+    … between VOUT and GND close to the terminals." So "give VOUT its own small reservoir" is not
+    permitted as written — 220 nF at 2 V is 0.44 µJ, ~4000× short of one 1.8 mJ blink. A real
+    reservoir has to sit behind isolation.
+  - **The harvested rail is at or below the LED's forward voltage.** VOUT is typically **2.0 V at
+    5 mA** with a phone (§8.6; the "up to 15 mW" figure is the front-page feature bullet, and the
+    electrical table's 3.3 V is at **1 mA** into a Class 5 antenna at 14 A/m). `LA P47F` VF is
+    min 1.95 / typ 2.05 / max 2.55 V, and the LED path wants 16 mA. So "~8 blinks" needs a BOOST,
+    not a reservoir — there is no headroom for a ballast resistor, and VOUT sources a third of the
+    current. Buffering 1.8 mJ across those rails is ~1 mF behind a diode, on a frozen board.
+  - **It is not one route.** U5's VCC is on `VNFC`, switched from VS by U6 under `NFC_EN`, and the
+    datasheet requires VCC tied to VOUT if the tag is also to power the I²C bus — i.e. the flat-card
+    case ties VOUT to a node a load switch also drives. That needs ORing/isolation, not a wire.
+
+  Leaving the pin open is sanctioned by omission: the datasheet states no requirement for an unused
+  VOUT (searched for "unused" / "left open" / "floating" — nothing), the 150–220 nF is a precaution
+  for *operating in harvesting mode*, and ERC/DRC are clean on the unconnected net. **Reopen only
+  on a measured read-range figure showing margin to spare** — never on the 15 mW headline.
+
 - **NFC contact is offline-first.** The full vCard is **embedded** in the tag (`text/vcard`
   NDEF, `nfc.c`), read RF-powered by the phone with the card's supercap flat and **no
   reception** (the dead-signal courtroom case). A URL / App Clip is only ever an OPTIONAL
