@@ -222,7 +222,7 @@ AVR64EA28, VQFN-28, on the **back** of the board.
 | 9 | PC3 | SCL | TWI0 host (ALT2), ext 4.7k → VS |
 | 10 | PD0 | VDDIO2 | plain EA GPIO on the DD's old VDDIO2 pad; `SJ1` deleted outright 2026-07-30, but `C3` (100 nF → GND, the DD-era decoupler) still hangs on the net — no DC hold, so the internal pull-up in `gpio_init` still does that job (and charges C3 once at boot). *(This row said "SJ1 = DNP, so the pin floats" until the 2026-08-01 pressure test — doubly stale.)* |
 | 6 | PC0 | SNS_EN | **STO sense-divider gate** (2026-08-09): drives `U10` (TPS22916C) ON, active-HIGH; init LOW = divider disconnected. R15/R16 only draw from the tank while a conversion is in flight. High-side by necessity — gating the low leg would float `STO_SNS` to STO and forward-bias PD1's ESD clamp. No external pulldown: the TPS22916's smart ON pulldown (750 kΩ, auto-disconnecting) covers the reset/UPDI tristate window. |
-| 11 | PD1 | STO_SNS | supercap sense: STO/3 (R15/R16) into ADC AIN1 — **gated by `SNS_EN`/PC0**, C24 = 10 nF for a ~33 ms settle |
+| 11 | PD1 | STO_SNS | supercap sense: STO/3 (R15/R16) into ADC AIN1 — **gated by `SNS_EN`/PC0**, C24 = 10 nF → 6.68 ms τ (8.45 at its +10%/X7R corner), so `STO_SNS_SETTLE_MS` = 53 |
 | 12 | PD2 | VSENSE | light/rail sense: ADC AIN2 + AC0 AINP0 |
 | 20 | PF0 | INT1 | accel tap in (rising) |
 | 21 | PF1 | INT2 | accel motion in (rising) |

@@ -652,7 +652,7 @@ Summary of the **orderable** lines:
 | FB1 | 1 | 0603 bead | 0603 (`L_0603_1608Metric` — the true 0603 land since DRH's 2026-08-08 island round; the 0402-land debt is paid) | `BLM18PG221SN1D` |
 | C22 | 1 | 1 uF, 25 V, 0603, X7R | 0603 (C_0603_1608Metric) | `GRT188R71E105KE13D` |
 | C23 | 1 | 2.2 µF, 25 V, 0603, X7R | 0603 (C_0603_1608Metric) | `GRM188Z71E225ME43D` |
-| C24 | 1 | **10 nF**, 0402, X7R — ADC reservoir on `STO_SNS`, shrunk from 100 nF on 2026-08-09 so the **gated** divider settles in ~33 ms instead of ~335 ms (still ~2000× the ADC sample cap) | 0402 | `GRT155R71H103KE01D` |
+| C24 | 1 | **10 nF**, 0402, X7R — ADC reservoir on `STO_SNS`, shrunk from 100 nF on 2026-08-09 so the **gated** divider settles in ~33 ms instead of ~335 ms (still ~2000× the ADC sample cap). **±10%, and X7R adds ±15% over −55…+125 °C** — the worst-case-high 12.65 nF stretches τ from 6.68 to 8.45 ms, which is why `STO_SNS_SETTLE_MS` is 53 and not the nominal-cap 33; `firmware/board.h` owns that arithmetic | 0402 | `GRT155R71H103KE01D` |
 | C25 | 1 | 22 uF, 16 V, 1206 low-profile (0.95 max), X5R | 1206 (`solarglow:C_1206_3216Metric_HS_LP085`) | `GRM319R61C226KE15D` |
 | C26, C27 | 2 | 10 µF, 25 V, 1206 low-profile (0.95 max), X5R | 1206 (`solarglow:C_1206_3216Metric_HS_LP085`) | `GRM319R61E106KA12D` |
 | C28 | 1 | 100 nF, 0402, X7R | 0402 | `GRT155R71H104KE01D` |
