@@ -421,7 +421,22 @@ int main(void)
 #endif
 
     twi_init();           /* 3. I2C up, talk to the accel */
-    (void)adxl367_init_tap();      /* full accel config; validates DEVID after its soft reset */
+    /* Retry-once on a failed accel bring-up (2026-08-12; the ASIC experiment's init_seq
+     * had to define this terminal state explicitly, which exposed that the firmware
+     * computes the same failure -- rc across the DEVID check and all fourteen config
+     * writes -- and then threw it away with a (void) cast. This failure class has
+     * already bitten once: the pre-2026-08-02 reset-latency bug produced exactly "a
+     * boot that reported success" with the tap engine dead (see adxl367_init_tap's
+     * 7.5 ms comment). The latency root cause is fixed; this is the missing layer that
+     * would have CAUGHT it. One retry covers the transient causes (a marginal rail
+     * during the first I2C burst, a glitched ack); a part that fails twice is absent
+     * or broken, and the card boots anyway -- NFC still serves the vCard and the
+     * stuck-INT backstop keeps polling -- it just cannot be tapped awake, same as
+     * before this check existed. Deliberately NO EEPROM record here: a boot-path
+     * EEPROM write from a possibly-collapsing rail is the corruption window the
+     * health log exists to avoid (it defers commits off a low rail for this reason). */
+    if (adxl367_init_tap())
+        (void)adxl367_init_tap();
 
 #if USE_FRAM_LOG
     fram_boot_record();   /* archival black box: bump the cold-boot counter (wakes + re-parks U7) */

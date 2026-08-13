@@ -117,9 +117,10 @@ cd firmware
 make DFP=/path/to/Microchip/AVR-Ex_DFP/<version>
 ```
 Produces `solar-glow.hex`; the `avr-size` line reports usage (the part has 64 KB
-flash / 6 KB RAM, so this firmware — 5,034 B flash, 30 B RAM (5026 text + 8 data +
-22 bss, measured 2026-08-09 after the STO sense-divider gate and its deferred-read
-fix; the batch before it was the 2026-08-02 audit findings: ADC time bound, accel
+flash / 6 KB RAM, so this firmware — 5,042 B flash, 30 B RAM (5034 text + 8 data +
+22 bss, measured 2026-08-12 after the two ASIC-experiment back-ports: the accel-init
+retry-once and the un-fused-F_CPU settle fix, +8 B over the 2026-08-09 deferred-read
+figure; the batch before that was the 2026-08-02 audit findings: ADC time bound, accel
 data-valid window, wear-levelled tap ring, clean bus-clear STOP, ballast guard,
 dark dormancy and face-down deep sleep) — leaves room to spare).
 
