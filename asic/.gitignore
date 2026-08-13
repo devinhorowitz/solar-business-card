@@ -1,0 +1,6 @@
+# simulation + synthesis products (make sim / synth / gates) -- never commit
+*.vvp
+*.vcd
+build/
+synth_stat.txt
+synth_nand.txt

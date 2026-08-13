@@ -97,13 +97,24 @@
 #define SNS_EN_PIN_bm       PIN0_bm
 /* Settle before converting: C24 (10 nF, shrunk from 100 nF for exactly this) through the
  * divider's 667k Thevenin = 6.7 ms tau; 5 tau = 33 ms to 0.7%. At 100 nF this would have been
- * 335 ms and every tap would have gained a visible lead-in before the glow. */
-#define STO_SNS_SETTLE_MS   33
+ * 335 ms and every tap would have gained a visible lead-in before the glow.
+ *
+ * WHY 42 AND NOT 33 (2026-08-12; found by auditing every settle guarantee after the ASIC
+ * experiment's RTL review caught the same fencepost class in gates). The physics needs
+ * >= 33 ms of REAL time, but _delay_ms bakes in a cycle count from compile-time F_CPU
+ * (1 MHz), and until the OSCHFFRQ fuse is burned CLK_PER is 1.25 MHz -- delays run ~20%
+ * short (the clocks_init note; adxl367.c's 140-vs-110 fix is this same audit, passed).
+ * _delay_ms(33) on an un-fused part elapses in 26.4 ms = 3.96 tau: the divider is only
+ * ~98.1% settled and the event path reads STO ~90 mV LOW -- on exactly the units that do
+ * the bench characterization, straight off the programmer. 42,000 cycles clears 5 tau in
+ * both clock states (42 ms fused = 6.3 tau, 33.6 ms un-fused = 5.04 tau). The DEFERRED
+ * path is immune either way -- its settle is a real PIT period, 30x margin. */
+#define STO_SNS_SETTLE_MS   42
 /* This settle is paid TWO different ways, and getting that split wrong cost real power once
  * already (2026-08-09 audit):
  *   EVENT reads busy-wait it in sto_raw(). Fine: they ride tap / sweep / EEPROM-safety
- *   branches where a glow is about to spend ~0.4 J, so ~119 uC for two reads is ~0.14% of
- *   that, and 66 ms of extra tap->glow latency is imperceptible.
+ *   branches where a glow is about to spend ~0.4 J, so ~151 uC for two reads is ~0.18% of
+ *   that, and 84 ms of extra tap->glow latency is imperceptible.
  *   The PERIODIC read (sense_vmin_tick, every VMIN_SAMPLE_POLLS) must NOT busy-wait. It
  *   originally did, and at 16 s spacing that was 59 uC/sample = 3.71 uA average -- MORE than
  *   the 1.55 uA the gate saves, i.e. the whole change was a net loss. It now arms the gate on

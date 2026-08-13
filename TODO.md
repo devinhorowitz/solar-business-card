@@ -149,6 +149,40 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   fit pogo pins, flash the Pico, and smoke-test channels against `bench/monitor/README.md` before
   the first card powers up on it.
 
+- [ ] **[V-NEXT, PARKED] Companion ASIC — Tiny Tapeout proving ground → wafer.space quarter
+  slot; the RTL experiment is BUILT (`asic/`)**
+  _(Banked 2026-08-10 after the custom-silicon investigation; `asic/README.md` is the
+  experiment's verdict and `asic/SPEC.md` the design contract. Deliberately NOT a v4 item —
+  nothing here touches the board being ordered.)_
+  **The two-rung ladder, with the numbers that matter:**
+  - **Rung 1 — Tiny Tapeout (proof, not product):** €70/tile (~1 k gates, SKY130), fixed
+    8 in / 8 out / 8 bidir behind a shared-die mux, ~1 year to a demo board. It CANNOT yield
+    a shippable part — shared die, and the IHP shuttle's terms ban commercial use outright —
+    but it proves a block on real silicon for the price of a datasheet binder.
+    Shuttles at banking time: SKY26c closes **2026-09-07**, IHP26b **2026-09-21**.
+  - **Rung 2 — wafer.space GF180MCU (the product path):** 180 nm mixed-signal (MIM caps,
+    poly + hi-res resistors), **quarter slot = 4.9 mm², $2,000 early / $3,000, 1,000 dies,
+    48 I/O + 8 power pads** (~1.94 × 2.54 mm; full slot 20.12 mm² / $7,000 is NOT needed —
+    see below). Run 3: early-bird **2026-09-30**, purchase **2026-12-09**, submission
+    **2026-12-16**, dies **Q2 2027**. You receive **BARE DIE** — packaging (COB or bond-out)
+    and test are the unpriced half of the project. Tiny Tapeout's padframe is deliberately
+    wafer.space-compatible, which is what makes rung 1 → rung 2 a straight lift.
+  - **What the chip absorbs** (the green set from the absorb-map figure, 2026-08-10):
+    U1's application logic, the whole STO sense chain's sequencing (R15/R16/C24 divider in
+    hi-res poly + U10's gate + the deferred-read cadence in gates), Q2+R18, RN1, RN2, U6.
+    Stretch: U9 (25 nA analog LDO — first-silicon risk). NEVER: U3 (MEMS), U5 (RF+EEPROM),
+    U7 (FRAM process), U8+L2 (the harvester and its inductor), supercaps, cells, LEDs.
+  - **Quarter over full, decided:** ~25 signals against 48 pads, and the digital core is now
+    MEASURED, not estimated: 3,209 NAND-mapped cells / 250 DFFs = 0.13–0.25 mm², **3–5 % of
+    the slot** (yosys, regenerate via `make gates` in `asic/`) — the analog is what sizes the chip — and $4k buys TWO quarter-slot attempts across two runs (a respin
+    cycle) where $7k buys one full-slot shot with ~80 % of the die empty. First silicon is
+    usually wrong somewhere; optionality beats area.
+  - **The open question the experiment could not close:** whether the quarter-slot padframe
+    exposes enough ANALOG-capable pads (STO sense input, four 16 mA LED sinks) — ask
+    wafer.space directly before buying a slot.
+  - **Wake this item only after the v4 first article ships.** The card's critical path is
+    the energy budget and the read-range sweep; this ladder starts at €70 whenever there is
+    slack, and the deadlines above roll over to the next run if missed.
 - [ ] **[V-NEXT, PARKED] E-ink display variant — concept banked, not adopted**
   _(Piped 2026-08-02; `docs/eink-display-variant-notes.md` is the full record: panel survey,
   geometry both directions to scale, 1-bit artwork + QR mockups.)_ A different output modality

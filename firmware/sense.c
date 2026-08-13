@@ -247,7 +247,9 @@ static uint8_t sto_armed;      /* gate left ON by the deferred path, awaiting it
 static uint16_t sto_raw(void)
 {
     SNS_EN_PORT.OUTSET = SNS_EN_PIN_bm;      /* divider connected to STO */
-    _delay_ms(STO_SNS_SETTLE_MS);            /* C24 through the 667k Thevenin, 5 tau */
+    _delay_ms(STO_SNS_SETTLE_MS);            /* C24 through the 667k Thevenin; >= 5 tau in
+                                              * BOTH clock states -- board.h has the 42-vs-33
+                                              * un-fused-F_CPU arithmetic */
     uint16_t raw = adc_read_raw(STO_SNS_AIN);
     SNS_EN_PORT.OUTCLR = SNS_EN_PIN_bm;      /* back to zero tank draw */
     /* An event read collapses the node, so any deferred sample still pending has been
