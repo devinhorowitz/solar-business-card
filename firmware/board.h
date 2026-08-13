@@ -96,25 +96,45 @@
 #define SNS_EN_PORT         PORTC
 #define SNS_EN_PIN_bm       PIN0_bm
 /* Settle before converting: C24 (10 nF, shrunk from 100 nF for exactly this) through the
- * divider's 667k Thevenin = 6.7 ms tau; 5 tau = 33 ms to 0.7%. At 100 nF this would have been
- * 335 ms and every tap would have gained a visible lead-in before the glow.
+ * divider's 667k Thevenin = 6.68 ms tau NOMINAL. At 100 nF this would have been 335 ms and
+ * every tap would have gained a visible lead-in before the glow.
  *
- * WHY 42 AND NOT 33 (2026-08-12; found by auditing every settle guarantee after the ASIC
- * experiment's RTL review caught the same fencepost class in gates). The physics needs
- * >= 33 ms of REAL time, but _delay_ms bakes in a cycle count from compile-time F_CPU
- * (1 MHz), and until the OSCHFFRQ fuse is burned CLK_PER is 1.25 MHz -- delays run ~20%
- * short (the clocks_init note; adxl367.c's 140-vs-110 fix is this same audit, passed).
- * _delay_ms(33) on an un-fused part elapses in 26.4 ms = 3.96 tau: the divider is only
- * ~98.1% settled and the event path reads STO ~90 mV LOW -- on exactly the units that do
- * the bench characterization, straight off the programmer. 42,000 cycles clears 5 tau in
- * both clock states (42 ms fused = 6.3 tau, 33.6 ms un-fused = 5.04 tau). The DEFERRED
- * path is immune either way -- its settle is a real PIT period, 30x margin. */
-#define STO_SNS_SETTLE_MS   42
+ * 53 IS A DOUBLE-CORNER NUMBER -- clock state AND component tolerance. Both halves came out
+ * of the same audit (2026-08-12/13, prompted by the ASIC experiment's RTL review catching
+ * this fencepost class in gates), but the first pass fixed only the clock half and shipped
+ * 42, which is why the arithmetic is written out here instead of trusted.
+ *
+ *   CLOCK. _delay_ms bakes in a cycle count from compile-time F_CPU (1 MHz), and until the
+ *   OSCHFFRQ fuse is burned CLK_PER is 1.25 MHz, so a delay elapses ~20% SHORT: N ms of
+ *   _delay_ms is 0.8*N ms of real time. That state is not transient -- the EA has NO runtime
+ *   FRQSEL (the clocks_init note), so an un-fused part is 1.25 MHz for life, and the
+ *   Makefile's `fuses` target only ECHOES the avrdude lines. adxl367.c's 140-vs-110 fix is
+ *   this same audit, passed.
+ *
+ *   COMPONENT. tau is C24's, and C24 (GRT155R71H103KE01D) is 10 nF +/-10%, X7R -- whose EIA
+ *   definition allows a further +/-15% over -55..+125 C. Worst-case high is 10 * 1.10 * 1.15
+ *   = 12.65 nF, so tau = 8.45 ms, 27% longer than nominal. R15/R16 (+/-0.1%, 25 ppm) add
+ *   +0.21% and are noise beside it. DC bias is nil (a 50 V part sitting at STO/3 ~ 1.55 V)
+ *   and moves capacitance DOWN in any case, as does X7R aging -- both are the safe direction.
+ *
+ * Against the corner tau of 8.45 ms: _delay_ms(53) = 6.27 tau fused, and 42.4 ms un-fused =
+ * 5.02 tau. Nominal tau gives 7.9 / 6.4. Both predecessors cleared 5 tau only against a
+ * NOMINAL cap -- 33 was 4.94 fused / 3.95 un-fused, 42 was 6.29 / 5.03 -- but at the
+ * tolerance corner 42 un-fused falls to 3.98 tau, 1.88% unsettled. That is the SAME shortfall
+ * 33 had, and it reads STO ~87 mV LOW at 4.65 V (54 mV at the 2850 EEPROM gate). Every
+ * threshold it biases (glow floor, EE-write floor, caps-full sweep) therefore declines EARLY,
+ * so the direction is fail-safe -- but it lands on exactly the un-fused units that do the
+ * bench characterization, whose numbers everything downstream keys off. The DEFERRED path is
+ * immune to all of this: its settle is a real PIT period, ~118 tau even at the corner. */
+#define STO_SNS_SETTLE_MS   53
 /* This settle is paid TWO different ways, and getting that split wrong cost real power once
  * already (2026-08-09 audit):
  *   EVENT reads busy-wait it in sto_raw(). Fine: they ride tap / sweep / EEPROM-safety
- *   branches where a glow is about to spend ~0.4 J, so ~151 uC for two reads is ~0.18% of
- *   that, and 84 ms of extra tap->glow latency is imperceptible.
+ *   branches where a glow is about to spend ~0.4 J = ~100 mC off a ~4 V STO, so ~191 uC for
+ *   two reads (106 ms at ~1.8 mA active) is ~0.19% of that, and 106 ms of extra tap->glow
+ *   latency is imperceptible. (The 33- and 42-era figures here read 0.14% / 0.18% against a
+ *   charge basis that was never written down -- a uC numerator over a joule denominator. The
+ *   denominator is stated now, so the ratio can be checked rather than inherited.)
  *   The PERIODIC read (sense_vmin_tick, every VMIN_SAMPLE_POLLS) must NOT busy-wait. It
  *   originally did, and at 16 s spacing that was 59 uC/sample = 3.71 uA average -- MORE than
  *   the 1.55 uA the gate saves, i.e. the whole change was a net loss. It now arms the gate on

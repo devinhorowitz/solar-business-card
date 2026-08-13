@@ -93,7 +93,8 @@ void sense_adc_init(void)
     /* Long sample time. NOTE the often-quoted reason -- "the 1M//1M divider is
      * ~500k source impedance" -- is NOT what governs here: both analog nodes carry a
      * reservoir cap (C5 = 100 nF on VSENSE; C24 = 10 nF on STO_SNS since the 2026-08-09
-     * divider gate -- shrunk so the GATED divider settles in ~33 ms rather than ~335 ms,
+     * divider gate -- shrunk so the GATED divider settles in ~33 ms nominal rather than
+     * ~335 ms; board.h waits 53 for the un-fused clock and C24's own tolerance corner,
      * and still ~2000x the few-pF sample capacitor), so charge sharing settles
      * in well under a microsecond regardless of the divider. The real reasons to keep
      * SAMPDUR = 31 (62 us) are that it costs nothing at a 1 Hz poll and that the temp
@@ -225,9 +226,12 @@ uint8_t sense_vin_flags(void)
  * sto_raw() -- the EVENT path. Stateless: enable, settle, read, disable, every time, so no
  * caller can be ordered wrong and silently read a divider that was never switched on. It
  * pays STO_SNS_SETTLE_MS of BUSY-WAIT, which is only acceptable because these reads happen
- * on tap / sweep / EEPROM-safety branches where a glow is about to burn ~0.4 J: two gated
- * reads cost ~119 uC, about 0.14% of that, and the 66 ms of added tap->glow latency is
- * imperceptible.
+ * on tap / sweep / EEPROM-safety branches where a glow is about to burn ~0.4 J (~100 mC off
+ * a ~4 V STO): two gated reads cost ~191 uC, about 0.19% of that, and the 106 ms of added
+ * tap->glow latency is imperceptible. (These three figures are STO_SNS_SETTLE_MS-derived and
+ * board.h owns the constant -- they read 119 uC / 0.14% / 66 ms while it was 33, and stayed
+ * that way through the 42 bump because the same fact lived in two comments and only one was
+ * updated. If you change the constant, change them here AND there.)
  *
  * sense_vmin_tick() -- the PERIODIC path, which must NOT busy-wait. This comment used to
  * claim STO reads were "never on the 1 Hz poll path, so the duty a card in a drawer sees is
@@ -236,8 +240,11 @@ uint8_t sense_vin_flags(void)
  * _delay_ms for 33 ms every 16 s. At ~1.8 mA active that is 59 uC/sample = 3.71 uA average,
  * against the 1.55 uA the gate saves -- the gate was a NET LOSS of ~2.2 uA. Fixed 2026-08-09
  * by DEFERRING that read across ticks: arm the gate on one poll, sample on the next. The
- * ~1 s gap is 30x the settle and it elapses while the MCU is ASLEEP, so the cost is the
- * divider's own 1.55 uA for one poll in seventeen = ~0.09 uA, with zero extra awake time.
+ * ~1 s gap is ~118 tau even at C24's tolerance corner (board.h has that arithmetic) -- stated
+ * against tau, not against STO_SNS_SETTLE_MS, so raising the constant cannot silently erode
+ * this margin the way it would a "30x the settle" claim. It elapses while the MCU is ASLEEP,
+ * so the cost is the divider's own 1.55 uA for one poll in seventeen = ~0.09 uA, with zero
+ * extra awake time.
  * That is 38x better than the busy-wait and self-scaling: face-down deep sleep only
  * lengthens the PIT period, so the 1-in-VMIN_SAMPLE_POLLS duty holds at any poll rate.
  *
@@ -248,8 +255,9 @@ static uint16_t sto_raw(void)
 {
     SNS_EN_PORT.OUTSET = SNS_EN_PIN_bm;      /* divider connected to STO */
     _delay_ms(STO_SNS_SETTLE_MS);            /* C24 through the 667k Thevenin; >= 5 tau in
-                                              * BOTH clock states -- board.h has the 42-vs-33
-                                              * un-fused-F_CPU arithmetic */
+                                              * BOTH clock states AND at C24's +10%/X7R
+                                              * tolerance corner -- board.h has the
+                                              * double-corner arithmetic behind 53 */
     uint16_t raw = adc_read_raw(STO_SNS_AIN);
     SNS_EN_PORT.OUTCLR = SNS_EN_PIN_bm;      /* back to zero tank draw */
     /* An event read collapses the node, so any deferred sample still pending has been
