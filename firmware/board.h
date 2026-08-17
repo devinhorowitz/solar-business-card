@@ -116,6 +116,10 @@
  *   = 12.65 nF, so tau = 8.45 ms, 27% longer than nominal. R15/R16 (+/-0.1%, 25 ppm) add
  *   +0.21% and are noise beside it. DC bias is nil (a 50 V part sitting at STO/3 ~ 1.55 V)
  *   and moves capacitance DOWN in any case, as does X7R aging -- both are the safe direction.
+ *   THIS CONSTANT IS A FUNCTION OF C24's DIELECTRIC, so a cap swap moves it. The second
+ *   source (GRT155R71C103KE01J, 16 V) is the same X7R +/-10% and changes NOTHING here; a
+ *   C0G/NP0 part would cut the corner to 10.23 nF and this to 43. PCB/README.md's C24
+ *   sourcing note has both, and why the C0G swap is deliberately not taken.
  *
  * Against the corner tau of 8.45 ms: _delay_ms(53) = 6.27 tau fused, and 42.4 ms un-fused =
  * 5.02 tau. Nominal tau gives 7.9 / 6.4. Both predecessors cleared 5 tau only against a

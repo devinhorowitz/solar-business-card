@@ -652,7 +652,7 @@ Summary of the **orderable** lines:
 | FB1 | 1 | 0603 bead | 0603 (`L_0603_1608Metric` — the true 0603 land since DRH's 2026-08-08 island round; the 0402-land debt is paid) | `BLM18PG221SN1D` |
 | C22 | 1 | 1 uF, 25 V, 0603, X7R | 0603 (C_0603_1608Metric) | `GRT188R71E105KE13D` |
 | C23 | 1 | 2.2 µF, 25 V, 0603, X7R | 0603 (C_0603_1608Metric) | `GRM188Z71E225ME43D` |
-| C24 | 1 | **10 nF**, 0402, X7R — ADC reservoir on `STO_SNS`, shrunk from 100 nF on 2026-08-09 so the **gated** divider settles in ~33 ms instead of ~335 ms (still ~2000× the ADC sample cap). **±10%, and X7R adds ±15% over −55…+125 °C** — the worst-case-high 12.65 nF stretches τ from 6.68 to 8.45 ms, which is why `STO_SNS_SETTLE_MS` is 53 and not the nominal-cap 33; `firmware/board.h` owns that arithmetic | 0402 | `GRT155R71H103KE01D` |
+| C24 | 1 | **10 nF**, 0402, X7R — ADC reservoir on `STO_SNS`, shrunk from 100 nF on 2026-08-09 so the **gated** divider settles in ~33 ms instead of ~335 ms (still ~2000× the ADC sample cap). **±10%, and X7R adds ±15% over −55…+125 °C** — the worst-case-high 12.65 nF stretches τ from 6.68 to 8.45 ms, which is why `STO_SNS_SETTLE_MS` is 53 and not the nominal-cap 33; `firmware/board.h` owns that arithmetic. **Second source `GRT155R71C103KE01J`** — see the sourcing note below | 0402 | `GRT155R71H103KE01D` |
 | C25 | 1 | 22 uF, 16 V, 1206 low-profile (0.95 max), X5R | 1206 (`solarglow:C_1206_3216Metric_HS_LP085`) | `GRM319R61C226KE15D` |
 | C26, C27 | 2 | 10 µF, 25 V, 1206 low-profile (0.95 max), X5R | 1206 (`solarglow:C_1206_3216Metric_HS_LP085`) | `GRM319R61E106KA12D` |
 | C28 | 1 | 100 nF, 0402, X7R | 0402 | `GRT155R71H104KE01D` |
@@ -1076,6 +1076,34 @@ Work outside-in by heat sensitivity:
    > written without an angle on this −90° footprint sits axis-aligned — 0.5 mm wide where
    > the land wants 0.4 — and shaved the SDA-trunk gap to 0.124. All four pads carry `270`
    > now; anything that regenerates them must keep it.
+   >
+   > **C24 sourcing, and why its "low stock" is not a risk (2026-08-17).** The 2026-08-17
+   > availability regen showed `GRT155R71H103KE01D` at **50 in stock** — the thinnest real line
+   > in the BOM, and easy to misread as a part at risk. It is not. **The shortage is in the
+   > VOLTAGE RATING, not the part.** The whole GRT 10 nF 0402 family is the same
+   > soft-termination X7R ±10% and differs only in rating: `GRT155R71C103KE01J` (16 V) had
+   > **23,548**, `GRT155R71E103KE01J` (25 V) **8,165**, against our 50 V part's 50.
+   > `STO_SNS` sits at STO/3 — **1.55 V** at the AEM's 4.65 V VOVCH ceiling, 1.83 V even at the
+   > 5.5 V bench-abuse corner — so 50 V is **32× over-specified**. The 16 V sibling still
+   > carries ~9× margin, and its slightly larger DC-bias derating moves capacitance DOWN, which
+   > SHORTENS τ: the safe direction, and already bounded by the +10%/+15% high corner that
+   > `firmware/board.h` sizes the settle against. **Second source is therefore
+   > `GRT155R71C103KE01J`** — same family, footprint, dielectric, tolerance, soft termination
+   > and AEC-Q200, so a swap needs no board change, no firmware change, and nothing re-derived.
+   >
+   > **The C0G option, deliberately NOT taken.** 10 nF C0G/NP0 *does* exist in 0402 and is
+   > abundant (`GRM1555C1E103GE01D`, ±2 %, 25 V, 1.3 M in stock). Being Class 1 it is ±2 % with
+   > ~30 ppm/°C, no DC-bias effect and no aging, which collapses the worst-case corner from
+   > 12.65 nF to **10.23 nF** — τ 8.45 → **6.83 ms**, 19 % shorter, and `STO_SNS_SETTLE_MS`
+   > could come back from 53 to **43**. It is rejected because **no soft-termination C0G exists
+   > at this size and value**: every GRT 10 nF 0402 is X7R, every C0G candidate is GRM standard
+   > termination and not AEC-Q200. Soft termination is flex-crack protection, and this is a
+   > **0.6 mm** board that lives in a wallet and gets handled — which is presumably why the
+   > entire 0402 family here is GRT. What the swap would buy is 20 ms off the two-read event
+   > path (106 → 86 ms) and ~36 µC against a ~0.4 J glow, i.e. charge that is noise and latency
+   > this file already calls imperceptible. Trading mechanical robustness on a flexing card for
+   > that is the wrong direction. Revisit ONLY if C24 has to change for real availability
+   > reasons; then the settle constant comes down with it, in the same commit.
    >
    > **Both arrays' 3D models are house bodies since 2026-08-08** —
    > `solarglow.3dshapes/EXB28V_4x0402.step` / `EXB24V_2x0402.step`, single-colour 6-face,
