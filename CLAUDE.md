@@ -230,6 +230,25 @@ red, the check itself fails.
   green, with the count hoisted to the TOP of the issue body saying what an unreached probe
   means — **UNKNOWN, not "current"** — because a silent probe read as "no drift" is the failure
   this report exists to prevent.
+  **A HELD PIN MUST BE ABLE TO EXPIRE** (2026-08-17). A pin may sit deliberately below latest
+  by carrying `# HELD <pkg> BY <blocker>: <reason>` on the pin line, which reports as
+  "⏸️ held on purpose" instead of drifting red forever and training the reader to skip the row.
+  That marker used to be **unconditional**, and so it was a silence that could not end: `numpy`
+  stayed held at 2.4.6 for two weeks after numba 0.67.0 relaxed `numpy<2.5` to `numpy<2.6`,
+  reporting the same reassurance every Monday while the reason underneath it no longer existed.
+  The marker now NAMES ITS BLOCKER and `scripts/pin_hold.py` re-reads that blocker's live
+  dependency metadata each run to re-decide: **⏸️ still held**, **🔓 HOLD EXPIRED** (drop the
+  marker and bump), or **⚠️ unverified** — which counts toward the degraded-sweep banner exactly
+  like an unreached probe, since an unverifiable hold is the same species of silence. A marker
+  with no `BY` clause is **unauditable by construction** and is reported rather than honoured,
+  the same finding the action loop raises for a SHA pinned with no `# vN` comment. The classifier
+  is exercised every run against both real historical states of that numpy hold; if it stops
+  telling them apart, the sweep says so in a row (never a red job — red is the canaries').
+  The reason the hold outlived its cause is worth keeping too: the comment in `kibot.yml` blamed
+  "the KiCad image ships numba 0.66.0", but the `kibot` job is `runs-on: ubuntu-latest` with no
+  `container:` — every `pip install` there is runner-side and cannot see the image at all.
+  `cadquery` pulls numba onto the runner. Right ceiling, right version, wrong provenance — and
+  the wrong provenance is what made it read as someone else's problem to fix.
 - `consistency.yml` — runs the drift guard on doc/board/firmware changes, plus
   `scripts/mask_art.py` (check [6] regenerates the mask art through it), `scripts/part_colors.py`
   (check [10]), `scripts/panelize.py` (check [19] imports its `stub_layer()`), `kibot.yml`
