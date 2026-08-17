@@ -208,6 +208,22 @@ red, the check itself fails.
   CI passes `WERROR=1`), uploads the hex, and gates the README's measured size figures
   against the build (`scripts/check_fw_size.py` — a size-changing edit lands with its
   README figure update in the same commit, or fails).
+- `asic.yml` — the DRH-1 companion-ASIC core (2026-08-17). Runs `make -C asic sim` (6
+  `$fatal`-armed testbenches; a bench that stops asserting cannot pass by going quiet — the
+  Makefile fails on a non-zero `vvp` exit **and** on a missing `TB PASS` line) then
+  `make -C asic gates`, and gates SPEC's **"no latches"** claim against the cells yosys
+  actually emitted (`$_DLATCH_` / `$_SR_` in the mapped netlist) rather than against warning
+  text, which is upstream prose that can be reworded. The **cell count is deliberately
+  ungated** — it moves with the yosys version, the same call the mesh gate makes on triangle
+  count; `asic/README.md` owns the published number and says to re-derive it. Measured cost:
+  27 s sim + 4 s synth, under two minutes with apt and checkout, and it triggers **only** on
+  `asic/**` minus `asic/**.md`, so every other push pays nothing. Until this landed, `asic/`
+  was the one tree here with no CI at all — which is a bad shape for work whose next rung has
+  a hard shuttle deadline. Its apt installs are **deliberately unpinned**, against the
+  doctrine below, for a stated reason: this job commits nothing (`asic/.gitignore` covers
+  `build/`, `*.vvp`, both `synth_*.txt`), so no artifact's reproducibility depends on a pin,
+  and pinning apt against `ubuntu-latest` turns a runner-image roll into rot. Versions are
+  printed in a provenance step instead. Same call `xvfb` in `kibot.yml` already makes.
 - `weekly-freshness.yml` — the Monday canary + drift report. Pins have two failure modes
   push-CI can't see: **rot** (the pinned artifact stops being fetchable) and **drift**
   (upstream moves on). Weekly, pushes or not: re-fetches the pinned toolchain/DFP and

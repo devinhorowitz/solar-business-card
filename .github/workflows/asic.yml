@@ -1,0 +1,93 @@
+name: ASIC RTL
+
+# The DRH-1 companion-ASIC core (asic/) was the one tree in this repo with NO CI:
+# `make sim`, `make synth` and `make gates` were entirely manual, so the RTL and its
+# mutation-tested benches were unguarded against a toolchain bump in a way nothing else
+# here is. That is a bad shape for work whose next step has a HARD DATE -- a Tiny Tapeout
+# shuttle deadline -- because finding out the benches stopped passing during submission
+# week is the expensive version of that discovery.
+#
+# COST. Measured on the real tree before this file was written: `make sim` (6 self-checking
+# testbenches, Icarus) is 27 s and `make gates` (yosys synth + abc -g NAND) is 4 s, so ~31 s
+# of actual work plus apt and checkout -- call it under two minutes. And it triggers ONLY on
+# asic/**, so every other push in this repo pays nothing at all. Compare kibot's ~20 min.
+#
+# `asic/**.md` is EXCLUDED, the same lesson `PCB/**` learned on 2026-07-30: prose beside the
+# source is not the source. A SPEC.md edit changes no RTL, so the sim result is identical and
+# running it would be pure noise. (Written the day asic/README.md gained its pre-submission
+# section, which is exactly the edit that should not have run a simulator.)
+
+on:
+  push:
+    paths:
+      - 'asic/**'
+      - '!asic/**.md'
+      - '.github/workflows/asic.yml'
+  pull_request:
+    paths:
+      - 'asic/**'
+      - '!asic/**.md'
+      - '.github/workflows/asic.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  rtl:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1   # v7.0.1
+
+      # DELIBERATELY UNPINNED, unlike everything else this repo runs in CI. The pinning
+      # doctrine exists because DRC is a merge gate and Generated/ is a gerber set that goes
+      # to a fab -- neither applies here: this job COMMITS NOTHING (asic/.gitignore covers
+      # build/, *.vvp and both synth_*.txt), so there is no artifact whose reproducibility a
+      # pin would protect. Pinning apt against ubuntu-latest would also convert a runner-image
+      # roll into rot, which is strictly worse than the drift it prevents. Same call the
+      # `xvfb` install in kibot.yml already makes.
+      # The versions are PRINTED below instead, so a future failure can be diagnosed against
+      # what actually ran rather than guessed at.
+      - name: Install Icarus Verilog + yosys
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq iverilog yosys
+
+      - name: Toolchain provenance
+        run: |
+          iverilog -V | head -1
+          yosys -V
+
+      # The real gate. Every bench is $fatal-armed and must print "TB PASS: <name>"; the
+      # Makefile fails on a non-zero vvp exit AND on a missing TB PASS line, so a bench that
+      # silently stops asserting cannot pass by going quiet.
+      - name: Simulate — every testbench must pass
+        run: make -C asic sim
+
+      - name: Synthesise and size
+        run: make -C asic gates
+
+      # SPEC's "no latches" is a claim about the RTL, so it gets a gate rather than a comment.
+      # Checked against the CELLS yosys actually emitted, not against warning text: a warning
+      # string is upstream prose that can be reworded, while a $_DLATCH_ / $_SR_ in the netlist
+      # is the thing itself. The cell COUNT is deliberately NOT gated -- it moves with the
+      # yosys version, the same reason the mesh gate leaves triangle count alone. asic/README
+      # owns the published number and says to re-derive it with `make gates`.
+      - name: No inferred latches
+        run: |
+          if grep -qE '\$_(DLATCH|SR)_' asic/synth_nand.txt; then
+            echo "::error::yosys inferred a latch or SR primitive — SPEC.md requires none."
+            grep -nE '\$_(DLATCH|SR)_' asic/synth_nand.txt
+            exit 1
+          fi
+          echo "no \$_DLATCH_ / \$_SR_ cells in the mapped netlist"
+
+      # A tri-state outside the SDA pad would be a real find: it is the one place the design
+      # is allowed one (SPEC "no tri-state except the SDA pad in i2c_master"), and yosys says
+      # plainly that its tri-state support is limited. Reported, never fatal -- the message is
+      # upstream text and gating on it would be gating on prose.
+      # (name quoted: an unquoted colon inside a YAML scalar ends the key, and this file
+      # failed to parse exactly that way while being written.)
+      - name: "Tri-state sites (expected: i2c_master's SDA pad only)"
+        if: always()
+        run: |
+          yosys -p "read_verilog asic/rtl/*.v; hierarchy -top drh1_top" 2>&1 \
+            | grep -i "tri-state" || echo "none reported"
