@@ -772,9 +772,14 @@ EXPECTED_ABSENT = {
     "Generated/panel/*.kicad_pcb": "CI-built panel intermediate — gitignored; rebuild with scripts/panelize.py",
     # Files that live in the USER'S toolchain, not this repo.
     "avrdude.conf": "ships with the user's avrdude install",
-    "ioavr64ea28.h": "AVR-Dx DFP header — part of the toolchain pack, not the repo",
-    ".mcp.json": "local config mcp-setup.md instructs the user to create",
-    "digikey_mcp_server.py": "external MCP server on the user's machine (mcp-setup.md registration command)",
+    # Was "AVR-Dx DFP header" until 2026-08-17. WRONG, and wrong the same way CLAUDE.md's
+    # build paragraph was until the 2026-08-01 sift: the EA lives in AVR-Ex_DFP. Verified
+    # against the installed pack -- AVR-Ex_DFP/include/avr/ioavr64ea28.h. The sift fixed the
+    # prose and missed this copy, because a reason buried in a dict is not prose anyone
+    # re-reads; the entry kept being consulted, so it kept being silent.
+    "ioavr64ea28.h": "AVR-Ex DFP header — part of the toolchain pack, not the repo",
+    ".mcp.json": "local config docs/mcp-setup.md instructs the user to create",
+    "digikey_mcp_server.py": "external MCP server on the user's machine (docs/mcp-setup.md registration command)",
     # kicad-happy runs from a pinned OUT-OF-REPO clone by rule (docs/kicad-happy.md) — these
     # are its files, cited by the run recipe there.
     "analyze_schematic.py": "kicad-happy analyzer — lives in the pinned external clone (docs/kicad-happy.md)",
@@ -901,6 +906,32 @@ def check_doc_cited_paths():
     if stale_absent:
         warn(f"{len(stale_absent)} EXPECTED_ABSENT entr(y/ies) no longer cited by any doc — "
              f"drop them: {', '.join(stale_absent)}")
+    # EVERY CHECKABLE CLAIM A REASON MAKES IS CHECKED (2026-08-17). Above, `stale_absent`
+    # asks only "is this entry still consulted?" -- never "is its reason still TRUE?". That
+    # is how "AVR-Dx DFP header" survived the 2026-08-01 sift that fixed the same error in
+    # CLAUDE.md's prose: the entry kept being consulted, so it kept being silent, exactly the
+    # shape the weekly sweep's unconditional `# HELD` marker had. Prose semantics cannot be
+    # gated, but these three claim-kinds can, and an entry deferring to a doc that has since
+    # been deleted would otherwise suppress citations while pointing at nothing.
+    reason_problems = []
+    for _p, _why in EXPECTED_ABSENT.items():
+        probe = _p.replace("*", "x")
+        if "git history" in _why and not subprocess.run(
+                ["git", "log", "--all", "--oneline", "--", "*" + os.path.basename(probe)],
+                cwd=ROOT, capture_output=True, text=True).stdout.strip():
+            reason_problems.append(f"{_p}: reason claims 'git history', but no commit ever held it")
+        if "gitignored" in _why and subprocess.run(
+                ["git", "check-ignore", "-q", probe], cwd=ROOT).returncode != 0:
+            reason_problems.append(f"{_p}: reason claims 'gitignored', but .gitignore does not cover it")
+        for _doc in re.findall(r"(docs/[\w.-]+\.md)", _why):
+            if _doc not in tracked:
+                reason_problems.append(f"{_p}: reason defers to {_doc}, which no longer exists")
+    if reason_problems:
+        err(f"{len(reason_problems)} EXPECTED_ABSENT reason(s) make a claim the tree "
+            "contradicts: " + "; ".join(reason_problems))
+    else:
+        ok(f"all {len(EXPECTED_ABSENT)} EXPECTED_ABSENT reasons still hold "
+           "(git-history, gitignored and deferred-doc claims re-checked)")
     if absences:
         print(f"  note:   {sum(len(v) for v in absences.values())} citation(s) of "
               f"deliberately-absent files, each with its reason on file:")
