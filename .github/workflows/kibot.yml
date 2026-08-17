@@ -256,14 +256,27 @@ jobs:
       - name: Render the enclosure assembly views
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq xvfb
-          # NUMPY IS HELD BELOW 2.5, deliberately. The KiCad image ships numba 0.66.0,
-          # which requires numpy<2.5; installing 2.5.1 over it left pip printing a
-          # dependency-conflict ERROR on every render step and numba nominally broken in
-          # the image we did not build. 2.4.6 is the newest numpy under that ceiling, and
-          # it is the pairing every local render and solid gate has been run against.
-          # The `# HELD numpy:` marker is read by weekly-freshness.yml, so the sweep reports it as
-          # a held pin with its reason instead of permanent drift against 2.5.x.
-          python3 -m pip install --quiet 'vtk==9.6.2' 'pillow==12.3.0' 'numpy==2.4.6' 'shapely==2.1.2'  # HELD numpy: the KiCad image ships numba 0.66.0, which needs numpy under 2.5
+          # NUMPY WAS HELD BELOW 2.5 FROM 2026-08-03 TO 2026-08-17, and the hold is now released.
+          # Worth recording why, because the reason written here for two weeks was WRONG in a way
+          # that made the problem look like someone else's:
+          #   It said "the KiCad image ships numba 0.66.0". It cannot be that. This job is
+          #   `runs-on: ubuntu-latest` with NO `container:` -- KiCad is only ever entered through
+          #   `docker run`, and not one pip install in this file is inside one. Every install here
+          #   lands in the RUNNER's Python, which cannot see the image's site-packages.
+          #   What actually put numba on the runner is `cadquery` (pinned four steps above, and
+          #   deliberately NOT written here as pkg-equals-version: the sweep discovers pins by
+          #   grepping that pattern across these files, so a version quoted in prose becomes a
+          #   phantom row the moment it disagrees with the real pin). cadquery declares numba as
+          #   a direct dependency, and installs it into this same interpreter. The
+          #   ceiling was real and the version was real; the provenance was not, and "an image we
+          #   did not build" reads as unfixable when in fact it arrived through our own pip line.
+          # numba 0.67.0 then relaxed `numpy<2.5` to `numpy<2.6`, so the ceiling is gone upstream.
+          # Verified before bumping, on python3.12 with this file's full accumulated install set:
+          # `pip check` -> "No broken requirements found" with numpy 2.5.2 + numba 0.67.0.
+          # A hold must now name its blocker (`# HELD <pkg> BY <blocker>: …`) so the weekly sweep
+          # can re-derive it from upstream every run instead of trusting it forever -- which is the
+          # bug that let this one outlive its reason by two weeks. See scripts/pin_hold.py.
+          python3 -m pip install --quiet 'vtk==9.6.2' 'pillow==12.3.0' 'numpy==2.5.2' 'shapely==2.1.2'
           xvfb-run -a python3 enclosure/assembly_render.py
 
       - name: Commit generated outputs

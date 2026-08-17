@@ -145,29 +145,58 @@ jobs:
           # avr8 toolchain: no version feed exists; the firmware-canary already proved the URL alive
           echo "| avr8-gnu-toolchain | 3.7.0.1796 | (no upstream feed) | ℹ️ URL-alive is proven by firmware-canary |" >> "$R"
 
+          # A HOLD MUST BE ABLE TO EXPIRE. The classifier that decides that is exercised on
+          # every run against the two real historical states of the numpy hold, so it cannot
+          # rot into always-agreeing -- the same shape as check [20]'s ledger. A failure here
+          # is a ROW, never a red job: red belongs to the canaries and means rot.
+          if python3 scripts/pin_hold.py --self-test > /tmp/pinhold-selftest.txt 2>&1; then :; else
+            echo "| hold-expiry self-test | — | — | ❌ CLASSIFIER SELF-TEST FAILED — every ⏸️/🔓 verdict below is untrustworthy: $(tr '\n|' ';_' < /tmp/pinhold-selftest.txt | cut -c1-200) |" >> "$R"
+          fi
+
           # pip pins (self-discovered from the workflows, so a new pin joins automatically)
           for spec in $(grep -rhoE "[a-zA-Z0-9_-]+==[0-9][0-9.]*" .github/workflows/*.yml | sort -u); do
             pkg=${spec%%==*}; pin=${spec##*==}
-            # The marker NAMES its package -- `# HELD <pkg>: <reason>`. A bare `# HELD:`
-            # was tried first and bound to every pin sharing the line: one comment on the
-            # render install claimed pillow, shapely and vtk were held too, which would
-            # have hidden real drift on three pins to explain one.
+            # The marker NAMES its package -- `# HELD <pkg> BY <blocker>: <reason>`. A bare
+            # `# HELD:` was tried first and bound to every pin sharing the line: one comment
+            # on the render install claimed pillow, shapely and vtk were held too, which
+            # would have hidden real drift on three pins to explain one.
             # ...and it must sit ON THE PIN LINE. Matching the marker anywhere let the
             # prose ABOVE the pin win on file order, so the reported reason was a
             # sentence about the mechanism rather than the reason itself.
-            held=$(grep -rhoE "$pkg==[0-9][0-9.]*.*# *HELD +$pkg *: *[^\"']*" .github/workflows/*.yml \
-                   | head -1 | sed -E 's/.*# *HELD +[A-Za-z0-9_-]+ *: *//')
+            # ...and since 2026-08-17 it must NAME THE BLOCKER, because a hold that cannot be
+            # re-derived is a silence that never ends. numpy sat "held on purpose" for two
+            # weeks after numba 0.67.0 lifted the numpy<2.5 ceiling that justified it: the
+            # marker was unconditional, so the row reported the same reassurance every Monday
+            # while the reason underneath it had ceased to exist. The blocker's live metadata
+            # is now re-read each run and the verdict re-decided.
+            heldraw=$(grep -rhoE "$pkg==[0-9][0-9.]*.*# *HELD +$pkg( +BY +[A-Za-z0-9._-]+)? *: *[^\"']*" .github/workflows/*.yml | head -1)
+            held=$(printf '%s' "$heldraw" | sed -E 's/.*# *HELD +[A-Za-z0-9_-]+( +BY +[A-Za-z0-9._-]+)? *: *//')
+            blocker=$(printf '%s' "$heldraw" | sed -nE 's/.*# *HELD +[A-Za-z0-9_-]+ +BY +([A-Za-z0-9._-]+) *:.*/\1/p')
             latest=$(curl -fsSL "https://pypi.org/pypi/$pkg/json" 2>/dev/null | python3 -c "import json,sys; print(json.load(sys.stdin)['info']['version'])" 2>/dev/null)
             if [ -z "$latest" ]; then
               echo "| pip \`$pkg\` | $pin | probe failed | ⚠️ PyPI unreachable |" >> "$R"
             elif [ "$pin" = "$latest" ]; then
               echo "| pip \`$pkg\` | $pin | same | ✅ current |" >> "$R"
-            elif [ -n "$held" ]; then
-              # A pin can be BELOW latest on purpose. Reporting that as drift forever
-              # trains the reader to skip the row, which is how a real drift gets missed
-              # next to a fake one -- so a pin carrying `# HELD: <reason>` reports the
-              # reason instead, and stays visible without crying wolf.
-              echo "| pip \`$pkg\` | $pin | $latest | ⏸️ held on purpose — $held |" >> "$R"
+            elif [ -n "$heldraw" ] && [ -z "$blocker" ]; then
+              # Unauditable BY CONSTRUCTION -- exactly the finding the action loop below
+              # raises for a SHA pinned with no `# vN` comment to check it against.
+              echo "| pip \`$pkg\` | $pin | $latest | ⚠️ hold names no blocker (\`# HELD $pkg BY <blocker>: …\`) — nothing to re-check it against |" >> "$R"
+            elif [ -n "$heldraw" ]; then
+              # A pin can be BELOW latest on purpose. Reporting that as drift forever trains
+              # the reader to skip the row, which is how a real drift gets missed next to a
+              # fake one. But the hold only survives if the blocker still says so TODAY.
+              # `cut` (tab-delimited by default) rather than a ${..%%..} on a literal tab:
+              # a raw tab is invisible here and this file is a YAML block scalar.
+              hv=$(python3 scripts/pin_hold.py --check "$pkg" "$latest" "$blocker" 2>/dev/null)
+              verdict=$(printf '%s' "$hv" | cut -f1)
+              detail=$(printf '%s' "$hv" | cut -f2-)
+              if [ "$verdict" = "HELD" ]; then
+                echo "| pip \`$pkg\` | $pin | $latest | ⏸️ held on purpose — $held (re-checked: $detail) |" >> "$R"
+              elif [ "$verdict" = "EXPIRED" ]; then
+                echo "| pip \`$pkg\` | $pin | $latest | 🔓 HOLD EXPIRED — $detail. Drop the \`# HELD\` marker and bump. |" >> "$R"
+              else
+                echo "| pip \`$pkg\` | $pin | $latest | ⚠️ hold unverified — ${detail:-pin_hold.py produced no verdict} |" >> "$R"
+              fi
             else
               echo "| pip \`$pkg\` | $pin | $latest | 🔻 drifted (render pins: remember VTK pixels differ across versions — a bump churns Generated/) |" >> "$R"
             fi
@@ -214,6 +243,10 @@ jobs:
             echo "**Doctrine reminder:** pins move only by deliberate commit. Rot (red canary) = act now."
             echo "Drift (🔻) = schedule a bump whose CI diff you actually read — for KiCad, the merge run's"
             echo "\`Generated/\` diff is the blast radius."
+            echo
+            echo "A **⏸️ held** pin re-derives its reason from the blocker's live metadata every run, so"
+            echo "**🔓 HOLD EXPIRED** means the thing that justified the hold is gone upstream and the pin"
+            echo "is now free to move — treat it as drift you already have the answer to."
           } >> "$R"
 
           # ---- make a DEGRADED sweep legible ------------------------------------------------
@@ -231,11 +264,14 @@ jobs:
           # indenting it instead would put leading spaces in front of the `>` and turn the
           # blockquote into a code block. Keep them one line each.
           ROWS=$(grep -c '^| ' "$R"); ROWS=$(( ROWS > 2 ? ROWS - 2 : 0 ))   # minus header + separator
-          FAILED=$(grep -c 'probe failed\|unreachable\|could not inspect' "$R" || true)
+          # An UNVERIFIABLE HOLD counts here too. A hold whose blocker could not be evaluated is
+          # the same species of silence as an unreached probe -- if it did not count, the one
+          # row-type this rewrite exists to expose would be the one type the banner ignores.
+          FAILED=$(grep -c 'probe failed\|unreachable\|could not inspect\|hold unverified\|hold names no blocker' "$R" || true)
           if [ "$ROWS" -eq 0 ]; then
             BANNER=$(printf '> ❌ **SWEEP PRODUCED NO ROWS.** The report step ran but emitted nothing, so this body says\n> NOTHING about your pins — treat every verdict below as ABSENT, not as clean. Read the run log:\n> this is a bug in the reporter, not necessarily in a pin.')
           elif [ "$FAILED" -gt 0 ]; then
-            BANNER=$(printf '> ⚠️ **SWEEP DEGRADED — %s of %s probes could not reach upstream this run.**\n> Those rows are **UNKNOWN, not "current"**: a probe that never answered cannot tell you a pin has\n> not drifted. Re-run before concluding anything about them. The canary line above is unaffected —\n> it is what says whether the pinned world still builds.' "$FAILED" "$ROWS")
+            BANNER=$(printf '> ⚠️ **SWEEP DEGRADED — %s of %s rows could not be verified this run.**\n> Those rows are **UNKNOWN — not "current", and not "safely held"**: a probe that never answered,\n> or a hold whose blocker could not be evaluated, cannot tell you a pin is where it should be.\n> Re-run before concluding anything about them. The canary line above is unaffected — it is what\n> says whether the pinned world still builds.' "$FAILED" "$ROWS")
           else
             BANNER=$(printf '**Probes:** all %s reached upstream this run.' "$ROWS")
           fi
