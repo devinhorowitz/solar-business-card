@@ -265,10 +265,24 @@ re-spin for the enclosure:
     25-40 mm from U1 (SC1 24.7, SC3 31.7, SC2 35.2, SC4 40.4 mm), but the long cap bodies reach within a
     few mm of the MCU at their near ends. A max-temp / derating flag needs only coarse accuracy (±5 °C),
     which the AVR internal sensor (§6) meets after a one-point cal.
-  - *And an NTC has nowhere to land.* No spare pin is ADC-capable -- the free GPIO (PA4 / PC0 / PC1) are
-    not on PORT D/E/F, the only ADC-input ports on this AVR-Dx -- so an analog thermistor cannot be added
-    without a re-spin. If a future rev ever needs a genuine per-cap reading, add **one I²C temp sensor**
-    on the existing PC2/PC3 bus near the cap cluster, not analog NTCs. Either path: bench-confirm the
+  - *And an NTC still needs a re-spin -- but NOT for the reason this bullet gave until 2026-08-18.*
+    It read: "No spare pin is ADC-capable -- the free GPIO (PA4 / PC0 / PC1) are not on PORT D/E/F, the
+    only ADC-input ports on this AVR-Dx". Every clause of that is false on the part actually fitted; it
+    is pre-EA-port DD28 reasoning that survived the 2026-07-23 swap. From Microchip's own machine-readable
+    device description for the **AVR64EA28** (the ATDF in the AVR-Ex pack): **PORTE does not exist on the
+    28-pin package at all** -- the ports are A, C, D, F -- and the ADC's positive input reaches **PORTA
+    (PA2-PA7 = AIN22-27), PORTC (PC0-PC3 = AIN28-31), PORTD (PD0-PD7 = AIN0-7) and PORTF (PF0/PF1 =
+    AIN16/17)**. So the three pins the sentence named as non-ADC are **PA4 = AIN24, PC0 = AIN28,
+    PC1 = AIN29** -- all three ADC-capable.
+    Two of them are also no longer free: `board.h` has **PA4 = `CHG_DIS_G`** and **PC0 = `SNS_EN`**. The
+    one genuinely spare pin is **PC1**, and it *is* an ADC input -- so the real blocker is COPPER, not
+    silicon: PC1 is deliberately unrouted with no breakout, so an analog NTC still cannot be fitted
+    without a re-spin. Same conclusion, different reason, and the difference matters the day someone
+    re-spins for another purpose and assumes the ADC path is closed.
+    The recommendation is unchanged and now rests on its real grounds: if a future rev needs a genuine
+    per-cap reading, add **one I²C temp sensor** on the existing PC2/PC3 bus near the cap cluster rather
+    than analog NTCs -- no pin cost on a bus that already exists, against a re-spin plus a divider plus a
+    self-heating error budget. Either path: bench-confirm the
     isothermal assumption once (two thermocouples -- a cap can vs the MCU die, under a heat-soak) before
     trusting the single-sensor proxy in firmware.
 - **Optional supercap-to-shell thermal-interface material (TIM).** A compliant gap-filler could bridge
