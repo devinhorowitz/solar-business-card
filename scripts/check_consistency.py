@@ -913,13 +913,33 @@ def check_doc_cited_paths():
     # shape the weekly sweep's unconditional `# HELD` marker had. Prose semantics cannot be
     # gated, but these three claim-kinds can, and an entry deferring to a doc that has since
     # been deleted would otherwise suppress citations while pointing at nothing.
-    reason_problems = []
+    #
+    # SHALLOW-CLONE SAFE, and it was NOT on the first attempt: `actions/checkout` defaults to
+    # fetch-depth 1, so `git log --all` in CI sees ONE commit and found nothing for either
+    # culled xlsx -- the gate went red on its first CI run against a tree that was fine. The
+    # canary had tested the LOGIC in a full clone and never the ENVIRONMENT. So the history
+    # probe now reports UNKNOWN rather than asserting when it cannot see history, the same
+    # rule pin_hold.py follows: a probe that cannot answer must not answer.
+    shallow = subprocess.run(["git", "rev-parse", "--is-shallow-repository"], cwd=ROOT,
+                             capture_output=True, text=True).stdout.strip() == "true"
+    reason_problems, unprovable = [], 0
     for _p, _why in EXPECTED_ABSENT.items():
         probe = _p.replace("*", "x")
-        if "git history" in _why and not subprocess.run(
-                ["git", "log", "--all", "--oneline", "--", "*" + os.path.basename(probe)],
-                cwd=ROOT, capture_output=True, text=True).stdout.strip():
-            reason_problems.append(f"{_p}: reason claims 'git history', but no commit ever held it")
+        if "git history" in _why:
+            # ONLY A NEGATIVE IS AMBIGUOUS. Finding the file in history proves the claim
+            # outright, however truncated the clone; finding nothing proves it false ONLY if
+            # the clone could have seen it. Keying off the shallow FLAG alone was wrong in
+            # both directions: `git pull` deepens history without clearing `.git/shallow`, so
+            # a working clone with thousands of commits still reports shallow and would have
+            # had this check silently switched off.
+            if subprocess.run(
+                    ["git", "log", "--all", "--oneline", "--", "*" + os.path.basename(probe)],
+                    cwd=ROOT, capture_output=True, text=True).stdout.strip():
+                pass                                   # proven, regardless of clone depth
+            elif shallow:
+                unprovable += 1                        # cannot see far enough to say
+            else:
+                reason_problems.append(f"{_p}: reason claims 'git history', but no commit ever held it")
         if "gitignored" in _why and subprocess.run(
                 ["git", "check-ignore", "-q", probe], cwd=ROOT).returncode != 0:
             reason_problems.append(f"{_p}: reason claims 'gitignored', but .gitignore does not cover it")
@@ -930,8 +950,10 @@ def check_doc_cited_paths():
         err(f"{len(reason_problems)} EXPECTED_ABSENT reason(s) make a claim the tree "
             "contradicts: " + "; ".join(reason_problems))
     else:
+        _skip = (f"; {unprovable} git-history claim(s) UNPROVABLE in a shallow clone, "
+                 "not counted as passing" if unprovable else "")
         ok(f"all {len(EXPECTED_ABSENT)} EXPECTED_ABSENT reasons still hold "
-           "(git-history, gitignored and deferred-doc claims re-checked)")
+           f"(gitignored + deferred-doc claims re-checked{_skip})")
     if absences:
         print(f"  note:   {sum(len(v) for v in absences.values())} citation(s) of "
               f"deliberately-absent files, each with its reason on file:")
