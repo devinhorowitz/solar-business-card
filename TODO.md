@@ -173,7 +173,7 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
     Stretch: U9 (25 nA analog LDO — first-silicon risk). NEVER: U3 (MEMS), U5 (RF+EEPROM),
     U7 (FRAM process), U8+L2 (the harvester and its inductor), supercaps, cells, LEDs.
   - **Quarter over full, decided:** ~25 signals against 48 pads, and the digital core is now
-    MEASURED, not estimated: 3,309 NAND-mapped cells / 251 DFFs = 0.13–0.25 mm², **3–5 % of
+    MEASURED, not estimated: 3,335 NAND-mapped cells / 251 DFFs = 0.13–0.25 mm², **3–5 % of
     the slot** (yosys, regenerate via `make gates` in `asic/`) — the analog is what sizes the chip — and $4k buys TWO quarter-slot attempts across two runs (a respin
     cycle) where $7k buys one full-slot shot with ~80 % of the die empty. First silicon is
     usually wrong somewhere; optionality beats area.

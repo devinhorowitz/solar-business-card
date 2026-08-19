@@ -44,12 +44,22 @@ ack_err, one-clk LED leak — each mutation independently hits `$fatal`). Highli
 - **sense: the U10 property** — over a full 32-poll run, `sns_en` is high **0.47 %** of
   cycles (bound: 2 %); the divider is provably gated off between samples, and the force
   path now guarantees ≥ SETTLE_ENV_TICKS *full* settle periods (review finding 4)
+- **the thresholds are pinned to volts** (2026-08-19). `TH_LOW`/`TH_CRIT` carried a
+  "placeholder scaling" tag from the first commit; they are now specified in millivolts
+  against `board.h` with the codes derived from one declared full scale, and the bench checks
+  the boundaries in millivolts rather than in codes. Full scale is 6000 mV, deliberately
+  **above** the AEM's 4.65 V VOVCH ceiling, because `GLOW_CLAMP_STO_MV` 5200 sits above it
+  too — a converter saturating at VOVCH would make the ballast guard unreachable, silently,
+  with every bench still passing. The bench now also asserts the thing `board.h` only says in
+  a parenthetical: a full tank at VOVCH (code 198) never trips the guard (code 221)
 - **ballast guard: the ceiling is measured, not asserted.** The unclamped breathe peak is
   taken first (252/256) so the ceiling check cannot pass vacuously; with the guard on, every
   channel of every animation caps at 225/256 *and reaches it*, and mode 00 stays dark.
-  `sense_seq`'s threshold is DISCOVERED by binary search rather than restated in the bench —
-  it reports the boundary it found (code 181) — and its reset value is proven pessimistic.
-  End to end in `tb_top`: same tap, two rails, 225/256 at sto=200 against 252/256 at sto=150
+  `sense_seq`'s thresholds are DISCOVERED by binary search rather than restated in the bench,
+  then validated **in millivolts** — within one LSB of their `board.h` numbers, on the
+  protective side — which is what catches a rounding rule that is wrong in the bench and the
+  DUT at once. `vclamp`'s reset value is proven pessimistic. End to end in `tb_top`: same tap,
+  two rails, 225/256 at the 5.5 V abuse corner against 252/256 at the AEM's VOVCH ceiling
 - integration: behavioural ADXL367 verifies the init addressing; tap → 197 measured PWM
   edges per LED; mid-glow vcrit → **dark on the same clk edge `brownout` rises**
   (review finding 3 + the 5b scenario that fails without the fix); recovery glows again
@@ -65,14 +75,15 @@ Yosys 0.33, `synth` then `abc -g NAND`, top `drh1_top`:
 
 | | |
 |---|---|
-| cells (NAND-mapped) | **3,309** = 1,964 NAND2 + 1,094 NOT + 251 DFF |
+| cells (NAND-mapped) | **3,335** = 1,980 NAND2 + 1,104 NOT + 251 DFF |
 | largest module | `gamma_pwm` (~58 % — the gamma × PWM datapath, now including the clamp) |
 | area @ conservative 15–25 kgate/mm² | **0.13–0.25 mm²** |
 | **fraction of a 4.9 mm² quarter slot** | **≈ 3–5 %** |
 
-(Was 3,209 before the ballast guard landed on 2026-08-19: the duty ceiling costs **+100
-cells, +3.1 %** — 54 NAND2, 45 NOT and the one flop that holds `vclamp` — which does not
-move the area band or the slot fraction at this rounding.)
+(Was 3,209 that morning. The ballast guard's duty ceiling cost **+100** and pinning the
+thresholds to volts a further **+26** — the comparator constants moved and stopped being
+powers of two — for **+126 cells, +3.9 %** total. Neither moves the area band or the slot
+fraction at this rounding.)
 
 The digital core is a rounding error against the slot. What actually sizes the chip is
 the analog below — and even generous analog budgets leave the quarter slot mostly empty.

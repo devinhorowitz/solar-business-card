@@ -57,16 +57,8 @@
  * EXB-28V151JX elements to ~68-70 mW against a 62.5 mW rating. gamma_pwm
  * consumes this as clamp_en and caps peak duty at CLAMP_PEAK.
  *
- *   THRESHOLD, and how provisional it is: TH_LOW/TH_CRIT are tagged
- *   "placeholder scaling" and TH_CLAMP inherits exactly that caveat -- it is
- *   derived FROM them, not from volts, so the three move together and cannot
- *   drift apart. TH_LOW 96 stands for the firmware's VS_GLOW_FLOOR_MV 2750,
- *   which implies 2750/96 = 28.65 mV per code; GLOW_CLAMP_STO_MV 5200 is then
- *   5200/28.65 = 181.5, and TH_CLAMP takes the FLOOR, 181. Flooring is the
- *   conservative rounding for a guard: the clamp engages at code 181 (~5185 mV
- *   on that scale), at or below the threshold it is protecting, never above it.
- *   Sanity, since a threshold past full scale would be silently unreachable:
- *   181 of 255 is 71 % of range, and even the 5.5 V abuse corner is code 192.
+ *   THRESHOLD: 5200 mV from board.h, converted by the one scale this module
+ *   declares -- see THE ANALOG CONTRACT below.
  *
  *   POLARITY is deliberately the opposite kind from vlow/vcrit. Those are
  *   STRICT-below flags; vclamp is AT-OR-ABOVE, so the three partition the
@@ -92,15 +84,58 @@
  * doubled reads sto_raw() gets by disarming the deferred sampler). Starting
  * any sample restarts the POLLS_PER_SAMPLE cadence.
  *
+ * THE ANALOG CONTRACT (pinned 2026-08-19; TH_LOW/TH_CRIT carried a "placeholder
+ * scaling" tag from this module's first commit until then, and TH_CLAMP had to be
+ * derived from TH_LOW rather than from volts, because there was no scale to use).
+ *
+ *   FULL SCALE. One code is FS_MV/256 of STO. FS_MV = 6000 realises as a /5 on-die
+ *   divider into a 1.2 V bandgap reference -- a 4R:R ratio in hi-res poly, which is
+ *   what the absorb map moves R15/R16 into -- giving 23.4 mV per code. The card's own
+ *   chain is /3 into 2.048 V at 12 bits (1.5 mV per code); this is ~16x coarser, which
+ *   is fine against thresholds hundreds of mV apart and is the price of an 8-bit SAR.
+ *
+ *   WHY 6000 AND NOT 4650. The obvious full scale is the AEM10300's VOVCH ceiling,
+ *   since STO physically lives in 0.20-4.65 V (STO_CFG[3:0] = LLHH straps VOVCH 4.65 /
+ *   VCHRDY 1.00 / VOVDIS 0.20, read off the board file). It would be WRONG.
+ *   GLOW_CLAMP_STO_MV is 5200 -- ABOVE VOVCH -- because the ballast guard exists for an
+ *   abuse corner reachable only from a bench supply, and a converter saturating at
+ *   4.65 V could never see it: the guard would be unreachable, silently, and every
+ *   bench would still pass. 6000 mV clears the 5.5 V supercap rating with headroom.
+ *
+ *   AND IT PAYS A DIVIDEND THE BOARD ALREADY CLAIMED: board.h says of the clamp
+ *   threshold "(VOVCH 4.65 V never trips it)". On this scale VOVCH is code 198 and
+ *   TH_CLAMP is 221, so that sentence becomes a property of the silicon rather than a
+ *   parenthetical -- and tb_sense_seq asserts it.
+ *
+ *   PROVENANCE, one line each, because the three are NOT equally solid:
+ *     TH_LOW_MV   2750  board.h VS_GLOW_FLOOR_MV. Solid -- vlow is defined as the
+ *                       complement of sense_rail_ok(), which gates on exactly this.
+ *     TH_CLAMP_MV 5200  board.h GLOW_CLAMP_STO_MV. Solid, same file, same reason.
+ *     TH_CRIT_MV  2000  AN ASIC-SIDE CHOICE, and it must not be read as a firmware
+ *                       mirror: THE CARD HAS NO SECOND RAIL GATE. main.c gates every
+ *                       glow at VS_GLOW_FLOOR_MV and stops there; the latching DORMANT
+ *                       state below it is this design's own addition, so its floor
+ *                       needs its own basis. It takes the pack's usable-depth floor
+ *                       from the AEM10300 selection analysis ("drain to ~2 V at the
+ *                       load -> ~9-10 J usable"), i.e. the point the energy budget
+ *                       already treats as spent. Below the 2750 glow gate, as the
+ *                       ordering requires, and far above VCHRDY 1.00 V, where nothing
+ *                       runs at all. Revisit with bench data, not by argument.
+ *
  * Verilog-2001, single clock, synchronous reset (rst_n sampled on posedge
  * clk), no latches, no initial blocks, strobes exactly 1 clk wide.
  */
 module sense_seq #(
     parameter SETTLE_ENV_TICKS = 5,      // ~39 ms at 128 Hz -- the RC settle, in silicon
     parameter POLLS_PER_SAMPLE = 16,     // sense.c's VMIN_SAMPLE_POLLS
-    parameter [7:0] TH_LOW   = 8'd96,    // vlow:   below glow floor  (placeholder scaling)
-    parameter [7:0] TH_CRIT  = 8'd64,    // vcrit:  brownout floor
-    parameter [7:0] TH_CLAMP = 8'd181    // vclamp: ballast guard     (see header)
+    // ---- THE ANALOG CONTRACT: what one code is worth, in millivolts of STO ----
+    // Thresholds are given in MILLIVOLTS and the codes are derived below, so every
+    // number here can be checked against board.h instead of against a scale factor
+    // nobody wrote down. See the header for the full-scale derivation and sources.
+    parameter integer FS_MV       = 6000, // STO at full scale: /5 divider, 1.2 V bandgap
+    parameter integer TH_LOW_MV   = 2750, // board.h VS_GLOW_FLOOR_MV -- the card's glow gate
+    parameter integer TH_CRIT_MV  = 2000, // pack usable-depth floor -- an ASIC-SIDE choice
+    parameter integer TH_CLAMP_MV = 5200  // board.h GLOW_CLAMP_STO_MV -- the ballast guard
 )(
     input  wire clk, input wire rst_n,
     input  wire tick_poll, input wire tick_env,
@@ -128,6 +163,18 @@ module sense_seq #(
     localparam [EW-1:0] ELIM = SETTLE_ENV_TICKS;       // convert on the ELIM+1-th env
                                                        //   strobe: k strobes observed
                                                        //   = k-1 full periods (header)
+
+    /* CODES ARE DERIVED, and each rounds in the direction that makes the PROTECTIVE
+     * action happen sooner rather than later:
+     *   vlow / vcrit are strict-BELOW gates, so rounding UP (ceil) means the glow is
+     *     withheld, or dormancy entered, a fraction of an LSB early.
+     *   vclamp is an AT-OR-ABOVE gate, so rounding DOWN (floor) means the ballast
+     *     ceiling engages a fraction of an LSB early.
+     * One LSB is FS_MV/256 = 23.4 mV at the default scale, so the bias is small; the
+     * point is that it is deliberate and always in the safe direction. */
+    localparam [7:0] TH_LOW   = (TH_LOW_MV   * 256 + FS_MV - 1) / FS_MV;   // ceil
+    localparam [7:0] TH_CRIT  = (TH_CRIT_MV  * 256 + FS_MV - 1) / FS_MV;   // ceil
+    localparam [7:0] TH_CLAMP = (TH_CLAMP_MV * 256)             / FS_MV;   // floor
 
     localparam [2:0] S_IDLE    = 3'd0,
                      S_ARM     = 3'd1,
