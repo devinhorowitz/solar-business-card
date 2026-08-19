@@ -36,7 +36,7 @@ module clkdiv #(parameter CLK_HZ = 1000000) (
 ### rtl/gamma_pwm.v  (mirrors led.c)
 ```verilog
 module gamma_pwm #(
-    parameter [7:0] CLAMP_PEAK = 8'd225   // board.h GLOW_CLAMP_PEAK
+    parameter [7:0] CLAMP_PEAK = 8'd221   // board.h GLOW_CLAMP_PEAK
 )(
     input  wire clk, input wire rst_n,
     input  wire tick_env,
@@ -52,7 +52,7 @@ steps in sweep mode; gamma via a `function [7:0] gamma(input [7:0] x)` implement
 `clamp_en` is the BALLAST GUARD's actuation half. While it is high, **every** duty written
 to a channel is capped at `CLAMP_PEAK` — a CEILING, not a rescale, matching the firmware's
 `if (peak > GLOW_CLAMP_PEAK) peak = GLOW_CLAMP_PEAK`. That shape is required, not incidental:
-the published bound (70 mW × 225/255 = 61.8 mW against a 62.5 mW element rating) is computed
+the published bound (71.9 mW × 221/255 = 62.3 mW against a 62.5 mW element rating) is computed
 at a HELD peak, so a flat top at the ceiling *is* the worst case. It must be applied at ONE
 chokepoint that every animation passes through — the firmware's equivalent is a single
 function, `sense_glow_peak()` — so a mode added later inherits it by construction. The

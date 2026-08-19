@@ -35,7 +35,31 @@ P_PKG          = 0.250           # Bourns CAY10 structural twin, 4x per-element
 STO_FLOOR      = 2.750           # board.h VS_GLOW_FLOOR_MV
 STO_VOVCH      = 4.650           # AEM10300 ceiling
 STO_ABUSE      = 5.500           # supercap rating; bench-supply only
-CLAMP_PEAK     = 225             # gamma_pwm CLAMP_PEAK
+
+def _read_clamp_peaks():
+    """READ the clamp out of both files rather than carry a third copy of it.
+
+    The value lives twice by necessity -- board.h owns the card's, gamma_pwm.v mirrors
+    it for the silicon -- and a third copy here would be the drift this repo keeps
+    getting bitten by. So this parses both, and check_clamp() below fails if they ever
+    disagree OR if either stops holding the thermal inequality. That guard is not
+    decorative: PCB/README.md flags R1-R4's 150 ohm as SIZED, not locked, and
+    bench-pending, so a re-tune moves the corner under this constant's feet."""
+    import re, pathlib as _p
+    root = _p.Path(__file__).resolve().parents[2]
+    c = {}
+    m = re.search(r'#define\s+GLOW_CLAMP_PEAK\s+(\d+)',
+                  (root / "firmware/board.h").read_text())
+    if not m: raise SystemExit("cannot find GLOW_CLAMP_PEAK in firmware/board.h")
+    c["board.h"] = int(m.group(1))
+    m = re.search(r"parameter\s*\[7:0\]\s*CLAMP_PEAK\s*=\s*8'd(\d+)",
+                  (root / "asic/rtl/gamma_pwm.v").read_text())
+    if not m: raise SystemExit("cannot find CLAMP_PEAK in asic/rtl/gamma_pwm.v")
+    c["gamma_pwm.v"] = int(m.group(1))
+    return c
+
+CLAMP_SRC      = _read_clamp_peaks()
+CLAMP_PEAK     = CLAMP_SRC["board.h"]
 AEM_DARK_A     = 6e-9            # AEM10300 IQ on STO (DS Table 5)
 
 R_LO, R_HI = R_NOM * (1 - R_TOL), R_NOM * (1 + R_TOL)
@@ -93,18 +117,22 @@ def main():
 
     print(f"\n== findings the envelope forces out (each is a computed inequality, not an opinion)")
 
-    # [F1] the clamp is sized against NOMINAL R; RN1 is +/-5%
-    p_nom  = current(STO_ABUSE, VF_GUARD, R_NOM, 0.4) ** 2 * R_NOM
-    p_tol  = current(STO_ABUSE, VF_GUARD, R_LO,  0.4) ** 2 * R_LO
-    need   = int(P_ELEM / p_tol * 255)          # largest peak that still averages under rating
-    print(f"  [F1] clamp adequacy at the RESISTOR TOLERANCE corner")
-    print(f"       board.h sizes the clamp on nominal R: {p_nom*1e3:.1f} mW x {CLAMP_PEAK}/255 "
-          f"= {p_nom*CLAMP_PEAK/255*1e3:.1f} mW < {P_ELEM*1e3:.1f} mW  OK")
-    print(f"       at R -5% it is:              {p_tol*1e3:.1f} mW x {CLAMP_PEAK}/255 "
-          f"= {p_tol*CLAMP_PEAK/255*1e3:.1f} mW "
-          f"{'<' if p_tol*CLAMP_PEAK/255 < P_ELEM else '>'} {P_ELEM*1e3:.1f} mW  "
-          f"{'OK' if p_tol*CLAMP_PEAK/255 < P_ELEM else 'OVER by ' + format((p_tol*CLAMP_PEAK/255/P_ELEM-1)*100, '.1f') + '%'}")
-    print(f"       largest CLAMP_PEAK that holds at that corner: {need}")
+    # [F1] -- was a FINDING on 2026-08-19, is now a GATE. The clamp used to be 225,
+    # sized on RN1's NOMINAL 150 ohm; at the -5% corner that averaged 1.4% OVER rating.
+    p_nom = current(STO_ABUSE, VF_GUARD, R_NOM, 0.4) ** 2 * R_NOM
+    p_tol = current(STO_ABUSE, VF_GUARD, R_LO,  0.4) ** 2 * R_LO
+    need  = int(P_ELEM / p_tol * 255)          # largest peak that averages under rating
+    ok    = p_tol * CLAMP_PEAK / 255 < P_ELEM
+    print(f"  [F1] clamp holds at the RESISTOR TOLERANCE corner")
+    for src, v in CLAMP_SRC.items():
+        print(f"       {src:<14} CLAMP_PEAK = {v}")
+    print(f"       nominal R: {p_nom*1e3:.1f} mW x {CLAMP_PEAK}/255 = "
+          f"{p_nom*CLAMP_PEAK/255*1e3:.1f} mW")
+    print(f"       R -5%:     {p_tol*1e3:.1f} mW x {CLAMP_PEAK}/255 = "
+          f"{p_tol*CLAMP_PEAK/255*1e3:.1f} mW {'<' if ok else '>'} {P_ELEM*1e3:.1f} mW  "
+          f"{'OK (' + format(p_tol*CLAMP_PEAK/255/P_ELEM*100, '.1f') + '% of rating)' if ok else 'OVER'}")
+    print(f"       package:   {4*p_tol*CLAMP_PEAK/255*1e3:.1f} mW of {P_PKG*1e3:.0f} mW")
+    print(f"       ceiling:   largest peak that holds here is {need}")
 
     # [F2] a max-Vf part cannot light at the glow floor
     hdr = STO_FLOOR - VF_MAX
@@ -137,6 +165,16 @@ def main():
         for k, v in want.items():
             if v not in txt:
                 bad.append(f"README.md does not carry the computed {k} = {v}")
+        # the two copies of the clamp must agree, and must hold the inequality
+        if len(set(CLAMP_SRC.values())) != 1:
+            print("::error::the clamp constant disagrees between the card and the RTL: "
+                  + ", ".join(f"{k}={v}" for k, v in CLAMP_SRC.items()))
+            return 1
+        if not (p_tol * CLAMP_PEAK / 255 < P_ELEM):
+            print(f"::error::CLAMP_PEAK {CLAMP_PEAK} averages "
+                  f"{p_tol*CLAMP_PEAK/255*1e3:.1f} mW at the RN1 -5% corner, over the "
+                  f"{P_ELEM*1e3:.1f} mW element rating. Largest that holds: {need}.")
+            return 1
         if bad:
             print("::error::asic/analog/README.md disagrees with sink_budget.py")
             print("\n".join("  " + b for b in bad)); return 1

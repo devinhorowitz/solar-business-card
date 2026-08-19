@@ -76,15 +76,16 @@ Yosys 0.33, `synth` then `abc -g NAND`, top `drh1_top`:
 
 | | |
 |---|---|
-| cells (NAND-mapped) | **3,335** = 1,980 NAND2 + 1,104 NOT + 251 DFF |
+| cells (NAND-mapped) | **3,261** = 1,956 NAND2 + 1,054 NOT + 251 DFF |
 | largest module | `gamma_pwm` (~58 % — the gamma × PWM datapath, now including the clamp) |
 | area @ conservative 15–25 kgate/mm² | **0.13–0.25 mm²** |
 | **fraction of a 4.9 mm² quarter slot** | **≈ 3–5 %** |
 
-(Was 3,209 that morning. The ballast guard's duty ceiling cost **+100** and pinning the
-thresholds to volts a further **+26** — the comparator constants moved and stopped being
-powers of two — for **+126 cells, +3.9 %** total. Neither moves the area band or the slot
-fraction at this rounding.)
+(Was 3,209 that morning. The ballast guard's duty ceiling cost **+100**, pinning the
+thresholds to volts a further **+26**, and re-sizing the clamp from 225 to 221 gave back
+**−74** — the constants are compared against, so their bit patterns are logic, and 221 is
+a cheaper one than 225. Net **+52 cells, +1.6 %**. None of it moves the area band or the
+slot fraction at this rounding, which is the point of leaving the count ungated.)
 
 The digital core is a rounding error against the slot. What actually sizes the chip is
 the analog below — and even generous analog budgets leave the quarter slot mostly empty.
@@ -118,7 +119,7 @@ cases the contract was what was wrong.
 ### Closed
 
 - **Ballast/thermal duty guard** (2026-08-19). The card clamps glow duty above an
-  abuse-corner STO — `USE_BALLAST_GUARD`, `GLOW_CLAMP_STO_MV` 5200, `GLOW_CLAMP_PEAK` 225,
+  abuse-corner STO — `USE_BALLAST_GUARD`, `GLOW_CLAMP_STO_MV` 5200, `GLOW_CLAMP_PEAK` 221,
   applied in `sense_glow_peak()` — because RN1's EXB-28V151JX elements are rated **62.5 mW
   each** and the worst DC corner (STO 5.5 V off a bench supply, min-bin Vf 1.9 V, VOL ~0.4 V)
   draws **~21 mA** for **~68-70 mW, about 110 % of rating**. `gamma_pwm.v` had no equivalent
@@ -129,8 +130,8 @@ cases the contract was what was wrong.
   `gamma_pwm` gained `CLAMP_PEAK` / `clamp_en` and a `ballast()` function every duty passes
   through (the actuation), so a mode added later inherits the ceiling by construction. It is
   a CEILING, not a rescale, because the published bound is computed at a held peak:
-  70 mW × 225/255 = 61.8 mW < 62.5 mW, so a flat top at the ceiling *is* the worst case.
-  Cost: **+100 cells, +3.1 %** (3,209 → 3,309), one new flop, no latches.
+  71.9 mW × 221/255 = 62.3 mW < 62.5 mW, so a flat top at the ceiling *is* the worst case.
+  Cost when it landed: **+100 cells, +3.1 %** (3,209 → 3,309), one new flop, no latches.
   On SPEC's **"16 mA sink cells"** — that is the NORMAL ceiling, (4.65 − 2.25)/150 — the
   guard changes nothing: at the corner the same 150 Ω ballast still passes ~21 mA, a **33 %
   overshoot** into an on-die sink. Sizing those cells is analog work this experiment does not

@@ -42,7 +42,7 @@
  * Verilog-2001, single clock, synchronous reset, no latches, no initial.
  */
 module gamma_pwm #(
-    parameter [7:0] CLAMP_PEAK = 8'd225   // board.h GLOW_CLAMP_PEAK -- see header
+    parameter [7:0] CLAMP_PEAK = 8'd221   // board.h GLOW_CLAMP_PEAK -- see header
 )(
     input  wire clk, input wire rst_n,
     input  wire tick_env,
@@ -85,7 +85,7 @@ module gamma_pwm #(
      * rescale -- exactly the firmware's `if (peak > GLOW_CLAMP_PEAK) peak =
      * GLOW_CLAMP_PEAK`, which flat-tops the envelope rather than shrinking it.
      * That is the right shape for the published bound, because the bound is
-     * computed at a HELD peak: 70 mW x 225/255 = 61.8 mW < 62.5 mW rating. A
+     * computed at a HELD peak: 71.9 mW x 221/255 = 62.3 mW < 62.5 mW rating. A
      * flat top at CLAMP_PEAK forever IS that worst case, so clamping the
      * instantaneous duty buys the identical guarantee as clamping the peak. */
     function [7:0] ballast (input [7:0] d);

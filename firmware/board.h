@@ -596,7 +596,7 @@
  * Panasonic publishes no PACKAGE total for EXB28V (it prints one for EXB18V and EXB2HV, so the
  * silence is deliberate); the structural twin -- Bourns CAY10-xxxJ4, same convex 0804, same
  * 62.5 mW/element -- publishes 0.250 W/package, i.e. exactly 4x per-element, no package
- * derating in this geometry. At the clamp that leaves 4 x 61.8 = 247 mW against 250 mW, ~1%.
+ * derating in this geometry. At the clamp that leaves 4 x 62.3 = 249 mW against 250 mW, ~0.3%.
  * The convex termination is load-bearing for that: the CONCAVE 0804 equivalent (EXBN8V /
  * CAT10) is rated half, 31 mW/element, where these currents would be ~118% of rating.
  * Worst DC corner from the
@@ -605,7 +605,17 @@
  * Vf 1.9 V (LA P47F 3B bin), VOL ~0.4 V -> I ~21 mA -> ~68-70 mW at 100% duty = ~110%
  * of rating. PWM averages far below that in every shipped animation, so this clamp is
  * dormancy insurance, not a behavior change: above the threshold, peak duty is capped so
- * the worst-corner AVERAGE stays under rating (70 mW x 225/255 = 61.8 mW < 62.5 mW).
+ * the worst-corner AVERAGE stays under rating (71.9 mW x 221/255 = 62.3 mW < 62.5 mW).
+ * THE PEAK WAS 225 UNTIL 2026-08-19, AND 225 DID NOT HOLD. The arithmetic above used
+ * RN1's NOMINAL 150 ohm, but RN1 is +/-5% and -5% is the current-worst corner: 142.5 ohm
+ * gives 22.46 mA and 71.9 mW, not 21 mA and 70 mW, so 225/255 averaged 63.4 mW -- 1.4%
+ * OVER the element rating rather than 1% under. 221 is the largest peak that holds there
+ * (62.3 mW, 99.7% of rating; package 249 mW of 250). Found by asic/analog/sink_budget.py,
+ * which solves each figure on its own corner instead of one convenient typical, and which
+ * now GATES this constant: it reads GLOW_CLAMP_PEAK out of this file and CLAMP_PEAK out of
+ * gamma_pwm.v, fails if they disagree, and fails if either stops holding the inequality.
+ * That matters because R1-R4's 150 ohm is flagged SIZED-not-locked and bench-pending -- a
+ * re-tune moves this number, and now it cannot move silently.
  * Applied inside sense_glow_peak(), the one chokepoint every glow's peak passes through
  * (main.c routes the sweep peak through it too). Free: the STO read is already in hand.
  * 1 = on. Alternative if the board is ever re-laid: EXB-38V151JV -- same family, same
@@ -616,7 +626,7 @@
  * (0.1 W) ballasts" until 2026-08-09 -- the discrete-era answer, which no longer applies. */
 #define USE_BALLAST_GUARD   1
 #define GLOW_CLAMP_STO_MV   5200   /* above this STO, clamp duty (VOVCH 4.65 V never trips it) */
-#define GLOW_CLAMP_PEAK     225    /* max peak while clamped: 70 mW x 225/255 < 62.5 mW rating  */
+#define GLOW_CLAMP_PEAK     221    /* max peak while clamped: 71.9 mW x 221/255 < 62.5 mW rating */
 
 /* Dark-motion mute: suppress the MOTION soft-breath while the card is in the dark (the last poll
  * saw no light, VSENSE < LIGHT_THRESH) -- i.e. stowed in a pocket / bag. This closes a real carry-

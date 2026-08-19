@@ -683,7 +683,7 @@ both the light and strong-sun predicates (`sense_vin_flags()`, raw-count, no mV 
   Any lit poll exits dormancy (~1 poll after morning light). Behaves identically with
   `USE_DOUBLE_TAP` either way.
 - **`USE_BALLAST_GUARD`** (0/1, default 1) **/ `GLOW_CLAMP_STO_MV`** (5200) **/
-  `GLOW_CLAMP_PEAK`** (225): clamp every glow's peak duty when STO sits above 5.2 V, so the
+  `GLOW_CLAMP_PEAK`** (221): clamp every glow's peak duty when STO sits above 5.2 V, so the
   four 1/16 W elements of **RN1** (the `EXB-28V151JX` array — the discrete R1–R4 this line
   named until 2026-08-09 left with the 2026-08-07 consolidation; the per-element rating is
   identical, so the guard's numbers did not move) stay under rating even at the abuse corner
