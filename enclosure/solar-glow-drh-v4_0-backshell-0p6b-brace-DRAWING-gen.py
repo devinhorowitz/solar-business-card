@@ -390,8 +390,8 @@ def sheet(vname, v):
     for yl in (tb_y+34,tb_y+24,tb_y+15,tb_y+8): ax.plot([tb_x,tb_x+tb_w],[yl,yl],lw=0.4,color=INK)
     ax.plot([tb_x+60,tb_x+60],[tb_y,tb_y+15],lw=0.4,color=INK)
     if vname == "max":
-        _title = "SOLAR-GLOW DRH v3.0  —  Ti BACK-SHELL (0.6mm-BOARD DUMB BOX)"
-        _dwg, _rev = "solar-glow-drh-v3_0-backshell-0p6b-brace", "v3.0"
+        _title = "SOLAR-GLOW DRH v4.0  —  Ti BACK-SHELL (0.6mm-BOARD DUMB BOX)"
+        _dwg, _rev = "solar-glow-drh-v4_0-backshell-0p6b-brace", "v4.0"
     else:
         _dwg, _rev = v["shell_name"], vname
         _title = (f"SOLAR-GLOW DRH  —  Ti BACK-SHELL LITE ({floor:.2f} FLOOR, THINNED)" if is_ti
@@ -427,7 +427,7 @@ def sheet(vname, v):
     # The max variant keeps its EXACT historical filenames (enclosure/README + the STEP
     # freshness ledger cite them); lite/air derive theirs from shell_name, the same rule
     # the shell CAD uses for its STEP/STL.
-    stem = ("solar-glow-drh-v3_0-backshell-0p6b-brace-DRAWING" if vname == "max"
+    stem = ("solar-glow-drh-v4_0-backshell-0p6b-brace-DRAWING" if vname == "max"
             else v["shell_name"] + "-DRAWING")
     # CreationDate=None: matplotlib stamps a write time into the PDF, so an unchanged drawing
     # rewrote itself on every run. That is not cosmetic once CI regenerates these -- a job that

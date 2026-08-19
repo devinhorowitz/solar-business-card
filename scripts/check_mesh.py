@@ -35,10 +35,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 
-# filename -> ledger. (The v3_0 in the shell's name is a naming fossil -- the
-# geometry is the current v4 solid; the coordinated rename is a TODO unit.)
+# filename -> ledger. (The shell's name said v3_0 until the 2026-08-19 rename, while the
+# geometry had been the current v4 solid throughout; these keys moved with it.)
 BASELINE = {
-    "solar-glow-drh-v3_0-backshell-0p6b-brace-Ti-max.stl": dict(
+    "solar-glow-drh-v4_0-backshell-0p6b-brace-Ti-max.stl": dict(
         # re-ledgered 2026-08-07 (cap scoot + part-aware ring reliefs, fit_rules.RING --
     # the ring gave up 191.3 mm2 x 1.8 around ten parts, six of which it had been
     # CRUSHING; volume was 5620.24 pre-scoot):

@@ -3,12 +3,12 @@
 > **The v3.0 board files this doc names are no longer in `PCB/`** _(removed 2026-07-28; the current
 > board is v4.0)_. They stay in git history —
 > `git log --diff-filter=D -- PCB/solar-glow-drh-v3_0.kicad_pcb`, then
-> `git show <sha>^:PCB/solar-glow-drh-v3_0.kicad_pcb`. The `enclosure/solar-glow-drh-v3_0-backshell-*`
-> files are **not** affected: they keep their v3_0 names, are still current, and are still what goes
-> to the fab.
+> `git show <sha>^:PCB/solar-glow-drh-v3_0.kicad_pcb`. The `enclosure/solar-glow-drh-v4_0-backshell-*`
+> files are **not** affected by that PCB culling: they are still current and still what goes to the
+> fab. _(They were named `…v3_0-backshell-…` until the 2026-08-19 rename; same geometry.)_
 
 > **Superseded for the enclosure — read the v3.0 deltas.** The authoritative shell spec is now
-> `enclosure/README.md` and the generator `enclosure/solar-glow-drh-v3_0-backshell-0p6b-brace-cad.py`; the board
+> `enclosure/README.md` and the generator `enclosure/solar-glow-drh-v4_0-backshell-0p6b-brace-cad.py`; the board
 > is **v3.0** (`PCB/solar-glow-drh-v3_0.kicad_pcb`). Since this doc was written the shell was built
 > and aligned: the **mounting holes moved** (v3.0 positions below), the **floor is 1.00 mm** (0.95
 > under a small U2 relief pocket), the **ribs are removed** (a resin diffuser brace carries center
@@ -22,7 +22,8 @@ figures for the populated parts.
 
 The board changed materially from the *original* shell modeled in `enclosure/` — **four supercaps
 instead of two, no edge castellations, VQFN-28 not QFN-20, and an accelerometer tap instead of a
-button.** That redesign is done: the v3.0 shell (`solar-glow-drh-v3_0-backshell-*`) is the result.
+button.** That redesign is done: the shell (`solar-glow-drh-v4_0-backshell-*`, `v3_0`-named until
+2026-08-19) is the result.
 §8 lists what changed.
 
 ---

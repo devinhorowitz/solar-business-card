@@ -551,17 +551,6 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
   **air NFC re-tune** rides this: open back = no titanium behind the coil = C9's 47 pF
   needs the bench again (`enclosure/README.md` variants table carries the warning).
 
-- [ ] **[ENCLOSURE] Rename the `v3_0-backshell-0p6b` fossil — a coordinated 10-file unit**
-  _(2026-08-01, found while building the mesh gate.)_ The shell generator, its DRAWING-gen, and
-  the STEP/STL they emit all still carry `v3_0` names although the geometry is the current v4
-  solid (the thickness figure measures 3.5500 from it). The rename touches, together, in one
-  commit: both generator filenames, `kibot.yml` trigger paths AND its CAD-step commands,
-  `assembly_render.py`, `scripts/ref_figures.py` (if it names the file), `check_mesh.py`'s
-  BASELINE keys, README + PCB/README + enclosure/README
-  prose, and design-notes references (historical mentions keep their history markers; the
-  engraving-studies reference this list once carried was culled 2026-08-02). Do it
-  as its own PR — a miss anywhere breaks the CI chain silently.
-
 - [ ] **[ENCLOSURE, cosmetic] The shell STL's one tessellation pinch** _(2026-08-01, found and
   ledgered by `scripts/check_mesh.py` on its first measurement.)_ One zero-length boundary edge
   at a single rim point (24.4, −34.45, 2.7) plus 3 zero-area facets — a cadquery boolean seam

@@ -3,7 +3,7 @@
 
 WHY THIS IS ITS OWN MODULE. Two generators set type from the same JetBrains Mono files:
 `scripts/face_art.py` opens the card face's soldermask, and
-`enclosure/solar-glow-drh-v3_0-backshell-0p6b-brace-cad.py` engraves the medallion's ring
+`enclosure/solar-glow-drh-v4_0-backshell-0p6b-brace-cad.py` engraves the medallion's ring
 text, monogram and unit serial into titanium. Both need glyph outlines and both got them
 by folding the contours with `reduce(symmetric_difference)`, which is wrong, so the bug
 existed in two places and was found in only one.

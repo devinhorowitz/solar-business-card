@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-solar-glow-drh-v3_0-backshell-0p6b-brace-cad.py  -  0.6 mm-board DUMB-BOX shell for the resin brace.
+solar-glow-drh-v4_0-backshell-0p6b-brace-cad.py  -  0.6 mm-board DUMB-BOX shell for the resin brace.
 
 Back-only titanium shell for the SOLAR-GLOW DRH PCB. It drops over the populated back and is held by
 eight M2 screws (four corner + four panel-corner); the bare show-front (two solar cells + the backlit DRH monogram window) stays
