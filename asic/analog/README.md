@@ -29,13 +29,19 @@ on its own corner rather than at one convenient typical.
 
 ## Three findings the envelope forces out
 
-**[F1] The ballast guard is ~1.4 % short at RN1's tolerance corner.** `board.h` sizes the
-clamp on the *nominal* 150 Ω: 68.3 mW × 225/255 = 60.2 mW, under the 62.5 mW element
-rating. RN1 is ±5 %, and the −5 % corner is the current-worst one: 71.9 mW × 225/255 =
-**63.4 mW, 1.4 % over rating**. The largest `GLOW_CLAMP_PEAK` that still holds there is
-**221**. This is a card finding, not an ASIC one — `GLOW_CLAMP_PEAK` lives in `board.h`
-and `gamma_pwm`'s `CLAMP_PEAK` mirrors it. **Not changed here**: it is a firmware
-constant on a board about to be ordered, and the call is the user's.
+**[F1] The ballast guard was ~1.4 % short at RN1's tolerance corner — now fixed.**
+`board.h` sized the clamp on the *nominal* 150 Ω: 68.3 mW × 225/255 = 60.2 mW, under the
+62.5 mW element rating. But RN1 is ±5 %, and −5 % is the current-worst corner: 71.9 mW ×
+225/255 = **63.4 mW, 1.4 % over**. `GLOW_CLAMP_PEAK` and `gamma_pwm`'s `CLAMP_PEAK` are
+now **221**, the largest peak that holds there — 62.3 mW, **99.6 %** of the element rating,
+with the package at 249.1 mW of 250 mW.
+
+That margin is thin on purpose rather than by accident, and it is now **gated** rather than
+trusted: `sink_budget.py` reads `GLOW_CLAMP_PEAK` out of `firmware/board.h` and `CLAMP_PEAK`
+out of `asic/rtl/gamma_pwm.v` — it does not carry a third copy — and `--check` fails if the
+two disagree, or if either stops satisfying the inequality. That guard earns its keep
+because `PCB/README.md` flags R1–R4's 150 Ω as **SIZED, not locked** and bench-pending: a
+re-tune moves the corner under the constant, and now it cannot move silently.
 
 **[F2] A worst-bin LED cannot light at the glow floor at all.** Vf is unbinned across
 3B–5A at **1.95–2.55 V**. The glow gate opens at 2.75 V, leaving 200 mV for ballast *and*
@@ -61,7 +67,7 @@ across a rail range spanning 2.75–5.5 V. That tension is the cell's real desig
 | R_on ceiling | **17.8 Ω** | 0.4 V at I_max, matching the VOL the board was sized against |
 | R_on floor | set by F3 | below ~0.4 V drop the ballast exceeds rating faster than the clamp recovers |
 | drain standoff, LED off | ≥ 5.50 V | drain floats near STO when dark → **a 5 V-class device**, not a 1.8/3.3 V one |
-| die dissipation, 4 ch | **35.9 mW** (31.7 mW clamped) | 4 × 0.4 V × I_max; on-die, unlike RN1's share |
+| die dissipation, 4 ch | **35.9 mW** (31.1 mW clamped) | 4 × 0.4 V × I_max; on-die, unlike RN1's share |
 | off-state leakage | ≤ 1 nA/ch at 5.5 V, 85 °C | the AEM's own dark IQ is 6 nA — four leaky sinks must not dominate the standby ledger |
 | matching, 4 ch | tighter than the LED bin spread | brightness uniformity is visible; Vf already varies 1.95–2.55 V |
 
