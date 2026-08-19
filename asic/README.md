@@ -15,11 +15,11 @@ sharp enough to write down.**
 | file | mirrors | what it is |
 |---|---|---|
 | `rtl/clkdiv.v` | main.c's PIT | 1 MHz → 128 Hz env + 1 Hz poll strobes |
-| `rtl/gamma_pwm.v` | led.c | 4-ch 8-bit PWM, gamma-2, breathe/sweep/dim modes |
+| `rtl/gamma_pwm.v` | led.c | 4-ch 8-bit PWM, gamma-2, breathe/sweep/dim + the ballast duty ceiling |
 | `rtl/i2c_master.v` | twi.h usage | byte-transaction master, open-drain SDA |
 | `rtl/init_seq.v` | adxl367.c | ROM-driven ADXL367 config with one-retry policy |
 | `rtl/sar_ctrl.v` | — | 8-bit SAR controller for the analog comparator/DAC pair |
-| `rtl/sense_seq.v` | sense.c | **the deferred-read rule, in gates**: arm → settle → convert → gate off |
+| `rtl/sense_seq.v` | sense.c | **the deferred-read rule, in gates**: arm → settle → convert → gate off; vlow/vcrit/vclamp |
 | `rtl/wake_fsm.v` | main.c | tap → glow → sweep; vcrit → dormant + brownout; NFC hold |
 | `rtl/drh1_top.v` | — | the chip |
 | `rtl/tt_um_drh_solarglow.v` | — | Tiny Tapeout wrapper (their fixed pin interface) |
@@ -44,6 +44,12 @@ ack_err, one-clk LED leak — each mutation independently hits `$fatal`). Highli
 - **sense: the U10 property** — over a full 32-poll run, `sns_en` is high **0.47 %** of
   cycles (bound: 2 %); the divider is provably gated off between samples, and the force
   path now guarantees ≥ SETTLE_ENV_TICKS *full* settle periods (review finding 4)
+- **ballast guard: the ceiling is measured, not asserted.** The unclamped breathe peak is
+  taken first (252/256) so the ceiling check cannot pass vacuously; with the guard on, every
+  channel of every animation caps at 225/256 *and reaches it*, and mode 00 stays dark.
+  `sense_seq`'s threshold is DISCOVERED by binary search rather than restated in the bench —
+  it reports the boundary it found (code 181) — and its reset value is proven pessimistic.
+  End to end in `tb_top`: same tap, two rails, 225/256 at sto=200 against 252/256 at sto=150
 - integration: behavioural ADXL367 verifies the init addressing; tap → 197 measured PWM
   edges per LED; mid-glow vcrit → **dark on the same clk edge `brownout` rises**
   (review finding 3 + the 5b scenario that fails without the fix); recovery glows again
@@ -59,10 +65,14 @@ Yosys 0.33, `synth` then `abc -g NAND`, top `drh1_top`:
 
 | | |
 |---|---|
-| cells (NAND-mapped) | **3,209** = 1,910 NAND2 + 1,049 NOT + 250 DFF |
-| largest module | `gamma_pwm` (~54 % — the gamma × PWM datapath) |
+| cells (NAND-mapped) | **3,309** = 1,964 NAND2 + 1,094 NOT + 251 DFF |
+| largest module | `gamma_pwm` (~58 % — the gamma × PWM datapath, now including the clamp) |
 | area @ conservative 15–25 kgate/mm² | **0.13–0.25 mm²** |
 | **fraction of a 4.9 mm² quarter slot** | **≈ 3–5 %** |
+
+(Was 3,209 before the ballast guard landed on 2026-08-19: the duty ceiling costs **+100
+cells, +3.1 %** — 54 NAND2, 45 NOT and the one flop that holds `vclamp` — which does not
+move the area band or the slot fraction at this rounding.)
 
 The digital core is a rounding error against the slot. What actually sizes the chip is
 the analog below — and even generous analog budgets leave the quarter slot mostly empty.
@@ -83,27 +93,31 @@ the analog below — and even generous analog budgets leave the quarter slot mos
 
 ## Fix before any shuttle submission
 
-One place where the RTL and the card still disagree. It is not caught by anything in
-`tb/` -- the benches verify the RTL against its own contract, and the contract is what is
-wrong.
-
-- **No ballast/thermal guard exists in the RTL.** The card clamps glow duty above an
-  abuse-corner STO -- `USE_BALLAST_GUARD`, `GLOW_CLAMP_STO_MV` 5200, `GLOW_CLAMP_PEAK` 225,
-  applied in `sense_glow_peak()`, the one chokepoint every animation's peak passes through.
-  It exists because RN1's EXB-28V151JX elements are rated **62.5 mW each** and the worst DC
-  corner (STO 5.5 V off a bench supply, min-bin Vf 1.9 V, VOL ~0.4 V) draws **~21 mA** for
-  **~68-70 mW, about 110 % of rating**; the clamp holds the worst-corner average at
-  70 x 225/255 = 61.8 mW. `gamma_pwm.v` has **no equivalent, and no input to build one from**
-  -- its only control is `mode`, and mode 01's envelope runs to full scale regardless of rail.
-  `sense_seq.v` exposes no threshold for it either.
-  The number this lands on is SPEC's **"16 mA sink cells"**, which is the NORMAL ceiling:
-  (4.65 - 2.25)/150. At the corner the card already guards, the same 150 ohm ballast passes
-  ~21 mA -- a **33 % overshoot** driven straight into an on-die sink. Sizing those cells is
-  analog work this experiment does not claim, but the **duty clamp is digital** and belongs
-  in this directory. A chip that cannot dim itself at an over-voltage rail has no equivalent
-  of the guard the card shipped.
+Nothing outstanding. Both items this section was opened for are closed; it stays as the
+place the next contract-level divergence gets written down, because neither of these was a
+bug `tb/` could have found — the benches check the RTL against its contract, and in both
+cases the contract was what was wrong.
 
 ### Closed
+
+- **Ballast/thermal duty guard** (2026-08-19). The card clamps glow duty above an
+  abuse-corner STO — `USE_BALLAST_GUARD`, `GLOW_CLAMP_STO_MV` 5200, `GLOW_CLAMP_PEAK` 225,
+  applied in `sense_glow_peak()` — because RN1's EXB-28V151JX elements are rated **62.5 mW
+  each** and the worst DC corner (STO 5.5 V off a bench supply, min-bin Vf 1.9 V, VOL ~0.4 V)
+  draws **~21 mA** for **~68-70 mW, about 110 % of rating**. `gamma_pwm.v` had no equivalent
+  *and no input to build one from*: its only control was `mode`, and mode 01's envelope ran
+  to full scale regardless of rail. A chip that cannot dim itself at an over-voltage rail has
+  no equivalent of the guard the card shipped.
+  Both halves now exist. `sense_seq` gained `TH_CLAMP` / `vclamp` (the measurement);
+  `gamma_pwm` gained `CLAMP_PEAK` / `clamp_en` and a `ballast()` function every duty passes
+  through (the actuation), so a mode added later inherits the ceiling by construction. It is
+  a CEILING, not a rescale, because the published bound is computed at a held peak:
+  70 mW × 225/255 = 61.8 mW < 62.5 mW, so a flat top at the ceiling *is* the worst case.
+  Cost: **+100 cells, +3.1 %** (3,209 → 3,309), one new flop, no latches.
+  On SPEC's **"16 mA sink cells"** — that is the NORMAL ceiling, (4.65 − 2.25)/150 — the
+  guard changes nothing: at the corner the same 150 Ω ballast still passes ~21 mA, a **33 %
+  overshoot** into an on-die sink. Sizing those cells is analog work this experiment does not
+  claim; what is now digital is the duty clamp, and it is in this directory.
 
 - **`chg_dis` → `brownout`** (2026-08-19). The RTL's status output named the same net as
   the card and meant the opposite thing. In `wake_fsm.v` it is a brownout *tell*: asserted
@@ -117,10 +131,9 @@ wrong.
   Renamed throughout `rtl/`, `tb/` and `SPEC.md`; the rationale lives in `rtl/wake_fsm.v`'s
   header, where a future reader meets it. **It must never reach `EN_STO_CH`.** A rename is
   worth only as much as whatever keeps it renamed, so `asic.yml` now fails if `chg_dis`
-  reappears in `rtl/` or `tb/` -- the FRONT_SIDE-snapshot shape, where a deliberate return
-  updates the gate in the same commit.
-  Provably a pure rename, not a behaviour change: cell count unchanged at **3,209**
-  (1,910 NAND2 + 1,049 NOT + 250 DFF), no latches, all 6 benches pass.
+  reappears as an IDENTIFIER in `rtl/` or `tb/` (comments are stripped first, so the header
+  may still name it to explain why it is gone).
+  Provably a pure rename: cell count unchanged at 3,209 at the time, no latches, 6/6 benches.
 
 _(This section is newer than the review pass above: neither item was among the 5 findings,
 because both were contract-level and the review checked the RTL against the contract.)_

@@ -41,10 +41,13 @@
  *
  * Verilog-2001, single clock, synchronous reset, no latches, no initial.
  */
-module gamma_pwm (
+module gamma_pwm #(
+    parameter [7:0] CLAMP_PEAK = 8'd225   // board.h GLOW_CLAMP_PEAK -- see header
+)(
     input  wire clk, input wire rst_n,
     input  wire tick_env,
     input  wire [1:0] mode,   // 00 off | 01 breathe (all 4 in phase) | 10 sweep (90 deg offsets) | 11 dim solid
+    input  wire clamp_en,     // sense_seq.vclamp: rail above the ballast-guard threshold
     output wire [3:0] led     // active-high to the four 16 mA sink cells
 );
 
@@ -74,6 +77,23 @@ module gamma_pwm (
         end
     endfunction
 
+    /* THE BALLAST GUARD, actuation half -- led.c has no equivalent because the
+     * card applies it one level up, in sense.c's sense_glow_peak(). This is the
+     * same idea in the same shape: ONE function that every animation's amplitude
+     * passes through on its way to a duty register, so no mode can route around
+     * it and a mode added later inherits it by construction. A ceiling, not a
+     * rescale -- exactly the firmware's `if (peak > GLOW_CLAMP_PEAK) peak =
+     * GLOW_CLAMP_PEAK`, which flat-tops the envelope rather than shrinking it.
+     * That is the right shape for the published bound, because the bound is
+     * computed at a HELD peak: 70 mW x 225/255 = 61.8 mW < 62.5 mW rating. A
+     * flat top at CLAMP_PEAK forever IS that worst case, so clamping the
+     * instantaneous duty buys the identical guarantee as clamping the peak. */
+    function [7:0] ballast (input [7:0] d);
+        begin
+            ballast = (clamp_en && d > CLAMP_PEAK) ? CLAMP_PEAK : d;
+        end
+    endfunction
+
     reg [7:0] phase;     // master envelope phase, steps on tick_env
     reg [7:0] pwm_cnt;   // free-running 8-bit PWM counter on clk
     reg [7:0] duty0, duty1, duty2, duty3;
@@ -96,22 +116,22 @@ module gamma_pwm (
                     duty3 <= 8'd0;
                 end
                 MODE_BREATHE: begin        // all four in phase (led_breathe)
-                    duty0 <= gamma(tri255(phase));
-                    duty1 <= gamma(tri255(phase));
-                    duty2 <= gamma(tri255(phase));
-                    duty3 <= gamma(tri255(phase));
+                    duty0 <= ballast(gamma(tri255(phase)));
+                    duty1 <= ballast(gamma(tri255(phase)));
+                    duty2 <= ballast(gamma(tri255(phase)));
+                    duty3 <= ballast(gamma(tri255(phase)));
                 end
                 MODE_SWEEP: begin          // 90-degree offsets (led_sweep chase)
-                    duty0 <= gamma(tri255(phase));
-                    duty1 <= gamma(tri255(phase + CH_OFFS));
-                    duty2 <= gamma(tri255(phase + (CH_OFFS << 1)));
-                    duty3 <= gamma(tri255(phase + (CH_OFFS << 1) + CH_OFFS));
+                    duty0 <= ballast(gamma(tri255(phase)));
+                    duty1 <= ballast(gamma(tri255(phase + CH_OFFS)));
+                    duty2 <= ballast(gamma(tri255(phase + (CH_OFFS << 1))));
+                    duty3 <= ballast(gamma(tri255(phase + (CH_OFFS << 1) + CH_OFFS)));
                 end
                 MODE_DIM: begin            // constant small duty
-                    duty0 <= DIM_DUTY;
-                    duty1 <= DIM_DUTY;
-                    duty2 <= DIM_DUTY;
-                    duty3 <= DIM_DUTY;
+                    duty0 <= ballast(DIM_DUTY);
+                    duty1 <= ballast(DIM_DUTY);
+                    duty2 <= ballast(DIM_DUTY);
+                    duty3 <= ballast(DIM_DUTY);
                 end
             endcase
         end
