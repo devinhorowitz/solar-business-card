@@ -21,13 +21,13 @@
 //       window (> 10 rising edges each); glow self-terminates (mode 00,
 //       LEDs solid low) after GLOW_POLLS.
 //   [3] VIN_CODE dropped below TH_CRIT (64) -> the next PERIODIC sample
-//       latches it (sto_q == 30) and chg_dis rises; an NFC field pulse
+//       latches it (sto_q == 30) and brownout rises; an NFC field pulse
 //       during the wait proves nfc_en rises with fd_n low and has expired
 //       (NFC_HOLD_POLLS) by dormancy time -- the FD path is state-independent.
-//   [4] tap in DORMANT: ZERO led edges over a 2-poll window, chg_dis stays
+//   [4] tap in DORMANT: ZERO led edges over a 2-poll window, brownout stays
 //       up, and the tap forces NO sample (sample count unchanged) -- taps
 //       are ignored, not deferred.
-//   [5] VIN_CODE raised -> next periodic sample -> chg_dis released, and a
+//   [5] VIN_CODE raised -> next periodic sample -> brownout released, and a
 //       fresh tap glows again (> 10 edges per led, mode 01).
 //   [5b] vcrit latches MID-ANIMATION (the one path invariant [8] cannot see
 //       otherwise, since every other dormancy entry happens from idle with
@@ -35,11 +35,11 @@
 //       standing vlow latch still says healthy, the glow fires, and the
 //       tap-FORCED sample itself latches vcrit while the breathe animation
 //       is live. Asserts mode 01 held right up to the cut, the LEDs are
-//       dark at the FIRST negedge with chg_dis high -- i.e. from the SAME
-//       clk edge chg_dis rises, which only gamma_pwm's combinational
+//       dark at the FIRST negedge with brownout high -- i.e. from the SAME
+//       clk edge brownout rises, which only gamma_pwm's combinational
 //       mode-off can provide (the duty regs clear one clk later) -- and the
 //       animation never resumes on its own (zero led edges, mode 00,
-//       chg_dis held, over 2 polls). The tap is placed at a measured
+//       brownout held, over 2 polls). The tap is placed at a measured
 //       envelope phase so the cut lands at duty ~144/256: if the
 //       combinational off is reverted, the one-clk drive is a REAL lit
 //       cycle and this scenario (and [8]) must fail.
@@ -49,7 +49,7 @@
 //       write set arrives THROUGH the pad model (>= 5 writes, first is
 //       0x1F <- 0x52), uio_oe[7:1] is constantly driven / uio_out[0]
 //       constantly low (open-drain SDA), and its SCL idles high.
-//   [8] standing invariant, every clk: chg_dis high -> all four LEDs low
+//   [8] standing invariant, every clk: brownout high -> all four LEDs low
 //       (dormancy means DARK; a single lit clk fails the run).
 //
 // Scaling: drh1_top's CLK_HZ pass-through runs clkdiv at 32768 "Hz", so one
@@ -78,7 +78,7 @@ module tb_top;
 
     wire [3:0]  led;
     wire        scl, sda;
-    wire        nfc_en, sns_en, chg_dis;
+    wire        nfc_en, sns_en, brownout;
     wire [7:0]  dac_code, dbg_sto;
     wire [1:0]  dbg_mode;
 
@@ -92,7 +92,7 @@ module tb_top;
         .led(led),
         .sda(sda), .scl(scl),
         .int1(int1), .int2(int2), .fd_n(fd_n),
-        .nfc_en(nfc_en), .sns_en(sns_en), .chg_dis(chg_dis),
+        .nfc_en(nfc_en), .sns_en(sns_en), .brownout(brownout),
         .cmp_in(cmp_in), .dac_code(dac_code),
         .dbg_sto(dbg_sto), .dbg_mode(dbg_mode)
     );
@@ -169,8 +169,8 @@ module tb_top;
     /* ---- standing invariants, every clk ------------------------------------ */
     always @(posedge clk) if (rst_n === 1'b1) begin
         // [8] dormancy means DARK
-        if (chg_dis === 1'b1 && led !== 4'b0000)
-            $fatal(1, "LED %b lit while chg_dis high (dormancy must be dark)", led);
+        if (brownout === 1'b1 && led !== 4'b0000)
+            $fatal(1, "LED %b lit while brownout high (dormancy must be dark)", led);
         // [7] uio_oe constant except the sda bit; SDA pad only ever drives low
         if (tt_uio_oe[7:1] !== 7'b1111111)
             $fatal(1, "tt uio_oe[7:1]=%b, must be constantly driven", tt_uio_oe[7:1]);
@@ -237,9 +237,9 @@ module tb_top;
         if (fw_reg_main !== 8'h1F || fw_val_main !== 8'h52)
             $fatal(1, "first init write {%h<=%h}, expected SOFT_RESET {1f<=52}",
                    fw_reg_main, fw_val_main);
-        if (led !== 4'b0000 || dbg_mode !== 2'b00 || chg_dis !== 1'b0)
-            $fatal(1, "not dark/idle after init (led=%b mode=%b chg_dis=%b)",
-                   led, dbg_mode, chg_dis);
+        if (led !== 4'b0000 || dbg_mode !== 2'b00 || brownout !== 1'b0)
+            $fatal(1, "not dark/idle after init (led=%b mode=%b brownout=%b)",
+                   led, dbg_mode, brownout);
         $display("[1] init OK: %0d writes, first = SOFT_RESET", slave.wr_count);
 
         /* [2] healthy tap -> glow: mode 01, exact sample, edges on all four */
@@ -280,15 +280,15 @@ module tb_top;
         repeat (16) @(posedge clk);
         fd_n = 1'b1;                           // field leaves; hold starts
         k = 0;
-        while (chg_dis !== 1'b1 && k < 20 * POLL_CLKS) begin @(posedge clk); k = k + 1; end
-        if (chg_dis !== 1'b1)
-            $fatal(1, "chg_dis never rose after VIN dropped below TH_CRIT");
+        while (brownout !== 1'b1 && k < 20 * POLL_CLKS) begin @(posedge clk); k = k + 1; end
+        if (brownout !== 1'b1)
+            $fatal(1, "brownout never rose after VIN dropped below TH_CRIT");
         if (dbg_sto !== VIN_DEAD)
             $fatal(1, "sto_q=%0d in dormancy, expected %0d", dbg_sto, VIN_DEAD);
         if (dbg_mode !== 2'b00) $fatal(1, "mode=%b in dormancy", dbg_mode);
         if (nfc_en !== 1'b0)
             $fatal(1, "nfc_en still up long after NFC_HOLD_POLLS expired");
-        $display("[3] dormancy OK: chg_dis up, sto=%0d, NFC hold expired", dbg_sto);
+        $display("[3] dormancy OK: brownout up, sto=%0d, NFC hold expired", dbg_sto);
 
         /* [4] tap in DORMANT: ignored -- zero edges, no forced sample */
         clr_edges; win_en = 1'b1;
@@ -299,17 +299,17 @@ module tb_top;
         if (ec0 !== 0 || ec1 !== 0 || ec2 !== 0 || ec3 !== 0)
             $fatal(1, "LED edges %0d/%0d/%0d/%0d during dormancy, expected 0",
                    ec0, ec1, ec2, ec3);
-        if (chg_dis !== 1'b1) $fatal(1, "chg_dis dropped while VIN still dead");
+        if (brownout !== 1'b1) $fatal(1, "brownout dropped while VIN still dead");
         if (samples !== s_before)
             $fatal(1, "a dormant tap forced a sample (taps must be IGNORED)");
         $display("[4] dormant tap OK: dark, no sample");
 
-        /* [5] recovery: next periodic sample releases chg_dis; tap glows */
+        /* [5] recovery: next periodic sample releases brownout; tap glows */
         vin_code = VIN_OK;
         k = 0;
-        while (chg_dis !== 1'b0 && k < 20 * POLL_CLKS) begin @(posedge clk); k = k + 1; end
-        if (chg_dis !== 1'b0)
-            $fatal(1, "chg_dis never released after VIN recovered");
+        while (brownout !== 1'b0 && k < 20 * POLL_CLKS) begin @(posedge clk); k = k + 1; end
+        if (brownout !== 1'b0)
+            $fatal(1, "brownout never released after VIN recovered");
         if (dbg_sto !== VIN_OK)
             $fatal(1, "sto_q=%0d after recovery sample, expected %0d",
                    dbg_sto, VIN_OK);
@@ -323,7 +323,7 @@ module tb_top;
         check_edges_gt(10);
         $display("[5] recovery OK: edges %0d/%0d/%0d/%0d", ec0, ec1, ec2, ec3);
 
-        /* [5b] vcrit cuts a LIVE glow: dark from the same edge chg_dis rises */
+        /* [5b] vcrit cuts a LIVE glow: dark from the same edge brownout rises */
         // let [5]'s glow run out back to idle (standing latches: healthy)
         k = 0;
         while (dbg_mode !== 2'b00 && k < 6 * POLL_CLKS) begin @(posedge clk); k = k + 1; end
@@ -344,20 +344,20 @@ module tb_top;
         // ride the live animation up to the cut; mode 01 must hold throughout
         k = 0;
         @(negedge clk);
-        while (chg_dis !== 1'b1 && k < 2 * POLL_CLKS) begin
+        while (brownout !== 1'b1 && k < 2 * POLL_CLKS) begin
             if (dbg_mode !== 2'b01)
                 $fatal(1, "[5b] animation lost (mode=%b) before vcrit latched", dbg_mode);
             @(negedge clk); k = k + 1;
         end
-        if (chg_dis !== 1'b1)
+        if (brownout !== 1'b1)
             $fatal(1, "[5b] forced sample did not latch vcrit mid-glow");
-        // FIRST negedge with chg_dis high == the same clk edge it rose on:
+        // FIRST negedge with brownout high == the same clk edge it rose on:
         // the duty regs still hold the breathe value for this one cycle, so
         // only the combinational mode-off can make this pass (finding 3).
         if (led !== 4'b0000)
-            $fatal(1, "[5b] led=%b on the clk edge chg_dis rose -- one-clk drive while charging disabled", led);
+            $fatal(1, "[5b] led=%b on the clk edge brownout rose -- one-clk drive while charging disabled", led);
         if (dbg_mode !== 2'b00)
-            $fatal(1, "[5b] mode=%b on the chg_dis edge, expected 00", dbg_mode);
+            $fatal(1, "[5b] mode=%b on the brownout edge, expected 00", dbg_mode);
         if (dbg_sto !== VIN_DEAD)
             $fatal(1, "[5b] sto_q=%0d at the cut, expected %0d", dbg_sto, VIN_DEAD);
         // the animation must never resume on its own
@@ -367,15 +367,15 @@ module tb_top;
         if (ec0 !== 0 || ec1 !== 0 || ec2 !== 0 || ec3 !== 0)
             $fatal(1, "[5b] led edges %0d/%0d/%0d/%0d after the mid-glow cut, expected 0",
                    ec0, ec1, ec2, ec3);
-        if (chg_dis !== 1'b1) $fatal(1, "[5b] chg_dis dropped while VIN still dead");
+        if (brownout !== 1'b1) $fatal(1, "[5b] brownout dropped while VIN still dead");
         if (dbg_mode !== 2'b00) $fatal(1, "[5b] animation resumed on its own (mode=%b)", dbg_mode);
-        $display("[5b] mid-glow vcrit OK: dark on the chg_dis edge, no resume");
+        $display("[5b] mid-glow vcrit OK: dark on the brownout edge, no resume");
         // recover so [6]/[7] see the run-out state the old scenario ended in
         vin_code = VIN_OK;
         k = 0;
-        while (chg_dis !== 1'b0 && k < 20 * POLL_CLKS) begin @(posedge clk); k = k + 1; end
-        if (chg_dis !== 1'b0)
-            $fatal(1, "[5b] chg_dis never released after recovery");
+        while (brownout !== 1'b0 && k < 20 * POLL_CLKS) begin @(posedge clk); k = k + 1; end
+        if (brownout !== 1'b0)
+            $fatal(1, "[5b] brownout never released after recovery");
 
         /* [6] whole-run gate duty: the divider only exists while converting */
         if (samples < 4)

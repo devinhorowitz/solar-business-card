@@ -224,6 +224,19 @@ red, the check itself fails.
   `build/`, `*.vvp`, both `synth_*.txt`), so no artifact's reproducibility depends on a pin,
   and pinning apt against `ubuntu-latest` turns a runner-image roll into rot. Versions are
   printed in a provenance step instead. Same call `xvfb` in `kibot.yml` already makes.
+  It also gates the **retired signal name** (2026-08-19): the core's brownout status output
+  was `chg_dis` until then — the same name as the card's `CHG_DIS_G` (PA4 → Q2 gate), which
+  is the opposite thing, a charge-**inhibit control** for NFC reads. Wiring one to the other
+  disables harvest exactly when the tank is empty, and the miswire *looks correct because the
+  names match*, so no bench in `tb/` can fail on it — they check the RTL against its contract,
+  and the contract was what was wrong. The rename is therefore held by CI rather than by
+  prose. It bans the **identifier, not the word**: `rtl/wake_fsm.v`'s header names `chg_dis`
+  to explain why it is gone, and the first cut of this gate was a bare `grep` that went red on
+  a clean tree against exactly that sentence — forbidding the documentation of the rule it
+  enforces. Comments are stripped (line-count preserved, so reported line numbers are real)
+  before the scan, and the stripper **self-tests both cases every run** — a prose mention must
+  stay green, a declaration must go red — so it fails itself rather than going quietly
+  permissive.
 - `weekly-freshness.yml` — the Monday canary + drift report. Pins have two failure modes
   push-CI can't see: **rot** (the pinned artifact stops being fetchable) and **drift**
   (upstream moves on). Weekly, pushes or not: re-fetches the pinned toolchain/DFP and

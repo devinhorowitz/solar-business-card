@@ -117,14 +117,20 @@ module wake_fsm #(
     input  wire int1, input wire int2, input wire fd_n,
     input  wire vlow, input wire vcrit, input wire init_done,
     output reg  [1:0] led_mode, output reg force_sense,
-    output reg  nfc_en, output reg chg_dis
+    output reg  nfc_en, output reg brownout
 );
 ```
 WAIT_INIT → IDLE. Rising `int1` in IDLE: `force_sense` strobe, then if `!vlow` glow
 (mode 01) for GLOW_POLLS; second `int1` during glow → sweep (mode 10). `vcrit` → DORMANT:
-mode 00, taps ignored, `chg_dis` asserted, exit only when `!vcrit`. `fd_n` low → `nfc_en`
+mode 00, taps ignored, `brownout` asserted, exit only when `!vcrit`. `fd_n` low → `nfc_en`
 for NFC_HOLD_POLLS (NFC works unpowered; the rail is only for the FD/I²C extras — same as
 the card).
+
+`brownout` is a STATUS output, not a charge control, and that distinction is why it is not
+called `chg_dis`: the card's `CHG_DIS_G` (PA4 → Q2 gate) is a charge-**inhibit control**
+driven from the FD handler to quiet the DC-DC for an NFC read. Tying this pin to that net
+would disable harvest exactly when the tank is empty. It must never reach `EN_STO_CH`.
+(Renamed 2026-08-19; `asic.yml` fails if the old name returns.)
 
 ### rtl/drh1_top.v
 Wire all of the above. Ports:
@@ -134,7 +140,7 @@ module drh1_top (
     output wire [3:0] led,
     inout  wire sda, output wire scl,
     input  wire int1, input wire int2, input wire fd_n,
-    output wire nfc_en, output wire sns_en, output wire chg_dis,
+    output wire nfc_en, output wire sns_en, output wire brownout,
     input  wire cmp_in, output wire [7:0] dac_code,
     output wire [7:0] dbg_sto, output wire [1:0] dbg_mode,
     output wire sda_oe        // 2026-08-12 amendment — pass-through of the master's pad OE
@@ -150,7 +156,7 @@ module tt_um_drh_solarglow (
     input  wire ena, input wire clk, input wire rst_n
 );
 ```
-ui_in: 0=int1 1=int2 2=fd_n 3=cmp_in. uo_out: 3:0=led 4=nfc_en 5=sns_en 6=chg_dis 7=scl.
+ui_in: 0=int1 1=int2 2=fd_n 3=cmp_in. uo_out: 3:0=led 4=nfc_en 5=sns_en 6=brownout 7=scl.
 uio 0: SDA (oe from the master's sda_oe); uio 7:1: dac_code[7:1] out (LSB unobservable on
 TT — acceptable for the demo board; the wafer.space padframe has pads to spare).
 
@@ -159,7 +165,7 @@ TT — acceptable for the demo board; the wafer.space padframe has pads to spare
 Self-checking testbench, `$fatal` on assertion failure, final line `TB PASS: <name>`.
 Integration TB (`tb/tb_top.v`) must include a behavioural ADXL367 I²C slave model that
 CHECKS the init writes' addressing, then: tap → observe glow PWM activity on all four LEDs;
-vcrit scenario via the SAR/comparator model → DORMANT + chg_dis; sns_en duty bounded.
+vcrit scenario via the SAR/comparator model → DORMANT + brownout; sns_en duty bounded.
 
 ## Size gate
 

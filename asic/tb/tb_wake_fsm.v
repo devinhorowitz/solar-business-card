@@ -17,17 +17,17 @@
  *   3. Second tap during the glow -> mode 10 (sweep), no second
  *      force_sense strobe (design: strobe on IDLE taps only), sweep ends
  *      back at mode 00 after its GLOW_POLLS-poll window.
- *   4. vcrit mid-glow -> mode 00 + chg_dis high; taps ignored while
+ *   4. vcrit mid-glow -> mode 00 + brownout high; taps ignored while
  *      dormant (no strobe, no mode change over 2 polls); recovery when
- *      vcrit drops: chg_dis released, no spontaneous glow, and the next
+ *      vcrit drops: brownout released, no spontaneous glow, and the next
  *      tap glows normally.
  *   5. fd_n low -> nfc_en immediately; counter reloads while the field is
  *      held (still high across a poll with fd_n low); after release,
  *      nfc_en holds through NFC_HOLD_POLLS - 1 polls and drops exactly on
  *      the NFC_HOLD_POLLS-th tick_poll, then stays off.
  *   6. int2 is reserved: an int2 pulse changes nothing (mode, strobe count,
- *      nfc_en, chg_dis all unmoved).
- *   Invariant (every sampled cycle): chg_dis == 1 implies led_mode == 00,
+ *      nfc_en, brownout all unmoved).
+ *   Invariant (every sampled cycle): brownout == 1 implies led_mode == 00,
  *   and no output is ever X after reset.
  *
  * All TB sampling is on negedge clk (NBA-updated DUT state stable), house
@@ -48,7 +48,7 @@ module tb_wake_fsm;
     reg        tick_poll;
     reg [7:0]  pcnt;
     wire [1:0] led_mode;
-    wire       force_sense, nfc_en, chg_dis;
+    wire       force_sense, nfc_en, brownout;
 
     wake_fsm #(.GLOW_POLLS(GLOW_POLLS), .NFC_HOLD_POLLS(NFC_HOLD_POLLS)) dut (
         .clk(clk), .rst_n(rst_n),
@@ -56,7 +56,7 @@ module tb_wake_fsm;
         .int1(int1), .int2(int2), .fd_n(fd_n),
         .vlow(vlow), .vcrit(vcrit), .init_done(init_done),
         .led_mode(led_mode), .force_sense(force_sense),
-        .nfc_en(nfc_en), .chg_dis(chg_dis)
+        .nfc_en(nfc_en), .brownout(brownout)
     );
 
     always #5 clk = ~clk;
@@ -90,18 +90,18 @@ module tb_wake_fsm;
 
     always @(negedge clk) begin
         if (mon_on) begin
-            if (force_sense === 1'bx || nfc_en === 1'bx || chg_dis === 1'bx ||
+            if (force_sense === 1'bx || nfc_en === 1'bx || brownout === 1'bx ||
                 ^led_mode === 1'bx)
                 $fatal(1, "output X after reset: mode=%b fs=%b nfc=%b chg=%b",
-                       led_mode, force_sense, nfc_en, chg_dis);
+                       led_mode, force_sense, nfc_en, brownout);
             if (force_sense === 1'b1) begin
                 if (fs_prev)
                     $fatal(1, "force_sense high 2 consecutive cycles (not a 1-clk strobe)");
                 fs_count = fs_count + 1;
             end
             fs_prev = (force_sense === 1'b1);
-            if (chg_dis === 1'b1 && led_mode !== 2'b00)
-                $fatal(1, "invariant broken: chg_dis high with led_mode %b", led_mode);
+            if (brownout === 1'b1 && led_mode !== 2'b00)
+                $fatal(1, "invariant broken: brownout high with led_mode %b", led_mode);
         end
     end
 
@@ -212,16 +212,16 @@ module tb_wake_fsm;
         vcrit = 1'b1;
         repeat (3) @(negedge clk);
         if (led_mode !== 2'b00)    $fatal(1, "4: vcrit did not force mode 00 (mode %b)", led_mode);
-        if (chg_dis !== 1'b1)      $fatal(1, "4: vcrit did not assert chg_dis");
+        if (brownout !== 1'b1)      $fatal(1, "4: vcrit did not assert brownout");
         fs_count = 0;
         tap;                       // taps must be ignored while dormant
         repeat (2 * POLL_CLKS) @(negedge clk);
         if (fs_count != 0)         $fatal(1, "4: force_sense fired on a dormant tap");
         if (led_mode !== 2'b00)    $fatal(1, "4: dormant tap changed led_mode");
-        if (chg_dis !== 1'b1)      $fatal(1, "4: chg_dis dropped while vcrit held");
+        if (brownout !== 1'b1)      $fatal(1, "4: brownout dropped while vcrit held");
         vcrit = 1'b0;              // recovery
         repeat (3) @(negedge clk);
-        if (chg_dis !== 1'b0)      $fatal(1, "4: chg_dis not released when vcrit dropped");
+        if (brownout !== 1'b0)      $fatal(1, "4: brownout not released when vcrit dropped");
         if (led_mode !== 2'b00)    $fatal(1, "4: spontaneous glow on recovery");
         repeat (2 * POLL_CLKS) @(negedge clk);
         if (fs_count != 0)         $fatal(1, "4: dormant tap replayed after recovery");
@@ -234,7 +234,7 @@ module tb_wake_fsm;
         for (p = 1; p <= GLOW_POLLS; p = p + 1) wait_poll;   // let it run out
         repeat (2) @(negedge clk);
         if (led_mode !== 2'b00)    $fatal(1, "4: post-recovery glow did not end");
-        $display("4 OK: vcrit cut the glow, chg_dis held, taps dead while dormant, clean recovery");
+        $display("4 OK: vcrit cut the glow, brownout held, taps dead while dormant, clean recovery");
 
         /* ========== 5: fd_n low -> nfc_en for NFC_HOLD_POLLS polls ========== */
         if (nfc_en !== 1'b0)       $fatal(1, "5: nfc_en high before any field");
@@ -272,8 +272,8 @@ module tb_wake_fsm;
         repeat (2 * POLL_CLKS) @(negedge clk);
         if (fs_count != 0)         $fatal(1, "6: int2 pulse strobed force_sense");
         if (led_mode !== 2'b00)    $fatal(1, "6: int2 pulse changed led_mode");
-        if (nfc_en !== 1'b0 || chg_dis !== 1'b0)
-                                   $fatal(1, "6: int2 pulse moved nfc_en/chg_dis");
+        if (nfc_en !== 1'b0 || brownout !== 1'b0)
+                                   $fatal(1, "6: int2 pulse moved nfc_en/brownout");
         $display("6 OK: int2 reserved -- pulse had no effect");
 
         $display("TB PASS: tb_wake_fsm");

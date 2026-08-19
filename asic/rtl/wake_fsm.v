@@ -23,14 +23,25 @@
  *     runs GLOW_POLLS polls (contract gives it no length of its own; the
  *     glow window is the one poll-denominated animation length here);
  *     further taps during the sweep are ignored.
- *   - vcrit -> DORMANT: mode 00, chg_dis asserted, taps ignored, exit only
- *     when vcrit drops. This is the silicon cousin of main.c's brownout
- *     floor (every glow gated by VS_GLOW_FLOOR_MV) -- with chg_dis the
- *     analog tell that the tank is at the brownout floor and the LED loads
- *     must stay off. Recovery returns to IDLE with chg_dis released.
+ *   - vcrit -> DORMANT: mode 00, `brownout` asserted, taps ignored, exit
+ *     only when vcrit drops. This is the silicon cousin of main.c's
+ *     brownout floor (every glow gated by VS_GLOW_FLOOR_MV) -- `brownout`
+ *     is the TELL that the tank sits at that floor and the LED loads must
+ *     stay off. Recovery returns to IDLE with it released.
  *     vcrit is honoured from IDLE/GLOW/SWEEP (it cuts an animation dead);
  *     during WAIT_INIT it is ignored -- init is still sequencing and there
  *     is no armed behaviour to suppress.
+ *     THE NAME IS LOAD-BEARING, and this output is a STATUS TELL, not a
+ *     charge control. It was called chg_dis until 2026-08-19, which is
+ *     the same name as the card's own CHG_DIS_G net (PA4 -> Q2 gate) --
+ *     and that one is the opposite kind of thing: a charge-INHIBIT
+ *     CONTROL, driven from the FD both-edge handler to quiet the >=10 MHz
+ *     DC-DC for an NFC read, nothing to do with brownout. Wire this pin
+ *     to that net and a brownout disables harvest exactly when the tank
+ *     is empty: the cold-start deadlock that the 2026-07-23 fix and R18's
+ *     gate pulldown exist to prevent, re-created in silicon. The miswire
+ *     was dangerous BECAUSE the two names matched, so no reviewer and no
+ *     bench could see it. This output must never reach EN_STO_CH.
  *   - fd_n low (NFC field present, main.c's PA6/FD, active-low, field-
  *     powered) -> nfc_en asserted and held for NFC_HOLD_POLLS polls AFTER
  *     the field is last seen, then off: main.c's transient NFC-rail window
@@ -61,7 +72,7 @@ module wake_fsm #(
     input  wire int1, input wire int2, input wire fd_n,
     input  wire vlow, input wire vcrit, input wire init_done,
     output reg  [1:0] led_mode, output reg force_sense,
-    output reg  nfc_en, output reg chg_dis
+    output reg  nfc_en, output reg brownout
 );
 
     localparam [1:0] MODE_OFF     = 2'b00,
@@ -94,7 +105,7 @@ module wake_fsm #(
             led_mode    <= MODE_OFF;   // dark at reset -- same guarantee gamma_pwm
             force_sense <= 1'b0;       //   makes with its duty regs
             nfc_en      <= 1'b0;
-            chg_dis     <= 1'b0;
+            brownout    <= 1'b0;
         end else begin
             int1_q      <= int1;       // runs in every state: a pre-init or
                                        // in-dormancy tap is consumed, never
@@ -119,7 +130,7 @@ module wake_fsm #(
 
                 ST_WAIT_INIT: begin            // nothing armed until the accel
                     led_mode <= MODE_OFF;      //   config sequence is done
-                    chg_dis  <= 1'b0;
+                    brownout <= 1'b0;
                     if (init_done)
                         state <= ST_IDLE;
                 end
@@ -128,7 +139,7 @@ module wake_fsm #(
                     led_mode <= MODE_OFF;
                     if (vcrit) begin
                         state    <= ST_DORMANT;
-                        chg_dis  <= 1'b1;
+                        brownout <= 1'b1;
                     end else if (tap) begin
                         force_sense <= 1'b1;           // fresh rail read (event path)
                         if (!vlow) begin               // rail-gated glow (standing latch)
@@ -144,7 +155,7 @@ module wake_fsm #(
                     if (vcrit) begin                   // brownout cuts the animation
                         state    <= ST_DORMANT;
                         led_mode <= MODE_OFF;
-                        chg_dis  <= 1'b1;
+                        brownout <= 1'b1;
                     end else if (tap) begin            // second tap -> sweep signature
                         state    <= ST_SWEEP;
                         led_mode <= MODE_SWEEP;
@@ -163,7 +174,7 @@ module wake_fsm #(
                     if (vcrit) begin
                         state    <= ST_DORMANT;
                         led_mode <= MODE_OFF;
-                        chg_dis  <= 1'b1;
+                        brownout <= 1'b1;
                     end else if (tick_poll) begin
                         if (anim_cnt <= 8'd1) begin
                             state    <= ST_IDLE;
@@ -177,10 +188,10 @@ module wake_fsm #(
                 ST_DORMANT: begin                      // mode 00, taps ignored
                     led_mode <= MODE_OFF;
                     if (!vcrit) begin
-                        chg_dis <= 1'b0;               // recovery: charge tell off,
-                        state   <= ST_IDLE;            //   taps live again
+                        brownout <= 1'b0;              // recovery: tell clears,
+                        state    <= ST_IDLE;           //   taps live again
                     end else begin
-                        chg_dis <= 1'b1;
+                        brownout <= 1'b1;
                     end
                 end
 
