@@ -24,6 +24,7 @@ sharp enough to write down.**
 | `rtl/drh1_top.v` | — | the chip |
 | `rtl/tt_um_drh_solarglow.v` | — | Tiny Tapeout wrapper (their fixed pin interface) |
 | `tb/` | — | 6 self-checking benches + a reusable behavioural ADXL367 slave |
+| `analog/` | RN1 + D2–D5 | the LED sink cells' spec and operating envelope — **no simulation** |
 
 `make sim` runs everything (Icarus, `-g2012`); `make synth` / `make gates` write the two
 Yosys stat reports (gitignored like every other build product — the numbers below are
@@ -93,7 +94,12 @@ the analog below — and even generous analog budgets leave the quarter slot mos
 - **The analog cells are stubs**: RC oscillator, bandgap, comparator + R-2R DAC (the SAR's
   other half), four 16 mA LED sink drivers, two pass FETs, POR. That is schematic-level
   design in the GF180 PDK (Xschem/ngspice/Magic), it is the actual risk in the project,
-  and none of it is verified by anything in this directory.
+  and **none of it is simulated by anything in this directory.** One of them now has a
+  written SPECIFICATION, though: `asic/analog/README.md` pins the LED sink cells' operating
+  envelope — I_max 22.46 mA at the worst corner, an R_on window with a floor as well as a
+  ceiling, a 5 V-class drain standoff, a 1 nA/channel leakage budget — computed by
+  `asic/analog/sink_budget.py` from the LED binning, RN1's tolerance and the AEM's rail limits,
+  and gated against that computation in CI. Sizing the transistor still needs the PDK.
 - **No hardening**: RTL→GDS (OpenLane/LibreLane + PDK) was not run here — for the Tiny
   Tapeout rung it runs in *their* GitHub Actions, which is the designed path.
 - **No packaging or test plan**: wafer.space delivers bare die; COB/bond-out and a test
