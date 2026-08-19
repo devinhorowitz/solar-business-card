@@ -306,7 +306,7 @@ def _mk_variants():
             cap_h=_SUPERCAP_H, cavity=cav_max, floor=1.00, wall_th=1.00, border_h=0.15,
             open_back=False, brace=True, medallion=True, fins=True,
             material="Ti Gr5 (reference; brass or 6061 acceptable -- non-magnetic, machinable)",
-            shell_name="solar-glow-drh-v3_0-backshell-0p6b-brace-Ti-max",
+            shell_name="solar-glow-drh-v4_0-backshell-0p6b-brace-Ti-max",
             brace_name="solar-glow-drh-diffuser-brace",
             coverage_floor=0.32,   # ledgered min (measures 0.329 after the 2026-08-08 LDO-island
                                    # migration to the SC3/SC4 bay: the island's five pockets and

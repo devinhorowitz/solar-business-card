@@ -47,14 +47,14 @@ on:
       # the parameter exists for -- and nothing regenerates, so the committed STEP
       # silently ships unit 001's number.
       - 'enclosure/medallion.py'
-      - 'enclosure/solar-glow-drh-v3_0-backshell-0p6b-brace-cad.py'
+      - 'enclosure/solar-glow-drh-v4_0-backshell-0p6b-brace-cad.py'
       # ...and the glyph fill the shell generator engraves the medallion's ring text,
       # monogram and unit SERIAL with. It is one import out from that generator, which is
       # exactly where the #132 gap class hides: change the rule that decides whether an
       # '8' keeps its counters and, without this line, the committed STEP keeps the old
       # digits. Shared with scripts/face_art.py (consistency.yml triggers on it there).
       - 'scripts/glyphs.py'
-      - 'enclosure/solar-glow-drh-v3_0-backshell-0p6b-brace-DRAWING-gen.py'
+      - 'enclosure/solar-glow-drh-v4_0-backshell-0p6b-brace-DRAWING-gen.py'
       - 'enclosure/brace/solar-glow-drh-diffuser-brace-cad.py'
       - 'enclosure/brace/solar-glow-drh-diffuser-brace-DRAWING-gen.py'
       # The pogo test plate has no other trigger: it is not consumed by the assembly
@@ -193,9 +193,9 @@ jobs:
         run: |
           python3 -m pip install --quiet 'cadquery==2.8.0' 'matplotlib==3.11.1' 'shapely==2.1.2'
           python3 enclosure/brace/solar-glow-drh-diffuser-brace-cad.py
-          python3 enclosure/solar-glow-drh-v3_0-backshell-0p6b-brace-cad.py
+          python3 enclosure/solar-glow-drh-v4_0-backshell-0p6b-brace-cad.py
           python3 enclosure/brace/solar-glow-drh-diffuser-brace-DRAWING-gen.py
-          python3 enclosure/solar-glow-drh-v3_0-backshell-0p6b-brace-DRAWING-gen.py
+          python3 enclosure/solar-glow-drh-v4_0-backshell-0p6b-brace-DRAWING-gen.py
           python3 enclosure/solar-glow-drh-pogo-testplate-cad.py
 
       # Mesh validity gate (2026-08-01): the STLs the step above just wrote go to
@@ -369,8 +369,8 @@ jobs:
                 scripts/panelize.py scripts/render.py scripts/ref_figures.py \
                 enclosure/assembly_render.py enclosure/fit_rules.py enclosure/board_parts.py \
                 enclosure/medallion.py enclosure/part_heights.py \
-                enclosure/solar-glow-drh-v3_0-backshell-0p6b-brace-cad.py \
-                enclosure/solar-glow-drh-v3_0-backshell-0p6b-brace-DRAWING-gen.py \
+                enclosure/solar-glow-drh-v4_0-backshell-0p6b-brace-cad.py \
+                enclosure/solar-glow-drh-v4_0-backshell-0p6b-brace-DRAWING-gen.py \
                 enclosure/brace/solar-glow-drh-diffuser-brace-cad.py \
                 enclosure/brace/solar-glow-drh-diffuser-brace-DRAWING-gen.py \
                 enclosure/solar-glow-drh-pogo-testplate-cad.py \

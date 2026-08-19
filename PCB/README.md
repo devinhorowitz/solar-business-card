@@ -71,9 +71,13 @@ parts, and how to build the assembly.**
 > git log --diff-filter=D -- PCB/solar-glow-drh-v3_0.kicad_pcb   # the commit that removed it
 > git show <sha>^:PCB/solar-glow-drh-v3_0.kicad_pcb > /tmp/v3.kicad_pcb
 > ```
-> **`enclosure/solar-glow-drh-v3_0-backshell-*` is unaffected.** Those keep their v3_0 names but are
-> current, fab-ready, and staying — the name records which board revision the shell was first cut
-> against, and the v4 board carries the identical 8-hole pattern.
+> **`enclosure/solar-glow-drh-v4_0-backshell-*` is unaffected.** Those files are current and
+> fab-ready. _(They carried `v3_0` names until 2026-08-19 — the revision the shell was first cut
+> against — and this note used to explain why that was fine. It stopped being fine when the
+> DRAWING generator was found stamping **`REV v3.0`** into the title block of the sheet a
+> machinist cuts to; a stale revision on a fab document is not a naming preference. Renamed and
+> re-stamped to v4.0 in one commit. The v4 board carries the identical 8-hole pattern, so the
+> geometry never moved.)_
 
 ```
 PCB/

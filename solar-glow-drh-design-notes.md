@@ -1068,7 +1068,7 @@ gain, against the higher (but still multi-decade at desk temp) cell float.*
 - **Inductor:** Murata DFE252010F-100M (10 µH, 1.76 A, 2.5×2.0×1.0 mm), the AEM10300 datasheet Table 11 part; its 1.0 mm height clears the cavity floor (the caps set 1.75 mm). Footprint set to the KiCad 1008/2520 land (`L_1008_2520Metric`); re-run Update-PCB then route.
 - **The perennial #1 gate:** measure real indoor harvest -- the entire case for an active PMIC is
   MPPT-in-dim-light, and that number is still unmeasured (§2).
-- **Enclosure:** the `v3_0-backshell` files stay frozen and are mechanically valid for `v4_0` as-is (the
+- **Enclosure:** the `v4_0-backshell` files stay frozen and are mechanically valid for `v4_0` as-is (the
   cavity/outline are unchanged by the scaffold). Re-verify against the reworked board only if the rework
   changes the Z-stack (e.g. a tall 10 uH inductor) or the outline; regenerate as a `v4_0-backshell` at that
   point, not before.
