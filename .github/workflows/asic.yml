@@ -80,6 +80,76 @@ jobs:
           fi
           echo "no \$_DLATCH_ / \$_SR_ cells in the mapped netlist"
 
+      # THE RETIRED NAME MUST STAY RETIRED. Until 2026-08-19 this core called its brownout
+      # STATUS output `chg_dis` -- the same name as the card's own CHG_DIS_G net (PA4 -> Q2
+      # gate), which is the opposite kind of thing: a charge-INHIBIT CONTROL, driven from the
+      # FD handler to quiet the DC-DC for an NFC read. Tie them together and a brownout
+      # disables harvest exactly when the tank is empty -- the cold-start deadlock R18's gate
+      # pulldown exists to prevent, re-created in silicon -- and the miswire LOOKS CORRECT,
+      # because the names match. That is a defect no bench here can fail on: tb/ checks the
+      # RTL against its contract, and the contract was what was wrong. A rename is worth only
+      # as much as whatever keeps it renamed, so the old name is banned in SOURCE rather than
+      # merely documented. FRONT_SIDE-snapshot shape: a deliberate return updates this gate
+      # in the same commit.
+      #
+      # IT BANS THE IDENTIFIER, NOT THE WORD, and that distinction is the whole design.
+      # rtl/wake_fsm.v's header NAMES chg_dis to explain why it is gone -- the first cut of
+      # this gate was a bare `grep chg_dis` and went red on a clean tree against exactly that
+      # sentence, i.e. it forbade documenting the thing it enforces. So comments are stripped
+      # (line-count preserved, so reported line numbers are real) before the scan, and the
+      # stripper SELF-TESTS against both cases every run: a prose mention must stay green, a
+      # declaration must go red. If it ever stops telling them apart, the gate fails itself
+      # rather than going quietly permissive.
+      - name: The retired brownout-signal name stays retired
+        run: |
+          python3 - <<'PY'
+          import pathlib, sys
+
+          RETIRED = "chg_dis"
+
+          def strip_comments(src):
+              """Blank // and /* */ comments, preserving line count and offsets."""
+              out, i, n, blk = [], 0, len(src), False
+              while i < n:
+                  if blk:
+                      if src.startswith("*/", i):
+                          out.append("  "); i += 2; blk = False
+                      else:
+                          out.append("\n" if src[i] == "\n" else " "); i += 1
+                  elif src.startswith("/*", i):
+                      out.append("  "); i += 2; blk = True
+                  elif src.startswith("//", i):
+                      while i < n and src[i] != "\n":
+                          out.append(" "); i += 1
+                  else:
+                      out.append(src[i]); i += 1
+              return "".join(out)
+
+          def hits(src):
+              return [(k, l) for k, l in enumerate(strip_comments(src).splitlines(), 1)
+                      if RETIRED in l]
+
+          # -- self-test: the gate must distinguish a mention from an identifier ----------
+          PROSE = "/*\n * it was called %s until 2026-08-19.\n */\nassign a = b;  // not %s\n" % (RETIRED, RETIRED)
+          CODE  = "module m(output reg %s);  /* the tell */\nendmodule\n" % RETIRED
+          if hits(PROSE):
+              print("::error::gate self-test failed: a prose mention was flagged"); sys.exit(1)
+          if not hits(CODE):
+              print("::error::gate self-test failed: a declaration was NOT flagged"); sys.exit(1)
+          print("self-test ok: prose mention green, declaration red")
+
+          # -- the scan --------------------------------------------------------------------
+          bad = []
+          for f in sorted(pathlib.Path("asic").glob("*/*.v")):
+              for k, l in hits(f.read_text()):
+                  bad.append("%s:%d: %s" % (f, k, l.strip()))
+          if bad:
+              print("::error::%s is retired -- the brownout status output is named 'brownout'. See asic/rtl/wake_fsm.v." % RETIRED)
+              print("\n".join(bad))
+              sys.exit(1)
+          print("no %s identifier in asic/rtl or asic/tb" % RETIRED)
+          PY
+
       # A tri-state outside the SDA pad would be a real find: it is the one place the design
       # is allowed one (SPEC "no tri-state except the SDA pad in i2c_master"), and yosys says
       # plainly that its tri-state support is limited. Reported, never fatal -- the message is

@@ -34,9 +34,9 @@
  * Mode-off is SAME-CYCLE: the led outputs are forced low combinationally
  * whenever mode == 00 (a final AND on the output path), on top of the duty
  * regs clearing one clk later. Load-bearing for dormancy: when vcrit cuts a
- * live glow, wake_fsm registers chg_dis and led_mode=00 on the same edge,
+ * live glow, wake_fsm registers brownout and led_mode=00 on the same edge,
  * and without the AND the still-loaded duty regs would drive the LEDs for
- * one clk while chg_dis is already high. tb_top's dormancy-dark invariant
+ * one clk while brownout is already high. tb_top's dormancy-dark invariant
  * pins this.
  *
  * Verilog-2001, single clock, synchronous reset, no latches, no initial.

@@ -6,7 +6,7 @@
  * see rtl/drh1_top.v); no behaviour of its own. Pin map per SPEC.md:
  *
  *   ui_in : 0 = int1   1 = int2   2 = fd_n   3 = cmp_in   (7:4 unused)
- *   uo_out: 3:0 = led  4 = nfc_en 5 = sns_en 6 = chg_dis  7 = scl
+ *   uo_out: 3:0 = led  4 = nfc_en 5 = sns_en 6 = brownout 7 = scl
  *   uio 0 : SDA, open-drain (uio_out[0] tied 0; oe = the master's sda_oe)
  *   uio 7:1: dac_code[7:1] out -- dac_code[0] is unobservable on TT
  *            (acceptable for the demo board per SPEC; the wafer.space
@@ -43,7 +43,7 @@ module tt_um_drh_solarglow (
 );
 
     wire [3:0] led;
-    wire       nfc_en, sns_en, chg_dis, scl;
+    wire       nfc_en, sns_en, brownout, scl;
     wire [7:0] dac_code;
     wire [7:0] dbg_sto;      // no spare TT pins: consumed below
     wire [1:0] dbg_mode;     // no spare TT pins: consumed below
@@ -58,14 +58,14 @@ module tt_um_drh_solarglow (
         .led(led),
         .sda(sda), .scl(scl),
         .int1(ui_in[0]), .int2(ui_in[1]), .fd_n(ui_in[2]),
-        .nfc_en(nfc_en), .sns_en(sns_en), .chg_dis(chg_dis),
+        .nfc_en(nfc_en), .sns_en(sns_en), .brownout(brownout),
         .cmp_in(ui_in[3]), .dac_code(dac_code),
         .dbg_sto(dbg_sto), .dbg_mode(dbg_mode),
         .sda_oe(sda_oe)
     );
 
     /* ---- outputs, per the SPEC pin map ----------------------------------- */
-    assign uo_out = {scl, chg_dis, sns_en, nfc_en, led};
+    assign uo_out = {scl, brownout, sns_en, nfc_en, led};
 
     assign uio_out = {dac_code[7:1], 1'b0};      // SDA pad only ever drives low
     assign uio_oe  = {7'b1111111,                // dac_code[7:1]: always driven

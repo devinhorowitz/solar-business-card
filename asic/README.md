@@ -20,7 +20,7 @@ sharp enough to write down.**
 | `rtl/init_seq.v` | adxl367.c | ROM-driven ADXL367 config with one-retry policy |
 | `rtl/sar_ctrl.v` | — | 8-bit SAR controller for the analog comparator/DAC pair |
 | `rtl/sense_seq.v` | sense.c | **the deferred-read rule, in gates**: arm → settle → convert → gate off |
-| `rtl/wake_fsm.v` | main.c | tap → glow → sweep; vcrit → dormant + chg_dis; NFC hold |
+| `rtl/wake_fsm.v` | main.c | tap → glow → sweep; vcrit → dormant + brownout; NFC hold |
 | `rtl/drh1_top.v` | — | the chip |
 | `rtl/tt_um_drh_solarglow.v` | — | Tiny Tapeout wrapper (their fixed pin interface) |
 | `tb/` | — | 6 self-checking benches + a reusable behavioural ADXL367 slave |
@@ -45,7 +45,7 @@ ack_err, one-clk LED leak — each mutation independently hits `$fatal`). Highli
   cycles (bound: 2 %); the divider is provably gated off between samples, and the force
   path now guarantees ≥ SETTLE_ENV_TICKS *full* settle periods (review finding 4)
 - integration: behavioural ADXL367 verifies the init addressing; tap → 197 measured PWM
-  edges per LED; mid-glow brownout → **dark on the same clk edge `chg_dis` rises**
+  edges per LED; mid-glow vcrit → **dark on the same clk edge `brownout` rises**
   (review finding 3 + the 5b scenario that fails without the fix); recovery glows again
 
 An adversarial review pass confirmed 5 findings (2 critical — a hierarchical `sda_oe`
@@ -83,8 +83,9 @@ the analog below — and even generous analog budgets leave the quarter slot mos
 
 ## Fix before any shuttle submission
 
-Two places where the RTL and the card disagree. Neither is caught by anything in `tb/` --
-both benches verify the RTL against its own contract, and the contract is what is wrong.
+One place where the RTL and the card still disagree. It is not caught by anything in
+`tb/` -- the benches verify the RTL against its own contract, and the contract is what is
+wrong.
 
 - **No ballast/thermal guard exists in the RTL.** The card clamps glow duty above an
   abuse-corner STO -- `USE_BALLAST_GUARD`, `GLOW_CLAMP_STO_MV` 5200, `GLOW_CLAMP_PEAK` 225,
@@ -102,19 +103,27 @@ both benches verify the RTL against its own contract, and the contract is what i
   in this directory. A chip that cannot dim itself at an over-voltage rail has no equivalent
   of the guard the card shipped.
 
-- **`chg_dis` names the same net as the board and means the opposite thing.** In
-  `wake_fsm.v` it is a brownout *tell*: asserted entering DORMANT on `vcrit`, released on
-  recovery, meaning "tank is at the floor, keep the LED loads off". On the card `CHG_DIS_G`
-  (PA4 -> Q2 gate) is a charge-**inhibit control**, driven from the FD both-edge handler to
-  quiet the >=10 MHz DC-DC for an NFC read -- nothing to do with brownout.
-  Wire the RTL's output to the board's net and a brownout **disables harvest exactly when the
-  tank is empty**: the cold-start deadlock that the 2026-07-23 fix and R18's gate pulldown
-  exist to prevent, re-introduced in silicon. The danger is that the miswire looks correct --
-  the names match. Rename the RTL signal before submission (it is a status output, not a
-  charge enable) and it must never reach `EN_STO_CH`.
+### Closed
+
+- **`chg_dis` → `brownout`** (2026-08-19). The RTL's status output named the same net as
+  the card and meant the opposite thing. In `wake_fsm.v` it is a brownout *tell*: asserted
+  entering DORMANT on `vcrit`, released on recovery, meaning "tank is at the floor, keep the
+  LED loads off". On the card `CHG_DIS_G` (PA4 -> Q2 gate) is a charge-**inhibit control**,
+  driven from the FD both-edge handler to quiet the >=10 MHz DC-DC for an NFC read --
+  nothing to do with brownout. Wire the RTL's output to the board's net and a brownout
+  **disables harvest exactly when the tank is empty**: the cold-start deadlock that the
+  2026-07-23 fix and R18's gate pulldown exist to prevent, re-introduced in silicon. The
+  danger was that the miswire looked correct, *because the names matched*.
+  Renamed throughout `rtl/`, `tb/` and `SPEC.md`; the rationale lives in `rtl/wake_fsm.v`'s
+  header, where a future reader meets it. **It must never reach `EN_STO_CH`.** A rename is
+  worth only as much as whatever keeps it renamed, so `asic.yml` now fails if `chg_dis`
+  reappears in `rtl/` or `tb/` -- the FRONT_SIDE-snapshot shape, where a deliberate return
+  updates the gate in the same commit.
+  Provably a pure rename, not a behaviour change: cell count unchanged at **3,209**
+  (1,910 NAND2 + 1,049 NOT + 250 DFF), no latches, all 6 benches pass.
 
 _(This section is newer than the review pass above: neither item was among the 5 findings,
-because both are contract-level and the review checked the RTL against the contract.)_
+because both were contract-level and the review checked the RTL against the contract.)_
 
 ## Where this goes (if it goes)
 

@@ -51,7 +51,7 @@ module drh1_top #(parameter CLK_HZ = 1000000) (
     output wire [3:0] led,
     inout  wire sda, output wire scl,
     input  wire int1, input wire int2, input wire fd_n,
-    output wire nfc_en, output wire sns_en, output wire chg_dis,
+    output wire nfc_en, output wire sns_en, output wire brownout,
     input  wire cmp_in, output wire [7:0] dac_code,
     output wire [7:0] dbg_sto, output wire [1:0] dbg_mode,
     output wire sda_oe               // i2c_master's pad output-enable, exported
@@ -130,7 +130,7 @@ module drh1_top #(parameter CLK_HZ = 1000000) (
         .int1(int1), .int2(int2), .fd_n(fd_n),
         .vlow(vlow), .vcrit(vcrit), .init_done(init_done_all),
         .led_mode(dbg_mode), .force_sense(force_sense),
-        .nfc_en(nfc_en), .chg_dis(chg_dis)
+        .nfc_en(nfc_en), .brownout(brownout)
     );
 
     /* ---- LEDs ------------------------------------------------------------ */
