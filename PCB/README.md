@@ -831,6 +831,8 @@ them on the **back**; the front stays naked until you fit the cells. You finish 
 types by hand afterward.
 
 **The split**
+- **The board carries ONE footprint with an EMPTY reference, and that is correct.** `solarglow:NPTH_mech` sits at (0.00, 0.00) on F.Cu with 7 pads: it is the mechanical NPTH carrier, not a part. It is flagged **both** `exclude_from_bom` and `exclude_from_pos`, which is why check [15] (nothing reaches the pick-and-place without a BOM line) and check [2] pass with it present — the two flags are what keep an un-buyable, un-placeable feature out of both fab documents. Written down 2026-08-18 because a blank refdes reads as a defect on sight and had already cost one investigation; if you are looking at it again, the flags above are the answer.
+
 - **PCBWay machine-places** (reflow, bottom) — **41 parts** (46 until 2026-08-08: R1–R4 → RN1
   landed with DRH's ballast-array copper, then R10/R11 → RN2 and the C7 deletion in the same
   consolidation round — 7 parts out, 2 arrays in)
@@ -1244,7 +1246,7 @@ and the glow-window mask staying open (Step 3) — a tented window kills the opt
 3. **Flash firmware over UPDI.** Use a **TC2030-MCP** pogo cable on `TC1` (hands-free), or
    solder a 3-pin header on `J1` as the backup. Firmware lives in **`../firmware/`**; its
    knobs and wake model are in `../firmware/README.md`, and the pin map it targets is
-   `../firmware/board.h` (with `../firmware/README.md`) - where the v4 additions PA4=EN_STO_CH and PD1=STO_SNS are recorded.
+   `../firmware/board.h` (with `../firmware/README.md`) - where the v4 additions **PA4=`CHG_DIS_G`** and **PD1=`STO_SNS`** are recorded. _(This line said `PA4=EN_STO_CH` until 2026-08-18, which is the PRE-2026-07-23 topology -- the one the cold-start-deadlock fix removed. PA4 drives **Q2's gate**; `EN_STO_CH` is the far side of Q2 (Q2.drain + R17 + U8.12) and PA4 never touches it. That separation is the whole fix: R18 holds Q2 off, so charging stays ON whenever the MCU is dead, resetting or UPDI-parked. Verified against the netlist, and `board.h`'s `ENSTOCH_PORT` block is the arithmetic.)_
    > **Programming caution:** `NFC_EN` (PA7) now has a **1 MΩ pulldown (`R14`)** — U6
    > defaults hard-off while PA7 floats during reset / UPDI. Still drive PA7 low early in
    > init as belt-and-suspenders. The **U6 pin-map check is done** — TI SLVSD76C
