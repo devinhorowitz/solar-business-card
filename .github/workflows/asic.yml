@@ -22,11 +22,15 @@ on:
     paths:
       - 'asic/**'
       - '!asic/**.md'
+      # ...except this one, which is NOT prose: sink_budget.py --check gates the figures
+      # in it, so an edit there is an edit to a checked artifact. Last match wins.
+      - 'asic/analog/README.md'
       - '.github/workflows/asic.yml'
   pull_request:
     paths:
       - 'asic/**'
       - '!asic/**.md'
+      - 'asic/analog/README.md'
       - '.github/workflows/asic.yml'
   workflow_dispatch:
 
@@ -236,6 +240,17 @@ jobs:
               print("\n".join(bad)); sys.exit(1)
           print(f"SPEC.md and asic/rtl/ agree on all {len(spec_modules('asic/SPEC.md'))} declared module contracts")
           PY
+
+      # The LED sink cells are the one analog block whose SPECIFICATION is fully
+      # determined by things this repo already owns -- the LED's binning, RN1's value and
+      # tolerance, the AEM's rail limits, the firmware's glow gate -- even though sizing
+      # the transistor needs a PDK that is not here. So the envelope is COMPUTED and the
+      # spec document is gated against the computation, rather than being a page of
+      # numbers that rot quietly. It pays for itself already: the computation found that
+      # board.h sizes the ballast clamp on RN1's NOMINAL 150 ohm, and at the -5% tolerance
+      # corner the clamped average lands 1.4% OVER the element rating.
+      - name: LED sink-cell envelope matches its spec document
+        run: python3 asic/analog/sink_budget.py --check
 
       # A tri-state outside the SDA pad would be a real find: it is the one place the design
       # is allowed one (SPEC "no tri-state except the SDA pad in i2c_master"), and yosys says
