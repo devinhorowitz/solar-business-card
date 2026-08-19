@@ -224,6 +224,18 @@ red, the check itself fails.
   `build/`, `*.vvp`, both `synth_*.txt`), so no artifact's reproducibility depends on a pin,
   and pinning apt against `ubuntu-latest` turns a runner-image roll into rot. Versions are
   printed in a provenance step instead. Same call `xvfb` in `kibot.yml` already makes.
+  It also gates **SPEC.md's module contracts against the RTL** (2026-08-19). `SPEC.md`
+  hand-copies every module's port list beside the real thing — the shape this repo keeps
+  getting burned by, a human sentence next to the source with nothing between them — and it
+  bit twice in one day. The ballast-guard PR added `vclamp` and `TH_CLAMP` to `sense_seq` and
+  updated the prose *under* the code fence but never the fence: an edit script asserted, failed
+  before writing, and the corrected re-run silently dropped that one replacement. Nothing
+  noticed, because nothing reads that fence. The gate found it, and on the same run found a
+  second nobody had touched in months — `drh1_top`'s `CLK_HZ` parameter was never in SPEC at
+  all. It compares **name sets only** (formatting, order, widths and defaults are presentation
+  and stay free), is deliberately **one-way** (SPEC need not declare every module, but what it
+  declares must match), and self-tests three ways each run — identical pair green, dropped port
+  red, dropped parameter red.
   It also gates the **retired signal name** (2026-08-19): the core's brownout status output
   was `chg_dis` until then — the same name as the card's `CHG_DIS_G` (PA4 → Q2 gate), which
   is the opposite thing, a charge-**inhibit control** for NFC reads. Wiring one to the other

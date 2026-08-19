@@ -15,12 +15,12 @@
 //   [1] reset -> init: the slave sees >= 5 register writes addressed to
 //       0x1D, and the FIRST is {SOFT_RESET 0x1F <- 0x52}, init_seq ROM
 //       entry 0; LEDs dark and mode 00 until then (dark at reset).
-//   [2] healthy rail (VIN_CODE=200) -> tap on int1 -> mode 01 within a few
+//   [2] healthy rail (VIN_OK = VOVCH) -> tap on int1 -> mode 01 within a few
 //       clk, the tap-forced sample runs and latches sto_q == VIN_CODE
 //       exactly, and ALL FOUR led lines show PWM edges inside the glow
 //       window (> 10 rising edges each); glow self-terminates (mode 00,
 //       LEDs solid low) after GLOW_POLLS.
-//   [3] VIN_CODE dropped below TH_CRIT (64) -> the next PERIODIC sample
+//   [3] VIN_CODE dropped below TH_CRIT -> the next PERIODIC sample
 //       latches it (sto_q == 30) and brownout rises; an NFC field pulse
 //       during the wait proves nfc_en rises with fd_n low and has expired
 //       (NFC_HOLD_POLLS) by dormancy time -- the FD path is state-independent.
@@ -68,14 +68,22 @@ module tb_top;
     localparam integer CLK_NS     = 10;
 
     localparam [6:0] ACCEL_ADDR = 7'h1D;          // ADXL367, ASEL grounded
-    localparam [7:0] VIN_OK     = 8'd200;         // healthy (>= TH_LOW 96), and ALSO
-                                                  //   above TH_CLAMP 181, so every
-                                                  //   glow at this rail is clamped --
-                                                  //   [9] is what makes that visible
-    localparam [7:0] VIN_MID    = 8'd150;         // TH_LOW 96 < 150 < TH_CLAMP 181:
-                                                  //   a normal charged tank, full
-                                                  //   amplitude, guard idle
-    localparam [7:0] VIN_DEAD   = 8'd30;          // below TH_CRIT 64
+    /* THE ANALOG CONTRACT, again. This bench drives a behavioural comparator, so its
+     * rail codes have to mean the same volts sense_seq's thresholds do -- derived
+     * here from millivolts rather than typed, so a scale change carries the scenarios
+     * with it instead of silently landing them on the wrong side of a threshold.
+     * NOT hypothetical: pinning the thresholds to volts on 2026-08-19 moved TH_CLAMP
+     * from code 181 to 221 and left the old VIN_OK = 200 BELOW it, so the "high rail"
+     * scenario quietly stopped being a high rail. [9] failed and said so. */
+    localparam integer FS_MV       = 6000;   // = sense_seq.FS_MV
+    localparam integer VIN_OK_MV   = 4650;   // AEM10300 VOVCH: the fullest a card gets
+    localparam integer VIN_HIGH_MV = 5500;   // the supercap RATING -- bench-supply abuse,
+                                             //   the only place the ballast guard fires
+    localparam integer VIN_DEAD_MV =  700;   // far below the 2000 mV dormancy floor
+
+    localparam [7:0] VIN_OK   = (VIN_OK_MV   * 256) / FS_MV;   // 198, below TH_CLAMP 221
+    localparam [7:0] VIN_HIGH = (VIN_HIGH_MV * 256) / FS_MV;   // 234, above it
+    localparam [7:0] VIN_DEAD = (VIN_DEAD_MV * 256) / FS_MV;   // 29,  below TH_CRIT 86
 
     /* ---- DUT: drh1_top on its own I2C bus -------------------------------- */
     reg         clk, rst_n;
@@ -412,26 +420,26 @@ module tb_top;
          * the only thing that can prove they are CONNECTED is a difference visible
          * at the LED pins. The unit benches each pass with .clamp_en() left off the
          * instantiation entirely; this one does not.
-         * Two rails, one tap each, nothing else changed. VIN_OK is above the clamp
-         * threshold, VIN_MID is deliberately between the glow floor and the clamp --
-         * a NORMAL charged tank, which must glow at full amplitude. Both are latched
+         * Two rails, one tap each, nothing else changed. VIN_HIGH is the 5.5 V abuse
+         * corner and above the clamp threshold; VIN_OK is the AEM's own VOVCH ceiling,
+         * the fullest a real card ever gets, which must still glow at full amplitude. Both are latched
          * by a periodic sample BEFORE the tap, because the glow decision and the
          * clamp both read the standing latch (see sense_seq's design note); the
          * force_rd the tap issues gates the NEXT event, not this one. */
-        vin_code = VIN_OK;
+        vin_code = VIN_HIGH;
         k = 0;
-        while (dbg_sto !== VIN_OK && k < 20 * POLL_CLKS) begin @(posedge clk); k = k + 1; end
-        if (dbg_sto !== VIN_OK) $fatal(1, "[9] sto never latched VIN_OK");
+        while (dbg_sto !== VIN_HIGH && k < 20 * POLL_CLKS) begin @(posedge clk); k = k + 1; end
+        if (dbg_sto !== VIN_HIGH) $fatal(1, "[9] sto never latched VIN_HIGH");
         glow_peak_duty(pk_hi);
 
         k = 0;
         while (dbg_mode !== 2'b00 && k < 8 * POLL_CLKS) begin @(posedge clk); k = k + 1; end
 
-        vin_code = VIN_MID;
+        vin_code = VIN_OK;
         k = 0;
-        while (dbg_sto !== VIN_MID && k < 20 * POLL_CLKS) begin @(posedge clk); k = k + 1; end
-        if (dbg_sto !== VIN_MID) $fatal(1, "[9] sto never latched VIN_MID");
-        if (brownout !== 1'b0) $fatal(1, "[9] VIN_MID is below the brownout floor -- pick a higher code");
+        while (dbg_sto !== VIN_OK && k < 20 * POLL_CLKS) begin @(posedge clk); k = k + 1; end
+        if (dbg_sto !== VIN_OK) $fatal(1, "[9] sto never latched VIN_OK");
+        if (brownout !== 1'b0) $fatal(1, "[9] VIN_OK is below the brownout floor -- pick a higher code");
         glow_peak_duty(pk_mid);
 
         if (pk_hi == 0 || pk_mid == 0)
@@ -441,7 +449,7 @@ module tb_top;
             $fatal(1, "[9] peak duty %0d at the HIGH rail is not below %0d at the normal rail -- vclamp is not reaching gamma_pwm",
                    pk_hi, pk_mid);
         $display("[9] ballast guard OK: peak duty %0d/256 at sto=%0d (clamped) vs %0d/256 at sto=%0d (normal)",
-                 pk_hi, VIN_OK, pk_mid, VIN_MID);
+                 pk_hi, VIN_HIGH, pk_mid, VIN_OK);
 
         /* [6] whole-run gate duty: the divider only exists while converting */
         if (samples < 4)

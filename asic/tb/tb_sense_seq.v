@@ -49,8 +49,22 @@ module tb_sense_seq;
 
     localparam integer SETTLE  = 5;      // = DUT SETTLE_ENV_TICKS
     localparam integer PPS     = 16;     // = DUT POLLS_PER_SAMPLE
-    localparam [7:0]   TH_LOW  = 8'd96;
-    localparam [7:0]   TH_CRIT = 8'd64;
+    /* THE ANALOG CONTRACT, driven from here so the bench owns it (sense_seq's own
+     * defaults are the same numbers). The CODES below are re-derived independently
+     * with the same rounding rule the DUT states -- if the two disagree, C2's
+     * boundary cases fail. Check D then goes further and validates the boundaries
+     * in MILLIVOLTS, which is what catches the rounding rule itself being wrong in
+     * both places at once. */
+    localparam integer FS_MV       = 6000;   // /5 divider into a 1.2 V bandgap
+    localparam integer TH_LOW_MV   = 2750;   // board.h VS_GLOW_FLOOR_MV
+    localparam integer TH_CRIT_MV  = 2000;   // pack usable-depth floor (ASIC-side)
+    localparam integer TH_CLAMP_MV = 5200;   // board.h GLOW_CLAMP_STO_MV
+    localparam integer VOVCH_MV    = 4650;   // AEM10300 ceiling, STO_CFG = LLHH
+
+    localparam [7:0] TH_LOW   = (TH_LOW_MV   * 256 + FS_MV - 1) / FS_MV;  // ceil
+    localparam [7:0] TH_CRIT  = (TH_CRIT_MV  * 256 + FS_MV - 1) / FS_MV;  // ceil
+    localparam [7:0] TH_CLAMP = (TH_CLAMP_MV * 256)             / FS_MV;  // floor
+    localparam [7:0] VOVCH_C  = (VOVCH_MV    * 256)             / FS_MV;
 
     reg clk = 1'b0;
     reg rst_n = 1'b0;
@@ -95,7 +109,8 @@ module tb_sense_seq;
 
     sense_seq #(
         .SETTLE_ENV_TICKS(SETTLE), .POLLS_PER_SAMPLE(PPS),
-        .TH_LOW(TH_LOW), .TH_CRIT(TH_CRIT)
+        .FS_MV(FS_MV), .TH_LOW_MV(TH_LOW_MV),
+        .TH_CRIT_MV(TH_CRIT_MV), .TH_CLAMP_MV(TH_CLAMP_MV)
     ) u_seq (
         .clk(clk), .rst_n(rst_n),
         .tick_poll(tick_poll), .tick_env(tick_env),
@@ -207,6 +222,37 @@ module tb_sense_seq;
     integer d_lo, d_hi, d_mid;
     reg     d_cl;
 
+    /* a discovered boundary code, checked against its millivolt target. `up` selects
+     * the rounding the threshold is supposed to use: 1 = ceil (vlow/vcrit, protective
+     * = trip early on the way down), 0 = floor (vclamp, protective = clamp early on
+     * the way up). Both must land strictly inside one LSB of the target. */
+    task check_volts;
+        input [8*5:1] name;
+        input integer code;
+        input integer target_mv;
+        input integer up;
+        integer mv, lsb;
+        begin
+            mv  = (code * FS_MV) / 256;
+            lsb = FS_MV / 256;
+            if (up) begin
+                if (mv < target_mv)
+                    $fatal(1, "D: %0s boundary code %0d = %0d mV is BELOW its %0d mV target -- rounded the unsafe way",
+                           name, code, mv, target_mv);
+                if (mv - target_mv >= lsb)
+                    $fatal(1, "D: %0s boundary code %0d = %0d mV is more than one LSB (%0d mV) above %0d mV",
+                           name, code, mv, lsb, target_mv);
+            end else begin
+                if (mv > target_mv)
+                    $fatal(1, "D: %0s boundary code %0d = %0d mV is ABOVE its %0d mV target -- rounded the unsafe way",
+                           name, code, mv, target_mv);
+                if (target_mv - mv >= lsb)
+                    $fatal(1, "D: %0s boundary code %0d = %0d mV is more than one LSB (%0d mV) below %0d mV",
+                           name, code, mv, lsb, target_mv);
+            end
+        end
+    endtask
+
     task sample_at;
         input [7:0] code;
         output      cl;
@@ -304,7 +350,7 @@ module tb_sense_seq;
         $display("A OK: SAR result == VIN_CODE exactly for 0/64/96/200/255, 16 clk each, done 1-cycle");
 
         /* ---------- B: cadence (16th poll, not before) + THE DUTY GATE ---------- */
-        VIN_CODE = 8'd200;                       // healthy rail: no flags expected
+        VIN_CODE = VOVCH_C;                      // healthy rail: no flags expected
         tick_en  = 1'b1;
         do_reset;
         mon_cycles = 0; mon_high = 0; mon_go = 0; mon_done = 0;
@@ -318,7 +364,7 @@ module tb_sense_seq;
                 $fatal(1, "sns_en high at poll %0d -- sampled BEFORE the 16th poll", p);
         end
         // the 16th tick_poll just strobed: this is the sample
-        check_sample(8'd200, 1'b0, 1'b0, 6);
+        check_sample(VOVCH_C, 1'b0, 1'b0, 6);
         $display("B1 OK: polls 1..15 gated off every cycle; sample on the 16th poll (settle=%0d env strobes = >= %0d full periods, latch-then-release)", SETTLE + 1, SETTLE);
 
         while (p < 2 * PPS) begin
@@ -327,7 +373,7 @@ module tb_sense_seq;
             if (p < 2 * PPS && sns_en !== 1'b0)
                 $fatal(1, "sns_en high between samples at poll %0d", p);
         end
-        check_sample(8'd200, 1'b0, 1'b0, 6);
+        check_sample(VOVCH_C, 1'b0, 1'b0, 6);
         repeat (4) @(negedge clk);
         mon_en = 1'b0;
         @(negedge clk);                          // let the monitor settle its last count
@@ -354,71 +400,96 @@ module tb_sense_seq;
             if (sns_en !== 1'b0)
                 $fatal(1, "sns_en high mid-cadence with no force_rd (poll %0d of 16)", p);
         end
-        VIN_CODE = 8'd95;                        // < TH_LOW(96), >= TH_CRIT(64)
+        VIN_CODE = TH_LOW - 8'd1;                // under the glow gate, above the floor
         pulse_force;
-        check_sample(8'd95, 1'b1, 1'b0, 4);      // rise within 4 clk = out-of-cadence
-        $display("C1 OK: force_rd at poll 3 of 16 -> immediate sample; 95 -> vlow=1 vcrit=0");
+        check_sample(TH_LOW - 8'd1, 1'b1, 1'b0, 4);  // rise within 4 clk = out-of-cadence
+        $display("C1 OK: force_rd at poll 3 of 16 -> immediate sample; %0d -> vlow=1 vcrit=0",
+                 TH_LOW - 8'd1);
 
-        VIN_CODE = 8'd63;                        // < TH_CRIT
+        VIN_CODE = TH_CRIT - 8'd1;               // < TH_CRIT
         pulse_force;
-        check_sample(8'd63, 1'b1, 1'b1, 4);
+        check_sample(TH_CRIT - 8'd1, 1'b1, 1'b1, 4);
 
-        VIN_CODE = 8'd64;                        // == TH_CRIT: NOT strictly below
+        VIN_CODE = TH_CRIT;                      // == TH_CRIT: NOT strictly below
         pulse_force;
-        check_sample(8'd64, 1'b1, 1'b0, 4);
+        check_sample(TH_CRIT, 1'b1, 1'b0, 4);
 
-        VIN_CODE = 8'd96;                        // == TH_LOW: NOT strictly below
+        VIN_CODE = TH_LOW - 8'd1;                // just under the glow gate
         pulse_force;
-        check_sample(8'd96, 1'b0, 1'b0, 4);
+        check_sample(TH_LOW - 8'd1, 1'b1, 1'b0, 4);
 
-        VIN_CODE = 8'd200;                       // recovery: both flags clear
+        VIN_CODE = TH_LOW;                       // == TH_LOW: NOT strictly below
         pulse_force;
-        check_sample(8'd200, 1'b0, 1'b0, 4);
-        $display("C2 OK: 63 -> vlow+vcrit; boundaries 64/96 not-below; 200 clears both");
+        check_sample(TH_LOW, 1'b0, 1'b0, 4);
 
-        /* ---------- D: vclamp -- the ballast guard's measurement half ---------- */
-        // Reset must be PESSIMISTIC. vlow/vcrit reset optimistic on purpose (an
-        // unmeasured low must not block the first tap); vclamp is the opposite
-        // failure direction -- an unmeasured HIGH rail costs ballast dissipation on
-        // a part already at ~110 % of rating at the corner -- so it resets CLAMPED.
-        // Not theoretical: wake_fsm glows on a tap from the STANDING latches, before
-        // the force_rd sample it triggers has landed.
+        VIN_CODE = VOVCH_C;                      // a full tank at the AEM ceiling
+        pulse_force;
+        check_sample(VOVCH_C, 1'b0, 1'b0, 4);
+        $display("C2 OK: %0d -> vlow+vcrit; boundaries %0d/%0d not-below; VOVCH code %0d clears both",
+                 TH_CRIT - 8'd1, TH_CRIT, TH_LOW, VOVCH_C);
+
+        /* ---------- D: the thresholds are PINNED TO VOLTS ----------------------
+         * C2 above proves the flags switch at the expected CODES. This proves the
+         * codes mean the right MILLIVOLTS -- the part that used to be untestable,
+         * because until 2026-08-19 TH_LOW/TH_CRIT were tagged "placeholder scaling"
+         * and there was no volts to check against.
+         * Every boundary is DISCOVERED by binary search, converted back through
+         * FS_MV, and required to sit within one LSB of its board.h number ON THE
+         * PROTECTIVE SIDE. That catches a wrong rounding rule even when the bench
+         * and the DUT make the same mistake, which a code-vs-code check cannot. */
+
+        // vclamp resets PESSIMISTIC (clamped) -- opposite to vlow/vcrit, because the
+        // failure directions are opposite. wake_fsm can glow on a tap from the
+        // STANDING latches, before the force_rd sample it triggers has landed.
         do_reset;
         @(negedge clk);
         if (vclamp !== 1'b1)
             $fatal(1, "D: vclamp resets to %b -- the guard must reset CLAMPED", vclamp);
 
-        // endpoints first: the guard must be both reachable and not always-on.
-        sample_at(8'd0, d_cl);
-        if (d_cl !== 1'b0)
-            $fatal(1, "D: code 0 is clamped -- the guard fires at the brownout floor");
-        sample_at(8'd255, d_cl);
-        if (d_cl !== 1'b1)
-            $fatal(1, "D: full scale is not clamped -- the guard is unreachable");
-
-        // binary search for the lowest clamped code
+        // --- vlow: strict-below, so the boundary is the lowest code that CLEARS it
         d_lo = 0; d_hi = 255;
+        sample_at(8'd0,   d_cl); if (vlow !== 1'b1) $fatal(1, "D: code 0 is not vlow");
+        sample_at(8'd255, d_cl); if (vlow !== 1'b0) $fatal(1, "D: full scale is vlow");
+        while (d_hi - d_lo > 1) begin
+            d_mid = (d_lo + d_hi) / 2;
+            sample_at(d_mid[7:0], d_cl);
+            if (vlow === 1'b0) d_hi = d_mid; else d_lo = d_mid;
+        end
+        check_volts("vlow ", d_hi, TH_LOW_MV, 1);
+
+        // --- vcrit: same shape, deeper floor
+        d_lo = 0; d_hi = 255;
+        while (d_hi - d_lo > 1) begin
+            d_mid = (d_lo + d_hi) / 2;
+            sample_at(d_mid[7:0], d_cl);
+            if (vcrit === 1'b0) d_hi = d_mid; else d_lo = d_mid;
+        end
+        check_volts("vcrit", d_hi, TH_CRIT_MV, 1);
+
+        // --- vclamp: at-or-above, so the boundary is the lowest code that SETS it
+        d_lo = 0; d_hi = 255;
+        sample_at(8'd0,   d_cl); if (d_cl !== 1'b0) $fatal(1, "D: code 0 is clamped");
+        sample_at(8'd255, d_cl); if (d_cl !== 1'b1) $fatal(1, "D: full scale is not clamped -- guard unreachable");
         while (d_hi - d_lo > 1) begin
             d_mid = (d_lo + d_hi) / 2;
             sample_at(d_mid[7:0], d_cl);
             if (d_cl === 1'b1) d_hi = d_mid; else d_lo = d_mid;
         end
-        if (d_hi <= TH_LOW)
-            $fatal(1, "D: vclamp turns on at code %0d, at or below TH_LOW %0d -- the guard would clamp a NORMAL glow",
-                   d_hi, TH_LOW);
+        check_volts("clamp", d_hi, TH_CLAMP_MV, 0);
 
-        // monotone either side of the boundary (a binary search alone cannot see a
-        // non-monotone flag; these two mid-range probes can).
-        sample_at((TH_LOW + d_hi) / 2, d_cl);
+        // --- and the property board.h asserts in a parenthetical: the AEM10300's own
+        // VOVCH ceiling must NEVER trip the ballast guard. board.h says "(VOVCH 4.65 V
+        // never trips it)"; on this scale that is a checkable fact, not a comment.
+        // A full-scale chosen at VOVCH instead of 6000 mV would make the guard
+        // unreachable and every other check here would still pass.
+        sample_at(VOVCH_C, d_cl);
         if (d_cl !== 1'b0)
-            $fatal(1, "D: vclamp set at code %0d, below the boundary %0d -- not monotone",
-                   (TH_LOW + d_hi) / 2, d_hi);
-        sample_at((d_hi + 255) / 2, d_cl);
-        if (d_cl !== 1'b1)
-            $fatal(1, "D: vclamp clear at code %0d, above the boundary %0d -- not monotone",
-                   (d_hi + 255) / 2, d_hi);
-        $display("D OK: vclamp resets clamped; boundary at code %0d (TH_LOW %0d < %0d < 255), monotone both sides",
-                 d_hi, TH_LOW, d_hi);
+            $fatal(1, "D: a full tank at VOVCH (%0d mV, code %0d) trips the ballast guard -- board.h says it never does",
+                   VOVCH_MV, VOVCH_C);
+        if (vlow !== 1'b0 || vcrit !== 1'b0)
+            $fatal(1, "D: a full tank at VOVCH reads low/critical");
+        $display("D OK: thresholds pinned to volts (LSB %0d uV) -- vlow %0d mV, vcrit %0d mV, clamp %0d mV; VOVCH code %0d clears the guard (%0d)",
+                 (FS_MV * 1000) / 256, TH_LOW_MV, TH_CRIT_MV, TH_CLAMP_MV, VOVCH_C, TH_CLAMP);
 
         $display("TB PASS: tb_sense_seq");
         $finish;

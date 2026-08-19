@@ -150,6 +150,93 @@ jobs:
           print("no %s identifier in asic/rtl or asic/tb" % RETIRED)
           PY
 
+      # SPEC.md HAND-COPIES EVERY MODULE'S PORT LIST beside the real thing, which is the
+      # shape this repo keeps getting burned by: a human sentence sitting next to the
+      # source with nothing between them. It bit twice in one day. PR #241 added vclamp
+      # and TH_CLAMP to sense_seq and updated the PROSE under SPEC's code fence but never
+      # the fence itself -- an edit script asserted, failed before writing, and the
+      # corrected re-run silently dropped that one replacement. Nothing noticed, because
+      # nothing reads that fence. This gate found it, and found a second one nobody had
+      # touched in months: drh1_top's CLK_HZ parameter was never in SPEC at all.
+      # It compares NAME SETS only -- formatting, order, widths and defaults are free to
+      # differ, since those are presentation. And it is deliberately ONE-WAY: SPEC need
+      # not declare every module, but whatever it does declare must match. Self-tests
+      # three ways each run (identical pair green, dropped port red, dropped parameter
+      # red) so it fails itself rather than going quietly permissive.
+      - name: SPEC.md module contracts match the RTL
+        run: |
+          python3 - <<'PY'
+          import re, sys, pathlib
+
+          def strip_comments(src):
+              out, i, n, blk = [], 0, len(src), False
+              while i < n:
+                  if blk:
+                      if src.startswith("*/", i): out.append("  "); i += 2; blk = False
+                      else: out.append("\n" if src[i] == "\n" else " "); i += 1
+                  elif src.startswith("/*", i): out.append("  "); i += 2; blk = True
+                  elif src.startswith("//", i):
+                      while i < n and src[i] != "\n": out.append(" "); i += 1
+                  else: out.append(src[i]); i += 1
+              return "".join(out)
+
+          HEAD = re.compile(r'\bmodule\s+(\w+)\s*(#\s*\((?:[^()]|\([^()]*\))*\))?\s*\((.*?)\)\s*;', re.S)
+          PORT = re.compile(r'\b(?:input|output|inout)\b\s*(?:wire|reg|logic)?\s*(?:signed\s*)?(?:\[[^\]]*\]\s*)?(\w+)')
+          PARM = re.compile(r'\bparameter\b\s*(?:integer|signed)?\s*(?:\[[^\]]*\]\s*)?(\w+)\s*=')
+
+          def modules(src):
+              src = strip_comments(src)
+              out = {}
+              for m in HEAD.finditer(src):
+                  name, params, ports = m.group(1), m.group(2) or "", m.group(3)
+                  out[name] = (set(PORT.findall(ports)), set(PARM.findall(params)))
+              return out
+
+          def spec_modules(path):
+              txt = pathlib.Path(path).read_text()
+              got = {}
+              for fence in re.findall(r'```verilog\n(.*?)```', txt, re.S):
+                  got.update(modules(fence))
+              return got
+
+          def compare(spec, rtl):
+              bad = []
+              for name, (sp, spar) in sorted(spec.items()):
+                  if name not in rtl:
+                      bad.append(f"SPEC declares module '{name}' with no RTL of that name"); continue
+                  rp, rpar = rtl[name]
+                  for label, a, b in (("port", sp, rp), ("parameter", spar, rpar)):
+                      for x in sorted(a - b): bad.append(f"{name}: SPEC has {label} '{x}', RTL does not")
+                      for x in sorted(b - a): bad.append(f"{name}: RTL has {label} '{x}', SPEC does not")
+              return bad
+
+          def selftest():
+              S = "```verilog\nmodule m #(parameter integer P = 1)(input wire a, output reg [7:0] b);\n```"
+              R = "module m #(parameter integer P = 1)(input wire a, output reg [7:0] b); endmodule"
+              import tempfile, os
+              f = tempfile.NamedTemporaryFile('w', suffix='.md', delete=False); f.write(S); f.close()
+              if compare(spec_modules(f.name), modules(R)):
+                  print("::error::self-test failed: identical SPEC/RTL reported a mismatch"); sys.exit(1)
+              R2 = "module m #(parameter integer P = 1)(input wire a); endmodule"
+              if not compare(spec_modules(f.name), modules(R2)):
+                  print("::error::self-test failed: a dropped port was NOT reported"); sys.exit(1)
+              R3 = "module m (input wire a, output reg [7:0] b); endmodule"
+              if not compare(spec_modules(f.name), modules(R3)):
+                  print("::error::self-test failed: a dropped parameter was NOT reported"); sys.exit(1)
+              os.unlink(f.name)
+              print("self-test ok: identical pair green; dropped port and dropped parameter both red")
+
+          selftest()
+          rtl = {}
+          for f in sorted(pathlib.Path("asic/rtl").glob("*.v")):
+              rtl.update(modules(f.read_text()))
+          bad = compare(spec_modules("asic/SPEC.md"), rtl)
+          if bad:
+              print("::error::SPEC.md's module contracts disagree with asic/rtl/")
+              print("\n".join(bad)); sys.exit(1)
+          print(f"SPEC.md and asic/rtl/ agree on all {len(spec_modules('asic/SPEC.md'))} declared module contracts")
+          PY
+
       # A tri-state outside the SDA pad would be a real find: it is the one place the design
       # is allowed one (SPEC "no tri-state except the SDA pad in i2c_master"), and yosys says
       # plainly that its tri-state support is limited. Reported, never fatal -- the message is

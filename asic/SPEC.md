@@ -104,15 +104,19 @@ module sar_ctrl (
 module sense_seq #(
     parameter SETTLE_ENV_TICKS = 5,      // ~39 ms at 128 Hz — the RC settle, in silicon
     parameter POLLS_PER_SAMPLE = 16,     // sense.c's VMIN_SAMPLE_POLLS
-    parameter [7:0] TH_LOW  = 8'd96,     // vlow: below glow floor   (placeholder scaling)
-    parameter [7:0] TH_CRIT = 8'd64      // vcrit: brownout floor
+    // thresholds in MILLIVOLTS of STO; the 8-bit codes are derived from FS_MV
+    parameter integer FS_MV       = 6000, // full scale: /5 divider into a 1.2 V bandgap
+    parameter integer TH_LOW_MV   = 2750, // board.h VS_GLOW_FLOOR_MV
+    parameter integer TH_CRIT_MV  = 2000, // pack usable-depth floor — an ASIC-side choice
+    parameter integer TH_CLAMP_MV = 5200  // board.h GLOW_CLAMP_STO_MV
 )(
     input  wire clk, input wire rst_n,
     input  wire tick_poll, input wire tick_env,
     input  wire force_rd,                // event path: tap is about to spend a glow
     input  wire [7:0] sar_result, input wire sar_done,
     output reg  sar_go, output reg sns_en,
-    output reg  [7:0] sto_q, output reg vlow, output reg vcrit
+    output reg  [7:0] sto_q, output reg vlow, output reg vcrit,
+    output reg  vclamp
 );
 ```
 IDLE → (every 16th `tick_poll`, or `force_rd`) ARM (`sns_en`=1) → SETTLE (count `tick_env`)
@@ -120,15 +124,37 @@ IDLE → (every 16th `tick_poll`, or `force_rd`) ARM (`sns_en`=1) → SETTLE (co
 `sns_en`=0. The divider must be gated off between samples — that is the entire point of the
 U10 chain this replaces, and the testbench MUST assert the sns_en duty cycle is bounded.
 
+**The analog contract** (pinned 2026-08-19; `TH_LOW`/`TH_CRIT` were tagged "placeholder
+scaling" until then). Thresholds are specified in millivolts and the codes are derived at
+elaboration, so every number can be checked against `board.h` instead of against an unwritten
+scale factor. One code is `FS_MV`/256 of STO; `FS_MV` = 6000 realises as a /5 on-die divider
+into a 1.2 V bandgap — 23.4 mV per code, against the card's /3 into 2.048 V at 12 bits.
+
+Full scale is deliberately **not** the AEM10300's 4.65 V VOVCH ceiling, even though STO
+physically lives in 0.20–4.65 V (`STO_CFG[3:0]` = LLHH): `GLOW_CLAMP_STO_MV` is 5200, *above*
+VOVCH, because the ballast guard exists for a bench-supply abuse corner. A converter
+saturating at VOVCH could never reach it — the guard would be unreachable, silently, and every
+bench would still pass. Each code rounds so the protective action happens **sooner**: ceil for
+the strict-below gates (`vlow`, `vcrit`), floor for the at-or-above one (`vclamp`).
+
+Provenance is not uniform, and the RTL states it per line. `TH_LOW_MV` 2750 and `TH_CLAMP_MV`
+5200 come straight from `board.h`. `TH_CRIT_MV` 2000 is an **ASIC-side choice**: the card has
+no second rail gate — `main.c` gates every glow at `VS_GLOW_FLOOR_MV` and stops there — so the
+latching DORMANT state below it is this design's own addition and takes its floor from the AEM
+depth analysis ("drain to ~2 V at the load").
+
+The testbench MUST discover each boundary and validate it **in millivolts**, within one LSB on
+the protective side: a code-vs-code check cannot catch a rounding rule that is wrong in both
+the bench and the DUT. It MUST also assert what `board.h` states only parenthetically — that a
+full tank at VOVCH never trips the ballast guard.
+
 `vclamp` is the BALLAST GUARD's measurement half (firmware: `USE_BALLAST_GUARD`,
 `GLOW_CLAMP_STO_MV` 5200, applied in `sense_glow_peak()`), and it differs from its two
 neighbours in two deliberate ways. **Polarity**: `vlow`/`vcrit` are strict-below, `vclamp`
 is at-or-above, so the three partition the range. **Reset**: `vlow`/`vcrit` reset optimistic
 (0), `vclamp` resets PESSIMISTIC (1, clamped) — an unmeasured low costs a glow that should
 have happened, an unmeasured high costs dissipation on a part already near its rating, so
-the safe reset values are opposite. `TH_CLAMP` inherits TH_LOW's "placeholder scaling"
-caveat: it is derived from TH_LOW rather than from volts (floor of TH_LOW × 5200/2750), so
-the thresholds move together. The testbench MUST DISCOVER the boundary, not restate it.
+the safe reset values are opposite.
 
 ### rtl/wake_fsm.v  (mirrors main.c's dormancy/tap loop)
 ```verilog
@@ -158,7 +184,9 @@ would disable harvest exactly when the tank is empty. It must never reach `EN_ST
 ### rtl/drh1_top.v
 Wire all of the above. Ports:
 ```verilog
-module drh1_top (
+module drh1_top #(
+    parameter CLK_HZ = 1_000_000    // pass-through to clkdiv; tb_top runs the core slower
+)(
     input  wire clk, input wire rst_n,
     output wire [3:0] led,
     inout  wire sda, output wire scl,
