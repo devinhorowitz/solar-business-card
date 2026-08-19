@@ -9,36 +9,36 @@
 > Refresh: `python3 BOM/check_stock.py` (needs `DIGIKEY_CLIENT_ID`,
 > `DIGIKEY_CLIENT_SECRET`, `MOUSER_PART_API_KEY` in the environment; ~1 min).
 
-**Checked: 2026-08-17 19:30 UTC** · DigiKey Product Information v4 + Mouser Search API, queried by MPN (stored distributor P/Ns are shown as found live, not trusted from the sheet).
+**Checked: 2026-08-19 20:37 UTC** · DigiKey Product Information v4 + Mouser Search API, queried by MPN (stored distributor P/Ns are shown as found live, not trusted from the sheet).
 
 **30 of 30 lines fully available** · 0 on substitute only · **0 dead (❌)** · 0 unverifiable this run · 0 manual-order.
 
 | | Ref(s) | Qty | Mfr | MPN | Distributor P/N | Src | Lifecycle | Stock | $ @1 live |
 |---|---|---|---|---|---|---|---|---|---|
-| ✅ | R14, R17, R18 | 3 | Yageo | `AC0402FR-071ML` | `YAG3450CT-ND` | DigiKey | Active | 1,030 | $0.10 |
-| ✅ | U3 | 1 | Analog Devices | `ADXL367BCCZ-RL7` | `505-ADXL367BCCZ-RL7CT-ND` | DigiKey | Active | 1,317 | $7.80 |
+| ✅ | R14, R17, R18 | 3 | Yageo | `AC0402FR-071ML` | `YAG3450CT-ND` | DigiKey | Active | 880 | $0.10 |
+| ✅ | U3 | 1 | Analog Devices | `ADXL367BCCZ-RL7` | `505-ADXL367BCCZ-RL7CT-ND` | DigiKey | Active | 19,282 | $7.80 |
 | ✅ | U1 | 1 | Microchip Technology | `AVR64EA28-E/STX` | `150-AVR64EA28-E/STX-ND` | DigiKey | Active | 1,365 | $1.23 |
-| ✅ | FB1 | 1 | Murata | `BLM18PG221SN1D` | `490-5221-1-ND` | DigiKey | Active | 181,569 | $0.10 |
-| ✅ | L2 | 1 | Murata | `DFE252010F-100M` | `490-13039-1-ND` | DigiKey | Active | 21,131 | $0.25 |
-| ✅ | Q2 | 1 | Diodes Incorporated | `DMG1012T-7` | `DMG1012T-7DICT-ND` | DigiKey | Active | 165,057 | $1.17 |
+| ✅ | FB1 | 1 | Murata | `BLM18PG221SN1D` | `490-5221-1-ND` | DigiKey | Active | 321,369 | $0.10 |
+| ✅ | L2 | 1 | Murata | `DFE252010F-100M` | `490-13039-1-ND` | DigiKey | Active | 21,031 | $0.25 |
+| ✅ | Q2 | 1 | Diodes Incorporated | `DMG1012T-7` | `DMG1012T-7DICT-ND` | DigiKey | Active | 164,673 | $1.17 |
 | ✅ | RN2 | 1 | Panasonic | `EXB-24V472JX` | `Y5472CT-ND` | DigiKey | Active | 43,239 | $0.10 |
-| ✅ | RN1 | 1 | Panasonic | `EXB-28V151JX` | `Y7151CT-ND` | DigiKey | Active | 136,169 | $0.10 |
-| ✅ | C23 | 1 | Murata | `GRM188Z71E225ME43D` | `490-GRM188Z71E225ME43DCT-ND` | DigiKey | Active | 447,027 | $0.17 |
-| ✅ | C25 | 1 | Murata | `GRM319R61C226KE15D` | `490-GRM319R61C226KE15DCT-ND` | DigiKey | Active | 2,233 | $0.41 |
-| ✅ | C26, C27 | 2 | Murata | `GRM319R61E106KA12D` | `490-5525-1-ND` | DigiKey | Active | 333,662 | $0.46 |
+| ✅ | RN1 | 1 | Panasonic | `EXB-28V151JX` | `Y7151CT-ND` | DigiKey | Active | 135,736 | $0.10 |
+| ✅ | C23 | 1 | Murata | `GRM188Z71E225ME43D` | `490-GRM188Z71E225ME43DCT-ND` | DigiKey | Active | 446,438 | $0.17 |
+| ✅ | C25 | 1 | Murata | `GRM319R61C226KE15D` | `490-GRM319R61C226KE15DCT-ND` | DigiKey | Active | 1,538 | $0.41 |
+| ✅ | C26, C27 | 2 | Murata | `GRM319R61E106KA12D` | `490-5525-1-ND` | DigiKey | Active | 330,151 | $0.46 |
 | ✅ | C11 | 1 | Murata | `GRT155R71C224KE01D` | `490-GRT155R71C224KE01DCT-ND` | DigiKey | Active | 21,777 | $0.10 |
 | ✅ | C24 | 1 | Murata | `GRT155R71H103KE01D` | `490-GRT155R71H103KE01DCT-ND` | DigiKey | Active | 50 | $0.10 |
-| ✅ | C1, C3, C5, C6, C8, C12, C28, C29 | 8 | Murata | `GRT155R71H104KE01D` | `490-GRT155R71H104KE01DCT-ND` | DigiKey | Active | 365,673 | $0.11 |
-| ✅ | C4, C13 | 2 | Murata | `GRT188R61C106KE13D` | `490-12317-1-ND` | DigiKey | Active | 774,667 | $0.29 |
-| ✅ | C22 | 1 | Murata | `GRT188R71E105KE13D` | `490-GRT188R71E105KE13DCT-ND` | DigiKey | Active | 79,204 | $0.14 |
+| ✅ | C1, C3, C5, C6, C8, C12, C28, C29 | 8 | Murata | `GRT155R71H104KE01D` | `490-GRT155R71H104KE01DCT-ND` | DigiKey | Active | 335,673 | $0.11 |
+| ✅ | C4, C13 | 2 | Murata | `GRT188R61C106KE13D` | `490-12317-1-ND` | DigiKey | Active | 764,592 | $0.29 |
+| ✅ | C22 | 1 | Murata | `GRT188R71E105KE13D` | `490-GRT188R71E105KE13DCT-ND` | DigiKey | Active | 70,723 | $0.14 |
 | ✅ | D2, D3, D4, D5 | 4 | ams-OSRAM | `LA P47F-V2BB-24-3B5A-30-R18-Z` | `475-LAP47F-V2BB-24-3B5A-30-R18-ZCT-ND` | DigiKey | Active | 11,153 | $0.43 |
 | ✅ | U7 | 1 | RAMXEED | `MB85RC512TYPN-GS-AWEWE1` | `865-MB85RC512TYPN-GS-AWEWE1CT-ND` | DigiKey | Active | 1,500 | $10.19 |
-| ✅ | R16 | 1 | Vishay | `MCT0603MD1004BP500` | `541-MCT0603MD1004BP500CT-ND` | DigiKey | Active | 28,661 | $0.23 |
+| ✅ | R16 | 1 | Vishay | `MCT0603MD1004BP500` | `541-MCT0603MD1004BP500CT-ND` | DigiKey | Active | 28,611 | $0.23 |
 | ✅ | R5, R6, R15 | 3 | Vishay | `MCT0603MD2004BP500` | `541-MCT0603MD2004BP500CT-ND` | DigiKey | Active | 60,222 | $0.22 |
 | ✅ | U5 | 1 | NXP Semiconductors | `NT3H2211W0FHKH` | `568-12901-1-ND` | DigiKey | Active | 15,027 | $1.56 |
-| ✅ | C9 | 1 | Johanson Technology | `QSCP251Q470G1GV001T` | `712-QSCP251Q470G1GV001TCT-ND` | DigiKey | Active | 31,430 | $0.37 |
+| ✅ | C9 | 1 | Johanson Technology | `QSCP251Q470G1GV001T` | `712-QSCP251Q470G1GV001TCT-ND` | DigiKey | Active | 31,425 | $0.37 |
 | ✅ | U6 | 1 | Texas Instruments | `TPS22916CYFPR` | `296-50065-1-ND` | DigiKey | Active | 42,336 | $0.55 |
-| ✅ | U9 | 1 | Texas Instruments | `TPS7A0233PDQNR` | `296-TPS7A0233PDQNRCT-ND` | DigiKey | Active | 1,951 | $0.89 |
+| ✅ | U9 | 1 | Texas Instruments | `TPS7A0233PDQNR` | `296-TPS7A0233PDQNRCT-ND` | DigiKey | Active | 1,926 | $0.89 |
 | ✅ | U8 | 1 | e-peas | `10AEM10300C0000` | `120-AEM10300-QFN` | Mouser | Active (listed) | 533 | $3.77 |
 | ✅ | PV1, PV2 | 2 | ANYSOLAR | `SM141K06TF` | `2994-SM141K06TF-ND` | DigiKey | Active | 421 | $7.61 |
 | ✅ | SC2, SC4 | 2 | SCHURTER | `3-153-438` | `693-3-153-438` | Mouser | New Product | 198 | $16.69 |
@@ -60,9 +60,9 @@ Hand-kept sourcing knowledge — availability shown live. Older entries were tra
 | C9 | `QSCT251Q390G1GV001E` | Active (DigiKey) | 808 | $1.20 | 39 pF same-series ladder -- raises the enclosed resonance if the first card tunes low (C9 row note) |
 | C9 | `QSCT251Q560G1GV001E` | Active (DigiKey) | 11,258 | $1.40 | 56 pF same-series ladder -- lowers it if the first card tunes high (C9 row note) |
 | U6 | `TPS22918TDBVRQ1` | Active (DigiKey) | 0 | $0.75 | pin-identical AEC-Q100 sibling, ~50x the OFF leakage -- last resort only; NEVER TPS22917L (inverted EN) (U6 row note) |
-| FER1 | `3641014` | Active (DigiKey) | 81 | $4.19 | 0.14 mm sheet -- stack 3x for equivalent ferrite thickness (FER1 row note) |
-| FER1 | `MHLL6060-300` | Active (DigiKey) | 9,955 | $5.17 | Laird 0.09 mm -- weakest shielding, last resort (FER1 row note) |
-| PRG1 | `PG164100` | Active (DigiKey) | 1,191 | $11.68 | MPLAB Snap -- the Makefile already speaks it (PROG=snap_updi), and it puts no high voltage on the UPDI line. Confirm whether yours can power the target: a flat card has no supply of its own, and if the programmer cannot provide one, use the charge-in-light path in firmware/README.md step 3 |
+| FER1 | `3641014` | Active (DigiKey) | 76 | $4.19 | 0.14 mm sheet -- stack 3x for equivalent ferrite thickness (FER1 row note) |
+| FER1 | `MHLL6060-300` | Active (DigiKey) | 9,954 | $5.17 | Laird 0.09 mm -- weakest shielding, last resort (FER1 row note) |
+| PRG1 | `PG164100` | Active (DigiKey) | 1,186 | $11.68 | MPLAB Snap -- the Makefile already speaks it (PROG=snap_updi), and it puts no high voltage on the UPDI line. Confirm whether yours can power the target: a flat card has no supply of its own, and if the programmer cannot provide one, use the charge-in-light path in firmware/README.md step 3 |
 
 ## Datasheet filename prices
 
