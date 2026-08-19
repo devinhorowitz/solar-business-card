@@ -31,6 +31,11 @@
  *   - wake_fsm.force_sense -> sense_seq.force_rd is main.c's "gate first,
  *     convert only if a glow can still fire" event path; sense_seq.vlow /
  *     .vcrit close the loop back into wake_fsm (rail-gated glow, dormancy).
+ *   - sense_seq.vclamp -> gamma_pwm.clamp_en is the BALLAST GUARD, and it is
+ *     the one sense flag that does NOT go to wake_fsm: it changes how bright
+ *     an animation is, not whether one runs, so it lands on the duty path
+ *     instead of the state machine. Firmware analogue: sense_glow_peak()'s
+ *     high-side clamp (board.h USE_BALLAST_GUARD / GLOW_CLAMP_STO_MV / PEAK).
  *   - dbg_sto / dbg_mode are debug taps of sense_seq.sto_q and the live LED
  *     mode -- pure fan-out, no logic.
  *
@@ -104,7 +109,7 @@ module drh1_top #(parameter CLK_HZ = 1000000) (
     /* ---- STO sense chain: sequencer + SAR (analog stubs off-chip) ------- */
     wire       sar_go, sar_done;
     wire [7:0] sar_result;
-    wire       vlow, vcrit;
+    wire       vlow, vcrit, vclamp;
     wire       force_sense;
 
     sar_ctrl u_sar (
@@ -120,7 +125,7 @@ module drh1_top #(parameter CLK_HZ = 1000000) (
         .force_rd(force_sense),
         .sar_result(sar_result), .sar_done(sar_done),
         .sar_go(sar_go), .sns_en(sns_en),
-        .sto_q(dbg_sto), .vlow(vlow), .vcrit(vcrit)
+        .sto_q(dbg_sto), .vlow(vlow), .vcrit(vcrit), .vclamp(vclamp)
     );
 
     /* ---- supervisor: main.c's dormancy / tap / NFC loop ----------------- */
@@ -138,6 +143,7 @@ module drh1_top #(parameter CLK_HZ = 1000000) (
         .clk(clk), .rst_n(rst_n),
         .tick_env(tick_env),
         .mode(dbg_mode),               // the live wake_fsm mode, also the debug tap
+        .clamp_en(vclamp),             // ballast guard: sense measures, gamma_pwm acts
         .led(led)
     );
 

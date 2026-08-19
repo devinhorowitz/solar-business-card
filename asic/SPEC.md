@@ -35,16 +35,29 @@ module clkdiv #(parameter CLK_HZ = 1000000) (
 
 ### rtl/gamma_pwm.v  (mirrors led.c)
 ```verilog
-module gamma_pwm (
+module gamma_pwm #(
+    parameter [7:0] CLAMP_PEAK = 8'd225   // board.h GLOW_CLAMP_PEAK
+)(
     input  wire clk, input wire rst_n,
     input  wire tick_env,
     input  wire [1:0] mode,   // 00 off | 01 breathe (all 4 in phase) | 10 sweep (90° offsets) | 11 dim solid
+    input  wire clamp_en,     // sense_seq.vclamp — the ballast guard
     output wire [3:0] led     // active-high to the four 16 mA sink cells
 );
 ```
 Triangle envelope 0..255..0 stepped on `tick_env`; per-channel phase offset of 64 envelope
 steps in sweep mode; gamma via a `function [7:0] gamma(input [7:0] x)` implementing x²/255
 (the cheap gamma-2 the firmware's table approximates); free-running 8-bit PWM counter on `clk`.
+
+`clamp_en` is the BALLAST GUARD's actuation half. While it is high, **every** duty written
+to a channel is capped at `CLAMP_PEAK` — a CEILING, not a rescale, matching the firmware's
+`if (peak > GLOW_CLAMP_PEAK) peak = GLOW_CLAMP_PEAK`. That shape is required, not incidental:
+the published bound (70 mW × 225/255 = 61.8 mW against a 62.5 mW element rating) is computed
+at a HELD peak, so a flat top at the ceiling *is* the worst case. It must be applied at ONE
+chokepoint that every animation passes through — the firmware's equivalent is a single
+function, `sense_glow_peak()` — so a mode added later inherits it by construction. The
+testbench MUST prove every channel respects the ceiling *and* reaches it, and MUST measure
+the unclamped peak first so the ceiling check cannot pass vacuously.
 
 ### rtl/i2c_master.v
 ```verilog
@@ -107,6 +120,16 @@ IDLE → (every 16th `tick_poll`, or `force_rd`) ARM (`sns_en`=1) → SETTLE (co
 `sns_en`=0. The divider must be gated off between samples — that is the entire point of the
 U10 chain this replaces, and the testbench MUST assert the sns_en duty cycle is bounded.
 
+`vclamp` is the BALLAST GUARD's measurement half (firmware: `USE_BALLAST_GUARD`,
+`GLOW_CLAMP_STO_MV` 5200, applied in `sense_glow_peak()`), and it differs from its two
+neighbours in two deliberate ways. **Polarity**: `vlow`/`vcrit` are strict-below, `vclamp`
+is at-or-above, so the three partition the range. **Reset**: `vlow`/`vcrit` reset optimistic
+(0), `vclamp` resets PESSIMISTIC (1, clamped) — an unmeasured low costs a glow that should
+have happened, an unmeasured high costs dissipation on a part already near its rating, so
+the safe reset values are opposite. `TH_CLAMP` inherits TH_LOW's "placeholder scaling"
+caveat: it is derived from TH_LOW rather than from volts (floor of TH_LOW × 5200/2750), so
+the thresholds move together. The testbench MUST DISCOVER the boundary, not restate it.
+
 ### rtl/wake_fsm.v  (mirrors main.c's dormancy/tap loop)
 ```verilog
 module wake_fsm #(
@@ -165,7 +188,10 @@ TT — acceptable for the demo board; the wafer.space padframe has pads to spare
 Self-checking testbench, `$fatal` on assertion failure, final line `TB PASS: <name>`.
 Integration TB (`tb/tb_top.v`) must include a behavioural ADXL367 I²C slave model that
 CHECKS the init writes' addressing, then: tap → observe glow PWM activity on all four LEDs;
-vcrit scenario via the SAR/comparator model → DORMANT + brownout; sns_en duty bounded.
+vcrit scenario via the SAR/comparator model → DORMANT + brownout; sns_en duty bounded; and
+the ballast guard end to end — two rails, one tap each, the high one glowing at a strictly
+lower peak duty measured at the LED pins (the unit benches pass with `clamp_en` unconnected;
+only an integration difference proves the two halves are wired together).
 
 ## Size gate
 

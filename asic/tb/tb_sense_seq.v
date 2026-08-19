@@ -87,7 +87,7 @@ module tb_sense_seq;
     reg        tb_go    = 1'b0;          // phase-A direct SAR drive (sense_seq idle)
     reg [7:0]  VIN_CODE = 8'd0;          // the "analog" rail the comparator sees
 
-    wire       seq_go, sns_en, vlow, vcrit;
+    wire       seq_go, sns_en, vlow, vcrit, vclamp;
     wire [7:0] sto_q, dac_code, sar_result;
     wire       sar_done, sar_busy;
 
@@ -102,7 +102,7 @@ module tb_sense_seq;
         .force_rd(force_rd),
         .sar_result(sar_result), .sar_done(sar_done),
         .sar_go(seq_go), .sns_en(sns_en),
-        .sto_q(sto_q), .vlow(vlow), .vcrit(vcrit)
+        .sto_q(sto_q), .vlow(vlow), .vcrit(vcrit), .vclamp(vclamp)
     );
 
     sar_ctrl u_sar (
@@ -200,6 +200,38 @@ module tb_sense_seq;
 
     // observe one full sample: rise (within max_wait), settle/convert/latch
     // shape, fall, and the latched outputs
+    /* one forced sample at `code`, returning the resulting vclamp. Used by D to
+     * DISCOVER sense_seq's clamp threshold rather than restate it: TH_LOW/TH_CRIT
+     * are overridden above, TH_CLAMP deliberately is not, so a changed default is
+     * still under test instead of being silently agreed with. */
+    integer d_lo, d_hi, d_mid;
+    reg     d_cl;
+
+    task sample_at;
+        input [7:0] code;
+        output      cl;
+        integer w;
+        begin
+            VIN_CODE = code;
+            pulse_force;
+            w = 0;
+            while (sns_en !== 1'b1) begin
+                @(negedge clk); w = w + 1;
+                if (w > 8 * (SETTLE + 2) * ENV_CLKS)
+                    $fatal(1, "D: sns_en never rose for code %0d", code);
+            end
+            while (sns_en !== 1'b0) begin
+                @(negedge clk); w = w + 1;
+                if (w > 8 * (SETTLE + 2) * ENV_CLKS)
+                    $fatal(1, "D: sns_en stuck high for code %0d", code);
+            end
+            @(negedge clk);
+            if (sto_q !== code)
+                $fatal(1, "D: sto_q %0d != driven code %0d", sto_q, code);
+            cl = vclamp;
+        end
+    endtask
+
     task check_sample;
         input [7:0]   exp_q;
         input         exp_vlow;
@@ -343,6 +375,50 @@ module tb_sense_seq;
         pulse_force;
         check_sample(8'd200, 1'b0, 1'b0, 4);
         $display("C2 OK: 63 -> vlow+vcrit; boundaries 64/96 not-below; 200 clears both");
+
+        /* ---------- D: vclamp -- the ballast guard's measurement half ---------- */
+        // Reset must be PESSIMISTIC. vlow/vcrit reset optimistic on purpose (an
+        // unmeasured low must not block the first tap); vclamp is the opposite
+        // failure direction -- an unmeasured HIGH rail costs ballast dissipation on
+        // a part already at ~110 % of rating at the corner -- so it resets CLAMPED.
+        // Not theoretical: wake_fsm glows on a tap from the STANDING latches, before
+        // the force_rd sample it triggers has landed.
+        do_reset;
+        @(negedge clk);
+        if (vclamp !== 1'b1)
+            $fatal(1, "D: vclamp resets to %b -- the guard must reset CLAMPED", vclamp);
+
+        // endpoints first: the guard must be both reachable and not always-on.
+        sample_at(8'd0, d_cl);
+        if (d_cl !== 1'b0)
+            $fatal(1, "D: code 0 is clamped -- the guard fires at the brownout floor");
+        sample_at(8'd255, d_cl);
+        if (d_cl !== 1'b1)
+            $fatal(1, "D: full scale is not clamped -- the guard is unreachable");
+
+        // binary search for the lowest clamped code
+        d_lo = 0; d_hi = 255;
+        while (d_hi - d_lo > 1) begin
+            d_mid = (d_lo + d_hi) / 2;
+            sample_at(d_mid[7:0], d_cl);
+            if (d_cl === 1'b1) d_hi = d_mid; else d_lo = d_mid;
+        end
+        if (d_hi <= TH_LOW)
+            $fatal(1, "D: vclamp turns on at code %0d, at or below TH_LOW %0d -- the guard would clamp a NORMAL glow",
+                   d_hi, TH_LOW);
+
+        // monotone either side of the boundary (a binary search alone cannot see a
+        // non-monotone flag; these two mid-range probes can).
+        sample_at((TH_LOW + d_hi) / 2, d_cl);
+        if (d_cl !== 1'b0)
+            $fatal(1, "D: vclamp set at code %0d, below the boundary %0d -- not monotone",
+                   (TH_LOW + d_hi) / 2, d_hi);
+        sample_at((d_hi + 255) / 2, d_cl);
+        if (d_cl !== 1'b1)
+            $fatal(1, "D: vclamp clear at code %0d, above the boundary %0d -- not monotone",
+                   (d_hi + 255) / 2, d_hi);
+        $display("D OK: vclamp resets clamped; boundary at code %0d (TH_LOW %0d < %0d < 255), monotone both sides",
+                 d_hi, TH_LOW, d_hi);
 
         $display("TB PASS: tb_sense_seq");
         $finish;

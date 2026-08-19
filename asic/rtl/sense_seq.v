@@ -49,6 +49,44 @@
  * still converts to result 0 -> vlow/vcrit set -> no glow, the same
  * fail-safe direction as the firmware's stuck-ADC-reads-0 rule).
  *
+ * vclamp -- THE BALLAST GUARD's measurement half (firmware: USE_BALLAST_GUARD,
+ * GLOW_CLAMP_STO_MV in board.h, applied in sense.c's sense_glow_peak()). The
+ * card clamps glow duty when the tank sits ABOVE 5200 mV, because at the abuse
+ * corner (STO 5.5 V off a bench supply -- the AEM's own VOVCH 4.65 V never
+ * reaches it -- min-bin Vf 1.9 V, VOL ~0.4 V) a held 100 % duty pushes RN1's
+ * EXB-28V151JX elements to ~68-70 mW against a 62.5 mW rating. gamma_pwm
+ * consumes this as clamp_en and caps peak duty at CLAMP_PEAK.
+ *
+ *   THRESHOLD, and how provisional it is: TH_LOW/TH_CRIT are tagged
+ *   "placeholder scaling" and TH_CLAMP inherits exactly that caveat -- it is
+ *   derived FROM them, not from volts, so the three move together and cannot
+ *   drift apart. TH_LOW 96 stands for the firmware's VS_GLOW_FLOOR_MV 2750,
+ *   which implies 2750/96 = 28.65 mV per code; GLOW_CLAMP_STO_MV 5200 is then
+ *   5200/28.65 = 181.5, and TH_CLAMP takes the FLOOR, 181. Flooring is the
+ *   conservative rounding for a guard: the clamp engages at code 181 (~5185 mV
+ *   on that scale), at or below the threshold it is protecting, never above it.
+ *   Sanity, since a threshold past full scale would be silently unreachable:
+ *   181 of 255 is 71 % of range, and even the 5.5 V abuse corner is code 192.
+ *
+ *   POLARITY is deliberately the opposite kind from vlow/vcrit. Those are
+ *   STRICT-below flags; vclamp is AT-OR-ABOVE, so the three partition the
+ *   range with no gap and no overlap, and the firmware's strict `mv >
+ *   GLOW_CLAMP_STO_MV` is preserved with the rounding folded into TH_CLAMP.
+ *
+ *   RESET IS PESSIMISTIC (vclamp <= 1), and this is the one place this module
+ *   deliberately breaks its own optimistic-reset rule. The rule exists because
+ *   an unmeasured LOW should not block the first tap -- costing a glow that
+ *   should have happened. An unmeasured HIGH costs the opposite: ballast
+ *   over-dissipation on a part already at 110 % of rating at the corner. The
+ *   failure directions are opposite, so the safe reset values are too. It is
+ *   not theoretical -- wake_fsm's IDLE will glow on a tap using the STANDING
+ *   latches, before the force_rd sample it triggers has landed, so a glow
+ *   genuinely can precede the first conversion.
+ *
+ *   BOTH stuck-analog directions stay safe, which is worth stating because
+ *   only one of them is obvious: stuck-at-0 sets vlow+vcrit -> DORMANT -> mode
+ *   00 -> no LED current at all, and stuck-at-full sets vclamp -> clamped.
+ *
  * force_rd is sampled in IDLE only; a pulse during an in-flight sample is
  * absorbed (the running sample is equally fresh -- the same collapse of
  * doubled reads sto_raw() gets by disarming the deferred sampler). Starting
@@ -60,15 +98,17 @@
 module sense_seq #(
     parameter SETTLE_ENV_TICKS = 5,      // ~39 ms at 128 Hz -- the RC settle, in silicon
     parameter POLLS_PER_SAMPLE = 16,     // sense.c's VMIN_SAMPLE_POLLS
-    parameter [7:0] TH_LOW  = 8'd96,     // vlow: below glow floor   (placeholder scaling)
-    parameter [7:0] TH_CRIT = 8'd64      // vcrit: brownout floor
+    parameter [7:0] TH_LOW   = 8'd96,    // vlow:   below glow floor  (placeholder scaling)
+    parameter [7:0] TH_CRIT  = 8'd64,    // vcrit:  brownout floor
+    parameter [7:0] TH_CLAMP = 8'd181    // vclamp: ballast guard     (see header)
 )(
     input  wire clk, input wire rst_n,
     input  wire tick_poll, input wire tick_env,
     input  wire force_rd,                // event path: tap is about to spend a glow
     input  wire [7:0] sar_result, input wire sar_done,
     output reg  sar_go, output reg sns_en,
-    output reg  [7:0] sto_q, output reg vlow, output reg vcrit
+    output reg  [7:0] sto_q, output reg vlow, output reg vcrit,
+    output reg  vclamp                   // rail high enough that RN1 needs the duty clamp
 );
 
     // constant fn (Verilog-2001) so counters are sized, not blanket 32 bits
@@ -109,6 +149,7 @@ module sense_seq #(
             sto_q    <= 8'd0;
             vlow     <= 1'b0;
             vcrit    <= 1'b0;
+            vclamp   <= 1'b1;            // PESSIMISTIC on purpose -- see header
         end else begin
             sar_go <= 1'b0;                        // 1-cycle strobe
 
@@ -143,8 +184,9 @@ module sense_seq #(
                 S_CONVERT:
                     if (sar_done) begin            // latch at the handshake edge
                         sto_q <= sar_result;
-                        vlow  <= (sar_result < TH_LOW);
-                        vcrit <= (sar_result < TH_CRIT);
+                        vlow   <= (sar_result <  TH_LOW);
+                        vcrit  <= (sar_result <  TH_CRIT);
+                        vclamp <= (sar_result >= TH_CLAMP);
                         state <= S_LATCH;
                     end
 

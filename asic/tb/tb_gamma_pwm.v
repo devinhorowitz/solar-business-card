@@ -42,6 +42,7 @@ module tb_gamma_pwm;
     reg        clk = 1'b0;
     reg        rst_n = 1'b0;
     reg [1:0]  mode = 2'b00;
+    reg        clamp_en = 1'b0;   // ballast guard off unless a check turns it on
     wire       tick_env, tick_poll;
     wire [3:0] led;
 
@@ -52,7 +53,7 @@ module tb_gamma_pwm;
 
     gamma_pwm u_pwm (
         .clk(clk), .rst_n(rst_n),
-        .tick_env(tick_env), .mode(mode), .led(led)
+        .tick_env(tick_env), .mode(mode), .clamp_en(clamp_en), .led(led)
     );
 
     always #5 clk = ~clk;   // 100 MHz sim clock; rate checks are in cycles
@@ -74,6 +75,7 @@ module tb_gamma_pwm;
     integer maxv, peak_i0, peak_i1, peak_i2, peak_i3;
     integer found_a, found_b, found_c;
     integer dim_ref;
+    integer e_off, e_on, r0, r1, r2, r3;               // E: ballast-guard ceiling
 
     task do_reset;
         begin
@@ -231,6 +233,74 @@ module tb_gamma_pwm;
         if (dim_ref <= 0)  $fatal(1, "mode 11: duty is zero -- 'dim solid' is dark");
         if (dim_ref > 40)  $fatal(1, "mode 11: duty %0d/256 is not small", dim_ref);
         $display("D OK: mode 11 constant duty %0d/256 on all four channels", dim_ref);
+
+        /* ---------- E: ballast guard -- a real ceiling, on every channel ----------
+         * The ceiling is DISCOVERED, not restated here: gamma_pwm's CLAMP_PEAK is
+         * left at its default and the bench measures what the hardware does, so a
+         * changed default is still tested rather than silently agreed with. */
+
+        // E1: clamp OFF -- the unclamped peak. Without this, E2 could pass vacuously
+        // on an envelope that never reached the ceiling in the first place.
+        mode = 2'b01; clamp_en = 1'b0;
+        do_reset;
+        e_off = 0;
+        for (i = 1; i <= NSTEP; i = i + 1) begin
+            wait_env; measure_duty(c0, c1, c2, c3);
+            if (c0 > e_off) e_off = c0;
+        end
+
+        // E2: clamp ON, breathe -- a strictly lower peak, and a FLAT ceiling rather
+        // than a rescale: nothing anywhere in the envelope exceeds it. That shape is
+        // load-bearing for the published thermal bound, which is computed at a HELD
+        // peak (70 mW x CLAMP_PEAK/255), so a flat top IS the worst case.
+        clamp_en = 1'b1;
+        do_reset;
+        e_on = 0;
+        for (i = 1; i <= NSTEP; i = i + 1) begin
+            wait_env; measure_duty(c0, c1, c2, c3);
+            if (c1 != c0 || c2 != c0 || c3 != c0)
+                $fatal(1, "E2: clamped breathe channels differ (%0d %0d %0d %0d)", c0, c1, c2, c3);
+            if (c0 > e_on) e_on = c0;
+        end
+        if (e_on >= e_off)
+            $fatal(1, "E2: clamped peak %0d not below unclamped peak %0d -- the guard does nothing",
+                   e_on, e_off);
+        if (e_on == 0)
+            $fatal(1, "E2: clamped peak is 0 -- the guard extinguishes the glow instead of capping it");
+
+        // E3: clamp ON, sweep -- EVERY channel must respect the same ceiling, and
+        // every channel must actually REACH it. This is the check that catches one
+        // animation path routed around ballast(): the four sweep duties are written
+        // from four separate expressions, and exactly that slip happened while this
+        // guard was being written (MODE_SWEEP's duty0 is textually identical to
+        // MODE_BREATHE's, so a first-occurrence edit left it unclamped).
+        mode = 2'b10;
+        do_reset;
+        r0 = 0; r1 = 0; r2 = 0; r3 = 0;
+        for (i = 1; i <= NSTEP; i = i + 1) begin
+            wait_env; measure_duty(c0, c1, c2, c3);
+            if (c0 > e_on || c1 > e_on || c2 > e_on || c3 > e_on)
+                $fatal(1, "E3: sweep duty over the ceiling %0d at step %0d: %0d/%0d/%0d/%0d -- a channel bypasses the clamp",
+                       e_on, i, c0, c1, c2, c3);
+            if (c0 == e_on) r0 = r0 + 1;
+            if (c1 == e_on) r1 = r1 + 1;
+            if (c2 == e_on) r2 = r2 + 1;
+            if (c3 == e_on) r3 = r3 + 1;
+        end
+        if (r0 == 0 || r1 == 0 || r2 == 0 || r3 == 0)
+            $fatal(1, "E3: channel(s) never reached the ceiling (%0d/%0d/%0d/%0d hits) -- clamped-low, not clamped",
+                   r0, r1, r2, r3);
+
+        // E4: the clamp must not disturb the dark guarantee mode 00 owns.
+        mode = 2'b00;
+        do_reset;
+        for (i = 0; i < 4 * NSTEP; i = i + 1) begin
+            @(negedge clk);
+            if (led !== 4'b0000)
+                $fatal(1, "E4: led=%b with clamp on in mode 00 -- dark-at-off broken", led);
+        end
+        $display("E OK: ballast ceiling %0d (unclamped peak %0d); flat top, all 4 sweep channels reach it (%0d/%0d/%0d/%0d), mode 00 still dark",
+                 e_on, e_off, r0, r1, r2, r3);
 
         $display("TB PASS: tb_gamma_pwm");
         $finish;

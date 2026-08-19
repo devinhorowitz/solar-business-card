@@ -68,7 +68,13 @@ module tb_top;
     localparam integer CLK_NS     = 10;
 
     localparam [6:0] ACCEL_ADDR = 7'h1D;          // ADXL367, ASEL grounded
-    localparam [7:0] VIN_OK     = 8'd200;         // healthy (>= TH_LOW 96)
+    localparam [7:0] VIN_OK     = 8'd200;         // healthy (>= TH_LOW 96), and ALSO
+                                                  //   above TH_CLAMP 181, so every
+                                                  //   glow at this rail is clamped --
+                                                  //   [9] is what makes that visible
+    localparam [7:0] VIN_MID    = 8'd150;         // TH_LOW 96 < 150 < TH_CLAMP 181:
+                                                  //   a normal charged tank, full
+                                                  //   amplitude, guard idle
     localparam [7:0] VIN_DEAD   = 8'd30;          // below TH_CRIT 64
 
     /* ---- DUT: drh1_top on its own I2C bus -------------------------------- */
@@ -181,6 +187,7 @@ module tb_top;
 
     /* ---- helpers ------------------------------------------------------------ */
     integer k;   // shared wait counter (single sequential stimulus thread)
+    integer pk_hi, pk_mid;   // [9] ballast guard: peak duty at two rails
 
     task do_tap;                              // one crisp int1 rising edge
         begin
@@ -188,6 +195,30 @@ module tb_top;
             repeat (8) @(negedge clk);
             int1 = 1'b0;
             repeat (2) @(negedge clk);
+        end
+    endtask
+
+    /* max PWM high-time per 256-clk period over a glow window, used by [9]. The
+     * free-running 8-bit PWM counter passes every code once per 256 clks, so a
+     * window that does not straddle an envelope step counts the duty register
+     * exactly; here the env period IS 256 clks (CLK_HZ_SIM/128), so a window can
+     * blend two adjacent steps -- which bounds the reading between them and leaves
+     * the clamped/unclamped comparison sound without needing a tolerance. */
+    task glow_peak_duty;
+        output integer pk;
+        integer w, n, cnt;
+        begin
+            do_tap;
+            pk = 0;
+            for (n = 0; n < (5 * POLL_CLKS) / 512; n = n + 1) begin
+                cnt = 0;
+                for (w = 0; w < 256; w = w + 1) begin
+                    @(negedge clk);
+                    if (led[0] === 1'bx) $fatal(1, "[9] led[0] is X during the glow");
+                    if (led[0] === 1'b1) cnt = cnt + 1;
+                end
+                if (cnt > pk) pk = cnt;
+            end
         end
     endtask
 
@@ -376,6 +407,41 @@ module tb_top;
         while (brownout !== 1'b0 && k < 20 * POLL_CLKS) begin @(posedge clk); k = k + 1; end
         if (brownout !== 1'b0)
             $fatal(1, "[5b] brownout never released after recovery");
+
+        /* [9] BALLAST GUARD, end to end: sense_seq measures, gamma_pwm acts, and
+         * the only thing that can prove they are CONNECTED is a difference visible
+         * at the LED pins. The unit benches each pass with .clamp_en() left off the
+         * instantiation entirely; this one does not.
+         * Two rails, one tap each, nothing else changed. VIN_OK is above the clamp
+         * threshold, VIN_MID is deliberately between the glow floor and the clamp --
+         * a NORMAL charged tank, which must glow at full amplitude. Both are latched
+         * by a periodic sample BEFORE the tap, because the glow decision and the
+         * clamp both read the standing latch (see sense_seq's design note); the
+         * force_rd the tap issues gates the NEXT event, not this one. */
+        vin_code = VIN_OK;
+        k = 0;
+        while (dbg_sto !== VIN_OK && k < 20 * POLL_CLKS) begin @(posedge clk); k = k + 1; end
+        if (dbg_sto !== VIN_OK) $fatal(1, "[9] sto never latched VIN_OK");
+        glow_peak_duty(pk_hi);
+
+        k = 0;
+        while (dbg_mode !== 2'b00 && k < 8 * POLL_CLKS) begin @(posedge clk); k = k + 1; end
+
+        vin_code = VIN_MID;
+        k = 0;
+        while (dbg_sto !== VIN_MID && k < 20 * POLL_CLKS) begin @(posedge clk); k = k + 1; end
+        if (dbg_sto !== VIN_MID) $fatal(1, "[9] sto never latched VIN_MID");
+        if (brownout !== 1'b0) $fatal(1, "[9] VIN_MID is below the brownout floor -- pick a higher code");
+        glow_peak_duty(pk_mid);
+
+        if (pk_hi == 0 || pk_mid == 0)
+            $fatal(1, "[9] no glow at all (peaks %0d / %0d) -- the scenario proves nothing",
+                   pk_hi, pk_mid);
+        if (pk_hi >= pk_mid)
+            $fatal(1, "[9] peak duty %0d at the HIGH rail is not below %0d at the normal rail -- vclamp is not reaching gamma_pwm",
+                   pk_hi, pk_mid);
+        $display("[9] ballast guard OK: peak duty %0d/256 at sto=%0d (clamped) vs %0d/256 at sto=%0d (normal)",
+                 pk_hi, VIN_OK, pk_mid, VIN_MID);
 
         /* [6] whole-run gate duty: the divider only exists while converting */
         if (samples < 4)
