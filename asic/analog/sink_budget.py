@@ -22,11 +22,28 @@ is not the worst corner for another, so each is solved separately over the box.
                                             (solar-glow-drh-design-notes.md, board.h)
     gate  glow inhibited below VS_GLOW_FLOOR_MV = 2750    (board.h)
     duty  gamma_pwm clamps peak duty to CLAMP_PEAK/255 while sense_seq.vclamp is high
+
+MODEL VALIDITY -- read this before quoting a row. The loop equation treats Vf as a
+CONSTANT, but the only Vf data this repo has is 1.95-2.55 V *at 30 mA*, and a diode's
+forward voltage falls with current. So each row is only as good as its distance from
+that spec point, and the table prints the ratio so you cannot forget:
+
+    abuse corner   22 mA  0.75x spec   usable
+    VOVCH          16 mA  0.55x spec   shaky
+    glow floor      3 mA  0.11x spec   NOT USABLE -- a real LED conducts here; this
+                                       model says it does not, and the model is wrong
+
+That last row is why this note exists. On 2026-08-19 an earlier version of this file
+reported "the worst-bin LED cannot light at the glow floor" as a FINDING. It is not a
+finding, it is an artifact of applying a 30 mA number at 0.67 mA. Closing the low-rail
+end needs the LED's I-V curve or a bench sweep, not more arithmetic.
 """
 import argparse, sys
 
 # ---- sourced inputs ---------------------------------------------------------------
 VF_MIN, VF_MAX = 1.95, 2.55      # PCB/README.md: unbinned 3B-5A at 30 mA
+VF_SPEC_A      = 0.030           # ...AT 30 mA, and that qualifier is load-bearing --
+                                 # see MODEL VALIDITY in the module docstring
 VF_TYP         = 2.25            # PCB/README.md D2-D5 row
 VF_GUARD       = 1.90            # board.h's ballast-guard corner (below the DS floor)
 R_NOM, R_TOL   = 150.0, 0.05     # RN1 EXB-28V151JX, +/-5%
@@ -76,7 +93,7 @@ def rows():
         i_max = current(sto, VF_GUARD, R_LO, 0.4)
         i_typ = current(sto, VF_TYP,   R_NOM, 0.4)
         i_min = current(sto, VF_MAX,   R_HI, 0.4)
-        out.append((label, sto, i_min, i_typ, i_max, i_max**2 * R_LO))
+        out.append((label, sto, i_min, i_typ, i_max, i_max**2 * R_LO, i_max / VF_SPEC_A))
     return out
 
 def vsink_sweep():
@@ -94,10 +111,12 @@ def main():
     a = ap.parse_args()
 
     print("== operating envelope (Vsink = 0.4 V, the AVR's VOL the board was sized against)")
-    print(f"{'rail':<14}{'STO':>7}{'I min':>9}{'I typ':>9}{'I max':>9}{'ballast @Imax':>15}")
-    for lbl, sto, imin, ityp, imax, p in rows():
+    print(f"{'rail':<14}{'STO':>7}{'I min':>9}{'I typ':>9}{'I max':>9}{'ballast @Imax':>15}"
+          f"{'vs 30mA spec':>15}")
+    for lbl, sto, imin, ityp, imax, p, ratio in rows():
+        trust = "usable" if ratio > 0.6 else ("shaky" if ratio > 0.25 else "NOT USABLE")
         print(f"{lbl:<14}{sto:>6.2f}V{imin*1e3:>8.2f}m{ityp*1e3:>8.2f}m{imax*1e3:>8.2f}m"
-              f"{p*1e3:>11.1f}mW {p/P_ELEM*100:>5.0f}%")
+              f"{p*1e3:>11.1f}mW {p/P_ELEM*100:>5.0f}%{ratio:>9.2f}x {trust}")
 
     print("\n== sink compliance sweep at the abuse corner (why Vsink has a FLOOR, not just a ceiling)")
     print(f"{'Vsink':>7}{'I':>10}{'ballast':>11}{'of rating':>11}")
@@ -134,13 +153,14 @@ def main():
     print(f"       package:   {4*p_tol*CLAMP_PEAK/255*1e3:.1f} mW of {P_PKG*1e3:.0f} mW")
     print(f"       ceiling:   largest peak that holds here is {need}")
 
-    # [F2] a max-Vf part cannot light at the glow floor
+    # [F2] -- WAS reported as a finding on 2026-08-19 and was WRONG. Kept as a stated
+    # limit of the model, because the mistake is easy to make again from this same table.
     hdr = STO_FLOOR - VF_MAX
-    print(f"  [F2] headroom at the glow floor for a MAX-Vf part")
-    print(f"       {STO_FLOOR:.2f} V - {VF_MAX:.2f} V = {hdr*1e3:.0f} mV for ballast + sink;"
-          f" a 0.4 V sink alone needs {0.4*1e3:.0f} mV")
-    print(f"       -> {'DARK' if hdr < 0.4 else 'lights'}: the worst-bin LED cannot conduct at the floor")
-    print(f"       sink drop must be < {hdr*1e3:.0f} mV for ANY current at that rail")
+    print(f"  [F2] the low-rail end of this table is NOT a prediction")
+    print(f"       at {STO_FLOOR:.2f} V a MAX-Vf part leaves {hdr*1e3:.0f} mV for ballast + sink "
+          f"USING THE 30 mA Vf")
+    print(f"       -> the model says dark; a real LED does not, because Vf falls with current")
+    print(f"       -> {rows()[0][6]:.2f}x the spec point: needs the I-V curve or a bench sweep")
 
     # [F3] the inversion
     i_lo = current(STO_ABUSE, VF_GUARD, R_LO, 0.05)

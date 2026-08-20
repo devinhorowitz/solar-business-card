@@ -18,11 +18,19 @@ Series loop: `STO → LED → RN1 → sink`. Current is `(STO − Vf − Vsink) 
 corner for current is **min Vf, min R, min sink drop** — and each figure below is solved
 on its own corner rather than at one convenient typical.
 
-| rail | STO | I min | I typ | I max | ballast @ I max |
-|---|---|---|---|---|---|
-| glow floor | 2.75 V | **0.00 mA** | 0.67 mA | 3.16 mA | 1.4 mW (2 %) |
-| VOVCH (full tank) | 4.65 V | 10.79 mA | 13.33 mA | 16.49 mA | 38.8 mW (62 %) |
-| abuse corner | 5.50 V | 16.19 mA | 19.00 mA | **22.46 mA** | 71.9 mW (**115 %**) |
+| rail | STO | I min | I typ | I max | ballast @ I max | vs the 30 mA spec point |
+|---|---|---|---|---|---|---|
+| glow floor | 2.75 V | 0.00 mA | 0.67 mA | 3.16 mA | 1.4 mW (2 %) | 0.11× — **not usable** |
+| VOVCH (full tank) | 4.65 V | 10.79 mA | 13.33 mA | 16.49 mA | 38.8 mW (62 %) | 0.55× — shaky |
+| abuse corner | 5.50 V | 16.19 mA | 19.00 mA | **22.46 mA** | 71.9 mW (**115 %**) | 0.75× — usable |
+
+> **Model validity — read before quoting a row.** The loop equation treats Vf as a
+> constant, but the only Vf data this repo has is **1.95–2.55 V *at 30 mA***, and a
+> diode's forward voltage falls with current. Each row is therefore only as good as its
+> distance from that spec point, which is why the last column exists. The glow-floor row
+> is **not a prediction** — see F2.
+
+
 
 `I typ` at VOVCH is 13.33 mA, which is where SPEC's "16 mA" comes from — that is the
 *max*-corner figure at the full tank, not a typical.
@@ -36,6 +44,13 @@ on its own corner rather than at one convenient typical.
 now **221**, the largest peak that holds there — 62.3 mW, **99.6 %** of the element rating,
 with the package at 249.1 mW of 250 mW.
 
+One caveat on F1's own basis, since the same Vf trap is nearby: it is computed with
+`VF_GUARD` = 1.90 V, which is *below* the 1.95 V datasheet floor **at 30 mA**. Since Vf
+falls with current, 1.90 V is plausibly about right for a min-bin part at 22 mA — so the
+margin is likely intact, but by two errors cancelling rather than by derivation. Do not
+"correct" 1.90 to 1.95 without the I-V curve: that would lower the computed current and
+make the clamp look safer than it is.
+
 That margin is thin on purpose rather than by accident, and it is now **gated** rather than
 trusted: `sink_budget.py` reads `GLOW_CLAMP_PEAK` out of `firmware/board.h` and `CLAMP_PEAK`
 out of `asic/rtl/gamma_pwm.v` — it does not carry a third copy — and `--check` fails if the
@@ -43,11 +58,17 @@ two disagree, or if either stops satisfying the inequality. That guard earns its
 because `PCB/README.md` flags R1–R4's 150 Ω as **SIZED, not locked** and bench-pending: a
 re-tune moves the corner under the constant, and now it cannot move silently.
 
-**[F2] A worst-bin LED cannot light at the glow floor at all.** Vf is unbinned across
-3B–5A at **1.95–2.55 V**. The glow gate opens at 2.75 V, leaving 200 mV for ballast *and*
-sink — and a 0.4 V sink alone needs twice that. A max-Vf part is simply dark there. Any
-sink drop above 200 mV makes the bottom of the glow range unreachable for part of the
-bin distribution.
+**[F2] The low-rail end of this table is not a prediction — and was briefly published as
+one.** An earlier version of this file reported *"a worst-bin LED cannot light at the glow
+floor"* as a finding. **That was wrong.** It applied the 2.55 V figure — specified at
+**30 mA** — to an operating point of **0.67 mA**, where a real LED's Vf is materially
+lower and the part does conduct. The arithmetic was right and the premise was not.
+
+What is true is narrower and still worth knowing: **the low-rail glow behaviour is
+unmodelled here.** At 2.75 V a max-Vf part has only 200 mV for ballast *and* sink using
+the 30 mA number, so the margin is genuinely thin — but how thin cannot be settled by more
+arithmetic. It needs the LED's I-V curve or a bench sweep. Recorded rather than deleted
+because the mistake is easy to make again from this same table.
 
 **[F3] A stronger sink is worse, not better.** `Vsink` sits in series with the LED, so
 lowering it *raises* loop current and the ballast dissipates I²R. Dropping 0.50 → 0.05 V
@@ -56,8 +77,9 @@ takes current 21.8 → 24.9 mA and the ballast 67 → 88 mW — **108 % → 142 
 This is the opposite of the usual "minimise R_on" instinct and is the single most
 important constraint on this cell.
 
-F2 and F3 pull in opposite directions — F2 wants a small drop, F3 wants a large one —
-across a rail range spanning 2.75–5.5 V. That tension is the cell's real design problem.
+F3 wants a large sink drop; the thin low-rail headroom F2 points at wants a small one,
+across a rail spanning 2.75–5.5 V. That tension is the cell's real design problem — though
+its low-rail half is only bounded once the I-V curve exists.
 
 ## The specification
 
@@ -82,8 +104,8 @@ sags, and a current source would fight it.
 A **current-source** sink (mirror in saturation) is the upgrade path: it removes the
 abuse corner at its root, since I stops depending on STO, and it fixes F3. It does not
 save energy — the drop moves from RN1 to the die, same I·V — so it *worsens* the thermal
-picture, and it needs Vdsat headroom exactly where F2 says there is none. Worth revisiting
-only with bench data on the energy budget.
+picture, and it needs Vdsat headroom at the low rail where there is least of it. Worth
+revisiting only with bench data on the energy budget.
 
 ## What still needs the PDK
 
