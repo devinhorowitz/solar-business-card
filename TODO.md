@@ -160,6 +160,58 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   **Gates:** the #1 energy-budget item's draw side; F1's margin; the retracted F2; and any
   future re-tune of the 150 ohm ballast.
 
+- [ ] **[BENCH — first-article gate] Find the system's true low-rail floor, and set TH_CRIT from it**
+  _(2026-08-20. `asic/rtl/sense_seq.v`'s `TH_CRIT_MV` = 2000 is the one threshold in that module
+  with **no firmware anchor** — the card has no second rail gate — so it was sourced to the
+  AEM10300 selection analysis's "drain to ~2 V at the load". That is a statement about what the
+  HARVESTER can deliver, not about what THIS LOAD can still run on, and those are different
+  questions.)_
+
+  **It is an energy-budget claim in disguise, and the arithmetic is not small.** On the real tank
+  (2S2P, **1.40 F**, 15.14 J at the 4.65 V VOVCH ceiling):
+
+  | spend down to | stored left | spendable |
+  |---|---|---|
+  | 2.75 V — the card's glow floor | 5.29 J | **9.84 J** (README's "9.8 J spendable") |
+  | 2.60 V — the AVR's BOD | 4.73 J | 10.40 J |
+  | 2.00 V — `TH_CRIT` as set | 2.80 J | **12.34 J** |
+
+  So `TH_CRIT` = 2000 mV quietly asserts **+25.3 % usable energy** over the number the card
+  publishes. Nobody has justified that, and it is exactly the kind of claim the #1 energy-budget
+  gate exists to settle.
+
+  **And the ordering argument says 2.0 V is probably wrong in principle.** DORMANT exists to STOP
+  SPENDING so the tank can recover — so it has to engage **above** the point where the system
+  stops working, not at it. A design that has already browned out cannot execute the transition.
+  The card's own floor is the AVR's **BOD at 2.60 V**, and `VS_GLOW_FLOOR_MV` = 2750 is derived
+  from it explicitly (`board.h`: 2600 + 150 mV of glow-sag margin). `TH_CRIT` sits 600 mV
+  **below** that floor.
+
+  **What has to be established, in order:**
+  - **(a) Desk work first, and it has no home yet.** The minimum operating voltage of every part
+    still on `VS` once the ASIC replaces U1 — **ADXL367, NT3H2211, MB85RC512TY** — plus what the
+    TPS7A0233 does below dropout (`board.h` already notes VS tracks STO under ~3.3 V, so at
+    STO 2.0 V every peripheral sees ~2.0 V). The tree currently has exactly one datum near this:
+    `adxl367.h`'s 0.89 µA is specified *at a 2.0 V supply*, which shows the accel runs there but
+    says nothing about the others. Record the set in one place; today there isn't one.
+  - **(b) The ASIC's own Vmin is a GF180/PDK question this experiment does not claim.** It
+    blocks a final number, and `asic/README.md` should not pretend otherwise.
+  - **(c) Bench, on the first article.** Walk STO down and record where each function actually
+    fails — tap detection, NFC read, FRAM write, glow — rather than where a datasheet says it
+    might. That floor is the answer, and it feeds the CARD's numbers too, not just the ASIC's.
+
+  **Then** set `TH_CRIT` from it and reconcile against `VS_GLOW_FLOOR_MV`, so both thresholds
+  derive from one measured floor instead of two unrelated arguments.
+
+  **Guard already in place:** `tb_sense_seq`'s check D asserts `vcrit < vlow < clamp` on the
+  DISCOVERED boundaries, because the likely revision here is *upward* toward the glow floor —
+  the direction that breaks the ordering. It goes red rather than producing a supervisor that
+  enters dormancy while the glow gate still reads healthy.
+
+  **Converges with** the `VS_GLOW_FLOOR_MV` vs STO-channel-accuracy item and the LED I-V sweep
+  above: three separate arguments, all about where the bottom of the operating range really is.
+  Take the measurements together.
+
 - [ ] **[BENCH — BLOCKS the pogo rig] The test plate has no hold-down, only registration**
   _(2026-08-04. Raised by DRH while costing the panel; the numbers below confirm it.)_
   `enclosure/solar-glow-drh-pogo-testplate-cad.py` asserts **14 probe pads** (TP1–TP7 + JP1 ×4 +

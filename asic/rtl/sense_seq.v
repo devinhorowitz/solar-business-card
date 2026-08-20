@@ -120,7 +120,15 @@
  *                       load -> ~9-10 J usable"), i.e. the point the energy budget
  *                       already treats as spent. Below the 2750 glow gate, as the
  *                       ordering requires, and far above VCHRDY 1.00 V, where nothing
- *                       runs at all. Revisit with bench data, not by argument.
+ *                       runs at all.
+ *                       IT IS ALSO AN ENERGY CLAIM, and TODO.md now carries the bench
+ *                       item that settles it: on the real 1.40 F tank, spending to
+ *                       2.00 V rather than the card's 2.75 V glow floor is 12.34 J
+ *                       instead of 9.84 J -- +25% usable energy, asserted by a constant
+ *                       rather than measured. The card's own floor is the AVR's 2.60 V
+ *                       BOD, and DORMANT must engage ABOVE the point the system stops
+ *                       working, not at it. Expect this number to move UP. Revisit with
+ *                       bench data, not by argument.
  *
  * Verilog-2001, single clock, synchronous reset (rst_n sampled on posedge
  * clk), no latches, no initial blocks, strobes exactly 1 clk wide.
