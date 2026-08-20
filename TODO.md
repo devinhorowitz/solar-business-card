@@ -111,6 +111,55 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   **Gates:** the Locked `U5` VOUT decline reopens only on a margin figure from this; the C9 trim
   value; and whether the air variant earns its existence.
 
+- [ ] **[BENCH — first-article gate] Sweep the LED's I-V curve, and the loop current in situ**
+  _(2026-08-20. Added after an ASIC-side analysis published a wrong finding off the back of the
+  gap: `asic/analog/README.md` briefly claimed a worst-bin LED cannot light at the 2.75 V glow
+  floor. It was the 30 mA Vf applied at 0.67 mA. Retracted — but the retraction only says the
+  low rail is UNMODELLED, and nothing in the tree can model it.)_
+  **The whole repo has exactly one Vf datum: `1.95-2.55 V at 30 mA`** (unbinned 3B-5A,
+  `PCB/README.md`). Every current figure the card and the ASIC compute leans on it, and most of
+  them lean on it far from 30 mA. `asic/analog/sink_budget.py` now prints each row's distance
+  from that spec point, and the glow-floor row is **0.11x — not usable**. This is the
+  measurement that makes the bottom of the operating range real.
+
+  **(a) The part, on a breakout — the curve itself.** Sweep If from **~10 uA to 30 mA** (3.5
+  decades; the same wide-dynamic-range problem `docs/harvest-bench-fixture-handoff.md` §2 calls
+  out for the panel) and record Vf at each point, at room temperature. **Sample several parts**:
+  the LA P47F is shipped UNBINNED across 3B-5A, so bin spread — not measurement error — is the
+  dominant uncertainty, and one part tells you almost nothing about the corner.
+
+  **(b) The loop, on a real card — what the energy budget actually needs.** With SW2 on, sweep
+  STO from the **2.75 V glow floor to the 4.65 V VOVCH ceiling** and record per-LED current at
+  100 % duty. That folds in the ballast, the sink drop and Vf together, which is the number the
+  budget wants; the part curve in (a) is what lets you attribute a surprise to the right term.
+
+  **What it settles, each of which is currently an assumption:**
+  - **The low-rail end.** Does a max-Vf part conduct at 2.75 V, and how brightly? `board.h`'s
+    `VS_GLOW_FLOOR_MV` was chosen without this, and if the answer is "barely", the floor is
+    mis-set for part of the bin distribution. **This converges with the
+    `VS_GLOW_FLOOR_MV` vs STO-channel accuracy item below**, which reaches the same
+    constant from the opposite side — sense tolerance, not LED physics — and lands on a floor
+    near **2900 mV**. Two independent arguments pointing the same way; take both
+    measurements before moving the constant once.
+  - **`VF_GUARD` = 1.90 V.** F1's clamp margin (`GLOW_CLAMP_PEAK` 221) rests on it, and 1.90 is
+    *below* the 1.95 V datasheet floor **at 30 mA**. It is plausibly right at 22 mA because Vf
+    falls with current — i.e. the margin currently holds by two errors cancelling, not by
+    derivation. **Do not "correct" 1.90 to 1.95 without this curve**: that lowers the computed
+    current and makes the clamp look safer than it is.
+  - **The published "~16 mA".** `README.md`'s "The open question" computes it as
+    `(4.65 - 2.25)/150` — **no sink drop at all**. With the AVR's ~0.4 V VOL the same loop gives
+    **13.3 mA**. Both numbers are in the tree; the sweep says which one the budget should use.
+  - **Whether 150 ohm is right.** `PCB/README.md` flags R1-R4 as **SIZED, not locked** and
+    bench-pending. A re-tune moves the corner `sink_budget.py` gates the clamp against — the
+    guard will go red rather than drift, but only this measurement tells you where to move it.
+
+  **Where the results land:** `PCB/README.md`'s Vf row (add the low-current points and the spec
+  condition), `asic/analog/sink_budget.py`'s `VF_*` constants and its MODEL VALIDITY note, and
+  the envelope table's "not usable" row — which should stop saying that.
+
+  **Gates:** the #1 energy-budget item's draw side; F1's margin; the retracted F2; and any
+  future re-tune of the 150 ohm ballast.
+
 - [ ] **[BENCH — BLOCKS the pogo rig] The test plate has no hold-down, only registration**
   _(2026-08-04. Raised by DRH while costing the panel; the numbers below confirm it.)_
   `enclosure/solar-glow-drh-pogo-testplate-cad.py` asserts **14 probe pads** (TP1–TP7 + JP1 ×4 +
@@ -275,6 +324,9 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
   from data. Do not fold in a datasheet corner blind — it trades real runtime for paper margin.
   Same stack-up applies to `EE_WRITE_FLOOR_MV` (2850 vs erratum 2.2.1's 2.7 V) and
   `SWEEP_CAPS_FULL_MV` (4400 vs VOVCH 4.65 V, whose datasheet row has no min/max).
+  **Pair this with the LED I-V sweep above** (2026-08-20): that item reaches the same constant
+  from the LED side — whether a max-Vf part can conduct at all at 2750 mV — and also lands near
+  2900. Independent arguments, same direction; measure both before moving the floor once.
 
 - [ ] **[BENCH] Confirm the reordered NFC provisioning end to end** _(2026-07-26 pass 4.)_
   Provisioning now writes the NDEF first and the CC **last**, so a partial write leaves a tag
