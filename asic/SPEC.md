@@ -141,7 +141,11 @@ Provenance is not uniform, and the RTL states it per line. `TH_LOW_MV` 2750 and 
 5200 come straight from `board.h`. `TH_CRIT_MV` 2000 is an **ASIC-side choice**: the card has
 no second rail gate — `main.c` gates every glow at `VS_GLOW_FLOOR_MV` and stops there — so the
 latching DORMANT state below it is this design's own addition and takes its floor from the AEM
-depth analysis ("drain to ~2 V at the load").
+depth analysis ("drain to ~2 V at the load") — which is a statement about what the harvester can
+deliver, not about what this load can still run on. It is therefore also an unbacked energy
+claim (+25 % usable energy against the card's published figure) and is expected to move **up**;
+`TODO.md` carries the bench item that settles it. `tb_sense_seq` asserts `vcrit < vlow < clamp`
+on the discovered boundaries so that revision cannot silently break the ordering.
 
 The testbench MUST discover each boundary and validate it **in millivolts**, within one LSB on
 the protective side: a code-vs-code check cannot catch a rounding rule that is wrong in both

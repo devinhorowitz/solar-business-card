@@ -220,6 +220,7 @@ module tb_sense_seq;
      * are overridden above, TH_CLAMP deliberately is not, so a changed default is
      * still under test instead of being silently agreed with. */
     integer d_lo, d_hi, d_mid;
+    integer b_low, b_crit, b_clamp;   // discovered boundaries, for the ordering check
     reg     d_cl;
 
     /* a discovered boundary code, checked against its millivolt target. `up` selects
@@ -456,6 +457,7 @@ module tb_sense_seq;
             if (vlow === 1'b0) d_hi = d_mid; else d_lo = d_mid;
         end
         check_volts("vlow ", d_hi, TH_LOW_MV, 1);
+        b_low = d_hi;
 
         // --- vcrit: same shape, deeper floor
         d_lo = 0; d_hi = 255;
@@ -465,6 +467,7 @@ module tb_sense_seq;
             if (vcrit === 1'b0) d_hi = d_mid; else d_lo = d_mid;
         end
         check_volts("vcrit", d_hi, TH_CRIT_MV, 1);
+        b_crit = d_hi;
 
         // --- vclamp: at-or-above, so the boundary is the lowest code that SETS it
         d_lo = 0; d_hi = 255;
@@ -476,6 +479,17 @@ module tb_sense_seq;
             if (d_cl === 1'b1) d_hi = d_mid; else d_lo = d_mid;
         end
         check_volts("clamp", d_hi, TH_CLAMP_MV, 0);
+        b_clamp = d_hi;
+
+        // --- THE THREE MUST STAY IN ORDER. Nothing else checks this, and the ordering is
+        // not decorative: vcrit above vlow would mean the FSM enters dormancy while the
+        // glow gate still reads healthy, and the clamp below either would clamp a normal
+        // glow. It is guarded because TH_CRIT_MV is the one threshold with no firmware
+        // anchor (see TODO.md's bench item) -- the number most likely to be revised, and
+        // revised UPWARD toward the glow floor, which is the direction that breaks this.
+        if (!(b_crit < b_low && b_low < b_clamp))
+            $fatal(1, "D: thresholds out of order -- vcrit %0d, vlow %0d, clamp %0d (need vcrit < vlow < clamp)",
+                   b_crit, b_low, b_clamp);
 
         // --- and the property board.h asserts in a parenthetical: the AEM10300's own
         // VOVCH ceiling must NEVER trip the ballast guard. board.h says "(VOVCH 4.65 V
@@ -488,8 +502,9 @@ module tb_sense_seq;
                    VOVCH_MV, VOVCH_C);
         if (vlow !== 1'b0 || vcrit !== 1'b0)
             $fatal(1, "D: a full tank at VOVCH reads low/critical");
-        $display("D OK: thresholds pinned to volts (LSB %0d uV) -- vlow %0d mV, vcrit %0d mV, clamp %0d mV; VOVCH code %0d clears the guard (%0d)",
-                 (FS_MV * 1000) / 256, TH_LOW_MV, TH_CRIT_MV, TH_CLAMP_MV, VOVCH_C, TH_CLAMP);
+        $display("D OK: pinned to volts (LSB %0d uV) -- vcrit %0d mV (code %0d) < vlow %0d mV (%0d) < clamp %0d mV (%0d), in order; VOVCH code %0d clears the guard",
+                 (FS_MV * 1000) / 256, TH_CRIT_MV, b_crit, TH_LOW_MV, b_low,
+                 TH_CLAMP_MV, b_clamp, VOVCH_C);
 
         $display("TB PASS: tb_sense_seq");
         $finish;
