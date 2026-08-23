@@ -52,12 +52,15 @@ def outline(clr=SHIM_CLR):
     """The shim outline: cavity minus EVERY part, caps held at `clr`."""
     import fit_rules as fr
     from shapely.ops import unary_union
-    saved = fr.CLR_EXCEPTIONS
-    try:
-        fr.CLR_EXCEPTIONS = {r: clr for r in ("SC1", "SC2", "SC3", "SC4")}
-        return unary_union(list(fr.brace_footprint(span=0.0)))
-    finally:
-        fr.CLR_EXCEPTIONS = saved
+    # The plate holds the CAPS at one uniform gap, unlike the brace, whose cap bays are
+    # directional -- the shim is what MAKES them directional, so it cannot inherit them.
+    # Every OTHER part keeps the standard clearance: the plate lies on the board among
+    # live components and must not crowd them (nor sit on their pads).
+    def _ko(ref, poly):
+        if ref in fr.CAP_DATUM:
+            return fr.part_keepout(ref, poly, sides={s: clr for s in "EWNS"})
+        return fr.part_keepout(ref, poly)
+    return unary_union(list(fr.brace_footprint(span=0.0, keepout=_ko)))
 
 
 def coverage(shim):
@@ -163,17 +166,32 @@ def check(verbose=True):
     # their pads sit under the can, which is a blocker at any clearance, so that version
     # of this test could never fire. It was written that way first, and said so.
     from shapely.ops import unary_union
-    _saved = fr.clr_for
-    try:
-        fr.clr_for = lambda _ref: 0.0
-        z_tot, _ = pad_overlap(unary_union(list(fr.brace_footprint(span=0.0))))
-    finally:
-        fr.clr_for = _saved
+    z_tot, _ = pad_overlap(unary_union(list(fr.brace_footprint(
+        span=0.0,
+        keepout=lambda r, g: fr.part_keepout(r, g, sides={s: 0.0 for s in "EWNS"})))))
     if z_tot <= 1e-6:
         bad.append("SELF-TEST: a zero-clearance shim overlaps no pad either, so the pad "
                    "check is measuring nothing -- frames disagree")
 
     cov = coverage(shim)
+
+    # CAP_DATUM is a hand-written table in fit_rules that decides which two edges get the
+    # TIGHT brace clearance. It asserts a fact about THIS plate -- which sides it actually
+    # indexes -- and until this gate nothing connected the two. Get it wrong and the brace
+    # runs 0.25 mm on an edge the shim never located, so the brace stops fitting on the
+    # units whose caps are biggest: a hand-written sentence next to generated geometry, the
+    # failure this repo keeps re-finding. Measured here, from the cut outline.
+    for ref, sides in sorted(cov.items()):
+        measured = {k for k, v in sides.items() if v >= COVER_FLOOR}
+        declared = set(fr.CAP_DATUM.get(ref, ()))
+        if measured != declared:
+            bad.append(f"{ref}: fit_rules.CAP_DATUM says the shim indexes "
+                       f"{sorted(declared) or 'nothing'}, but the cut plate covers "
+                       f"{sorted(measured) or 'nothing'} above {COVER_FLOOR:.0%} "
+                       f"(E {sides['E']:.0%} W {sides['W']:.0%} N {sides['N']:.0%} "
+                       f"S {sides['S']:.0%}) -- the brace would run CLR_DATUM on an edge "
+                       f"this plate does not locate")
+
     for ref, sides in sorted(cov.items()):
         good = sorted((v, k) for k, v in sides.items())[::-1]
         picked = [k for v, k in good if v >= COVER_FLOOR]
@@ -212,9 +230,9 @@ def check(verbose=True):
     sys.path.insert(0, str(ROOT / "scripts"))
     import cap_clearance as cc
     for (ref, d), (who, mm) in sorted(cc.LEDGER.items()):
-        if mm >= fr.clr_for(ref):
-            continue
         side = {"+X": "E", "-X": "W", "+Y": "N", "-Y": "S"}[d]
+        if mm >= fr.clr_sides(ref)[side]:
+            continue
         # Coverage alone does NOT make the plate a guard, and testing only coverage was
         # this check's first bug: the probe is buffered by SHIM_CLR, so opening the
         # clearance to 0.75 kept coverage at 90% while the plate stopped standing between

@@ -137,15 +137,63 @@ def air_for(ref):
 # can run 0.50 over nominal. A cap indexed on two edges -- which is what the reflow shim
 # does, scripts/reflow_shim.py -- puts that entire +0.50 onto its two free edges, so a free
 # side needs 0.50 + the 0.10 datum gap = 0.60 before any placement error at all. 0.75 leaves
-# 0.15 mm. THIS IS WHY THE 111 mm2 IS NOT COMING BACK: better placement cannot buy it, only
-# a smaller-tolerance part could. The recoverable saving is anisotropy, not shrinkage -- the
-# two DATUM sides could run tight (~0.15) while the free sides hold 0.60 -- and that needs a
-# directional offset rather than the uniform buffer() in brace_footprint().
-CLR_EXCEPTIONS = {"SC1": 0.75, "SC2": 0.75, "SC3": 0.75, "SC4": 0.75}
+# 0.15 mm on a free edge. The sentence here used to end "THIS IS WHY THE 111 mm2 IS NOT
+# COMING BACK" -- that was true only of SHRINKING the number, and it was superseded the same
+# day by making it directional (below). ANISOTROPY RECOVERED 101.9 of the 111.2 mm2 on the
+# max brace and 100.0 of 109.3 on the lite, 92% and 91%, still one piece. What it does NOT
+# recover is the narrowest web: the pinch at (3.45, 32.33) is on SC1's WEST edge, which is a
+# FREE side, so it holds 0.75 and the neck stays 1.80 mm (was 2.28 before #249).
+# ANISOTROPIC, since 2026-08-23. A uniform 0.75 was the right total but the wrong shape:
+# the reflow shim (scripts/reflow_shim.py) indexes each cap against TWO orthogonal edges,
+# so those edges are located to the shim's own 0.10 mm datum gap while the body tolerance
+# -- all +0.50 of it -- lands on the two FREE edges. Spending 0.75 on all four sides pays
+# the tolerance price four times for a part that can only grow twice.
+#
+# Splitting it recovers the two datum sides AND undoes the backstop trade recorded above:
+# the four at-risk parts all sit on DATUM edges (SC4/L2 W, SC3/R15 S, SC2/C6 W, SC1/C11 E),
+# so at CLR_DATUM the resin catches the cap before the component does again, in every one.
+#
+# THIS COUPLES THE BRACE TO THE SHIM. A cap seated without the shim can sit anywhere in the
+# old envelope and the brace will not go on. That is a deliberate trade, not an oversight:
+# these pads are under the can, so the caps cannot be hand-seated with an iron anyway, and
+# the shim is now the specified way to reflow them.
+CAP_DATUM = {"SC1": ("E", "N"), "SC2": ("W", "N"),
+             "SC3": ("E", "S"), "SC4": ("W", "S")}
+CLR_DATUM = 0.25   # datum edge: located by the shim, so machine-placed precision applies
+CLR_FREE = 0.75    # free edge: SUPERCAP_BODY_TOL 0.50 + the 0.10 datum gap + 0.15 margin
+
+
+def clr_sides(ref):
+    """Per-edge in-plane clearance. Machine-placed parts are uniform CLR."""
+    d = CAP_DATUM.get(ref)
+    if d is None:
+        return {s: CLR for s in "EWNS"}
+    return {s: (CLR_DATUM if s in d else CLR_FREE) for s in "EWNS"}
 
 
 def clr_for(ref):
-    return CLR_EXCEPTIONS.get(ref, CLR)
+    """The scalar, worst-case answer -- what a caller that cannot be directional must use."""
+    return max(clr_sides(ref).values())
+
+
+def part_keepout(ref, poly, sides=None):
+    """The in-plane keepout for ONE part, and the single definition of it.
+
+    Every consumer goes through here -- brace_footprint and both brace-CAD call sites --
+    so a directional clearance cannot be applied in one place and a uniform one in
+    another. `sides` overrides the table (scripts/reflow_shim.py cuts the same geometry
+    at its own uniform gap); it is an explicit argument rather than module state, the
+    same rule VARIANTS follows.
+    """
+    c = clr_sides(ref) if sides is None else sides
+    if len(set(c.values())) == 1:
+        return poly.buffer(next(iter(c.values())), join_style=2)
+    x0, y0, x1, y1 = poly.bounds
+    # Mitred buffer of a rectangle IS the offset rectangle, so clipping the largest
+    # offset to the per-edge box gives exact square-cornered per-side growth. The
+    # intersection keeps this honest for a non-rectangular body too.
+    return poly.buffer(max(c.values()), join_style=2).intersection(
+        box(x0 - c["W"], y0 - c["S"], x1 + c["E"], y1 + c["N"]))
 CLR = 0.25                 # in-plane clearance around a part
 SLA_WEB = 0.40             # thinnest resin that may remain OVER a pocket
 SLA_WALL = 0.60            # thinnest in-plane feature we will print
@@ -271,14 +319,15 @@ def cavity_rect():
     return c
 
 
-def brace_footprint(span=None):
+def brace_footprint(span=None, keepout=None):
     """[polygon] -- the pieces the brace is actually made of, largest first.
 
     `span=None` is the max variant (module SPAN_LIMIT); per-variant callers pass
     variant_span(name). DROPPED_AREA/DROPPED_COUNT describe the LAST call -- a
     per-variant caller should read them immediately, before any other call."""
     cav = cavity_rect().buffer(-WALL_FIT, join_style=1, resolution=64)
-    keep = unary_union([p.buffer(clr_for(_r), join_style=2) for _r, p in blockers(span=span)])
+    _ko = keepout or part_keepout
+    keep = unary_union([_ko(_r, p) for _r, p in blockers(span=span)])
     boss = unary_union([Point(b).buffer(RELIEF_R, resolution=64) for b in MOUNTS])
     fp = cav.difference(keep).difference(boss)
     t = SLA_WALL / 2.0
@@ -356,7 +405,12 @@ def _mk_variants():
             material="Ti Gr5 (reference; brass or 6061 acceptable -- non-magnetic, machinable)",
             shell_name="solar-glow-drh-v4_0-backshell-0p6b-brace-Ti-max",
             brace_name="solar-glow-drh-diffuser-brace",
-            coverage_floor=0.30,   # ledgered min. RE-LEDGERED 2026-08-23, 0.32 -> 0.30, and
+            coverage_floor=0.32,   # ledgered min. RESTORED 2026-08-23 evening, 0.30 -> 0.32:
+                                   # the anisotropic bays put coverage back to 33.01% (it was
+                                   # 33.25% before #249 widened them), so the floor returns to
+                                   # what it was before the widening rather than staying at the
+                                   # relaxed value. History of the round trip follows.
+                                   # RE-LEDGERED 2026-08-23, 0.32 -> 0.30, and
                                    # DELIBERATELY, not because a board change eroded it: CLR_EXCEPTIONS
                                    # bought SC1-SC4 0.75 mm of in-plane clearance for HAND-SOLDER slop,
                                    # which costs 111 mm2 of footprint and measures 30.46%. The floor is
@@ -383,7 +437,9 @@ def _mk_variants():
             material="Ti Gr5 (thinned floor; the 0.60 is the shop-minimum conversation)",
             shell_name="solar-glow-drh-shell-lite-Ti",
             brace_name="solar-glow-drh-diffuser-brace-lite",
-            coverage_floor=0.24,   # ledgered min. RE-LEDGERED 2026-08-23, 0.25 -> 0.24, same cause
+            coverage_floor=0.25,   # ledgered min. RESTORED 2026-08-23 evening, 0.24 -> 0.25 --
+                                   # anisotropy took the lite brace back to 27.28% (27.51% pre-#249).
+                                   # RE-LEDGERED 2026-08-23, 0.25 -> 0.24, same cause
                                    # as max: the caps are hand-soldered in this variant too, so they
                                    # take the same 0.75 mm. Measures 24.78%, one piece.
                                    # Prior text: (measures 0.272 after the 2026-08-08 island

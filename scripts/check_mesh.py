@@ -127,6 +127,12 @@ BASELINE = {
     # the cap-scoot standoff -- SC3 is a brace BLOCKER, so the footprint recomputed
     # 1316.7 -> 1329.6 mm2, coverage 32.9% -> 33.2%, 50 pockets; value is the pinned CI
     # run's own measurement, local rebuild agreed to the digit; was 1938.74):
+    # re-ledgered 2026-08-23 evening (ANISOTROPIC bays: the uniform 0.75 became CLR_DATUM
+    # 0.25 on the two shim-indexed edges and CLR_FREE 0.75 on the two that absorb the can's
+    # +0.50 body tolerance. Footprint 1218.4 -> 1320.3 mm2, coverage 30.46% -> 33.01%, floor
+    # restored 0.30 -> 0.32; 101.9 of the 111.2 mm2 the widening cost is back, 92%. Value is
+    # CI's own measurement -- cadquery is absent from the dev container -- placeholder below
+    # until the first run reports it; was 1768.95):
     # re-ledgered 2026-08-23 (CLR_EXCEPTIONS: SC1-SC4 given 0.75 mm in-plane clearance for
     # HAND-SOLDER slop, vs 0.25 for machine-placed parts -- fit_rules has the rotation
     # arithmetic that sized it. Footprint 1329.6 -> 1218.4 mm2, coverage 33.25% -> 30.46%,
@@ -186,6 +192,8 @@ BASELINE = {
         # lite-brace blocker too -- footprint 1087.2 -> 1100.2 mm2, coverage 27.2% -> 27.5%,
         # still 30 pockets; the target variant gained AGAIN. Value is the pinned CI run's
         # own measurement, local rebuild agreed to the digit; was 1147.82):
+        # re-ledgered 2026-08-23 evening (same anisotropy round: footprint 990.9 -> 1090.9
+        # mm2, coverage 24.78% -> 27.28%, floor restored 0.24 -> 0.25; was 1036.29):
         # re-ledgered 2026-08-23 (same CLR_EXCEPTIONS round -- the caps are hand-soldered in
         # this variant too: footprint 1100.2 -> 990.9 mm2, coverage 27.51% -> 24.78%, floor
         # 0.25 -> 0.24. 109.3 mm2 x 1.22 = 133.3 mm3 predicted vs 127.62 measured; was 1163.91):

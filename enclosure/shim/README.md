@@ -57,7 +57,8 @@ neighbour is close precisely because the plate is the parts' complement.
 ## What this does not do
 
 **It is removed after reflow, so it gives no field restraint.** The edge-drop case still
-loads the brace, and in those four directions a component (see `fit_rules.CLR_EXCEPTIONS`).
+loads the brace — though since the bays went directional the brace, not a component, is what
+catches the cap on every at-risk edge (see `fit_rules.CAP_DATUM`).
 That is the argument for on-board index posts, which this does not replace.
 
 ## The tolerance that sizes everything
@@ -78,13 +79,21 @@ gap. Three consequences, all load-bearing:
    whose caps are biggest. The two-sided datum works only because the opposite two sides are
    open for the growth to go somewhere — and until check-time that was an accident of where
    the neighbouring parts sit. It is now asserted (see Gates).
-2. **`fit_rules.CLR_EXCEPTIONS` 0.75 mm is near-minimal.** A free side must clear
+2. **`fit_rules.CLR_FREE` 0.75 mm is near-minimal.** A free side must clear
    0.50 (tolerance) + 0.10 (datum gap) = **0.60 mm** before any placement error at all,
    leaving 0.15 mm. The bay is not a generous allowance for shaky hands; it is mostly the
    part.
-3. **The 111 mm² of brace footprint is not recoverable by better placement.** Only
-   anisotropy would buy any of it back — tight on the two datum sides, 0.60 on the free
-   ones — which needs a directional offset, not the uniform `buffer()` the brace uses today.
+3. **This plate is what lets the brace bays go anisotropic**, and that is where the
+   footprint comes back. Because the plate locates two edges of each cap, those two get
+   `fit_rules.CLR_DATUM` (0.25) while the two that absorb the +0.50 get `CLR_FREE` (0.75).
+   That recovered **101.9 of the 111.2 mm²** the uniform 0.75 cost the max brace (92%) and
+   100.0 of 109.3 on the lite, still one piece — and it put the resin back as the backstop
+   in all four at-risk directions, since every one of them is on a datum edge.
+
+   **The coupling runs both ways: the brace now only fits a cap this plate seated.** A cap
+   placed without it can sit anywhere in the old envelope and the brace will not go on.
+   `fit_rules.CAP_DATUM` names the two indexed edges per cap and is gated here against the
+   cut outline, so it cannot claim an edge this plate does not actually locate.
 
 Note 1.70 mm is likewise a **maximum**, not a nominal, and the shell cavity is built on it.
 
