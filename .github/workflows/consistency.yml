@@ -44,6 +44,13 @@ on:
       # check [19] imports panelize.stub_layer() to read the plating-bus stubs off the
       # board — the same fact the panel's tab spur is emitted from. An edit to that reader
       # changes what the check sees with no PCB/** in the diff.
+      # check [21] imports this module to re-measure what stops a hand-placed supercap.
+      # It owns BOTH the measurement and the ledger, so an edit here changes the verdict on
+      # an unchanged board — the same relationship [6] has with mask_art.py and [19] with
+      # panelize.py. Its sibling scripts/reflow_shim.py consumes that same ledger to prove
+      # the index shim stands between each cap and the part it would otherwise shear.
+      - 'scripts/cap_clearance.py'
+      - 'scripts/reflow_shim.py'
       - 'scripts/panelize.py'
       # check [20] imports bom_split.build() -- the Supplier-P/N gate reads every BOM
       # line through it, so an edit to the splitter changes what the check sees with
@@ -67,6 +74,8 @@ on:
       - 'scripts/check_consistency.py'
       - 'scripts/mask_art.py'
       - 'scripts/part_colors.py'
+      - 'scripts/cap_clearance.py'
+      - 'scripts/reflow_shim.py'
       - 'scripts/nfc_coil.py'
       - 'scripts/face_art.py'
       - 'scripts/glyphs.py'
@@ -119,3 +128,8 @@ jobs:
         run: python3 -m pip install --quiet --break-system-packages 'matplotlib==3.11.1'
       - name: Run consistency check
         run: python3 scripts/check_consistency.py
+      # The shim gate is its own script rather than a consistency check because it asserts
+      # something about an ARTIFACT (the cut plate), not about agreement between two files.
+      # It shares cap_clearance's ledger, so it goes red on the same board moves.
+      - name: Gate the reflow index shim
+        run: python3 scripts/reflow_shim.py

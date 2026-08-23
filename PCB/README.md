@@ -585,10 +585,10 @@ spare-board build); the hand-soldered parts (supercaps, cells) never need one.
 > | cap | direction | reaches | at |
 > |---|---|---|---|
 > | **SC4** | −X | **L2** — the harvester inductor | **0.50 mm** |
-> | **SC3** | −Y | **R15** — STO sense divider, upper leg | **0.58 mm** |
+> | **SC3** | −Y | **R15** — STO sense divider, upper leg | **0.57 mm** |
 > | **SC3** | −X | **C24** — STO sense divider cap | **1.01 mm** |
-> | SC1 | +X / +Y | C11 / C1 | 0.71 / 0.92 mm |
-> | SC2 | −X / +Y | C6 / C8 | 0.66 / 1.53 mm |
+> | SC1 | +X / +Y | C11 / C1 | 0.70 / 0.92 mm |
+> | SC2 | −X / +Y | C6 / C8 | 0.65 / 1.53 mm |
 >
 > Rotation about the cap centre is the other failure mode, and it is tighter than it looks:
 > **SC4 contacts L2 at 2.02°**, **SC3 contacts C24 at 3.00°**, **SC1 contacts C11 at 3.13°**.
@@ -608,6 +608,10 @@ spare-board build); the hand-soldered parts (supercaps, cells) never need one.
 >
 > These clearances are **not** design datums — a 0402 will shear before it indexes a supercap.
 > The brace's own allowance for this slop is separate and lives in `fit_rules.CLR_EXCEPTIONS`.
+>
+> Every number in this block is **measured from the board and gated** — `scripts/cap_clearance.py`
+> owns both the measurement and the ledger, and consistency check [21] fails if this table, the
+> ledger and the board stop agreeing. Do not hand-edit the figures; re-run the script.
 
 ---
 

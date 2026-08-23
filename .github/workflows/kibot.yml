@@ -206,6 +206,10 @@ jobs:
       # export_step_stable (OCC BRepCheck -- the choke point all three generators use).
       # scripts/check_mesh.py carries the per-file ledger, incl. the shell's known
       # zero-length rim pinch; triangle count is deliberately not gated (not bit-stable).
+      - name: Cut the reflow index shim
+        run: |
+          python3 scripts/reflow_shim.py --dxf
+
       - name: Gate the generated meshes
         run: |
           # rtree is trimesh's spatial index -- the ray engine imports it lazily, so its
@@ -304,7 +308,8 @@ jobs:
                 enclosure/brace/*.step enclosure/brace/*.stl
                 enclosure/brace/*DRAWING.pdf enclosure/brace/*DRAWING.png
                 enclosure/brace/*pocket-map.png
-                enclosure/brace/*brace-render.png"
+                enclosure/brace/*brace-render.png
+                enclosure/shim/*.dxf"
 
           git add -A $OUTS
           git diff --cached --quiet && { echo "outputs already current"; exit 0; }
