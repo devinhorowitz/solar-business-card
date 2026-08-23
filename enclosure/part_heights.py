@@ -139,6 +139,23 @@ SKIP = ("SC",)
 SUPERCAP_H = 1.70   # SS17 (SC1/SC3) and WS17 (SC2/SC4) are different lengths but the same
                     # 1.70 mm max thickness -- solar-glow-drh-design-notes.md line 219.
 
+# The caps' IN-PLANE tolerance, from the same datasheet page as the 1.70 above
+# (datasheets/"SC1-SC4  SCHURTER 3-153-438  $16.69.pdf", Dimension [mm], cases SS17 and
+# WS17). It lives beside SUPERCAP_H because it comes from the same drawing and, like the
+# height, it is a number several generators need and none may re-type:
+#
+#     SS17 (SC1/SC3)   17.0 +-0.5 wide   x  39.0 +0.5/-0.0 long   x  max 1.7
+#     WS17 (SC2/SC4)   17.0 +-0.5 wide   x  28.5 +0.5/-0.0 long   x  max 1.7
+#
+# BOTH in-plane dimensions can run 0.5 mm OVER nominal, and the width can also run 0.5
+# UNDER. That is five times the reflow shim's datum gap and two thirds of the brace's
+# whole cap bay, which makes it the number that sizes both: a cap indexed on two edges
+# puts the entire +0.5 onto the two free edges, so a free-side bay must clear
+# 0.5 + datum gap. fit_rules.CLR_EXCEPTIONS' 0.75 is therefore NEAR-MINIMAL, not
+# generous -- 0.15 mm of margin -- and it would be required even if placement were
+# perfect. Note 1.70 is likewise a MAXIMUM, not a nominal; the cavity is built on it.
+SUPERCAP_BODY_TOL = 0.50   # mm, worst-case growth on either in-plane axis
+
 # The LITE/AIR enclosure variants (2026-08-07) substitute thin supercaps. PROVISIONAL:
 # 1.00 is DRH's working number for a part not yet chosen -- no MPN, no datasheet, so
 # unlike every other figure in this file it is NOT verified against a source, and

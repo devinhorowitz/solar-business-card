@@ -2105,6 +2105,78 @@ def check_supplier_pns():
        f"both historical regressions still classify red")
 
 
+# ---- check [21]: what stops a hand-placed supercap, and what the docs say does -------
+# The 0.75 mm cap bays (fit_rules.CLR_EXCEPTIONS) are a design input; the parts those
+# caps can actually reach are a MEASUREMENT, and until now they were prose -- a table in
+# PCB/README.md and a comment in fit_rules.py, sitting next to generated geometry with
+# nothing between them. That is the gap class that produced checks [14], [19] and [20],
+# and it had already bitten twice here in one commit: J1 was published as SC1's stop at
+# 0.50 mm (it is DNP -- bare pads, it stops nothing) and SC3 was said to swing past 4 deg
+# (C24 catches it at 3.00). Both numbers were in a build sheet a human solders to.
+#
+# scripts/cap_clearance.py owns the measurement AND the ledger; this check calls that same
+# module rather than re-deriving, so the two cannot disagree -- the mask_art generate()
+# lesson. It gates three things: the ledger against the board, the README table against
+# the ledger, and that the dnp exclusion is still doing work (its own self-test).
+def check_cap_clearance():
+    n0 = len(errors)
+    sys.path.insert(0, os.path.join(ROOT, "scripts"))
+    import cap_clearance as cc
+
+    for msg in cc.check(verbose=False):
+        err(f"cap clearance: {msg}")
+
+    # The build sheet's table must say what the ledger says. Rows look like
+    #   | **SC4** | -X | **L2** -- the harvester inductor | **0.50 mm** |
+    # and the cells carry markdown emphasis, so match on the content not the decoration.
+    md = open(os.path.join(ROOT, "PCB", "README.md"), encoding="utf-8").read()
+    seen = set()
+    for line in md.splitlines():
+        if not line.lstrip().startswith(">") or line.count("|") < 4:
+            continue
+        cells = [c.strip().strip("*").strip() for c in line.strip().lstrip(">").strip().split("|")]
+        cells = [c for c in cells if c]
+        if len(cells) < 4 or not cells[0].startswith("SC"):
+            continue
+        cap = cells[0].strip("*")
+        dirs = [d.strip() for d in cells[1].replace("\u2212", "-").split("/")]
+        refs = [r.split("\u2014")[0].strip().strip("*") for r in cells[2].split("/")]
+        mms = [m.strip().replace("mm", "").strip().strip("*")
+               for m in cells[3].split("/")]
+        if not (len(dirs) == len(refs) == len(mms)):
+            err(f"cap clearance: PCB/README.md row for {cap} has mismatched "
+                f"direction/part/distance counts -- {cells[1]} | {cells[2]} | {cells[3]}")
+            continue
+        for d, r, mm in zip(dirs, refs, mms):
+            try:
+                val = float(mm)
+            except ValueError:
+                err(f"cap clearance: PCB/README.md {cap} {d} distance {mm!r} is not a number")
+                continue
+            key = (cap, d)
+            seen.add(key)
+            want = cc.LEDGER.get(key)
+            if want is None:
+                err(f"cap clearance: PCB/README.md publishes {cap} {d} -> {r} @ {val:.2f} mm "
+                    f"but cap_clearance.LEDGER has no such pair (a DNP footprint counted "
+                    f"as a stop reads exactly like this)")
+            elif r != want[0] or abs(val - want[1]) > cc.TOL:
+                err(f"cap clearance: PCB/README.md says {cap} {d} -> {r} @ {val:.2f} mm, "
+                    f"ledger says {want[0]} @ {want[1]:.2f} mm")
+
+    missing = {k for k, v in cc.LEDGER.items() if v[1] < 0.75} - seen
+    for cap, d in sorted(missing):
+        who, mm = cc.LEDGER[(cap, d)]
+        err(f"cap clearance: {cap} {d} reaches {who} at {mm:.2f} mm -- inside the brace bay, "
+            f"so it MUST appear in PCB/README.md's HAND-SOLDER CAUTION table")
+
+    if len(errors) == n0:
+        ok(f"{len(cc.LEDGER)} cap/neighbour pair(s) and {len(cc.ROT_LEDGER)} rotation "
+           f"limit(s) match the board; {len(seen)} published in the build sheet; "
+           f"dnp exclusion self-tested")
+
+
+
 def main():
     cli = find_kicad_cli()
     netpins, comps, sch_fps = export_netlist(cli)
@@ -2128,6 +2200,7 @@ def main():
     check_fab_identity()
     check_plating_bus()
     check_supplier_pns()
+    check_cap_clearance()
     print(f"\n== {len(errors)} error(s), {len(warnings)} warning(s) ==")
     sys.exit(1 if errors else 0)
 
