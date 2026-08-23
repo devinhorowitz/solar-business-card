@@ -1998,7 +1998,12 @@ OPAQUE_PN_LEDGER = {
     ("GRM319R61E106KA12D", "490-5525-1-ND"),     # C26/C27    DigiKey legacy numeric,
                                                  #            verified live 2026-08-06
                                                  #            (348,003 in stock, cut tape)
-    ("DFE252010F-100M", "490-13039-1-ND"),       # L2         DigiKey legacy numeric
+    ("DFE252010F-100M=P2", "490-13039-1-ND"),    # L2         DigiKey legacy numeric,
+                                                 #            re-keyed 2026-08-20 when the
+                                                 #            MPN gained its =P2 suffix;
+                                                 #            verified live that day (this
+                                                 #            P/N resolves to the =P2 part,
+                                                 #            19,078 in stock, cut tape)
     ("TPS22916CYFPR", "296-50065-1-ND"),         # U6         DigiKey legacy numeric,
                                                  #            verified live 2026-08-06
                                                  #            (42,386 in stock, cut tape;
