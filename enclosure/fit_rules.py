@@ -113,6 +113,23 @@ def air_for(ref):
 # Cost is bounded and was measured before choosing: 222.1 mm of the caps' 406 mm perimeter
 # faces brace material (the rest already faces open bay), so +0.50 costs ~111 mm2 and the
 # narrowest web goes 2.29 -> 1.79 mm (west rail), still one connected piece.
+# WHAT THE TRADE COSTS, measured from the BOARD rather than from this constant: in four of
+# the sixteen cap edge-directions 0.75 is now WIDER than the distance to a real neighbouring
+# part, so in those four the lateral backstop MOVED FROM RESIN TO A COMPONENT --
+#     SC4 -X -> L2   0.50 mm   (the AEM10300's power inductor)
+#     SC3 -Y -> R15  0.57 mm   (STO sense divider, upper leg)
+#     SC2 -X -> C6   0.65 mm
+#     SC1 +X -> C11  0.70 mm
+# At CLR 0.25 the brace caught the cap first in all four; ray-cast on the pre-change mesh read
+# 0.25/0.26 in every closed direction and >2.00 in every open one, which also cross-checks the
+# bays against the board's own openings. This is NOT a placement constraint -- the brace is
+# fitted after reflow, so bay width governs whether the brace fits over an off-nominal cap, and
+# lateral restraint only afterwards. It does mean an edge drop now loads L2/R15/C6/C11 instead
+# of resin. Accepted: a bay too narrow to fit over a hand-placed cap is the worse failure, and
+# PCB/README.md's HAND-SOLDER CAUTION carries the assembly-side half.
+# DNP FOOTPRINTS ARE NOT STOPS -- J1 sits 0.49 mm off SC1 and TP2/TP4 likewise, but all 13 dnp
+# parts (C30, J1, JP1, SW2, TC1, TC1/b1, TP1-7) are bare pads on a standard build. Reading them
+# as stops overstates SC1's restraint and understates its rotation limit by 2x.
 CLR_EXCEPTIONS = {"SC1": 0.75, "SC2": 0.75, "SC3": 0.75, "SC4": 0.75}
 
 

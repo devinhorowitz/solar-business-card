@@ -587,11 +587,18 @@ spare-board build); the hand-soldered parts (supercaps, cells) never need one.
 > | **SC4** | −X | **L2** — the harvester inductor | **0.50 mm** |
 > | **SC3** | −Y | **R15** — STO sense divider, upper leg | **0.58 mm** |
 > | **SC3** | −X | **C24** — STO sense divider cap | **1.01 mm** |
-> | SC1 | −X / +X / +Y | J1 / C11 / C1 | 0.50 / 0.71 / 0.92 mm |
+> | SC1 | +X / +Y | C11 / C1 | 0.71 / 0.92 mm |
 > | SC2 | −X / +Y | C6 / C8 | 0.66 / 1.53 mm |
 >
-> Rotation reaches contact sooner on two of them: **SC1 at 1.48°** (into J1) and **SC4 at 2.02°**
-> (into L2). SC2 and SC3 can swing past 4° with nothing in the way.
+> Rotation about the cap centre is the other failure mode, and it is tighter than it looks:
+> **SC4 contacts L2 at 2.02°**, **SC3 contacts C24 at 3.00°**, **SC1 contacts C11 at 3.13°**.
+> Only SC2 has real room — 6.71° to R5. For scale, 1° of tweezer rotation swings the corner
+> of a 39 mm cap by 0.34 mm, so these are angles a steady hand can produce.
+>
+> **The 13 DNP footprints are not stops.** C30, J1, JP1, SW2, TC1, TC1/b1 and TP1–TP7 are
+> bare pads on a standard build, so nothing there resists a cap. J1 in particular sits
+> 0.49 mm off SC1's −X edge and reads like a hard stop on the plot; it is not one unless
+> you have deliberately loaded it (see the debug-header note below). SC1's −X is open.
 >
 > **C24 and R15 are the two that matter most.** They are the STO sense divider — the circuit
 > every rail decision reads (`VS_GLOW_FLOOR_MV`, the ballast guard, dormancy). Shearing or
