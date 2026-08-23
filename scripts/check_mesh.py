@@ -127,7 +127,17 @@ BASELINE = {
     # the cap-scoot standoff -- SC3 is a brace BLOCKER, so the footprint recomputed
     # 1316.7 -> 1329.6 mm2, coverage 32.9% -> 33.2%, 50 pockets; value is the pinned CI
     # run's own measurement, local rebuild agreed to the digit; was 1938.74):
-    volume_mm3=1962.40, bbox=(-22.85, -42.4, 0.0, 24.35, 42.4, 1.8),
+    # re-ledgered 2026-08-23 (CLR_EXCEPTIONS: SC1-SC4 given 0.75 mm in-plane clearance for
+    # HAND-SOLDER slop, vs 0.25 for machine-placed parts -- fit_rules has the rotation
+    # arithmetic that sized it. Footprint 1329.6 -> 1218.4 mm2, coverage 33.25% -> 30.46%,
+    # floor re-ledgered 0.32 -> 0.30 WITH the reason. The caps cut THROUGH, so the loss is
+    # full-thickness: 111.2 mm2 x 1.80 = 200.2 mm3 predicted vs 193.45 measured, the 3.4%
+    # residual being footprint that sat under a pocket rather than through. bbox unchanged
+    # (only interior bays widened); still watertight, 0 open edges, 0 degenerate, 1 piece.
+    # THIS GATE IS WHY THE VALUE IS TRUSTWORTHY: cadquery is absent from the dev container,
+    # so the solid could not be rebuilt locally -- the number below is CI's own measurement
+    # off the regenerated STL; was 1962.40):
+    volume_mm3=1768.95, bbox=(-22.85, -42.4, 0.0, 24.35, 42.4, 1.8),
         max_boundary_edges=0, max_open_len_mm=0.0, max_degenerate=0),
     # ---- the 2026-08-07 enclosure variants (fit_rules.VARIANTS) --------------------------
     # Ledgered from local builds in the variants commit itself -- the chicken-and-egg rule:
@@ -176,7 +186,10 @@ BASELINE = {
         # lite-brace blocker too -- footprint 1087.2 -> 1100.2 mm2, coverage 27.2% -> 27.5%,
         # still 30 pockets; the target variant gained AGAIN. Value is the pinned CI run's
         # own measurement, local rebuild agreed to the digit; was 1147.82):
-        volume_mm3=1163.91, bbox=(-22.85, -42.4, 0.0, 24.35, 42.4, 1.22),
+        # re-ledgered 2026-08-23 (same CLR_EXCEPTIONS round -- the caps are hand-soldered in
+        # this variant too: footprint 1100.2 -> 990.9 mm2, coverage 27.51% -> 24.78%, floor
+        # 0.25 -> 0.24. 109.3 mm2 x 1.22 = 133.3 mm3 predicted vs 127.62 measured; was 1163.91):
+        volume_mm3=1036.29, bbox=(-22.85, -42.4, 0.0, 24.35, 42.4, 1.22),
         max_boundary_edges=0, max_open_len_mm=0.0, max_degenerate=0),
 }
 VOL_TOL = 0.005

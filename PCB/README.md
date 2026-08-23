@@ -577,6 +577,31 @@ spare-board build); the hand-soldered parts (supercaps, cells) never need one.
 > **Copper and mask are untouched** — only the paste layer was removed, so every pad solders by
 > hand exactly as before.
 
+> **HAND-SOLDER CAUTION — what a nudged supercap can break.** SC1–SC4 are 17 × 39 mm and
+> 17 × 28.5 mm bodies placed by hand, and several machine-placed parts sit close enough to be
+> sheared if a cap is slid or rotated into them. Measured from the board (travel to contact,
+> nominal position):
+>
+> | cap | direction | reaches | at |
+> |---|---|---|---|
+> | **SC4** | −X | **L2** — the harvester inductor | **0.50 mm** |
+> | **SC3** | −Y | **R15** — STO sense divider, upper leg | **0.58 mm** |
+> | **SC3** | −X | **C24** — STO sense divider cap | **1.01 mm** |
+> | SC1 | −X / +X / +Y | J1 / C11 / C1 | 0.50 / 0.71 / 0.92 mm |
+> | SC2 | −X / +Y | C6 / C8 | 0.66 / 1.53 mm |
+>
+> Rotation reaches contact sooner on two of them: **SC1 at 1.48°** (into J1) and **SC4 at 2.02°**
+> (into L2). SC2 and SC3 can swing past 4° with nothing in the way.
+>
+> **C24 and R15 are the two that matter most.** They are the STO sense divider — the circuit
+> every rail decision reads (`VS_GLOW_FLOOR_MV`, the ballast guard, dormancy). Shearing or
+> cold-jointing either corrupts the voltage the firmware thinks it has, silently, and C24 is
+> also the thinnest supply line in the BOM. Seat the caps deliberately rather than sliding them
+> into place, and inspect L2, C24 and R15 after fitting SC3 and SC4.
+>
+> These clearances are **not** design datums — a 0402 will shear before it indexes a supercap.
+> The brace's own allowance for this slop is separate and lives in `fit_rules.CLR_EXCEPTIONS`.
+
 ---
 
 ## Step 4 — Order the parts
