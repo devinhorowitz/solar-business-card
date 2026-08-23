@@ -22814,7 +22814,7 @@
 				)
 			)
 		)
-		(property "MPN" "DFE252010F-100M"
+		(property "MPN" "DFE252010F-100M=P2"
 			(at 520.7 372.11 0)
 			(show_name no)
 			(do_not_autoplace no)

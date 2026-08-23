@@ -206,8 +206,16 @@ def collision_prone(mpn):
 
 
 def mpn_matches(want, got):
-    """Exact, or exact plus a distributor packing suffix (Murata lists
-    DFE252010F-100M as DFE252010F-100M=P2)."""
+    """Exact, or exact plus a packing suffix.
+
+    KEPT, but no longer needed by the part that motivated it: L2's MPN carried the
+    bare DFE252010F-100M until 2026-08-20 and relied on this tolerance. It does not
+    any more -- the suffix is stored -- because the bare form is not an orderable
+    identifier at either distributor: DigiKey's exact-match endpoint 404s on it, and
+    all three DigiKey packagings (CT / TR / Digi-Reel) report the SAME manufacturer
+    P/N, DFE252010F-100M=P2. So =P2 is Murata's, not a distributor's, and the comment
+    here used to say otherwise. The tolerance remains for any part that still needs
+    it, and so a stored suffix never blocks a match."""
     w = want.replace(" ", "").upper()
     g = (got or "").replace(" ", "").upper()
     return g == w or (g.startswith(w) and len(g) > len(w) and g[len(w)] in "=#")

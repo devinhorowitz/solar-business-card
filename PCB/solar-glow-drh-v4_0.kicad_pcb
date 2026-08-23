@@ -11021,7 +11021,7 @@
 				(justify mirror)
 			)
 		)
-		(property "MPN" "DFE252010F-100M"
+		(property "MPN" "DFE252010F-100M=P2"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "B.Fab")
