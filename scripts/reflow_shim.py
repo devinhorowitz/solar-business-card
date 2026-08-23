@@ -44,6 +44,7 @@ SHIM_CLR = 0.10      # PROVISIONAL -- see "THE OPEN NUMBER" above
 THICK = 0.60         # mm, 316L flat stock; must stay under SUPERCAP_H so it never fouls
 MATERIAL = "316L stainless, laser-cut, deburred both faces"
 COVER_FLOOR = 0.60   # a datum side must face metal over at least this fraction
+OPEN_MAX = 0.10      # ...and the opposite side must be this open, or the cap is BOXED
 OUT = ROOT / "enclosure" / "shim"
 
 
@@ -184,6 +185,27 @@ def check(verbose=True):
         elif verbose:
             print(f"  {ref}: " + "  ".join(f"{k} {sides[k]:5.1%}" for k in ("E", "W", "N", "S"))
                   + f"   datum {'+'.join(sorted(picked))}")
+
+    # NEVER BOX A CAP. The plate is cut around the NOMINAL body, but the body is
+    # 17.0 +-0.5 wide and 39.0/28.5 +0.5/-0.0 long (part_heights.SUPERCAP_BODY_TOL, from
+    # the SCPC datasheet). A closed pocket at nominal + SHIM_CLR is 17.20 across and a
+    # max-material cap is 17.50: it JAMS by 0.30 mm, and it jams on exactly the units
+    # whose caps are biggest. The two-sided datum only works because the OTHER two sides
+    # are open for the +0.5 to go somewhere, and today they are open by accident of where
+    # the parts happen to sit -- nothing asserted it until this check. A board change that
+    # puts a part on a cap's free side turns the locator into a press fit.
+    from part_heights import SUPERCAP_BODY_TOL
+    for ref, sides in sorted(cov.items()):
+        for axis, (a, b) in (("X", ("E", "W")), ("Y", ("N", "S"))):
+            if min(sides[a], sides[b]) > OPEN_MAX and SHIM_CLR < SUPERCAP_BODY_TOL:
+                bad.append(f"{ref}: both {axis} sides are enclosed ({a} {sides[a]:.0%}, "
+                           f"{b} {sides[b]:.0%}) at {SHIM_CLR:.2f} mm clearance, but the "
+                           f"body can run {SUPERCAP_BODY_TOL:.2f} mm over nominal -- a "
+                           f"max-material cap jams instead of seating")
+            elif verbose:
+                free = a if sides[a] <= sides[b] else b
+                print(f"  {ref} {axis}: datum {a if free == b else b}, {free} open "
+                      f"({sides[free]:.0%}) for the +{SUPERCAP_BODY_TOL:.2f} mm growth")
 
     # The four directions where a real part sits inside the brace bay must be indexed --
     # that is what makes the plate a guard and not just a locator.

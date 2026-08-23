@@ -60,19 +60,39 @@ neighbour is close precisely because the plate is the parts' complement.
 loads the brace, and in those four directions a component (see `fit_rules.CLR_EXCEPTIONS`).
 That is the argument for on-board index posts, which this does not replace.
 
-## The open number
+## The tolerance that sizes everything
 
-Once a cap is datum-referenced, the remaining error is the cap's **own body tolerance** —
-and that figure is not recorded anywhere in this repo. The SS17/WS17 bodies are modelled at
-nominal 17.00 × 39.00 and 17.00 × 28.50 mm. `SHIM_CLR = 0.10` is sized for handling, **not**
-computed against a tolerance. Pull the SCHURTER SCPC number before cutting metal: it sets
-this constant, and it decides whether the brace bays can come back in from 0.75 mm and
-recover the 111 mm² of footprint that clearance costs.
+**Answered 2026-08-23 from the datasheet** (`../../datasheets/SC1-SC4  SCHURTER 3-153-438  $16.69.pdf`,
+Dimension [mm]) — it had been carried as an open question, and it is bigger than assumed:
+
+| case | parts | width | length | height |
+|---|---|---|---|---|
+| SS17 | SC1, SC3 | **17.0 ±0.5** | **39.0 +0.5/−0.0** | max 1.7 |
+| WS17 | SC2, SC4 | **17.0 ±0.5** | **28.5 +0.5/−0.0** | max 1.7 |
+
+Both in-plane dimensions can run **0.50 mm over nominal** — five times this plate's datum
+gap. Three consequences, all load-bearing:
+
+1. **The plate must never be a closed pocket.** At nominal + 0.10 an opening is 17.20 mm
+   across; a max-material can is 17.50. It would **jam by 0.30 mm**, on exactly the units
+   whose caps are biggest. The two-sided datum works only because the opposite two sides are
+   open for the growth to go somewhere — and until check-time that was an accident of where
+   the neighbouring parts sit. It is now asserted (see Gates).
+2. **`fit_rules.CLR_EXCEPTIONS` 0.75 mm is near-minimal.** A free side must clear
+   0.50 (tolerance) + 0.10 (datum gap) = **0.60 mm** before any placement error at all,
+   leaving 0.15 mm. The bay is not a generous allowance for shaky hands; it is mostly the
+   part.
+3. **The 111 mm² of brace footprint is not recoverable by better placement.** Only
+   anisotropy would buy any of it back — tight on the two datum sides, 0.60 on the free
+   ones — which needs a directional offset, not the uniform `buffer()` the brace uses today.
+
+Note 1.70 mm is likewise a **maximum**, not a nominal, and the shell cavity is built on it.
 
 ## Gates
 
 `python3 ../../scripts/reflow_shim.py` runs in `consistency.yml` and fails on: more than one
 piece, a plate at least as thick as the caps, any pad contact, a cap without two orthogonal
-datum sides, or a clearance that no longer stands inside a ledgered neighbour. It self-tests
+datum sides, **a cap enclosed on both sides of either axis** (the jamming case above), or a
+clearance that no longer stands inside a ledgered neighbour. It self-tests
 the pad measurement each run — with every clearance zeroed the plate **must** touch pads
 (0.021 mm²), or the check is measuring nothing and says so.

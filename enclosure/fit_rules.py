@@ -130,6 +130,17 @@ def air_for(ref):
 # DNP FOOTPRINTS ARE NOT STOPS -- J1 sits 0.49 mm off SC1 and TP2/TP4 likewise, but all 13 dnp
 # parts (C30, J1, JP1, SW2, TC1, TC1/b1, TP1-7) are bare pads on a standard build. Reading them
 # as stops overstates SC1's restraint and understates its rotation limit by 2x.
+# AND 0.75 IS NEAR-MINIMAL, NOT GENEROUS -- the paragraphs above sized it from HAND SLOP
+# (rotation plus translation) and that was only half the reason. The SCPC datasheet gives
+# the cans as 17.0 +-0.5 wide and 39.0 / 28.5 +0.5/-0.0 long (part_heights.SUPERCAP_BODY_TOL,
+# recorded 2026-08-23 from the same drawing as the 1.70 height). BOTH in-plane dimensions
+# can run 0.50 over nominal. A cap indexed on two edges -- which is what the reflow shim
+# does, scripts/reflow_shim.py -- puts that entire +0.50 onto its two free edges, so a free
+# side needs 0.50 + the 0.10 datum gap = 0.60 before any placement error at all. 0.75 leaves
+# 0.15 mm. THIS IS WHY THE 111 mm2 IS NOT COMING BACK: better placement cannot buy it, only
+# a smaller-tolerance part could. The recoverable saving is anisotropy, not shrinkage -- the
+# two DATUM sides could run tight (~0.15) while the free sides hold 0.60 -- and that needs a
+# directional offset rather than the uniform buffer() in brace_footprint().
 CLR_EXCEPTIONS = {"SC1": 0.75, "SC2": 0.75, "SC3": 0.75, "SC4": 0.75}
 
 
