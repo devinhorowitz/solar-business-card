@@ -2106,7 +2106,7 @@ def check_supplier_pns():
 
 
 # ---- check [21]: what stops a hand-placed supercap, and what the docs say does -------
-# The 0.75 mm cap bays (fit_rules.CLR_EXCEPTIONS) are a design input; the parts those
+# The cap bays (fit_rules CLR_DATUM/CLR_FREE) are a design input; the parts those
 # caps can actually reach are a MEASUREMENT, and until now they were prose -- a table in
 # PCB/README.md and a comment in fit_rules.py, sitting next to generated geometry with
 # nothing between them. That is the gap class that produced checks [14], [19] and [20],
@@ -2164,7 +2164,12 @@ def check_cap_clearance():
                 err(f"cap clearance: PCB/README.md says {cap} {d} -> {r} @ {val:.2f} mm, "
                     f"ledger says {want[0]} @ {want[1]:.2f} mm")
 
-    missing = {k for k, v in cc.LEDGER.items() if v[1] < 0.75} - seen
+    # Publication threshold is CLR_FREE, not the per-edge bay: the build sheet warns about
+    # what a NUDGED cap can shear during hand-soldering, which happens before the brace
+    # exists. It must not quietly stop listing L2 just because the brace later catches the
+    # cap on that edge. (It was a bare 0.75 literal until the bays went anisotropic.)
+    import fit_rules as _fr
+    missing = {k for k, v in cc.LEDGER.items() if v[1] < _fr.CLR_FREE} - seen
     for cap, d in sorted(missing):
         who, mm = cc.LEDGER[(cap, d)]
         err(f"cap clearance: {cap} {d} reaches {who} at {mm:.2f} mm -- inside the brace bay, "

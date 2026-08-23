@@ -151,7 +151,7 @@ SUPERCAP_H = 1.70   # SS17 (SC1/SC3) and WS17 (SC2/SC4) are different lengths bu
 # UNDER. That is five times the reflow shim's datum gap and two thirds of the brace's
 # whole cap bay, which makes it the number that sizes both: a cap indexed on two edges
 # puts the entire +0.5 onto the two free edges, so a free-side bay must clear
-# 0.5 + datum gap. fit_rules.CLR_EXCEPTIONS' 0.75 is therefore NEAR-MINIMAL, not
+# 0.5 + datum gap. fit_rules.CLR_FREE's 0.75 is therefore NEAR-MINIMAL, not
 # generous -- 0.15 mm of margin -- and it would be required even if placement were
 # perfect. Note 1.70 is likewise a MAXIMUM, not a nominal; the cavity is built on it.
 SUPERCAP_BODY_TOL = 0.50   # mm, worst-case growth on either in-plane axis

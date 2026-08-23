@@ -607,7 +607,9 @@ spare-board build); the hand-soldered parts (supercaps, cells) never need one.
 > into place, and inspect L2, C24 and R15 after fitting SC3 and SC4.
 >
 > These clearances are **not** design datums — a 0402 will shear before it indexes a supercap.
-> The brace's own allowance for this slop is separate and lives in `fit_rules.CLR_EXCEPTIONS`.
+> The brace's own allowance for this slop is separate and lives in `fit_rules` as `CLR_DATUM` /
+> `CLR_FREE` — directional since 2026-08-23, because the reflow shim indexes two edges of each
+> cap. Note the brace therefore only fits a cap the shim seated; see `enclosure/shim/README.md`.
 >
 > Every number in this block is **measured from the board and gated** — `scripts/cap_clearance.py`
 > owns both the measurement and the ledger, and consistency check [21] fails if this table, the

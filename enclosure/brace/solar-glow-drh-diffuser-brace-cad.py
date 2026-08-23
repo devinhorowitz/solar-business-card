@@ -72,7 +72,7 @@ OUT = os.environ.get("OUT_DIR") or os.path.join(os.path.dirname(os.path.abspath(
 # brace put 593 mm3 of solid resin inside three 1.70 mm cans and could not be installed.
 # The footprint is computed from the board now; see enclosure/fit_rules.py.
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
-from fit_rules import clr_for, air_for, export_step_stable   # GAP/AIR deliberately NOT imported by value -- per-variant/air_for(), see the loop                                          # noqa: E402
+from fit_rules import clr_sides, air_for, export_step_stable   # GAP/AIR deliberately NOT imported by value -- per-variant/air_for(), see the loop                                          # noqa: E402
 GLOW  = (14.95, 40.8, 35.85, 47.0)
 FER   = (36.9, 31.5, 48.9, 57.5)   # 12 WIDE (x, CRITICAL -- edge-limited) x 26 LONG (y, nominal; length is
                                    # forgiving -- open-ended channel, may run long/short and extend slightly past the brace).
@@ -124,7 +124,8 @@ _KEEPOUT = {ref: poly for ref, poly, _h, _src in _board_parts("B")}
 # Anything taller is a BLOCKER and is subtracted from the footprint instead. That makes
 # interference structurally impossible: the thing that would collide is the thing removed.
 #
-#   footprint = cavity - blockers(+clr_for) - boss reliefs, morphologically opened at SLA_WALL
+#   footprint = cavity - blockers(+part_keepout, DIRECTIONAL for SC1-4) - boss reliefs,
+#              morphologically opened at SLA_WALL
 #
 # Opening is what keeps it printable: subtracting round reliefs from rails leaves slivers,
 # and the opening deletes anything narrower than SLA_WALL and rounds the necks it leaves.
@@ -177,8 +178,8 @@ def _build(vname):
         h = part_height(ref)
         if h is None: continue
         if not in_fp(x0, x1, y0, y1): continue          # only parts under the footprint
-        _c = clr_for(ref)                                     # per-part; SC1-4 are hand-placed
-        px0, px1, py0, py1 = x0-_c, x1+_c, y0-_c, y1+_c       # full pad box + its clearance
+        _c = clr_sides(ref)                                   # per-EDGE; the caps are directional
+        px0, px1, py0, py1 = x0-_c["W"], x1+_c["E"], y0-_c["S"], y1+_c["N"]   # pad box + clearance
         depth = h + air_for(ref); through = (gap - depth) < SLA_WEB   # THROUGH whenever the blind
                                                         # web would be unprintable. The rule names
                                                         # the reason, not the part (see history in
@@ -265,8 +266,9 @@ def _build(vname):
         if thru: n_thru += 1
         elif depth > 1.0: n_deep += 1
         else: n_shal += 1
-        _c = clr_for(ref)
-        ax.add_patch(Rectangle((x0-_c, y0-_c), (x1-x0)+2*_c, (y1-y0)+2*_c, fc=col, ec="#222", lw=0.3, alpha=0.9))
+        _c = clr_sides(ref)
+        ax.add_patch(Rectangle((x0-_c["W"], y0-_c["S"]),
+                               (x1-x0)+_c["W"]+_c["E"], (y1-y0)+_c["S"]+_c["N"], fc=col, ec="#222", lw=0.3, alpha=0.9))
         if (x1-x0) > 1.8 and (y1-y0) > 1.3: ax.text((x0+x1)/2, (y0+y1)/2, ref, color="#111", ha="center", va="center", fontsize=4.6)
     for _bx0, _by0, _bw, _bh in bridges:
         if _bw < 0.35: _bx0 -= (0.35-_bw)/2; _bw = 0.35

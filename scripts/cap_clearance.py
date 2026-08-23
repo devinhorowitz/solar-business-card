@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """cap_clearance.py -- what actually stops a hand-placed supercap, measured from the board.
 
-SC1-SC4 are the only hand-soldered parts on the B side, and `fit_rules.CLR_EXCEPTIONS`
-buys them 0.75 mm of in-plane brace clearance for placement slop. That number is a
+SC1-SC4 are the only hand-soldered parts on the B side, and `fit_rules` buys them
+directional in-plane brace clearance (CLR_DATUM on the two shim-indexed edges,
+CLR_FREE on the two that absorb the body tolerance). That number is a
 DESIGN INPUT; this module measures the CONSEQUENCE -- how far each cap can actually
 travel, and what it reaches when it does.
 
@@ -170,16 +171,25 @@ def check(verbose=True):
             bad.append(f"{ref} rotation: board says {got}, ledger says {want}")
 
     # The whole point of the exception: which directions has 0.75 outrun?
-    exceeded = [(k, v) for k, v in sorted(LEDGER.items()) if v[1] < fr.clr_for(k[0])]
+    # Per-EDGE since the bays went anisotropic (2026-08-23): "inside the bay" is a
+    # question about ONE side, and comparing against the scalar worst case (clr_for, the
+    # 0.75 free-side figure) would keep reporting the four datum-side parts as unguarded
+    # long after CLR_DATUM started catching the cap before them.
+    SIDE = {"+X": "E", "-X": "W", "+Y": "N", "-Y": "S"}
+    exceeded = [(k, v) for k, v in sorted(LEDGER.items())
+                if v[1] < fr.clr_sides(k[0])[SIDE[k[1]]]]
     if verbose:
         print(f"cap_clearance: {len(tr)} real neighbours within {WINDOW} mm; "
               f"{len(dnp)} dnp footprints excluded ({', '.join(sorted(dnp))})")
         for (ref, d), (who, mm) in sorted(LEDGER.items()):
-            flag = "  <-- inside the brace bay" if mm < fr.clr_for(ref) else ""
+            bay = fr.clr_sides(ref)[SIDE[d]]
+            flag = ("  <-- INSIDE the bay, the part is the backstop" if mm < bay
+                    else f"  (bay {bay:.2f}, resin catches the cap first)"
+                    if ref in fr.CAP_DATUM else "")
             print(f"  {ref} {d}: {who} @ {mm:.2f} mm{flag}")
         for ref, (who, deg) in sorted(ROT_LEDGER.items()):
             print(f"  {ref} rotation: {who} @ {deg:.2f} deg")
-        print(f"  {len(exceeded)} direction(s) where CLR_EXCEPTIONS outruns a real part")
+        print(f"  {len(exceeded)} direction(s) where the brace bay outruns a real part")
 
     # Self-test: counting dnp parts MUST change the answer, or the exclusion is inert
     # and this gate would pass while silently reading phantom stops as real ones.
