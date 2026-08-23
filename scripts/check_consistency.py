@@ -2119,7 +2119,8 @@ def check_supplier_pns():
 # lesson. It gates three things: the ledger against the board, the README table against
 # the ledger, and that the dnp exclusion is still doing work (its own self-test).
 def check_cap_clearance():
-    sys.path.insert(0, str(ROOT / "scripts"))
+    n0 = len(errors)
+    sys.path.insert(0, os.path.join(ROOT, "scripts"))
     import cap_clearance as cc
 
     for msg in cc.check(verbose=False):
@@ -2128,7 +2129,7 @@ def check_cap_clearance():
     # The build sheet's table must say what the ledger says. Rows look like
     #   | **SC4** | -X | **L2** -- the harvester inductor | **0.50 mm** |
     # and the cells carry markdown emphasis, so match on the content not the decoration.
-    md = (ROOT / "PCB" / "README.md").read_text(encoding="utf-8")
+    md = open(os.path.join(ROOT, "PCB", "README.md"), encoding="utf-8").read()
     seen = set()
     for line in md.splitlines():
         if not line.lstrip().startswith(">") or line.count("|") < 4:
@@ -2169,8 +2170,10 @@ def check_cap_clearance():
         err(f"cap clearance: {cap} {d} reaches {who} at {mm:.2f} mm -- inside the brace bay, "
             f"so it MUST appear in PCB/README.md's HAND-SOLDER CAUTION table")
 
-    ok(f"{len(cc.LEDGER)} cap/neighbour pair(s) and {len(cc.ROT_LEDGER)} rotation limit(s) "
-       f"match the board; {len(seen)} published in the build sheet; dnp exclusion self-tested")
+    if len(errors) == n0:
+        ok(f"{len(cc.LEDGER)} cap/neighbour pair(s) and {len(cc.ROT_LEDGER)} rotation "
+           f"limit(s) match the board; {len(seen)} published in the build sheet; "
+           f"dnp exclusion self-tested")
 
 
 
