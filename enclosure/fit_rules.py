@@ -98,6 +98,26 @@ AIR_EXCEPTIONS = {"D2": 0.16, "D3": 0.16, "D4": 0.16, "D5": 0.16}
 
 def air_for(ref):
     return AIR_EXCEPTIONS.get(ref, AIR)
+
+
+# Per-part IN-PLANE clearance exceptions (2026-08-23), the XY twin of AIR_EXCEPTIONS.
+# CLR is one number for every part, which silently equated two very different risks:
+# a machine-placed 0402 lands within a few hundredths, while SC1-SC4 are HAND-SOLDERED
+# (they are on the hand-buy list, not the PCBWay CPL -- scripts/bom_split.py) and carry
+# human placement slop on a 17 x 39 mm body.
+#
+# ROTATION dominates, not translation: 1 deg of tweezer rotation swings the corner of a
+# 39 mm cap by 19.5 * sin(1 deg) = 0.340 mm, and 1.5 deg by 0.510 mm. 0.75 covers 1.5 deg
+# plus ~0.24 mm of translation. The caps cut THROUGH (h + air > gap), so this widens the
+# open bays they sit in rather than any pocket -- no web is affected, only footprint area.
+# Cost is bounded and was measured before choosing: 222.1 mm of the caps' 406 mm perimeter
+# faces brace material (the rest already faces open bay), so +0.50 costs ~111 mm2 and the
+# narrowest web goes 2.29 -> 1.79 mm (west rail), still one connected piece.
+CLR_EXCEPTIONS = {"SC1": 0.75, "SC2": 0.75, "SC3": 0.75, "SC4": 0.75}
+
+
+def clr_for(ref):
+    return CLR_EXCEPTIONS.get(ref, CLR)
 CLR = 0.25                 # in-plane clearance around a part
 SLA_WEB = 0.40             # thinnest resin that may remain OVER a pocket
 SLA_WALL = 0.60            # thinnest in-plane feature we will print
@@ -230,7 +250,7 @@ def brace_footprint(span=None):
     variant_span(name). DROPPED_AREA/DROPPED_COUNT describe the LAST call -- a
     per-variant caller should read them immediately, before any other call."""
     cav = cavity_rect().buffer(-WALL_FIT, join_style=1, resolution=64)
-    keep = unary_union([p.buffer(CLR, join_style=2) for _r, p in blockers(span=span)])
+    keep = unary_union([p.buffer(clr_for(_r), join_style=2) for _r, p in blockers(span=span)])
     boss = unary_union([Point(b).buffer(RELIEF_R, resolution=64) for b in MOUNTS])
     fp = cav.difference(keep).difference(boss)
     t = SLA_WALL / 2.0
@@ -308,7 +328,17 @@ def _mk_variants():
             material="Ti Gr5 (reference; brass or 6061 acceptable -- non-magnetic, machinable)",
             shell_name="solar-glow-drh-v4_0-backshell-0p6b-brace-Ti-max",
             brace_name="solar-glow-drh-diffuser-brace",
-            coverage_floor=0.32,   # ledgered min (measures 0.329 after the 2026-08-08 LDO-island
+            coverage_floor=0.30,   # ledgered min. RE-LEDGERED 2026-08-23, 0.32 -> 0.30, and
+                                   # DELIBERATELY, not because a board change eroded it: CLR_EXCEPTIONS
+                                   # bought SC1-SC4 0.75 mm of in-plane clearance for HAND-SOLDER slop,
+                                   # which costs 111 mm2 of footprint and measures 30.46%. The floor is
+                                   # a regression tripwire (see the check's own text: "re-ledger
+                                   # coverage_floor WITH the reason"), not a structural spec -- nothing
+                                   # states a required support area. What was checked instead: the
+                                   # footprint stays ONE piece, the narrowest web goes 2.29 -> 1.79 mm
+                                   # (west rail), and DROPPED_AREA actually FELL 255.6 -> 213.1 mm2
+                                   # because the slivers it used to discard no longer form.
+                                   # Prior text: (measures 0.329 after the 2026-08-08 LDO-island
                                    # migration to the SC3/SC4 bay: the island's five pockets and
                                    # DRH's Q2/R18/RN1/SW2 re-spread cost the max brace 58 mm2 of
                                    # field BY DESIGN -- the same round RAISED the lite brace
@@ -325,7 +355,10 @@ def _mk_variants():
             material="Ti Gr5 (thinned floor; the 0.60 is the shop-minimum conversation)",
             shell_name="solar-glow-drh-shell-lite-Ti",
             brace_name="solar-glow-drh-diffuser-brace-lite",
-            coverage_floor=0.25,   # ledgered min (measures 0.272 after the 2026-08-08 island
+            coverage_floor=0.24,   # ledgered min. RE-LEDGERED 2026-08-23, 0.25 -> 0.24, same cause
+                                   # as max: the caps are hand-soldered in this variant too, so they
+                                   # take the same 0.75 mm. Measures 24.78%, one piece.
+                                   # Prior text: (measures 0.272 after the 2026-08-08 island
                                    # migration -- UP from 0.264: the island's blockers left the
                                    # west corridor for the SC bay; floor deliberately kept at 0.25)
         ),
