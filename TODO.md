@@ -551,6 +551,47 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
 
 ## PCB — `PCB/solar-glow-drh-v4_0.kicad_pcb` / `.kicad_sch`
 
+- [ ] **[LAYOUT — v5] Inert index posts beside the supercaps, tied to GND**
+  _(2026-08-23. DRH places them manually; re-derive every coordinate below with
+  `python3 scripts/index_posts.py`, which computes them from the current board — do not
+  hand-edit the numbers here.)_
+  Cheap chip parts soldered beside SC1–SC4 so a hand-placed cap seats against something
+  sacrificial instead of against a live component. **Two on each cap's LONG datum edge, one
+  on the short** — a two-point contact is what constrains **rotation**, and rotation is the
+  dominant placement error (1° swings a 39 mm cap's corner 0.34 mm; the caps reach a real
+  part at 2.02–6.71°). One post stops translation and does nothing about rotation. Datum
+  edges are `fit_rules.CAP_DATUM`, i.e. the same two the reflow shim indexes.
+  - **Net: GND.** Not floating and **not a live rail** — a part whose job is to be struck by
+    a 17 × 39 mm slab should fail cosmetically, not electrically. GND over floating is for
+    MECHANICS, not function: a pad bonded to the pour has more copper anchorage against
+    lateral load. Costs thermal relief to solder.
+  - **Not capacitors.** Contributory energy storage fails by three orders of magnitude: all
+    ten placeable sites filled with the largest 6.3 V X5R each is **706 µF nominal = 0.05 %
+    of the 1.40 F tank**, 4.96 mJ of its 9.84 J usable, and ~0.015 % after a realistic 30 %
+    DC-bias derate. 1 % of the tank would need 14,000 µF. No ESR case either — the SCPC cells
+    are 25/40 mΩ (30.8 mΩ for the bank), so the 22.46 mA LED envelope droops **0.69 mV**. No
+    balancing case — the AEM10300's BAL pin already holds the midpoint, which is why U2 was
+    deleted in v4. Decoupling belongs at the pin: C27 (10 µF) is already 4.84 mm from U8.
+  - **Measured today, 10 of 12 sites place** (collision against body ∪ pads + 0.20 mm, dnp
+    copper included). **Only SC3 gets a working rotation datum** — 2 solid posts on its long
+    edge. SC1 and SC2 get 1 each; SC4 gets 0. `SC1 E@80 %` is blocked by **C11** and
+    `SC4 W@20 %` by **Q2**; moving those two is what would give all four caps a datum.
+  - Packages fall out of local room, not choice: 2512 → 1206 → 0805 → 0603. **0603 is
+    INADEQUATE for shear** (`PCB/README.md`: "a 0402 will shear before it indexes a
+    supercap"); 0805 is marginal. Two sites currently land on 0603.
+  - **These are real footprints and they are not free.** Each one needs: a
+    `part_heights.py` entry (`part_height()` **raises** on an unmapped refdes), a BOM line
+    with MPN **and** Manufacturer (`bom_split.build()` fails on an MPN with no manufacturer),
+    a CPL row (check [15] gates pick-and-place against BOM), a `part_colors.py` colour
+    (check [10]) and a 3D model — and each becomes a brace blocker or pocket, so the
+    footprint recomputes. Budget the gate work with the placement.
+  - Suggested refdes `MP1`–`MP12` rather than an `R` prefix, so nothing reads them as circuit
+    resistors. Value `0R`.
+  - **What this does NOT replace:** the reflow shim (`enclosure/shim/README.md`). Posts index
+    but cannot clamp, and the caps must be held while the paste is molten. The prize if all
+    four caps ever get a real rotation datum is decoupling the brace from the shim — today
+    the anisotropic bays mean the brace only fits a cap the shim seated.
+
 - [ ] **[LAYOUT — lite-brace headroom] Component moves that buy back the lite brace's lost third**
   _(2026-08-07, from the enclosure-variants round. DRH does the moves manually; everything downstream
   regenerates from the board — brace, shells, drawings, renders are all functions of it, so a pushed
