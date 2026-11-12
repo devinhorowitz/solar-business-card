@@ -600,15 +600,29 @@ def boss_fouls(mx, my):
 
     ONE home for the scallop, because it had two and they disagreed. boss_island() below
     subtracted these from its disc, the brace took its reliefs from that island and check
-    [4] gated it -- while the shell CAD unioned a bare `circle(boss_r)` and never made the
-    cut. The polygon was clear of every part by construction; the titanium was not: the
-    committed shells put SC1 0.375 mm inside the two west bosses (SC3 0.305, SC4 0.326,
-    SC2 0.174), found 2026-11-12 by an independent measurement of the STEP. The shell now
-    cuts exactly this list out of each boss cylinder, so what [4] proves about the polygon
-    is true of the metal."""
+    [8] gated it (step 4 of check_enclosure_fit) -- while the shell CAD unioned a bare
+    `circle(boss_r)` and never made the cut. The polygon was clear of every part by
+    construction; the titanium was not: the committed shells put SC1 0.375 mm inside the
+    two west bosses (SC3 0.305, SC4 0.326, SC2 0.174), found 2026-11-12 by an independent
+    measurement of the STEP. The shell now cuts exactly this list out of each boss, so
+    what [8] proves about the polygon is meant to hold for the metal -- and whether it
+    does is measured, not inferred: scripts/assembly_drc.py [F] sections the emitted STL."""
+    return [p.buffer(BOSS_CLR, join_style=2) for _r, p in _boss_foul_parts(mx, my)]
+
+
+def _boss_foul_parts(mx, my):
+    """[(refdes, outline)] -- the parts within BOSS_R of the boss axis at (mx, my). The one
+    statement of what "fouls a boss" means; boss_fouls() and boss_foul_refs() are two views
+    of it, so a sheet that NAMES the parts cannot disagree with the solid that is cut."""
     c = Point(mx, my)
-    return [p.buffer(BOSS_CLR, join_style=2) for _r, p, _h, _s in _cached_parts()
-            if p.distance(c) < BOSS_R]
+    return [(r, p) for r, p, _h, _s in _cached_parts() if p.distance(c) < BOSS_R]
+
+
+def boss_foul_refs(mx, my):
+    """The refdes of the parts boss_fouls(mx, my) cuts the boss back for. For anything that
+    has to say WHICH part in words -- the shell drawing's boss-flat callout -- so the word
+    is read off the board with the numbers beside it and never typed."""
+    return [r for r, _p in _boss_foul_parts(mx, my)]
 
 
 def boss_island(mx, my):

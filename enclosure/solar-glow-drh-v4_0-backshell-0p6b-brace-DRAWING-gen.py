@@ -245,14 +245,19 @@ def sheet(vname, v):
         _m = (_mx[-1], _my[2]) if (_mx[-1], _my[2]) in _flats else next(iter(_flats))
         _c = _flats[_m][0].centroid
         _dd = sorted(d for _g, d in _flats.values())
+        # WHICH part is read off the board like the numbers beside it (fit_rules.boss_foul_refs,
+        # the same test boss_fouls() cuts by) -- a typed "SUPERCAP" would be true today and
+        # silently false the day a re-route puts something else beside a boss.
+        _who = sorted({r for _bx, _by in mounts for r in _fr.boss_foul_refs(_bx, _by)})
+        _whotxt = " ".join(_who) if len(_who) <= 4 else f"{len(_who)} PARTS"
         # (141, 213): right of the hole-position leader, which runs diagonally through the
         # column the other two plan callouts sit in, and clear of Section A-A's own leaders
         leader(X(_c.x), Y(_c.y), 141, 213,
                f"{len(_flats)}\u00d7 BOSS FLAT" + (" (HIDDEN \u2014 CAVITY SIDE)" if not open_back else "") +
                f": EACH \u00d8{2*boss_r:.2f} BOSS CUT BACK {_fr.BOSS_CLR:.2f}\n"
-               f"CLEAR OF THE SUPERCAP IT WOULD FOUL, FULL DEPTH; FLATS\n"
-               f"{_dd[0]:.2f}\u2013{_dd[-1]:.2f} FROM THE HOLE AXIS (THREAD KEEP-OUT r{_fr.THREAD_KEEP:.2f}\n"
-               f"UNTOUCHED). MODELED \u2014 STEP GOVERNS.", fs=4.9)
+               f"CLEAR OF THE PART IT WOULD FOUL ({_whotxt}), FULL\n"
+               f"DEPTH; FLATS {_dd[0]:.2f}\u2013{_dd[-1]:.2f} FROM THE HOLE AXIS (THREAD KEEP-OUT\n"
+               f"r{_fr.THREAD_KEEP:.2f} UNTOUCHED). MODELED \u2014 STEP GOVERNS.", fs=4.9)
 
     # U7 relief pocket (cavity-floor recess; hidden in back-face view -> dashed).
     # Drawn ONLY if the arithmetic still calls for one -- see the import block above.
