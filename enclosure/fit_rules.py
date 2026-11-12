@@ -421,7 +421,15 @@ def _mk_variants():
             material="Ti Gr5 (reference; brass or 6061 acceptable -- non-magnetic, machinable)",
             shell_name="solar-glow-drh-v4_0-backshell-0p6b-brace-Ti-max",
             brace_name="solar-glow-drh-diffuser-brace",
-            coverage_floor=0.32,   # ledgered min. RESTORED 2026-08-23 evening, 0.30 -> 0.32:
+            coverage_floor=0.32,   # ledgered min. UNCHANGED 2026-11-12 and re-measured: 33.01 %,
+                                   # the same figure as before by coincidence of two moves.
+                                   # The footprint lost the 0.25 mm east strip it never had
+                                   # room for (1320.3 -> 1313.6 mm2, see brace_cavity()), and
+                                   # the denominator is now that same true cavity (3978.9 mm2,
+                                   # was the 3999.5 rectangle) instead of a cavity the shell
+                                   # does not have. Against the OLD denominator this brace
+                                   # would read 32.84 %. DROPPED_AREA 213.1 -> 202.6 mm2.
+                                   # RESTORED 2026-08-23 evening, 0.30 -> 0.32:
                                    # the anisotropic bays put coverage back to 33.01% (it was
                                    # 33.25% before #249 widened them), so the floor returns to
                                    # what it was before the widening rather than staying at the
@@ -453,7 +461,10 @@ def _mk_variants():
             material="Ti Gr5 (thinned floor; the 0.60 is the shop-minimum conversation)",
             shell_name="solar-glow-drh-shell-lite-Ti",
             brace_name="solar-glow-drh-diffuser-brace-lite",
-            coverage_floor=0.25,   # ledgered min. RESTORED 2026-08-23 evening, 0.24 -> 0.25 --
+            coverage_floor=0.25,   # ledgered min. UNCHANGED 2026-11-12: 27.28 % -> 27.25 % of the
+                                   # true cavity (footprint 1090.9 -> 1084.1 mm2, same east
+                                   # strip as max; 27.11 % against the old rectangle).
+                                   # RESTORED 2026-08-23 evening, 0.24 -> 0.25 --
                                    # anisotropy took the lite brace back to 27.28% (27.51% pre-#249).
                                    # RE-LEDGERED 2026-08-23, 0.25 -> 0.24, same cause
                                    # as max: the caps are hand-soldered in this variant too, so they
