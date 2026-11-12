@@ -651,8 +651,8 @@ def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pill
         _mg = _md.geometry(_maker_text, MAKER_FONT_R, MAKER_FONT_B)
         print(f"  [medallion] geometry+audit {_time.time()-_t0:.1f}s")
         # Assemble each family as an OCC COMPOUND (no pre-fusing) so the shell sees
-        # exactly two booleans; medallion.py already simplified the outlines to 8 um,
-        # which is what keeps those two booleans from being a 20-minute build.
+        # exactly two booleans; medallion.py already simplified the outlines (together, to
+        # within 8 um), which is what keeps those two booleans from being a 20-minute build.
         _cutsol, _islsol = [], []
         for _geo, _d in ((_mg["cut_rest"], _md.REST_D), (_mg["cut_main"], _md.COIN_D)):
             for _p in (_geo.geoms if _geo.geom_type == "MultiPolygon" else [_geo]):
@@ -679,12 +679,12 @@ def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pill
         print(f"  [medallion] {len(_cutsol)} cut + {len(_islsol)} island prisms "
               f"{_time.time()-_t0:.1f}s")
         if _cutsol:
-            # FUSE the cut family into one tool before cutting. rest and main were
-            # simplified independently, so their shared boundaries drift a few um and
-            # the solids micro-overlap -- and an OCC cut with self-intersecting
-            # compound tools fails SILENTLY and partially (found as a coin floor that
-            # never got cut while the counters did). The fuse resolves the overlaps;
-            # the single cut is then clean.
+            # FUSE the cut family into one tool before cutting. rest and main share
+            # their borders vertex for vertex now (medallion._partition), so the prisms
+            # no longer micro-overlap -- but they still TOUCH along every shared wall,
+            # and an OCC cut with a compound of touching tools fails SILENTLY and
+            # partially (found, in the overlapping era, as a coin floor that never got
+            # cut while the counters did). One fused tool, one clean cut.
             _tool = _cutsol[0]
             for _s in _cutsol[1:]:
                 _tool = _tool.fuse(_s)
