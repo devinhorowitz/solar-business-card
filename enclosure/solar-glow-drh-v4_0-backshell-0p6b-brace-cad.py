@@ -343,6 +343,20 @@ def _poly_solid(poly, z0, dz):
 
 _MOUNT_XY = {tuple(m) for m in mounts}
 
+def _void_in_recess():
+    """fit_rules' cavity void, held inside the board recess. edge_fit is NEGATIVE (a press fit),
+    so the recess is 0.05 mm smaller than the board on every flat and a void that runs out to
+    the board edge would still be cut 0.05 mm under the recess wall. Clipping to the recess
+    footprint (same rounded rectangle build() cuts at the seat) means the floor-to-seat cut can
+    never pass beneath the wall above it."""
+    e = max(0.0, -edge_fit)
+    rec = box(e, e, W - e, H - e)
+    rec = rec.buffer(-cavR, join_style=1, resolution=48).buffer(cavR, join_style=1, resolution=48)
+    v = _cavity_void_poly().intersection(rec)
+    if v.geom_type != "Polygon":                 # a clip can shed dust; the void is the big piece
+        v = max((g for g in v.geoms if g.geom_type == "Polygon"), key=lambda g: g.area)
+    return v
+
 def _axis_piece(wp, x, y, z):
     """Of the solids a scallop cut can leave, keep the one the boss axis runs through --
     the rule fit_rules.boss_island() applies to its polygon (a crumb the cut detaches is
@@ -422,7 +436,7 @@ def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pill
     # At floor 0 (the open air frame) the void cut must start BELOW z0, or the cut face is
     # coincident with the block bottom and OCC's boolean gets to choose what that means.
     _vz0 = floor if floor > 0 else -0.20
-    res = res.cut(_poly_solid(_cavity_void_poly(), _vz0, cavity + (floor - _vz0)))
+    res = res.cut(_poly_solid(_void_in_recess(), _vz0, cavity + (floor - _vz0)))
     # corner relief (recess depth)
     cwp = cq.Workplane("XY").workplane(offset=bb - 0.01)
     for ccx, ccy in [(R, R), (W - R, R), (R, H - R), (W - R, H - R)]:

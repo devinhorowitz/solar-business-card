@@ -561,6 +561,14 @@ def cavity_void_poly(tool_r=TOOL_R, simplify=True):
     if stuck:
         opened = opened.union(unary_union(
             [p.buffer(LIP_CLR + tool_r, join_style=1, resolution=48) for p in stuck]))
+    # The void is BOARD area by definition, and until 2026-11 nothing held it there. A
+    # relief dilated by LIP_CLR + tool_r runs past the board edge wherever a part sits
+    # closer to it than that -- all four supercaps, 1.00 mm off the N and S edges -- so the
+    # polygon reached y-0.30 / y89.20 (21.3 mm2 outside the board). The shell cuts this
+    # polygon from floor to seat: 0.30 mm into the perimeter wall and UNDER the board
+    # recess, four pockets a cutter coming down the cavity cannot reach. "Tool-reachable
+    # by construction" was true in plan and false in section.
+    opened = opened.intersection(box(0.0, 0.0, W, H))
     if opened.geom_type == "MultiPolygon":
         opened = max(opened.geoms, key=lambda g: g.area)
     # simplify is a CAD-export convenience (it keeps OCC from chewing on thousands of
