@@ -341,8 +341,6 @@ def _poly_solid(poly, z0, dz):
     xy = [(wx(x), wy(y)) for x, y in list(poly.exterior.coords)[:-1]]
     return cq.Workplane("XY").workplane(offset=z0).polyline(xy).close().extrude(dz)
 
-_MOUNT_XY = {tuple(m) for m in mounts}
-
 def _void_in_recess():
     """fit_rules' cavity void, held inside the board recess. edge_fit is NEGATIVE (a press fit),
     so the recess is 0.05 mm smaller than the board on every flat and a void that runs out to
@@ -367,6 +365,59 @@ def _axis_piece(wp, x, y, z):
     pt = cq.Vector(wx(x), wy(y), z)
     keep = [s for s in sols if s.isInside(pt)] or sols[:1]
     return cq.Workplane("XY").newObject(keep[:1])
+
+_SCALLOP_FAT = 0.02      # the scallop tool is cut from a cylinder this much fatter than the
+                         # boss, and taller wherever there is only air to be taller into, so
+                         # no face of the tool lies ON a curved face of the boss
+
+def _boss_scallop_tool(x, y, floor, cavity, foot=0.0):
+    """What has to come OUT of the boss at (x, y) for it to be fit_rules.boss_island():
+    its keep-outs, plus any crumb they detach from the piece the axis runs through.
+    None if nothing fouls this boss.
+
+    Built on a lone cylinder and cut from the finished shell, not from the boss before it is
+    unioned -- which is where the first draft of this put it, and what the first generator
+    run rejected. OCC's chamfer cannot break the edges of an end face once a boss on that
+    face carries a flat: lip + full cylinder chamfers, lip + flatted cylinder is
+    StdFail_NotDone in every construction order tried, down to a ten-line reproduction. On
+    max and lite that never shows, because their bosses stand on the cavity floor. On the
+    open frame the boss foot IS the resting face, the deburr pass below is all-or-nothing
+    per face, and it quietly dropped the edge-break from the whole face.
+
+    So the deburr runs first, on the full-round bosses it has always handled, and the
+    keep-outs come out afterwards by boolean -- the same answer _lip_break_cut and
+    _recess_mouth_ease already give to the same OCC limit. `foot` > 0 (open frame only)
+    grows each keep-out by that much at the resting face and tapers it back at 45 degrees,
+    so the new flat gets the break every other edge of that face has.
+
+    Every cut face is a plane: square-cornered part outlines against the original cylinder,
+    nothing faceted for a CAM seat to choke on."""
+    fouls = [g for kp in _boss_fouls(x, y)
+             for g in (kp.geoms if kp.geom_type == "MultiPolygon" else [kp])]
+    if not fouls:
+        return None
+    # Upward the tool overshoots into the board recess, which is air. Downward it may only
+    # overshoot on the open frame: anywhere else `floor` is the cavity FLOOR, and a tool that
+    # started below it would mill a 0.02 mm pocket into the floor under every scallop (it
+    # did, on the first build of this -- 0.18 mm3 the lite shell had no reason to lose).
+    z0 = floor - (_SCALLOP_FAT if floor == 0 else 0.0)
+    dz = floor + cavity + _SCALLOP_FAT - z0
+    fat = (cq.Workplane("XY").workplane(offset=z0).moveTo(wx(x), wy(y))
+             .circle(boss_r + _SCALLOP_FAT).extrude(dz))
+    island = fat
+    for g in fouls:
+        island = island.cut(_poly_solid(g, z0 - 0.01, dz + 0.02))
+    island = _axis_piece(island, x, y, floor + cavity / 2)
+    tool = fat.cut(island)
+    if foot > 0:
+        for g in fouls:
+            grown = g.buffer(foot, join_style=2)
+            xy = [(wx(px), wy(py)) for px, py in list(grown.exterior.coords)[:-1]]
+            wedge = (cq.Workplane("XY").workplane(offset=floor).polyline(xy).close()
+                       .extrude(foot, taper=45))
+            wedge = wedge.union(_poly_solid(grown, z0, floor - z0))    # ...and on down past the face
+            tool = tool.union(wedge.intersect(fat))
+    return tool
 
 def _maker_text(txt, lx, cy, capH, fontpath):
     """Readable all-caps engraving text: LEFT edge at x=lx, vertically centered at y=cy, cap height ~capH.
@@ -466,17 +517,6 @@ def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pill
         if lip_break > 0:                                   # convex top-edge break that FOLLOWS the boss circle;
             try: b = b.faces(">Z").chamfer(lip_break)       # chamfer the bare cylinder BEFORE the union (OCC won't
             except Exception: pass                          # chamfer the merged internal tops, but a lone cylinder is fine)
-        # SCALLOP THE MOUNT BOSSES. fit_rules has always described a boss as a disc cut back
-        # BOSS_CLR from every part that fouls it (boss_island); the brace reliefs and check [4]
-        # both use that -- and this loop unioned the bare cylinder, so the cut never reached
-        # the metal (see fit_rules.boss_fouls for the measured overlaps). Cut the SAME keep-outs
-        # here, as prisms: square-cornered part outlines, so the result is planes plus the
-        # original cylinder -- still analytic, nothing faceted for a CAM seat to choke on.
-        if (x, y) in _MOUNT_XY:
-            for _kp in _boss_fouls(x, y):
-                for _g in (_kp.geoms if _kp.geom_type == "MultiPolygon" else [_kp]):
-                    b = b.cut(_poly_solid(_g, floor - 0.01, cavity + 0.02))
-            b = _axis_piece(b, x, y, floor + cavity / 2)
         res = res.union(b)
     # cap-gap ribs (full-cavity walls; also prop the board along the corridor)
     if ribs:
@@ -582,6 +622,15 @@ def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pill
                 res = res.faces(sel).edges().chamfer(EDGE_BREAK)
             except Exception as e:
                 print(f"  [deburr] faces('{sel}') skipped: {type(e).__name__}")
+    # SCALLOP THE MOUNT BOSSES. fit_rules has always described a boss as a disc cut back
+    # BOSS_CLR from every part that fouls it (boss_island); the brace reliefs and check [8]
+    # both use that -- and the boss loop above unions the bare cylinder, so until 2026-11 the
+    # cut never reached the metal (fit_rules.boss_fouls has the measured overlaps). After the
+    # deburr on purpose: see _boss_scallop_tool.
+    for mx, my in mounts:
+        _tool = _boss_scallop_tool(mx, my, floor, cavity, foot=EDGE_BREAK if floor == 0 else 0.0)
+        if _tool is not None:
+            res = res.cut(_tool)
     # rear MEDALLION (Z9F, replaced the engraved maker's mark 2026-07-31): the coin. Cut
     # AFTER the deburr, deliberately: the 0.1 edge-break must never see the crest edges --
     # on a 0.30 letter stroke it would eat two-thirds of the lap face, and walking OCC
