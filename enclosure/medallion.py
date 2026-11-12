@@ -168,6 +168,50 @@ def _parts(g):
     return list(g.geoms) if g.geom_type.startswith("Multi") else ([] if g.is_empty else [g])
 
 
+def _polys(g):
+    """Every Polygon in g, whatever a boolean wrapped it in (a clip can hand back a
+    GeometryCollection with stray lines and points in it)."""
+    if g.is_empty:
+        return []
+    if g.geom_type == "Polygon":
+        return [g]
+    return [p for q in getattr(g, "geoms", []) for p in _polys(q)]
+
+
+def _partition(disc, reach_main, reach_rest, tol=0.008):
+    """Simplify ONCE and derive the rest -> (main, rest, standing), an exact partition of disc.
+
+    The three families ARE a partition by construction, and simplifying each on its own
+    (which is what this module did) broke it: Douglas-Peucker keeps different vertices on
+    the two sides of a shared border, so every border moved by up to `tol` in three
+    different ways. Measured on the committed max shell, 2026-11-12:
+      * 13 vertical edges shared by FOUR faces -- a deep and a shallow wall leaving one
+        vertex 0..6.7 degrees apart with a wedge of standing titanium between them, i.e.
+        a solid that touches itself. One CAD kernel refused the STEP outright.
+      * 804 upward faces at z+0.02 totalling 0.095 mm2 -- island prisms (extruded 0.02
+        past the field so they fuse) poking into cuts their own outline had strayed over.
+    Here only two outlines are ever simplified, the whole cut and the shallow cut; every
+    other border is a difference of those, so two families that share a border share its
+    coordinates exactly."""
+    cut_all = unary_union([reach_main, reach_rest]).simplify(tol).intersection(disc)
+    cut_all = unary_union([p for p in _polys(cut_all) if p.area > _DUST])
+    rest = Polygon() if reach_rest.is_empty else reach_rest.simplify(tol).intersection(cut_all)
+    # the wall-hug rule geometry() applies before simplifying, re-applied to what the clip made
+    rest = unary_union([p for p in _polys(rest) if not p.buffer(-0.05).is_empty])
+    main = cut_all.difference(rest)
+    # A hairline of the DEEP cut left between the shallow cut's simplified edge and the wall
+    # it used to run along is the shallow cut's own ground (it was rest before either outline
+    # was simplified): hand it back rather than mill a 0.45 slot a few microns wide.
+    hair = [p for p in _polys(main) if p.buffer(-0.02).is_empty]
+    if hair:
+        rest = unary_union([rest] + hair)
+        main = cut_all.difference(rest)
+    main = unary_union(_polys(main))
+    standing = disc.difference(cut_all)
+    standing = unary_union([p for p in _polys(standing) if p.area > _DUST])
+    return main, rest, standing
+
+
 def geometry(text_fn, font_r, font_b):
     """-> dict of FINAL machining geometry (already X-mirrored), all board coords:
 
@@ -231,9 +275,8 @@ def geometry(text_fn, font_r, font_b):
     # them: one un-simplified coin boolean is a 20-minute build. 8 um is invisible
     # against the shop's +-0.05 and none of this is fit-critical geometry (the
     # fit_rules no-simplify law protects BOSS clearances, which live elsewhere).
-    reach_main = reach_main.simplify(0.008)
-    reach_rest = reach_rest.simplify(0.008)
-    standing = standing.simplify(0.008)
+    # The simplification must not be done family by family: see _partition().
+    reach_main, reach_rest, standing = _partition(disc, reach_main, reach_rest)
 
     # THE AUDIT: no detached standing island below MIN_ISLAND, anywhere, ever.
     small = [p for p in _parts(standing)
