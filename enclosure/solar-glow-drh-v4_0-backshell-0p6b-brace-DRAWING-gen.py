@@ -45,13 +45,18 @@ _MCY = sum(_fr.fin_band()) / 2.0                  # medallion centre = the clear
 
 # Shared geometry, ONE home each: board rect, board thickness, boss radii and the back
 # border come from fit_rules (this sheet held its own literals for them until 2026-08-07).
-# R (card corner radius) and the lip scalars shown in Section A-A stay local drawing
-# annotation, as before; the lip is per-band from the board in fit_rules and note 8 tells
-# the prose story.
+# R (card corner radius) stays local drawing annotation, as before.
 W, H, R = _fr.W, _fr.H, 3.0
 board   = _fr.BOARD_TH                       # 0.60
-lip_W,lip_N,lip_S,lip_E,lip_Ew = 2.5,2.0,2.0,1.0,2.5
-lip_w   = lip_W                              # WEST lip shown in Section A-A
+# THE LIP IS READ FROM fit_rules TOO, as of 2026-11-12 -- it was the last thing on this sheet
+# still typed, as five scalars (W 2.5 / N 2.0 / S 2.0 / E 1.0 / E-wide 2.5) plus a note in
+# prose, and the prose had gone wrong in every clause that named a number or a part: "EAST
+# 1.0" against a lip that is 1.25 the whole length of the card, "WIDENING TO 2.5 AT THE SOUTH
+# END" against a single east band, and "C7 (x49.55 ...)" against a board with no C7. Four of
+# the five scalars were read by nothing. What is left is the one Section A-A draws: the west
+# lip where no part narrows it -- the widest row of fit_rules.lip_as_cut("W") -- and the
+# note is built from that same function for all four edges (_lip_note, below).
+lip_w   = max(_w for _lo, _hi, _w, _who in _fr.lip_as_cut("W"))      # 2.5 today
 bbw     = _fr.BACK_BORDER                    # SYMMETRIC exterior back-border width (4 sides)
 boss_r, pilot_r, cbore, ease = _fr.BOSS_R, _fr.PILOT_R, 3.0, 0.10
 lb = 0.10                                    # light interior edge-breaks (felt, not seen), 45deg
@@ -73,6 +78,170 @@ INK="#111111"; GRY="#9a9a9a"; HATCH="#e8e8e8"
 # plain checkout could not regenerate the sheet -- same fix as the backshell generator.
 OUT = _o.environ.get("OUT_DIR") or _o.path.dirname(_o.path.abspath(__file__))
 _o.makedirs(OUT, exist_ok=True)
+
+
+# ---- THE LIP NOTE: every number and every name computed (2026-11-12) --------------------
+# fit_rules.lip_as_cut() is the lip the shell is cut with: the per-band widths, each with
+# what limits it read off the board by the loop that sized it, and with every stretch a
+# tool-reach relief removes reported as what is LEFT there -- nothing, beside all four
+# supercaps. This turns those rows into the sentence. It deliberately does not recite
+# fit_rules.lip_bands(): that table still lists 0.70 / 0.72 mm bands under the caps, and
+# they are the cut's input, not its result (sectioned on the committed STLs: the board edge
+# is bare there, on all three variants). The old note read "... AND C7 (x49.55, THE ONE
+# EAST-EDGE PART LEFT ...)" and was true of a board three months gone; this one names what
+# fit_rules names, the way the boss-flat callout does.
+import io as _io, math as _math, re as _re          # noqa: E402
+_EDGE_WORDS = (("W", "WEST", "y"), ("E", "EAST", "y"), ("S", "SOUTH", "x"), ("N", "NORTH", "x"))
+
+
+def _who(names):
+    """Limiters as the note prints them: the coil first, then refdes in reading order; a
+    crowd is counted, not listed (the boss-flat callout's rule)."""
+    def _nat(r):
+        m = _re.match(r"(\D+)(\d+)", r)
+        return (m.group(1), int(m.group(2))) if m else (r, 0)
+    refs = sorted((n for n in names if n != _fr.COIL_REF), key=_nat)
+    refs = refs if len(refs) <= 4 else [f"{len(refs)} PARTS"]
+    return ", ".join([n for n in names if n == _fr.COIL_REF][:1] + refs)
+
+
+def _stretch(lo, hi):
+    """lo..hi to 0.1 mm, rounded INWARD, so what is printed is true of every point in it."""
+    return f"{_math.ceil(lo * 10 - 1e-6) / 10:.1f}–{_math.floor(hi * 10 + 1e-6) / 10:.1f}"
+
+
+def _lip_note():
+    relieved = {r for r, _p in _fr.lip_relieved()}       # the parts the tool-reach relief took the lip from
+    edges, coil, cleared, tooled = [], False, False, False
+    for e, word, axis in _EDGE_WORDS:
+        rows = _fr.lip_as_cut(e)
+        top = max(w for _lo, _hi, w, _n in rows)
+        named, runs = [], []
+        for lo, hi, w, who in rows:
+            if w < top and hi - lo < 0.6:
+                continue            # a sliver between a relief and the next 0.5 station: the STEP has it, a sentence need not
+            coil |= _fr.COIL_REF in who
+            tooled |= bool(relieved.intersection(who))
+            cleared |= any(n != _fr.COIL_REF and n not in relieved for n in who)
+            if w == top:
+                named += [n for n in who if n not in named]
+                continue
+            label = "NONE" if w == 0 else f"{w:.2f}"
+            where = f"{axis}{_stretch(lo, hi)}" + (f" ({_who(who)})" if who else "")
+            if runs and runs[-1][0] == label:
+                runs[-1][1].append(where)
+            else:
+                runs.append((label, [where]))
+        s = f"{word} {top:.2f}" + (" FULL LENGTH" if len(rows) == 1 else "") \
+            + (f" ({_who(named)})" if named else "")
+        if runs:
+            s += "; " + ", ".join(f"{label} " + ", ".join(ws) for label, ws in runs)
+        edges.append(s)
+    # the rules behind the brackets, each stated only if a row above actually uses it
+    rule = ""
+    if cleared or tooled:
+        rule = "A BAND STOPS " + ", OR ".join(
+            ([f"{_fr.LIP_CLR:.2f} SHORT OF ITS PART"] if cleared else []) +
+            ([f"{_fr.LIP_CLR + _fr.TOOL_R:.2f} WHERE THE \u00d8{2 * _fr.TOOL_R:.1f} TOOL COULD NOT "
+              f"CLEAR IT"] if tooled else []))
+    if coil:
+        rule += (", AND " if rule else "THE LIP STOPS ") + \
+                (f"{_fr.COIL_CLR:.2f} SHORT OF {_fr.COIL_REF} COPPER (GROUNDED METAL OVER THE COIL "
+                 f"WOULD DETUNE IT)")
+    return " ".join(
+        ["FRONT SUPPORT LIP IS CUT PER BAND TO CLEAR B-SIDE PARTS (SECTION A-A: THE WEST LIP "
+         "AT FULL WIDTH). WIDTHS FROM THE BOARD EDGE, POSITIONS IN BOARD x/y, LIMITER IN "
+         "BRACKETS:"]
+        + [s + "." for s in edges]
+        + ([rule + "."] if rule else [])
+        + [f"STEPS BLEND AT R{_fr.TOOL_R:.2f}."])
+
+
+# ---- THE NOTES BLOCK: measured, wrapped, and refused if it does not fit (2026-11-12) ----
+# The block drew one ax.text() per typed line and wrapped nothing, so a note was exactly as
+# long as its sentence. Three of them ran through the title block and off the sheet on every
+# committed drawing -- note 5 ran to x 598 on a 420 mm sheet, cut off mid-word at the border
+# -- and nothing objected, because nothing measured. Each line is now measured before it is
+# placed and broken at the last word that fits; if the block cannot be made to fit, the
+# generator stops rather than draw over the border.
+#
+# MEASURED WITH THE RENDERERS THE SHEET IS SAVED THROUGH, not counted in characters and not
+# estimated from one of them: the PNG's Agg (hinted, at the PNG's own dpi) and the PDF's
+# (unhinted) set the same string up to 1% apart, in either direction. A line has to fit in
+# both files, so its width is the larger of the two.
+from matplotlib.backends.backend_agg import RendererAgg as _RAgg                    # noqa: E402
+from matplotlib.backends.backend_pdf import PdfFile as _PdfFile, RendererPdf as _RPdf   # noqa: E402
+from matplotlib.font_manager import FontProperties as _FontProps                   # noqa: E402
+PNG_DPI   = 150
+_AGG      = _RAgg(8, 8, PNG_DPI)
+_PDF      = _RPdf(_PdfFile(_io.BytesIO()), 72, 297 / 25.4 * 72, 420 / 25.4 * 72)
+TITLE_BLK = (288, 12, 120, 46)               # x, y, w, h -- the notes' right-hand neighbour
+NOTE_FS   = 5.85
+NOTE_X    = 20.0
+NOTE_XR   = TITLE_BLK[0] - 3.0               # 285: a 3 mm gutter short of the title block
+NOTE_YB   = 11.48                            # lowest baseline -- where the old block's twelfth
+                                             # line sat, 1 mm of paper above the inner border
+# Wrapped, the max sheet's eleven notes take seventeen lines where twelve were drawn, and
+# the old block was already full. The room comes from three places, none of them the type
+# size: the CRITICAL DIMENSIONS table and the NOTES heading move up 5.5 into the empty band
+# under the plan (2.1 clear of the "52.70" dimension above it, measured), the two gaps
+# around the heading close by 1.9, and the pitch goes 3.32 -> 2.74 (133% of the 2.06 mm
+# type). All three sheets use the same positions, so they still read as one family.
+CRIT_Y    = 83.5                             # CRITICAL DIMENSIONS heading (was 78)
+NOTES_Y   = 59.4                             # NOTES heading (was 52.5)
+NOTE_Y1   = 55.4                             # first note's baseline (was 48.0)
+NOTE_PITCH, NOTE_PITCH_MIN = 2.74, 2.50      # preferred; the floor below which lines crowd
+NOTE_INDENT = "    "
+
+
+def _text_mm(s, fs):
+    """Width of `s` at `fs` pt, in sheet mm, in whichever of the two saved files draws it wider."""
+    prop = _FontProps(size=fs)
+    return max(_AGG.get_text_width_height_descent(s, prop, ismath=False)[0] / PNG_DPI,
+               _PDF.get_text_width_height_descent(s, prop, ismath=False)[0] / 72.0) * 25.4
+
+
+def _wrap(para, lead, width, fs):
+    """One paragraph -> the lines it takes inside `width` mm. `lead` opens the first line
+    (the note's number, or the indent of a continuation paragraph); later lines hang on
+    NOTE_INDENT. Breaks only at spaces and keeps the doubled spaces the notes use as
+    separators, so a line that did not need breaking is drawn exactly as it was typed."""
+    lines, cur, fresh = [], lead, True
+    for tok in _re.findall(r"\S+\s*", para):
+        if fresh or _text_mm((cur + tok).rstrip(), fs) <= width:
+            cur, fresh = cur + tok, False
+        else:
+            lines.append(cur.rstrip())
+            cur = NOTE_INDENT + tok
+    return lines + [cur.rstrip()]
+
+
+def _set_notes(vname, notes):
+    """([line...], pitch) for the whole block, or SystemExit -- never a block that overruns.
+
+    Two ways not to fit, and each is named: a single word wider than the block (nothing to
+    break at), or more lines than the block holds at NOTE_PITCH_MIN. Neither is recoverable
+    by drawing anyway; a note that leaves the sheet is a note a shop does not read."""
+    width, lines, per = NOTE_XR - NOTE_X, [], []
+    for i, (key, paras) in enumerate(notes):
+        mine = []
+        for j, para in enumerate(paras):
+            mine += _wrap(para, f"{i + 1}. " if j == 0 else NOTE_INDENT, width, NOTE_FS)
+        wide = [(ln, _text_mm(ln, NOTE_FS)) for ln in mine if _text_mm(ln, NOTE_FS) > width]
+        if wide:
+            raise SystemExit(f"[{vname}] note {i + 1} ('{key}') has a line {wide[0][1]:.1f} mm "
+                             f"wide that cannot be broken to fit the {width:.0f} mm notes "
+                             f"block: {wide[0][0][:60]!r}")
+        lines += mine
+        per.append(f"{i + 1}:{len(mine)}")
+    pitch = min(NOTE_PITCH, (NOTE_Y1 - NOTE_YB) / max(1, len(lines) - 1))
+    if pitch < NOTE_PITCH_MIN - 1e-9:
+        raise SystemExit(f"[{vname}] the notes block needs {len(lines)} lines ({' '.join(per)} "
+                         f"per note) and holds {int((NOTE_Y1 - NOTE_YB) / NOTE_PITCH_MIN) + 1} "
+                         f"at the {NOTE_PITCH_MIN} mm minimum pitch between y{NOTE_Y1} and "
+                         f"y{NOTE_YB} -- shorten a note or re-budget the block; it will not "
+                         f"be drawn past the border")
+    return lines, pitch
 
 
 def sheet(vname, v):
@@ -137,7 +306,7 @@ def sheet(vname, v):
     else:
         notes.append(("floor", ["NO FLOOR - OPEN FRAME. THE BACK OF EVERY B-SIDE COMPONENT FACES THE TABLE; THE FRAME'S RESTING PLANE (BOTTOM FACE) CARRIES THE ASSEMBLY.",
                                 f"DEPTH {cavity:.2f} = TALLEST B-SIDE PART {cavity - 2*_fr.CAP_AIR:.2f} + 2×{_fr.CAP_AIR:.2f} RESTING CLEARANCE (fit_rules.VARIANTS: resting-clearance-limited)."]))
-    notes.append(("lip", ["FRONT SUPPORT LIP IS ASYMMETRIC (SECTION A-A): WEST 2.5 / NORTH 2.0 / SOUTH 2.0 FOR PCB RIGIDITY; EAST 1.0 CLEARING THE JP1/TP1 PADS, THE NFC COIL (A GROUNDED LIP WOULD DETUNE IT), AND C7 (x49.55, THE ONE EAST-EDGE PART LEFT AFTER v4 REMOVED THE Q1/U4/R7/R9 CLAMP CLUSTER + D9/D10/D11); WIDENING TO 2.5 ONLY AT THE SOUTH END (y0-10, CLEAR OF ALL)." + (" THE EXTERIOR BACK BORDER (PLAN) IS INDEPENDENT AND UNIFORM %.1f ON ALL 4 SIDES." % bbw if border > 0 else " NO EXTERIOR BACK BORDER — THE OPEN FRAME HAS NO BACK FACE.")]))
+    notes.append(("lip", [_lip_note() + (" THE EXTERIOR BACK BORDER (PLAN) IS INDEPENDENT AND UNIFORM %.1f ON ALL 4 SIDES." % bbw if border > 0 else " NO EXTERIOR BACK BORDER — THE OPEN FRAME HAS NO BACK FACE.")]))
     if has_brace:
         notes.append(("ribs", ["NO INTERNAL RIBS OR SUPPORT POSTS: THE RESIN BRACE (SEPARATE PART) CARRIES CENTER SUPPORT. A PCB LAYOUT CHANGE = A BRACE REPRINT, NOT A SHELL RE-MACHINE."]))
     else:
@@ -408,7 +577,7 @@ def sheet(vname, v):
     ax.text(BX-92,BY-25,"DETAIL B   (corner boss)   13:1",fontsize=8.5,fontweight="bold",color=INK)
 
     # ===================== CRITICAL DIMS + NOTES =====================
-    ax.text(20,78,"CRITICAL DIMENSIONS  —  C1 & C3 TOLERANCED ±0.05 (MARKED ON VIEWS); ALL OTHER FEATURES PER ISO 2768-1 (MEDIUM)",fontsize=7.4,fontweight="bold",color=INK)
+    ax.text(NOTE_X,CRIT_Y,"CRITICAL DIMENSIONS  —  C1 & C3 TOLERANCED ±0.05 (MARKED ON VIEWS); ALL OTHER FEATURES PER ISO 2768-1 (MEDIUM)",fontsize=7.4,fontweight="bold",color=INK)
     ct=[["C1",
          "Cavity depth  (boss-top plane → cavity floor)" if not open_back else
          "Frame depth  (PCB-rest plane → resting plane; OPEN FRAME)",
@@ -417,18 +586,18 @@ def sheet(vname, v):
         ["C3",f"8× mounting holes  (x {_mx[-1]-_mx[0]:.2f}; y rows "
               f"{'/'.join(f'{v_:g}' for v_ in _my)})","±0.05  (linear)"],
         ["C4","Mounting holes — tapped, thru, from back","M2   /   Ø1.6 drill"]]
-    yy=72.5
+    yy=CRIT_Y-5.5
     for r in ct:
-        ax.text(20,yy,r[0],fontsize=6.7,fontweight="bold",color=INK)
+        ax.text(NOTE_X,yy,r[0],fontsize=6.7,fontweight="bold",color=INK)
         ax.text(28,yy,r[1],fontsize=6.5,color=INK); ax.text(120,yy,r[2],fontsize=6.5,color=INK); yy-=4.2
-    ax.text(20,52.5,"NOTES",fontsize=7.4,fontweight="bold",color=INK)
-    yy=48.0
-    for _i,(_k,_lines) in enumerate(notes):
-        for _j,_ln in enumerate(_lines):
-            ax.text(20,yy,(f"{_i+1}. {_ln}" if _j==0 else f"    {_ln}"),fontsize=5.85,color=INK); yy-=3.32
+    ax.text(NOTE_X,NOTES_Y,"NOTES",fontsize=7.4,fontweight="bold",color=INK)
+    # every line measured and wrapped, the block refused if it will not fit -- see _set_notes
+    _nlines, _npitch = _set_notes(vname, notes)
+    for _n, _ln in enumerate(_nlines):
+        ax.text(NOTE_X, NOTE_Y1 - _n * _npitch, _ln, fontsize=NOTE_FS, color=INK)
 
     # ===================== TITLE BLOCK =====================
-    tb_x,tb_y,tb_w,tb_h=288,12,120,46
+    tb_x,tb_y,tb_w,tb_h=TITLE_BLK
     ax.add_patch(Rectangle((tb_x,tb_y),tb_w,tb_h,fill=False,ec=INK,lw=0.9))
     for yl in (tb_y+34,tb_y+24,tb_y+15,tb_y+8): ax.plot([tb_x,tb_x+tb_w],[yl,yl],lw=0.4,color=INK)
     ax.plot([tb_x+60,tb_x+60],[tb_y,tb_y+15],lw=0.4,color=INK)
@@ -478,7 +647,7 @@ def sheet(vname, v):
     # not touch the drawing at all, and a real change would be invisible among them. PNG carries
     # no such stamp and is already reproducible.
     fig.savefig(_o.path.join(OUT,stem+".pdf"),facecolor="white",metadata={"CreationDate": None})
-    fig.savefig(_o.path.join(OUT,stem+".png"),dpi=150,facecolor="white")
+    fig.savefig(_o.path.join(OUT,stem+".png"),dpi=PNG_DPI,facecolor="white")
     plt.close(fig)
     print(f"saved {stem}.pdf/.png  [{vname}] floor={floor:.2f} cavity={cavity:.2f} "
           f"border={border:.2f} overall={overall:.2f} M2x{screw:g} tip-plane z={sf:.2f} | {material}")
