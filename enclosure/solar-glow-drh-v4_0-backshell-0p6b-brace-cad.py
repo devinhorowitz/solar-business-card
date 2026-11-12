@@ -449,6 +449,14 @@ def _maker_text(txt, lx, cy, capH, fontpath):
 
 # ===== build =====
 _LIPSUM = {e: len(lip_bands(e)) for e in ('W', 'E', 'S', 'N')}
+# Edge-break groups build() had to skip. The try/except around the deburr exists so that an
+# EXPERIMENT (ribs, pillars, a relief flag) still returns a solid, and for a shipped variant
+# it was a way to lose geometry without anyone knowing: one line in a build log, and a frame
+# whose drawing goes on calling its edge-breaks MODELED. It happened once -- the open frame,
+# the first time its bosses were scalloped -- and no gate could have seen it: the missing
+# chamfers are 2.9 mm3 of a 997 mm3 part, 0.29 %, inside check_mesh's 0.5 % volume tolerance.
+# build() still only records the skip; the jobs loop below makes it fatal for what ships.
+_DEBURR_SKIPS = []
 
 
 def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pillars=False, locators=False, prog_window=False, glow_marker=True, maker_mark=True, tool_relief=False, fins=True, cavity=cavity, screw_len=None):
@@ -622,6 +630,7 @@ def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pill
                 res = res.faces(sel).edges().chamfer(EDGE_BREAK)
             except Exception as e:
                 print(f"  [deburr] faces('{sel}') skipped: {type(e).__name__}")
+                _DEBURR_SKIPS.append((sel, type(e).__name__))    # the jobs loop refuses these
     # SCALLOP THE MOUNT BOSSES. fit_rules has always described a boss as a disc cut back
     # BOSS_CLR from every part that fouls it (boss_island); the brace reliefs and check [8]
     # both use that -- and the boss loop above unions the bare cylinder, so until 2026-11 the
@@ -727,8 +736,13 @@ print(f"cavity={cavity} general (max; per-variant from fit_rules.VARIANTS); U7 p
       f"deburr: outer rim {edge_ease}, ends {EDGE_BREAK}  reflector-frame {GLOW_WIN[2]-GLOW_WIN[0]:.1f}x{GLOW_WIN[3]-GLOW_WIN[1]:.1f} laser-marked (full floor under it)  "
       f"relief: OFF (concave junctions left sharp -> clean analytic STEP; round tool leaves its radius)")
 for _vn, name, fl, wl, bd, cav_v, sl, mk, fn, gm, mat in jobs:
+    del _DEBURR_SKIPS[:]
     solid = build(floor=fl, wall_th=wl, border_h=bd, cavity=cav_v, screw_len=sl,
                   maker_mark=mk, fins=fn, glow_marker=gm)
+    if _DEBURR_SKIPS:
+        raise SystemExit(f"[{_vn}] the edge-break was skipped on {_DEBURR_SKIPS} -- OCC could "
+                         f"not chamfer that end face, so the solid would ship without breaks "
+                         f"its drawing calls MODELED. Not exporting {name}; see _DEBURR_SKIPS.")
     field = fl + cav_v + board_th                       # per-variant, NOT the module cavity
     foot = (W + 2*edge_fit + 2*wl)
     export_step_stable(solid, OUT + name + ".step")
