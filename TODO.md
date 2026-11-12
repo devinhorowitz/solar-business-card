@@ -770,7 +770,7 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
   - If the frame is changed later: **the engraving reads correctly from the back**, and the brace
     fits the KiCad board export in a rigid placement.
 
-- [ ] **[ENCLOSURE — DRH's calls, from the same measurement] Five numbers left where they are**
+- [ ] **[ENCLOSURE — DRH's calls, from the same measurement] Seven numbers left where they are**
   _(2026-11-12. Each was measured or traced, none was changed. Both numbers are given so the
   judgement can be made without re-deriving them.)_
   - **The ridge east of the ferrite channel is 0.40 mm, under `SLA_WALL` 0.60.** It was 0.65. The
@@ -810,6 +810,13 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
     reaches **0.40 mm into the flat**. Giving the bosses the caps' directional keep-out
     (`part_keepout`) would put the flats 1.48–1.68 mm from the axes, still outside `THREAD_KEEP`
     1.30, at the cost of thread annulus. The brace learned this on 2026-08-23; the shell did not.
+  - **NEW, the same stale 1.00 a third time — the east lip's top is stepped.** `_lip_break_cut` in
+    the shell CAD cuts its 45° lip-break from the SCALAR lip outline (`_lip_void_P`, `lip_E` = 1.0),
+    not from the per-band void. On the east the lip is really 1.25 mm, so the cutter takes the top
+    0.10 mm off its inner 0.25 mm. Ray-cast on the built lite shell: the lip top reads z 1.720 from
+    x 49.55 to 49.80 and reaches the 1.820 seat only at x 49.90. **The board rests on 0.85 mm of
+    east lip, not 1.25.** Not a collision, and the same on the committed and the rebuilt shells —
+    found while listing where else `_CAV`'s 1.00 had survived, not by SolidCraft.
   - **NEW, found by the sectioned gate on its first run — the lip passes 0.097 mm from C24** (and
     0.268 from R16), against `LIP_CLR` 0.30. The per-band lip stands `LIP_CLR` off a part in every
     band that part spans; the Ø2.0 finisher's fill at a band step is not held to it, and check [8]
