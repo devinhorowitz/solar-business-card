@@ -36,12 +36,33 @@ air), the interference_drc.py pattern: per-variant values come EXPLICITLY from t
 table, never from mutated module state, and each variant is measured against ITS
 OWN emitted shell (and brace, where one exists):
 
-  shell   enclosure/<shell_name>.stl                ray-cast
-  brace   enclosure/brace/<brace_name>.stl or None  ray-cast
+  shell   enclosure/<shell_name>.stl                ray-cast, and SECTIONED in plan
+  brace   enclosure/brace/<brace_name>.stl or None  ray-cast, and SECTIONED in plan
   ferrite fit_rules.FER / FER_T / FER_POCKET_DEPTH vs the brace pocket AS EMITTED
   board   fit_rules datums + board_parts (the committed .kicad_pcb)
   screws  fit_rules.MOUNTS / BOSS_R / PILOT_R vs shell material under each mount,
           with the variant's own screw_len from the table
+
+THE PLAN-VIEW SECTIONS ([B] and [F], 2026-11-12) exist because of two failures that
+passed every gate here, both found by an independent measurement of the committed STEPs:
+
+  * all four supercaps sat INSIDE mount bosses, 0.17 to 0.375 mm deep. fit_rules had
+    always described a boss as a disc scalloped clear of whatever fouls it, check [8]
+    gated that polygon, and the shell CAD unioned a plain cylinder. The polygon was
+    clear by construction; the titanium was never looked at.
+  * both braces were 0.20 mm WIDER than the cavities they drop into, over 26 mm of the
+    east wall. The brace was cut from the scalar rectangle fit_rules._CAV, the shell
+    from cavity_void_poly(), and [B] below compared the brace's bounding box to that
+    same rectangle -- so it agreed, every run.
+
+Same shape both times, and the same shape as the MOUNTS incident: one generator used
+the shared definition, the other did not, and the gate checked the shared definition.
+A gate of that kind cannot be fixed by pointing it at a better definition. So these two
+do not read one: they slice the emitted meshes at heights inside the cavity and compare
+the metal that is actually there against the part outlines read from the board, and
+against the brace that is actually there. Each carries a canary -- a synthetic part
+planted in a boss, the brace pushed a millimetre into the wall -- that must go red on
+every run, because a section taken in the wrong frame reads as a clean pass.
 
 Variant policy, stated rather than implied:
   * max / lite -- every check, parameterized (floor, cavity, screw_len, stack).
@@ -58,6 +79,13 @@ WHAT THIS DOES NOT COVER, said plainly so it is not mistaken for total:
     not duplicated here.
   * Nothing about the resin's print tolerance beyond the RSS stack fit_rules.AIR
     already carries.
+  * HANDEDNESS. Every solid here is written in board coordinates (X right, Y down, Z to
+    the card's front), which is a left-handed frame, and every reader in this repo --
+    this one included -- loads them the same way. A mirror-image part therefore passes
+    all of it. Only something that places the solids against a right-handed model of the
+    board (KiCad's own STEP export) can see that; nothing in CI does yet.
+  * The part outlines are board_parts' reading of the .kicad_pcb. An error in THAT
+    reader is shared with the generators and is invisible here too.
 """
 import sys
 from pathlib import Path
@@ -75,6 +103,19 @@ TOL = 0.02            # mesh/quantisation tolerance for an equality assertion
 # cavity walls, and tightening the screws bows the PCB over the coil rather than
 # clamping the sheet. 2x the ledgered 0.05, so a re-spec has room before it trips.
 FER_CRUSH = 0.10
+
+# ---- the plan-view sections ([B], [F]) --------------------------------------------------
+# What the SECTION can resolve, not a design clearance: the shell is tessellated at 0.04 mm
+# and a section inscribes every arc, so two outlines closer than this cannot be told from
+# touching. Deliberately NOT fit_rules.BOSS_CLR / LIP_CLR -- a gate that asked the generator
+# what the clearance should be is the gate this one replaces. The printed table is where the
+# real numbers are read; this only refuses contact.
+SECTION_FLOOR = 0.05
+OVERLAP_EPS = 1e-3    # mm2 of plan overlap that counts as metal inside a body, not noise
+SECTION_GRID = 1e-5   # mm: snap for stitching section segments into closed outlines
+# Heights are fractions of the cavity plus an irrational-looking nudge, so no cut ever lands
+# on a mesh vertex or a horizontal face (floor top, seat, chamfer edge) and degenerates.
+_NUDGE = 0.0137
 
 _ERRORS, _WARNS, _NOTES = [], [], []
 
@@ -139,6 +180,59 @@ def ring_spans(mesh, cx, cy, r, W, H, n=16):
     return out
 
 
+def section(mesh, z, W, H, trimesh):
+    """The material `mesh` has at height z, as shapely geometry in BOARD coordinates.
+
+    mesh_plane() returns loose segments; they are stitched on a snap grid and polygonized,
+    and each resulting face is kept only if the mesh actually contains a point inside it --
+    asked of the mesh itself by ray parity, so nothing here guesses at ring nesting."""
+    import shapely
+    from shapely.affinity import translate
+    from shapely.geometry import Polygon
+    from shapely.ops import polygonize, unary_union
+    segs = trimesh.intersections.mesh_plane(mesh, [0.0, 0.0, 1.0], [0.0, 0.0, z])
+    if len(segs) == 0:
+        return Polygon()
+    net = shapely.union_all(shapely.linestrings(segs[:, :, :2]), grid_size=SECTION_GRID)
+    faces = [f for f in polygonize(net) if f.area > 1e-9]
+    if not faces:
+        return Polygon()
+    probe = np.array([[*f.representative_point().coords[0], z] for f in faces])
+    inside = mesh.contains(probe)
+    return translate(unary_union([f for f, k in zip(faces, inside) if k]), W / 2.0, H / 2.0)
+
+
+def cavity_levels(floor, cavity):
+    """[(label, z)] -- three cuts through the cavity: just under the seat (below the 0.10
+    lip-break, and inside even a bare pad's 0.20 budget), the middle, just above the floor."""
+    seat = floor + cavity
+    return [("under the seat", seat - 0.12 - _NUDGE),
+            ("mid-cavity", floor + cavity / 2.0 + _NUDGE),
+            ("above the floor", floor + 0.08 + _NUDGE)]
+
+
+def deepest(overlap, body):
+    """How far the overlap reaches into `body`, and where -- (depth mm, (x, y)).
+
+    The depth is the largest inset of the body that the overlap still touches, found by
+    bisection. (Measuring the overlap's own vertices against the body's edge reads 0.000
+    for a strip of metal that crosses a part from side to side: every vertex of such a
+    strip lies ON the edge.)"""
+    x0, y0, x1, y1 = body.bounds
+    lo, hi = 0.0, min(x1 - x0, y1 - y0) / 2.0
+    for _ in range(24):
+        mid = (lo + hi) / 2.0
+        core = body.buffer(-mid)
+        if not core.is_empty and core.intersects(overlap):
+            lo = mid
+        else:
+            hi = mid
+    core = body.buffer(-lo * 0.999) if lo > 0 else body
+    at = overlap.intersection(core)
+    at = overlap if at.is_empty else at
+    return lo, at.representative_point().coords[0]
+
+
 def check_variant(vname, v, fr, bp, trimesh):
     """Run every applicable check for one VARIANTS row. Values come EXPLICITLY from
     the table; nothing here reads a module-level geometry constant that could have
@@ -192,6 +286,9 @@ def check_variant(vname, v, fr, bp, trimesh):
             err(f"cavity floor measures {floor_z:.3f}, not {floor} -- every Z below is off by "
                 f"{floor_z - floor:+.3f}")
 
+    # the shell, sliced once: [B] and [F] both read these
+    shell_cuts = [(lbl, z, section(shell, z, W, H, trimesh)) for lbl, z in cavity_levels(floor, cavity)]
+
     # ---- 2. the brace fills the cavity it was cut for --------------------------------
     print("[B] brace vs cavity")
     if brace is None:
@@ -205,17 +302,38 @@ def check_variant(vname, v, fr, bp, trimesh):
             err(f"brace spans z {bz0:.3f}..{bz1:.3f}, not 0..{cavity} -- it does not fill "
                 f"the cavity")
 
-        cav = fr.cavity_rect()
-        cx0, cy0, cx1, cy1 = cav.bounds
-        bb = brace.bounds
-        bx0, by0 = bb[0][0] + W / 2.0, bb[0][1] + H / 2.0
-        bx1, by1 = bb[1][0] + W / 2.0, bb[1][1] + H / 2.0
-        if bx0 >= cx0 - TOL and by0 >= cy0 - TOL and bx1 <= cx1 + TOL and by1 <= cy1 + TOL:
-            ok(f"brace footprint [{bx0:.2f},{by0:.2f}]..[{bx1:.2f},{by1:.2f}] sits inside the "
-               f"cavity [{cx0:.2f},{cy0:.2f}]..[{cx1:.2f},{cy1:.2f}]")
-        else:
-            err(f"brace footprint [{bx0:.2f},{by0:.2f}]..[{bx1:.2f},{by1:.2f}] escapes the "
-                f"cavity [{cx0:.2f},{cy0:.2f}]..[{cx1:.2f},{cy1:.2f}] -- it will not drop in")
+        # THE BRACE AGAINST THE CAVITY THE SHELL ACTUALLY HAS. This used to compare the
+        # brace's bounding box with fit_rules.cavity_rect() -- the rectangle the brace was
+        # cut from -- and so reported "sits inside the cavity" on every run while the
+        # emitted brace overhung the emitted east wall by 0.20 mm (see the docstring).
+        # Now both sides are the artifacts: the same horizontal cut through each.
+        from shapely.affinity import translate
+        worst_gap, pre = None, len(_ERRORS)
+        for lbl, z, metal in shell_cuts:
+            resin = section(brace, z - floor, W, H, trimesh)
+            if resin.is_empty:
+                err(f"brace has no material at z {z - floor:.3f} of its own {cavity} height "
+                    f"({lbl}) -- nothing to compare")
+                continue
+            over = metal.intersection(resin)
+            if over.area > OVERLAP_EPS:
+                x0, y0, x1, y1 = over.bounds
+                err(f"brace and shell occupy the same {over.area:.3f} mm2 {lbl} (z {z:.2f}): "
+                    f"board x {x0:.3f}..{x1:.3f}, y {y0:.2f}..{y1:.2f} -- the brace is "
+                    f"{min(x1 - x0, y1 - y0):.3f} mm too big there and will not drop in")
+            else:
+                gap = metal.distance(resin)
+                worst_gap = gap if worst_gap is None else min(worst_gap, gap)
+            # canary: the same cut, the brace pushed 1 mm east, MUST collide with the wall
+            if metal.intersection(translate(resin, 1.0, 0.0)).area <= OVERLAP_EPS:
+                err(f"SELF-TEST: the brace shifted 1 mm east still clears the shell {lbl} -- "
+                    f"the two sections are not in one frame, so a clean result means nothing")
+        if len(_ERRORS) == pre:
+            bb = brace.bounds
+            ok(f"brace drops into the emitted cavity at all {len(shell_cuts)} "
+               f"levels: no plan overlap with shell metal, closest approach {worst_gap:.3f} mm "
+               f"(brace spans board x {bb[0][0] + W / 2.0:.3f}..{bb[1][0] + W / 2.0:.3f}); "
+               f"canary collides as it must")
 
     # ---- 3. the ferrite: the pocket, the sheet, and the clamp ------------------------
     print("[C] ferrite (FER1) in its pocket")
@@ -368,6 +486,71 @@ def check_variant(vname, v, fr, bp, trimesh):
         else:
             ok(f"{ref}: clear -- no shell material at or above {board_front:.3f} anywhere "
                f"over its {x1-x0:.1f} x {y1-y0:.1f} mm footprint")
+
+    # ---- 6. the shell against every B-side body, in plan -----------------------------
+    # interference_drc.py casts the BRACE against the parts and skips the supercaps (their
+    # height is None by design); check [8] proves fit_rules' polygons clear them. Neither
+    # ever looked at the SHELL's metal -- which is how four cans sat inside eight bosses.
+    # Every body here, the caps included, at every cut that passes through it.
+    print("[F] shell metal vs B-side bodies (sectioned)")
+    from shapely.geometry import box as _box
+    seat = floor + cavity
+    rows, pre = [], len(_ERRORS)
+    for ref, poly, h, src in bp.parts("B"):
+        if h is None and ref.startswith("SC"):
+            h = v["cap_h"]               # the supercaps: None in the table, the cavity is built on them
+        if h is None:
+            err(f"{ref}: no height in part_heights, so where its body ends is unknown -- "
+                f"cannot be checked against the shell")
+            continue
+        hit = None
+        gap = None
+        for lbl, z, metal in shell_cuts:
+            if z <= seat - h:            # this cut passes UNDER the part: nothing of it down here
+                continue
+            over = metal.intersection(poly)
+            if over.area > OVERLAP_EPS:
+                depth, (px, py) = deepest(over, poly)
+                if hit is None or over.area > hit[0]:
+                    hit = (over.area, depth, px, py, lbl, z)
+            else:
+                d = metal.distance(poly)
+                gap = d if gap is None else min(gap, d)
+        if hit is not None:
+            area, depth, px, py, lbl, z = hit
+            err(f"{ref}: {area:.3f} mm2 of shell metal INSIDE its {h:.2f} mm body {lbl} "
+                f"(z {z:.2f}), reaching {depth:.3f} mm in at board ({px:.2f}, {py:.2f})"
+                + (" -- and it is bare copper, so that is a short as well as a crush"
+                   if src == "pads" else ""))
+        elif gap is None:
+            err(f"{ref}: no section passes through its {h:.2f} mm body -- cannot be checked")
+        else:
+            rows.append((gap, ref, h, src))
+            if gap < SECTION_FLOOR:
+                err(f"{ref}: shell metal stands {gap:.3f} mm from its body -- inside the "
+                    f"{SECTION_FLOOR} mm this section can resolve, i.e. contact")
+    if not rows and len(_ERRORS) == pre:
+        err("no B-side bodies came back from board_parts -- nothing was checked")
+    rows.sort()
+    for gap, ref, h, src in rows[:6]:
+        print(f"          {ref:6s} h={h:.2f} {'body' if src == 'model' else 'pads'}  "
+              f"nearest shell metal {gap:.3f} mm")
+    # canary: a 0.3 mm "part" planted in the thread land of each boss -- between the bore
+    # and THREAD_KEEP, the one ring no scallop is ever allowed into -- must read as
+    # metal-inside-a-body. Taken at the cut under the seat, above every spotface.
+    blind = []
+    for mx, my in fr.MOUNTS:
+        r = (fr.PILOT_R + fr.THREAD_KEEP) / 2.0
+        fake = _box(mx - 0.15, my + r - 0.15, mx + 0.15, my + r + 0.15)
+        if shell_cuts[0][2].intersection(fake).area <= OVERLAP_EPS:
+            blind.append((mx, my))
+    if blind:
+        err(f"SELF-TEST: a synthetic part planted in the boss at {blind} reads as CLEAR -- "
+            f"the section does not see the shell there, so every 'clear' above is unproven")
+    if len(_ERRORS) == pre:
+        ok(f"all {len(rows)} B-side bodies clear the shell's metal at every cut through "
+           f"them (tightest {rows[0][1]} at {rows[0][0]:.3f} mm; six tightest above); "
+           f"{len(fr.MOUNTS)} planted canaries all read as collisions")
 
     return len(_ERRORS), len(_WARNS)
 
