@@ -50,7 +50,7 @@ Each fact has exactly one home; everything else points at it rather than restati
 | Back-shell medallion (ring text, monogram, serial №) | `enclosure/medallion.py` — the shell generator and its drawing both import it; bump `SERIAL` there and CI regenerates the STEP/STL/drawing (a kibot trigger since 2026-07-31) |
 | Fabrication panel (PCBWay) | `scripts/panelize.py` — derived from the board on every CI run into `Generated/panel/`; never hand-maintained |
 | README renders | `scripts/render.py` — raytraced from the board/panel on every CI run into `Generated/docs/`; add a target there rather than committing a hand-made image |
-| Enclosure **fit rules** | `enclosure/fit_rules.py` — one home for the brace footprint, the lip bands and the boss scallops; both generators import it and check [8] asserts it |
+| Enclosure **fit rules** | `enclosure/fit_rules.py` — one home for the brace footprint, the lip bands and the boss scallops; both generators import it and check [8] asserts it. That proves the RULES; whether the emitted solids carry them is `scripts/assembly_drc.py`, which slices the STLs (2026-11-12 — a rule one generator never applied passed check [8] for three months) |
 | Enclosure part positions | `enclosure/board_parts.py` — true body ∪ pads, read from the committed `.kicad_pcb` |
 | Enclosure geometry | `enclosure/solar-glow-drh-v4_0-backshell-0p6b-brace-cad.py` (prints the Z-stack; regenerates the STEP) |
 | Assembly views | `enclosure/assembly_render.py` — regenerated from the STLs + the board; not hand-made |
@@ -336,8 +336,16 @@ supercaps; the floor is a **true uniform 1.00 mm** (the old 0.05 mm U7 relief po
 2026-07-28 — U7 is the 0.90 mm DFN-8, not the 1.75 mm SOIC it was sized for); overall height
 **3.55 mm**. **Eight** bosses on the v4 8-hole pattern (four corner, concentric with the r3.0
 fillets, plus four panel-corner), each **scalloped** clear of whatever fouls it while keeping
-≥ 92.3 % of its M2 thread annulus. Retention is **eight M2×3 slotted brass screws**, not a press
+≥ 93.2 % of its M2 thread annulus. Retention is **eight M2×3 slotted brass screws**, not a press
 fit; the head is Ø3.0 and the tip lands **flush** in a Ø3.0 back spotface.
+
+**Measured independently on 2026-11-12, and two things on this page were not true of the parts.**
+The scallops above existed in `fit_rules` and not in the titanium — all four supercaps sat inside
+mount bosses — and both braces were 0.20 mm wider than their cavities. Both are fixed, and
+`scripts/assembly_drc.py` now slices the emitted solids rather than trusting the rules that were
+meant to produce them. A third finding is NOT fixed and blocks any order: **every enclosure
+STEP/STL is the mirror image of the part.** `enclosure/README.md` opens with it; the decision is
+in `TODO.md`.
 
 The electrical gotchas: the screws tie the metal body to board GND, so the enclosed variant
 **drops the edge castellations** (or adds a die-cut Kapton layer) so nothing shorts to the
