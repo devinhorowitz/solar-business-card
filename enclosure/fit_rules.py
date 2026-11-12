@@ -559,13 +559,30 @@ def lip_poly(simplify=True):
     return box(0.0, 0.0, W, H).difference(cavity_void_poly(simplify=simplify))
 
 
+def boss_fouls(mx, my):
+    """The keep-outs a boss at (mx, my) has to be cut back for: every part outline within
+    BOSS_R of the boss axis, grown by BOSS_CLR with square corners.
+
+    ONE home for the scallop, because it had two and they disagreed. boss_island() below
+    subtracted these from its disc, the brace took its reliefs from that island and check
+    [4] gated it -- while the shell CAD unioned a bare `circle(boss_r)` and never made the
+    cut. The polygon was clear of every part by construction; the titanium was not: the
+    committed shells put SC1 0.375 mm inside the two west bosses (SC3 0.305, SC4 0.326,
+    SC2 0.174), found 2026-11-12 by an independent measurement of the STEP. The shell now
+    cuts exactly this list out of each boss cylinder, so what [4] proves about the polygon
+    is true of the metal."""
+    c = Point(mx, my)
+    return [p.buffer(BOSS_CLR, join_style=2) for _r, p, _h, _s in _cached_parts()
+            if p.distance(c) < BOSS_R]
+
+
 def boss_island(mx, my):
     """A boss disc scalloped clear of anything that fouls it."""
     disc = Point(mx, my).buffer(BOSS_R, resolution=64)
-    foul = [p for _r, p, _h, _s in _cached_parts() if p.distance(Point(mx, my)) < BOSS_R]
+    foul = boss_fouls(mx, my)
     if not foul:
         return disc
-    scal = disc.difference(unary_union([p.buffer(BOSS_CLR, join_style=2) for p in foul]))
+    scal = disc.difference(unary_union(foul))
     if scal.geom_type == "MultiPolygon":
         keep = [g for g in scal.geoms if g.contains(Point(mx, my))]
         scal = keep[0] if keep else disc

@@ -296,7 +296,8 @@ def _recess_mouth_ease(wt, c):
 # enclosure/fit_rules.py -- ONE home, shared with the brace generator and asserted by
 # check_consistency [8]. See that module for why they are not four scalars any more.
 from fit_rules import (lip_bands, cavity_void_poly as _cavity_void_poly,
-                       boss_island as _boss_island, LIP_CLR, LIP_MAX, COIL_EAST,
+                       boss_island as _boss_island, boss_fouls as _boss_fouls,
+                       LIP_CLR, LIP_MAX, COIL_EAST,
                        ring_reliefs as _ring_reliefs,
                        BOSS_CLR, THREAD_KEEP, export_step_stable,
                        fin_region as _fin_region, fin_ribs as _fin_ribs,
@@ -339,6 +340,19 @@ def _poly_solid(poly, z0, dz):
     """extrude a simple shapely polygon (board coords) into a CadQuery prism, z0 .. z0+dz."""
     xy = [(wx(x), wy(y)) for x, y in list(poly.exterior.coords)[:-1]]
     return cq.Workplane("XY").workplane(offset=z0).polyline(xy).close().extrude(dz)
+
+_MOUNT_XY = {tuple(m) for m in mounts}
+
+def _axis_piece(wp, x, y, z):
+    """Of the solids a scallop cut can leave, keep the one the boss axis runs through --
+    the rule fit_rules.boss_island() applies to its polygon (a crumb the cut detaches is
+    not a boss). A cut that leaves one solid, the normal case, is returned untouched."""
+    sols = wp.solids().vals()
+    if len(sols) <= 1:
+        return wp
+    pt = cq.Vector(wx(x), wy(y), z)
+    keep = [s for s in sols if s.isInside(pt)] or sols[:1]
+    return cq.Workplane("XY").newObject(keep[:1])
 
 def _maker_text(txt, lx, cy, capH, fontpath):
     """Readable all-caps engraving text: LEFT edge at x=lx, vertically centered at y=cy, cap height ~capH.
@@ -438,6 +452,17 @@ def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pill
         if lip_break > 0:                                   # convex top-edge break that FOLLOWS the boss circle;
             try: b = b.faces(">Z").chamfer(lip_break)       # chamfer the bare cylinder BEFORE the union (OCC won't
             except Exception: pass                          # chamfer the merged internal tops, but a lone cylinder is fine)
+        # SCALLOP THE MOUNT BOSSES. fit_rules has always described a boss as a disc cut back
+        # BOSS_CLR from every part that fouls it (boss_island); the brace reliefs and check [4]
+        # both use that -- and this loop unioned the bare cylinder, so the cut never reached
+        # the metal (see fit_rules.boss_fouls for the measured overlaps). Cut the SAME keep-outs
+        # here, as prisms: square-cornered part outlines, so the result is planes plus the
+        # original cylinder -- still analytic, nothing faceted for a CAM seat to choke on.
+        if (x, y) in _MOUNT_XY:
+            for _kp in _boss_fouls(x, y):
+                for _g in (_kp.geoms if _kp.geom_type == "MultiPolygon" else [_kp]):
+                    b = b.cut(_poly_solid(_g, floor - 0.01, cavity + 0.02))
+            b = _axis_piece(b, x, y, floor + cavity / 2)
         res = res.union(b)
     # cap-gap ribs (full-cavity walls; also prop the board along the corridor)
     if ribs:
