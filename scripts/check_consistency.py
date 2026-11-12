@@ -516,6 +516,12 @@ def check_enclosure_fit():
             bad += 1
 
     # 4. No part inside a boss, and the scallops must not eat the tapped thread.
+    #    THIS PROVES THE POLYGON, NOT THE TITANIUM, and for three months that difference
+    #    was four supercaps inside eight bosses: boss_island() was clear of every part by
+    #    construction while the shell CAD unioned a plain cylinder and never cut it. The
+    #    shell cuts fit_rules.boss_fouls() now, and whether the emitted metal really
+    #    carries the scallop is scripts/assembly_drc.py [F], which sections the STL --
+    #    this check cannot know and must not be read as saying so.
     import math
     from shapely.geometry import Point as _P, box as _box
     from shapely.ops import unary_union
@@ -569,9 +575,9 @@ def check_enclosure_fit():
         _covtxt = ", ".join(f"{vn} {n}pc {100*c:.1f}%" for vn, (n, c) in _var_cov.items())
         ok(f"braces [{_covtxt}] above their ledgered coverage floors, every covered part "
            f"keeps a >={fr.SLA_WEB} mm web; {sum(len(fr.lip_bands(e)) for e in 'WESN')} lip "
-           f"bands all stand off their parts and clear the coil; 8 bosses clear, thread "
-           f"intact; guaranteed ring relieved around {len(_reliefs)} part(s), all bodies "
-           f">={fr.LIP_CLR} clear of it")
+           f"bands all stand off their parts and clear the coil; 8 boss islands clear, "
+           f"thread intact (the polygon -- the metal is assembly_drc [F]); guaranteed ring "
+           f"relieved around {len(_reliefs)} part(s), all bodies >={fr.LIP_CLR} clear of it")
 
 
 def check_doc_file_refs():

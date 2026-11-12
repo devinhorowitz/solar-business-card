@@ -77,8 +77,10 @@ def build(vname):
     blockers = [r for r, _p in _fit.blockers(span=span)]
     led_hug = _covered("D2", pieces, span)      # lite steps around the 0.83 LEDs entirely
     u7_cov = _covered("U7", pieces, span); u7_thru = _is_thru("U7", pieces, gap, span)
-    cav_n = _fit.cavity_rect().bounds[3]
-    reach_n = BY1 >= cav_n - WALL_FIT - 0.2     # does the footprint still reach the N wall?
+    # brace_cavity(), not cavity_rect(): the outline the brace may actually fill (the shell's
+    # void less the wall fit). The bare rectangle is what left both braces 0.20 mm wider than
+    # their cavities on the east until 2026-11; nothing on this sheet reads it any more.
+    reach_n = BY1 >= _fit.brace_cavity().bounds[3] - 0.2     # does the footprint still reach the N wall?
 
     fig=plt.figure(figsize=(420/25.4,297/25.4))
     ax=fig.add_axes([0,0,1,1]); ax.set_xlim(0,420); ax.set_ylim(0,297)

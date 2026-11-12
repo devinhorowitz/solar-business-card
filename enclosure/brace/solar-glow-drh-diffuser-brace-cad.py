@@ -135,9 +135,8 @@ from shapely.geometry import box as _bx2                                     # n
 # fit_rules.VARIANTS -- never as from-imported module constants, which freeze at import
 # and would build one variant's geometry under another's name (the consumer-map hazard
 # this refactor exists to dodge). GAP/SPAN_LIMIT are deliberately NOT imported by value.
-from fit_rules import (brace_footprint as _brace_footprint, cavity_rect as _cavity_rect,
-                       blockers as _fit_blockers, SLA_WEB, SLA_WALL,
-                       WALL_FIT as _WCLR, VARIANTS)                           # noqa: E402
+from fit_rules import (brace_footprint as _brace_footprint,
+                       blockers as _fit_blockers, SLA_WEB, SLA_WALL, VARIANTS)   # noqa: E402
 import fit_rules as _fit                                                      # noqa: E402
 
 # The rules live in enclosure/fit_rules.py, shared with the shell generator and asserted by
