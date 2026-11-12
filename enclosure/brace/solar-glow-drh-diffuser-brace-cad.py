@@ -97,7 +97,7 @@ def wy(by): return by - H/2
 # and FB1 too shallow. Import, do not re-declare.
 from part_heights import part_height  # noqa: E402
 
-from board_parts import parts as _board_parts  # noqa: E402
+from board_parts import parts as _board_parts, cell_tab_lands as _cell_tab_lands  # noqa: E402
 
 # Part outlines come from board_parts, which reads the TRUE body (3D model extents, with the
 # model's own (rotate ..)/(offset ..) applied on top of the footprint's (at x y rot)) unioned
@@ -248,7 +248,11 @@ def _build(vname):
     for _g in _pieces:
         ax.add_patch(mp.Polygon(list(_g.exterior.coords), closed=True,
                                 fc="#e8e4d8", ec="#fff", lw=1.5, alpha=0.28))
-    for _tx, _ty, _lb in [(4.3, 17.0, "PV1 N-tab"), (46.5, 17.0, "PV1 P-tab"), (4.3, 71.9, "PV2 N-tab"), (46.5, 71.9, "PV2 P-tab")]:
+    # the cells' solder-tab lands, READ OFF THE BOARD (board_parts.cell_tab_lands). This was a
+    # typed list -- (4.3, 17.0) (46.5, 17.0) (4.3, 71.9) (46.5, 71.9) -- shared, by retyping,
+    # with the brace drawing; the lands are at y 15.75 / 73.15, so both starred the wrong place.
+    for _tr, _tp, _tg in _cell_tab_lands():
+        _tx, _ty, _lb = _tg.centroid.x, _tg.centroid.y, f"{_tr} {_tp[0]}-tab"
         ax.plot(_tx, _ty, marker="*", ms=9, color="#ff5252", zorder=8); ax.text(_tx, _ty+2.0, _lb, color="#ff8a80", ha="center", va="bottom", fontsize=4.2, zorder=8)
     ax.text((BX0+BX1)/2, BY1-0.9, f"WHITE RESIN BRACE [{vname}] ({len(_pieces)} piece(s), computed from the board)", color="#eee", ha="center", fontsize=7, fontweight="bold")
     ax.add_patch(Rectangle((FER[0]-FER_CLR, BY0), FER[2]-FER[0]+2*FER_CLR, BY1-BY0, fc="#2a2140", ec="#7e57c2", lw=0.9, ls=(0, (3, 2)), alpha=0.6))

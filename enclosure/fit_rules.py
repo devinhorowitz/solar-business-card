@@ -204,6 +204,8 @@ MIN_PIECE = 25.0           # smaller than this is print debris, not support
 SINGLE_PIECE = True        # ship one part; see brace_footprint()
 DROPPED_AREA = 0.0         # set by brace_footprint(): support given up to stay single-piece
 DROPPED_COUNT = 0
+DROPPED = []               # ...and the pieces themselves, so a caller can say WHAT was given up
+                           # (the brace drawing: all four solar-cell tab rails, 2026-11-12)
 WALL_FIT = 0.05            # brace-to-cavity-wall contact fit
 
 # ---- shell ----------------------------------------------------------------------------
@@ -359,9 +361,10 @@ def brace_footprint(span=None, keepout=None):
     # loose part in an assembly that must come apart for C9 NFC trim is a thing to lose and a
     # thing to reassemble wrong, so it is dropped by decision, not by accident. Cost is
     # recorded rather than hidden: DROPPED_AREA is what the choice gave up.
-    global DROPPED_AREA, DROPPED_COUNT
+    global DROPPED_AREA, DROPPED_COUNT, DROPPED
     DROPPED_AREA = sum(g.area for g in pieces[1:])
     DROPPED_COUNT = len(pieces) - 1
+    DROPPED = list(pieces[1:])
     return pieces[:1]
 
 
