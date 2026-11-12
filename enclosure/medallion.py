@@ -339,6 +339,11 @@ def geometry(text_fn, font_r, font_b):
     # fit_rules no-simplify law protects BOSS clearances, which live elsewhere).
     # The simplification must not be done family by family: see _partition().
     reach_main, reach_rest, standing = _partition(reach_main, reach_rest, standing)
+    # ...and the disc handed back is the one they tile: the same outline on the same grid.
+    # Left as the analytic circle it disagrees with the islands' rim by the snap itself,
+    # 0.0008 mm2 in 67 slivers -- nothing, and exactly the kind of nothing a caller
+    # measuring "disc area in no family" would be right to ask about.
+    disc = _weld(disc)[0]
 
     # THE AUDIT: no detached standing island below MIN_ISLAND, anywhere, ever.
     small = [p for p in _parts(standing)
