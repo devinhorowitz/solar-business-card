@@ -848,6 +848,28 @@ def fin_ribs(rib_w=FIN_RIB_W):
     return out
 
 
+def crowded_edges(shape):
+    """[(n_faces, (x, y, z), (x, y, z))] -- every edge of an OCC shape that more than two
+    faces use, with its end points. A closed solid's edges belong to exactly two faces each;
+    one that belongs to four is the solid touching itself along a line."""
+    from OCP.BRep import BRep_Tool
+    from OCP.TopAbs import TopAbs_EDGE, TopAbs_FACE
+    from OCP.TopExp import TopExp
+    from OCP.TopoDS import TopoDS
+    from OCP.TopTools import TopTools_IndexedDataMapOfShapeListOfShape
+    uses = TopTools_IndexedDataMapOfShapeListOfShape()
+    TopExp.MapShapesAndAncestors_s(shape, TopAbs_EDGE, TopAbs_FACE, uses)
+    out = []
+    for i in range(1, uses.Extent() + 1):
+        n = uses.FindFromIndex(i).Extent()
+        if n > 2:
+            e = TopoDS.Edge_s(uses.FindKey(i))
+            a = BRep_Tool.Pnt_s(TopExp.FirstVertex_s(e))
+            b = BRep_Tool.Pnt_s(TopExp.LastVertex_s(e))
+            out.append((n, (a.X(), a.Y(), a.Z()), (b.X(), b.Y(), b.Z())))
+    return out
+
+
 def export_step_stable(solid, path, **kw):
     """cq.exporters.export to STEP, but leave the file alone if only the timestamp moved.
 
@@ -870,6 +892,25 @@ def export_step_stable(solid, path, **kw):
         if not _BCA(_shape).IsValid():
             raise SystemExit(f"export_step_stable: OCC BRepCheck says the solid bound for "
                              f"{path} is INVALID -- refusing to export")
+        # MANIFOLD GATE (2026-11-12). BRepCheck is necessary and was not sufficient: it
+        # passed the max shell for three months while that solid carried 13 edges each
+        # shared by FOUR faces -- titanium touching itself along a line, courtesy of the
+        # medallion (medallion._partition has the story). OCC calls that a valid shape.
+        # Another CAD kernel would not import the STEP at all, and a STEP the next seat
+        # cannot open is not a deliverable, whatever this one thinks of it. So the one
+        # choke point every exported solid passes through also asks the cheap question
+        # directly. Measured before it was wired in: 13 on the committed max shell, 4 on
+        # the first draft of the fix, 0 on the other five shipped solids and on the pogo
+        # plate -- red where it should be, silent where it should be, 0.2 s on the largest.
+        _crowd = crowded_edges(_shape)
+        if _crowd:
+            _n, _a, _b = _crowd[0]
+            raise SystemExit(
+                f"export_step_stable: the solid bound for {path} has {len(_crowd)} edge(s) "
+                f"shared by more than two faces (first: {_n} faces along "
+                f"({_a[0]:.3f}, {_a[1]:.3f}, {_a[2]:.3f}) .. ({_b[0]:.3f}, {_b[1]:.3f}, "
+                f"{_b[2]:.3f}), solid coordinates). OCC accepts a solid that touches itself "
+                f"like this; other kernels refuse to open the file -- refusing to export")
     strip = lambda s: _re.sub(r"(?m)^FILE_NAME\('[^']*','[^']*'", "FILE_NAME(", s)
     tmp = path + ".tmp"
     # exportType is REQUIRED here and was the bug that kept this function from ever running:
