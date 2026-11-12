@@ -143,7 +143,8 @@ import fit_rules as _fit                                                      # 
 # The rules live in enclosure/fit_rules.py, shared with the shell generator and asserted by
 # check_consistency [8]. They are NOT restated here: the copy that used to sit in this file
 # is what went stale against the supercaps.
-_cav = _cavity_rect().buffer(-_WCLR, join_style=1, resolution=64)
+_cav = _fit.brace_cavity()          # the shell's actual void less the wall fit -- NOT cavity_rect() alone,
+                                    # which is 0.25 mm wider than the cavity on the east (see fit_rules.brace_cavity)
 
 
 def _build(vname):
