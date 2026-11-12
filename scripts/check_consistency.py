@@ -456,7 +456,20 @@ def check_enclosure_fit():
                 err(f"[{_vn}] brace covers {ref} ({h:.2f} mm) over {a:.2f} mm2, leaving a "
                     f"{web:.2f} mm web -- below the {fr.SLA_WEB} mm printable minimum")
                 bad += 1
-        _cavq = fr.cavity_rect().buffer(-fr.WALL_FIT, join_style=1, resolution=64)
+        # The brace has to drop into the shell's void -- the board rectangle minus the lip
+        # the shell actually cuts (lip_poly), not the scalar rectangle the brace used to be
+        # made from. Until 2026-11 nothing compared the two, and the east lip (1.25 mm, the
+        # coil clamp) had outgrown _CAV's 1.00: both committed braces overhung the cavity
+        # wall by 0.20 mm over ~26 mm and every gate was green. brace_cavity() now builds
+        # the footprint from the void, so this cannot fail TODAY by construction; it is
+        # here for the next time someone gives the brace an outline of its own.
+        _lipq = fr.lip_poly(simplify=False)
+        _over = sum(g.intersection(_lipq).area for g in pieces)
+        if _over > 1e-6:
+            err(f"[{_vn}] brace footprint overlaps the shell's lip by {_over:.3f} mm2 -- "
+                f"the brace would not drop into the cavity")
+            bad += 1
+        _cavq = fr.brace_cavity()
         _cov = sum(g.area for g in pieces) / _cavq.area
         _var_cov[_vn] = (len(pieces), _cov)
         if _vv["coverage_floor"] is not None and _cov < _vv["coverage_floor"] - 1e-9:

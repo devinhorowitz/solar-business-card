@@ -319,13 +319,29 @@ def cavity_rect():
     return c
 
 
+def brace_cavity():
+    """The outline a brace may fill: cavity_rect() cut back to the shell's ACTUAL void, then
+    shrunk by the wall fit.
+
+    cavity_rect() is the scalar rectangle _CAV -- a 1.00 mm east lip -- and the brace used
+    to be cut from it alone. The shell is cut from cavity_void_poly(), whose east lip the
+    coil clamp in _lip_reach() sets at W - COIL_EAST = 1.25 mm. Same module, two answers:
+    the committed braces came out 0.20 mm WIDER than the committed cavities along the whole
+    middle band (east face x49.750 against a wall at x49.550; 9.02 mm3 of overlap on max,
+    5.94 on lite, measured on the STEPs 2026-11-12), and check [8] measured the brace
+    against cavity_rect() again, so it agreed. Wherever the per-band lip is no wider than
+    the ring -- west, north, south today -- the intersection changes nothing."""
+    return (cavity_rect().intersection(cavity_void_poly(simplify=False))
+            .buffer(-WALL_FIT, join_style=1, resolution=64))
+
+
 def brace_footprint(span=None, keepout=None):
     """[polygon] -- the pieces the brace is actually made of, largest first.
 
     `span=None` is the max variant (module SPAN_LIMIT); per-variant callers pass
     variant_span(name). DROPPED_AREA/DROPPED_COUNT describe the LAST call -- a
     per-variant caller should read them immediately, before any other call."""
-    cav = cavity_rect().buffer(-WALL_FIT, join_style=1, resolution=64)
+    cav = brace_cavity()
     _ko = keepout or part_keepout
     keep = unary_union([_ko(_r, p) for _r, p in blockers(span=span)])
     boss = unary_union([Point(b).buffer(RELIEF_R, resolution=64) for b in MOUNTS])
@@ -868,7 +884,7 @@ def export_step_stable(solid, path, **kw):
 if __name__ == "__main__":
     import math
     fp = brace_footprint()
-    cav = cavity_rect().buffer(-WALL_FIT, join_style=1, resolution=64)
+    cav = brace_cavity()
     print(f"brace: {len(fp)} piece(s), {sum(g.area for g in fp):.2f} mm2 "
           f"({100*sum(g.area for g in fp)/cav.area:.1f}% of {cav.area:.0f} mm2 cavity)")
     print(f"  blockers: {', '.join(r for r, _ in blockers())}")
