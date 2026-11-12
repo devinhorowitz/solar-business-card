@@ -823,6 +823,42 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
     asserts band widths, not the opened polygon. C24 ends at y 49.40 and the 2.5 mm band starts at
     y 49.50. It clears the gate's 0.05 mm floor, so the gate prints it and passes.
 
+- [ ] **[ENCLOSURE — DRH's calls, from the 2026-11-12 prose clean-up] Two things the geometry does that its documents said it did not**
+  _(2026-11-12. Found while replacing four pieces of hand-typed text in the enclosure tree with
+  computed ones. Neither is changed — the clean-up touched no geometry, and every STEP and STL
+  rebuilds byte-identical. Both numbers are given.)_
+  - **There is no support lip beside any of the four supercaps.** `fit_rules.lip_bands()` gives
+    the north and south edges a 0.70 / 0.72 mm band under each can, and the commit that moved the
+    caps to 1.00 mm from their edges (2026-08-07, `50f35d0`) counted those bands as a gain: "Lip
+    bands 16 -> 18 -- the retreat opened new seating." They are not in the metal.
+    `cavity_void_poly()` relieves any part the Ø2.0 finisher's fillet would leave lip on, by
+    `LIP_CLR + TOOL_R` = 1.30 mm all round; all four cans trip it at a band-step corner, and 1.30
+    from a can 1.00 off the edge takes the whole strip. Measured on the cut polygon and on the
+    sectioned STLs, committed and rebuilt, all three variants (they agree to 0.01 mm): the board
+    edge is bare over x 4.3–22.9 and 27.7–46.3 on the south and x 4.3–23.0 and 27.8–46.5 on the
+    north — **74.6 of the 101.6 mm of short edge.** The cut lip was 464.2 mm² the hour before
+    that commit and 352.3 mm² after it; it is 366.1 mm² today. On the open (air) frame, whose own
+    sheet says the board "SPANS FREE BETWEEN THE LIP AND THE 8 BOSSES", that is most of both short
+    edges with neither lip nor brace. Options, none taken: accept it; or stop the relief
+    consuming a band it only needed to clear at one corner — e.g. start the narrow band a tool
+    radius before the part instead of at the next 0.5 mm station, so the step's fillet lands
+    clear of the can and nothing is relieved (untested). Either way the sheet follows: the shell
+    drawing's lip note is written from `fit_rules.lip_as_cut()` and says NONE for those
+    stretches, and `scripts/assembly_drc.py` [G] holds that description to the sectioned shell.
+  - **The brace backs none of the four solar-cell solder tabs**, and has not since 2026-08-08.
+    `enclosure/brace/README.md` listed tab backing as the brace's second job until this clean-up;
+    it now says the opposite, with the numbers. Rebuilt from each commit's own board and rules:
+    three of four backed from the 2026-07-29 respin, one after the 2026-08-07 centre
+    consolidation (`scripts/check_mesh.py` records the legs as "traded to the horizontal cap
+    scoots by design"), none after the LDO island went in the next day. The four outboard rails
+    are still computed — 36–66 mm² each, 202.6 mm² together, each behind exactly one tab — and
+    each is cut off from the body by the reliefs round a corner boss and a mid-edge boss, so
+    `fit_rules.SINGLE_PIECE` drops them. Behind each 12 mm² tab land today: 3.0–3.6 mm² of
+    supercap can, 0.6 mm² of shell lip (west pair only), and 6.1–8.5 mm² of nothing. The leg
+    trade was deliberate; whether losing the tab backing with it was, is the question. Options,
+    none taken: accept it; print the four rails as separate pieces (`fit_rules.DROPPED` is
+    exactly them); or bridge each rail to the body past its mid-edge boss.
+
 - [ ] **[SOURCING — lite/air] Pick the thin supercap MPN**
   _(2026-08-07, opened with the three-variant round.)_ `part_heights.SUPERCAP_H_THIN = 1.00`
   is **PROVISIONAL — DRH's working number, no MPN, no datasheet behind it**, unlike every

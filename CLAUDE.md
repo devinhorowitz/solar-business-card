@@ -99,7 +99,8 @@ python3 scripts/interference_drc.py    # 3D interference DRC: brace STL ray-cast
 ```
 ```sh
 python3 scripts/assembly_drc.py        # the assembled stack: Z budget, ferrite, screws, cells --
-                                       # and the SECTIONED shell-vs-parts and brace-vs-shell checks
+                                       # and the SECTIONED shell-vs-parts and brace-vs-shell checks,
+                                       # and [G]: the lip the shell drawing describes vs the metal
 ```
 STEP validity is gated at export time — OCC `BRepCheck` inside `fit_rules.export_step_stable`,
 the one choke point all three CAD generators use — **and since 2026-11-12 so is the thing
@@ -111,7 +112,22 @@ instead of landing. The shell STL carries one ledgered zero-length rim pinch; a 
 (nonzero open length) goes red. Triangle count is deliberately ungated — it is not bit-stable.
 **All three mesh gates read the COMMITTED solids**, so after an enclosure-moving change they are
 red locally until the merge run rebuilds them — build into a scratch `OUT_DIR` (all five
-generators honour it) and point a copy of the tree at that, rather than committing the output.
+generators honour it; the three CAD generators concatenate it, so give it a trailing slash) and
+point a copy of the tree at that, rather than committing the output.
+
+**Drawings** (both `*-DRAWING-gen.py`; matplotlib and shapely only, ~10 s):
+```sh
+OUT_DIR=/tmp/sheets python3 enclosure/solar-glow-drh-v4_0-backshell-0p6b-brace-DRAWING-gen.py
+OUT_DIR=/tmp/sheets python3 enclosure/brace/solar-glow-drh-diffuser-brace-DRAWING-gen.py
+```
+They are reproducible to the byte — with CI's pins, rebuilding `main`'s five sheets gives PDFs and
+PNGs identical to the committed ones — **but only under matplotlib's own rc.** A sandbox can
+export `MATPLOTLIBRC` pointing at one that substitutes a narrower font with hinting off, and then
+a sheet that fits locally overflows in CI with nothing to say so (found 2026-11-12, checking a
+wrap). Pin it for the run:
+`MATPLOTLIBRC=$(python3 -c 'import matplotlib as m, os; print(os.path.join(m.get_data_path(), "matplotlibrc"))')`.
+The shell sheet's notes block is measured, wrapped and **refused** if it will not fit — a note
+too long for the block stops the generator instead of running off the page.
 
 **NFC coil paper tune** (the antenna's L and resonance are re-derived from the routing —
 the one subsystem neither external reviewer can see as a designed object):
@@ -450,6 +466,34 @@ red, the check itself fails.
   by boolean (`_boss_scallop_tool`; on the open frame the cutter carries its own 45° foot), and a
   skipped edge-break on a shipped variant now fails the build (`_DEBURR_SKIPS`). Reach for a
   boolean, not `chamfer()`, when adding a feature that meets an end face.
+- **`fit_rules.lip_bands()` is the INPUT to the lip cut, not the lip. Describe the part with
+  `fit_rules.lip_as_cut()`.** The shell drawing's lip note was the last typed thing on that sheet,
+  and by 2026-11-12 every clause of it that named a number or a part was wrong ("EAST 1.0" against
+  a 1.25 mm lip, a widening that does not exist, and a C7 three months off the board). The obvious
+  fix — recite `lip_bands()` — would have been wrong too: that table gives the north and south edges
+  a 0.70 / 0.72 mm band under each supercap, and `cavity_void_poly()` then relieves all four cans by
+  `LIP_CLR + TOOL_R` = 1.30 mm, which from a can 1.00 mm off the edge takes the whole strip. **There
+  is no lip beside any supercap: 74.6 of the 101.6 mm of short edge, on every shell since the caps
+  moved to 1.00 mm on 2026-08-07** — in a commit whose message counted those bands as "new
+  seating". `lip_as_cut()` is the bands with the reliefs applied, each row naming what limits it
+  (read out of the loop that sizes the band, the `boss_foul_refs()` shape), and it raises rather
+  than return rows the cut polygon contradicts. `scripts/assembly_drc.py` [G] then holds it to the
+  sectioned shell, because a description checked against the module that produced it is the gate
+  the *shared definition* bullet above warns about. Whether the bare edge is acceptable is open in
+  `TODO.md`.
+- **A typed coordinate list is a copy, and the copy is the failure mode — again.** The four
+  solar-cell tab lands were typed into the brace drawing generator and typed again into the brace
+  CAD's pocket map, both 1.25 mm off the board. They are read by `board_parts.cell_tab_lands()`
+  now. What they showed once read: **the brace backs none of the four tabs** (it was three of four
+  at the 2026-07-29 respin, none since 2026-08-08), while `enclosure/brace/README.md` listed tab
+  backing as the brace's second job and the sheet labelled legs that are not there. The rails are
+  still computed and are exactly what `SINGLE_PIECE` drops — `fit_rules.DROPPED`. Also open in
+  `TODO.md`.
+- **A ledger entry is a standing waiver, so a ledger audits itself.** `scripts/interference_drc.py`'s
+  `EDGE_LEDGER` excused seven parts from the cavity rectangle and had excused nothing since
+  2026-08-08: six had been moved inboard and the seventh, C7, was deleted from the board the day
+  after it was ledgered. It is empty now, an entry that escapes nothing or names nothing FAILS the
+  gate, and the audit self-tests on every run. Same rule as `drc_exclusion_key.py --check-dead`.
 - **Glyph outlines come from `scripts/glyphs.py`, once — never fold contours by hand.** Two
   generators set type from the same JetBrains Mono files: `scripts/face_art.py` opens the card
   face's soldermask, and the shell CAD engraves the medallion's ring text, monogram and unit
