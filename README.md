@@ -344,9 +344,10 @@ fit; the head is Ø3.0 and the tip lands **flush** in a Ø3.0 back spotface.
 The scallops above existed in `fit_rules` and not in the titanium — all four supercaps sat inside
 mount bosses — and both braces were 0.20 mm wider than their cavities. Both are fixed, and
 `scripts/assembly_drc.py` now slices the emitted solids rather than trusting the rules that were
-meant to produce them. A third finding is NOT fixed and blocks any order: **every enclosure
-STEP/STL is the mirror image of the part.** `enclosure/README.md` opens with it; the decision is
-in `TODO.md`.
+meant to produce them. A third finding was that **every enclosure STEP/STL was the mirror image of
+the part**: the files are written right-handed since 2026-11-13, and `scripts/handedness_drc.py`
+holds each one to KiCad's own export of the board. What still blocks an order is the
+re-measurement on SolidCraft — `enclosure/README.md` opens with it; the checklist is in `TODO.md`.
 
 The electrical gotchas: the screws tie the metal body to board GND, so the enclosed variant
 **drops the edge castellations** (or adds a die-cut Kapton layer) so nothing shorts to the
