@@ -1007,6 +1007,29 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
       that corner.
 
     Either way, no gate applies a tool radius today: `assembly_drc` measures the corner as modelled.
+  - **NEW 2026-11-13 (found here, checking a sheet sentence) — the brace is NOT relieved for the R1.0
+    the sheet asks for, at four boss-to-wall corners.** Note 5 said "THE RESIN BRACE IS RELIEVED
+    TO CLEAR R1.0 AT THESE CORNERS". Measured: the committed shell STLs were sectioned at three
+    heights, every sharp concave corner was filled the way a radius-R end mill leaves it (an opening
+    of the void by R), and each was intersected with the committed brace STL at the same height.
+    - **As modelled (sharp):** 0.00000 mm² everywhere.
+    - **At R1.0:** four overlaps, the same on max and lite and at every height.
+      - East wall, beside the east mid-span bosses: (49.32, 31.42) and (49.32, 57.47), 0.115 mm²
+        and **0.225 mm deep** into the resin.
+      - West wall: (2.63, 31.65) and (2.63, 57.25), 0.015 mm² and 0.053–0.055 mm deep.
+    - **At R0.5 or R0.25:** none.
+
+    The brace's boss relief is a circle (`RELIEF_R` = `BOSS_R` + `CLR`), and it does not reach the
+    fillet a round tool leaves where a boss meets the wall. `assembly_drc` [B] passes because it
+    measures the sharp model. The sentence is removed from note 5. Not SolidCraft-measured: this
+    repo's instrument only. **Options:**
+    - (a) Relieve the brace at boss-to-wall junctions for `TOOL_R`. The braces change.
+    - (b) Call a Ø1.0 or smaller finisher at those corners on the sheet. A text change, and it
+      clears.
+    - (c) Fit by hand. 0.225 of resin is sandable, but it is a fitting step nobody has written down.
+
+    Same root as the C2 item above: no gate applies the tool radius. A gate that opens the void by
+    `fit_rules.TOOL_R` before `assembly_drc` [B] and [F] would catch both.
   - **NEW 2026-11-13 (SolidCraft, C3) — a 0.4632 gap between the corners of TP3's and TP2's
     pockets, both braces.** It is the only sub-0.60 gap that is not the ferrite channel's. Record
     above, C3. **Options:**
