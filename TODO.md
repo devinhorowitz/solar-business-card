@@ -730,6 +730,55 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
     `scripts/handedness_drc.py` measures the first and third of these on every CI run, in the
     kernel that wrote the files; this is the check in one that did not.
 
+  **MEASURED 2026-11-13 on `9a90a36` — SolidCraft 0.40.1, the files exactly as committed, the board
+  re-exported with `kicad-cli` (49 bodies: the PCB and all 48 modelled parts).** _(The box above is
+  left open on purpose: one expectation below is not met, two observations are new, and ticking it
+  is what releases an order — DRH's call.)_ The instrument was made to fail first: the max brace
+  pushed 0.50 mm into the PCB reads 329.2333 mm³ against 329.2333 by hand from its own face areas.
+  All six STEPs import closed, one solid each, with no warning (max shell 5293.1293 mm³).
+  - Supercap to boss: **met.** No overlap on max / lite / air. Face to face, the eight free-edge
+    flats stand 0.7500 mm off the cans (x 4.345, 4.415, 46.254, 46.406) and the two datum ends
+    0.2500 (y 29.774 on SC2's boss, y 59.150 on SC4's), identical on all three shells.
+  - Brace to shell: **met.** No overlap, max and lite; east face x 49.500 against a wall at 49.550,
+    west face 2.550 against 2.500.
+  - Seat-level faces: **met.** Gone on max, lite and air. (Three faces of 0.000 mm² remain at the
+    seat corners, 0.01 mm tall, as they did before.)
+  - Max shell STEP: **met.** No repair needed; 28,403 edges, none shared by four faces; 9,626
+    faces, 82 under 0.001 mm²; nothing facing up at z +0.02.
+  - Open-frame edge-break: **met.** Each of the ten boss flats carries a 45° face from z 0 to 0.10.
+  - Brace walls: **met but for one.** None under 0.10 mm, and the 0.0068 at (4.411, 49.653) is gone.
+    Under 0.60 the channel's own five, all 0.33 tall and the same on both braces: 0.2650 (x
+    36.435–36.700, y 36.5–39.4), 0.4000 (the east ridge, 25.87 long), and 0.4964 / 0.4980 / 0.5200
+    at x 36.2–36.7. **And one that is not the channel's: 0.4632 mm between two pocket corners, from
+    (26.600, 11.960) to (26.150, 11.850), both braces.** It is a diagonal neck rather than a
+    parallel-faced wall, which may be why rays cast along face normals do not report it.
+  - The hand: **met, every figure.** Board placed by a translation alone, nothing mirrored: max
+    brace one part, L2, 0.0466 mm³; lite brace nothing. Mirrored: 52.8334 mm³ over 33 parts and
+    487.5701 over 28 (max), 52.9328 over 34 and 301.4910 over 28 (lite). From behind the medallion
+    reads DRH, No 001, and SOLAR · NFC · TITANIUM · ATL GA · MMXXVI clockwise. The pogo plate's
+    Ø1.45 bores are at file (−4.9, −20.0) and (55.7, −85.0), and its title and net labels read from
+    above. Hole registration is still 0.000000 mm at all eight mounts on all three shells.
+
+  Two things the list did not ask about, both DRH's to weigh:
+  - **Seven zero-radius internal corners now run the full cavity height** (max and lite; six on
+    air). Two are 90°, at (46.254, 29.774) and (46.406, 59.150): the corners of SC2's and SC4's
+    keep-outs where they cut into the east mid-span bosses. Five are 42–44°, at y 0.050 (x 4.210,
+    22.977, 46.357) and y 88.850 (x 4.283, 46.538), where a relief arc meets the straight recess
+    line; the air frame has no corner at x 22.977. A round tool leaves its own radius in each.
+  - **C24 to the lip reads 0.1574 mm on SolidCraft, where the sectioned gate has 0.097** (KiCad's
+    exported pad solid against the lite shell, at (2.558, 49.310)), and no pad of R16 is within
+    0.30 mm where the gate has 0.268. C24 is inside `LIP_CLR` either way. Why the two numbers
+    differ was not determined.
+
+  Unchanged, and already in the item below: the 0.05 mm press fit (5.89974 mm³, all three shells),
+  L2 (0.04661 mm³), and 0.060 mm over the supercaps with KiCad's seating against 0.10 with parts
+  flush. One instrument note: a clearance run against a twice-split slab of the max shell returned
+  0.1649 mm for SC4 at a point where a probe finds no material; it was discarded in favour of the
+  face-to-face figures above. Not re-measured: the east lip's stepped top, clearance against the
+  un-split max shell, and wall thickness beyond the two surveys used (distances between distinct
+  voids, and opposed axis-aligned faces). The full report and every command are kept outside the
+  tree, beside the first review's.
+
 - [ ] **[ENCLOSURE — DRH's calls, from the same measurement] Seven numbers left where they are** (two since fixed, and marked so)
   _(2026-11-12. Each was measured or traced, none was changed. Both numbers are given so the
   judgement can be made without re-deriving them.)_
