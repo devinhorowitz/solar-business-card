@@ -25,7 +25,7 @@ measured and rejected before this one:
 | Thickness | **0.60 mm** — must stay under `part_heights.SUPERCAP_H` (1.70) so it never stands proud of the caps |
 | Outline | `fit_rules.brace_footprint(span=0.0)` — `span=0` makes **every** part a blocker, so the plate lands only on bare laminate |
 | Cap clearance | **0.10 mm** — `SHIM_CLR`, **PROVISIONAL** (see below) |
-| Area | 976.3 mm², one connected piece |
+| Area | 969.6 mm², one connected piece _(976.3 until 2026-11-12: the outline is the brace footprint, and that lost a 0.25 mm strip along its east edge when it was cut back to the cavity the shell really has — the plate now stops at x 49.50. No datum side moved.)_ |
 | Pad contact | **zero** across all 208 B-side pads |
 
 Because the outline is the complement of the parts, the plate cannot rest on a component —

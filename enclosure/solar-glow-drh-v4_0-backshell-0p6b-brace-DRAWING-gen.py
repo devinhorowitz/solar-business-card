@@ -189,8 +189,35 @@ def sheet(vname, v):
         ax.add_patch(MplPoly(rrect(X(0.05+bbw),Y(0.05+bbw),_afw*S1,_afh*S1,max(cavR-bbw,0.3)*S1),closed=True,fill=False,ec=INK,lw=0.8))
         for lx,ly,rot in [(0.05+bbw/2,44,90),(W-0.05-bbw/2,44,90),(25.4,0.05+bbw/2,0),(25.4,H-0.05-bbw/2,0)]:
             ax.text(X(lx),Y(ly),f"{bbw:.1f}",ha="center",va="center",fontsize=4.8,color="#2f5bd0",rotation=rot)
+    # MOUNT-BOSS FLATS (2026-11-12). Each boss is cut back from whatever fouls it -- today a
+    # supercap, at all eight, by that cap's own free-edge bay clearance (fit_rules.boss_fouls;
+    # 2026-11-13 -- it was a uniform BOSS_CLR, and the callout below printed that constant,
+    # so the sheet now prints the stand-off MEASURED off the island instead). fit_rules has described the boss that way since the
+    # 2026-07-29 respin and the shell CAD never made the cut until now (four cans sat inside
+    # eight bosses in the committed STEPs), so this sheet has never drawn it either. Drawn
+    # from fit_rules.boss_fouls(), the same list the CAD cuts: the stretch of each keep-out's
+    # edge that lies inside the boss. Behind a floor it is a HIDDEN line (the r2.60 circle on
+    # this face is the back annulus, which stays round); on the open frame it is the boss's
+    # visible outline, so the circle gives way to the island itself.
+    from shapely.geometry import Point as _Pt
+    from shapely.ops import unary_union as _uu
+    _flats = {}
     for mx,my in mounts:
-        ax.add_patch(plt.Circle((X(mx),Y(my)),boss_r*S1,fill=False,ec=GRY,lw=0.5))
+        _kp = _fr.boss_fouls(mx, my)
+        if _kp:
+            _seg = _uu(_kp).boundary.intersection(_Pt(mx, my).buffer(boss_r, resolution=64))
+            _flats[(mx, my)] = (_seg, _uu(_kp).distance(_Pt(mx, my)))
+    for mx,my in mounts:
+        if open_back and (mx, my) in _flats:
+            ax.add_patch(MplPoly([(X(px), Y(py)) for px, py in _fr.boss_island(mx, my).exterior.coords],
+                                 closed=True, fill=False, ec=GRY, lw=0.5))
+        else:
+            ax.add_patch(plt.Circle((X(mx),Y(my)),boss_r*S1,fill=False,ec=GRY,lw=0.5))
+        if (mx, my) in _flats:
+            for _ln in getattr(_flats[(mx, my)][0], "geoms", [_flats[(mx, my)][0]]):
+                if _ln.geom_type == "LineString":
+                    ax.plot([X(px) for px, _py in _ln.coords], [Y(py) for _px, py in _ln.coords],
+                            color=INK, lw=0.55, ls="-" if open_back else (0, (2.2, 1.4)))
         ax.add_patch(plt.Circle((X(mx),Y(my)),cbore/2*S1,fill=False,ec=GRY,lw=0.5))
         ax.add_patch(plt.Circle((X(mx),Y(my)),pilot_r*S1,fill=False,ec=INK,lw=0.9))
         ax.plot([X(mx)-1.6*S1,X(mx)+1.6*S1],[Y(my),Y(my)],lw=0.4,color=INK)
@@ -215,6 +242,26 @@ def sheet(vname, v):
             ax.add_patch(plt.Circle((X(25.4), Y(_MCY)), _rr * S1,
                                     fill=False, ec=GRY, lw=0.28, ls=(0, (3, 1.6))))
         leader(X(25.4 + 9.4), Y(_MCY - 9.4), 124, 196, "MEDALLION (REF — REAR ART BLOCK)", fs=5.2)
+
+    if _flats:
+        _m = (_mx[-1], _my[2]) if (_mx[-1], _my[2]) in _flats else next(iter(_flats))
+        _c = _flats[_m][0].centroid
+        _dd = sorted(d for _g, d in _flats.values())
+        # WHICH part is read off the board like the numbers beside it (fit_rules.boss_foul_refs,
+        # the same test boss_fouls() cuts by) -- a typed "SUPERCAP" would be true today and
+        # silently false the day a re-route puts something else beside a boss.
+        _who = sorted({r for _bx, _by in mounts for r in _fr.boss_foul_refs(_bx, _by)})
+        _whotxt = " ".join(_who) if len(_who) <= 4 else f"{len(_who)} PARTS"
+        _cb = sorted(g for _bx, _by in mounts for _r, g in _fr.boss_cutbacks(_bx, _by))
+        _cbtxt = f"{_cb[0]:.2f}" if _cb[-1] - _cb[0] < 0.005 else f"{_cb[0]:.2f}\u2013{_cb[-1]:.2f}"
+        # (141, 213): right of the hole-position leader, which runs diagonally through the
+        # column the other two plan callouts sit in, and clear of Section A-A's own leaders
+        leader(X(_c.x), Y(_c.y), 141, 213,
+               f"{len(_flats)}\u00d7 BOSS FLAT" + (" (HIDDEN \u2014 CAVITY SIDE)" if not open_back else "") +
+               f": EACH \u00d8{2*boss_r:.2f} BOSS CUT BACK {_cbtxt}\n"
+               f"CLEAR OF THE PART IT WOULD FOUL ({_whotxt}), FULL\n"
+               f"DEPTH; FLATS {_dd[0]:.2f}\u2013{_dd[-1]:.2f} FROM THE HOLE AXIS (THREAD KEEP-OUT\n"
+               f"r{_fr.THREAD_KEEP:.2f} UNTOUCHED). MODELED \u2014 STEP GOVERNS.", fs=4.9)
 
     # U7 relief pocket (cavity-floor recess; hidden in back-face view -> dashed).
     # Drawn ONLY if the arithmetic still calls for one -- see the import block above.

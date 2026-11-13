@@ -319,13 +319,29 @@ def cavity_rect():
     return c
 
 
+def brace_cavity():
+    """The outline a brace may fill: cavity_rect() cut back to the shell's ACTUAL void, then
+    shrunk by the wall fit.
+
+    cavity_rect() is the scalar rectangle _CAV -- a 1.00 mm east lip -- and the brace used
+    to be cut from it alone. The shell is cut from cavity_void_poly(), whose east lip the
+    coil clamp in _lip_reach() sets at W - COIL_EAST = 1.25 mm. Same module, two answers:
+    the committed braces came out 0.20 mm WIDER than the committed cavities along the whole
+    middle band (east face x49.750 against a wall at x49.550; 9.02 mm3 of overlap on max,
+    5.94 on lite, measured on the STEPs 2026-11-12), and check [8] measured the brace
+    against cavity_rect() again, so it agreed. Wherever the per-band lip is no wider than
+    the ring -- west, north, south today -- the intersection changes nothing."""
+    return (cavity_rect().intersection(cavity_void_poly(simplify=False))
+            .buffer(-WALL_FIT, join_style=1, resolution=64))
+
+
 def brace_footprint(span=None, keepout=None):
     """[polygon] -- the pieces the brace is actually made of, largest first.
 
     `span=None` is the max variant (module SPAN_LIMIT); per-variant callers pass
     variant_span(name). DROPPED_AREA/DROPPED_COUNT describe the LAST call -- a
     per-variant caller should read them immediately, before any other call."""
-    cav = cavity_rect().buffer(-WALL_FIT, join_style=1, resolution=64)
+    cav = brace_cavity()
     _ko = keepout or part_keepout
     keep = unary_union([_ko(_r, p) for _r, p in blockers(span=span)])
     boss = unary_union([Point(b).buffer(RELIEF_R, resolution=64) for b in MOUNTS])
@@ -405,7 +421,15 @@ def _mk_variants():
             material="Ti Gr5 (reference; brass or 6061 acceptable -- non-magnetic, machinable)",
             shell_name="solar-glow-drh-v4_0-backshell-0p6b-brace-Ti-max",
             brace_name="solar-glow-drh-diffuser-brace",
-            coverage_floor=0.32,   # ledgered min. RESTORED 2026-08-23 evening, 0.30 -> 0.32:
+            coverage_floor=0.32,   # ledgered min. UNCHANGED 2026-11-12 and re-measured: 33.01 %,
+                                   # the same figure as before by coincidence of two moves.
+                                   # The footprint lost the 0.25 mm east strip it never had
+                                   # room for (1320.3 -> 1313.6 mm2, see brace_cavity()), and
+                                   # the denominator is now that same true cavity (3978.9 mm2,
+                                   # was the 3999.5 rectangle) instead of a cavity the shell
+                                   # does not have. Against the OLD denominator this brace
+                                   # would read 32.84 %. DROPPED_AREA 213.1 -> 202.6 mm2.
+                                   # RESTORED 2026-08-23 evening, 0.30 -> 0.32:
                                    # the anisotropic bays put coverage back to 33.01% (it was
                                    # 33.25% before #249 widened them), so the floor returns to
                                    # what it was before the widening rather than staying at the
@@ -437,7 +461,10 @@ def _mk_variants():
             material="Ti Gr5 (thinned floor; the 0.60 is the shop-minimum conversation)",
             shell_name="solar-glow-drh-shell-lite-Ti",
             brace_name="solar-glow-drh-diffuser-brace-lite",
-            coverage_floor=0.25,   # ledgered min. RESTORED 2026-08-23 evening, 0.24 -> 0.25 --
+            coverage_floor=0.25,   # ledgered min. UNCHANGED 2026-11-12: 27.28 % -> 27.25 % of the
+                                   # true cavity (footprint 1090.9 -> 1084.1 mm2, same east
+                                   # strip as max; 27.11 % against the old rectangle).
+                                   # RESTORED 2026-08-23 evening, 0.24 -> 0.25 --
                                    # anisotropy took the lite brace back to 27.28% (27.51% pre-#249).
                                    # RE-LEDGERED 2026-08-23, 0.25 -> 0.24, same cause
                                    # as max: the caps are hand-soldered in this variant too, so they
@@ -545,6 +572,14 @@ def cavity_void_poly(tool_r=TOOL_R, simplify=True):
     if stuck:
         opened = opened.union(unary_union(
             [p.buffer(LIP_CLR + tool_r, join_style=1, resolution=48) for p in stuck]))
+    # The void is BOARD area by definition, and until 2026-11 nothing held it there. A
+    # relief dilated by LIP_CLR + tool_r runs past the board edge wherever a part sits
+    # closer to it than that -- all four supercaps, 1.00 mm off the N and S edges -- so the
+    # polygon reached y-0.30 / y89.20 (21.3 mm2 outside the board). The shell cuts this
+    # polygon from floor to seat: 0.30 mm into the perimeter wall and UNDER the board
+    # recess, four pockets a cutter coming down the cavity cannot reach. "Tool-reachable
+    # by construction" was true in plan and false in section.
+    opened = opened.intersection(box(0.0, 0.0, W, H))
     if opened.geom_type == "MultiPolygon":
         opened = max(opened.geoms, key=lambda g: g.area)
     # simplify is a CAD-export convenience (it keeps OCC from chewing on thousands of
@@ -559,13 +594,72 @@ def lip_poly(simplify=True):
     return box(0.0, 0.0, W, H).difference(cavity_void_poly(simplify=simplify))
 
 
+def boss_fouls(mx, my):
+    """The keep-outs a boss at (mx, my) has to be cut back for: every part outline within
+    BOSS_R of the boss axis, grown by BOSS_CLR with square corners.
+
+    ONE home for the scallop, because it had two and they disagreed. boss_island() below
+    subtracted these from its disc, the brace took its reliefs from that island and check
+    [8] gated it (step 4 of check_enclosure_fit) -- while the shell CAD unioned a bare
+    `circle(boss_r)` and never made the cut. The polygon was clear of every part by
+    construction; the titanium was not: the committed shells put SC1 0.375 mm inside the
+    two west bosses (SC3 0.305, SC4 0.326, SC2 0.174), found 2026-11-12 by an independent
+    measurement of the STEP. The shell now cuts exactly this list out of each boss, so
+    what [8] proves about the polygon is meant to hold for the metal -- and whether it
+    does is measured, not inferred: scripts/assembly_drc.py [F] sections the emitted STL.
+
+    A SUPERCAP IS CUT BACK BY ITS OWN BAY CLEARANCE, not BOSS_CLR (2026-11-13). BOSS_CLR is
+    clearance from a part's NOMINAL outline, right for a machine-placed part; a supercap is
+    hand-reflowed, its body tolerance lands on its two FREE edges (CAP_DATUM above), and all
+    eight cap-to-boss adjacencies on this board are free edges. Cut back 0.20 from nominal,
+    each flat stood 0.40 inside the envelope the brace's own bay already allows for the same
+    can -- titanium the resin had been told the cap might occupy. The flat now uses the same
+    per-edge numbers as the bay (clr_sides via part_keepout, the ONE definition of a part's
+    keep-out), floored at BOSS_CLR, so brace and shell cannot disagree about how big a cap
+    can be. Every flat still clears THREAD_KEEP; check_consistency gates that per boss."""
+    return [_boss_keepout(r, p) for r, p in _boss_foul_parts(mx, my)]
+
+
+def _boss_keepout(ref, poly):
+    """What one fouling part takes out of a boss: BOSS_CLR all round, or -- for a part with a
+    directional bay (the supercaps) -- that bay's own per-edge clearance where it is larger."""
+    if ref in CAP_DATUM:
+        return part_keepout(ref, poly, sides={s: max(BOSS_CLR, v) for s, v in clr_sides(ref).items()})
+    return poly.buffer(BOSS_CLR, join_style=2)
+
+
+def _boss_foul_parts(mx, my):
+    """[(refdes, outline)] -- the parts within BOSS_R of the boss axis at (mx, my). The one
+    statement of what "fouls a boss" means; boss_fouls() and boss_foul_refs() are two views
+    of it, so a sheet that NAMES the parts cannot disagree with the solid that is cut."""
+    c = Point(mx, my)
+    return [(r, p) for r, p, _h, _s in _cached_parts() if p.distance(c) < BOSS_R]
+
+
+def boss_foul_refs(mx, my):
+    """The refdes of the parts boss_fouls(mx, my) cuts the boss back for. For anything that
+    has to say WHICH part in words -- the shell drawing's boss-flat callout -- so the word
+    is read off the board with the numbers beside it and never typed."""
+    return [r for r, _p in _boss_foul_parts(mx, my)]
+
+
+def boss_cutbacks(mx, my):
+    """[(refdes, gap)] -- how far the boss at (mx, my) actually stands off each part it was cut
+    back for, MEASURED from the part's nominal outline to the finished island. For the shell
+    drawing's callout, which printed BOSS_CLR as "the" cut-back and became false the day the
+    supercaps took their own bay clearance: a number read off the geometry cannot go stale
+    against the rule that made it."""
+    isl = boss_island(mx, my)
+    return [(r, p.distance(isl)) for r, p in _boss_foul_parts(mx, my)]
+
+
 def boss_island(mx, my):
     """A boss disc scalloped clear of anything that fouls it."""
     disc = Point(mx, my).buffer(BOSS_R, resolution=64)
-    foul = [p for _r, p, _h, _s in _cached_parts() if p.distance(Point(mx, my)) < BOSS_R]
+    foul = boss_fouls(mx, my)
     if not foul:
         return disc
-    scal = disc.difference(unary_union([p.buffer(BOSS_CLR, join_style=2) for p in foul]))
+    scal = disc.difference(unary_union(foul))
     if scal.geom_type == "MultiPolygon":
         keep = [g for g in scal.geoms if g.contains(Point(mx, my))]
         scal = keep[0] if keep else disc
@@ -807,6 +901,28 @@ def fin_ribs(rib_w=FIN_RIB_W):
     return out
 
 
+def crowded_edges(shape):
+    """[(n_faces, (x, y, z), (x, y, z))] -- every edge of an OCC shape that more than two
+    faces use, with its end points. A closed solid's edges belong to exactly two faces each;
+    one that belongs to four is the solid touching itself along a line."""
+    from OCP.BRep import BRep_Tool
+    from OCP.TopAbs import TopAbs_EDGE, TopAbs_FACE
+    from OCP.TopExp import TopExp
+    from OCP.TopoDS import TopoDS
+    from OCP.TopTools import TopTools_IndexedDataMapOfShapeListOfShape
+    uses = TopTools_IndexedDataMapOfShapeListOfShape()
+    TopExp.MapShapesAndAncestors_s(shape, TopAbs_EDGE, TopAbs_FACE, uses)
+    out = []
+    for i in range(1, uses.Extent() + 1):
+        n = uses.FindFromIndex(i).Extent()
+        if n > 2:
+            e = TopoDS.Edge_s(uses.FindKey(i))
+            a = BRep_Tool.Pnt_s(TopExp.FirstVertex_s(e))
+            b = BRep_Tool.Pnt_s(TopExp.LastVertex_s(e))
+            out.append((n, (a.X(), a.Y(), a.Z()), (b.X(), b.Y(), b.Z())))
+    return out
+
+
 def export_step_stable(solid, path, **kw):
     """cq.exporters.export to STEP, but leave the file alone if only the timestamp moved.
 
@@ -829,6 +945,25 @@ def export_step_stable(solid, path, **kw):
         if not _BCA(_shape).IsValid():
             raise SystemExit(f"export_step_stable: OCC BRepCheck says the solid bound for "
                              f"{path} is INVALID -- refusing to export")
+        # MANIFOLD GATE (2026-11-12). BRepCheck is necessary and was not sufficient: it
+        # passed the max shell for three months while that solid carried 13 edges each
+        # shared by FOUR faces -- titanium touching itself along a line, courtesy of the
+        # medallion (medallion._partition has the story). OCC calls that a valid shape.
+        # Another CAD kernel would not import the STEP at all, and a STEP the next seat
+        # cannot open is not a deliverable, whatever this one thinks of it. So the one
+        # choke point every exported solid passes through also asks the cheap question
+        # directly. Measured before it was wired in: 13 on the committed max shell, 4 on
+        # the first draft of the fix, 0 on the other five shipped solids and on the pogo
+        # plate -- red where it should be, silent where it should be, 0.2 s on the largest.
+        _crowd = crowded_edges(_shape)
+        if _crowd:
+            _n, _a, _b = _crowd[0]
+            raise SystemExit(
+                f"export_step_stable: the solid bound for {path} has {len(_crowd)} edge(s) "
+                f"shared by more than two faces (first: {_n} faces along "
+                f"({_a[0]:.3f}, {_a[1]:.3f}, {_a[2]:.3f}) .. ({_b[0]:.3f}, {_b[1]:.3f}, "
+                f"{_b[2]:.3f}), solid coordinates). OCC accepts a solid that touches itself "
+                f"like this; other kernels refuse to open the file -- refusing to export")
     strip = lambda s: _re.sub(r"(?m)^FILE_NAME\('[^']*','[^']*'", "FILE_NAME(", s)
     tmp = path + ".tmp"
     # exportType is REQUIRED here and was the bug that kept this function from ever running:
@@ -851,7 +986,7 @@ def export_step_stable(solid, path, **kw):
 if __name__ == "__main__":
     import math
     fp = brace_footprint()
-    cav = cavity_rect().buffer(-WALL_FIT, join_style=1, resolution=64)
+    cav = brace_cavity()
     print(f"brace: {len(fp)} piece(s), {sum(g.area for g in fp):.2f} mm2 "
           f"({100*sum(g.area for g in fp)/cav.area:.1f}% of {cav.area:.0f} mm2 cavity)")
     print(f"  blockers: {', '.join(r for r, _ in blockers())}")

@@ -38,6 +38,10 @@ MACHINING RULES THE GEOMETRY ENFORCES (found the hard way in spins 8-10):
   * THE AUDIT ASSERTS AT BUILD TIME: every standing island must span >= MIN_ISLAND.
     Change a parameter into something unmachinable and the generator refuses to emit
     a STEP, which is the whole point of a contract.
+  * THE THREE FAMILIES TILE THE COIN, AND THAT IS AUDITED TOO (_partition): deep cut,
+    shallow cut and islands share every border vertex for vertex, none overlaps
+    another, and no outline may touch ITSELF at a point -- in the solid that is one
+    edge shared by four faces, which OCC accepts and another kernel will not open.
 
 Everything here is shapely on board coordinates; the generator supplies its own text
 renderer (_maker_text) and does the CadQuery work. The final X-mirror about the board
@@ -48,9 +52,10 @@ from __future__ import annotations
 
 import math
 
+import shapely
 import shapely.affinity as aff
 from shapely.geometry import Point, Polygon
-from shapely.ops import unary_union
+from shapely.ops import polygonize, unary_union
 
 from fit_rules import W, fin_band
 
@@ -72,6 +77,9 @@ MIN_ISLAND = 0.55                  # no detached standing mark smaller than this
 DIAL_MIN_MARK = 0.35               # dial marks under this are font ornament: deleted
 DIAL = [(DIAL_MONOGRAM, 4.80, -1.6, "b"), (f"No {SERIAL}", 1.80, 3.0, "r")]
 _DUST = 0.005                      # sub-0.005 mm2 opening residue: numerical, dropped
+_GRID = 1e-4                       # mm: the one grid every medallion vertex lands on (_weld)
+_MOVE_MAX = 0.008                  # mm: the most the simplification may move an outline
+_TOLS = (0.020, 0.016, 0.012, 0.008, 0.004, 0.0)   # coverage_simplify ladder, coarsest first
 
 
 def _mirror(g):
@@ -168,6 +176,104 @@ def _parts(g):
     return list(g.geoms) if g.geom_type.startswith("Multi") else ([] if g.is_empty else [g])
 
 
+def _weld(*families):
+    """Node the families' outlines together ONCE, on a grid, and rebuild each family from
+    that one arrangement -> the same families, every shared border now ONE vertex list.
+
+    Families derived from each other by boolean difference agree as point sets, and a CAD
+    kernel needs more than that: every boolean re-nodes in floating point, so a shared
+    border comes back with a vertex on one side that the other side does not have, and the
+    same crossing comes back as two vertices a few ulp apart. Unioning the outlines under
+    a precision model (snap-rounding) puts every vertex on the grid and splits every edge
+    wherever another passes; polygonizing that and handing each face to the family its
+    interior lies in gives borders that are shared vertex for vertex, with no two
+    vertices closer than the grid. _GRID is 0.1 um -- 80x finer than the simplification
+    budget below and 1000x coarser than OCC's 1e-7 confusion tolerance."""
+    live = [f for f in families if not f.is_empty]
+    if not live:
+        return families
+    net = shapely.union_all([f.boundary for f in live], grid_size=_GRID)
+    out = [[] for _ in families]
+    for face in polygonize(net):
+        pt = face.representative_point()
+        for i, fam in enumerate(families):
+            if fam.contains(pt):
+                out[i].append(face)
+                break
+    return tuple(unary_union(fs) if fs else Polygon() for fs in out)
+
+
+def _pinches(g):
+    """Vertices the outline of g passes through more than once. In the solid that is two
+    sectors of one family meeting along a single vertical edge -- metal (or a pocket)
+    touching itself, which is an edge shared by four faces."""
+    seen, twice = set(), set()
+    for p in _parts(g):
+        for ring in [p.exterior] + list(p.interiors):
+            for c in list(ring.coords)[:-1]:
+                (twice if c in seen else seen).add(c)
+    return sorted(twice)
+
+
+def _partition(main, rest, standing):
+    """Simplify the three families TOGETHER -> (main, rest, standing), still tiling the disc.
+
+    The three ARE a partition by construction, and simplifying each on its own (which is
+    what this module did until 2026-11) broke it: Douglas-Peucker keeps different vertices
+    on the two sides of a shared border, so every border moved by up to 8 um in three
+    different ways. Measured on the committed max shell, 2026-11-12:
+      * 13 vertical edges each shared by FOUR faces, z 0 to 0.25 -- two wedges of standing
+        titanium meeting at a point, where a deep and a shallow wall had left one vertex
+        0 to 6.7 degrees apart. A solid that touches itself. OCC's BRepCheck calls that
+        valid; another CAD kernel refused to import the STEP at all.
+      * 804 upward faces at z+0.02 totalling 0.0952 mm2 -- island prisms (extruded 0.02
+        past the field so they fuse) poking into cuts their own outline had strayed over.
+        That area is reproducible here with no kernel: it is exactly the island/cut
+        overlap of the three old outlines (0.0853 + 0.0099 mm2).
+
+    A FIRST DRAFT OF THIS FIX simplified two outlines (whole cut, shallow cut) and derived
+    the others as differences. Against stand-in block glyphs it tiled the disc to zero
+    area. On the real artwork it did that too, and still failed twice: the differences left
+    a 7e-15 mm edge that OCC cannot build a wire through (BRepAdaptor_Curve::No geometry --
+    the generator died), and with that edge welded away the solid came out with FOUR
+    four-face edges, z 0.25 to 0.45, each within a millimetre of one of the thirteen.
+    Wherever the shallow cut's simplified edge ran ALONG a wall, a crack of deep cut well
+    under a micron wide opened between the two and tapered to a point, leaving the shallow
+    floor touching the wall along one vertical line. Simplifying one outline at a time
+    cannot avoid that, however the remainder is derived: the wall is two outlines.
+
+    So the simplification is done once, on the partition itself. GEOS simplifies a
+    coverage edge by edge -- each border once, for both its neighbours -- and never moves
+    one across another. Its tolerance is area-based, not a distance, so the coarsest rung
+    of _TOLS that keeps every outline within _MOVE_MAX of where it was is the one used:
+    the same 8 um the old call promised, now measured instead of assumed."""
+    fams = _weld(main, rest, standing)
+    live = [f for f in fams if not f.is_empty]
+    assert shapely.coverage_is_valid(live), (
+        "medallion families do not tile before simplification -- _weld() left a border "
+        "that two families do not share")
+    for tol in _TOLS:
+        cand = list(shapely.coverage_simplify(live, tol))
+        if max(a.boundary.hausdorff_distance(b.boundary) for a, b in zip(live, cand)) <= _MOVE_MAX:
+            break
+    it = iter(cand)
+    out = tuple(next(it) if not f.is_empty else f for f in fams)
+
+    # THE PARTITION AUDIT, in the same spirit as the island audit below: a STEP another
+    # kernel cannot open is not a deliverable, so refuse to produce the outlines for one.
+    live = [f for f in out if not f.is_empty]
+    assert shapely.coverage_is_valid(live), "medallion families stopped tiling in simplification"
+    for i, a in enumerate(live):
+        for b in live[i + 1:]:
+            assert a.intersection(b).area < 1e-9, "two medallion families overlap"
+    pin = [c for f in out for c in _pinches(f)]
+    assert not pin, (
+        f"{len(pin)} medallion outline(s) touch themselves at a point (first at "
+        f"({pin[0][0]:.3f}, {pin[0][1]:.3f}), pre-mirror) -- in the solid that is an edge "
+        f"shared by four faces; nudge the text or the tool radii apart")
+    return out
+
+
 def geometry(text_fn, font_r, font_b):
     """-> dict of FINAL machining geometry (already X-mirrored), all board coords:
 
@@ -231,9 +337,13 @@ def geometry(text_fn, font_r, font_b):
     # them: one un-simplified coin boolean is a 20-minute build. 8 um is invisible
     # against the shop's +-0.05 and none of this is fit-critical geometry (the
     # fit_rules no-simplify law protects BOSS clearances, which live elsewhere).
-    reach_main = reach_main.simplify(0.008)
-    reach_rest = reach_rest.simplify(0.008)
-    standing = standing.simplify(0.008)
+    # The simplification must not be done family by family: see _partition().
+    reach_main, reach_rest, standing = _partition(reach_main, reach_rest, standing)
+    # ...and the disc handed back is the one they tile: the same outline on the same grid.
+    # Left as the analytic circle it disagrees with the islands' rim by the snap itself,
+    # 0.0008 mm2 in 67 slivers -- nothing, and exactly the kind of nothing a caller
+    # measuring "disc area in no family" would be right to ask about.
+    disc = _weld(disc)[0]
 
     # THE AUDIT: no detached standing island below MIN_ISLAND, anywhere, ever.
     small = [p for p in _parts(standing)

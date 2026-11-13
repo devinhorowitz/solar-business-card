@@ -135,15 +135,15 @@ from shapely.geometry import box as _bx2                                     # n
 # fit_rules.VARIANTS -- never as from-imported module constants, which freeze at import
 # and would build one variant's geometry under another's name (the consumer-map hazard
 # this refactor exists to dodge). GAP/SPAN_LIMIT are deliberately NOT imported by value.
-from fit_rules import (brace_footprint as _brace_footprint, cavity_rect as _cavity_rect,
-                       blockers as _fit_blockers, SLA_WEB, SLA_WALL,
-                       WALL_FIT as _WCLR, VARIANTS)                           # noqa: E402
+from fit_rules import (brace_footprint as _brace_footprint,
+                       blockers as _fit_blockers, SLA_WEB, SLA_WALL, VARIANTS)   # noqa: E402
 import fit_rules as _fit                                                      # noqa: E402
 
 # The rules live in enclosure/fit_rules.py, shared with the shell generator and asserted by
 # check_consistency [8]. They are NOT restated here: the copy that used to sit in this file
 # is what went stale against the supercaps.
-_cav = _cavity_rect().buffer(-_WCLR, join_style=1, resolution=64)
+_cav = _fit.brace_cavity()          # the shell's actual void less the wall fit -- NOT cavity_rect() alone,
+                                    # which is 0.25 mm wider than the cavity on the east (see fit_rules.brace_cavity)
 
 
 def _build(vname):
@@ -190,9 +190,13 @@ def _build(vname):
 
     # THIN-WALL ELIMINATION: any two pockets separated by a sub-SLA-min wall would print as a
     # fragile fin (or fail to form and shed into the pocket). Bridge each such pair so it merges
-    # into one clean recess. Threshold 0.40 sits in the clean gap between the real thin walls
-    # (<=0.16) and the next-nearest (>=0.49) on the max build; re-verify per variant in the log.
-    WALL_MIN = 0.40; nbridge = 0; _bl = []; bridges = []
+    # into one clean recess.
+    # The threshold is SLA_WALL, the thinnest in-plane feature fit_rules says we print. It was a
+    # bare 0.40 until 2026-11-13, chosen to sit "in the clean gap between the real thin walls
+    # (<=0.16) and the next-nearest (>=0.49) on the max build" -- which is to say it left every
+    # wall from 0.40 to 0.60 standing below the minimum this file imports two lines up. The
+    # independent measurement of the built braces (SolidCraft, 2026-11-12) counted them.
+    WALL_MIN = SLA_WALL; nbridge = 0; _bl = []; bridges = []; _pb = []
     for i in range(len(pk)):
         for j in range(i+1, len(pk)):
             ra, ax0, ax1, ay0, ay1, da, ta = pk[i]; rb, bx0, bx1, by0, by1, db, tb = pk[j]
@@ -210,7 +214,83 @@ def _build(vname):
             if w <= 0 or hh <= 0: continue
             brace = brace.cut(cq.Workplane("XY").box(w, hh, bdz, centered=(False, False, False)).translate((wx(bxr[0]), wy(byr[0]), bz)))
             nbridge += 1; _bl.append(f"{ra}-{rb}({wall:.2f})"); bridges.append((bxr[0], byr[0], w, hh))
-    print(f"[{vname}] thin-wall bridges (<{WALL_MIN}mm): {nbridge}  {_bl}")
+            _pb.append((bxr[0], byr[0], bxr[1], byr[1], (gap + 1.0) if (ta or tb) else max(da, db)))
+    # EVERY LEVEL OPENED AT SLA_WALL. The pair pass above compares a pocket only with another
+    # pocket, so a pocket beside a supercap bay, a through-cut blocker or the brace's own outline
+    # was never compared with anything: those are not pockets, they are where the footprint
+    # stops. The independent measurement of the built braces (SolidCraft, 2026-11-12) found
+    # walls of exactly that kind down to 0.0068 mm -- C24's blind pocket against SC3's bay,
+    # made when the bays went directional and SC3's west, a free edge, moved out to CLR_FREE.
+    # Nothing in the repo could see it: the only thin-wall measurement here was of the 2D
+    # footprint, which has no pockets in it.
+    # Bridging those one wall at a time was tried first and is the wrong shape: each bridge is
+    # computed from the geometry before the others are cut, and the bridge from R15 into the
+    # same bay stood its own end 0.007 mm from C24's pocket -- a fix that made the wall it was
+    # fixing. So the rule brace_footprint() already applies to the plan is applied at every
+    # height instead. Within each band of z where the set of pockets is constant, the resin
+    # left in plan is opened at SLA_WALL -- mitred, so a square pocket corner stays square and
+    # only a feature too thin to hold a SLA_WALL square goes -- and what the opening removes is
+    # cut over that band. A level is computed whole, so no cut can stand beside another, and a
+    # blind pocket that met a bay opens onto it as a ledge (its floor web is already SLA_WEB).
+    from shapely.ops import unary_union as _uu
+    from shapely.geometry import box as _box
+    _r = WALL_MIN / 2.0
+    _feats = [(_box(px0, py0, px1, py1), (gap + 1.0) if thr else dep)
+              for _ref, px0, px1, py0, py1, dep, thr in pk]
+    _feats += [(_box(x0, y0, x1, y1), d) for x0, y0, x1, y1, d in _pb]
+    _fpU = _uu(_pieces)
+    _depths = sorted({round(d, 4) for _g, d in _feats if d < gap})
+    _bands = []                                          # (z_lo, z_hi, features active)
+    _prev = 0.0
+    for d in _depths:                                    # band between floors gap-d and gap-prev
+        _bands.append((gap - d, gap - _prev, [g for g, dd in _feats if dd >= d - 1e-9]))
+        _prev = d
+    _bands.append((0.0, gap - _prev, [g for g, dd in _feats if dd > gap]))   # through-only base
+    nedge = 0; _level_area = 0.0
+    for z_lo, z_hi, active in _bands:
+        if z_hi - z_lo < 1e-6:
+            continue
+        mat = _fpU.difference(_uu(active)) if active else _fpU
+        kept = mat.buffer(-_r, join_style=2).buffer(_r, join_style=2)
+        gone = mat.difference(kept)
+        pieces = [g for g in (list(gone.geoms) if hasattr(gone, "geoms") else [gone])
+                  if not g.is_empty and g.area > 1e-7]
+        if not pieces:
+            continue
+        lo = z_lo - (0.05 if z_lo <= 0.0 else 0.0)
+        hi = z_hi + (0.05 if z_hi >= gap - 1e-9 else 0.0)
+        cutter = None
+
+        def _prism(ring):
+            pts = [(wx(x), wy(y)) for x, y in list(ring.coords)[:-1]]
+            return (cq.Workplane("XY").workplane(offset=lo).polyline(pts).close()
+                    .extrude(hi - lo))
+        for g0 in pieces:
+            # Overlap the voids this piece opens onto, so the boolean meets no coincident face --
+            # but ONLY the voids: grown into `kept` as well, the cut would shave 0.02 off resin
+            # the opening has just certified at SLA_WALL, leaving it at 0.58.
+            g = g0.buffer(0.02, join_style=2).difference(kept)
+            # Drop the near-duplicate vertices the difference leaves (OCC cannot build a wire
+            # through points nanometres apart: makeFromWires). SIMPLIFY, not a grid snap: a snap
+            # moves every vertex, so a cutter face meant to lie ON a pocket wall lands a few nm
+            # off it, and OCC reconciles the two by inflating vertex tolerance -- which the
+            # tessellator then reads as a vertex 0.2 mm off its own plane (tried; it carved a
+            # wedge off the top of the max brace). Simplify keeps every surviving vertex exact.
+            g = g.simplify(1e-6, preserve_topology=True)
+            for gg in (list(g.geoms) if hasattr(g, "geoms") else [g]):
+                if gg.is_empty or gg.geom_type != "Polygon" or gg.area < 1e-6:
+                    continue
+                c = _prism(gg.exterior)
+                for hole in gg.interiors:                   # resin kept inside a cut: leave it
+                    c = c.cut(_prism(hole))
+                cutter = c if cutter is None else cutter.union(c)
+                bx0, by0, bx1, by1 = gg.bounds
+                bridges.append((bx0, by0, bx1 - bx0, by1 - by0))
+            nedge += 1; _level_area += g0.area                 # the resin removed, not the cutter
+        if cutter is not None:
+            brace = brace.cut(cutter)
+    print(f"[{vname}] thin-wall bridges (<{WALL_MIN}mm): {nbridge} pocket-pocket; "
+          f"{nedge} piece(s) opened at SLA_WALL over {len(_bands)} level(s), {_level_area:.3f} mm2 in plan  {_bl}")
     # ferrite pocket = OPEN CHANNEL: WIDTH (x) walled (critical, edge-limited); LENGTH (y) OPEN at
     # both ends so the ferrite can be cut long/short and extend slightly past the brace.
     fx0, fx1 = max(FER[0]-FER_CLR, BX0+0.2), min(FER[2]+FER_CLR, BX1)   # width walls

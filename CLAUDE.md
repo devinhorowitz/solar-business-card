@@ -97,11 +97,21 @@ python3 scripts/check_mesh.py          # STL validity + volume/bbox ledger (need
 ```sh
 python3 scripts/interference_drc.py    # 3D interference DRC: brace STL ray-cast vs every B-side body
 ```
+```sh
+python3 scripts/assembly_drc.py        # the assembled stack: Z budget, ferrite, screws, cells --
+                                       # and the SECTIONED shell-vs-parts and brace-vs-shell checks
+```
 STEP validity is gated at export time — OCC `BRepCheck` inside `fit_rules.export_step_stable`,
-the one choke point all three CAD generators use. The mesh gate also runs in `kibot.yml`
+the one choke point all three CAD generators use — **and since 2026-11-12 so is the thing
+`BRepCheck` does not check**: no edge of an exported solid may be shared by more than two faces
+(`fit_rules.crowded_edges`). OCC calls a solid that touches itself along a line valid; another
+kernel refused to open the max shell for exactly that. The mesh gate also runs in `kibot.yml`
 **before** the commit-back, so a cadquery/OCC bump that breaks a tessellation fails the job
 instead of landing. The shell STL carries one ledgered zero-length rim pinch; a real hole
 (nonzero open length) goes red. Triangle count is deliberately ungated — it is not bit-stable.
+**All three mesh gates read the COMMITTED solids**, so after an enclosure-moving change they are
+red locally until the merge run rebuilds them — build into a scratch `OUT_DIR` (all five
+generators honour it) and point a copy of the tree at that, rather than committing the output.
 
 **NFC coil paper tune** (the antenna's L and resonance are re-derived from the routing —
 the one subsystem neither external reviewer can see as a designed object):
@@ -363,6 +373,83 @@ red, the check itself fails.
   `enclosure/` or `scripts/`** — the copy is the failure mode, so the copy is what is banned. A
   drawing that is wrong is worse than one that is missing: nothing about the hole pattern is typed
   into that sheet any more, every dimension on it is computed from `MOUNTS`.
+- **A shared definition protects only the generator that calls it — and a gate that checks the
+  definition is not a gate on the part.** The `MOUNTS` lesson, twice more, and found 2026-11-12 the
+  only way it could be: by measuring the committed STEPs with a CAD program this repo does not use.
+  `fit_rules.boss_island()` — the boss disc cut back `BOSS_CLR` from whatever fouls it — was imported
+  by the shell CAD and reached only through the dormant `tool_relief` path; the boss loop unioned a
+  plain cylinder. **All four supercaps sat INSIDE mount bosses, 0.17–0.375 mm deep, on every
+  committed shell**, while check [8] printed "8 bosses clear" on every run. It was true — of the
+  polygon. And the brace was cut from the scalar rectangle `_CAV` (a 1.00 mm east lip, the ring's)
+  while the shell's cavity came from `cavity_void_poly()` (1.25 mm, the coil clamp): **both braces
+  were 0.20 mm WIDER than their cavities over y 31–58**, and `assembly_drc` [B] compared the brace's
+  bounding box with that same rectangle, so it agreed. The brace was right about the bosses and
+  wrong about the wall; the shell was the other way round. The shell now cuts
+  `fit_rules.boss_fouls()` and the brace is built from `fit_rules.brace_cavity()` — but what closes
+  the CLASS is `scripts/assembly_drc.py` [B] and [F], which **slice the emitted STLs** and compare
+  the metal that is actually there with the part outlines read off the board, and with the brace
+  that is actually there. On the old solids they are red, and within 0.003 mm of what SolidCraft
+  measured (0.374 / 0.303 / 0.323 / 0.174 mm into the bosses; 0.200 mm over x 49.550–49.750); each
+  carries a canary that must collide on every run. **When a rule moves into `fit_rules`, ask which solid can now be measured to prove it
+  arrived.** Do not repair a gate of this kind by pointing it at a better definition.
+- **Every enclosure solid is written in a LEFT-HANDED frame, so every STEP and STL in this tree is
+  the MIRROR IMAGE of the part. This is an OPEN DECISION (`TODO.md`), not a fixed bug.** Both
+  generators — and the pogo plate — place board coordinates (X right, Y down, Z toward the card's
+  front) straight into CadQuery (`wx`/`wy`). That triad is left-handed; STEP and STL are right-handed
+  by definition. Measured 2026-11-12 against KiCad's own STEP export of the board: the max brace
+  collides with the populated board in both rigid placements the hole pattern allows (53 mm³ over
+  34 parts, 494 mm³ over 29) and its mirror image fits (0.05 mm³, one part); the medallion —
+  X-mirrored in `medallion.py` so it reads correctly from behind the REAL card — reads backwards in
+  the STEP. `enclosure/assembly_render.py` found the mirror in the pictures and flips the finished
+  image (`present()`); the solids were never flipped. **No gate here can see it**: `check_mesh`,
+  `interference_drc`, `assembly_drc` and the render all load the solids in the frame the generators
+  write, so a mirror-image part passes everything. Three things to know before touching it:
+  the two dimensioned drawings are TRUE views already (the shell's back-face plan plots x right /
+  y up, the brace's board-facing plan x right / y down), so they are right and the solids they say
+  "govern" are their mirror images — invisible only because everything drawn on those sheets is
+  symmetric; the pogo plate is mirrored too (its own probe table fits the panel only face-DOWN,
+  0.000 mm, and misses by 70 mm face-up), but its engraved labels read correctly in the file, so
+  mirroring it at the printer fixes the layout and reverses the text; and since the bosses are
+  scalloped the shell is no longer symmetric enough to shrug it off — cut from the file as emitted,
+  the cap clearances come out 0.05–0.27 mm in one placement and SC1/SC3 touch metal in the other.
+  **Do not send a STEP or STL from this tree to a shop or a printer until that decision is taken,
+  and never flip one generator or one reader without the rest.**
+- **OCC's `BRepCheck` says "valid" about a solid another kernel will not open — and a stand-in test
+  says "fixed" about artwork it never saw.** `medallion.geometry()` splits the coin into deep cut,
+  shallow cut and standing islands, an exact partition, and used to `.simplify(0.008)` the three
+  SEPARATELY, so every shared border moved three different ways. In the max shell that was **13
+  vertical edges each shared by four faces** (the solid touching itself; SolidCraft refused the
+  import) and **804 sliver faces** where island prisms poked into cuts — 0.0952 mm², which is
+  exactly the island/cut overlap of the three old outlines, reproducible in shapely with no kernel.
+  The first fix simplified two outlines and derived the rest as differences; against stand-in block
+  glyphs it tiled the coin to zero. On the real artwork the generator **died** (a 7×10⁻¹⁵ mm edge
+  OCC cannot build a wire through), and with that welded away it still emitted **four** four-face
+  edges — wherever the shallow cut's edge ran along a wall, a crack of deep cut under a micron wide
+  opened between them. `medallion._partition()` now welds the three outlines onto one grid and
+  simplifies them **as one coverage** (GEOS, each border once for both neighbours), and AUDITS the
+  result: the families must tile, must not overlap, and no outline may pass through one vertex
+  twice — that 2D test predicted all four 3D edges before the solid was built. `SERIAL` is
+  per-unit data, so **test engraving changes on the real artwork and sweep the serial**; the
+  export gate above is the backstop for everything else.
+- **The cavity void is BOARD area — in section, not just in plan.** `cavity_void_poly()` dilates
+  each "stuck" part by `LIP_CLR + TOOL_R` so the relief is tool-reachable, and until 2026-11-12
+  nothing clipped the result: with the supercaps 1.00 mm off the north and south edges the polygon
+  ran 0.30 mm PAST the board, and the shell cut it from floor to seat — into the perimeter wall and
+  underneath the board recess. Four pockets no cutter coming down the cavity can reach (four
+  downward faces at seat level, 24.9 mm²). The comment beside the dilation said "tool-reachable by
+  construction"; it was true in plan. The void is clipped to the board in `fit_rules` and to the
+  recess footprint in the shell CAD (`_void_in_recess` — the recess is 0.05 mm smaller than the
+  board, `edge_fit`).
+- **OCC cannot chamfer an end face once a boss standing on it carries a flat, and the deburr pass
+  used to say so in one log line.** Lip + full cylinder chamfers; lip + flatted cylinder is
+  `StdFail_NotDone` in every construction order, down to a ten-line reproduction. On max and lite
+  the bosses stand on the cavity floor and it never shows. On the open (air) frame the boss foot IS
+  the resting face, and the first cut of the boss scallops left that frame with **no edge-break
+  anywhere on its resting face** — 2.9 mm³ of a 997 mm³ part, inside `check_mesh`'s volume
+  tolerance, under a drawing calling the breaks MODELED. So the keep-outs are cut AFTER the deburr,
+  by boolean (`_boss_scallop_tool`; on the open frame the cutter carries its own 45° foot), and a
+  skipped edge-break on a shipped variant now fails the build (`_DEBURR_SKIPS`). Reach for a
+  boolean, not `chamfer()`, when adding a feature that meets an end face.
 - **Glyph outlines come from `scripts/glyphs.py`, once — never fold contours by hand.** Two
   generators set type from the same JetBrains Mono files: `scripts/face_art.py` opens the card
   face's soldermask, and the shell CAD engraves the medallion's ring text, monogram and unit

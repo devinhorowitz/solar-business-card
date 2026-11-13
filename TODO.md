@@ -683,6 +683,165 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
 
 ## Enclosure — `enclosure/…-backshell-…-cad.py`, `enclosure/brace/`
 
+- [ ] **[ENCLOSURE — BLOCKS EVERY FAB ORDER] The emitted solids are MIRROR IMAGES of the parts: decide the frame**
+  _(2026-11-12. From an independent measurement of the committed enclosure solids — SolidCraft, on
+  DRH's machine, against `main` at `d060215`, deliberately a CAD program nothing in this repo uses,
+  because every gate here measures geometry built from the same inputs the generators read. The
+  report and its draft patches are on the unmerged branch `review/solidcraft-d060215`. The four
+  defects it traced to code are FIXED in the PR that added this entry — see the Gotchas in
+  `CLAUDE.md`. This one is not, on purpose: it is a decision, and it is DRH's.)_
+  Both CAD generators place board coordinates — X right, Y down, Z toward the card's front —
+  straight into CadQuery (`wx`/`wy`). That triad is left-handed; STEP and STL are right-handed by
+  definition. **So every STEP and STL in `enclosure/` is the mirror image of the part.**
+  - **Measured**, against KiCad's own (right-handed) STEP export of the populated board: the max
+    brace collides in both rigid placements the hole pattern allows — **53.1 mm³ over 34 parts** and
+    **493.9 mm³ over 29** — and its mirror image fits (0.05 mm³, one part, L2). The medallion,
+    X-mirrored in `enclosure/medallion.py` so it reads correctly from behind the REAL card, reads
+    **backwards** in the STEP.
+  - **It hid** because the hole pattern is symmetric about both axes, `enclosure/assembly_render.py`
+    flips its finished pictures (`present()`, "THE SCENE IS LEFT-HANDED"), and every gate loads the
+    solids in the frame the generators write them in.
+  - **The pogo plate is mirrored too** — analysed 2026-11-12 from the generator's own table, not
+    measured on SolidCraft: the 14 probe bores + 2 dowels fit the panel only **face-DOWN** (0.000 mm,
+    with a half turn); face-up, which is the plate's whole purpose, the best rigid placement misses
+    by **70 mm**. Its asymmetric dowels would enforce the wrong way round. Its engraved labels are
+    `cq.text` and read correctly in the file, so **mirroring it at the printer fixes the layout and
+    reverses the lettering** — the opposite of the medallion.
+  - **The shell is no longer symmetric enough to shrug it off.** With the bosses scalloped, a shell
+    cut from the file as emitted clears the supercaps by 0.13 / 0.27 / 0.05 / 0.19 mm in one
+    placement, and in the other SC1 and SC3 touch metal. The 0.20 mm the scallops buy exists only in
+    the right hand.
+
+  **Options, none taken:**
+  - **(a) Reflect once, at export.** The review's draft patch 06: a `shop_frame()` in `fit_rules`,
+    called on the two export lines of each generator, so the files are written in
+    (x − W/2, H/2 − y, z) — KiCad's own STEP-export convention. Smallest change to the generators.
+  - **(b) Flip `wy` in the generators.** Mirrors the model itself. More invasive than it looks: the
+    brace CAD positions every pocket with `box(…, centered=False).translate((wx(px0), wy(py0), …))`,
+    which silently assumes +y growth, so each of those sites has to change corner.
+  - **(c) Leave the files and tell the shop and the printer to mirror.** No code; relies on a note
+    being read, every order, and gives the pogo plate reversed labels.
+
+  **What has to move WITH it under (a) or (b)** — read 2026-11-12, each line checked against the file:
+  - `scripts/interference_drc.py` — ray origins are `(x − W/2, y − H/2)`; the y term flips.
+  - `scripts/assembly_drc.py` — the same in `z_hits` / `up_hits`, and `section()` translates by
+    `(+W/2, +H/2)`; a y-flip there. Its canaries will say so loudly if it is missed.
+  - `enclosure/assembly_render.py` — `stl()` translates the meshes into the left-handed scene, and
+    `present()` plus both texture mappings are calibrated to that scene ("change one and you must
+    change the other"). Cheapest: mirror the meshes on load and leave the scene alone.
+  - `scripts/check_mesh.py` — nothing for the shells and braces (their bboxes are y-symmetric,
+    ±45.40 and ±42.40); the pogo plate's y range (−10.4…99.3) flips if that generator is included.
+  - `enclosure/solar-glow-drh-pogo-testplate-cad.py` — NOT touched by draft patch 06. Needs the
+    same reflection for its geometry and the opposite treatment for its lettering.
+  - **Nothing**: `scripts/ref_figures.py` (reads only the shell's thickness), `scripts/render.py`
+    (never reads an enclosure solid), `enclosure/medallion.py` (its X-mirror is right for a
+    right-handed part — it is why the STEP reads backwards today), and **both dimensioned
+    drawings**, which are already TRUE views (shell plan: x right / y up, seen from the back; brace
+    plan: x right / y down, seen from the board side). The sheets are right and the solids they say
+    "govern" are their mirror images.
+  - The hand-buy line `ENC1` in `scripts/bom_split.py` says "machined from" the STEP; its wording
+    should say which hand once that is true.
+
+  **Nothing in CI can see handedness**, and the new sectioned checks in `scripts/assembly_drc.py`
+  say so in their own docstring. The gate that could is the measurement that found it: export the
+  populated board with `kicad-cli pcb export step` and boolean it against the enclosure STEPs. Both
+  halves already run in `kibot.yml`'s job (KiCad in the container, cadquery on the runner), so it is
+  buildable — worth doing in the same change that picks the frame, so the choice lands gated.
+
+  **Until this is decided, do not send any STEP or STL from this tree to a shop or a printer.**
+
+- [ ] **[ENCLOSURE — first thing after the merge run] Re-measure the rebuilt solids on SolidCraft**
+  _(2026-11-12.)_ Nothing in the cloud can confirm the fixes: SolidCraft exists only on DRH's
+  machine. The cloud session rebuilt everything with CI's pins and measured it with OpenCascade —
+  an instrument that reproduces every SolidCraft figure on `main` to the last digit (max shell
+  5290.7426 mm³, cap overlaps 2.3122 / 0.7343 / 1.6998 / 1.8132 mm³, brace overlap 9.0186 mm³, 13
+  four-face edges, 804 sliver faces, four seat-level faces of 24.896 mm²) — but it is the same kernel
+  that wrote the files, which is exactly what the original measurement was designed to avoid. On the
+  solids the merge run commits, check:
+  - **No supercap-to-boss overlap**, max / lite / air. Expect a flat on every boss, **0.750 mm** off
+    the can's free edge (its bay clearance): faces at board x 4.345 (SC1), 4.415 (SC3), 46.254 (SC2),
+    46.406 (SC4). The two east mid-span bosses also meet SC2's and SC4's datum ends, 0.25 off.
+    _(Was 0.200 off a nominal can until 2026-11-13 — see the boss item below.)_
+  - **No brace-to-shell overlap**, max and lite. Expect the brace's east face at x **49.500** against
+    a wall at 49.550.
+  - **The four downward faces at seat level are gone** (24.896 mm², max and lite; the air frame had
+    them too).
+  - **The max shell STEP imports with no edge repair.** Expect 28,403 edges, none used four times;
+    9,626 faces, 82 of them under 0.001 mm² (was 1,765); no upward faces at z +0.02.
+  - **The open frame still has its resting-face edge-break**, including a 45° foot on each boss flat.
+  - **No brace resin wall under 0.10 mm**, max and lite, and none under `SLA_WALL` 0.60 except the
+    ferrite channel's own walls (x 36.2–36.7 and 49.10, top 0.33 mm only). The 0.0068 mm wall at
+    (4.411, 49.653) is the canary: it must be gone.
+  - If the frame is changed later: **the engraving reads correctly from the back**, and the brace
+    fits the KiCad board export in a rigid placement.
+
+- [ ] **[ENCLOSURE — DRH's calls, from the same measurement] Seven numbers left where they are** (two since fixed, and marked so)
+  _(2026-11-12. Each was measured or traced, none was changed. Both numbers are given so the
+  judgement can be made without re-deriving them.)_
+  - **The ridge east of the ferrite channel is 0.40 mm, under `SLA_WALL` 0.60.** It was 0.65. The
+    brace's east edge moved 0.25 mm west to fit the shell (`fit_rules.brace_cavity()`); the channel
+    wall stayed at `FER[2] + FER_CLR` = x 49.10. Confirmed on both built braces by sectioning the
+    STL through the channel: 0.650 → 0.400, uniform over y 33.5–55.5. It is a ridge 0.33 mm tall
+    (the channel's depth) on full-thickness resin, not a free-standing wall. Options are a narrower
+    `FER_CLR`, an open east side, or accepting it; the channel was not redesigned.
+  - **The board is 0.05 mm LARGER than its pocket on every flat** (pocket 50.700 × 88.800, board
+    50.800 × 88.900; 5.90 mm³ of overlap, all three shells). Deliberate — `edge_fit = -0.05`,
+    "press interference on the FLATS", relieved at the corners — but the repo says three things
+    about it: the shell CAD says press fit, `enclosure/README.md` §8 says "treat as a slip fit", and
+    the drawing's own note says "SLIP FIT, NOT A PRESS FIT". Against that 0.05 the repo's own
+    figures for a routed outline are ±0.1 (the jig item below) and ±0.2
+    (`solar-glow-drh-design-notes.md`). Whichever it is, `edge_fit` has three homes to change
+    together: the shell CAD, `ef` in its DRAWING-gen, and `EF` in `fit_rules._back_field()`.
+  - **L2 reads 0.02 mm proud of its pocket — in KiCad's model, not on the part.** The export seats
+    every part 0.040 mm off the back face and draws L2 as the generic 1008 body, **1.200** tall;
+    1.200 + 0.040 against a 1.22 pocket is the 0.02. `enclosure/part_heights.py` already waives that
+    model by name (`MODEL_NOTES`): the part is a Murata DFE252010F, 1.0 mm max, and check [7] prints
+    the note on every run. At 1.0 the margin is +0.18. What is genuinely open is the seating plane —
+    whether 0.040 of standoff should be carried as a number rather than inside `fit_rules.AIR`.
+  - **FIXED 2026-11-13 — thin walls beside blind pockets, both braces.** Every level of the brace
+    is now opened at `SLA_WALL` (the brace CAD's comment has the reasoning, including why bridging
+    one wall at a time made a new 0.007 mm wall). Measured in the cloud by casting rays inward from
+    every section boundary — an instrument calibrated against the committed brace, where it finds
+    the 0.0068 below, 0.0718 (R15), 0.0904 (C3) and 0.0989 (west edge): walls under 0.10 mm went
+    15 → 0 on max, 19 → 0 on lite, and every slice of the rebuilt max brace matches the opened plan
+    at 23,787 sampled points. Nothing under 0.60 remains but the ferrite channel's walls, which
+    were not part of it: the 0.40 east ridge (item above) and, on the channel's WEST side, the walls
+    between it and the pockets beside it — **0.265 mm** at x 36.435 (y 36.5–39.0), 0.50–0.52 at
+    x 36.18–36.20, all only the channel's 0.33 mm deep. Same call as the ridge, and it is DRH's:
+    opening them would let those pockets break into the channel and shorten the wall that locates
+    the ferrite's width. The original record follows. 16
+    in-plane walls under 0.60 mm on max (8 under 0.40), 22 on lite, every one with a blind pocket
+    on at least one side. The thinnest, **0.0068 mm at (4.411, 49.653)**, is arithmetic: C24's
+    blind pocket ends at x 4.408 / y 49.653 (body + `CLR` 0.25) and SC3's through-bay starts at
+    x 4.415 (body − `CLR_FREE` 0.75), leaving 0.007 mm of resin between a pocket and a bay. The
+    brace CAD's thin-wall rule (`WALL_MIN` 0.40) merges pocket-to-pocket pairs only; SC3 is a
+    blocker, not a pocket, so that pair is never compared — and neither is a pocket against the
+    footprint's outside edge (the 0.099 mm wall at (2.60, 55.11) is one of those). The other walls
+    were not traced. SolidCraft's thickness method failed its own canary, so the list is real but
+    not exhaustive.
+  - **FIXED 2026-11-13** (`fit_rules.boss_fouls()` cuts a supercap back by its own `part_keepout`,
+    floored at `BOSS_CLR`; flats now 1.475–1.676 mm from the axes, worst thread annulus 82.3 %, and
+    the shell drawing prints the stand-off it measures off the island rather than the constant).
+    **NEW, found integrating — the scalloped bosses clear a NOMINAL can.** `BOSS_CLR` is 0.20 for
+    every part. All eight boss-to-cap adjacencies are on the caps' FREE edges (`CAP_DATUM`), where
+    this file's own rule gives the brace `CLR_FREE` 0.75 because the can may run +0.50 wide
+    (`SUPERCAP_BODY_TOL`) and the shim's datum gap adds 0.10. A max-material can indexed by the shim
+    reaches **0.40 mm into the flat**. Giving the bosses the caps' directional keep-out
+    (`part_keepout`) would put the flats 1.48–1.68 mm from the axes, still outside `THREAD_KEEP`
+    1.30, at the cost of thread annulus. The brace learned this on 2026-08-23; the shell did not.
+  - **NEW, the same stale 1.00 a third time — the east lip's top is stepped.** `_lip_break_cut` in
+    the shell CAD cuts its 45° lip-break from the SCALAR lip outline (`_lip_void_P`, `lip_E` = 1.0),
+    not from the per-band void. On the east the lip is really 1.25 mm, so the cutter takes the top
+    0.10 mm off its inner 0.25 mm. Ray-cast on the built lite shell: the lip top reads z 1.720 from
+    x 49.55 to 49.80 and reaches the 1.820 seat only at x 49.90. **The board rests on 0.85 mm of
+    east lip, not 1.25.** Not a collision, and the same on the committed and the rebuilt shells —
+    found while listing where else `_CAV`'s 1.00 had survived, not by SolidCraft.
+  - **NEW, found by the sectioned gate on its first run — the lip passes 0.097 mm from C24** (and
+    0.268 from R16), against `LIP_CLR` 0.30. The per-band lip stands `LIP_CLR` off a part in every
+    band that part spans; the Ø2.0 finisher's fill at a band step is not held to it, and check [8]
+    asserts band widths, not the opened polygon. C24 ends at y 49.40 and the 2.5 mm band starts at
+    y 49.50. It clears the gate's 0.05 mm floor, so the gate prints it and passes.
+
 - [ ] **[SOURCING — lite/air] Pick the thin supercap MPN**
   _(2026-08-07, opened with the three-variant round.)_ `part_heights.SUPERCAP_H_THIN = 1.00`
   is **PROVISIONAL — DRH's working number, no MPN, no datasheet behind it**, unlike every
@@ -698,7 +857,8 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
 
 - [ ] **[ENCLOSURE, cosmetic] The shell STL's one tessellation pinch** _(2026-08-01, found and
   ledgered by `scripts/check_mesh.py` on its first measurement.)_ One zero-length boundary edge
-  at a single rim point (24.4, −34.45, 2.7) plus 3 zero-area facets — a cadquery boolean seam
+  at a single rim point (24.4, −34.45, 2.7) plus 1 zero-area facet (3 until the 2026-11-12
+  medallion fix) — a cadquery boolean seam
   artifact, invisible to slicers (open length 0.000 mm). Ledgered in the mesh gate so anything
   worse goes red; chase only if a cadquery bump changes the count, and fix belongs in the
   shell generator's tessellation parameters, not the mesh.
@@ -844,6 +1004,11 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
 - Enclosure STEP stays **analytic-sharp**: r1.0 internal corners are a DRAWING
   spec; do **not** enable `tool_relief` (produces a faceted STEP the fab rejects).
 - East cavity lip pinched to 1.0 mm over y10–72 (NFC detune) — do not widen.
+  _(2026-11-12: the NUMBER here is stale, the rule is not. The lip has been a single **1.25 mm**
+  band over the whole east edge since `fit_rules.COIL_CLR` went to 1.00 — the wall is at x 49.550,
+  measured on the STEP — and what holds it is the standoff from coil copper, not the 1.0. The old
+  1.0 survived in one more place, `fit_rules._CAV`, and that is what left both braces 0.20 mm wider
+  than their cavities. Intent unchanged: do not bring grounded metal nearer the coil.)_
 - NFC tuning at bring-up needs the brace **removable** — don't defeat it.
 - Supercap footprints are a **hybrid**: SC1/SC3 = SS17 land (3-153-440, 39 mm), SC2/SC4 = WS17
   land (3-153-438, 28.5 mm); flat under-body pads, asymmetric widths = polarity key. The old REV-J diagonal-pad land is WRONG -- never reuse.
