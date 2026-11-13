@@ -24,7 +24,7 @@ never reach a pick-and-place.
 
 **Ordered, but not from a distributor:**
 
-- `ENC1` — the titanium back-shell -- its own fab order, machined from enclosure/*.step
+- `ENC1` — the titanium back-shell -- its own fab order, machined from enclosure/*.step as written (the files are right-handed: do not mirror)
 
 **The supercaps are two different parts.** SC1/SC3 and SC2/SC4 are different
 capacitances with different MPNs and separate stock pools; four of either one
