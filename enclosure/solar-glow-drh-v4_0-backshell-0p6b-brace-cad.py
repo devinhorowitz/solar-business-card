@@ -108,7 +108,10 @@ U7_POCKET    = max(0.0, round(U7_H - cap_H, 3))   # 0.0 -> no pocket (was 0.05 f
 U7_POS       = (28.1, 37.3)               # U7 (MB85RC512TY FRAM) origin, board coords (v4 board): re-keyed from the removed U2 balancer, essentially where U2 sat (old (30.10,37.64)). Same SOIC-8_3.9x4.9 package; pad box 6.75 x 4.41 (unchanged footprint), centered here.
 U7_POCKET_WH = (7.8, 5.4)                 # pocket size: pad box + ~0.5 margin all round (same SOIC-8, unchanged). At U7_POS the pocket spans y[34.6,40.0] -> N edge ~0.8 clear of the glow window (y40.80); x[24.2,32.0] covers the U7 east pad (~x31.48).
 
-edge_fit   = -0.05                 # press interference on the FLATS
+from fit_rules import EDGE_FIT as _EDGE_FIT, BOARD_R as _BOARD_R   # noqa: E402 -- one home
+edge_fit   = _EDGE_FIT                # press interference on the FLATS -- a PRESS FIT BY DECISION
+                                      # (DRH 2026-11-13; fit_rules.EDGE_FIT carries why)
+assert R == _BOARD_R, "board corner radius: fit_rules.BOARD_R is its home" 
 corner_clr = 0.15                  # corner relief so the press grips the flats
 edge_ease  = 0.10                  # light edge-break on the outer rim + recess mouth (felt, not seen)
 lip_break  = 0.10                  # light 45deg edge-break on the inner (cavity-side) lip edge (felt, not seen)
@@ -129,15 +132,13 @@ lip_E      = _RING["E"]                # E stays narrow through the JP1/TP1 pads
 # committed shell (probed 2026-08-07 on the STL). The widths now live in fit_rules.RING,
 # and build() cuts fit_rules.ring_reliefs() out of the ring -- a part-aware relief, sized
 # LIP_CLR + TOOL_R, that follows the board. check [8] gates the result.
-lip_E_wide = 2.5                       # E END zones (clear of pads+coil) widen to match the west
-EAST_WIDE_Y = [(0.0, 10.0)]   # board-y bands the E lip widens to 2.5 (else pinched to 1.0, wall x49.8).
-# 2026-07-11: NORTH wide band (72,88.9) REMOVED -> east lip is now pinched (1.0, wall x49.8) over all of
-# y10-88.9. v4 removed most of the old clamp cluster (Q1/U4/R7/R9 and D9/D10/D11 are GONE); of the parts that
-# drove this pinch only C7 @ x49.55 (y72-88.9) still sits near the east edge, overhanging the old 2.5 wide lip
-# (wall x48.3). Re-verified vs the board: the 1.0 pinch (wall x49.8) clears C7 by 0.25 -- the SAME tolerance
-# class as the JP1/TP1 pinch at x49.6. The NFC coil (east copper ~x48.4) stays well clear of the x49.8 wall.
-# Edge-support lost under the pinch is picked up by the brace east rail (RAIL_E_N extended to x49.70, in the
-# brace generator).
+# The scalar east widening (lip_E_wide / EAST_WIDE_Y) and its outline _lip_void_P() were
+# deleted 2026-11-13. They were the last thing in this file that still drew the lip from
+# four scalars, and the lip edge-break was cut from them: on the east, where the per-band
+# lip is really 1.25 (the coil clamp, fit_rules.COIL_EAST), the 45-degree cutter took the
+# top 0.10 off its inner 0.25 and the board rested on 0.85 mm of east lip, not 1.25 --
+# measured on SolidCraft and here, TODO.md C1/B8. The break now follows the void the shell
+# is actually cut to (_lip_break_cut below).
 lip_w      = lip_E                      # legacy min-lip alias (only the dormant tool_relief helper still reads it)
 back_border = 2.0                      # SYMMETRIC proud back-frame border, equal on all 4 sides (decoupled from the asymmetric front lip). Front lip stays asymmetric (it clears B-side parts); this is the cosmetic exterior back border only.
 boss_r     = 2.60                  # M2 boss / back annulus outer radius
@@ -228,39 +229,69 @@ def _cav_inner(z0, dz, grow=0.0):
 
 
 RING_FUSE_EPS = 0.01
-def _east_blocks(z0, dz):
-    """solid east-END wide-lip blocks: fill x[W-lip_E_wide, W-lip_E] over the EAST_WIDE_Y bands."""
-    out = None
-    for ya, yb in EAST_WIDE_Y:
-        blk = (cq.Workplane("XY").workplane(offset=z0)
-                 .center(wx((2*W - lip_E_wide - lip_E)/2.0), wy((ya + yb)/2.0))
-                 .rect(lip_E_wide - lip_E, yb - ya).extrude(dz))
-        out = blk if out is None else out.union(blk)
-    return out
-def _lip_void_P():
-    """Cavity-void perimeter in BOARD coords: straight W/N/S edges + the NOTCHED east edge, built from
-    EAST_WIDE_Y so it is correct for ANY number of wide bands -- one pinch-step for the current single
-    south band [(0,10)]; two for the older wide-both-ends layout. East x = W-lip_E_wide inside a wide
-    band, else W-lip_E. (Previously this polygon hard-coded EAST_WIDE_Y[0] and [1]; that indexed out of
-    range once the north wide band was removed, so the generator could not run until this rewrite.)"""
-    y0, y1 = lip_N, H - lip_S
-    wide = lambda y: any(a <= y < b for a, b in EAST_WIDE_Y)
-    xw, xp = W - lip_E_wide, W - lip_E
-    xat = lambda y: (xw if wide(y) else xp)
-    east = [(xat(y0 + 1e-6), y0)]
-    for by in sorted({b for band in EAST_WIDE_Y for b in band if y0 < b < y1}):
-        east += [(xat(by - 1e-6), by), (xat(by + 1e-6), by)]      # step at each wide/pinch boundary
-    east.append((xat(y1 - 1e-6), y1))
-    return [(lip_W, lip_N)] + east + [(lip_W, y1)]
-def _lip_inner_pts():
-    """lip inner (cavity void) perimeter, MODEL coords: the notched asymmetric outline. West corners are
-    filleted in the real part; here sharp -> a ~lip_break cosmetic over-cut at those 2 corners only."""
-    return [(wx(x),wy(y)) for x,y in _lip_void_P()]
 def _lip_break_cut(bb, c, taper):
     """45deg edge-break on the lip inner top edge: taper-extrude the void outline over the top c mm so it
-    grows outward into the lip, and cut it -> the sharp top-inner lip edge is knocked back at 45deg."""
-    sk = cq.Sketch().polygon([(wx(x),wy(y)) for x,y in _lip_void_P()]).reset().vertices("<Y").fillet(IR).reset().vertices(">Y").fillet(IR)
-    return cq.Workplane("XY").workplane(offset=bb-c).placeSketch(sk).extrude(c, taper=taper)
+    grows outward into the lip, and cut it -> the sharp top-inner lip edge is knocked back at 45deg.
+
+    The outline is the void the shell is CUT to (_void_in_recess), not a scalar stand-in for it, so
+    every lip edge gets the break and no edge loses bearing to it.
+
+    Two things keep it a clean cut. Where the void already reaches the recess wall (beside the
+    supercaps, where there is no lip) there is no lip edge to break, and a frustum grown there
+    would undercut the wall the board presses into -- so the outline is first held c + 0.02 inside
+    the recess. And the frustum starts _BREAK_DIP BELOW the break, shrunk by the same, so its
+    drafted faces CROSS the void's vertical walls at 45 degrees instead of lying on them: built on
+    the wall outline itself (first cut, 2026-11-13) the boolean left 45 zero-length seams round the
+    max shell at z seat - 0.10, and check_mesh refused them."""
+    v = _void_in_recess().intersection(_recess_fp().buffer(-(c + 0.02), join_style=2))
+    return _frustum(v.buffer(-_BREAK_DIP, join_style=2), bb - c - _BREAK_DIP, c + _BREAK_DIP + 0.01, taper)
+
+_BREAK_DIP = 0.05        # how far an edge-break frustum starts inside the void (see _lip_break_cut)
+
+def _frustum(poly, z0, h, taper):
+    """Taper-extrude every polygon in `poly` (board coords) from z0 by h; union of the pieces."""
+    out = None
+    for g in (poly.geoms if poly.geom_type == "MultiPolygon" else [poly]):
+        if g.is_empty or g.area < 1e-4:
+            continue
+        # 0.02 off the exact outline at most, on a 0.10 break: without it the near-tangent run where
+        # a band-step fillet meets its wall left two zero-length seams per frustum; with it, one
+        g = g.simplify(0.02, preserve_topology=True)
+        xy = [(wx(x), wy(y)) for x, y in list(g.exterior.coords)[:-1]]
+        f = cq.Workplane("XY").workplane(offset=z0).polyline(xy).close().extrude(h, taper=taper)
+        out = f if out is None else out.union(f)
+    return out
+
+def _resting_face_break(c):
+    """OPEN FRAME ONLY: the c x 45deg break on the cavity wall's edge at the resting face (z = 0),
+    cut by boolean like the lip break -- and, like it, BEFORE the bosses are unioned, so it never
+    touches them (each boss cylinder carries its own foot chamfer, and each spotface mouth its own
+    cone, _spotface_mouth_break).
+
+    This was faces('<Z').edges().chamfer() until 2026-11-13, when the lip bands began stepping a
+    tool radius past every part (fit_rules._lip_limits): the new outline put OCC's chamfer into
+    StdFail_NotDone on the whole face, with no single region to blame (excluding any one stretch of
+    the west wall still failed; excluding all of it passed) -- the OCC limit _recess_mouth_ease and
+    _lip_break_cut already route round. The outer edge is not in here: edge_ease broke it when the
+    block was made, and breaking it again is the double break the rim top had (SolidCraft B5).
+    The frustum is _lip_break_cut's own, on the same void outline, mirrored to grow DOWNWARD; a
+    taper on a re-offset outline was tried first and OCC's offset-wire builder refused it."""
+    # built growing UP from the void shrunk by _BREAK_DIP (so it crosses the wall, as the lip break
+    # does), then mirrored to grow DOWN: the shrunk outline lands at z = c + dip, the void's own
+    # outline at z = c, the break at c out from the wall at z = 0, and c + 0.02 at z = -0.02.
+    v = _void_in_recess()
+    h = c + _BREAK_DIP + 0.02
+    up = _frustum(v.buffer(-_BREAK_DIP, join_style=2), 0.0, h, -45)
+    return up.mirror("XY", basePointVector=(0, 0, 0)).translate((0, 0, c + _BREAK_DIP))
+
+def _spotface_mouth_break(c):
+    """OPEN FRAME ONLY: a true 45deg cone at each spotface mouth on the resting face."""
+    tool = None
+    for mx, my in mounts:
+        cone = (cq.Workplane("XY").workplane(offset=-0.02).moveTo(wx(mx), wy(my))
+                  .circle(CBORE_D / 2 + c + 0.02).extrude(c + 0.02, taper=45))
+        tool = cone if tool is None else tool.union(cone)
+    return tool
 
 def _recess_mouth_ease(wt, c):
     """45deg ease on the recess-mouth top-inner edge, around the board opening. Filleted (cavR) rounded-rect
@@ -300,6 +331,7 @@ from fit_rules import (lip_bands, cavity_void_poly as _cavity_void_poly,
                        LIP_CLR, LIP_MAX, COIL_EAST,
                        ring_reliefs as _ring_reliefs,
                        BOSS_CLR, THREAD_KEEP, export_solid,
+                       boss_cuts as _boss_cuts, recess_poly as _recess_poly, TOOL_R as _TOOL_R,
                        fin_region as _fin_region, fin_ribs as _fin_ribs,
                        FIN_PROUD, FIN_VALLEY,
                        MOUNTS as mounts)                                      # noqa: E402
@@ -341,16 +373,17 @@ def _poly_solid(poly, z0, dz):
     xy = [(wx(x), wy(y)) for x, y in list(poly.exterior.coords)[:-1]]
     return cq.Workplane("XY").workplane(offset=z0).polyline(xy).close().extrude(dz)
 
+def _recess_fp():
+    """The board recess in plan, board coords -- fit_rules.recess_poly(), the one statement of it."""
+    return _recess_poly()
+
 def _void_in_recess():
     """fit_rules' cavity void, held inside the board recess. edge_fit is NEGATIVE (a press fit),
     so the recess is 0.05 mm smaller than the board on every flat and a void that runs out to
     the board edge would still be cut 0.05 mm under the recess wall. Clipping to the recess
     footprint (same rounded rectangle build() cuts at the seat) means the floor-to-seat cut can
     never pass beneath the wall above it."""
-    e = max(0.0, -edge_fit)
-    rec = box(e, e, W - e, H - e)
-    rec = rec.buffer(-cavR, join_style=1, resolution=48).buffer(cavR, join_style=1, resolution=48)
-    v = _cavity_void_poly().intersection(rec)
+    v = _cavity_void_poly().intersection(_recess_fp())
     if v.geom_type != "Polygon":                 # a clip can shed dust; the void is the big piece
         v = max((g for g in v.geoms if g.geom_type == "Polygon"), key=lambda g: g.area)
     return v
@@ -390,10 +423,12 @@ def _boss_scallop_tool(x, y, floor, cavity, foot=0.0):
     grows each keep-out by that much at the resting face and tapers it back at 45 degrees,
     so the new flat gets the break every other edge of that face has.
 
-    Every cut face is a plane: square-cornered part outlines against the original cylinder,
-    nothing faceted for a CAM seat to choke on."""
-    fouls = [g for kp in _boss_fouls(x, y)
-             for g in (kp.geoms if kp.geom_type == "MultiPolygon" else [kp])]
+    Every cut face is a plane or a true cylinder: square-cornered part outlines against the
+    original cylinder, and an R = TOOL_R bore for each dogbone (fit_rules.boss_cuts -- where the
+    Ø2.0 finisher has to go to reach a keep-out corner), nothing faceted for a CAM seat to choke on."""
+    kps, dbs = _boss_cuts(x, y)
+    fouls = [g for kp in kps for g in (kp.geoms if kp.geom_type == "MultiPolygon" else [kp])]
+    bores = [cc for d in dbs for cc in d]
     if not fouls:
         return None
     # Upward the tool overshoots into the board recess, which is air. Downward it may only
@@ -407,6 +442,9 @@ def _boss_scallop_tool(x, y, floor, cavity, foot=0.0):
     island = fat
     for g in fouls:
         island = island.cut(_poly_solid(g, z0 - 0.01, dz + 0.02))
+    for cx, cy in bores:
+        island = island.cut(cq.Workplane("XY").workplane(offset=z0 - 0.01)
+                              .moveTo(wx(cx), wy(cy)).circle(_TOOL_R).extrude(dz + 0.02))
     island = _axis_piece(island, x, y, floor + cavity / 2)
     tool = fat.cut(island)
     if foot > 0:
@@ -417,6 +455,12 @@ def _boss_scallop_tool(x, y, floor, cavity, foot=0.0):
                        .extrude(foot, taper=45))
             wedge = wedge.union(_poly_solid(grown, z0, floor - z0))    # ...and on down past the face
             tool = tool.union(wedge.intersect(fat))
+        for cx, cy in bores:
+            cone = (cq.Workplane("XY").workplane(offset=floor).moveTo(wx(cx), wy(cy))
+                      .circle(_TOOL_R + foot).extrude(foot, taper=45))
+            cone = cone.union(cq.Workplane("XY").workplane(offset=z0).moveTo(wx(cx), wy(cy))
+                                .circle(_TOOL_R + foot).extrude(floor - z0))
+            tool = tool.union(cone.intersect(fat))
     return tool
 
 def _maker_text(txt, lx, cy, capH, fontpath):
@@ -517,6 +561,8 @@ def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pill
     # at full height (2.80) and fill the corner regions the break outline would otherwise reach.
     if lip_break > 0:
         res = res.cut(_lip_break_cut(bb, lip_break, -45))
+    if EDGE_BREAK > 0 and floor == 0:                   # open frame: the resting face's wall edge
+        res = res.cut(_resting_face_break(EDGE_BREAK))
     # bosses (always) + window braces (optional; OFF by default -- ribs+lip already support U7/caps;
     # the braces only propped the window / bare-laminate spans. Removing them frees board (13.6,40.1) &
     # (39.5,40.0) for future revs. Analysis: U7 floor clearance unchanged (rib end is its support).)
@@ -525,6 +571,8 @@ def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pill
         if lip_break > 0:                                   # convex top-edge break that FOLLOWS the boss circle;
             try: b = b.faces(">Z").chamfer(lip_break)       # chamfer the bare cylinder BEFORE the union (OCC won't
             except Exception: pass                          # chamfer the merged internal tops, but a lone cylinder is fine)
+        if EDGE_BREAK > 0 and floor == 0:                   # open frame: the boss foot IS the resting face
+            b = b.faces("<Z").chamfer(EDGE_BREAK)           # (raises if OCC refuses -- never ship it unbroken)
         res = res.union(b)
     # cap-gap ribs (full-cavity walls; also prop the board along the corridor)
     if ribs:
@@ -624,8 +672,18 @@ def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pill
     # The outer top/bottom rim is already eased by `edge_ease`. The internal board-rest tops (lip/boss/
     # rib at z=bb) and hole exits won't take a clean OCC chamfer here -> carry a drawing note instead:
     # "deburr all edges, break sharp corners ~0.1 mm (Ti)". Per-group try/except keeps the build robust.
+    # NOT faces('>Z') while edge_ease is on (2026-11-13): edge_ease already broke the rim top
+    # and the recess mouth, and chamfering them again left TWO facets -- 45 then 22.5 degrees,
+    # 0.200 wide by 0.100 tall -- under a sheet that calls a single 0.10x45 (SolidCraft B5,
+    # sectioned here at y44.45 on max and lite).
+    # On the OPEN FRAME the resting face is broken by boolean instead: the wall's edge before the
+    # bosses went on (_resting_face_break), each boss foot on its own cylinder, the spotface
+    # mouths here.
+    if EDGE_BREAK > 0 and floor == 0:
+        res = res.cut(_spotface_mouth_break(EDGE_BREAK))
     if EDGE_BREAK > 0:
-        for sel in ("<Z", ">Z"):
+        for sel in tuple(s_ for s_ in (("<Z",) if edge_ease > 0 else ("<Z", ">Z"))
+                         if not (s_ == "<Z" and floor == 0)):
             try:
                 res = res.faces(sel).edges().chamfer(EDGE_BREAK)
             except Exception as e:

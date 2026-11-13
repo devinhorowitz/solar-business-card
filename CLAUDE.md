@@ -509,16 +509,33 @@ red, the check itself fails.
   (read out of the loop that sizes the band, the `boss_foul_refs()` shape), and it raises rather
   than return rows the cut polygon contradicts. `scripts/assembly_drc.py` [G] then holds it to the
   sectioned shell, because a description checked against the module that produced it is the gate
-  the *shared definition* bullet above warns about. Whether the bare edge is acceptable is open in
-  `TODO.md`.
+  the *shared definition* bullet above warns about. **Settled 2026-11-13, by a measurement rather
+  than a preference:** every cap's FREE edge faces the board edge (`CAP_DATUM` — the shim indexes
+  from inside), so a max-material can stands 0.40 mm off it and no lip can stand `LIP_CLR` off that
+  and still seat anything. `lip_bands()` now says so itself: it measures a cap at
+  `fit_rules.part_envelope()` and cuts a band narrower than `LIP_MIN` to none, so the input and the
+  part agree and no relief does it by accident.
 - **A typed coordinate list is a copy, and the copy is the failure mode — again.** The four
   solar-cell tab lands were typed into the brace drawing generator and typed again into the brace
   CAD's pocket map, both 1.25 mm off the board. They are read by `board_parts.cell_tab_lands()`
   now. What they showed once read: **the brace backs none of the four tabs** (it was three of four
   at the 2026-07-29 respin, none since 2026-08-08), while `enclosure/brace/README.md` listed tab
   backing as the brace's second job and the sheet labelled legs that are not there. The rails are
-  still computed and are exactly what `SINGLE_PIECE` drops — `fit_rules.DROPPED`. Also open in
-  `TODO.md`.
+  still computed and are exactly what `SINGLE_PIECE` drops — `fit_rules.DROPPED`. **Accepted by DRH
+  on 2026-11-13:** the air frame has no brace at all, so the card must take unbacked tabs anyway, and
+  a first-article press test in `TODO.md` is what proves it does.
+- **The STEP keeps every inside corner sharp; the part has the finisher's radius in each — so a
+  gate on the model is not a gate on the machined part** (2026-11-13). The sheet tells the shop to
+  finish the cavity's concave corners with a Ø2.0 (`fit_rules.TOOL_R`), and every check measured
+  the sharp model: the brace ran 0.225 mm into the east boss-to-wall fillets, a max-material
+  SC2 / SC4 sat 0.113 / 0.130 inside the mid-span boss corners, and C24's STO_SNS pad stood 0.097
+  from a band-step fillet — all green. Three rules close it: the brace is cut to
+  `fit_rules.cavity_as_milled()`; a boss keep-out corner the tool cannot reach gets a modeled Ø2.0
+  bore (`fit_rules.boss_cuts()`, placed as far from the thread as the tool can be and still reach);
+  and a lip band steps a tool radius past its part. Metal near a supercap is held to the can at MAX
+  material (`fit_rules.part_envelope()`), not nominal. `scripts/assembly_drc.py` **[H]** sections the
+  emitted shell, opens it by the radius, and holds the brace, every part and the max-material cans
+  to that. **A finisher larger than `TOOL_R` breaks all of it** — the sheet says so.
 - **A ledger entry is a standing waiver, so a ledger audits itself.** `scripts/interference_drc.py`'s
   `EDGE_LEDGER` excused seven parts from the cavity rectangle and had excused nothing since
   2026-08-08: six had been moved inboard and the seventh, C7, was deleted from the board the day

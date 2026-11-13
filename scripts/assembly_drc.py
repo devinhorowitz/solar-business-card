@@ -75,6 +75,14 @@ So [G] sections the emitted shell and measures, every 0.1 mm along all four edge
 far the metal stands in from the board edge, and holds lip_as_cut() to it. Its canary is
 the same measurement against a description half a millimetre too wide.
 
+THE AS-MILLED CHECK ([H], 2026-11-13) is [B] and [F] again with the finisher's radius
+applied: each section's void is opened by fit_rules.TOOL_R -- the radius the sheet tells the
+shop to finish the inside corners with -- before the brace, every B-side body and the four
+supercaps at MAX MATERIAL (fit_rules.part_envelope) are held to it. It exists because the
+STEP keeps those corners sharp and both earlier checks measured the STEP: the brace ran
+0.225 mm into the east boss-to-wall fillets and a max-material SC2 / SC4 sat 0.113 / 0.130
+inside the mid-span boss corners on every committed shell, all of it green.
+
 Variant policy, stated rather than implied:
   * max / lite -- every check, parameterized (floor, cavity, screw_len, stack).
   * air -- open_back, no brace: the cavity-floor probe and every brace/ferrite
@@ -701,6 +709,92 @@ def check_variant(vname, v, fr, bp, trimesh):
         ok(f"the lip in the metal is the lip the drawing's note describes ({'; '.join(said)}): "
            f"{n_all} stations on four edges, worst {worst_all:.3f} mm off where one width "
            f"governs; a description 0.5 mm too wide disagrees at {canary_hits}, as it must")
+
+    # ---- 8. the shell AS A ROUND CUTTER LEAVES IT -----------------------------------
+    # The STEP keeps every inside corner of the cavity sharp, and the sheet tells the shop to
+    # finish them with a Ø(2 x TOOL_R) tool -- which leaves TOOL_R of metal in each. [B] and
+    # [F] measure the sharp model, so two findings of 2026-11-13 passed both: the brace ran
+    # 0.225 mm into the fillets at the east boss-to-wall corners, and at the east mid-span
+    # bosses the fillet reached a max-material SC2 / SC4 by 0.113 / 0.130 (SolidCraft 0.134).
+    # Same sections; the void is opened by the radius before anything is compared.
+    print(f"[H] the shell as milled (every sharp inside corner given the Ø{2 * fr.TOOL_R:g} "
+          f"finisher's radius)")
+    from shapely.geometry import box as _box2
+    pre = len(_ERRORS)
+    R = fr.TOOL_R
+    room = _box2(-1.0, -1.0, W + 1.0, H + 1.0)
+    milled = []
+    for lbl, z, metal in shell_cuts:
+        void = room.difference(metal)
+        opened = (void.buffer(-R, join_style=1, quad_segs=32)
+                      .buffer(R, join_style=1, quad_segs=32))
+        milled.append((lbl, z, metal, room.difference(opened)))
+    # canary: the radius must add metal somewhere, and a speck planted in the largest fillet
+    # must read clear of the sharp metal and inside the milled metal -- or this check cannot
+    # tell the two shells apart and every 'clear' below is the sharp model again
+    _l, _z, sharp0, milled0 = milled[0]
+    fil = milled0.difference(sharp0)
+    pieces = [g for g in getattr(fil, "geoms", [fil]) if g.geom_type == "Polygon"]
+    if not pieces or max(g.area for g in pieces) < 0.02:
+        err("SELF-TEST: the finisher's radius adds no metal at any corner of the section -- "
+            "the opening is not being applied, so this check is [F] again")
+    else:
+        big = max(pieces, key=lambda g: g.area)
+        sp = big.representative_point().buffer(0.01)
+        if sharp0.intersection(sp).area > 1e-9 or milled0.intersection(sp).area < sp.area * 0.99:
+            err("SELF-TEST: a speck planted in the largest fillet does not read as "
+                "milled-metal-only -- the two shells are not being told apart")
+    if brace is not None:
+        worst = None
+        for lbl, z, _metal, mm in milled:
+            resin = section(brace, z - floor, trimesh)
+            over = mm.intersection(resin)
+            for g in getattr(over, "geoms", [over]):
+                if g.area > OVERLAP_EPS:
+                    c = g.centroid
+                    err(f"brace and the AS-MILLED shell occupy the same {g.area:.3f} mm2 {lbl} "
+                        f"(z {z:.2f}) at board ({c.x:.2f}, {c.y:.2f}) -- the brace runs into "
+                        f"the R{R:g} the finisher leaves in that corner")
+            if over.area <= OVERLAP_EPS:
+                d = mm.distance(resin)
+                worst = d if worst is None else min(worst, d)
+        if worst is not None and len(_ERRORS) == pre:
+            ok(f"brace clears the as-milled shell at all {len(milled)} levels "
+               f"(closest {worst:.3f} mm)")
+    rows = []
+    seat = floor + cavity
+    for ref, poly, h, src in bp.parts("B"):
+        if h is None and ref.startswith("SC"):
+            h = v["cap_h"]
+        if h is None:
+            continue
+        env = fr.part_envelope(ref, poly)
+        for name, shape in ((ref, poly),) + (((ref + " max-material", env),) if env is not poly else ()):
+            gap = None
+            for lbl, z, _metal, mm in milled:
+                if z <= seat - h:
+                    continue
+                over = mm.intersection(shape)
+                if over.area > OVERLAP_EPS:
+                    depth, (px, py) = deepest(over, shape)
+                    err(f"{name}: {over.area:.4f} mm2 of AS-MILLED metal inside it {lbl} "
+                        f"(z {z:.2f}), {depth:.3f} mm deep at board ({px:.2f}, {py:.2f}) -- "
+                        f"the R{R:g} the finisher leaves in a corner the model keeps sharp")
+                    gap = -1.0
+                    break
+                d = mm.distance(shape)
+                gap = d if gap is None else min(gap, d)
+            if gap is not None and gap >= 0:
+                rows.append((gap, name))
+                if gap < SECTION_FLOOR:
+                    err(f"{name}: as-milled metal stands {gap:.3f} mm from it -- contact")
+    rows.sort()
+    for gap, name in rows[:6]:
+        print(f"          {name:18s} nearest as-milled metal {gap:.3f} mm")
+    if len(_ERRORS) == pre:
+        ok(f"{len(rows)} bodies (the supercaps also at max material, fit_rules.part_envelope) "
+           f"clear the shell as an R{R:g} finisher leaves it (tightest {rows[0][1]} "
+           f"{rows[0][0]:.3f}); the planted fillet speck reads as milled metal, as it must")
 
     return len(_ERRORS), len(_WARNS)
 
