@@ -35,8 +35,10 @@ WHAT IT MEASURES
   [B]  each brace against every B-side component solid, by OCC boolean: zero, but for
        PROUD_IN_KICAD. CANARY: the same brace MIRRORED must collide, in both placements
        the mount holes allow.
-  [S]  each shell, sectioned through its cavity, against every component's plan outline:
-       no contact. CANARY: its mirror image must fit WORSE, in both placements.
+  [S]  each shell, sectioned through its cavity, against every component's plan outline
+       and the bare-pad footprints (no model, so KiCad exports no body for them; board_parts
+       reads them, the reader [P] holds to KiCad's placement): no contact. CANARY: its
+       mirror image must fit WORSE, in both placements.
   [E]  each STEP against its own STL. [B] reads the braces' STEPs and [S] the shells' STLs,
        but the printer is sent the brace's STL and the machinist the shell's STEP -- so the
        two files of every solid, the pogo plate's included, must be the same solid in the
@@ -55,7 +57,14 @@ WHAT IT CANNOT SEE, said plainly so it is not mistaken for total:
     mirror image overlaps nothing in one placement and merely stands closer to the parts
     beside the west lip (R16 loses 0.18 mm). [S] scores that over every part in reach,
     prints both hands, and fails unless the mirror image fits worse -- it never passes on
-    "no collision" alone. assembly_drc [G] is the stronger
+    "no collision" alone. In the OTHER placement the mirror image's west lip lands on the bare
+    JP1 and TP1 pads (8.857 and 1.616 mm2), and nothing else; KiCad exports no body for a
+    footprint without a model, so [S] takes those footprints from board_parts. Until
+    2026-11-13 it did not need to: a cap-corner flat on each east mid-span boss made the
+    mirror crowd SC1 / SC3 there. The Ø2.0 bores that went in that day (fit_rules.boss_cuts)
+    carved that corner away, the mirror stopped crowding anything KiCad exports in that
+    placement, and the first CI run read the shells as WRITTEN IN THE WRONG HAND -- with every
+    other witness of the hand green. assembly_drc [G] is the stronger
     witness (a mirror-image shell has its lip nick 4 mm from where the board wants it);
     [P] and [M] are what tie that gate's frame to this one's.
   * Bare pads. KiCad's export carries component bodies, not copper, so a lip resting on
@@ -101,6 +110,13 @@ CANARY_PARTS = 5
 # loses. So the fit is scored over EVERY part in reach: "crowding" is how far inside REACH
 # the metal stands, summed over the parts (0.809 mm as written, 1.036 mirrored). A mirror
 # image must crowd the board by at least CROWD_MARGIN more, or overlap it.
+# Re-measured in CI 2026-11-13 on the solids with the Ø2.0 boss-corner bores, over KiCad's
+# bodies alone: as written crowding 0.223 (R16 0.378, C24 0.399); mirrored as written 0.550
+# (R16 0.199); mirrored and turned half a turn 0.000 (nearest SC1 0.549) -- better than the
+# shell itself, so the gate called the right hand wrong. That placement's mirror lands on
+# the bare JP1 / TP1 pads instead, which KiCad exports no body for, so [S] carries the
+# bare-pad footprints too: as written they stand 0.300 off the lip (crowding +0.400 on both
+# sides of the comparison), and the half-turn mirror overlaps them, 8.857 and 1.616 mm2.
 REACH = 0.5
 CROWD_MARGIN = 0.05
 
@@ -448,6 +464,16 @@ def check(board_step, panel_step=None):
 
     # ---- [S] the shells, in section -------------------------------------------------
     outlines = [(names.get(i, f"?{i}"), silhouette(s), pb.zmin, pb.zmax) for i, (s, pb) in enumerate(back)]
+    # ...and the bare-pad footprints, which KiCad exports nothing for (no model): bare copper
+    # the grounded lip must not land on, and in one placement the only thing a mirror-image
+    # shell lands on (see WHAT IT CANNOT SEE). board_parts gives them their pad envelope and a
+    # nominal height; [P] above is what ties that reader's placement to KiCad's.
+    bare = [(ref, in_kicad(poly), z_under - h, z_under)
+            for ref, poly, h, src in bp.parts("B") if src == "pads"]
+    if not bare:
+        err("board_parts reads no bare-pad footprint on the back -- [S] has lost the one "
+            "witness that tells a shell's hand in its second placement")
+    outlines += bare
     for vname, v in fr.VARIANTS.items():
         print(f"[S] {vname}: shell vs KiCad's parts")
         path = ROOT / "enclosure" / (v["shell_name"] + ".stl")

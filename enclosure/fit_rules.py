@@ -36,6 +36,7 @@ WHAT THE RULES ARE
 """
 from __future__ import annotations
 
+import math
 import os
 import sys
 
@@ -49,7 +50,25 @@ from board_parts import parts as board_parts   # noqa: E402
 # ---- board / cavity -------------------------------------------------------------------
 W, H = 50.80, 88.90
 BOARD_TH = 0.60
+BOARD_R = 3.0              # the board's corner radius (was the shell CAD's own `R`)
 TOOL_R = 1.0               # dia 2.0 finisher -> R1.0 internal corners
+# THE BOARD IS A PRESS FIT IN ITS RECESS, BY DECISION (DRH, 2026-11-13). The recess is cut
+# 0.05 smaller than the board on every flat (relieved at the four corners, corner_clr in the
+# shell CAD). Until then this number had three homes -- the shell CAD, its DRAWING-gen and
+# _back_field() below -- and the repo described it three ways (press fit, "treat as a slip
+# fit", "SLIP FIT, NOT A PRESS FIT"). Against a routed outline of +-0.1 to +-0.2 a board at
+# the top of its tolerance will not enter titanium: its FR4 EDGE is sanded at assembly, and
+# enclosure/README.md says so. The interference is the intent; the sanding is the step.
+EDGE_FIT = -0.05
+
+
+def recess_poly():
+    """The board recess in plan, board coords: the board outline moved EDGE_FIT on every
+    flat, corners at BOARD_R + EDGE_FIT -- the rounded rectangle the shell cuts at the seat
+    and the floor-to-seat cavity is held inside."""
+    e, r = max(0.0, -EDGE_FIT), BOARD_R + EDGE_FIT
+    return (box(e, e, W - e, H - e).buffer(-r, join_style=1, resolution=48)
+            .buffer(r, join_style=1, resolution=48))
 CAP_AIR = 0.10             # air over the CAVITY-SETTING parts (the caps in max; the shell
                            # CAD's cav_margin was this same number restated -- collapsed
                            # here 2026-08-07, the CAVITY-two-homes fix)
@@ -176,6 +195,43 @@ def clr_for(ref):
     return max(clr_sides(ref).values())
 
 
+# ---- the MAX-MATERIAL outline (2026-11-13) ----------------------------------------------
+# The datum gap is the reflow shim's own constant, read out of its source rather than copied
+# (scripts/ is not on this module's import path, and the shim imports this module lazily).
+# ast, not exec: nothing in that file runs to get one number out of it.
+def _shim_clr():
+    import ast
+    src = os.path.join(os.path.dirname(HERE), "scripts", "reflow_shim.py")
+    for node in ast.parse(open(src, encoding="utf-8").read()).body:
+        if (isinstance(node, ast.Assign) and len(node.targets) == 1
+                and getattr(node.targets[0], "id", None) == "SHIM_CLR"):
+            return float(ast.literal_eval(node.value))
+    raise RuntimeError("scripts/reflow_shim.py has no SHIM_CLR -- the datum gap has no home")
+
+
+from part_heights import SUPERCAP_BODY_TOL as _BODY_TOL      # noqa: E402
+SHIM_DATUM_GAP = _shim_clr()
+
+
+def part_envelope(ref, poly):
+    """The largest outline the part can have ON THE BOARD -- what metal must clear, as
+    opposed to part_keepout(), which is what the RESIN keeps off it.
+
+    A machine-placed part is its nominal outline. A supercap is not: its body runs up to
+    SUPERCAP_BODY_TOL over nominal on both in-plane axes, and the reflow shim indexes it on
+    its two DATUM edges, so the whole tolerance lands on its two FREE edges (+TOL + the
+    shim's datum gap) and the datum edges move by the gap alone. On this board every cap's
+    FREE edge faces the nearest board edge (CAP_DATUM: the shim indexes from inside), so a
+    max-material can stands 1.00 - 0.60 = 0.40 mm off the north or south edge, not 1.00.
+    Everything that puts titanium near a cap -- the lip bands, the boss flats -- reads this,
+    or it is clearing a can that may not be the one on the board."""
+    d = CAP_DATUM.get(ref)
+    if d is None:
+        return poly
+    return part_keepout(ref, poly, sides={s: (SHIM_DATUM_GAP if s in d
+                                              else _BODY_TOL + SHIM_DATUM_GAP) for s in "EWNS"})
+
+
 def part_keepout(ref, poly, sides=None):
     """The in-plane keepout for ONE part, and the single definition of it.
 
@@ -215,6 +271,15 @@ BOSS_CLR = 0.20            # Ti boss to part/pad
 THREAD_KEEP = 1.30         # never scallop inside this: the M2 thread lives at r0.80..~1.0
 LIP_CLR = 0.30             # lip edge to nearest part body or pad
 LIP_MAX = {"W": 2.5, "E": 2.5, "S": 2.0, "N": 2.0}
+LIP_MIN = 0.30             # a band narrower than this is cut as NO lip (2026-11-13). Beside the
+                           # supercaps the honest band is 0.10: a max-material can stands 0.40
+                           # off the edge (part_envelope) and the lip stands LIP_CLR off that.
+                           # Of 0.10, 0.05 is under the press-fit recess wall and the rest is
+                           # the lip's own 0.10 edge break, so it seats nothing, and the 0.17
+                           # slot it leaves under a corner boss is too narrow for the Ø2.0 to
+                           # enter -- the slot's fill reached 0.066 into a max-material can.
+                           # Same as LIP_CLR, so "no lip" and "a lip a part can trust" are the
+                           # only two answers.
 
 # ---- the shell's GUARANTEED lip ring (2026-08-07) --------------------------------------
 # The back-shell unions a scalar lip ring on top of the per-band lip system -- the ring is
@@ -253,7 +318,11 @@ def ring_reliefs(ps=None):
     not undo. `ps` takes the parts-list shape so the check can feed a synthetic part."""
     ring = ring_metal_poly()
     out = []
-    for _r, p, _h, src in (ps if ps is not None else _cached_parts()):
+    for r, p, _h, src in (ps if ps is not None else _cached_parts()):
+        # the max-material outline, not the nominal one (2026-11-13): sized from a nominal
+        # SC1 the relief left ring metal whose fillet reached 0.011 mm2 into the can that
+        # the cap's own tolerance allows, at all four caps' outer corners
+        p = part_envelope(r, p)
         if src == "model" and p.distance(ring) < LIP_CLR:
             out.append(p.buffer(LIP_CLR + TOOL_R, join_style=1, resolution=48))
     return out
@@ -332,9 +401,30 @@ def brace_cavity():
     middle band (east face x49.750 against a wall at x49.550; 9.02 mm3 of overlap on max,
     5.94 on lite, measured on the STEPs 2026-11-12), and check [8] measured the brace
     against cavity_rect() again, so it agreed. Wherever the per-band lip is no wider than
-    the ring -- west, north, south today -- the intersection changes nothing."""
-    return (cavity_rect().intersection(cavity_void_poly(simplify=False))
+    the ring -- west, north, south today -- the intersection changes nothing.
+
+    AND THE VOID IS THE ONE THE CUTTER LEAVES (2026-11-13). The shell is modelled with its
+    boss-to-wall junctions sharp, and the sheet tells the shop to finish them with a Ø2.0
+    tool -- which leaves R1.0 of metal in each. The brace was cut to the sharp model, so at
+    the four bosses whose discs meet the cavity wall beside the brace's band it ran 0.225
+    mm (east) and 0.055 mm (west) into those fillets: sectioned on the committed STLs, and
+    invisible to assembly_drc [B], which measured the sharp shell too. cavity_as_milled()
+    is the void with the finisher's radius applied."""
+    return (cavity_rect().intersection(cavity_as_milled())
             .buffer(-WALL_FIT, join_style=1, resolution=64))
+
+
+def cavity_as_milled(tool_r=TOOL_R):
+    """The cavity void at the board-rest plane AS A RADIUS-tool_r FINISHER LEAVES IT: board
+    area less the lip metal and the boss islands, opened by the tool. Every inside corner of
+    the metal that the model leaves sharp comes back as a tool_r fillet; nothing else moves.
+
+    The brace is cut to this, and scripts/assembly_drc.py [H] applies the same opening to
+    the SECTIONED shell, so the rule and the part are measured by two different readers."""
+    void = (box(0.0, 0.0, W, H).difference(lip_metal_poly())
+            .difference(unary_union([boss_island(mx, my) for mx, my in MOUNTS])))
+    return (void.buffer(-tool_r, join_style=1, resolution=48)
+                .buffer(tool_r, join_style=1, resolution=48))
 
 
 def brace_footprint(span=None, keepout=None):
@@ -526,13 +616,24 @@ def _lip_limits(edge, lo, hi, ps=None):
     ps = ps or _cached_parts()
     cands = []
     for ref, poly, _h, _src in ps:
-        x0, y0, x1, y1 = poly.bounds
+        # TWO THINGS this used to get wrong, both found 2026-11-13 by opening the cut void
+        # by TOOL_R and measuring it against the parts (TODO.md, the C24 and supercap items):
+        #  * A supercap was measured at NOMINAL. Its free edge faces the board edge, so the
+        #    0.70 / 0.72 bands it "allowed" sat inside the can's own tolerance -- titanium
+        #    where a max-material can may be. part_envelope() is the can that has to fit.
+        #  * A part only narrowed the stations it OVERLAPPED, so a wide band could start at
+        #    the next 0.5 station -- 0.10 past C24's end -- and the finisher's R1.0 fillet in
+        #    the step corner then reached to 0.099 of a live STO_SNS pad, against LIP_CLR
+        #    0.30. Growing the part's along-edge extent by TOOL_R puts the step at least a
+        #    tool radius past it: the corner fillet's arc is then >= LIP_CLR off a part that
+        #    stands LIP_CLR off the narrow band ((R - LIP_CLR)^2 + 0 <= (R - LIP_CLR)^2).
+        x0, y0, x1, y1 = part_envelope(ref, poly).bounds
         if edge in ("W", "E"):
-            if y1 <= lo or y0 >= hi:
+            if y1 + TOOL_R <= lo or y0 - TOOL_R >= hi:
                 continue
             d = x0 if edge == "W" else (W - x1)
         else:
-            if x1 <= lo or x0 >= hi:
+            if x1 + TOOL_R <= lo or x0 - TOOL_R >= hi:
                 continue
             d = y0 if edge == "S" else (H - y1)
         cands.append((d - LIP_CLR, ref))
@@ -541,6 +642,8 @@ def _lip_limits(edge, lo, hi, ps=None):
     cut = lambda v: max(0.0, round(v, 2))
     width = cut(min([LIP_MAX[edge]] + [v for v, _n in cands]))
     who = [] if width >= LIP_MAX[edge] else [n for v, n in cands if cut(v) == width]
+    if width < LIP_MIN:          # a sliver is not a seat -- see LIP_MIN; the limiter keeps its name
+        width = 0.0
     return width, who
 
 
@@ -624,7 +727,14 @@ def lip_relieved(tool_r=TOOL_R, _opened=None):
     is bare from x4.3 to 22.9 and x27.7 to 46.3 on the south, x4.3 to 23.0 and x27.8 to 46.5
     on the north -- 74.6 of the 101.6 mm of short edge. lip_bands() is the INPUT to the cut,
     not a description of the part, and a sheet that recited it would dimension a ledge that
-    does not exist."""
+    does not exist.
+
+    SINCE 2026-11-13 THIS RETURNS NOTHING, and that is the design working. The relief above
+    was doing by accident what the caps' tolerance requires on purpose: a max-material can
+    stands 0.40 off the edge, not 1.00. _lip_limits() measures a cap at part_envelope() and
+    cuts a band under LIP_MIN to none, and steps every band a tool radius past its part, so
+    no band-step fillet lands on a part and nothing is left to relieve. It stays as the
+    backstop for a part the band rules do not anticipate."""
     opened = _void_opened(tool_r) if _opened is None else _opened
     lip_now = box(0.0, 0.0, W, H).difference(opened)
     return [(r, p) for r, p, _h, _s in _cached_parts() if lip_now.intersection(p).area > 1e-6]
@@ -804,8 +914,93 @@ def boss_fouls(mx, my):
     can -- titanium the resin had been told the cap might occupy. The flat now uses the same
     per-edge numbers as the bay (clr_sides via part_keepout, the ONE definition of a part's
     keep-out), floored at BOSS_CLR, so brace and shell cannot disagree about how big a cap
-    can be. Every flat still clears THREAD_KEEP; check_consistency gates that per boss."""
-    return [_boss_keepout(r, p) for r, p in _boss_foul_parts(mx, my)]
+    can be. Every flat still clears THREAD_KEEP; check_consistency gates that per boss.
+
+    EACH KEEP-OUT CARRIES ITS DOGBONES (2026-11-13). A keep-out corner that lands inside the
+    boss is an inside corner of the metal, and the Ø2.0 finisher cannot cut one: it leaves an
+    R1.0 fillet there. At the two east mid-span bosses that fillet reached a max-material
+    SC2 / SC4 by 0.113 / 0.130 mm (SolidCraft 0.134), while every gate measured the sharp
+    corner. boss_cuts() adds the disc the tool sweeps to reach the corner, so the cut is one a
+    TOOL_R cutter can make and the polygon is the metal."""
+    kps, dbs = boss_cuts(mx, my)
+    return [kp.union(unary_union([Point(c).buffer(TOOL_R, resolution=64) for c in d]))
+            if d else kp for kp, d in zip(kps, dbs)]
+
+
+def boss_cuts(mx, my):
+    """([keep-out], [[(cx, cy)...] per keep-out]) -- what comes out of the boss at (mx, my):
+    each fouling part's keep-out, and for each one the centres of its TOOL_R dogbones.
+
+    THE RULE: every corner of a keep-out within a tool's reach of the boss must be a corner
+    the Ø2.0 finisher can actually get to. A corner that lands inside the disc is an inside
+    corner of the metal; a corner just outside it can sit in a slot too narrow for the tool
+    (under a corner boss the disc stands 0.22 mm off the recess wall). Either way the
+    finisher leaves an R1.0 fillet there, and at the two east mid-span bosses that fillet
+    reached a max-material SC2 / SC4 by 0.113 / 0.130 mm (SolidCraft 0.134) while every gate
+    measured the sharp corner.
+
+    A dogbone is the end mill parked so it reaches the corner: a TOOL_R circle through it,
+    clear of the lip and the recess wall (it may cut only the boss), and of all such circles
+    the one whose centre lies farthest from the boss axis -- so it takes the least metal near
+    the thread. Where the line from the axis out through the corner is clear, that is the
+    centre; the textbook position on the corner's bisector was the first cut of this, and at
+    SC4's mid-span boss it reached 1.269 mm from the axis, inside THREAD_KEEP. The flats stay
+    where they were. A corner the tool already reaches gets nothing. The shell CAD cuts the
+    centres as true cylinders (a polygon would hand the CAM a faceted bore); everything 2D
+    reads boss_fouls(), which carries them as discs."""
+    c = Point(mx, my)
+    kps = [_boss_keepout(r, p) for r, p in _boss_foul_parts(mx, my)]
+    if not kps:
+        return kps, []
+    reach = BOSS_R + 2 * TOOL_R
+    win = c.buffer(reach + 2 * TOOL_R)
+    fixed = (box(-5.0, -5.0, W + 5.0, H + 5.0).difference(recess_poly())
+             .union(_lip_metal_cached())).intersection(win)
+    isl = Point(mx, my).buffer(BOSS_R, resolution=64).difference(unary_union(kps))
+    void = win.difference(fixed).difference(isl)
+    can = void.buffer(-TOOL_R, join_style=1, resolution=48).buffer(TOOL_R, join_style=1, resolution=48)
+    out = []
+    for kp in kps:
+        pts = list(kp.exterior.coords)[:-1]
+        cen, n = [], len(pts)
+        for i, v in enumerate(pts):
+            if c.distance(Point(v)) >= reach:
+                continue
+            p, q = pts[i - 1], pts[(i + 1) % n]
+            a = (p[0] - v[0], p[1] - v[1]); b = (q[0] - v[0], q[1] - v[1])
+            la, lb = math.hypot(*a), math.hypot(*b)
+            if la < 1e-9 or lb < 1e-9:
+                continue
+            bx, by = a[0] / la + b[0] / lb, a[1] / la + b[1] / lb
+            if math.hypot(bx, by) < 1e-9:            # straight through: not a corner
+                continue
+            # only a CONVEX corner of the keep-out is an inside corner of the metal
+            if not kp.buffer(1e-6).contains(Point(v[0] + 1e-4 * bx, v[1] + 1e-4 * by)):
+                continue
+            if can.buffer(1e-4).contains(Point(v)):  # the finisher already gets there
+                continue
+            best = None
+            for k in range(720):
+                t = math.radians(k * 0.5)
+                cc = (v[0] + TOOL_R * math.cos(t), v[1] + TOOL_R * math.sin(t))
+                if Point(cc).buffer(TOOL_R, resolution=48).intersection(fixed).area > 1e-9:
+                    continue
+                d = c.distance(Point(cc))
+                if best is None or d > best[0]:
+                    best = (d, cc)
+            if best is None:
+                raise RuntimeError(f"boss at ({mx}, {my}): no Ø{2 * TOOL_R:g} tool position "
+                                   f"reaches keep-out corner ({v[0]:.3f}, {v[1]:.3f}) without "
+                                   f"cutting the lip or the recess wall")
+            cen.append((round(best[1][0], 6), round(best[1][1], 6)))
+        out.append(cen)
+    return kps, out
+
+
+def _lip_metal_cached(_c={}):
+    if "m" not in _c:
+        _c["m"] = lip_metal_poly()
+    return _c["m"]
 
 
 def _boss_keepout(ref, poly):
@@ -954,7 +1149,7 @@ def _back_field():
     Now mirrors the generator's art-field rect exactly: centred, cavW-2*border wide,
     fillet concentric with the frame fillet.
     """
-    W, H, EF, CAVR = 50.80, 88.90, -0.05, 2.95      # board + edge_fit, as the generator uses
+    EF, CAVR = EDGE_FIT, BOARD_R + EDGE_FIT          # board + edge_fit, as the generator uses
     hw, hh = (W + 2 * EF) / 2 - BACK_BORDER, (H + 2 * EF) / 2 - BACK_BORDER
     cx, cy = W / 2, H / 2
     r = max(CAVR - BACK_BORDER, 0.3)

@@ -10,7 +10,7 @@ rebuilds that STL from the board.</sub>
 Back-only titanium shell for the SOLAR-GLOW DRH PCB. It drops over the populated back of the
 board and is held by eight M2 screws (four at the board corners + four at the panel inner corners);
 the bare show-front (two solar cells + the backlit DRH monogram window) stays exposed. Retention is
-the eight screws clamping, not a press fit.
+the eight screws clamping; the board's 0.05 mm press fit in its recess (§8) locates it, it does not hold it.
 
 This is the **0.6 mm-board "dumb box"** shell. It reduces to a floor, walls, eight M2 bosses,
 no relief pocket -- nothing else. All center support and all
@@ -53,10 +53,10 @@ The solids in this directory were measured with SolidCraft — a CAD program not
 uses — against `main` at `d060215`, because every gate here measures geometry built from the
 same inputs the generators read, and so inherits any error in a shared input. Six of its findings
 needed acting on. Four were traced to lines in the generators and fixed at once; the fifth, the
-hand the files are written in, was a decision and was taken the next day; the sixth is still a
-decision and is left exactly as it was. (It measured two more things that are recorded, with both numbers,
-in `TODO.md`: L2 against its pocket, and thin resin walls beside blind pockets in both braces —
-the second has since been fixed, and has its own row below.)
+hand the files are written in, was a decision and was taken the next day; the sixth, the board's
+0.05 mm press into its pocket, was a decision too, and on 2026-11-13 DRH kept it (§8). (It measured two more things: L2 against its pocket — KiCad's
+generic model, not the fitted part, and closed on 2026-11-13 under Locked in `TODO.md` — and thin
+resin walls beside blind pockets in both braces, since fixed, with its own row below.)
 
 | | committed solids (SolidCraft) | this tree's solids | |
 |---|---|---|---|
@@ -66,7 +66,12 @@ the second has since been fixed, and has its own row below.)
 | cavity cut underneath the rim wall | four downward faces at seat level, 24.896 mm² | **0** | fixed |
 | max shell STEP opens in another kernel | **refused**: 13 edges each shared by four faces, 804 sliver faces | 0 such edges, 0 slivers | fixed here; unconfirmed there |
 | parts are the right hand | **mirror images**: max brace collides in both placements (53.1 mm³ over 34 parts, 493.9 over 29), engraving reversed, pogo plate takes the panel only face-down | written right-handed: max brace 0.047 mm³ (one part, L2's KiCad model), lite 0; their mirror images collide; engraving reads from behind; the plate's dowel bores on the panel's tooling holes, 0.000 mm | fixed 2026-11-13 |
-| board against its pocket | board 0.05 mm larger on every flat, 5.90 mm³ | unchanged — deliberate, §8 | open |
+| board against its pocket | board 0.05 mm larger on every flat, 5.90 mm³ | unchanged — a press fit **by design** (DRH, 2026-11-13), §8 | decided |
+| east lip under the board | top **stepped**: the board rests on 0.85 mm of a 1.25 mm lip (SolidCraft C1) | full **1.25**: flat 1.15 + its 0.10×45° break, every y | fixed |
+| rim top and recess mouth | **two facets**, 0.200 × 0.100 (45° then 22.5°) under a sheet calling 0.10×45° (B5) | one 0.10×45° facet each; the air frame's resting rim too, which had the same pair | fixed |
+| a Ø2.0 finisher vs a max-material supercap | SC2 / SC4 **0.113 / 0.130** inside the boss-corner fillet (SolidCraft 0.134 on a square corner); SC1 / SC3 0.050 at the outer corners | all four **0.150 clear** (the keep-out's full margin): Ø2.0 bores modeled where the tool must reach | fixed |
+| a Ø2.0 finisher vs the brace | brace **0.225 mm** into the east boss-to-wall fillets, 0.055 west | clear at every level, closest 0.048 | fixed |
+| C24 (STO_SNS pad) to the lip | **0.097** to its pad box (0.152 to the rounded pad; SolidCraft 0.157), against `LIP_CLR` 0.30 | **0.296** | fixed |
 
 The right-hand column was measured in the cloud with OpenCascade and by slicing the STLs — an
 instrument that reproduces every SolidCraft figure on the committed solids to the last digit, and
@@ -92,6 +97,18 @@ What changed, in one line each — the reasoning is in the generators and in `CL
   the offset. The pogo plate's lettering is modelled mirror-written so that the reflection puts it
   right. Every vertex of the five rebuilt STLs is the bit-exact reflection of one in the file it
   replaces; no face, edge or volume changed in any STEP.
+- **The finisher's radius (2026-11-13).** The sharp model was what every gate measured, and the
+  sheet told the shop to finish the corners with a Ø2.0 that leaves R1.0 in each. Now the brace is
+  cut to `fit_rules.cavity_as_milled()`; a boss keep-out corner the tool cannot reach gets a
+  modeled Ø2.0 bore (`fit_rules.boss_cuts()`, placed as far from the thread as the tool can be);
+  the supercaps are held at max material (`fit_rules.part_envelope()`, their free edges face the
+  board edge); and a lip band steps a tool radius past its part, so the step's fillet clears it.
+  `scripts/assembly_drc.py` **[H]** sections the emitted shell with the radius applied.
+- **Lip break and rim.** The lip's 45° break was cut from a scalar outline the per-band lip had
+  outgrown (a 1.00 mm east lip, against the real 1.25); it follows the cut void now, and every
+  edge-break frustum starts inside the void so it crosses the wall instead of lying on it. The rim
+  top and mouth were chamfered twice; the deburr leaves them to `edge_ease` now, and the open
+  frame's resting face is broken by boolean.
 - **Brace walls.** The brace's own thin-wall rule compared a pocket only with another pocket, at
   0.40. Now every level of the brace — each band of height where the set of pockets is constant —
   is opened at `SLA_WALL` 0.60, the rule `brace_footprint()` already applies to the plan. A level
@@ -535,13 +552,17 @@ this sound, and all three are requests to the shop, not hopes:
 > generators also no longer write to a hardcoded `/mnt/user-data/outputs/` — they write beside
 > themselves, overridable with `$OUT_DIR`, so a plain checkout can regenerate both sheets.
 
-### 8. Press fit — do NOT rely on it
+### 8. Press fit — by design, and what it costs at assembly
 
-PCB recess flats are modeled 0.05 mm interference (below CNC tolerance) — treat as a **slip fit**; the eight screws retain and clamp.
+The PCB recess is cut **0.05 mm smaller than the board on every flat** (relieved at the four corners), and that interference is the **intent** — DRH's decision of 2026-11-13, with `fit_rules.EDGE_FIT` as its one home (the shell CAD, its drawing and the back-field rectangle all read it). Until then this section said "treat as a slip fit", the shell CAD said press fit and the sheet said both; the sheet now prints *"A PRESS FIT BY DESIGN, DO NOT OPEN IT UP"*, so a machinist does not "correct" it.
+
+**The assembly step it implies.** A routed board outline holds ±0.1 to ±0.2 mm, so a board at the top of its tolerance will not enter titanium. **Sand the board's FR4 edge, never the shell**: a few strokes on a flat sanding block, square to the face, until it presses in by thumb. Keep clear of the copper at the board edge — the recess walls are grounded titanium (§ edge castellations below). The eight screws still do the retaining and clamping; the press fit only locates.
 
 ### 9. Internal radii and tooling
 
-Internal concave junctions are modeled **sharp**; a round tool leaves its own fillet (standard for a milled pocket). The whole solid is analytic (planes, cylinders, cones) — verified 167 analytic faces, zero spline/Bezier. Rough the cavity with a Ø3–4 mm tool; finish corners/walls with a Ø2.0.
+Internal concave junctions are modeled **sharp**; a round tool leaves its own fillet (standard for a milled pocket). The whole solid is analytic (planes, cylinders, cones) — verified 167 analytic faces, zero spline/Bezier. Rough the cavity with a Ø3–4 mm tool; finish corners/walls with a Ø2.0 **or smaller — never larger**.
+
+Everything that has to clear those fillets is **sized for the Ø2.0's R1.0** (2026-11-13): the brace is cut to the cavity as that tool leaves it (`fit_rules.cavity_as_milled()`), and wherever a supercap keep-out corner lands where the tool could not reach, the boss carries a modeled **Ø2.0 bore** through that corner (`fit_rules.boss_cuts()` — six of them, at all four corner bosses and the two east mid-span ones), placed as far from the thread as the tool can be and still reach it. `scripts/assembly_drc.py` **[H]** sections the emitted shell, gives every sharp inside corner the R1.0, and holds the brace, every B-side part and the four supercaps **at max material** to that. Before it, the Ø2.0 put titanium 0.225 mm into the brace at the east boss-to-wall corners and 0.13 mm into a max-material SC4, on shells every other gate passed.
 
 ### 10. Edge break / deburr (note, do not model)
 

@@ -46,7 +46,7 @@ _MCY = sum(_fr.fin_band()) / 2.0                  # medallion centre = the clear
 # Shared geometry, ONE home each: board rect, board thickness, boss radii and the back
 # border come from fit_rules (this sheet held its own literals for them until 2026-08-07).
 # R (card corner radius) stays local drawing annotation, as before.
-W, H, R = _fr.W, _fr.H, 3.0
+W, H, R = _fr.W, _fr.H, _fr.BOARD_R
 board   = _fr.BOARD_TH                       # 0.60
 # THE LIP IS READ FROM fit_rules TOO, as of 2026-11-12 -- it was the last thing on this sheet
 # still typed, as five scalars (W 2.5 / N 2.0 / S 2.0 / E 1.0 / E-wide 2.5) plus a note in
@@ -262,15 +262,17 @@ def sheet(vname, v):
     sf        = round(stack - screw, 2)        # spotface bottom = screw-tip plane above z=0
     u7_pocket = 0.0 if open_back else U7_POCKET   # a pocket needs a floor to be cut into
     bb, wt = floor + cavity, floor + cavity + board
-    ef = -0.05
+    ef = _fr.EDGE_FIT
     cavW,cavH,cavR = W+2*ef,H+2*ef,R+ef
     # The board-in-recess fit, as MODELLED, said once and computed (2026-11-13). Note 4 said
     # "THE BOARD PRESS-FIT" and the recess note said "SLIP FIT, NOT A PRESS FIT" -- two typed
     # words on one sheet, contradicting each other, and the solid has the recess 0.05 under the
-    # board on every flat (SolidCraft, and this repo's own section of the STL). Which of the two
-    # is INTENDED is still open (TODO.md, the press-or-slip item); the sheet says what is cut.
+    # board on every flat (SolidCraft, and this repo's own section of the STL). DRH decided the
+    # same day: a press fit is the intent (fit_rules.EDGE_FIT), so the sheet says so -- a
+    # machinist who reads only "0.05 INTERFERENCE" may well "correct" it to a clearance.
     _fit = (f"RECESS {cavW:.2f} x {cavH:.2f} FOR A {W:.2f} x {H:.2f} BOARD: {abs(ef):.2f} "
-            f"{'INTERFERENCE' if ef < 0 else 'CLEARANCE'} PER FLAT AS MODELLED")
+            f"{'INTERFERENCE' if ef < 0 else 'CLEARANCE'} PER FLAT AS MODELLED"
+            + (" - A PRESS FIT BY DESIGN" if ef < 0 else ""))
     outW,outH,outR = cavW+2*wall,cavH+2*wall,cavR+wall
     oxmin = oymin = -(wall + ef)                                 # outline SW corner (-0.95)
     _oxmax, _oymax = W + wall + ef, H + wall + ef                # outline NE corner (datums)
@@ -298,6 +300,15 @@ def sheet(vname, v):
         notes.append(("brace", [f"BRACE REGISTRATION: THE RESIN BRACE ({_npc} PIECE{'S' if _npc != 1 else ''}, ITS FOOTPRINT COMPUTED FROM THE BOARD) REGISTERS TO THIS SHELL BY FITMENT - ITS OUTLINE, {_fr.WALL_FIT:.2f} OFF THE CAVITY WALLS WHERE IT REACHES THEM, + THE COMPONENT POCKETS + THE BOARD IN ITS RECESS ({_fit}). NO LOCATOR PILLARS; THE CAVITY FLOOR IS A FULL {floor:.2f} EVERYWHERE."]))
     else:
         notes.append(("brace", ["NO BRACE: AN OPEN FRAME HAS NO FLOOR TO RETAIN ONE (fit_rules.VARIANTS: brace_name=None). THE PCB REGISTERS IN THE %.2f RECESS AND ON THE 8 BOSSES." % board]))
+    # The finisher sentence, computed from fit_rules.TOOL_R (2026-11-13). Until then it was typed
+    # and said only "FINISH WITH A Ø2.0", which was a hope: the brace and two boss corners were
+    # sized to the SHARP model, so that tool put R1.0 of titanium 0.225 mm into the resin and
+    # 0.13 mm into a max-material supercap. They are sized to the cut now (cavity_as_milled,
+    # boss_cuts' dogbones), and scripts/assembly_drc.py [H] measures the emitted shell that way.
+    # So the sheet can say the thing a machinist needs: this tool or smaller, never larger.
+    _fin = (f"CONCAVE JUNCTION CORNERS LEFT SHARP IN THE MODEL: FINISH WITH A \u00d8{2 * _fr.TOOL_R:.1f} mm "
+            f"TOOL = R{_fr.TOOL_R:.1f} AS-MILLED; ALL CLEARANCES ALLOW FOR IT (BOSS-CORNER "
+            f"\u00d8{2 * _fr.TOOL_R:.1f} BORES MODELED). SMALLER IS FINE, LARGER IS NOT.")
     if is_ti:
         # 2026-11-13, from the SolidCraft review of 9a90a36: the LIP break was listed as MODELED
         # and is only in part (the cutter is the old scalar lip outline, so it misses the R16
@@ -309,11 +320,12 @@ def sheet(vname, v):
         # Its last sentence said "THE RESIN BRACE IS RELIEVED TO CLEAR R1.0 AT THESE CORNERS", and
         # it is not: with each sharp corner filled to R1.0 as milled, both braces overlap the
         # metal at four boss-to-wall corners, 0.225 mm deep on the east wall (TODO.md, the
-        # 2026-11-13 R1.0 item). Removed, not reworded -- whether to relieve the brace or call a
-        # smaller finisher is DRH's call, and the sheet should not answer it in the meantime.
-        notes.append(("edge", ["EDGE BREAKS - ALL 0.10x45°, FELT NOT SEEN.  MODELED, CALLED OUT ON SEC A-A / DETAIL B:  RIM = outer rim (top & bottom);  MOUTH = recess mouth (around PCB);  FRAME = proud back-frame bottom edges;  BOSS = boss + spotface bottom edges (Detail B).  LIP = inner (cavity-side) lip edge: BREAK EVERY LIP EDGE ON THE PART, WHETHER OR NOT THE MODEL SHOWS IT.  BREAK ALL OTHER EXPOSED EDGES 0.10x45°.  CONCAVE JUNCTION CORNERS LEFT SHARP IN THE MODEL: FINISH WITH A Ø2.0 mm TOOL = R1.0 AS-MILLED."]))
+        # 2026-11-13 R1.0 item). Removed, not reworded. Later that day the brace WAS relieved --
+        # cut to fit_rules.cavity_as_milled() -- and the finisher sentence (_fin above) now says
+        # what is true and gated (assembly_drc [H]): this tool or smaller, never larger.
+        notes.append(("edge", ["EDGE BREAKS - ALL 0.10x45°, FELT NOT SEEN.  MODELED, CALLED OUT ON SEC A-A / DETAIL B:  RIM = outer rim (top & bottom);  MOUTH = recess mouth (around PCB);  FRAME = proud back-frame bottom edges;  BOSS = boss + spotface bottom edges (Detail B).  LIP = inner (cavity-side) lip edge: BREAK EVERY LIP EDGE ON THE PART, WHETHER OR NOT THE MODEL SHOWS IT.  BREAK ALL OTHER EXPOSED EDGES 0.10x45°.  " + _fin]))
     else:
-        notes.append(("edge", ["EDGE BREAKS - ALL 0.10x45°, FELT NOT SEEN.  MODELED, CALLED OUT ON SEC A-A / DETAIL B:  RIM = outer rim (top & bottom);  MOUTH = recess mouth (around PCB);  BOSS = boss + spotface bottom edges (Detail B).  LIP = inner (cavity-side) lip edge: BREAK EVERY LIP EDGE ON THE PART, WHETHER OR NOT THE MODEL SHOWS IT.  BREAK ALL OTHER EXPOSED EDGES 0.10x45°.  CONCAVE JUNCTION CORNERS LEFT SHARP IN THE MODEL: FINISH WITH A Ø2.0 mm TOOL = R1.0 AS-MILLED.  DEBURR 316L WITH SHARP TOOLS, SINGLE PASSES - AUSTENITIC STAINLESS WORK-HARDENS UNDER A RUBBING DEBURR."]))
+        notes.append(("edge", ["EDGE BREAKS - ALL 0.10x45°, FELT NOT SEEN.  MODELED, CALLED OUT ON SEC A-A / DETAIL B:  RIM = outer rim (top & bottom);  MOUTH = recess mouth (around PCB);  BOSS = boss + spotface bottom edges (Detail B).  LIP = inner (cavity-side) lip edge: BREAK EVERY LIP EDGE ON THE PART, WHETHER OR NOT THE MODEL SHOWS IT.  BREAK ALL OTHER EXPOSED EDGES 0.10x45°.  " + _fin + "  DEBURR 316L WITH SHARP TOOLS, SINGLE PASSES - AUSTENITIC STAINLESS WORK-HARDENS UNDER A RUBBING DEBURR."]))
     if not open_back:
         _guide = ("AT THE ~1.0 Ti MIN-WALL GUIDANCE SO IT ALSO CLEARS ALUMINIUM / COPPER / STAINLESS."
                   if floor >= 1.0 - 1e-9 else

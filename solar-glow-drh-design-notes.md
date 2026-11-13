@@ -1916,3 +1916,91 @@ they are placement decisions in disguise: SRC/VINT/BUFSRC/MID get buffers (a bar
 divider on SRC is a real parasite at desk-light harvest currents), the stiff rails get
 1M:1M, MID gets no resistive path to ground at all, and LX_LOUT gets an RC average
 that the UI is forbidden to present as a voltage.
+
+## Addendum — The enclosure calls, settled (2026-11-13)
+
+The 2026-11-12 measurement, the prose clean-up and SolidCraft's hand-back left eleven enclosure
+items open in `TODO.md` as "DRH's calls", each with both numbers and its options. DRH decided four
+(in three answers); six were defects with one right answer, fixed in the generators; and one, L2,
+closed as KiCad's model rather than the part. The items are culled
+from `TODO.md` (full text in git history); the decisions are under Locked there. Every figure
+below was measured on the rebuilt solids with the repo's own instruments (OCC and sections of
+the STLs) — **none is SolidCraft-confirmed**, which is what the re-measure item is for.
+
+**Decided by DRH (four items, three answers):**
+- **Board in its recess: a press fit, by design.** The recess is 0.05 under the board on every
+  flat. The shell CAD, `enclosure/README.md` and the sheet had called it press fit, slip fit and
+  both. `fit_rules.EDGE_FIT` is its one home now (the shell CAD, its drawing and `_back_field()`
+  read it); the sheet says "A PRESS FIT BY DESIGN"; README §8 writes down the step it implies —
+  sand an oversize board's FR4 edge, never the titanium.
+- **Solar-cell tabs: not backed.** No brace has backed them since 2026-08-08, and the air frame has
+  no brace at all, so the card must take unbacked tabs anyway. A first-article press test is on
+  the BENCH list.
+- **Thin brace walls: kept** — two items, the ferrite channel's walls (0.40 east ridge, 0.265–0.52
+  west) and the 0.4632 TP2/TP3 diagonal neck (SolidCraft C3), all joined to the brace along their base. Formlabs' Form 4
+  design guide gives 0.2 mm for supported and unsupported walls (Grey Resin, 50 µm); its older
+  Form 2 figures were 0.6–0.8. The brace README's print spec now names the class.
+
+**Fixed in the generators (six: the brace and boss-corner items under the first bullet, then C24, the
+cap-side lip, the east lip, the rim), each with its before / after:**
+- **The finisher's radius.** The STEP keeps the cavity's inside corners sharp; the sheet tells
+  the shop to finish them with a Ø2.0, which leaves R1.0 in each; every gate measured the sharp
+  model. Sectioned with the radius applied, the committed shells had the brace **0.225 mm** into
+  the east boss-to-wall fillets (0.055 west), a max-material SC2 / SC4 **0.114 / 0.135** inside
+  the mid-span boss corners (SolidCraft had inferred 0.134 from a square corner), and SC1 / SC3
+  **0.050** inside at the outer corners, where a corner boss leaves a 0.22 mm slot the tool cannot
+  enter. Now: the brace is cut to `fit_rules.cavity_as_milled()`; every keep-out corner the tool
+  cannot reach gets a modeled Ø2.0 bore (`fit_rules.boss_cuts()`) — six of them, at the four
+  corner bosses and the two east mid-span ones — placed on the tool circle through the corner
+  farthest from the boss axis, so no bore comes nearer the thread than the flat it serves (the
+  bisector placement was tried first and reached 1.269 mm from SC4's mid-span axis, inside
+  `THREAD_KEEP` 1.30); and metal near a cap is held to the can at max material,
+  `fit_rules.part_envelope()`. After: all four max-material cans **0.150 clear** (the keep-out's
+  whole margin), the brace clear at every level (closest 0.048). `scripts/assembly_drc.py` **[H]**
+  is the new gate; on the committed solids it reproduces every number above, and its canary is
+  a speck planted in the largest fillet that must read as metal.
+- **C24 to the lip.** A part narrowed only the 0.5 mm stations it overlapped, so the 2.5 mm west
+  band started 0.10 past C24, and that step's fillet stood **0.097** from its STO_SNS pad box
+  (0.152 from the rounded pad; SolidCraft 0.157) against `LIP_CLR` 0.30. A part's along-edge
+  extent is grown by `TOOL_R` before the test, which puts each step a tool radius past it. After:
+  **0.296** (the lip's 0.01 width rounding takes the rest).
+- **No lip beside the supercaps — now by rule, not by accident.** Every cap's FREE edge faces the
+  board edge (the shim indexes from inside), so a max-material can stands 0.40 off it, not 1.00:
+  the 0.70 / 0.72 bands `lip_bands()` reported there sat inside the can's own tolerance, and the
+  relief that removed them had removed metal the can owns. `lip_bands()` measures a cap at
+  `part_envelope()` and cuts any band under `LIP_MIN` (0.30, = `LIP_CLR`) to none, so the input
+  and the part agree and `lip_relieved()` relieves nothing. The bare stretches move by 1 mm or so
+  (S x3.0–23.5 / 27.0–47.5, N x3.5–23.5 / 27.5–47.5); the cut lip is 360.9 mm², from 366.1.
+- **The east lip's stepped top (SolidCraft C1, B8).** The 45° lip break was cut from
+  `_lip_void_P()`, a scalar outline with a 1.00 mm east lip, while the per-band lip is 1.25; the
+  board rested on 0.85 mm of it. The scalar outline, `EAST_WIDE_Y` and `_east_blocks` are deleted;
+  the break follows the cut void. After: flat seat from x 49.65 to the edge plus the 0.10 break —
+  the full 1.25, at every y.
+- **The rim top and recess mouth's two facets (SolidCraft B5).** `edge_ease` broke them and the
+  deburr broke them again: 45° then 22.5°, 0.200 × 0.100. The deburr leaves the top face to
+  `edge_ease` now. After: one 0.10 × 45° facet each. The air frame's resting rim had the same
+  pair at the bottom and is single now too.
+- **And one of this round's own, caught by `check_mesh` — edge-break cutters on the walls they break.** Built on the void's own outline, a break
+  frustum lies ON the cavity wall at its base, and the boolean left 45–98 zero-length seams per
+  shell (`check_mesh` refused them). Each frustum now starts 0.05 inside the void, shrunk by the
+  same, so its drafted faces cross the wall at 45°. On the open frame the resting face's break is
+  cut by boolean too — `chamfer()` on that face went to StdFail_NotDone once the lip steps moved,
+  with no single region to blame — before the bosses are unioned; each boss foot is chamfered on
+  its own cylinder and each spotface mouth gets a true cone.
+
+**And the hand gate's margin moved.** The first CI run of this round failed
+`scripts/handedness_drc.py` [S] on all three shells — "THE FILE IS WRITTEN IN THE WRONG HAND" —
+with every other witness of the hand green (the braces' [B], each STEP against its STL [E], the
+frame [M], assembly_drc [G]). [S] scores a shell's fit to KiCad's exported bodies against its
+mirror image's in the two placements the holes allow, and in one of them the mirror used to
+crowd SC1 / SC3 at the mid-span boss corners. The Ø2.0 bores carved those corners away, and the
+mirror then crowded nothing KiCad exports (nearest SC1, 0.549) while the real shell stands 0.378
+from R16 and 0.399 from C24 by design. What the mirror really hits there is the bare JP1 and TP1
+pads under its west lip, 8.857 and 1.616 mm² — footprints with no model, so KiCad exports no body
+for them. [S] now takes the bare-pad footprints from `board_parts`, the reader its own [P] holds to
+KiCad's placement.
+
+**Seen, not changed:** on the air frame the Ø3.0 spotface at each west boss (2.87, 28.63 /
+60.27) reaches 0.025 mm past that boss's SC1 / SC3 flat at x 4.345 / 4.415, so the flat has a
+0.025 × 0.20 window at its foot. It is the same on `main`; the spotface is sized for the screw
+head and the flat for the can, and they overlap by that much.

@@ -13,6 +13,11 @@ the FRAM VS re-rail are placed, routed, and verified on the board; the U7
 footprint-identity swap and DNP clear have since landed too (2026-07-26). A PCB layout change still means
 a brace reprint, not a shell re-machine._
 
+_Culled 2026-11-13: the two enclosure "DRH's calls" items — eleven open sub-items from the
+2026-11-12 measurement, the prose clean-up and the SolidCraft hand-back. Six were fixed in the
+generators, four decided by DRH and one (L2) closed as KiCad's model; the record, with both numbers for each, is the design-notes addendum "The
+enclosure calls, settled (2026-11-13)", and the verdicts are under Locked._
+
 _Purged 2026-08-09: 18 completed `[x]` items culled (the file's own policy — the record is in git
 history and the design-notes addenda); the panel `check_zone_fills` fab hazard culled because it was
 FIXED the same day (`PCB/solar-glow-drh-panel.kibot.yaml` now carries the preflight); and two
@@ -110,6 +115,20 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
 
   **Gates:** the Locked `U5` VOUT decline reopens only on a margin figure from this; the C9 trim
   value; and whether the air variant earns its existence.
+
+- [ ] **[BENCH — first-article gate] Press-test the solar-cell tab joints: nothing backs them, by decision**
+  _(DRH, 2026-11-13, closing the "brace backs none of the four tabs" item.)_ No brace has backed
+  the four PV solder tabs since 2026-08-08: the outboard rails that would are cut off from the
+  body by the boss reliefs, and the one-piece rule drops them (`fit_rules.DROPPED`). The air
+  variant has no brace at all, so the design has to tolerate unbacked tabs regardless — and that
+  is what this test establishes, rather than a resin part assumed to. On the first assembled
+  card in each shell (max, lite, air): press each cell with a thumb, straight down, at the end
+  over its tab land (PV1 / PV2, pads `Nt` and `Pt`: x 4.30 and 46.50, y 15.75 and 73.15), firm
+  enough to flex the board visibly, ten times. Then inspect all four joints under magnification
+  for a crack line round the fillet or a lifted tab, and re-read each cell's open-circuit voltage
+  against its pre-test value. **Fails if** any joint cracks or a cell's V_oc moves. If it fails,
+  the options are the ones the decision passed over: print the four rails as separate pieces, or
+  bridge each past its mid-edge boss.
 
 - [ ] **[BENCH — first-article gate] Sweep the LED's I-V curve, and the loop current in situ**
   _(2026-08-20. Added after an ASIC-side analysis published a wrong finding off the back of the
@@ -797,7 +816,8 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
     - **B2**, note 4 "PRESS-FIT" against note 10 "SLIP FIT, NOT A PRESS FIT". The recess measures
       50.700 × 88.800 here as on SolidCraft (STL sectioned at seat + 0.30, along both centre lines,
       all three shells). Both notes now state the modelled fit computed from the sheet's `ef`:
-      "0.05 INTERFERENCE PER FLAT AS MODELLED". Which is intended is still the press-or-slip item.
+      "0.05 INTERFERENCE PER FLAT AS MODELLED". DRH decided the same day: a press fit, by design
+      (Locked; `enclosure/README.md` §8).
     - **B3**, note 5: "(BOSS-TO-WALL + EAST-LIP STEPS)". The east wall is x 49.550 on every
       0.1 mm row clear of a boss (seat − 0.30). The parenthesis is gone, so the sentence covers every
       concave corner left sharp, which C2 counts.
@@ -896,183 +916,29 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
     `check_doc_file_refs` needs UTF-8 forced). CI and every session here are Linux. It matters only
     if the suite is run there.
 
-- [ ] **[ENCLOSURE — DRH's calls, from the same measurement] Seven numbers left where they are** (two since fixed, and marked so; three more added 2026-11-13 from the SolidCraft hand-back)
-  _(2026-11-12. Each was measured or traced, none was changed. Both numbers are given so the
-  judgement can be made without re-deriving them.)_
-  - **The ridge east of the ferrite channel is 0.40 mm, under `SLA_WALL` 0.60.** It was 0.65. The
-    brace's east edge moved 0.25 mm west to fit the shell (`fit_rules.brace_cavity()`); the channel
-    wall stayed at `FER[2] + FER_CLR` = x 49.10. Confirmed on both built braces by sectioning the
-    STL through the channel: 0.650 → 0.400, uniform over y 33.5–55.5. It is a ridge 0.33 mm tall
-    (the channel's depth) on full-thickness resin, not a free-standing wall. Options are a narrower
-    `FER_CLR`, an open east side, or accepting it; the channel was not redesigned.
-  - **The board is 0.05 mm LARGER than its pocket on every flat** (pocket 50.700 × 88.800, board
-    50.800 × 88.900; 5.90 mm³ of overlap, all three shells). Deliberate — `edge_fit = -0.05`,
-    "press interference on the FLATS", relieved at the corners — but the repo says three things
-    about it: the shell CAD says press fit, `enclosure/README.md` §8 says "treat as a slip fit", and
-    the drawing's own note says "SLIP FIT, NOT A PRESS FIT". _(2026-11-13: SolidCraft found a
-    fourth: the same sheet's note 4 said "PRESS-FIT". Both notes now state what is cut, computed from
-    `ef`: "0.05 INTERFERENCE PER FLAT AS MODELLED". The intent below is still open, and the sheet no
-    longer takes a side on it.)_ Against that 0.05 the repo's own
-    figures for a routed outline are ±0.1 (the jig item below) and ±0.2
-    (`solar-glow-drh-design-notes.md`). Whichever it is, `edge_fit` has three homes to change
-    together: the shell CAD, `ef` in its DRAWING-gen, and `EF` in `fit_rules._back_field()`.
-  - **L2 reads 0.02 mm proud of its pocket — in KiCad's model, not on the part.** The export seats
-    every part 0.040 mm off the back face and draws L2 as the generic 1008 body, **1.200** tall;
-    1.200 + 0.040 against a 1.22 pocket is the 0.02. `enclosure/part_heights.py` already waives that
-    model by name (`MODEL_NOTES`): the part is a Murata DFE252010F, 1.0 mm max, and check [7] prints
-    the note on every run. At 1.0 the margin is +0.18. What is genuinely open is the seating plane —
-    whether 0.040 of standoff should be carried as a number rather than inside `fit_rules.AIR`.
-  - **FIXED 2026-11-13 — thin walls beside blind pockets, both braces.** Every level of the brace
-    is now opened at `SLA_WALL` (the brace CAD's comment has the reasoning, including why bridging
-    one wall at a time made a new 0.007 mm wall). Measured in the cloud by casting rays inward from
-    every section boundary — an instrument calibrated against the committed brace, where it finds
-    the 0.0068 below, 0.0718 (R15), 0.0904 (C3) and 0.0989 (west edge): walls under 0.10 mm went
-    15 → 0 on max, 19 → 0 on lite, and every slice of the rebuilt max brace matches the opened plan
-    at 23,787 sampled points. Nothing under 0.60 remains but the ferrite channel's walls, which
-    were not part of it: the 0.40 east ridge (item above) and, on the channel's WEST side, the walls
-    between it and the pockets beside it — **0.265 mm** at x 36.435 (y 36.5–39.0), 0.50–0.52 at
-    x 36.18–36.20, all only the channel's 0.33 mm deep. Same call as the ridge, and it is DRH's:
-    opening them would let those pockets break into the channel and shorten the wall that locates
-    the ferrite's width. The original record follows. 16
-    in-plane walls under 0.60 mm on max (8 under 0.40), 22 on lite, every one with a blind pocket
-    on at least one side. The thinnest, **0.0068 mm at (4.411, 49.653)**, is arithmetic: C24's
-    blind pocket ends at x 4.408 / y 49.653 (body + `CLR` 0.25) and SC3's through-bay starts at
-    x 4.415 (body − `CLR_FREE` 0.75), leaving 0.007 mm of resin between a pocket and a bay. The
-    brace CAD's thin-wall rule (`WALL_MIN` 0.40) merges pocket-to-pocket pairs only; SC3 is a
-    blocker, not a pocket, so that pair is never compared — and neither is a pocket against the
-    footprint's outside edge (the 0.099 mm wall at (2.60, 55.11) is one of those). The other walls
-    were not traced. SolidCraft's thickness method failed its own canary, so the list is real but
-    not exhaustive.
-  - **FIXED 2026-11-13** (`fit_rules.boss_fouls()` cuts a supercap back by its own `part_keepout`,
-    floored at `BOSS_CLR`; flats now 1.475–1.676 mm from the axes, worst thread annulus 82.3 %, and
-    the shell drawing prints the stand-off it measures off the island rather than the constant).
-    **NEW, found integrating — the scalloped bosses clear a NOMINAL can.** `BOSS_CLR` is 0.20 for
-    every part. All eight boss-to-cap adjacencies are on the caps' FREE edges (`CAP_DATUM`), where
-    this file's own rule gives the brace `CLR_FREE` 0.75 because the can may run +0.50 wide
-    (`SUPERCAP_BODY_TOL`) and the shim's datum gap adds 0.10. A max-material can indexed by the shim
-    reaches **0.40 mm into the flat**. Giving the bosses the caps' directional keep-out
-    (`part_keepout`) would put the flats 1.48–1.68 mm from the axes, still outside `THREAD_KEEP`
-    1.30, at the cost of thread annulus. The brace learned this on 2026-08-23; the shell did not.
-  - **NEW, the same stale 1.00 a third time — the east lip's top is stepped.** `_lip_break_cut` in
-    the shell CAD cuts its 45° lip-break from the SCALAR lip outline (`_lip_void_P`, `lip_E` = 1.0),
-    not from the per-band void. On the east the lip is really 1.25 mm, so the cutter takes the top
-    0.10 mm off its inner 0.25 mm. Ray-cast on the built lite shell: the lip top reads z 1.720 from
-    x 49.55 to 49.80 and reaches the 1.820 seat only at x 49.90. **The board rests on 0.85 mm of
-    east lip, not 1.25.** Not a collision, and the same on the committed and the rebuilt shells —
-    found while listing where else `_CAV`'s 1.00 had survived, not by SolidCraft.
-    _(2026-11-13: measured on SolidCraft and here, with extents. Stepped over y 10.000–83.996
-    between the bosses, 65.86 mm. Not stepped and not broken over y 4.787–9.900, because
-    `EAST_WIDE_Y = [(0, 10)]` still widens the scalar outline there. The same cutter is why the
-    LIP break is missing on the R16 step and the middle lips' end walls. Record above, C1 and B8.)_
-    **Options:** (a) cut the lip break from the per-band void (`fit_rules.cavity_void_poly()`), not
-    `_lip_void_P()`. That gives a full 1.25 bearing on the east and a break on every lip edge, but
-    every shell STEP changes and needs re-measuring. (b) Delete `EAST_WIDE_Y` / `lip_E_wide`
-    only: the east lip becomes uniform, the 0.85 bearing stays, and the shells still change.
-    (c) Accept it. The sheet now asks for every lip edge to be broken by hand either way.
-  - **NEW, found by the sectioned gate on its first run — the lip passes 0.097 mm from C24** (and
-    0.268 from R16), against `LIP_CLR` 0.30. The per-band lip stands `LIP_CLR` off a part in every
-    band that part spans; the Ø2.0 finisher's fill at a band step is not held to it, and check [8]
-    asserts band widths, not the opened polygon. C24 ends at y 49.40 and the 2.5 mm band starts at
-    y 49.50. It clears the gate's 0.05 mm floor, so the gate prints it and passes.
-    _(2026-11-13: that 0.097 is to `board_parts`' pad RECTANGLES. With the pads' roundrect corners
-    put back, this repo gets 0.1524, and SolidCraft gets 0.1574 against KiCad's pad solid. R16
-    is 0.302 here, against the gate's 0.268. Record above, D2.)_
-  - **NEW 2026-11-13 (SolidCraft, B5) — the rim top and the recess mouth carry TWO facets, not one
-    0.10 × 45°.** Measured on SolidCraft and sectioned here at y 44.45, identically on both:
-    - The mouth runs 45° from (50.750, 2.320) to (50.779, 2.349), then 22.5° to (50.950, 2.420).
-      The outer edge mirrors it.
-    - The break is 0.200 wide by 0.100 tall, and the rim flat is 0.600.
-    - The rim bottom, the back frame and the boss ends are single 0.10 × 45°.
-
-    Cause, read here: the shell CAD chamfers the block's `>Z` edges (`edge_ease`) and eases the
-    mouth, then the deburr chamfers every `>Z` edge a second time (`EDGE_BREAK`). Its own comment
-    says the rim is already eased. The sheets' two leaders still say "0.10×45° RIM (top)" and
-    "0.10×45° MOUTH".
-    **Options:**
-    - (a) Leave the rim and mouth out of the second chamfer, so the solid becomes what the sheet
-      says. Every shell STEP changes.
-    - (b) Keep the solid, and compute the leaders from `edge_ease` and `EDGE_BREAK` so they say
-      what is cut.
-    - (c) Accept it: felt, not seen.
-  - **NEW 2026-11-13 (SolidCraft, C2) — two 90° corners at the east mid-span bosses, and a
-    finisher that rounds them into a max-material can.** Note 5 tells the shop to finish every
-    sharp concave corner with the Ø2.0. At (46.254, 29.774) and (46.406, 59.150), that radius
-    reaches a can at full free-edge tolerance plus the shim's datum gap. It goes in by 0.113 / 0.130
-    here, or 0.134 on SolidCraft's square-corner model. A nominal can clears by 0.266 / 0.225.
-    Record above, C2. **Options:**
-    - (a) Call a smaller finisher for those two corners on the sheet. A text change; the worst case
-      clears by 0.005 with Ø1.0 and by 0.109 with Ø0.5.
-    - (b) Relieve the two corners in the model, so any tool works. The shell STEPs change.
-    - (c) Accept it. It takes a max-material can, seated at the shim's full datum gap, at exactly
-      that corner.
-
-    Either way, no gate applies a tool radius today: `assembly_drc` measures the corner as modelled.
-  - **NEW 2026-11-13 (found here, checking a sheet sentence) — the brace is NOT relieved for the R1.0
-    the sheet asks for, at four boss-to-wall corners.** Note 5 said "THE RESIN BRACE IS RELIEVED
-    TO CLEAR R1.0 AT THESE CORNERS". Measured: the committed shell STLs were sectioned at three
-    heights, every sharp concave corner was filled the way a radius-R end mill leaves it (an opening
-    of the void by R), and each was intersected with the committed brace STL at the same height.
-    - **As modelled (sharp):** 0.00000 mm² everywhere.
-    - **At R1.0:** four overlaps, the same on max and lite and at every height.
-      - East wall, beside the east mid-span bosses: (49.32, 31.42) and (49.32, 57.47), 0.115 mm²
-        and **0.225 mm deep** into the resin.
-      - West wall: (2.63, 31.65) and (2.63, 57.25), 0.015 mm² and 0.053–0.055 mm deep.
-    - **At R0.5 or R0.25:** none.
-
-    The brace's boss relief is a circle (`RELIEF_R` = `BOSS_R` + `CLR`), and it does not reach the
-    fillet a round tool leaves where a boss meets the wall. `assembly_drc` [B] passes because it
-    measures the sharp model. The sentence is removed from note 5. Not SolidCraft-measured: this
-    repo's instrument only. **Options:**
-    - (a) Relieve the brace at boss-to-wall junctions for `TOOL_R`. The braces change.
-    - (b) Call a Ø1.0 or smaller finisher at those corners on the sheet. A text change, and it
-      clears.
-    - (c) Fit by hand. 0.225 of resin is sandable, but it is a fitting step nobody has written down.
-
-    Same root as the C2 item above: no gate applies the tool radius. A gate that opens the void by
-    `fit_rules.TOOL_R` before `assembly_drc` [B] and [F] would catch both.
-  - **NEW 2026-11-13 (SolidCraft, C3) — a 0.4632 gap between the corners of TP3's and TP2's
-    pockets, both braces.** It is the only sub-0.60 gap that is not the ferrite channel's. Record
-    above, C3. **Options:**
-    - (a) Let the brace's pocket-pair pass bridge diagonal pairs as well. TP2's and TP3's pockets
-      would then meet at the corner, and both brace STLs change.
-    - (b) Accept it. There is resin on both sides, a Ø0.6 disc fits over every point of it, and the
-      worst plausible print joins two pocket corners over test pads that are never fitted.
-
-- [ ] **[ENCLOSURE — DRH's calls, from the 2026-11-12 prose clean-up] Two things the geometry does that its documents said it did not**
-  _(2026-11-12. Found while replacing four pieces of hand-typed text in the enclosure tree with
-  computed ones. Neither is changed — the clean-up touched no geometry, and every STEP and STL
-  rebuilds byte-identical. Both numbers are given.)_
-  - **There is no support lip beside any of the four supercaps.** `fit_rules.lip_bands()` gives
-    the north and south edges a 0.70 / 0.72 mm band under each can, and the commit that moved the
-    caps to 1.00 mm from their edges (2026-08-07, `50f35d0`) counted those bands as a gain: "Lip
-    bands 16 -> 18 -- the retreat opened new seating." They are not in the metal.
-    `cavity_void_poly()` relieves any part the Ø2.0 finisher's fillet would leave lip on, by
-    `LIP_CLR + TOOL_R` = 1.30 mm all round; all four cans trip it at a band-step corner, and 1.30
-    from a can 1.00 off the edge takes the whole strip. Measured on the cut polygon and on the
-    sectioned STLs, committed and rebuilt, all three variants (they agree to 0.01 mm): the board
-    edge is bare over x 4.3–22.9 and 27.7–46.3 on the south and x 4.3–23.0 and 27.8–46.5 on the
-    north — **74.6 of the 101.6 mm of short edge.** The cut lip was 464.2 mm² the hour before
-    that commit and 352.3 mm² after it; it is 366.1 mm² today. On the open (air) frame, whose own
-    sheet says the board "SPANS FREE BETWEEN THE LIP AND THE 8 BOSSES", that is most of both short
-    edges with neither lip nor brace. Options, none taken: accept it; or stop the relief
-    consuming a band it only needed to clear at one corner — e.g. start the narrow band a tool
-    radius before the part instead of at the next 0.5 mm station, so the step's fillet lands
-    clear of the can and nothing is relieved (untested). Either way the sheet follows: the shell
-    drawing's lip note is written from `fit_rules.lip_as_cut()` and says NONE for those
-    stretches, and `scripts/assembly_drc.py` [G] holds that description to the sectioned shell.
-  - **The brace backs none of the four solar-cell solder tabs**, and has not since 2026-08-08.
-    `enclosure/brace/README.md` listed tab backing as the brace's second job until this clean-up;
-    it now says the opposite, with the numbers. Rebuilt from each commit's own board and rules:
-    three of four backed from the 2026-07-29 respin, one after the 2026-08-07 centre
-    consolidation (`scripts/check_mesh.py` records the legs as "traded to the horizontal cap
-    scoots by design"), none after the LDO island went in the next day. The four outboard rails
-    are still computed — 36–66 mm² each, 202.6 mm² together, each behind exactly one tab — and
-    each is cut off from the body by the reliefs round a corner boss and a mid-edge boss, so
-    `fit_rules.SINGLE_PIECE` drops them. Behind each 12 mm² tab land today: 3.0–3.6 mm² of
-    supercap can, 0.6 mm² of shell lip (west pair only), and 6.1–8.5 mm² of nothing. The leg
-    trade was deliberate; whether losing the tab backing with it was, is the question. Options,
-    none taken: accept it; print the four rails as separate pieces (`fit_rules.DROPPED` is
-    exactly them); or bridge each rail to the body past its mid-edge boss.
+  **THE SOLIDS CHANGED AGAIN AFTER EVERYTHING ABOVE (2026-11-13, later — the enclosure calls
+  round; design notes, "The enclosure calls, settled").** Every shell and both braces were
+  rebuilt, so the measurement this item waits on is of the solids `main` carries **after that
+  round's merge run**, not of `9a90a36`. What to expect, board coordinates as above (all from this
+  repo's own instruments — none of it is a SolidCraft figure yet):
+  - **Six Ø2.0 bores (R1.0, true cylinders), full cavity height**, one through each supercap
+    keep-out corner the finisher could not otherwise reach — at the four corner bosses and the two
+    east mid-span ones, centres (4.940, 1.054), (45.624, 1.051), (5.010, 87.846), (45.811, 87.846),
+    (45.430, 30.341), (45.602, 58.555), on all three shells. Every flat is where it was; no bore
+    comes nearer a boss axis than 1.475 mm (`THREAD_KEEP` 1.30).
+  - **With every concave corner of the cavity filled to R1.0** (the Ø2.0 the sheet calls for):
+    the brace clear at every level, and each supercap at max material (+0.60 on its two free
+    edges, +0.10 on its datum edges, `fit_rules.part_envelope`) **0.150 clear** — S1 and S2 of the
+    local ArtCraft review measure exactly this.
+  - **The east lip seats the board on its full 1.25**: flat at the seat from x 49.65 to the board
+    edge, then a single 0.10 × 45° break down to the wall at x 49.55, at every y.
+  - **Rim top and recess mouth: one 0.10 × 45° facet each**, and the air frame's resting rim too.
+  - **No lip beside a supercap**, by rule now: south x 3.0–23.5 and 27.0–47.5, north x 3.5–23.5 and
+    27.5–47.5, the cavity wall on the recess wall.
+  - **C24 to the lip 0.296** to its pad box (more to the rounded pad, by the D2 reasoning above).
+  - **The max STEP:** still no edge shared by four faces (the export gate holds it); the
+    rim pinch at (24.4, −34.45) is gone with the scalar lip outline, and one zero-length seam per
+    break cutter stands at board (27.07, 0.78), z seat − 0.15 (`scripts/check_mesh.py` ledgers it).
 
 - [ ] **[SOURCING — lite/air] Pick the thin supercap MPN**
   _(2026-08-07, opened with the three-variant round.)_ `part_heights.SUPERCAP_H_THIN = 1.00`
@@ -1192,6 +1058,25 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
   GRM319 (0.95 mm max). The X7R→X5R trade is deliberate: no low-profile 10 µF true-X7R exists in
   ANY case size, and the supercaps cap the system at +85 °C — exactly X5R's window.
 - Board electrically frozen; PCB change = brace reprint, not shell re-machine.
+- **Enclosure verdicts of 2026-11-13 — do not re-derive** (the reasoning and both numbers for each
+  are in the design-notes addendum "The enclosure calls, settled (2026-11-13)"):
+  - **The board is a 0.05 mm PRESS fit in its recess, by design (DRH).** Against a routed outline
+    of ±0.1–0.2 an oversize board has its FR4 edge sanded at assembly (`enclosure/README.md` §8);
+    the titanium is never opened up. `fit_rules.EDGE_FIT` is its one home. Re-open only on a
+    measured batch of boards where sanding stops being the exception.
+  - **The brace backs none of the four solar-cell tabs (DRH).** The air frame has no brace, so the
+    card must take unbacked tabs anyway. Re-open only if the first-article press test (BENCH, above)
+    cracks a joint.
+  - **The brace keeps its four sub-`SLA_WALL` features (DRH):** the ferrite channel's 0.40 east
+    ridge and 0.265–0.52 west walls, and the 0.46 TP2/TP3 neck. The print spec names a printer
+    class that holds 0.25 mm walls (`enclosure/brace/README.md`). Re-open only if no such service
+    will print it.
+  - **There is no lip beside a supercap, and there cannot be.** Every cap's free edge faces the
+    board edge, so a max-material can stands 0.40 mm off it; `lip_bands()` says none there by rule
+    (`fit_rules.part_envelope`, `LIP_MIN`). Not a preference — a can's tolerance owns that strip.
+  - **L2's 0.02 mm "proud" is KiCad's model, not the part.** The physical solder standoff is
+    already inside `fit_rules.AIR`'s RSS by name; the 0.040 seat is KiCad's export convention, and
+    the fitted DFE252010F (1.0 max) clears by 0.18. No separate seating constant.
 - **TWO LAYERS, 0.6 mm — locked 2026-08-10 after an adversarial re-examination. Cost is not the
   reason, and "a dedicated ground plane cuts noise" does not survive contact with this board.**
   The case for 4 layers is the standard one and it is sound in general. It fails here on three
