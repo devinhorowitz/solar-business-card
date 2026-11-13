@@ -16,8 +16,11 @@ This DRC measures backward from the ARTIFACT, not forward from the inputs:
             footprint, a vertical ray finds the local material top; available
             headroom there = CAVITY - top (a through-cut pocket gives the full
             CAVITY down to the shell floor plane, which the brace's z=0 rests
-            on). The frame offset is DERIVED (cavity-rect centre vs mesh bbox
-            centre), not hard-coded.
+            on). Board coordinates reach the mesh through fit_rules.file_xy(),
+            the one statement of the file frame -- definitional, not derived
+            from the mesh (this line said "DERIVED ... not hard-coded" long
+            after the code stopped doing that: a bbox-centre offset ray-cast
+            the lite brace half a card away from its parts).
   gate   -- min over samples of (available - height) must be >= 0 for every
             part, and every body polygon must sit inside the cavity rect
             unless EDGE_LEDGER excuses it by name. The ledger is audited on
@@ -174,16 +177,21 @@ def check_variant(vname, v):
         print(f"  FAIL: brace mesh height {mz1:.2f} != cavity {cavity_h} -- frame is wrong")
         return 1
     cx0, cy0, cx1, cy1 = cav.bounds
-    # The board->mesh transform is DEFINITIONAL, not derived: the brace CAD builds at
-    # wx/wy = board - (W/2, H/2). It used to be inferred from bbox centres, which is
-    # correct only while the brace happens to span the full cavity envelope -- the lite
-    # brace does not (its main piece stops at board y 58.4), and the inferred offset
-    # would have ray-cast every pocket half a card away from its part.
-    off = (fit_rules.W / 2, fit_rules.H / 2)
-    if not (mx0 >= cx0 - off[0] - 0.5 and mx1 <= cx1 - off[0] + 0.5
-            and my0 >= cy0 - off[1] - 0.5 and my1 <= cy1 - off[1] + 0.5):
+    # The board->mesh transform is DEFINITIONAL, not derived, and it has ONE home:
+    # fit_rules.file_xy() (THE FILE FRAME there). It used to be inferred from bbox centres,
+    # which is correct only while the brace happens to span the full cavity envelope -- the
+    # lite brace does not (its main piece stops at board y 58.4), and the inferred offset
+    # would have ray-cast every pocket half a card away from its part. Then it was typed
+    # here as "board - (W/2, H/2)", the frame the brace is MODELLED in, which is left-handed:
+    # the file was the mirror image of the part and this gate, reading it the same way,
+    # agreed with it. The file is right-handed since 2026-11-13 (y runs UP in it), and the
+    # mapping is read rather than restated so a writer and this reader cannot drift apart.
+    # What pins the mapping itself to the real hand is scripts/handedness_drc.py.
+    fx0, fy0 = fit_rules.file_xy(cx0, cy1)        # the cavity rect's corners, in the file frame
+    fx1, fy1 = fit_rules.file_xy(cx1, cy0)
+    if not (mx0 >= fx0 - 0.5 and mx1 <= fx1 + 0.5 and my0 >= fy0 - 0.5 and my1 <= fy1 + 0.5):
         print(f"  FAIL: brace mesh bbox falls outside the cavity under the definitional "
-              f"board-centre transform -- generator frame broke")
+              f"file frame -- generator frame broke")
         return 1
     if v["cap_h"] != fit_rules._SUPERCAP_H:
         print(f"  note: thin-cap variant -- SC1-SC4 assumed {v['cap_h']:.2f} mm "
@@ -224,7 +232,7 @@ def check_variant(vname, v):
                if poly.buffer(EPS).contains(Point(x, y))]
         if not pts:
             pts = [(poly.centroid.x, poly.centroid.y)]
-        origins = np.array([[x - off[0], y - off[1], cavity_h + 5.0] for x, y in pts])
+        origins = np.array([[*fit_rules.file_xy(x, y), cavity_h + 5.0] for x, y in pts])
         dirs = np.tile([0.0, 0.0, -1.0], (len(origins), 1))
         loc, idx_ray, _ = ray.intersects_location(origins, dirs)
         top = np.zeros(len(pts))          # no material hit -> through-cut, top = 0

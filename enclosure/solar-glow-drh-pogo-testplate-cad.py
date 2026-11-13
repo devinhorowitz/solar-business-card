@@ -199,11 +199,24 @@ for d, (x, y) in zip(COUPON, COUPON_XY):
 
 # engraved labels: net names on the cavity floor beside each boss, sizes beside the coupon,
 # a title on the top face. All via the matplotlib-bundled DejaVu, so CI and desk agree.
+#
+# THE LETTERING IS MODELLED MIRROR-WRITTEN, ON PURPOSE (2026-11-13). This plate is modelled in
+# board coordinates like the shell and the brace -- X right, Y DOWN, Z up toward the panel --
+# which is a left-handed frame, and export_solid() reflects it once (y -> -y) on the way out
+# so the file is the part (fit_rules, THE FILE FRAME). Everything positional wants exactly
+# that: until then the 14 bores and 2 dowels fitted the panel only face-DOWN, and missed by
+# 70 mm face-up, which is the plate's whole purpose. Text is the one thing that does not:
+# cq.text lays glyphs out for a right-handed viewer, so a label that reads correctly in the
+# MODEL is reversed by the reflection. Each label is therefore flipped about its own anchor
+# line here, and the reflection puts it right. It is vertically centred on that anchor
+# (cq.text's default), so the flip moves no label: the engraved footprints are where they
+# were, and the nudges below still clear what they were tuned to clear.
 def engrave(txt, x, y, z, h=2.2, depth=0.4, halign="left"):
     global plate
     try:
         t = (cq.Workplane("XY").workplane(offset=z)
-             .center(x, y).text(txt, h, -depth, font="DejaVu Sans", fontPath=FONT, halign=halign))
+             .center(x, y).text(txt, h, -depth, font="DejaVu Sans", fontPath=FONT, halign=halign)
+             .mirror("XZ", (0, y, 0)))
         plate = plate.cut(t)
     except Exception as e:                      # a font hiccup must not cost the geometry
         print(f"  (label '{txt}' skipped: {e})")
@@ -234,9 +247,10 @@ for lab, x, y in PROBES:
     print(f"  {lab:8} ({x:7.3f},{y:7.3f})")
 print("dowels: " + ", ".join(f"({x:g},{y:g})" for x, y in DOWELS))
 
-from fit_rules import export_step_stable  # noqa: E402
-export_step_stable(plate, OUT + BASE + ".step")
-cq.exporters.export(plate, OUT + BASE + ".stl", tolerance=0.03, angularTolerance=0.2)
+# Modelled in board coordinates, which are LEFT-handed; written right-handed. export_solid
+# reflects once on the way out (fit_rules, THE FILE FRAME) -- never call an exporter here.
+from fit_rules import export_solid  # noqa: E402
+export_solid(plate, OUT + BASE, 0.03)
 print(f"wrote {BASE}.step / .stl")
 
 # ---- bench-monitor channel map -------------------------------------------------------

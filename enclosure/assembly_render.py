@@ -111,10 +111,20 @@ def poly_prism(shape, z0, dz):
 
 
 def stl(path, dz=0.0):
-    """STLs are CENTRED ON THE ORIGIN (the generators use wx = bx - W/2), while the board,
-    screws and parts below are in board coords 0..W / 0..H. Shift to board coords here."""
+    """An emitted shell or brace STL, carried into THIS SCENE's frame: board coords 0..W /
+    0..H, y DOWN, which is where the board, screws and parts below already are.
+
+    The files are RIGHT-handed since 2026-11-13 -- a board point (bx, by) sits at
+    (bx - W/2, H/2 - by) in them, y UP (fit_rules, THE FILE FRAME). This scene is not: it is
+    built in board coordinates and present() un-mirrors the finished picture (see below). So
+    the mesh is reflected back into board coordinates on load, and the scene, the camera,
+    present() and both texture mappings -- calibrated to each other, "change one and you must
+    change the other" -- stay exactly as they were. The reflection is READ from
+    fit_rules.board_xy(), not typed: it is the same statement of the frame the gates use.
+    A reflection reverses every triangle's winding; the normals pass below re-orients them."""
     r = vtk.vtkSTLReader(); r.SetFileName(path); r.Update()
-    t = vtk.vtkTransform(); t.Translate(W / 2.0, H / 2.0, dz)
+    (ox, oy), (ex, _), (_, ey) = fr.board_xy(0.0, 0.0), fr.board_xy(1.0, 0.0), fr.board_xy(0.0, 1.0)
+    t = vtk.vtkTransform(); t.Translate(ox, oy, dz); t.Scale(ex - ox, ey - oy, 1.0)
     f = vtk.vtkTransformPolyDataFilter(); f.SetInputData(r.GetOutput()); f.SetTransform(t); f.Update()
     r = f
     n = vtk.vtkPolyDataNormals(); n.SetInputConnection(r.GetOutputPort())
@@ -147,6 +157,14 @@ def actor(pd, rgb, spec=0.25, power=20, opacity=1.0):
 # Mirroring the finished image is exactly equivalent to mirroring the scene, because that is all
 # the defect is. Two cosmetic consequences, neither factual: the turntables now turn the other
 # way, and the key light appears to come from the other side.
+#
+# THE SOLIDS HAD THE SAME DEFECT AND IT WAS NOT COSMETIC (2026-11-13). This comment found the
+# mirror in the pictures in July and fixed the pictures. The STEP and STL files were written in
+# the same left-handed frame, went on being the mirror image of the part, and no gate could see
+# it -- an independent CAD measurement of the committed files did, in November. They are written
+# right-handed now (fit_rules, THE FILE FRAME). The SCENE is deliberately still left-handed:
+# stl() reflects each mesh back into board coordinates on load, so nothing here had to be
+# re-calibrated and the pictures do not move.
 def present(img):
     return img.transpose(Image.FLIP_LEFT_RIGHT)
 
