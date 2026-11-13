@@ -306,7 +306,12 @@ def sheet(vname, v):
         # now, true whatever the model does. And the sharp-corner list named "EAST-LIP STEPS",
         # which do not exist (the east wall is x 49.550 its whole length) while omitting the
         # corners that do; the sentence covers every concave junction corner left sharp instead.
-        notes.append(("edge", ["EDGE BREAKS - ALL 0.10x45°, FELT NOT SEEN.  MODELED, CALLED OUT ON SEC A-A / DETAIL B:  RIM = outer rim (top & bottom);  MOUTH = recess mouth (around PCB);  FRAME = proud back-frame bottom edges;  BOSS = boss + spotface bottom edges (Detail B).  LIP = inner (cavity-side) lip edge: BREAK EVERY LIP EDGE ON THE PART, WHETHER OR NOT THE MODEL SHOWS IT.  BREAK ALL OTHER EXPOSED EDGES 0.10x45°.  CONCAVE JUNCTION CORNERS LEFT SHARP IN THE MODEL: FINISH WITH A Ø2.0 mm TOOL = R1.0 AS-MILLED." + (" THE RESIN BRACE IS RELIEVED TO CLEAR R1.0 AT THESE CORNERS." if has_brace else "")]))
+        # Its last sentence said "THE RESIN BRACE IS RELIEVED TO CLEAR R1.0 AT THESE CORNERS", and
+        # it is not: with each sharp corner filled to R1.0 as milled, both braces overlap the
+        # metal at four boss-to-wall corners, 0.225 mm deep on the east wall (TODO.md, the
+        # 2026-11-13 R1.0 item). Removed, not reworded -- whether to relieve the brace or call a
+        # smaller finisher is DRH's call, and the sheet should not answer it in the meantime.
+        notes.append(("edge", ["EDGE BREAKS - ALL 0.10x45°, FELT NOT SEEN.  MODELED, CALLED OUT ON SEC A-A / DETAIL B:  RIM = outer rim (top & bottom);  MOUTH = recess mouth (around PCB);  FRAME = proud back-frame bottom edges;  BOSS = boss + spotface bottom edges (Detail B).  LIP = inner (cavity-side) lip edge: BREAK EVERY LIP EDGE ON THE PART, WHETHER OR NOT THE MODEL SHOWS IT.  BREAK ALL OTHER EXPOSED EDGES 0.10x45°.  CONCAVE JUNCTION CORNERS LEFT SHARP IN THE MODEL: FINISH WITH A Ø2.0 mm TOOL = R1.0 AS-MILLED."]))
     else:
         notes.append(("edge", ["EDGE BREAKS - ALL 0.10x45°, FELT NOT SEEN.  MODELED, CALLED OUT ON SEC A-A / DETAIL B:  RIM = outer rim (top & bottom);  MOUTH = recess mouth (around PCB);  BOSS = boss + spotface bottom edges (Detail B).  LIP = inner (cavity-side) lip edge: BREAK EVERY LIP EDGE ON THE PART, WHETHER OR NOT THE MODEL SHOWS IT.  BREAK ALL OTHER EXPOSED EDGES 0.10x45°.  CONCAVE JUNCTION CORNERS LEFT SHARP IN THE MODEL: FINISH WITH A Ø2.0 mm TOOL = R1.0 AS-MILLED.  DEBURR 316L WITH SHARP TOOLS, SINGLE PASSES - AUSTENITIC STAINLESS WORK-HARDENS UNDER A RUBBING DEBURR."]))
     if not open_back:
