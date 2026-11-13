@@ -64,6 +64,17 @@ against the brace that is actually there. Each carries a canary -- a synthetic p
 planted in a boss, the brace pushed a millimetre into the wall -- that must go red on
 every run, because a section taken in the wrong frame reads as a clean pass.
 
+THE LIP CHECK ([G], 2026-11-12) is the same lesson applied before it could bite. The
+shell drawing's lip note is no longer typed: it is written from fit_rules.lip_as_cut(),
+which is a DESCRIPTION -- per-band widths, the stretches a relief removes, the part
+behind each -- and a description computed in the module that cuts the part is exactly
+the kind of thing this file exists to distrust. The first one written recited
+fit_rules.lip_bands() and would have put a 0.70 mm ledge on the sheet under each
+supercap, where every shell this repo has built has none: 74.6 mm of bare board edge.
+So [G] sections the emitted shell and measures, every 0.1 mm along all four edges, how
+far the metal stands in from the board edge, and holds lip_as_cut() to it. Its canary is
+the same measurement against a description half a millimetre too wide.
+
 Variant policy, stated rather than implied:
   * max / lite -- every check, parameterized (floor, cavity, screw_len, stack).
   * air -- open_back, no brace: the cavity-floor probe and every brace/ferrite
@@ -111,6 +122,19 @@ FER_CRUSH = 0.10
 # what the clearance should be is the gate this one replaces. The printed table is where the
 # real numbers are read; this only refuses contact.
 SECTION_FLOOR = 0.05
+# ---- the lip check ([G]) -----------------------------------------------------------------
+# A flat wall sections exactly (worst 0.002 mm, measured on five shells), so this is well
+# inside the smallest step the description has to tell apart (2.32 from 2.25) and well
+# outside the 0.005 the widths are rounded by.
+LIP_TOL = 0.03
+# How far either side of a described step the metal may be anywhere BETWEEN the two widths:
+# the finisher's radius blends a band step and a relief leaves an arc, and neither is in the
+# description. Measured on the committed shells the longest transition is 1.30 mm.
+LIP_BLEND = 1.35
+# Stations this close to a corner are inside the NEXT edge's lip (up to 2.5 wide, plus its
+# blend): a probe there runs along metal, and "width" stops meaning anything.
+LIP_CORNER = 3.6
+LIP_STEP = 0.1
 OVERLAP_EPS = 1e-3    # mm2 of plan overlap that counts as metal inside a body, not noise
 SECTION_GRID = 1e-5   # mm: snap for stitching section segments into closed outlines
 # Heights are fractions of the cavity plus an irrational-looking nudge, so no cut ever lands
@@ -209,6 +233,65 @@ def cavity_levels(floor, cavity):
     return [("under the seat", seat - 0.12 - _NUDGE),
             ("mid-cavity", floor + cavity / 2.0 + _NUDGE),
             ("above the floor", floor + 0.08 + _NUDGE)]
+
+
+def edge_reach(metal, edge, t, W, H, depth=6.0):
+    """How far the shell's perimeter metal stands IN from the board edge at station t along
+    `edge` ("W"/"E": t is board y; "S"/"N": t is board x), on one section. It is the inner
+    end of the run of metal that contains the wall -- found half a millimetre OUTSIDE the
+    board edge, where there is always wall -- so it is negative where that run stops short
+    of the board edge, and None if there is no wall there at all (a section in the wrong
+    frame)."""
+    from shapely.geometry import LineString
+    a, b = {"W": ((-0.5, t), (depth, t)), "E": ((W + 0.5, t), (W - depth, t)),
+            "S": ((t, -0.5), (t, depth)), "N": ((t, H + 0.5), (t, H - depth))}[edge]
+    hit = metal.intersection(LineString([a, b]))
+    for seg in getattr(hit, "geoms", [hit]):
+        if seg.geom_type != "LineString" or seg.is_empty:
+            continue
+        ins = [(c[0] if edge == "W" else W - c[0]) if edge in "WE" else
+               (c[1] if edge == "S" else H - c[1]) for c in seg.coords]
+        if min(ins) <= -0.5 + 1e-6:
+            return max(ins)
+    return None
+
+
+def lip_disagreements(rows, edge, lip_cut, recess_cut, mounts, boss_r, W, H):
+    """([(t, got, lo, hi)], n_stations, worst) -- where the sectioned shell does not have the
+    lip `rows` describes along `edge`. `rows` is fit_rules.lip_as_cut()'s shape,
+    [(lo, hi, width, names)], width 0.0 meaning no lip.
+
+    A station passes if the metal's reach from the board edge lies between the narrowest and
+    the widest row within LIP_BLEND of it -- so it must EQUAL the row's width wherever a row
+    runs undisturbed, and only a blend or a relief arc is given room. "No lip" means no
+    ledge inboard of the recess wall, which is measured on its own section (the recess is
+    not the board outline: it is 0.05 mm inside it today, and that is DRH's open fit
+    decision, not something to assume here). Stations a mount boss stands on are skipped --
+    a boss is not lip -- and `worst` is the largest error where a single row governs."""
+    span = H if edge in "WE" else W
+    off = lambda m: (m[0] if edge == "W" else W - m[0]) if edge in "WE" else \
+                    (m[1] if edge == "S" else H - m[1])
+    along = lambda m: m[1] if edge in "WE" else m[0]
+    bosses = [along(m) for m in mounts if off(m) < boss_r + 3.0]
+    bad, n, worst = [], 0, 0.0
+    t = LIP_CORNER
+    while t <= span - LIP_CORNER + 1e-9:
+        if not any(abs(t - b) <= boss_r + 0.3 for b in bosses):
+            near = [w for lo, hi, w, _n in rows if lo <= t + LIP_BLEND and hi >= t - LIP_BLEND]
+            got = edge_reach(lip_cut, edge, t, W, H)
+            wall = edge_reach(recess_cut, edge, t, W, H)
+            n += 1
+            if got is None or wall is None or not near:
+                bad.append((t, got, None, None))
+            else:
+                lo, hi = min(near), max(near)
+                top = max(hi, wall) if hi <= 0.0 else hi          # no lip: nothing past the recess wall
+                if not ((lo <= 0.0 or got >= lo - LIP_TOL) and got <= top + LIP_TOL):
+                    bad.append((t, got, lo, hi))
+                elif lo == hi and hi > 0.0:
+                    worst = max(worst, abs(got - hi))
+        t = round(t + LIP_STEP, 6)
+    return bad, n, worst
 
 
 def deepest(overlap, body):
@@ -551,6 +634,49 @@ def check_variant(vname, v, fr, bp, trimesh):
         ok(f"all {len(rows)} B-side bodies clear the shell's metal at every cut through "
            f"them (tightest {rows[0][1]} at {rows[0][0]:.3f} mm; six tightest above); "
            f"{len(fr.MOUNTS)} planted canaries all read as collisions")
+
+    # ---- 7. the lip the shell drawing describes is the lip the shell has -------------
+    # fit_rules.lip_as_cut() is what the drawing's lip note is written from. It is checked
+    # against fit_rules' own polygon where it is computed; this is the check that matters,
+    # against the metal. Mid-cavity, clear of the lip-break at the seat.
+    print("[G] support lip vs its description (sectioned)")
+    pre = len(_ERRORS)
+    lip_cut = shell_cuts[1][2]
+    recess_cut = section(shell, seat + fr.BOARD_TH / 2.0 + _NUDGE, W, H, trimesh)
+    n_all, worst_all, canary_hits, said = 0, 0.0, 0, []
+    for edge in "WESN":
+        rows = fr.lip_as_cut(edge)
+        bad, n, worst = lip_disagreements(rows, edge, lip_cut, recess_cut,
+                                          fr.MOUNTS, fr.BOSS_R, W, H)
+        n_all += n
+        worst_all = max(worst_all, worst)
+        if n < 100:
+            err(f"{edge} edge: only {n} stations could be measured -- too few to say the lip "
+                f"matches anything")
+        if bad:
+            ax = "y" if edge in "WE" else "x"
+            t, got, lo, hi = bad[0]
+            what = ("the section has no wall there" if got is None or lo is None else
+                    f"metal reaches {got:.3f} mm in from the board edge, description allows "
+                    f"{lo:.2f}..{hi:.2f}")
+            err(f"{edge} edge: the shell's lip is not the lip fit_rules.lip_as_cut() describes "
+                f"at {len(bad)} of {n} stations (first at {ax}{t:.1f}: {what}; last at "
+                f"{ax}{bad[-1][0]:.1f}) -- the drawing's lip note is written from that "
+                f"description, so the sheet and the STEP it says governs disagree")
+        said.append(f"{edge} " + "/".join(dict.fromkeys(
+            "none" if w == 0.0 else f"{w:.2f}" for _lo, _hi, w, _n in rows)))
+        # canary: the same measurement against a description 0.5 mm too wide on every row
+        wide = [(lo, hi, w + 0.5, names) for lo, hi, w, names in rows]
+        canary_hits += len(lip_disagreements(wide, edge, lip_cut, recess_cut,
+                                             fr.MOUNTS, fr.BOSS_R, W, H)[0])
+    if canary_hits < n_all / 2.0:
+        err(f"SELF-TEST: a lip description 0.5 mm too wide on every row disagrees with the "
+            f"shell at only {canary_hits} of {n_all} stations -- the section is not measuring "
+            f"the lip, so agreement above means nothing")
+    if len(_ERRORS) == pre:
+        ok(f"the lip in the metal is the lip the drawing's note describes ({'; '.join(said)}): "
+           f"{n_all} stations on four edges, worst {worst_all:.3f} mm off where one width "
+           f"governs; a description 0.5 mm too wide disagrees at {canary_hits}, as it must")
 
     return len(_ERRORS), len(_WARNS)
 

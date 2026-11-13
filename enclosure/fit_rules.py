@@ -39,7 +39,7 @@ from __future__ import annotations
 import os
 import sys
 
-from shapely.geometry import box, Point, Polygon
+from shapely.geometry import box, LineString, Point, Polygon
 from shapely.ops import unary_union
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -204,6 +204,8 @@ MIN_PIECE = 25.0           # smaller than this is print debris, not support
 SINGLE_PIECE = True        # ship one part; see brace_footprint()
 DROPPED_AREA = 0.0         # set by brace_footprint(): support given up to stay single-piece
 DROPPED_COUNT = 0
+DROPPED = []               # ...and the pieces themselves, so a caller can say WHAT was given up
+                           # (the brace drawing: all four solar-cell tab rails, 2026-11-12)
 WALL_FIT = 0.05            # brace-to-cavity-wall contact fit
 
 # ---- shell ----------------------------------------------------------------------------
@@ -359,9 +361,10 @@ def brace_footprint(span=None, keepout=None):
     # loose part in an assembly that must come apart for C9 NFC trim is a thing to lose and a
     # thing to reassemble wrong, so it is dropped by decision, not by accident. Cost is
     # recorded rather than hidden: DROPPED_AREA is what the choice gave up.
-    global DROPPED_AREA, DROPPED_COUNT
+    global DROPPED_AREA, DROPPED_COUNT, DROPPED
     DROPPED_AREA = sum(g.area for g in pieces[1:])
     DROPPED_COUNT = len(pieces) - 1
+    DROPPED = list(pieces[1:])
     return pieces[:1]
 
 
@@ -505,10 +508,24 @@ def variant_span(name):
     return s
 
 
-def _lip_reach(edge, lo, hi, ps=None):
+COIL_REF = "NFC COIL"      # the one lip limiter that is not a part: the coil clamp on the east edge
+
+
+def _lip_limits(edge, lo, hi, ps=None):
+    """(width, [limiter...]) for the stretch lo..hi of `edge` -- the ONE statement of how
+    wide the lip may be there and of what stops it being wider.
+
+    The limiters are the parts (by refdes) and, on the east edge, the coil clamp (COIL_REF)
+    whose own reach, cut to the same 0.01 the lip is, IS the width returned; an unlimited
+    stretch (LIP_MAX) has none. _lip_reach() is the first half of this and lip_band_limits()
+    the second, so anything that has to say in WORDS why a band is the width it is -- the
+    shell drawing's lip note -- reads the name out of the loop that sized the band, the way
+    boss_foul_refs() does for the boss flats. That note was typed until 2026-11-12, and what
+    it had typed was "C7 (x49.55, THE ONE EAST-EDGE PART LEFT ...)": a capacitor that had
+    not been on the board for three months."""
     ps = ps or _cached_parts()
-    lim = LIP_MAX[edge]
-    for _ref, poly, _h, _src in ps:
+    cands = []
+    for ref, poly, _h, _src in ps:
         x0, y0, x1, y1 = poly.bounds
         if edge in ("W", "E"):
             if y1 <= lo or y0 >= hi:
@@ -518,10 +535,17 @@ def _lip_reach(edge, lo, hi, ps=None):
             if x1 <= lo or x0 >= hi:
                 continue
             d = y0 if edge == "S" else (H - y1)
-        lim = min(lim, d - LIP_CLR)
+        cands.append((d - LIP_CLR, ref))
     if edge == "E":
-        lim = min(lim, W - COIL_EAST)
-    return max(0.0, round(lim, 2))
+        cands.append((W - COIL_EAST, COIL_REF))
+    cut = lambda v: max(0.0, round(v, 2))
+    width = cut(min([LIP_MAX[edge]] + [v for v, _n in cands]))
+    who = [] if width >= LIP_MAX[edge] else [n for v, n in cands if cut(v) == width]
+    return width, who
+
+
+def _lip_reach(edge, lo, hi, ps=None):
+    return _lip_limits(edge, lo, hi, ps)[0]
 
 
 def lip_bands(edge, step=0.5):
@@ -547,9 +571,26 @@ def lip_bands(edge, step=0.5):
     return merged
 
 
-def cavity_void_poly(tool_r=TOOL_R, simplify=True):
-    """Cavity void in board coords: the board rect inset by the per-band lip, opened by the
-    finisher radius, plus local reliefs for what the tool then cannot reach."""
+def lip_band_limits(edge, step=0.5):
+    """[(lo, hi, width, [limiter...])] -- lip_bands(), each band with what limits it.
+
+    The bands and widths ARE lip_bands(); the names are _lip_limits() over the same
+    stations, so a band and its reason cannot be read from two different computations."""
+    out = []
+    for lo, hi, w in lip_bands(edge, step):
+        who, a = [], lo
+        while a < hi - 1e-9:
+            b = min(a + step, hi)
+            who += [n for n in _lip_limits(edge, a, b)[1] if n not in who]
+            a = b
+        out.append((lo, hi, w, who))
+    return out
+
+
+def _void_opened(tool_r=TOOL_R):
+    """The board rect inset by the per-band lip and opened by the finisher radius: the void
+    BEFORE any relief. Split out of cavity_void_poly() so lip_relieved() can be asked which
+    parts that opening leaves metal on without cutting the void a second way."""
     strips = []
     for lo, hi, w in lip_bands("W"):
         strips.append(box(0.0, lo, w, hi))
@@ -560,18 +601,47 @@ def cavity_void_poly(tool_r=TOOL_R, simplify=True):
     for lo, hi, w in lip_bands("N"):
         strips.append(box(lo, H - w, hi, H))
     void = box(0.0, 0.0, W, H).difference(unary_union(strips))
-    opened = (void.buffer(-tool_r, join_style=1, resolution=48)
-                  .buffer(tool_r, join_style=1, resolution=48))
+    return (void.buffer(-tool_r, join_style=1, resolution=48)
+                .buffer(tool_r, join_style=1, resolution=48))
+
+
+def _lip_relief(poly, tool_r=TOOL_R):
+    """The keep-out cavity_void_poly() opens around one relieved part."""
+    return poly.buffer(LIP_CLR + tool_r, join_style=1, resolution=48)
+
+
+def lip_relieved(tool_r=TOOL_R, _opened=None):
+    """[(refdes, outline)] -- the parts cavity_void_poly() relieves: those the tool-radius
+    opening would otherwise leave lip metal on. The one statement of it; the void is cut by
+    this list and lip_as_cut() names from it.
+
+    WHY ANYTHING OUTSIDE THE VOID NEEDS THE NAMES. The relief is LIP_CLR + tool_r = 1.30 mm
+    all round, sized for "a few parts near a step" and a 0.088 mm2 overlap. All four
+    supercaps trip it -- the fillet a band step leaves clips each can's corner -- and they
+    sit 1.00 mm off the north and south edges, so 1.30 takes the WHOLE strip beside them:
+    the 0.70 / 0.72 mm bands lip_bands() reports there are not in the metal. Sectioned
+    2026-11-12 on all three variants' STLs, the committed ones and a rebuild: the board edge
+    is bare from x4.3 to 22.9 and x27.7 to 46.3 on the south, x4.3 to 23.0 and x27.8 to 46.5
+    on the north -- 74.6 of the 101.6 mm of short edge. lip_bands() is the INPUT to the cut,
+    not a description of the part, and a sheet that recited it would dimension a ledge that
+    does not exist."""
+    opened = _void_opened(tool_r) if _opened is None else _opened
+    lip_now = box(0.0, 0.0, W, H).difference(opened)
+    return [(r, p) for r, p, _h, _s in _cached_parts() if lip_now.intersection(p).area > 1e-6]
+
+
+def cavity_void_poly(tool_r=TOOL_R, simplify=True):
+    """Cavity void in board coords: the board rect inset by the per-band lip, opened by the
+    finisher radius, plus local reliefs for what the tool then cannot reach."""
+    opened = _void_opened(tool_r)
 
     # A dia 2.0 finisher cannot reach the concave corners a band step leaves, so the opening
     # puts material back over a few parts near a step -- a fixed 0.088 mm2 worst case that
     # does NOT improve at any band clearance (swept 0.30..0.80, identical). Dilating a
     # keep-out by the tool radius makes it tool-reachable by construction.
-    lip_now = box(0.0, 0.0, W, H).difference(opened)
-    stuck = [p for _r, p, _h, _s in _cached_parts() if lip_now.intersection(p).area > 1e-6]
+    stuck = [p for _r, p in lip_relieved(tool_r, opened)]
     if stuck:
-        opened = opened.union(unary_union(
-            [p.buffer(LIP_CLR + tool_r, join_style=1, resolution=48) for p in stuck]))
+        opened = opened.union(unary_union([_lip_relief(p, tool_r) for p in stuck]))
     # The void is BOARD area by definition, and until 2026-11 nothing held it there. A
     # relief dilated by LIP_CLR + tool_r runs past the board edge wherever a part sits
     # closer to it than that -- all four supercaps, 1.00 mm off the N and S edges -- so the
@@ -592,6 +662,124 @@ def cavity_void_poly(tool_r=TOOL_R, simplify=True):
 def lip_poly(simplify=True):
     """The support ledge itself -- what a B-side part would be crushed by / shorted on."""
     return box(0.0, 0.0, W, H).difference(cavity_void_poly(simplify=simplify))
+
+
+def lip_metal_poly():
+    """The lip the shell is BUILT with, in board coords: the per-band ledge cavity_void_poly()
+    leaves, UNION the guaranteed ring less ring_reliefs() -- the two solids the shell CAD
+    unions (build(): block minus void, then `lip.cut(reliefs)`, then union). Exact, not
+    simplified. Today the ring adds nothing the ledge does not already have; it is in here so
+    that the day it does, lip_as_cut() measures the metal and not half of it."""
+    ring = ring_metal_poly()
+    rel = ring_reliefs()
+    if rel:
+        ring = ring.difference(unary_union(rel))
+    return unary_union([lip_poly(simplify=False), ring])
+
+
+def _lip_cut_width(edge, t, metal, depth):
+    """How far lip metal stands in from `edge` at station t, measured on `metal` (0.0 where
+    the void reaches the board edge)."""
+    a, b = {"W": ((0.0, t), (depth, t)), "E": ((W, t), (W - depth, t)),
+            "S": ((t, 0.0), (t, depth)), "N": ((t, H), (t, H - depth))}[edge]
+    hit = metal.intersection(LineString([a, b]))
+    best = 0.0
+    for seg in getattr(hit, "geoms", [hit]):
+        if seg.geom_type != "LineString" or seg.is_empty:
+            continue
+        if seg.distance(Point(a)) < 1e-6:        # only the run that starts AT the board edge
+            best = max(best, seg.length)
+    return best
+
+
+def lip_as_cut(edge):
+    """[(lo, hi, width, [limiter...])] along `edge` -- the lip AS THE SHELL IS CUT, in a form
+    a sentence can be written from. width 0.0 means no lip at all over that stretch.
+
+    This is lip_band_limits() with the reliefs applied: beside every part lip_relieved()
+    names, the lip is whatever LIP_CLR + TOOL_R leaves between that part and the edge --
+    nothing, for a part closer than 1.30 mm -- over the stretch of the edge the relief
+    reaches, and the limiter there is that part. Bands the relief removes are dropped; they
+    are not in the metal.
+
+    AND IT IS CHECKED AGAINST THE POLYGON BEFORE IT IS RETURNED, because a description that
+    is merely derived from the same inputs as the cut is the gate this repo keeps being
+    bitten by (boss_island() was clear of every part for three months while the titanium was
+    not). Every 0.1 mm along the edge, clear of the corners, the width measured on
+    lip_metal_poly() must lie between the narrowest and widest row within one relief reach
+    of that station -- so it must EQUAL the row's width anywhere a band or a gap runs
+    undisturbed, and only a blend or a relief arc is given room. A relief that bites a band
+    this function does not know how to describe raises here instead of printing."""
+    span = H if edge in ("W", "E") else W
+    tool_r = TOOL_R                              # the shell's own; cavity_void_poly()'s default
+    reach = LIP_CLR + tool_r
+    line = {"W": ((0.0, 0.0), (0.0, H)), "E": ((W, 0.0), (W, H)),
+            "S": ((0.0, 0.0), (W, 0.0)), "N": ((0.0, H), (W, H))}[edge]
+    bands = lip_band_limits(edge)
+    nominal = lambda t: next((w for lo, hi, w, _n in bands if lo - 1e-9 <= t <= hi + 1e-9), 0.0)
+
+    cuts = []                                    # [lo, hi, width left, [refdes]]
+    for ref, p in lip_relieved(tool_r):
+        x0, y0, x1, y1 = p.bounds
+        d = {"W": x0, "E": W - x1, "S": y0, "N": H - y1}[edge]
+        left = max(0.0, round(d - reach, 2))
+        p_lo, p_hi = (y0, y1) if edge in ("W", "E") else (x0, x1)
+        if left > 0.0:
+            # the relief stops short of the edge: over the part's own length the lip is cut
+            # back to `left` -- if it was wider than that to begin with
+            if left >= max(nominal(p_lo), nominal(p_hi), nominal((p_lo + p_hi) / 2.0)):
+                continue
+            cuts.append([p_lo, p_hi, left, [ref]])
+            continue
+        hit = _lip_relief(p, tool_r).intersection(LineString(line))
+        for seg in getattr(hit, "geoms", [hit]):
+            if seg.geom_type != "LineString" or seg.length < 1e-6:
+                continue
+            ts = [c[1] if edge in ("W", "E") else c[0] for c in seg.coords]
+            cuts.append([max(0.0, min(ts)), min(span, max(ts)), 0.0, [ref]])
+    cuts.sort()
+    merged = []
+    for c in cuts:                               # two reliefs that run into each other
+        if merged and c[0] <= merged[-1][1] + 1e-9 and abs(c[2] - merged[-1][2]) < 1e-9:
+            merged[-1][1] = max(merged[-1][1], c[1])
+            merged[-1][3] += [r for r in c[3] if r not in merged[-1][3]]
+        else:
+            merged.append(c)
+
+    rows = []
+    for lo, hi, w, who in bands:
+        keep = [(lo, hi)]
+        for c_lo, c_hi, left, _refs in merged:
+            if left < w:                         # a relief only ever REMOVES lip
+                keep = [q for a, b in keep for q in ((a, min(b, c_lo)), (max(a, c_hi), b))
+                        if q[1] - q[0] > 1e-9]
+        rows += [(a, b, w, list(who)) for a, b in keep]
+    rows += [(lo, hi, left, list(refs)) for lo, hi, left, refs in merged
+             if left < max(nominal(lo), nominal(hi), nominal((lo + hi) / 2.0))]
+    rows.sort()
+    out = []
+    for r in rows:                               # a band split by nothing rejoins itself
+        if out and abs(out[-1][2] - r[2]) < 1e-9 and out[-1][3] == r[3] \
+                and abs(out[-1][1] - r[0]) < 1e-9:
+            out[-1] = (out[-1][0], r[1], r[2], r[3])
+        else:
+            out.append(r)
+
+    metal = lip_metal_poly()
+    corner = max(LIP_MAX.values()) + tool_r      # inside this the probe runs ALONG the next edge's lip
+    depth = max(LIP_MAX.values()) + reach
+    t = corner
+    while t <= span - corner + 1e-9:
+        near = [w for lo, hi, w, _n in out if lo <= t + reach and hi >= t - reach]
+        got = _lip_cut_width(edge, t, metal, depth)
+        if not (min(near) - 0.005 <= got <= max(near) + 0.005):
+            raise RuntimeError(
+                f"lip_as_cut('{edge}'): at {'y' if edge in ('W', 'E') else 'x'}{t:.1f} the "
+                f"cut lip is {got:.3f} mm wide, outside the {min(near):.2f}..{max(near):.2f} "
+                f"this description allows there -- the bands and reliefs no longer describe "
+                f"the metal, so nothing may be printed from them until they do")
+        t = round(t + 0.1, 6)
+    return out
 
 
 def boss_fouls(mx, my):

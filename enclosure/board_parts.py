@@ -96,6 +96,29 @@ def _blocks(text: str, tag: str = "footprint"):
     return out
 
 
+def _pad_rects(b: str, rot: float):
+    """[(pad name, rectangle)] for one footprint block, in the FOOTPRINT's own frame -- the
+    pad's (size w h) box about its (at x y), turned by the pad's own angle less the
+    footprint's. parts() unions these into a keep-out; cell_tab_lands() picks pads out by
+    name. One loop, so the two cannot read a pad two ways."""
+    out = []
+    for pb in _blocks(b, "pad"):
+        pat = re.search(r'\(at (-?[\d.]+) (-?[\d.]+)(?: (-?[\d.]+))?\)', pb)
+        if not pat:
+            continue
+        px, py = float(pat.group(1)), float(pat.group(2))
+        prot = float(pat.group(3) or 0.0)
+        sz = re.search(r'\(size ([\d.]+) ([\d.]+)\)', pb)
+        pw, ph = (float(sz.group(1)), float(sz.group(2))) if sz else (0.3, 0.3)
+        r = box(px - pw / 2, py - ph / 2, px + pw / 2, py + ph / 2)
+        local = prot - rot          # stored pad angle is absolute; strip the footprint's
+        if abs(local) > 1e-9:
+            r = affinity.rotate(r, local, origin=(px, py))
+        nm = re.match(r'\(pad\s+"([^"]*)"', pb)
+        out.append((nm.group(1) if nm else "", r))
+    return out
+
+
 def parts(side: str = "B", pcb: str | None = None):
     """[(ref, keepout_polygon, height_mm_or_None, source)] for one side of the board.
 
@@ -119,20 +142,7 @@ def parts(side: str = "B", pcb: str | None = None):
         at = re.search(r'\(at (-?[\d.]+) (-?[\d.]+)(?: (-?[\d.]+))?\)', b)
         fx, fy, rot = float(at.group(1)), float(at.group(2)), float(at.group(3) or 0.0)
 
-        rects = []
-        for pb in _blocks(b, "pad"):
-            pat = re.search(r'\(at (-?[\d.]+) (-?[\d.]+)(?: (-?[\d.]+))?\)', pb)
-            if not pat:
-                continue
-            px, py = float(pat.group(1)), float(pat.group(2))
-            prot = float(pat.group(3) or 0.0)
-            sz = re.search(r'\(size ([\d.]+) ([\d.]+)\)', pb)
-            pw, ph = (float(sz.group(1)), float(sz.group(2))) if sz else (0.3, 0.3)
-            r = box(px - pw / 2, py - ph / 2, px + pw / 2, py + ph / 2)
-            local = prot - rot          # stored pad angle is absolute; strip the footprint's
-            if abs(local) > 1e-9:
-                r = affinity.rotate(r, local, origin=(px, py))
-            rects.append(r)
+        rects = [r for _name, r in _pad_rects(b, rot)]
         padbox = None
         if rects:
             loc = unary_union(rects)
@@ -170,6 +180,40 @@ def parts(side: str = "B", pcb: str | None = None):
             h = None
         out.append((ref, keepout, h, source))
     return out
+
+
+CELL_TAB_PADS = ("Nt", "Pt")     # the cell footprints' own names for the two solder-tab lands
+
+
+def cell_tab_lands(pcb: str | None = None):
+    """[(refdes, pad, land polygon)] -- the solar cells' solder-tab lands, read off the board:
+    pads Nt and Pt of every PV* footprint, in board coordinates, sorted.
+
+    They are what the brace's rails were put there to back, and until 2026-11-12 the only
+    record of where they are was four coordinates typed into the brace drawing generator
+    and typed again into the brace CAD's pocket map: (4.3, 17.0) (46.5, 17.0) (4.3, 71.9)
+    (46.5, 71.9). The lands are at y 15.75 and 73.15. Both copies were 1.25 mm out, the
+    same way, and nothing could have noticed, because nothing compared them to the board.
+    Raises rather than return an empty list: "no tabs" is never the answer for this card."""
+    with open(pcb or PCB, encoding="utf-8", errors="replace") as fh:
+        text = fh.read()
+    out = []
+    for b in _blocks(text):
+        rm = re.search(r'\(property "Reference" "([^"]+)"', b)
+        ref = rm.group(1) if rm else "?"
+        if not ref.startswith("PV"):
+            continue
+        at = re.search(r'\(at (-?[\d.]+) (-?[\d.]+)(?: (-?[\d.]+))?\)', b)
+        fx, fy, rot = float(at.group(1)), float(at.group(2)), float(at.group(3) or 0.0)
+        for name, r in _pad_rects(b, rot):
+            if name in CELL_TAB_PADS:
+                if rot:
+                    r = affinity.rotate(r, rot, origin=(0, 0))
+                out.append((ref, name, affinity.translate(r, xoff=fx, yoff=fy)))
+    if not out:
+        raise RuntimeError(f"no {'/'.join(CELL_TAB_PADS)} pads on any PV* footprint -- the "
+                           f"solar cells' tab lands were not found on the board")
+    return sorted(out, key=lambda t: (t[0], t[1]))
 
 
 COIL_NETS = ("LA", "LB")

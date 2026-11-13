@@ -30,7 +30,9 @@ U7 = (28.1,37.3,7.8,5.4)                        # U7 (MB85RC512TY FRAM DFN-8) po
 # Heights come from enclosure/part_heights.py -- the single home, verified against each
 # part's 3D model by check_consistency [7]. Nothing on this sheet may restate one.
 from part_heights import part_height as _ph     # noqa: E402
+from board_parts import cell_tab_lands as _tab_lands   # noqa: E402
 from shapely.geometry import Point as _spt      # noqa: E402
+TAB_REACH = 1.5                                 # a tab is BACKED if resin comes this close to its land's centre
 
 def _covered(ref, pieces, span):
     """Is this part actually under the brace at all? Tall parts are stepped around now."""
@@ -73,6 +75,7 @@ def build(vname):
     # STEP is built from. It used to be five literal rectangles restated here (BX*/RW/RE), which
     # is how a sheet keeps describing a part that changed underneath it.
     pieces = _fit.brace_footprint(span=span)
+    dropped = list(_fit.DROPPED); dropped_area = _fit.DROPPED_AREA      # read IMMEDIATELY (last call's)
     BX0,BY0,BX1,BY1 = pieces[0].bounds
     blockers = [r for r, _p in _fit.blockers(span=span)]
     led_hug = _covered("D2", pieces, span)      # lite steps around the 0.83 LEDs entirely
@@ -138,23 +141,47 @@ def build(vname):
                         ("%.2f" % (_ph("U7")+air_for("U7")) if u7_cov else "OPEN")),
             ha="center",va="center",fontsize=4.0,
             color="#7a1f12" if u7_thru else ("#6b4e00" if u7_cov else "#555555"))
-    # the 4 panel solder tabs the rails back (red stars; drawn only inside this plan's extent)
-    TABS=[(4.3,17.0),(46.5,17.0),(4.3,71.9),(46.5,71.9)]
-    backed=[t for t in TABS if any(g.distance(_spt(*t)) <= 1.5 for g in pieces)]
-    for tx,ty in TABS:
+    # THE PANEL SOLDER TABS (red stars; drawn only inside this plan's extent), READ OFF THE
+    # BOARD -- board_parts.cell_tab_lands(), the Nt/Pt lands of PV1 and PV2. They were four
+    # typed points, (4.3, 17.0) (46.5, 17.0) (4.3, 71.9) (46.5, 71.9), and the lands are at
+    # y 15.75 and 73.15: every star on this plan sat 1.25 mm from its tab, and so did the
+    # same four numbers typed into the brace CAD's pocket map.
+    #
+    # WHETHER THEY ARE BACKED is the question this sheet exists to answer honestly, and the
+    # answer has been NO since 2026-08-08. Rebuilt from each commit's own board and rules:
+    # three of the four were backed from the 2026-07-29 respin (the fourth, PV2's east tab,
+    # never was -- its rail was the island east of SC4 the single-piece rule dropped that
+    # day), one after the 2026-08-07 centre consolidation moved the caps outboard and traded
+    # the legs away on purpose (scripts/check_mesh.py records it: "leg area traded to the
+    # horizontal cap scoots by design"), and none after the LDO island went in the next day.
+    # The outboard rails are still COMPUTED -- each is cut off from the body by the reliefs
+    # round a corner boss and a mid-edge boss, and brace_footprint() drops all four as
+    # islands to keep the brace one piece. The count was already printed ("tabs backed
+    # 0/4"). What was wrong was everything typed round it: "W LEG" / "E LEG" labelling resin
+    # that is not there, "RAILS RUN ... OUTBOARD OF THE CAPS" in note 4, and a README still
+    # listing tab backing as the brace's second job. All of it is computed now, the trade
+    # included -- how many tabs the dropped pieces WOULD back.
+    tabs = [(f"{r}.{p}", g.centroid.x, g.centroid.y) for r, p, g in _tab_lands()]
+    tab_gap = {n: min(g.distance(_spt(tx, ty)) for g in pieces) for n, tx, ty in tabs}
+    backed = [n for n in tab_gap if tab_gap[n] <= TAB_REACH]
+    would = [n for n, tx, ty in tabs if any(g.distance(_spt(tx, ty)) <= TAB_REACH for g in dropped)]
+    for _n,tx,ty in tabs:
         if ty <= BY1 + 3:
             ax.plot(X(tx),Y(ty),marker="*",ms=8,color="#d23b2a",zorder=6)
-    ax.text(X(4.4),Y(23.5),"W\nLEG",ha="center",va="center",fontsize=4.4,color=INK)
-    ax.text(X(46.5),Y(23.5),"E\nLEG",ha="center",va="center",fontsize=4.4,color=INK)
+    for _lx,_lt in ((4.4,"W\nLEG"),(46.5,"E\nLEG")):      # a label only where there is a leg to label
+        if any(g.contains(_spt(_lx,23.5)) for g in pieces):
+            ax.text(X(_lx),Y(23.5),_lt,ha="center",va="center",fontsize=4.4,color=INK)
     ax.text(X(25.4),272,"BOARD-FACING FACE   SCALE 1.7:1",ha="center",fontsize=8.2,fontweight="bold",color=INK)
     # plan dims + leaders
     dimh(X(BX0),X(BX1),Y(BY1)-3.0,f"{BX1-BX0:.2f}",fs=7,side=-1)
     dimv(Y(BY0),Y(BY1),X(BX0)-3.5,f"{BY1-BY0:.2f}",fs=7,side=1)
     leader(X((FER[0]+FER[2])/2),Y(52.0),X(BX1)+9,Y(52.0)+3,"12.0 WIDE\n(CRITICAL)",ha="left",fs=5.0)
-    _lty = 71.9 if 71.9 <= BY1 + 3 else 17.0
-    _ltxt = ("LEGS BACK THE 4\nPANEL SOLDER TABS\n(NOTE 4)" if len(backed) == 4 else
-             "LEGS BACK %d OF THE 4\nPANEL SOLDER TABS\n(NOTE 4)" % len(backed))
-    leader(X(46.5),Y(_lty),X(BX1)+9,Y(_lty)-3,_ltxt,ha="left",fs=5.0)
+    _east = sorted((ty, tx) for _n, tx, ty in tabs if tx > _fit.W / 2)     # the east tab the leader points at
+    _lty, _ltx = next(((ty, tx) for ty, tx in reversed(_east) if ty <= BY1 + 3), _east[0])
+    _ltxt = ("LEGS BACK THE %d\nPANEL SOLDER TABS\n(NOTE 4)" % len(tabs) if len(backed) == len(tabs) else
+             "LEGS BACK %d OF THE %d\nPANEL SOLDER TABS\n(NOTE 4)" % (len(backed), len(tabs)) if backed else
+             "THE %d PANEL SOLDER\nTABS ARE NOT BACKED\n(NOTE 4)" % len(tabs))
+    leader(X(_ltx),Y(_lty),X(BX1)+9,Y(_lty)-3,_ltxt,ha="left",fs=5.0)
 
     # ===================== SECTION B-B (across the brace) =====================
     S2=13.0; EX,EY=244,206
@@ -181,15 +208,31 @@ def build(vname):
 
     # ===================== NOTES =====================
     ax.text(20,96,"NOTES",fontsize=7.6,fontweight="bold",color=INK)
+    # note 4's last clause: what the footprint does about the solder tabs, in whichever of
+    # the three states it is actually in. Nothing here is typed that the footprint decides.
+    _reach = "N WALL" if reach_n else "y%.1f (SHORT OF THE N WALL)" % BY1
+    if len(backed) == len(tabs):
+        _rails = f"RAILS RUN S->{_reach} OUTBOARD OF THE CAPS + BACK THE {len(tabs)} PANEL SOLDER TABS"
+    elif backed:
+        _rails = (f"RAILS RUN S->{_reach} OUTBOARD OF THE CAPS + BACK {len(backed)} OF THE "
+                  f"{len(tabs)} PANEL SOLDER TABS ({', '.join(backed)})")
+    else:
+        _rails = (f"THE FOOTPRINT RUNS S->{_reach} BUT PUTS NO RESIN BEHIND ANY OF THE {len(tabs)} PANEL "
+                  f"SOLDER TABS (THE NEAREST IS {min(tab_gap.values()):.1f} FROM A TAB CENTRE)"
+                  + (f": THE {len(dropped)} PIECES DROPPED TO KEEP THE BRACE ONE PART "
+                     f"({dropped_area:.0f} mm2) WOULD BACK {len(would)} OF THEM" if would else ""))
     notes=[
      "1. PART = SOLAR-GLOW DRH DIFFUSER BRACE [%s]. A DROP-IN INSERT, NOT A FASTENED OR BONDED PART. 3D STEP GOVERNS ALL GEOMETRY; THE STL IS THE PRINT SOURCE." % vname.upper(),
      "2. PROCESS: SLA / RESIN 3D PRINT (e.g. PCBWay). MATERIAL: TOUGH WHITE RESIN. IT MUST BE OPAQUE-WHITE AND NON-CONDUCTIVE - NO CARBON / GRAPHITE-FILLED RESIN",
      "    (WEAKLY CONDUCTIVE): THE BRACE RESTS ON GND / VS / SIGNAL COPPER, SO A DIELECTRIC IS REQUIRED. WHITE ALSO DRIVES THE WINDOW BACKING (NOTE 6).",
      f"3. FIT: PRINT ~0.1 PROUD IN HEIGHT AND SAND THE FLAT BOTTOM (DATUM) DOWN TO A ZERO-AIR FIT IN THE {gap:.2f} CAVITY. ALL POCKETS ARE ON THE TOP FACE, SO THE",
      "    BOTTOM LAPS FLAT ON GLASS WITHOUT TOUCHING THEM. DO NOT SAND THE TOP (IT SETS THE POCKET DEPTHS).",
-     f"4. PRECISION FIT, NO RATTLE: THE OUTER EDGES CONTACT THE FLAT CAVITY WALLS AT ~{WALL_FIT:.2f} WHERE THE FOOTPRINT REACHES THEM (COMPUTED EXTENT x {BX0:.2f}-{BX1:.2f},",
-     f"    y {BY0:.2f}-{BY1:.2f}; E EDGE STEPPED -- THE PLAN IS THE COMPUTED FOOTPRINT). THE FOUR CORNER BOSSES (r{_fit.BOSS_R:.1f}) + ROUNDED CORNERS ARE RELIEVED (NEED NOT"
-     f" FIT). RAILS RUN S->{'N WALL' if reach_n else 'y%.1f (SHORT OF THE N WALL)' % BY1} OUTBOARD OF THE CAPS + BACK {'THE 4' if len(backed)==4 else '%d OF THE 4' % len(backed)} PANEL SOLDER TABS; POCKETS KEY TO THE BOARD.",
+     # Wrapped like note 8: its last clause is as long as what it has to say, and that is
+     # computed -- see _rails above. (It was two typed lines that happened to fit.)
+     *textwrap.wrap(
+         f"4. PRECISION FIT, NO RATTLE: THE OUTER EDGES CONTACT THE FLAT CAVITY WALLS AT ~{WALL_FIT:.2f} WHERE THE FOOTPRINT REACHES THEM (COMPUTED EXTENT x {BX0:.2f}-{BX1:.2f}, "
+         f"y {BY0:.2f}-{BY1:.2f}; E EDGE STEPPED -- THE PLAN IS THE COMPUTED FOOTPRINT). THE FOUR CORNER BOSSES (r{_fit.BOSS_R:.1f}) + ROUNDED CORNERS ARE RELIEVED (NEED NOT "
+         f"FIT). {_rails}; POCKETS KEY TO THE BOARD.", width=190, subsequent_indent="    "),
      f"5. FERRITE CHANNEL (OVER THE NFC COIL): OPEN-ENDED CHANNEL, WALLED ON THE 12 WIDTH (CRITICAL - EDGE-LIMITED), OPEN AT BOTH Y-ENDS, {FER_DEPTH:.2f} DEEP.",
      "    FERRITE (Wurth WE-FSFS 364006, NOMINAL 12 × 26 mm, EVEN ON THE 2mm SCORE GRID) IS PSA'd IN; LENGTH IS FORGIVING AND MAY OVERHANG THE ENDS SLIGHTLY.",
      ("6. WINDOW = LED-HUG DIFFUSER BACKING: SOLID WHITE RESIN FILLS THE MONOGRAM-WINDOW FOOTPRINT BEHIND THE FR4, MINUS THE TIGHT D2-D5 LED POCKETS."
@@ -245,7 +288,9 @@ def build(vname):
     else:
         print(f"[{vname}] U7 pocket: NONE -- h {_ph('U7'):.2f} > span {span:.2f}, stepped around")
     print(f"[{vname}] window: {'LED-hug pockets' if led_hug else 'open LED cutouts (stepped around)'}; "
-          f"tabs backed {len(backed)}/4")
+          f"tabs backed {len(backed)}/{len(tabs)} (nearest resin {min(tab_gap.values()):.2f}-"
+          f"{max(tab_gap.values()):.2f} mm from a tab centre; the {len(dropped)} dropped piece(s), "
+          f"{dropped_area:.1f} mm2, would back {len(would)})")
     print(f"[{vname}] saved {base}-DRAWING.pdf/.png "
           f"(envelope {BX1-BX0:.1f} x {BY1-BY0:.1f} x {gap:.2f})")
 
