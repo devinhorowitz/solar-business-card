@@ -127,7 +127,11 @@ OFF_BOARD_ONCE = [
 # headers -- they are flagged in the schematic and the board, and build() filters on
 # those flags rather than on a list kept here.
 NOT_DISTRIBUTOR = {
-    "ENC1": "the titanium back-shell -- its own fab order, machined from enclosure/*.step",
+    # "as written": the STEPs were the MIRROR IMAGE of the part until 2026-11-13 (modelled in
+    # board coordinates, a left-handed frame, and written that way). They are right-handed
+    # now -- fit_rules, THE FILE FRAME -- and a shop that mirrors one cuts the wrong part.
+    "ENC1": "the titanium back-shell -- its own fab order, machined from enclosure/*.step "
+            "as written (the files are right-handed: do not mirror)",
 }
 
 # A distributor P/N is an IDENTIFIER, not a description: it is submitted verbatim and

@@ -75,7 +75,15 @@ BASELINE = {
     volume_mm3=5292.87, bbox=(-26.35, -45.4, -0.15, 26.35, 45.4, 3.4),
         max_boundary_edges=1, max_open_len_mm=0.001, max_degenerate=1),
     "solar-glow-drh-pogo-testplate.stl": dict(
-        volume_mm3=50860.32, bbox=(-10.4, -10.4, -17.8, 61.2, 99.3, 10.0),
+        # re-ledgered 2026-11-13: the y range flips, -10.4..99.3 -> -99.3..10.4, and nothing
+        # else moves (the rebuilt STL measures the same volume as the one it replaces, to
+        # 1e-4 mm3). The plate is modelled in bare board coordinates, y DOWN, and every solid
+        # is written right-handed now -- file y = -board y (fit_rules, THE FILE FRAME).
+        # THIS ROW IS THE PLATE'S OWN HANDEDNESS GATE: it is the one un-centred solid here, so
+        # its box is not symmetric in y and a plate written in the old frame lands 89 mm
+        # outside it. The shells' and braces' boxes ARE symmetric in y and cannot tell either
+        # hand from the other; scripts/handedness_drc.py holds those to KiCad's own export.
+        volume_mm3=50860.32, bbox=(-10.4, -99.3, -17.8, 61.2, 10.4, 10.0),
         max_boundary_edges=0, max_open_len_mm=0.0, max_degenerate=0),
     # volume re-ledgered 2026-08-02 with fit_rules.AIR 0.12 -> 0.22 (pockets 0.1 deeper,
     # measured from a local regeneration then restored -- CI owns the artifact). The

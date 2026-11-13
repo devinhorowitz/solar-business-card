@@ -683,86 +683,13 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
 
 ## Enclosure — `enclosure/…-backshell-…-cad.py`, `enclosure/brace/`
 
-- [ ] **[ENCLOSURE — BLOCKS EVERY FAB ORDER] The emitted solids are MIRROR IMAGES of the parts: decide the frame**
-  _(2026-11-12. From an independent measurement of the committed enclosure solids — SolidCraft, on
-  DRH's machine, against `main` at `d060215`, deliberately a CAD program nothing in this repo uses,
-  because every gate here measures geometry built from the same inputs the generators read. The
-  report and its draft patches are on the unmerged branch `review/solidcraft-d060215`. The four
-  defects it traced to code are FIXED in the PR that added this entry — see the Gotchas in
-  `CLAUDE.md`. This one is not, on purpose: it is a decision, and it is DRH's.)_
-  Both CAD generators place board coordinates — X right, Y down, Z toward the card's front —
-  straight into CadQuery (`wx`/`wy`). That triad is left-handed; STEP and STL are right-handed by
-  definition. **So every STEP and STL in `enclosure/` is the mirror image of the part.**
-  - **Measured**, against KiCad's own (right-handed) STEP export of the populated board: the max
-    brace collides in both rigid placements the hole pattern allows — **53.1 mm³ over 34 parts** and
-    **493.9 mm³ over 29** — and its mirror image fits (0.05 mm³, one part, L2). The medallion,
-    X-mirrored in `enclosure/medallion.py` so it reads correctly from behind the REAL card, reads
-    **backwards** in the STEP.
-  - **It hid** because the hole pattern is symmetric about both axes, `enclosure/assembly_render.py`
-    flips its finished pictures (`present()`, "THE SCENE IS LEFT-HANDED"), and every gate loads the
-    solids in the frame the generators write them in.
-  - **The pogo plate is mirrored too** — analysed 2026-11-12 from the generator's own table, not
-    measured on SolidCraft: the 14 probe bores + 2 dowels fit the panel only **face-DOWN** (0.000 mm,
-    with a half turn); face-up, which is the plate's whole purpose, the best rigid placement misses
-    by **70 mm**. Its asymmetric dowels would enforce the wrong way round. Its engraved labels are
-    `cq.text` and read correctly in the file, so **mirroring it at the printer fixes the layout and
-    reverses the lettering** — the opposite of the medallion.
-  - **The shell is not symmetric enough to shrug it off.** A shell cut from the file as emitted can
-    be screwed down two ways. Sectioned against the board on the rebuilt solids — 2026-11-13,
-    `scripts/assembly_drc.py`'s own `section()` with the metal mirrored, at its three heights; max,
-    lite and air read the same:
-    - **reflected in x**, the 2.5 mm west lip lands on the bare **JP1 and TP1 pads** at the east
-      edge (8.86 and 1.62 mm² of titanium over copper, x 48.30–49.25), and the two west mid-span
-      bosses stand **0.11 mm inside SC1 and 0.05 mm inside SC3** — they are the images of the east
-      bosses, which are notched only as far as the shorter caps SC2 and SC4 reach;
-    - **reflected in y**, nothing overlaps, but C24 stands **0.048 mm** from shell metal — inside
-      the 0.05 mm a section can resolve, so `assembly_drc` [F] would call it contact (then R16
-      0.124, SC2 0.239, SC4 0.274). It is 0.097 in the right hand.
-
-    _(Re-measured after the flats moved out to the caps' bay clearance. On the 0.20 mm flats the
-    y placement cleared the caps by only 0.05–0.27 mm. The pads under the lip were there then too
-    and the first look missed them: it sectioned mid-cavity only, above a bare pad's 0.20 mm.)_
-
-  **Options, none taken:**
-  - **(a) Reflect once, at export.** The review's draft patch 06: a `shop_frame()` in `fit_rules`,
-    called on the two export lines of each generator, so the files are written in
-    (x − W/2, H/2 − y, z) — KiCad's own STEP-export convention. Smallest change to the generators.
-  - **(b) Flip `wy` in the generators.** Mirrors the model itself. More invasive than it looks: the
-    brace CAD positions every pocket with `box(…, centered=False).translate((wx(px0), wy(py0), …))`,
-    which silently assumes +y growth, so each of those sites has to change corner.
-  - **(c) Leave the files and tell the shop and the printer to mirror.** No code; relies on a note
-    being read, every order, and gives the pogo plate reversed labels.
-
-  **What has to move WITH it under (a) or (b)** — read 2026-11-12, each line checked against the file:
-  - `scripts/interference_drc.py` — ray origins are `(x − W/2, y − H/2)`; the y term flips.
-  - `scripts/assembly_drc.py` — the same in `z_hits` / `up_hits`, and `section()` translates by
-    `(+W/2, +H/2)`; a y-flip there. Its canaries will say so loudly if it is missed.
-  - `enclosure/assembly_render.py` — `stl()` translates the meshes into the left-handed scene, and
-    `present()` plus both texture mappings are calibrated to that scene ("change one and you must
-    change the other"). Cheapest: mirror the meshes on load and leave the scene alone.
-  - `scripts/check_mesh.py` — nothing for the shells and braces (their bboxes are y-symmetric,
-    ±45.40 and ±42.40); the pogo plate's y range (−10.4…99.3) flips if that generator is included.
-  - `enclosure/solar-glow-drh-pogo-testplate-cad.py` — NOT touched by draft patch 06. Needs the
-    same reflection for its geometry and the opposite treatment for its lettering.
-  - **Nothing**: `scripts/ref_figures.py` (reads only the shell's thickness), `scripts/render.py`
-    (never reads an enclosure solid), `enclosure/medallion.py` (its X-mirror is right for a
-    right-handed part — it is why the STEP reads backwards today), and **both dimensioned
-    drawings**, which are already TRUE views (shell plan: x right / y up, seen from the back; brace
-    plan: x right / y down, seen from the board side). The sheets are right and the solids they say
-    "govern" are their mirror images.
-  - The hand-buy line `ENC1` in `scripts/bom_split.py` says "machined from" the STEP; its wording
-    should say which hand once that is true.
-
-  **Nothing in CI can see handedness**, and the new sectioned checks in `scripts/assembly_drc.py`
-  say so in their own docstring. The gate that could is the measurement that found it: export the
-  populated board with `kicad-cli pcb export step` and boolean it against the enclosure STEPs. Both
-  halves already run in `kibot.yml`'s job (KiCad in the container, cadquery on the runner), so it is
-  buildable — worth doing in the same change that picks the frame, so the choice lands gated.
-
-  **Until this is decided, do not send any STEP or STL from this tree to a shop or a printer.**
-
-- [ ] **[ENCLOSURE — first thing after the merge run] Re-measure the rebuilt solids on SolidCraft**
-  _(2026-11-12.)_ Nothing in the cloud can confirm the fixes: SolidCraft exists only on DRH's
+- [ ] **[ENCLOSURE — BLOCKS EVERY FAB ORDER; first thing after the merge run] Re-measure the rebuilt solids on SolidCraft**
+  _(2026-11-12; the frame added 2026-11-13.)_ **Until this is done, do not send any STEP or STL from
+  this tree to a shop or a printer.** _(That sentence used to close the entry above this one --
+  "The emitted solids are MIRROR IMAGES of the parts: decide the frame" -- which is culled: the
+  decision was taken on 2026-11-13, option (a), reflect once at export. `CLAUDE.md` has the three
+  rules it left behind, `enclosure/fit_rules.py` the frame, and `scripts/handedness_drc.py` the
+  gate.)_ Nothing in the cloud can confirm the fixes: SolidCraft exists only on DRH's
   machine. The cloud session rebuilt everything with CI's pins and measured it with OpenCascade —
   an instrument that reproduces every SolidCraft figure on `main` to the last digit (max shell
   5290.7426 mm³, cap overlaps 2.3122 / 0.7343 / 1.6998 / 1.8132 mm³, brace overlap 9.0186 mm³, 13
@@ -784,8 +711,24 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
   - **No brace resin wall under 0.10 mm**, max and lite, and none under `SLA_WALL` 0.60 except the
     ferrite channel's own walls (x 36.2–36.7 and 49.10, top 0.33 mm only). The 0.0068 mm wall at
     (4.411, 49.653) is the canary: it must be gone.
-  - If the frame is changed later: **the engraving reads correctly from the back**, and the brace
-    fits the KiCad board export in a rigid placement.
+  - **The files are the parts, not their mirror images** (written right-handed since 2026-11-13).
+    In a shell's or a brace's file a board point (x, y) is at **(x − 25.4, 44.45 − y)**: y runs UP
+    now, so every board coordinate in this list reads that way in SolidCraft. Expect:
+    - against KiCad's STEP export of the populated board, placed by a translation alone and NOT
+      mirrored: the **max brace overlaps one part, L2, by 0.047 mm³** (KiCad's generic 1008 body,
+      1.20 tall where the part fitted is 1.00 — the item on L2 below) and the **lite brace
+      nothing**. Mirrored, they must collide: 52.8 mm³ over 33 parts and 487.6 over 28 (max),
+      52.9 over 34 and 301.5 over 28 (lite). Those are this tree's braces; the 53.1 / 493.9
+      SolidCraft first reported were the braces at `d060215`, before the level opening;
+    - **the medallion reads correctly from behind** — DRH, No 001, and SOLAR · NFC · TITANIUM ·
+      ATL GA · MMXXVI clockwise round the ring;
+    - **the pogo plate takes the panel face-UP**: its two dowel bores under TH1 and TH2 (file
+      (−4.9, −20.0) and (55.7, −85.0); the plate is un-centred, a board point (x, y) is at
+      (x, −y)), and its title and net labels reading correctly from above;
+    - the max shell STEP's counts are what they were — the reflection changes no face, edge or
+      volume (5293.129 mm³ by OCC).
+    `scripts/handedness_drc.py` measures the first and third of these on every CI run, in the
+    kernel that wrote the files; this is the check in one that did not.
 
 - [ ] **[ENCLOSURE — DRH's calls, from the same measurement] Seven numbers left where they are** (two since fixed, and marked so)
   _(2026-11-12. Each was measured or traced, none was changed. Both numbers are given so the

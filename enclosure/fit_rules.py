@@ -1089,6 +1089,77 @@ def fin_ribs(rib_w=FIN_RIB_W):
     return out
 
 
+# ---- THE FILE FRAME (2026-11-13) ----------------------------------------------------------
+# Every enclosure solid is MODELLED in board coordinates -- X right, Y DOWN, Z toward the card's
+# front -- because that is what the .kicad_pcb stores and what every rule above is written in.
+# That triad is LEFT-handed (x cross y = -z). STEP and STL are right-handed by definition, so
+# a solid written out as modelled is the MIRROR IMAGE of the part, and until this date every
+# STEP and STL in enclosure/ was one. Measured on the committed files against KiCad's own
+# (right-handed) STEP export of the populated board, first on SolidCraft and then reproduced
+# here to the digit: the max brace collided with the board's parts in both rigid placements
+# the mount holes allow (53.1 mm3 over 34 parts, 493.9 mm3 over 29) and its mirror image
+# fitted (0.05 mm3, one part); the medallion read backwards. It hid because the hole pattern
+# is symmetric about both axes, assembly_render.py flips its finished pictures, and every
+# gate loaded the solids in the frame the generators wrote them in.
+#
+# So a solid is reflected ONCE, on its way out, and nowhere else:
+#
+#     model (x, y, z)   ->   file (x, -y, z)
+#
+# The shell and the braces are modelled centred on the card (wx = bx - W/2, wy = by - H/2),
+# so their files hold the board point (bx, by) at
+#
+#     (bx - W/2,  H/2 - by)          x right, y UP, z toward the card's front
+#
+# which is KiCad's own STEP-export convention (its board STEP has the card at x 0..W,
+# y -H..0): an enclosure file and KiCad's export differ by a TRANSLATION and nothing else,
+# and scripts/handedness_drc.py holds them to exactly that. The pogo plate is modelled
+# un-centred, in bare board coordinates, and lands at (bx, -by).
+#
+# THE MODEL DOES NOT CHANGE. Every rule, pocket and polygon stays in board coordinates, the
+# medallion keeps its X-mirror (right for a right-handed part -- it is why the old STEP read
+# backwards), and both dimensioned drawings were true views all along.
+#
+# export_solid() is the one way a solid leaves this repo; file_xy() / board_xy() /
+# board_geom() are the one statement of the mapping for anything that READS an emitted solid
+# (interference_drc, assembly_drc, assembly_render). A reader that types its own "- W/2,
+# - H/2" is the MOUNTS failure again: flip one side and not the other and every gate that
+# shares the stale copy still passes.
+
+def shop_frame(solid):
+    """`solid` (a cadquery Shape or Workplane, in the MODEL frame) reflected through the XZ
+    plane: the frame a file is written in. See THE FILE FRAME above."""
+    return solid.mirror("XZ")
+
+
+def export_solid(solid, stem, stl_tolerance, stl_angular=0.2):
+    """Write `solid` as <stem>.step and <stem>.stl IN THE FILE FRAME, and return what was
+    written. The one way a solid leaves this repo: reflected exactly once, then through
+    export_step_stable (BRepCheck, the manifold gate, the timestamp-stable write) and the STL
+    exporter. A generator that calls an exporter directly writes the mirror image."""
+    import cadquery as _cq
+    shop = shop_frame(solid)
+    export_step_stable(shop, stem + ".step")
+    _cq.exporters.export(shop, stem + ".stl", tolerance=stl_tolerance, angularTolerance=stl_angular)
+    return shop
+
+
+def file_xy(bx, by):
+    """Board (x, y) -> where an emitted shell or brace has that point, in file (x, y)."""
+    return bx - W / 2.0, H / 2.0 - by
+
+
+def board_xy(fx, fy):
+    """File (x, y) of an emitted shell or brace -> board (x, y). The inverse of file_xy()."""
+    return fx + W / 2.0, H / 2.0 - fy
+
+
+def board_geom(geom):
+    """A shapely geometry in an emitted shell's or brace's file (x, y) -> board coordinates."""
+    from shapely.affinity import affine_transform
+    return affine_transform(geom, [1.0, 0.0, 0.0, -1.0, W / 2.0, H / 2.0])
+
+
 def crowded_edges(shape):
     """[(n_faces, (x, y, z), (x, y, z))] -- every edge of an OCC shape that more than two
     faces use, with its end points. A closed solid's edges belong to exactly two faces each;

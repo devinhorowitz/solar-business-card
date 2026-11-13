@@ -67,6 +67,9 @@ on:
       - 'scripts/check_mesh.py'
       - 'scripts/interference_drc.py'
       - 'scripts/assembly_drc.py'
+      # the handedness gate: an edit to it must re-prove it against the solids and against
+      # KiCad's own export, which only this job can produce
+      - 'scripts/handedness_drc.py'
       - 'enclosure/**.stl'
       - '.github/workflows/kibot.yml'
 
@@ -226,6 +229,33 @@ jobs:
           # shell that has to contain it, and gates the two subsystems that were in no fit
           # check at all -- the ferrite in its pocket, and the screws' bosses.
           python3 scripts/assembly_drc.py
+
+      # WHICH HAND ARE THE SOLIDS IN (2026-11-13). Every gate above reads a solid the way the
+      # generators write it, so they prove shell, brace and board AGREE and nothing about the
+      # hand they agree in: for months every STEP and STL here was the MIRROR IMAGE of its
+      # part (modelled in board coordinates, which are left-handed, and written as modelled)
+      # and all of them passed, every run. What saw it was an independent CAD measurement
+      # against KiCad's own STEP export of the board. This is that measurement.
+      #
+      # Two halves, because the two tools live in different places: KiCad only inside the
+      # pinned image (it exports the populated board, right-handed by its own construction,
+      # into the runner's temp dir -- NOT into the checkout, where the commit step's globs
+      # would pick a .step up), then cadquery and trimesh on the runner (installed by the
+      # two steps above) place the emitted solids against it by a translation alone. Each
+      # brace must fit and its mirror image must collide; each shell's mirror image must fit
+      # worse; each STEP must be its own STL in the same hand; and the pogo plate must put a
+      # dowel bore under each of the PANEL's two tooling holes (the panel built earlier in
+      # this job -- it is not committed, so this is the only place that check can run).
+      # Calibrated on the solids it exists to catch: it reproduces the independent
+      # measurement to the digit. ~10 s for the exports, ~50 s for the check. Fails BEFORE
+      # the commit-back, so a solid in the wrong hand cannot land.
+      - name: Gate the hand the solids are written in
+        run: |
+          docker run --rm -u "$(id -u):$(id -g)" -e HOME=/tmp -v "$PWD":/wk -v "$RUNNER_TEMP":/out -w /wk \
+            "$KICAD_IMAGE" python3 scripts/handedness_drc.py \
+              --export-board /out/board.step --export-panel /out/panel.step
+          python3 scripts/handedness_drc.py \
+            --board-step "$RUNNER_TEMP/board.step" --panel-step "$RUNNER_TEMP/panel.step"
 
       # Reference figures for PCB/README.md's assembly steps (D2-D5 LED polarity, the SW2
       # master bridge) plus the thickness-at-hand-scale figure, drawn FROM the board file

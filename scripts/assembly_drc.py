@@ -90,11 +90,17 @@ WHAT THIS DOES NOT COVER, said plainly so it is not mistaken for total:
     not duplicated here.
   * Nothing about the resin's print tolerance beyond the RSS stack fit_rules.AIR
     already carries.
-  * HANDEDNESS. Every solid here is written in board coordinates (X right, Y down, Z to
-    the card's front), which is a left-handed frame, and every reader in this repo --
-    this one included -- loads them the same way. A mirror-image part therefore passes
-    all of it. Only something that places the solids against a right-handed model of the
-    board (KiCad's own STEP export) can see that; nothing in CI does yet.
+  * HANDEDNESS, on its own. Until 2026-11-13 every solid was written in the frame it is
+    modelled in -- board coordinates, X right, Y down, Z to the card's front, which is
+    LEFT-handed -- and every reader in this repo, this one included, loaded them the same
+    way, so a mirror-image part passed all of it. The files are right-handed now
+    (fit_rules, THE FILE FRAME) and this gate reads them through fit_rules.file_xy() /
+    board_geom(), the one statement of that mapping. That makes it a strong test that the
+    shell and the brace agree with the BOARD under the mapping ([F] and [G] go red on a
+    shell written in the other hand: its lip nick is 4 mm from where the board puts it) --
+    and no test at all that the mapping is the right-handed one. A reader and a writer
+    flipped together still agree. scripts/handedness_drc.py closes that: it places the
+    emitted solids against KiCad's own STEP export of the board by a translation alone.
   * The part outlines are board_parts' reading of the .kicad_pcb. An error in THAT
     reader is shared with the generators and is invisible here too.
 """
@@ -166,52 +172,62 @@ def note(m):
     _NOTES.append(m); print(f"  note    {m}")
 
 
-def z_hits(mesh, bx, by, W, H, zhi=60.0):
+def _frame():
+    """fit_rules -- for file_xy() / board_geom(), THE mapping between board coordinates and an
+    emitted solid's (fit_rules, THE FILE FRAME). Imported lazily like every dependency here,
+    so main() can report a missing one cleanly; never restated in this file."""
+    import fit_rules
+    return fit_rules
+
+
+def z_hits(mesh, bx, by, zhi=60.0):
     """All z crossings under a downward ray at BOARD coords (bx, by), or None.
 
-    The STLs are centred on the origin (the generators emit wx = bx - W/2), so board
-    coords are shifted here rather than in every caller.
+    Board coordinates are mapped into the solid's file frame here, by fit_rules.file_xy(),
+    rather than in every caller.
     """
-    o = np.array([[bx - W / 2.0, by - H / 2.0, zhi]])
+    o = np.array([[*_frame().file_xy(bx, by), zhi]])
     d = np.array([[0.0, 0.0, -1.0]])
     loc, _, _ = mesh.ray.intersects_location(o, d)
     return loc[:, 2] if len(loc) else None
 
 
-def top_at(mesh, bx, by, W, H, zhi=60.0):
+def top_at(mesh, bx, by, zhi=60.0):
     """Material top under a downward ray at BOARD coords (bx, by), or None."""
-    z = z_hits(mesh, bx, by, W, H, zhi)
+    z = z_hits(mesh, bx, by, zhi)
     return float(z.max()) if z is not None else None
 
 
-def up_hits(mesh, bx, by, W, H, zlo=-5.0):
+def up_hits(mesh, bx, by, zlo=-5.0):
     """z crossings of an UPWARD ray from below at BOARD coords -- the openness probe."""
-    o = np.array([[bx - W / 2.0, by - H / 2.0, zlo]])
+    o = np.array([[*_frame().file_xy(bx, by), zlo]])
     d = np.array([[0.0, 0.0, 1.0]])
     loc, _, _ = mesh.ray.intersects_location(o, d)
     return loc[:, 2] if len(loc) else None
 
 
-def ring_spans(mesh, cx, cy, r, W, H, n=16):
+def ring_spans(mesh, cx, cy, r, n=16):
     """(bottom, top) spans sampled on a circle -- for a boss, whose CENTRE is a
     through bore."""
     out = []
     for i in range(n):
         a = 2.0 * np.pi * i / n
-        z = z_hits(mesh, cx + r * np.cos(a), cy + r * np.sin(a), W, H)
+        z = z_hits(mesh, cx + r * np.cos(a), cy + r * np.sin(a))
         if z is not None:
             out.append((float(z.min()), float(z.max())))
     return out
 
 
-def section(mesh, z, W, H, trimesh):
-    """The material `mesh` has at height z, as shapely geometry in BOARD coordinates.
+def section_file(mesh, z, trimesh):
+    """The material `mesh` has at height z, as shapely geometry in the solid's OWN (file)
+    frame -- nothing is mapped. For scripts/handedness_drc.py, which has to place a solid
+    against KiCad's export by a translation alone and so must not borrow this repo's idea
+    of where the board is.
 
     mesh_plane() returns loose segments; they are stitched on a snap grid and polygonized,
     and each resulting face is kept only if the mesh actually contains a point inside it --
     asked of the mesh itself by ray parity, so nothing here guesses at ring nesting."""
     import shapely
-    from shapely.affinity import translate
     from shapely.geometry import Polygon
     from shapely.ops import polygonize, unary_union
     segs = trimesh.intersections.mesh_plane(mesh, [0.0, 0.0, 1.0], [0.0, 0.0, z])
@@ -223,7 +239,14 @@ def section(mesh, z, W, H, trimesh):
         return Polygon()
     probe = np.array([[*f.representative_point().coords[0], z] for f in faces])
     inside = mesh.contains(probe)
-    return translate(unary_union([f for f, k in zip(faces, inside) if k]), W / 2.0, H / 2.0)
+    return unary_union([f for f, k in zip(faces, inside) if k])
+
+
+def section(mesh, z, trimesh):
+    """The material `mesh` has at height z, as shapely geometry in BOARD coordinates:
+    section_file(), carried from the solid's file frame to the board's by
+    fit_rules.board_geom()."""
+    return _frame().board_geom(section_file(mesh, z, trimesh))
 
 
 def cavity_levels(floor, cavity):
@@ -352,7 +375,7 @@ def check_variant(vname, v, fr, bp, trimesh):
 
     if open_back:
         note("open frame -- no floor/brace by design: skipping the cavity-floor probe")
-        z = up_hits(shell, W / 2.0, H / 2.0, W, H)
+        z = up_hits(shell, W / 2.0, H / 2.0)
         if z is not None:
             err(f"open frame: an upward ray at the cavity centre hits frame material at "
                 f"z={float(z.min()):.3f} -- the back is not open")
@@ -360,7 +383,7 @@ def check_variant(vname, v, fr, bp, trimesh):
             ok("open frame: an upward ray at the cavity centre hits nothing -- "
                "the back really is open")
     else:
-        floor_z = top_at(shell, W / 2.0, H / 2.0, W, H)
+        floor_z = top_at(shell, W / 2.0, H / 2.0)
         if floor_z is None:
             err("no shell material under the cavity centre -- cannot locate the floor plane")
         elif abs(floor_z - floor) <= TOL:
@@ -370,7 +393,7 @@ def check_variant(vname, v, fr, bp, trimesh):
                 f"{floor_z - floor:+.3f}")
 
     # the shell, sliced once: [B] and [F] both read these
-    shell_cuts = [(lbl, z, section(shell, z, W, H, trimesh)) for lbl, z in cavity_levels(floor, cavity)]
+    shell_cuts = [(lbl, z, section(shell, z, trimesh)) for lbl, z in cavity_levels(floor, cavity)]
 
     # ---- 2. the brace fills the cavity it was cut for --------------------------------
     print("[B] brace vs cavity")
@@ -393,7 +416,7 @@ def check_variant(vname, v, fr, bp, trimesh):
         from shapely.affinity import translate
         worst_gap, pre = None, len(_ERRORS)
         for lbl, z, metal in shell_cuts:
-            resin = section(brace, z - floor, W, H, trimesh)
+            resin = section(brace, z - floor, trimesh)
             if resin.is_empty:
                 err(f"brace has no material at z {z - floor:.3f} of its own {cavity} height "
                     f"({lbl}) -- nothing to compare")
@@ -415,7 +438,8 @@ def check_variant(vname, v, fr, bp, trimesh):
             bb = brace.bounds
             ok(f"brace drops into the emitted cavity at all {len(shell_cuts)} "
                f"levels: no plan overlap with shell metal, closest approach {worst_gap:.3f} mm "
-               f"(brace spans board x {bb[0][0] + W / 2.0:.3f}..{bb[1][0] + W / 2.0:.3f}); "
+               f"(brace spans board x {fr.board_xy(bb[0][0], 0.0)[0]:.3f}.."
+               f"{fr.board_xy(bb[1][0], 0.0)[0]:.3f}); "
                f"canary collides as it must")
 
     # ---- 3. the ferrite: the pocket, the sheet, and the clamp ------------------------
@@ -432,7 +456,7 @@ def check_variant(vname, v, fr, bp, trimesh):
                   ("north", (fx0 + fx1) / 2, fy1 - 0.6)]
         tops, missing = {}, []
         for lbl, px, py in probes:
-            t = top_at(brace, px, py, W, H)
+            t = top_at(brace, px, py)
             tops[lbl] = t
             if t is None:
                 missing.append(lbl)
@@ -476,7 +500,7 @@ def check_variant(vname, v, fr, bp, trimesh):
     probe_r = (fr.PILOT_R + fr.BOSS_R) / 2.0     # between the bore and the boss OD
     back = float(shell.bounds[0][2])
     for mx, my in fr.MOUNTS:
-        spans = ring_spans(shell, mx, my, probe_r, W, H)
+        spans = ring_spans(shell, mx, my, probe_r)
         if not spans:
             err(f"mount ({mx},{my}): no shell material in the boss annulus at r={probe_r:.2f} "
                 f"-- nothing for an M2 to thread into")
@@ -556,7 +580,7 @@ def check_variant(vname, v, fr, bp, trimesh):
         shaded = []
         for fx in np.linspace(x0 + 0.2, x1 - 0.2, nx):
             for fy in np.linspace(y0 + 0.2, y1 - 0.2, ny):
-                t = top_at(shell, fx, fy, W, H)
+                t = top_at(shell, fx, fy)
                 if t is not None and t > board_front - TOL:
                     shaded.append((round(float(fx), 1), round(float(fy), 1), round(t, 3)))
         if shaded:
@@ -642,7 +666,7 @@ def check_variant(vname, v, fr, bp, trimesh):
     print("[G] support lip vs its description (sectioned)")
     pre = len(_ERRORS)
     lip_cut = shell_cuts[1][2]
-    recess_cut = section(shell, seat + fr.BOARD_TH / 2.0 + _NUDGE, W, H, trimesh)
+    recess_cut = section(shell, seat + fr.BOARD_TH / 2.0 + _NUDGE, trimesh)
     n_all, worst_all, canary_hits, said = 0, 0.0, 0, []
     for edge in "WESN":
         rows = fr.lip_as_cut(edge)

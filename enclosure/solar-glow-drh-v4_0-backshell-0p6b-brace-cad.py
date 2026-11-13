@@ -299,7 +299,7 @@ from fit_rules import (lip_bands, cavity_void_poly as _cavity_void_poly,
                        boss_island as _boss_island, boss_fouls as _boss_fouls,
                        LIP_CLR, LIP_MAX, COIL_EAST,
                        ring_reliefs as _ring_reliefs,
-                       BOSS_CLR, THREAD_KEEP, export_step_stable,
+                       BOSS_CLR, THREAD_KEEP, export_solid,
                        fin_region as _fin_region, fin_ribs as _fin_ribs,
                        FIN_PROUD, FIN_VALLEY,
                        MOUNTS as mounts)                                      # noqa: E402
@@ -745,8 +745,9 @@ for _vn, name, fl, wl, bd, cav_v, sl, mk, fn, gm, mat in jobs:
                          f"its drawing calls MODELED. Not exporting {name}; see _DEBURR_SKIPS.")
     field = fl + cav_v + board_th                       # per-variant, NOT the module cavity
     foot = (W + 2*edge_fit + 2*wl)
-    export_step_stable(solid, OUT + name + ".step")
-    cq.exporters.export(solid, OUT + name + ".stl", tolerance=0.04, angularTolerance=0.2)
+    # Modelled in board coordinates, which are LEFT-handed; written right-handed. export_solid
+    # reflects once on the way out (fit_rules, THE FILE FRAME) -- never call an exporter here.
+    export_solid(solid, OUT + name, 0.04)
     print(f"  {name:38s} [{_vn}] floor={fl:.2f} cavity={cav_v:.2f} wall={wl:.2f} "
           f"field={field:.2f} at-frame={field+bd:.2f} foot={foot:.1f}mm M2x{sl} "
           f"medallion={mk} fins={fn} | {mat}")
