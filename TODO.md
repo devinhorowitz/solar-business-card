@@ -707,10 +707,21 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
     by **70 mm**. Its asymmetric dowels would enforce the wrong way round. Its engraved labels are
     `cq.text` and read correctly in the file, so **mirroring it at the printer fixes the layout and
     reverses the lettering** — the opposite of the medallion.
-  - **The shell is no longer symmetric enough to shrug it off.** With the bosses scalloped, a shell
-    cut from the file as emitted clears the supercaps by 0.13 / 0.27 / 0.05 / 0.19 mm in one
-    placement, and in the other SC1 and SC3 touch metal. The 0.20 mm the scallops buy exists only in
-    the right hand.
+  - **The shell is not symmetric enough to shrug it off.** A shell cut from the file as emitted can
+    be screwed down two ways. Sectioned against the board on the rebuilt solids — 2026-11-13,
+    `scripts/assembly_drc.py`'s own `section()` with the metal mirrored, at its three heights; max,
+    lite and air read the same:
+    - **reflected in x**, the 2.5 mm west lip lands on the bare **JP1 and TP1 pads** at the east
+      edge (8.86 and 1.62 mm² of titanium over copper, x 48.30–49.25), and the two west mid-span
+      bosses stand **0.11 mm inside SC1 and 0.05 mm inside SC3** — they are the images of the east
+      bosses, which are notched only as far as the shorter caps SC2 and SC4 reach;
+    - **reflected in y**, nothing overlaps, but C24 stands **0.048 mm** from shell metal — inside
+      the 0.05 mm a section can resolve, so `assembly_drc` [F] would call it contact (then R16
+      0.124, SC2 0.239, SC4 0.274). It is 0.097 in the right hand.
+
+    _(Re-measured after the flats moved out to the caps' bay clearance. On the 0.20 mm flats the
+    y placement cleared the caps by only 0.05–0.27 mm. The pads under the lip were there then too
+    and the first look missed them: it sectioned mid-cavity only, above a bare pad's 0.20 mm.)_
 
   **Options, none taken:**
   - **(a) Reflect once, at export.** The review's draft patch 06: a `shop_frame()` in `fit_rules`,
@@ -767,7 +778,8 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
   - **The four downward faces at seat level are gone** (24.896 mm², max and lite; the air frame had
     them too).
   - **The max shell STEP imports with no edge repair.** Expect 28,403 edges, none used four times;
-    9,626 faces, 82 of them under 0.001 mm² (was 1,765); no upward faces at z +0.02.
+    9,626 faces, 82 of them under 0.001 mm² (was 1,765); no upward faces at z +0.02. _(Counts
+    re-taken 2026-11-13 after the flats moved: the same three numbers.)_
   - **The open frame still has its resting-face edge-break**, including a 45° foot on each boss flat.
   - **No brace resin wall under 0.10 mm**, max and lite, and none under `SLA_WALL` 0.60 except the
     ferrite channel's own walls (x 36.2–36.7 and 49.10, top 0.33 mm only). The 0.0068 mm wall at
