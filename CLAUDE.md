@@ -392,7 +392,7 @@ red, the check itself fails.
 - **A shared definition protects only the generator that calls it — and a gate that checks the
   definition is not a gate on the part.** The `MOUNTS` lesson, twice more, and found 2026-11-12 the
   only way it could be: by measuring the committed STEPs with a CAD program this repo does not use.
-  `fit_rules.boss_island()` — the boss disc cut back `BOSS_CLR` from whatever fouls it — was imported
+  `fit_rules.boss_island()` — the boss disc cut back clear of whatever fouls it — was imported
   by the shell CAD and reached only through the dormant `tool_relief` path; the boss loop unioned a
   plain cylinder. **All four supercaps sat INSIDE mount bosses, 0.17–0.375 mm deep, on every
   committed shell**, while check [8] printed "8 bosses clear" on every run. It was true — of the
@@ -425,9 +425,12 @@ red, the check itself fails.
   "govern" are their mirror images — invisible only because everything drawn on those sheets is
   symmetric; the pogo plate is mirrored too (its own probe table fits the panel only face-DOWN,
   0.000 mm, and misses by 70 mm face-up), but its engraved labels read correctly in the file, so
-  mirroring it at the printer fixes the layout and reverses the text; and since the bosses are
-  scalloped the shell is no longer symmetric enough to shrug it off — cut from the file as emitted,
-  the cap clearances come out 0.05–0.27 mm in one placement and SC1/SC3 touch metal in the other.
+  mirroring it at the printer fixes the layout and reverses the text; and the shell is not symmetric
+  enough to shrug it off — cut from the file as emitted it screws down two ways, and sectioned
+  against the board (2026-11-13, all three variants) one of them puts the 2.5 mm west lip on the
+  bare JP1 and TP1 pads at the east edge (8.9 and 1.6 mm²) and two mid-span bosses 0.11 and 0.05 mm
+  into SC1 and SC3, while the other overlaps nothing but leaves C24 0.048 mm from shell metal,
+  inside what the section can resolve.
   **Do not send a STEP or STL from this tree to a shop or a printer until that decision is taken,
   and never flip one generator or one reader without the rest.**
 - **OCC's `BRepCheck` says "valid" about a solid another kernel will not open — and a stand-in test
