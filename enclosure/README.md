@@ -49,12 +49,14 @@ uses — against `main` at `d060215`, because every gate here measures geometry 
 same inputs the generators read, and so inherits any error in a shared input. Six of its findings
 needed acting on. Four were traced to lines in the generators and are fixed; two are decisions and
 are left exactly as they were. (It measured two more things that are recorded, with both numbers,
-in `TODO.md`: L2 against its pocket, and thin resin walls beside blind pockets in both braces.)
+in `TODO.md`: L2 against its pocket, and thin resin walls beside blind pockets in both braces —
+the second has since been fixed, and has its own row below.)
 
 | | committed solids (SolidCraft) | this tree's solids | |
 |---|---|---|---|
-| supercap can inside a mount boss | SC1 **0.375** / SC3 0.305 / SC4 0.326 / SC2 0.174 mm; 2.31 / 1.70 / 1.81 / 0.73 mm³ | **0** — a flat on every boss, 0.200 mm off the can | fixed |
+| supercap can inside a mount boss | SC1 **0.375** / SC3 0.305 / SC4 0.326 / SC2 0.174 mm; 2.31 / 1.70 / 1.81 / 0.73 mm³ | **0** — a flat on every boss, 0.75 mm off a can's free edge and 0.25 off a datum edge: the can's own bay clearance | fixed |
 | brace wider than its cavity | **0.200 mm** over y 31.11–57.79 (east); 9.02 mm³ max, 5.94 lite | **0** — brace east face x 49.500, wall x 49.550 | fixed |
+| resin walls in the brace thinner than `SLA_WALL` | down to **0.0068 mm** (C24's pocket against SC3's bay); 15 under 0.10 mm on max, 19 on lite | **0** under 0.10; nothing under 0.60 but the ferrite channel's own walls, left on purpose | fixed |
 | cavity cut underneath the rim wall | four downward faces at seat level, 24.896 mm² | **0** | fixed |
 | max shell STEP opens in another kernel | **refused**: 13 edges each shared by four faces, 804 sliver faces | 0 such edges, 0 slivers | fixed here; unconfirmed there |
 | parts are the right hand | braces collide, engraving reversed | unchanged | **open** — see above |
@@ -70,12 +72,19 @@ What changed, in one line each — the reasoning is in the generators and in `CL
 - **Bosses.** `fit_rules.boss_island()` had always described a boss as a disc cut back from
   whatever fouls it, and check [8] gated that polygon. The shell CAD unioned a plain cylinder. It
   now cuts `fit_rules.boss_fouls()` — after the deburr, by boolean, because OCC cannot chamfer an
-  end face once a boss on it carries a flat.
+  end face once a boss on it carries a flat. A supercap is cut back by its own bay clearance, the
+  same per-edge numbers the brace uses, not by `BOSS_CLR`: a flat 0.20 off a nominal can stood
+  0.40 inside the can the brace is told to expect.
 - **Brace outline.** It was cut from the scalar rectangle `_CAV` (a 1.00 mm east lip) while the
   shell's cavity came from `cavity_void_poly()` (1.25 mm). It is cut from
   `fit_rules.brace_cavity()` now, the intersection of the two. The reflow shim follows it.
 - **Void.** Clipped to the board, and in the shell to the recess footprint.
 - **Medallion.** Its three families are simplified together, as one coverage, and audited.
+- **Brace walls.** The brace's own thin-wall rule compared a pocket only with another pocket, at
+  0.40. Now every level of the brace — each band of height where the set of pockets is constant —
+  is opened at `SLA_WALL` 0.60, the rule `brace_footprint()` already applies to the plan. A level
+  is computed whole, so no cut can stand beside another. The ferrite channel is cut after, and its
+  walls are deliberately outside the rule: its width is the critical dimension.
 
 And what now looks at the parts instead of at the rules: `scripts/assembly_drc.py` slices the
 emitted shell and brace and compares the metal that is there with the part outlines read off the
@@ -137,7 +146,7 @@ part positions from `enclosure/board_parts.py` (true 3D body ∪ pads, with the 
   _(2026-11-12: this was true of `fit_rules.boss_island()` and NOT of the shell — the CAD never
   made the cut, and by the time anyone measured it four supercaps were inside those bosses. See
   the section above. On today's board each boss is fouled by exactly one part, a supercap; the
-  flats are 2.02–2.23 mm from the hole axes and the worst boss keeps 93.2 % of its annulus —
+  flats are 1.475–1.676 mm from the hole axes and the worst boss keeps 82.3 % of its annulus —
   `python3 enclosure/fit_rules.py` prints all eight.)_
 
 **No board change was required for any of it.**
@@ -319,7 +328,8 @@ panel; the switch faces the plate.
 - **Floor 0.75 → 0.95 → 1.00 (true 1 mm)**, on a **0.60 mm board** (was 0.80). Same 3.55 overall. The final 0.95 → 1.00 step comes from trimming the cavity 1.85 → 1.80 (cap air 0.15 → 0.10): the brace and the solar-cell sandwiches carry the board, and the WS17 datasheet confirms 1.70 mm is the cap **max** height (worst-case gap 0.05 mm). A true 1.00 floor also clears aluminium / copper / stainless, not just Ti.
 - **Ribs and locator pillars removed.** The old cap-gap ribs and window posts are gone, and the locator pillars are retired — the resin brace carries center support and registers to the shell by fitment (its computed footprint + the component pockets + the board press-fit). The cavity floor stays a full 1.00 everywhere.
 - **The support lip is per-band, computed from the board** (`enclosure/fit_rules.py`), not four scalars. The flat 2.5/2.0/2.0/1.0 lip landed on **nine** B-side parts, including **4.17 mm² of live pad** (`STO`, `STO_LDO`, `VS`, `NFC_EN`) under grounded titanium — fitting it shorted the storage rail. 24 bands now clear every part while supporting *more* edge than the flat lip did. The east lip is bounded by NFC coil copper **measured** at x48.550 — the old hardcoded 48.40 was 0.15 mm optimistic, so the lip *overhung* the antenna. It now stands off by a full **1.00 mm** (`COIL_CLR`), leaving a 1.25 mm east lip: still wider than the flat 1.0 the original design used, and 3.3× the standoff of the first fix. The tradeoff is linear — 0.30 → 1.95 mm lip / 490 mm², 1.00 → 1.25 / 463, 1.25 → 1.00 / 442.
-- **The eight M2 bosses are scalloped** clear of anything that fouls them — five of eight did, two on live nets. The worst keeps 92.3% of its r0.80–r2.60 annulus at a minimum radius of 1.80 mm, well outside the 1.30 mm M2 thread keep-out. No board change was required. _(Numbers as of 2026-07-29, and until 2026-11-12 a property of `fit_rules`' polygon only — the shell was not cut. Current figures: one supercap per boss, flats 2.02–2.23 mm from the axes, worst boss 93.2 %.)_
+- **The eight M2 bosses are scalloped** clear of anything that fouls them — five of eight did, two on live nets. The worst keeps 92.3% of its r0.80–r2.60 annulus at a minimum radius of 1.80 mm, well outside the 1.30 mm M2 thread keep-out. No board change was required. _(Numbers as of 2026-07-29, and until 2026-11-12 a property of `fit_rules`' polygon only — the shell was not cut. Current figures: one supercap per boss, flats 1.475–1.676 mm from the axes, worst boss 82.3 % — the
+flats moved in on 2026-11-13, when each cap began to take its own bay clearance.)_
 - **Support lip widened and made asymmetric.** The old uniform 1.00 lip is now **W 2.5 / N 2.0 / S 2.0** for a stiffer PCB (widths bounded by the nearest B-side part on each edge). **East stays 1.0** through the JP1/TP1 pads, over the NFC coil (a grounded Ti lip would detune it), and past C7 (x49.55, the one east-edge part left after v4 removed the Q1/U4/R7/R9 clamp cluster and the D9/D10/D11 diodes), which overhangs a wider lip, **widening to 2.5 only at the y0–10 end** clear of them. The exterior back border is independent of the lip and **uniform 2.0 on all 4 sides**.
 - **Reflector frame + floor tape dropped.** The monogram window is now backed by the brace's white LED-hug diffuser face, so the laser-marked reflector frame and the adhesive floor strip are no longer used.
 
