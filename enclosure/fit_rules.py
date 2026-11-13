@@ -794,8 +794,26 @@ def boss_fouls(mx, my):
     two west bosses (SC3 0.305, SC4 0.326, SC2 0.174), found 2026-11-12 by an independent
     measurement of the STEP. The shell now cuts exactly this list out of each boss, so
     what [8] proves about the polygon is meant to hold for the metal -- and whether it
-    does is measured, not inferred: scripts/assembly_drc.py [F] sections the emitted STL."""
-    return [p.buffer(BOSS_CLR, join_style=2) for _r, p in _boss_foul_parts(mx, my)]
+    does is measured, not inferred: scripts/assembly_drc.py [F] sections the emitted STL.
+
+    A SUPERCAP IS CUT BACK BY ITS OWN BAY CLEARANCE, not BOSS_CLR (2026-11-13). BOSS_CLR is
+    clearance from a part's NOMINAL outline, right for a machine-placed part; a supercap is
+    hand-reflowed, its body tolerance lands on its two FREE edges (CAP_DATUM above), and all
+    eight cap-to-boss adjacencies on this board are free edges. Cut back 0.20 from nominal,
+    each flat stood 0.40 inside the envelope the brace's own bay already allows for the same
+    can -- titanium the resin had been told the cap might occupy. The flat now uses the same
+    per-edge numbers as the bay (clr_sides via part_keepout, the ONE definition of a part's
+    keep-out), floored at BOSS_CLR, so brace and shell cannot disagree about how big a cap
+    can be. Every flat still clears THREAD_KEEP; check_consistency gates that per boss."""
+    return [_boss_keepout(r, p) for r, p in _boss_foul_parts(mx, my)]
+
+
+def _boss_keepout(ref, poly):
+    """What one fouling part takes out of a boss: BOSS_CLR all round, or -- for a part with a
+    directional bay (the supercaps) -- that bay's own per-edge clearance where it is larger."""
+    if ref in CAP_DATUM:
+        return part_keepout(ref, poly, sides={s: max(BOSS_CLR, v) for s, v in clr_sides(ref).items()})
+    return poly.buffer(BOSS_CLR, join_style=2)
 
 
 def _boss_foul_parts(mx, my):
@@ -811,6 +829,16 @@ def boss_foul_refs(mx, my):
     has to say WHICH part in words -- the shell drawing's boss-flat callout -- so the word
     is read off the board with the numbers beside it and never typed."""
     return [r for r, _p in _boss_foul_parts(mx, my)]
+
+
+def boss_cutbacks(mx, my):
+    """[(refdes, gap)] -- how far the boss at (mx, my) actually stands off each part it was cut
+    back for, MEASURED from the part's nominal outline to the finished island. For the shell
+    drawing's callout, which printed BOSS_CLR as "the" cut-back and became false the day the
+    supercaps took their own bay clearance: a number read off the geometry cannot go stale
+    against the rule that made it."""
+    isl = boss_island(mx, my)
+    return [(r, p.distance(isl)) for r, p in _boss_foul_parts(mx, my)]
 
 
 def boss_island(mx, my):

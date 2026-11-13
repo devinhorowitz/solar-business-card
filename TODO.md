@@ -758,8 +758,10 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
   four-face edges, 804 sliver faces, four seat-level faces of 24.896 mm²) — but it is the same kernel
   that wrote the files, which is exactly what the original measurement was designed to avoid. On the
   solids the merge run commits, check:
-  - **No supercap-to-boss overlap**, max / lite / air. Expect a flat on every boss, **0.200 mm** off
-    the can: at board x 4.895 (SC1), 4.965 (SC3), 45.704 (SC2), 45.856 (SC4).
+  - **No supercap-to-boss overlap**, max / lite / air. Expect a flat on every boss, **0.750 mm** off
+    the can's free edge (its bay clearance): faces at board x 4.345 (SC1), 4.415 (SC3), 46.254 (SC2),
+    46.406 (SC4). The two east mid-span bosses also meet SC2's and SC4's datum ends, 0.25 off.
+    _(Was 0.200 off a nominal can until 2026-11-13 — see the boss item below.)_
   - **No brace-to-shell overlap**, max and lite. Expect the brace's east face at x **49.500** against
     a wall at 49.550.
   - **The four downward faces at seat level are gone** (24.896 mm², max and lite; the air frame had
@@ -767,10 +769,13 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
   - **The max shell STEP imports with no edge repair.** Expect 28,403 edges, none used four times;
     9,626 faces, 82 of them under 0.001 mm² (was 1,765); no upward faces at z +0.02.
   - **The open frame still has its resting-face edge-break**, including a 45° foot on each boss flat.
+  - **No brace resin wall under 0.10 mm**, max and lite, and none under `SLA_WALL` 0.60 except the
+    ferrite channel's own walls (x 36.2–36.7 and 49.10, top 0.33 mm only). The 0.0068 mm wall at
+    (4.411, 49.653) is the canary: it must be gone.
   - If the frame is changed later: **the engraving reads correctly from the back**, and the brace
     fits the KiCad board export in a rigid placement.
 
-- [ ] **[ENCLOSURE — DRH's calls, from the same measurement] Seven numbers left where they are**
+- [ ] **[ENCLOSURE — DRH's calls, from the same measurement] Seven numbers left where they are** (two since fixed, and marked so)
   _(2026-11-12. Each was measured or traced, none was changed. Both numbers are given so the
   judgement can be made without re-deriving them.)_
   - **The ridge east of the ferrite channel is 0.40 mm, under `SLA_WALL` 0.60.** It was 0.65. The
@@ -793,7 +798,18 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
     model by name (`MODEL_NOTES`): the part is a Murata DFE252010F, 1.0 mm max, and check [7] prints
     the note on every run. At 1.0 the margin is +0.18. What is genuinely open is the seating plane —
     whether 0.040 of standoff should be carried as a number rather than inside `fit_rules.AIR`.
-  - **Thin walls beside blind pockets, both braces — measured; ONE traced, the rest not.** 16
+  - **FIXED 2026-11-13 — thin walls beside blind pockets, both braces.** Every level of the brace
+    is now opened at `SLA_WALL` (the brace CAD's comment has the reasoning, including why bridging
+    one wall at a time made a new 0.007 mm wall). Measured in the cloud by casting rays inward from
+    every section boundary — an instrument calibrated against the committed brace, where it finds
+    the 0.0068 below, 0.0718 (R15), 0.0904 (C3) and 0.0989 (west edge): walls under 0.10 mm went
+    15 → 0 on max, 19 → 0 on lite, and every slice of the rebuilt max brace matches the opened plan
+    at 23,787 sampled points. Nothing under 0.60 remains but the ferrite channel's walls, which
+    were not part of it: the 0.40 east ridge (item above) and, on the channel's WEST side, the walls
+    between it and the pockets beside it — **0.265 mm** at x 36.435 (y 36.5–39.0), 0.50–0.52 at
+    x 36.18–36.20, all only the channel's 0.33 mm deep. Same call as the ridge, and it is DRH's:
+    opening them would let those pockets break into the channel and shorten the wall that locates
+    the ferrite's width. The original record follows. 16
     in-plane walls under 0.60 mm on max (8 under 0.40), 22 on lite, every one with a blind pocket
     on at least one side. The thinnest, **0.0068 mm at (4.411, 49.653)**, is arithmetic: C24's
     blind pocket ends at x 4.408 / y 49.653 (body + `CLR` 0.25) and SC3's through-bay starts at
@@ -803,7 +819,10 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
     footprint's outside edge (the 0.099 mm wall at (2.60, 55.11) is one of those). The other walls
     were not traced. SolidCraft's thickness method failed its own canary, so the list is real but
     not exhaustive.
-  - **NEW, found integrating — the scalloped bosses clear a NOMINAL can.** `BOSS_CLR` is 0.20 for
+  - **FIXED 2026-11-13** (`fit_rules.boss_fouls()` cuts a supercap back by its own `part_keepout`,
+    floored at `BOSS_CLR`; flats now 1.475–1.676 mm from the axes, worst thread annulus 82.3 %, and
+    the shell drawing prints the stand-off it measures off the island rather than the constant).
+    **NEW, found integrating — the scalloped bosses clear a NOMINAL can.** `BOSS_CLR` is 0.20 for
     every part. All eight boss-to-cap adjacencies are on the caps' FREE edges (`CAP_DATUM`), where
     this file's own rule gives the brace `CLR_FREE` 0.75 because the can may run +0.50 wide
     (`SUPERCAP_BODY_TOL`) and the shim's datum gap adds 0.10. A max-material can indexed by the shim

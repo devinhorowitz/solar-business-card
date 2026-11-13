@@ -67,7 +67,12 @@ BASELINE = {
     # is a finding rather than a pass. Triangles 55,245 -> 47,767, not gated.
     # Transition note, as every entry here carries: the COMMITTED STL reads 5290.34 until
     # the merge-run rebuild, so a local check_mesh is red for exactly that one transition.
-    volume_mm3=5320.50, bbox=(-26.35, -45.4, -0.15, 26.35, 45.4, 3.4),
+    # re-ledgered 2026-11-13, 5320.50 -> 5292.87: the supercaps take their own bay
+    # clearance out of the bosses (fit_rules.boss_fouls -> part_keepout), 0.75 off a free
+    # edge where it was 0.20 off a nominal can. 15.404 mm2 more of the eight discs x 1.80 =
+    # 27.73 predicted, 27.63 measured; the 0.10 short is the boss-top chamfer, as above.
+    # bbox, the rim pinch and the 1 degenerate facet unchanged; triangles 47,501, ungated.
+    volume_mm3=5292.87, bbox=(-26.35, -45.4, -0.15, 26.35, 45.4, 3.4),
         max_boundary_edges=1, max_open_len_mm=0.001, max_degenerate=1),
     "solar-glow-drh-pogo-testplate.stl": dict(
         volume_mm3=50860.32, bbox=(-10.4, -10.4, -17.8, 61.2, 99.3, 10.0),
@@ -176,7 +181,15 @@ BASELINE = {
     # strip. This one was rebuilt locally (cadquery 2.8.0, the pin CI uses) and the build
     # of main it was compared against is byte-identical to the committed STL. Still one
     # piece, watertight, 0 open edges, 0 degenerate. Transition note as above.
-    volume_mm3=1933.44, bbox=(-22.85, -42.4, 0.0, 24.10, 42.4, 1.8),
+    # re-ledgered 2026-11-13, 1933.44 -> 1919.16, ITEMISED by building each state:
+    #    -7.38  the pocket-pair pass bridges at SLA_WALL 0.60, not a bare 0.40 (25 pairs).
+    #    -6.90  every level opened at SLA_WALL -- 6.90 predicted from the opened plan of
+    #           each band, 6.90 measured. This is what removed the 0.0068 mm wall (C24's
+    #           pocket against SC3's bay) and every other sub-0.10 wall SolidCraft found.
+    # bbox unchanged; still one piece, watertight, 0 open edges, 0 degenerate, and no
+    # facet that is neither horizontal nor vertical (a grid-snapped cutter once put one
+    # there by inflating a vertex tolerance; the brace CAD's comment has it).
+    volume_mm3=1919.16, bbox=(-22.85, -42.4, 0.0, 24.10, 42.4, 1.8),
         max_boundary_edges=0, max_open_len_mm=0.0, max_degenerate=0),
     # ---- the 2026-08-07 enclosure variants (fit_rules.VARIANTS) --------------------------
     # Ledgered from local builds in the variants commit itself -- the chicken-and-egg rule:
@@ -198,7 +211,9 @@ BASELINE = {
         # -9.80 the boss scallops (8.186 mm2 x 1.22 = 9.99 less the boss-top chamfer),
         # +30.36 the void out from under the rim wall (24.896 x 1.22 = 30.37). No
         # medallion here, so no third term. The max entry has the story.
-        volume_mm3=3942.06, bbox=(-26.35, -45.4, -0.15, 26.35, 45.4, 2.42),
+        # re-ledgered 2026-11-13, 3942.06 -> 3923.35: the free-edge boss flats, 15.404 mm2
+        # x 1.22 = 18.79 predicted, 18.71 measured (the max entry has the reason).
+        volume_mm3=3923.35, bbox=(-26.35, -45.4, -0.15, 26.35, 45.4, 2.42),
         max_boundary_edges=1, max_open_len_mm=0.001, max_degenerate=1),
     "solar-glow-drh-frame-air-316L.stl": dict(
         # air: OPEN frame, no floor -- walls + recess + 8 bosses only, z 0..1.80 exactly
@@ -215,7 +230,10 @@ BASELINE = {
         # boss on it carries a flat, so the scallop cutter carries the break itself (shell
         # CAD, _boss_scallop_tool). A build that reads ~999.8 here has LOST the resting-face
         # edge-break -- that is what the first draft of the scallop did, silently.
-        volume_mm3=996.92, bbox=(-26.35, -45.4, 0.0, 26.35, 45.4, 1.8),
+        # re-ledgered 2026-11-13, 996.92 -> 978.57: the free-edge boss flats, 15.404 mm2 x
+        # 1.20 = 18.48 predicted, 18.35 measured; the feet came with them (the shortfall is
+        # the same chamfer-and-foot share as before), so the warning above still holds.
+        volume_mm3=978.57, bbox=(-26.35, -45.4, 0.0, 26.35, 45.4, 1.8),
         max_boundary_edges=1, max_open_len_mm=0.001, max_degenerate=1),
     "solar-glow-drh-diffuser-brace-lite.stl": dict(
         # the lite brace: gap 1.22, span 0.60, 31 pockets, 0 through-holes, single piece
@@ -248,7 +266,10 @@ BASELINE = {
         # 0.25 mm east strip as the max brace, for the same reason. Footprint 1090.875 ->
         # 1084.123 mm2; 6.752 x 1.22 = 8.24 predicted, 8.23 measured. Coverage 27.28 % ->
         # 27.25 % of the true cavity, floor kept at 0.25.
-        volume_mm3=1144.28, bbox=(-22.85, -42.4, 0.0, 24.10, 42.4, 1.22),
+        # re-ledgered 2026-11-13, 1144.28 -> 1136.29: the level opening at SLA_WALL, all of
+        # it -- no lite pocket pair sat between 0.40 and 0.60, so the threshold change alone
+        # moves nothing here (measured: 1144.28 exactly). The max entry has the story.
+        volume_mm3=1136.29, bbox=(-22.85, -42.4, 0.0, 24.10, 42.4, 1.22),
         max_boundary_edges=0, max_open_len_mm=0.0, max_degenerate=0),
 }
 VOL_TOL = 0.005

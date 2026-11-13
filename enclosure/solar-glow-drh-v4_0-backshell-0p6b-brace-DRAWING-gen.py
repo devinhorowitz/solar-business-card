@@ -358,8 +358,10 @@ def sheet(vname, v):
         ax.add_patch(MplPoly(rrect(X(0.05+bbw),Y(0.05+bbw),_afw*S1,_afh*S1,max(cavR-bbw,0.3)*S1),closed=True,fill=False,ec=INK,lw=0.8))
         for lx,ly,rot in [(0.05+bbw/2,44,90),(W-0.05-bbw/2,44,90),(25.4,0.05+bbw/2,0),(25.4,H-0.05-bbw/2,0)]:
             ax.text(X(lx),Y(ly),f"{bbw:.1f}",ha="center",va="center",fontsize=4.8,color="#2f5bd0",rotation=rot)
-    # MOUNT-BOSS FLATS (2026-11-12). Each boss is cut back BOSS_CLR from whatever fouls it --
-    # today a supercap, at all eight. fit_rules has described the boss that way since the
+    # MOUNT-BOSS FLATS (2026-11-12). Each boss is cut back from whatever fouls it -- today a
+    # supercap, at all eight, by that cap's own free-edge bay clearance (fit_rules.boss_fouls;
+    # 2026-11-13 -- it was a uniform BOSS_CLR, and the callout below printed that constant,
+    # so the sheet now prints the stand-off MEASURED off the island instead). fit_rules has described the boss that way since the
     # 2026-07-29 respin and the shell CAD never made the cut until now (four cans sat inside
     # eight bosses in the committed STEPs), so this sheet has never drawn it either. Drawn
     # from fit_rules.boss_fouls(), the same list the CAD cuts: the stretch of each keep-out's
@@ -419,11 +421,13 @@ def sheet(vname, v):
         # silently false the day a re-route puts something else beside a boss.
         _who = sorted({r for _bx, _by in mounts for r in _fr.boss_foul_refs(_bx, _by)})
         _whotxt = " ".join(_who) if len(_who) <= 4 else f"{len(_who)} PARTS"
+        _cb = sorted(g for _bx, _by in mounts for _r, g in _fr.boss_cutbacks(_bx, _by))
+        _cbtxt = f"{_cb[0]:.2f}" if _cb[-1] - _cb[0] < 0.005 else f"{_cb[0]:.2f}\u2013{_cb[-1]:.2f}"
         # (141, 213): right of the hole-position leader, which runs diagonally through the
         # column the other two plan callouts sit in, and clear of Section A-A's own leaders
         leader(X(_c.x), Y(_c.y), 141, 213,
                f"{len(_flats)}\u00d7 BOSS FLAT" + (" (HIDDEN \u2014 CAVITY SIDE)" if not open_back else "") +
-               f": EACH \u00d8{2*boss_r:.2f} BOSS CUT BACK {_fr.BOSS_CLR:.2f}\n"
+               f": EACH \u00d8{2*boss_r:.2f} BOSS CUT BACK {_cbtxt}\n"
                f"CLEAR OF THE PART IT WOULD FOUL ({_whotxt}), FULL\n"
                f"DEPTH; FLATS {_dd[0]:.2f}\u2013{_dd[-1]:.2f} FROM THE HOLE AXIS (THREAD KEEP-OUT\n"
                f"r{_fr.THREAD_KEEP:.2f} UNTOUCHED). MODELED \u2014 STEP GOVERNS.", fs=4.9)
