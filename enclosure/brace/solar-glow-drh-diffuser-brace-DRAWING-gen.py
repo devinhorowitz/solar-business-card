@@ -120,6 +120,8 @@ def build(vname):
                     fontsize=5.0,fontweight="bold")
     # ferrite OPEN CHANNEL (band; walled on the 12 width, open both y-ends) + the 12x26 ferrite extent
     cxl=max(FER[0]-FER_CLR,BX0+0.2)
+    cxr=min(FER[2]+FER_CLR,BX1)           # the CAD's own two walls (fx0/fx1 in the brace CAD)
+    _chw=cxr-cxl                          # 12.40 today: the 12.0 ferrite + FER_CLR each side
     ax.add_patch(Rectangle((X(cxl),Y(BY1)),(BX1-cxl)*S,(BY1-BY0)*S,fc="#efeaf7",ec=PUR,lw=0.9,ls=(0,(4,2))))
     ax.add_patch(Rectangle((X(FER[0]),Y(min(FER[3],BY1))),(FER[2]-FER[0])*S,(min(FER[3],BY1)-max(FER[1],BY0))*S,fc="#d9ccf0",ec=PUR,lw=1.0))
     ax.text(X((FER[0]+FER[2])/2),Y(44.5),"FERRITE\nCHANNEL",ha="center",va="center",fontsize=4.6,color="#3a2b66",fontweight="bold")
@@ -175,7 +177,10 @@ def build(vname):
     # plan dims + leaders
     dimh(X(BX0),X(BX1),Y(BY1)-3.0,f"{BX1-BX0:.2f}",fs=7,side=-1)
     dimv(Y(BY0),Y(BY1),X(BX0)-3.5,f"{BY1-BY0:.2f}",fs=7,side=1)
-    leader(X((FER[0]+FER[2])/2),Y(52.0),X(BX1)+9,Y(52.0)+3,"12.0 WIDE\n(CRITICAL)",ha="left",fs=5.0)
+    # Computed (2026-11-13). It was the literal "12.0 WIDE" on a channel that measures 12.400
+    # wall to wall on both braces (SolidCraft; the CAD cuts FER +/- FER_CLR) -- the ferrite's
+    # nominal width, printed where a shop would read the channel's.
+    leader(X((FER[0]+FER[2])/2),Y(52.0),X(BX1)+9,Y(52.0)+3,f"{_chw:.2f} WIDE\n(CRITICAL)",ha="left",fs=5.0)
     _east = sorted((ty, tx) for _n, tx, ty in tabs if tx > _fit.W / 2)     # the east tab the leader points at
     _lty, _ltx = next(((ty, tx) for ty, tx in reversed(_east) if ty <= BY1 + 3), _east[0])
     _ltxt = ("LEGS BACK THE %d\nPANEL SOLDER TABS\n(NOTE 4)" % len(tabs) if len(backed) == len(tabs) else
@@ -233,8 +238,8 @@ def build(vname):
          f"4. PRECISION FIT, NO RATTLE: THE OUTER EDGES CONTACT THE FLAT CAVITY WALLS AT ~{WALL_FIT:.2f} WHERE THE FOOTPRINT REACHES THEM (COMPUTED EXTENT x {BX0:.2f}-{BX1:.2f}, "
          f"y {BY0:.2f}-{BY1:.2f}; E EDGE STEPPED -- THE PLAN IS THE COMPUTED FOOTPRINT). THE FOUR CORNER BOSSES (r{_fit.BOSS_R:.1f}) + ROUNDED CORNERS ARE RELIEVED (NEED NOT "
          f"FIT). {_rails}; POCKETS KEY TO THE BOARD.", width=190, subsequent_indent="    "),
-     f"5. FERRITE CHANNEL (OVER THE NFC COIL): OPEN-ENDED CHANNEL, WALLED ON THE 12 WIDTH (CRITICAL - EDGE-LIMITED), OPEN AT BOTH Y-ENDS, {FER_DEPTH:.2f} DEEP.",
-     "    FERRITE (Wurth WE-FSFS 364006, NOMINAL 12 × 26 mm, EVEN ON THE 2mm SCORE GRID) IS PSA'd IN; LENGTH IS FORGIVING AND MAY OVERHANG THE ENDS SLIGHTLY.",
+     f"5. FERRITE CHANNEL (OVER THE NFC COIL): OPEN-ENDED, WALLED {_chw:.2f} = FERRITE {FER[2]-FER[0]:.1f} + {FER_CLR:.2f} EACH SIDE (CRITICAL - EDGE-LIMITED), OPEN AT BOTH Y-ENDS, {FER_DEPTH:.2f} DEEP.",
+     f"    FERRITE (Wurth WE-FSFS 364006, NOMINAL {FER[2]-FER[0]:.0f} × {FER[3]-FER[1]:.0f} mm, EVEN ON THE 2mm SCORE GRID) IS PSA'd IN; LENGTH IS FORGIVING AND MAY OVERHANG THE ENDS SLIGHTLY.",
      ("6. WINDOW = LED-HUG DIFFUSER BACKING: SOLID WHITE RESIN FILLS THE MONOGRAM-WINDOW FOOTPRINT BEHIND THE FR4, MINUS THE TIGHT D2-D5 LED POCKETS."
       if led_hug else
       "6. WINDOW BACKING: SOLID WHITE RESIN FILLS THE MONOGRAM-WINDOW FOOTPRINT BEHIND THE FR4, MINUS OPEN D2-D5 CUTOUTS (THE LEDs EXCEED THE SPAN LIMIT: STEPPED AROUND)."),

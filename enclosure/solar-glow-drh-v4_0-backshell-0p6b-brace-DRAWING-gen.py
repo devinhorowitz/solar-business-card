@@ -264,6 +264,13 @@ def sheet(vname, v):
     bb, wt = floor + cavity, floor + cavity + board
     ef = -0.05
     cavW,cavH,cavR = W+2*ef,H+2*ef,R+ef
+    # The board-in-recess fit, as MODELLED, said once and computed (2026-11-13). Note 4 said
+    # "THE BOARD PRESS-FIT" and the recess note said "SLIP FIT, NOT A PRESS FIT" -- two typed
+    # words on one sheet, contradicting each other, and the solid has the recess 0.05 under the
+    # board on every flat (SolidCraft, and this repo's own section of the STL). Which of the two
+    # is INTENDED is still open (TODO.md, the press-or-slip item); the sheet says what is cut.
+    _fit = (f"RECESS {cavW:.2f} x {cavH:.2f} FOR A {W:.2f} x {H:.2f} BOARD: {abs(ef):.2f} "
+            f"{'INTERFERENCE' if ef < 0 else 'CLEARANCE'} PER FLAT AS MODELLED")
     outW,outH,outR = cavW+2*wall,cavH+2*wall,cavR+wall
     oxmin = oymin = -(wall + ef)                                 # outline SW corner (-0.95)
     _oxmax, _oymax = W + wall + ef, H + wall + ef                # outline NE corner (datums)
@@ -282,13 +289,26 @@ def sheet(vname, v):
         notes.append(("fin", ["FINISH: BEAD-BLAST MATTE, ALL OVER. NO MARKING SERVICE — OPEN FRAME: NO BACK FACE, NO REAR ART."]))
     notes.append(("tol", ["GENERAL TOLERANCE PER ISO 2768-1 (MEDIUM). C1-C4 TOLERANCED AS LISTED; C1 & C3 = ±0.05. DATUMS: A = LEFT EDGE, B = BOTTOM EDGE, C = PCB-REST PLANE."]))
     if has_brace:
-        notes.append(("brace", ["BRACE REGISTRATION: THE RESIN H-BRACE REGISTERS TO THIS SHELL BY FITMENT - ITS 4 OUTBOARD RAILS + THE COMPONENT POCKETS + THE BOARD PRESS-FIT. NO LOCATOR PILLARS; THE CAVITY FLOOR IS A FULL %.2f EVERYWHERE." % floor]))
+        # Computed from the footprint the brace is cut from (2026-11-13). It used to say "THE
+        # RESIN H-BRACE ... ITS 4 OUTBOARD RAILS": the rails are what brace_footprint()'s
+        # single-piece rule drops, and the brace sheet has said so for months -- this sheet kept
+        # describing a brace that no longer existed (SolidCraft finds no resin within 14.0 mm
+        # of a solar-cell tab; the repo's own section of the STL, 14.067).
+        _npc = len(_fr.brace_footprint(span=v["span"]))
+        notes.append(("brace", [f"BRACE REGISTRATION: THE RESIN BRACE ({_npc} PIECE{'S' if _npc != 1 else ''}, ITS FOOTPRINT COMPUTED FROM THE BOARD) REGISTERS TO THIS SHELL BY FITMENT - ITS OUTLINE, {_fr.WALL_FIT:.2f} OFF THE CAVITY WALLS WHERE IT REACHES THEM, + THE COMPONENT POCKETS + THE BOARD IN ITS RECESS ({_fit}). NO LOCATOR PILLARS; THE CAVITY FLOOR IS A FULL {floor:.2f} EVERYWHERE."]))
     else:
         notes.append(("brace", ["NO BRACE: AN OPEN FRAME HAS NO FLOOR TO RETAIN ONE (fit_rules.VARIANTS: brace_name=None). THE PCB REGISTERS IN THE %.2f RECESS AND ON THE 8 BOSSES." % board]))
     if is_ti:
-        notes.append(("edge", ["EDGE BREAKS - ALL 0.10x45°, FELT NOT SEEN, MODELED.  CALLED OUT ON SEC A-A / DETAIL B:  RIM = outer rim (top & bottom);  MOUTH = recess mouth (around PCB);  LIP = inner (cavity-side) lip edge;  FRAME = proud back-frame bottom edges;  BOSS = boss + spotface bottom edges (Detail B).  BREAK ALL OTHER EXPOSED EDGES 0.10x45°.  CONCAVE JUNCTION CORNERS (BOSS-TO-WALL + EAST-LIP STEPS) LEFT SHARP IN THE MODEL: FINISH WITH A Ø2.0 mm TOOL = R1.0 AS-MILLED." + (" THE RESIN BRACE IS RELIEVED TO CLEAR R1.0 AT THESE CORNERS." if has_brace else "")]))
+        # 2026-11-13, from the SolidCraft review of 9a90a36: the LIP break was listed as MODELED
+        # and is only in part (the cutter is the old scalar lip outline, so it misses the R16
+        # step, the middle lips' end walls and the east wall over y 4.8-9.9, and lands 0.25
+        # inboard of the east wall elsewhere -- TODO.md, the east-lip item). It is an instruction
+        # now, true whatever the model does. And the sharp-corner list named "EAST-LIP STEPS",
+        # which do not exist (the east wall is x 49.550 its whole length) while omitting the
+        # corners that do; the sentence covers every concave junction corner left sharp instead.
+        notes.append(("edge", ["EDGE BREAKS - ALL 0.10x45°, FELT NOT SEEN.  MODELED, CALLED OUT ON SEC A-A / DETAIL B:  RIM = outer rim (top & bottom);  MOUTH = recess mouth (around PCB);  FRAME = proud back-frame bottom edges;  BOSS = boss + spotface bottom edges (Detail B).  LIP = inner (cavity-side) lip edge: BREAK EVERY LIP EDGE ON THE PART, WHETHER OR NOT THE MODEL SHOWS IT.  BREAK ALL OTHER EXPOSED EDGES 0.10x45°.  CONCAVE JUNCTION CORNERS LEFT SHARP IN THE MODEL: FINISH WITH A Ø2.0 mm TOOL = R1.0 AS-MILLED." + (" THE RESIN BRACE IS RELIEVED TO CLEAR R1.0 AT THESE CORNERS." if has_brace else "")]))
     else:
-        notes.append(("edge", ["EDGE BREAKS - ALL 0.10x45°, FELT NOT SEEN, MODELED.  CALLED OUT ON SEC A-A / DETAIL B:  RIM = outer rim (top & bottom);  MOUTH = recess mouth (around PCB);  LIP = inner (cavity-side) lip edge;  BOSS = boss + spotface bottom edges (Detail B).  BREAK ALL OTHER EXPOSED EDGES 0.10x45°.  CONCAVE JUNCTION CORNERS LEFT SHARP IN THE MODEL: FINISH WITH A Ø2.0 mm TOOL = R1.0 AS-MILLED.  DEBURR 316L WITH SHARP TOOLS, SINGLE PASSES - AUSTENITIC STAINLESS WORK-HARDENS UNDER A RUBBING DEBURR."]))
+        notes.append(("edge", ["EDGE BREAKS - ALL 0.10x45°, FELT NOT SEEN.  MODELED, CALLED OUT ON SEC A-A / DETAIL B:  RIM = outer rim (top & bottom);  MOUTH = recess mouth (around PCB);  BOSS = boss + spotface bottom edges (Detail B).  LIP = inner (cavity-side) lip edge: BREAK EVERY LIP EDGE ON THE PART, WHETHER OR NOT THE MODEL SHOWS IT.  BREAK ALL OTHER EXPOSED EDGES 0.10x45°.  CONCAVE JUNCTION CORNERS LEFT SHARP IN THE MODEL: FINISH WITH A Ø2.0 mm TOOL = R1.0 AS-MILLED.  DEBURR 316L WITH SHARP TOOLS, SINGLE PASSES - AUSTENITIC STAINLESS WORK-HARDENS UNDER A RUBBING DEBURR."]))
     if not open_back:
         _guide = ("AT THE ~1.0 Ti MIN-WALL GUIDANCE SO IT ALSO CLEARS ALUMINIUM / COPPER / STAINLESS."
                   if floor >= 1.0 - 1e-9 else
@@ -311,7 +331,7 @@ def sheet(vname, v):
         notes.append(("ribs", ["NO INTERNAL RIBS OR SUPPORT POSTS: THE RESIN BRACE (SEPARATE PART) CARRIES CENTER SUPPORT. A PCB LAYOUT CHANGE = A BRACE REPRINT, NOT A SHELL RE-MACHINE."]))
     else:
         notes.append(("ribs", ["NO INTERNAL RIBS, SUPPORT POSTS, OR BRACE: OPEN FRAME. THE BOARD SPANS FREE BETWEEN THE LIP AND THE 8 BOSSES — HANDLE THE ASSEMBLY ACCORDINGLY."]))
-    notes.append(("recess", ["PCB RECESS = %.2f DEEP (RECEIVES THE %.2f mm BOARD; SLIP FIT, NOT A PRESS FIT). 3D STEP GOVERNS ALL GEOMETRY; STL NOT FOR CNC." % (board, board)]))
+    notes.append(("recess", [f"PCB RECESS = {board:.2f} DEEP, RECEIVES THE {board:.2f} mm BOARD ({_fit}). 3D STEP GOVERNS ALL GEOMETRY; STL NOT FOR CNC."]))
     notes.append(("part", [f"PART = {'BACK-SHELL' if not open_back else 'OPEN FRAME'} ONLY. PCB, {'RESIN BRACE, ' if has_brace else ''}AND 8× M2×{screw:g} BRASS SLOTTED-CHEESE SCREWS (HEAD Ø3.8) SUPPLIED SEPARATELY."]))
     note_no = {k: i + 1 for i, (k, _) in enumerate(notes)}
 
@@ -476,7 +496,7 @@ def sheet(vname, v):
          "MEDALLION (PLAN, circles):  Ø%.1f COIN SUNK %.2f BELOW ART FIELD (Ø0.4" % (2*(_mdl.COIN_R+_mdl.RIM_W),_mdl.COIN_D),
          "END MILL), COUNTERS/REST %.2f (Ø0.3 REST PASS); CRESTS (RING TEXT, RIM," % _mdl.REST_D,
          "HOOP, MONOGRAM, SERIAL) LEFT AT THE FRAME'S BEARING PLANE (−0.15),",
-         "VERTICAL WALLS, NO DETACHED ISLAND UNDER %.2f. DO NOT EDGE-BREAK" % _mdl.MIN_ISLAND,
+         "VERTICAL WALLS, NO DETACHED ISLAND UNDER %.2f. DO NOT EDGE-BREAK" % _mdl.MIN_ISLAND_AUDIT,
          "CREST EDGES. SERIAL (“No %s”) IS PER-UNIT VARIABLE TEXT." % _mdl.SERIAL,
          "",
          "OP ORDER: ALL BACK-FACE FEATURES BEFORE CAVITY HOLLOW (SOLID-STOCK",

@@ -35,7 +35,11 @@ MACHINING RULES THE GEOMETRY ENFORCES (found the hard way in spins 8-10):
     JetBrains Mono's coding-font dotted zero floats a O0.29 ornament in every 0's
     counter, and growing it would fill the counter. Plain oval zero, the classical
     engraving form; every serial is safe.
-  * THE AUDIT ASSERTS AT BUILD TIME: every standing island must span >= MIN_ISLAND.
+  * THE AUDIT ASSERTS AT BUILD TIME: every standing island must span >= MIN_ISLAND_AUDIT,
+    which is MIN_ISLAND less 0.02 -- a regrown O0.55 round is a polygon after the weld and
+    simplify, and measures 0.545-0.549 across (five of them on the 001 medallion). The shell
+    sheet prints MIN_ISLAND_AUDIT, the number the build actually guarantees; until 2026-11-13
+    it printed MIN_ISLAND, which those five islands are under.
     Change a parameter into something unmachinable and the generator refuses to emit
     a STEP, which is the whole point of a contract.
   * THE THREE FAMILIES TILE THE COIN, AND THAT IS AUDITED TOO (_partition): deep cut,
@@ -74,6 +78,7 @@ COIN_D, REST_D = 0.45, 0.25        # floors below the ART FIELD (<= fin-valley c
 PLANE = 0.15                       # the bearing plane == the frame's proudness
 TOOL_MAIN_R, TOOL_REST_R = 0.20, 0.15    # O0.4 coin finisher, O0.3 rest pass
 MIN_ISLAND = 0.55                  # no detached standing mark smaller than this
+MIN_ISLAND_AUDIT = MIN_ISLAND - 0.02   # what the audit enforces: the round regrown at MIN_ISLAND, as a polygon
 DIAL_MIN_MARK = 0.35               # dial marks under this are font ornament: deleted
 DIAL = [(DIAL_MONOGRAM, 4.80, -1.6, "b"), (f"No {SERIAL}", 1.80, 3.0, "r")]
 _DUST = 0.005                      # sub-0.005 mm2 opening residue: numerical, dropped
@@ -348,7 +353,7 @@ def geometry(text_fn, font_r, font_b):
     # THE AUDIT: no detached standing island below MIN_ISLAND, anywhere, ever.
     small = [p for p in _parts(standing)
              if max(p.bounds[2] - p.bounds[0], p.bounds[3] - p.bounds[1])
-             < MIN_ISLAND - 0.02]
+             < MIN_ISLAND_AUDIT]
     assert not small, (
         f"{len(small)} standing island(s) under {MIN_ISLAND} mm -- the parameters "
         f"produce unmachinable orphan posts (first at {small[0].centroid.coords[0]})")

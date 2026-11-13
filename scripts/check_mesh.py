@@ -83,7 +83,12 @@ BASELINE = {
         # its box is not symmetric in y and a plate written in the old frame lands 89 mm
         # outside it. The shells' and braces' boxes ARE symmetric in y and cannot tell either
         # hand from the other; scripts/handedness_drc.py holds those to KiCad's own export.
-        volume_mm3=50860.32, bbox=(-10.4, -99.3, -17.8, 61.2, 10.4, 10.0),
+        # re-ledgered 2026-11-13, 50860.32 -> 50867.96. Not a geometry change: this gate's own
+        # trimesh reads 50867.96 on the committed bytes at 4e88213, 575be73 and 9a90a36 -- every
+        # plate committed since the old figure was written -- and SolidCraft, a kernel that owes
+        # this repo nothing, measures the same. The old figure matched no committed plate and
+        # passed only inside VOL_TOL. TODO.md's 9a90a36 record, D1.
+        volume_mm3=50867.96, bbox=(-10.4, -99.3, -17.8, 61.2, 10.4, 10.0),
         max_boundary_edges=0, max_open_len_mm=0.0, max_degenerate=0),
     # volume re-ledgered 2026-08-02 with fit_rules.AIR 0.12 -> 0.22 (pockets 0.1 deeper,
     # measured from a local regeneration then restored -- CI owns the artifact). The

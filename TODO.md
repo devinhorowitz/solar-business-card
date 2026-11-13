@@ -774,12 +774,129 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
   L2 (0.04661 mm³), and 0.060 mm over the supercaps with KiCad's seating against 0.10 with parts
   flush. One instrument note: a clearance run against a twice-split slab of the max shell returned
   0.1649 mm for SC4 at a point where a probe finds no material; it was discarded in favour of the
-  face-to-face figures above. Not re-measured: the east lip's stepped top, clearance against the
-  un-split max shell, and wall thickness beyond the two surveys used (distances between distinct
-  voids, and opposed axis-aligned faces). The full report and every command are kept outside the
-  tree, beside the first review's.
+  face-to-face figures above. Not re-measured: clearance against the un-split max shell, and wall
+  thickness beyond the two surveys used (distances between distinct voids, and opposed
+  axis-aligned faces). The east lip's stepped top was measured afterwards: C1 below. The full
+  report and every command are kept outside the tree, beside the first review's.
 
-- [ ] **[ENCLOSURE — DRH's calls, from the same measurement] Seven numbers left where they are** (two since fixed, and marked so)
+  **MEASURED AFTERWARDS on the same `9a90a36` — SolidCraft's later checks, handed back 2026-11-13,
+  each re-checked in this repo with an instrument of its own.** _(SolidCraft's figures as written;
+  this repo's beside them, with how. "Inferred" is SolidCraft's arithmetic or code reading on top
+  of a measurement. Lite-shell heights unless stated: floor top z 0.600, seat 1.820, rim 2.420.)_
+  - **A — agreement, nothing to change.** Every committed STL is the same part as its STEP (largest
+    deviation 0.0000 braces, 0.0047 shells, 0.0117 pogo plate over 0.037 mm²; canaried). Every
+    dimension on the six sheets matches its STEP but the B items. The pogo plate's 14 bores sit
+    0.0000 off KiCad's own pad solids, its dowels on the panel drill file's two Ø1.500 NPTH, and the
+    populated card overlaps nothing on it. Not re-checked here beyond what B to D touch.
+  - **B — sheet text the solids contradict.** Fixed in the same commit as this record, each
+    sentence now computed from what it describes or removed:
+    - **B1**, shell note 4: "ITS 4 OUTBOARD RAILS". SolidCraft: no resin within 14.0 of a cell
+      pad. Here: each brace STL is one body, and the nearest resin at any height is 14.067 from a
+      tab-land centre (sectioned every 0.15 mm). The note now gives the piece count from
+      `brace_footprint()` and the outline's `WALL_FIT`.
+    - **B2**, note 4 "PRESS-FIT" against note 10 "SLIP FIT, NOT A PRESS FIT". The recess measures
+      50.700 × 88.800 here as on SolidCraft (STL sectioned at seat + 0.30, along both centre lines,
+      all three shells). Both notes now state the modelled fit computed from the sheet's `ef`:
+      "0.05 INTERFERENCE PER FLAT AS MODELLED". Which is intended is still the press-or-slip item.
+    - **B3**, note 5: "(BOSS-TO-WALL + EAST-LIP STEPS)". The east wall is x 49.550 on every
+      0.1 mm row clear of a boss (seat − 0.30). The parenthesis is gone, so the sentence covers every
+      concave corner left sharp, which C2 counts.
+    - **B4**, brace sheets: "12.0 WIDE (CRITICAL)". The CAD cuts `FER` ± `FER_CLR` =
+      x 36.700–49.100, 12.400, as SolidCraft measured. The label and note 5 are computed from it.
+    - **B6 — declined.** The sheet's bare-lip stretches come from `lip_as_cut()`, which
+      `assembly_drc` [G] holds to the sectioned metal (worst 0.002 where one width governs).
+      SolidCraft read them at the recess wall (y 0.050 / 88.850), where the relief arcs flare, so
+      the two sets differ by up to 0.15 on different lines and both stand. The "2.25 y48.5–49.5
+      (C24)" band has no flat in the metal: one vertex, x 2.259 at y 48.798 (SolidCraft); x 2.259
+      at y 48.80 here (0.02 mm rows). The Ø2.0 finisher blends a band narrower than its own radius.
+    - **B7**, "NO DETACHED ISLAND UNDER 0.55". SolidCraft: five islands 0.545 × 0.549,
+      0.2347 mm². Here, from `medallion.geometry()` with the shell's own text function: the same
+      five at the same five places, spans 0.5476–0.5497, 0.2339–0.2347 mm². They are the Ø0.55
+      regrown rounds as polygons, and the audit has always enforced `MIN_ISLAND − 0.02`. That
+      floor is now `medallion.MIN_ISLAND_AUDIT`, read by the audit and printed on the sheet (0.53).
+    - **B8**, the LIP break called MODELED. Sectioned here: present on the west straight run
+      (y 20.0, 0.10 × 45°), absent on the R16 step (y 47.0, square). Absent over y 4.787–9.900 on the
+      east and 0.25 inboard of the east wall elsewhere: the cause is C1's. Note 5 no longer claims
+      it; it says to break every lip edge on the part.
+    - **B5** is a decision, in the DRH's-calls item below.
+  - **C1 — the east lip's top.** SolidCraft: stepped over y 10.000–26.596, 30.664–58.236 and
+    62.304–83.996 (wall top z 1.720, a 0.250 flat, 45° to the seat at x 49.900, 0.850 of bearing);
+    not stepped over y 4.787–9.900 (full 1.250, no break), whose first 0.832 (y 4.787–5.619) stands
+    at z 1.810. Here, sectioning the lite STL at y 5.0, 5.4, 7.0, 9.5, 10.5, 20.0, 44.45 and 70.0: the
+    same profile at every station. **Cause, read from the shell CAD here** (SolidCraft had none):
+    `_lip_break_cut` cuts from `_lip_void_P()`, the SCALAR lip outline, whose east edge is
+    `W − RING["E"]` = x 49.80 except over `EAST_WIDE_Y = [(0.0, 10.0)]`, where it is
+    `W − lip_E_wide` = x 48.30, out in the cavity. From y 10 up the cutter lands 0.25 inside the real
+    wall (x 49.55) and takes the top 0.10 off that strip, which is the step. Below y 10 it lands on
+    no lip, so there is neither step nor break. The north wide band was removed on 2026-07-11 and
+    the south one never was, which is the asymmetry. The z 1.810 stretch is C4's corner relief.
+  - **C2 — sharp concave corners.**
+    - **SolidCraft:** seven run the full cavity height on max and lite, six on air.
+      - Two are 90°, at (46.254, 29.774) and (46.406, 59.150), where SC2's and SC4's keep-outs cut
+        the east mid-span bosses. #254's free-edge boss flats made these.
+      - Five are 42–44°, where a cap relief arc meets the recess line.
+    - **Here, each shell STL sectioned at nine heights:**
+      - The two 90° corners are at the same points on all three shells.
+      - At mid-cavity there are eight recess-line corners on all three, at x 4.210 / 22.977 /
+        27.650 / 46.357 (y 0.050) and 4.283 / 23.047 / 27.774 / 46.538 (y 88.850). A different five
+        pass the full-height test here on max. The test is sensitive at the seat and floor breaks,
+        so **which corners run the full height is left open.**
+      - Four more, about 90–102°, sit where a corner boss meets a relief. They are not in
+        SolidCraft's list.
+      - Then there are the twelve documented boss-to-wall junctions.
+    - **With the sheet's Ø2.0 finisher (R1.0) at the two 90° corners:**
+      - SolidCraft, inferred from a square-corner model: a nominal can is 0.209 clear of the
+        fillet. A can +0.50 on the free edge is 0.061 inside; with the 0.10 datum gap, 0.134 inside.
+      - Here, simulating the R1.0 tool on the exact boss island (polygon opening), SC2 / SC4: a
+        nominal can clears by 0.266 / 0.225. +0.50 free is 0.013 / 0.030 inside. +0.50 free + 0.10
+        datum is 0.060 / 0.084 inside. +0.60 free + 0.10 datum is 0.113 / 0.130 inside.
+      - The two models differ because the corner's end face is 0.66 long, under the tool radius,
+        so the tool also reaches the corner from the side. **Both say a nominal can clears and a
+        max-material can touches.**
+    - **Every other sharp corner at R1.0:** `assembly_drc` [F], re-run here with the tool radius
+      applied to every concave corner, still clears every nominal B-side body. The tightest is SC4
+      at 0.225, from 0.250 as modelled.
+  - **C3 — the 0.4632 neck between TP3's and TP2's pockets.**
+    - **Reproduced** with a scan from every convex void corner, through resin only. It is
+      calibrated: on the committed pre-#254 brace it finds the 0.0068, 0.0718 and 0.0904 walls, and
+      on `9a90a36` it finds this neck. It is the only gap under 0.60 in either brace that is not one
+      of the ferrite channel's walls.
+    - **This repo's own checks missed it** for two reasons. The level opening in the brace CAD is
+      mitred, which measures thickness along x and y only. And the pocket-pair pass skips diagonal
+      pairs by name ("diagonal corner nick").
+    - **It is a gap, not a wall.** A Ø0.6 disc of resin fits over every point of it. The decision
+      is below.
+  - **C4 — two small things, both benign, nothing changed.**
+    - Faces 0.010 below the seat: SolidCraft has 3.51 mm² in 22 faces. Here, on the lite STL,
+      5.217 mm² in 229 triangles sit at z 1.810. The scopes differ: this count likely also takes in
+      the corner-relief floors outside the board outline. The cause is confirmed in the shell CAD:
+      the board-corner relief is cut from `bb − 0.01`.
+    - The west cavity wall's x: 2.50000–2.50199 on SolidCraft, 2.50002–2.50178 here (0.25 mm rows,
+      away from bosses and the R16/C24 bands).
+  - **D1 — not a disagreement after all.** The ledger has the pogo plate STL at 50860.32;
+    SolidCraft measures 50867.96. `check_mesh`'s own pinned trimesh reads **50867.96** on the
+    committed bytes at `4e88213`, `575be73` and `9a90a36`, which is every plate committed since the
+    ledger was written. The ledger was stale and passed only inside the 0.5 % tolerance. It is
+    re-ledgered to the measurement both instruments agree on.
+  - **D2 — C24's pad to the lip: three numbers, and the reason for two of them.**
+    - The sectioned gate's 0.097 is to `board_parts`' pad RECTANGLES (C24's outline is its pads'
+      envelope).
+    - The pads are `roundrect` (rratio 0.25, corner r 0.1475). With the rounding put back, this
+      repo gets **0.1524** for pad 2 (GND) against the lite STL at z 1.70. SolidCraft has 0.1574
+      against KiCad's pad solid.
+    - R16's rounded pads measure 0.302 / 0.303 here, where the gate says 0.268 and SolidCraft finds
+      none within 0.30.
+    - So the gate is conservative wherever a pad is rounded. The 0.005 left between 0.1524 and
+      0.1574 was not determined. Nothing changed; C24 is inside `LIP_CLR` 0.30 on every figure.
+  - **E — not measured by SolidCraft:** the lip's stand-off from the coil copper (the export used
+    carries no copper), the sheets' line work (only numbers and notes were compared), and anything
+    physical: a max-material can, a routed outline against the 0.05 press, real part heights, a
+    printed brace on a real board.
+  - **F2 — declined:** `check_consistency.py`'s doc checks mis-report on Windows (path separators;
+    `check_doc_file_refs` needs UTF-8 forced). CI and every session here are Linux. It matters only
+    if the suite is run there.
+
+- [ ] **[ENCLOSURE — DRH's calls, from the same measurement] Seven numbers left where they are** (two since fixed, and marked so; three more added 2026-11-13 from the SolidCraft hand-back)
   _(2026-11-12. Each was measured or traced, none was changed. Both numbers are given so the
   judgement can be made without re-deriving them.)_
   - **The ridge east of the ferrite channel is 0.40 mm, under `SLA_WALL` 0.60.** It was 0.65. The
@@ -792,7 +909,10 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
     50.800 × 88.900; 5.90 mm³ of overlap, all three shells). Deliberate — `edge_fit = -0.05`,
     "press interference on the FLATS", relieved at the corners — but the repo says three things
     about it: the shell CAD says press fit, `enclosure/README.md` §8 says "treat as a slip fit", and
-    the drawing's own note says "SLIP FIT, NOT A PRESS FIT". Against that 0.05 the repo's own
+    the drawing's own note says "SLIP FIT, NOT A PRESS FIT". _(2026-11-13: SolidCraft found a
+    fourth: the same sheet's note 4 said "PRESS-FIT". Both notes now state what is cut, computed from
+    `ef`: "0.05 INTERFERENCE PER FLAT AS MODELLED". The intent below is still open, and the sheet no
+    longer takes a side on it.)_ Against that 0.05 the repo's own
     figures for a routed outline are ±0.1 (the jig item below) and ±0.2
     (`solar-glow-drh-design-notes.md`). Whichever it is, `edge_fit` has three homes to change
     together: the shell CAD, `ef` in its DRAWING-gen, and `EF` in `fit_rules._back_field()`.
@@ -840,11 +960,60 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
     x 49.55 to 49.80 and reaches the 1.820 seat only at x 49.90. **The board rests on 0.85 mm of
     east lip, not 1.25.** Not a collision, and the same on the committed and the rebuilt shells —
     found while listing where else `_CAV`'s 1.00 had survived, not by SolidCraft.
+    _(2026-11-13: measured on SolidCraft and here, with extents. Stepped over y 10.000–83.996
+    between the bosses, 65.86 mm. Not stepped and not broken over y 4.787–9.900, because
+    `EAST_WIDE_Y = [(0, 10)]` still widens the scalar outline there. The same cutter is why the
+    LIP break is missing on the R16 step and the middle lips' end walls. Record above, C1 and B8.)_
+    **Options:** (a) cut the lip break from the per-band void (`fit_rules.cavity_void_poly()`), not
+    `_lip_void_P()`. That gives a full 1.25 bearing on the east and a break on every lip edge, but
+    every shell STEP changes and needs re-measuring. (b) Delete `EAST_WIDE_Y` / `lip_E_wide`
+    only: the east lip becomes uniform, the 0.85 bearing stays, and the shells still change.
+    (c) Accept it. The sheet now asks for every lip edge to be broken by hand either way.
   - **NEW, found by the sectioned gate on its first run — the lip passes 0.097 mm from C24** (and
     0.268 from R16), against `LIP_CLR` 0.30. The per-band lip stands `LIP_CLR` off a part in every
     band that part spans; the Ø2.0 finisher's fill at a band step is not held to it, and check [8]
     asserts band widths, not the opened polygon. C24 ends at y 49.40 and the 2.5 mm band starts at
     y 49.50. It clears the gate's 0.05 mm floor, so the gate prints it and passes.
+    _(2026-11-13: that 0.097 is to `board_parts`' pad RECTANGLES. With the pads' roundrect corners
+    put back, this repo gets 0.1524, and SolidCraft gets 0.1574 against KiCad's pad solid. R16
+    is 0.302 here, against the gate's 0.268. Record above, D2.)_
+  - **NEW 2026-11-13 (SolidCraft, B5) — the rim top and the recess mouth carry TWO facets, not one
+    0.10 × 45°.** Measured on SolidCraft and sectioned here at y 44.45, identically on both:
+    - The mouth runs 45° from (50.750, 2.320) to (50.779, 2.349), then 22.5° to (50.950, 2.420).
+      The outer edge mirrors it.
+    - The break is 0.200 wide by 0.100 tall, and the rim flat is 0.600.
+    - The rim bottom, the back frame and the boss ends are single 0.10 × 45°.
+
+    Cause, read here: the shell CAD chamfers the block's `>Z` edges (`edge_ease`) and eases the
+    mouth, then the deburr chamfers every `>Z` edge a second time (`EDGE_BREAK`). Its own comment
+    says the rim is already eased. The sheets' two leaders still say "0.10×45° RIM (top)" and
+    "0.10×45° MOUTH".
+    **Options:**
+    - (a) Leave the rim and mouth out of the second chamfer, so the solid becomes what the sheet
+      says. Every shell STEP changes.
+    - (b) Keep the solid, and compute the leaders from `edge_ease` and `EDGE_BREAK` so they say
+      what is cut.
+    - (c) Accept it: felt, not seen.
+  - **NEW 2026-11-13 (SolidCraft, C2) — two 90° corners at the east mid-span bosses, and a
+    finisher that rounds them into a max-material can.** Note 5 tells the shop to finish every
+    sharp concave corner with the Ø2.0. At (46.254, 29.774) and (46.406, 59.150), that radius
+    reaches a can at full free-edge tolerance plus the shim's datum gap. It goes in by 0.113 / 0.130
+    here, or 0.134 on SolidCraft's square-corner model. A nominal can clears by 0.266 / 0.225.
+    Record above, C2. **Options:**
+    - (a) Call a smaller finisher for those two corners on the sheet. A text change; the worst case
+      clears by 0.005 with Ø1.0 and by 0.109 with Ø0.5.
+    - (b) Relieve the two corners in the model, so any tool works. The shell STEPs change.
+    - (c) Accept it. It takes a max-material can, seated at the shim's full datum gap, at exactly
+      that corner.
+
+    Either way, no gate applies a tool radius today: `assembly_drc` measures the corner as modelled.
+  - **NEW 2026-11-13 (SolidCraft, C3) — a 0.4632 gap between the corners of TP3's and TP2's
+    pockets, both braces.** It is the only sub-0.60 gap that is not the ferrite channel's. Record
+    above, C3. **Options:**
+    - (a) Let the brace's pocket-pair pass bridge diagonal pairs as well. TP2's and TP3's pockets
+      would then meet at the corner, and both brace STLs change.
+    - (b) Accept it. There is resin on both sides, a Ø0.6 disc fits over every point of it, and the
+      worst plausible print joins two pocket corners over test pads that are never fitted.
 
 - [ ] **[ENCLOSURE — DRH's calls, from the 2026-11-12 prose clean-up] Two things the geometry does that its documents said it did not**
   _(2026-11-12. Found while replacing four pieces of hand-typed text in the enclosure tree with
