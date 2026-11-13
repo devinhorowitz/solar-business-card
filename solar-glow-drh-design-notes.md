@@ -1988,6 +1988,18 @@ cap-side lip, the east lip, the rim), each with its before / after:**
   with no single region to blame — before the bosses are unioned; each boss foot is chamfered on
   its own cylinder and each spotface mouth gets a true cone.
 
+**And the hand gate's margin moved.** The first CI run of this round failed
+`scripts/handedness_drc.py` [S] on all three shells — "THE FILE IS WRITTEN IN THE WRONG HAND" —
+with every other witness of the hand green (the braces' [B], each STEP against its STL [E], the
+frame [M], assembly_drc [G]). [S] scores a shell's fit to KiCad's exported bodies against its
+mirror image's in the two placements the holes allow, and in one of them the mirror used to
+crowd SC1 / SC3 at the mid-span boss corners. The Ø2.0 bores carved those corners away, and the
+mirror then crowded nothing KiCad exports (nearest SC1, 0.549) while the real shell stands 0.378
+from R16 and 0.399 from C24 by design. What the mirror really hits there is the bare JP1 and TP1
+pads under its west lip, 8.857 and 1.616 mm² — footprints with no model, so KiCad exports no body
+for them. [S] now takes the bare-pad footprints from `board_parts`, the reader its own [P] holds to
+KiCad's placement.
+
 **Seen, not changed:** on the air frame the Ø3.0 spotface at each west boss (2.87, 28.63 /
 60.27) reaches 0.025 mm past that boss's SC1 / SC3 flat at x 4.345 / 4.415, so the flat has a
 0.025 × 0.20 window at its foot. It is the same on `main`; the spotface is sized for the screw

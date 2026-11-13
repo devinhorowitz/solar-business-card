@@ -455,7 +455,13 @@ red, the check itself fails.
   hair into SC1 and SC3; the other way it overlaps nothing and only crowds the parts beside the
   west lip (R16 loses 0.18 mm, C24 ends 0.048 mm from metal). So the fit is scored over every part
   in reach, never read off "no collision", and `assembly_drc` [F] and [G] are the stronger
-  witnesses — and nothing reads LETTERING. The plate's labels are modelled mirror-written ON PURPOSE, so that the
+  witnesses — and nothing reads LETTERING. **And the margin moves with the geometry** (2026-11-13):
+  the Ø2.0 boss-corner bores carved away the cap-corner metal the first placement's mirror had
+  been crowding, its mirror then fitted KiCad's bodies BETTER than the real shell, and the gate
+  called a right-handed shell wrong. That mirror's real collision is the bare JP1/TP1 pads under
+  its west lip, which KiCad exports no body for; `[S]` now takes the bare-pad footprints from
+  `board_parts` (the reader `[P]` ties to KiCad). When a change to the shell moves a boss or a
+  lip, expect `[S]`'s two placements to need looking at, not just its verdict. The plate's labels are modelled mirror-written ON PURPOSE, so that the
   reflection puts them right; if you touch them or the medallion, look at the result from the side
   a person reads it.
   **A solid in this tree is the part: cut or print it as written, and never mirror one.** What an
