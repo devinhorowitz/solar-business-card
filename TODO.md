@@ -769,9 +769,11 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
     a wall at 49.550.
   - **The four downward faces at seat level are gone** (24.896 mm², max and lite; the air frame had
     them too).
-  - **The max shell STEP imports with no edge repair.** Expect 28,403 edges, none used four times;
-    9,626 faces, 82 of them under 0.001 mm² (was 1,765); no upward faces at z +0.02. _(Counts
-    re-taken 2026-11-13 after the flats moved: the same three numbers.)_
+  - **The max shell STEP imports with no edge repair.** Expect **28,526 edges, none shared by more
+    than two faces; 9,648 faces, 36 of them under 0.001 mm²**; no upward faces at z +0.02. _(Counts
+    re-taken 2026-11-14 by OCC on the STEP `main` carries, built at `a4f951e`. The 28,403 / 9,626 /
+    82 that stood here until then were of `9a90a36`, the solids before the enclosure-calls round —
+    which is why the MEASURED block below, a record of that commit, still reads them.)_
   - **The open frame still has its resting-face edge-break**, including a 45° foot on each boss flat.
   - **No brace resin wall under 0.10 mm**, max and lite, and none under `SLA_WALL` 0.60 except the
     ferrite channel's own walls (x 36.2–36.7 and 49.10, top 0.33 mm only). The 0.0068 mm wall at
@@ -791,7 +793,7 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
       (−4.9, −20.0) and (55.7, −85.0); the plate is un-centred, a board point (x, y) is at
       (x, −y)), and its title and net labels reading correctly from above;
     - the max shell STEP's counts are what they were — the reflection changes no face, edge or
-      volume (5293.129 mm³ by OCC).
+      volume (**5289.905 mm³** by OCC on today's STEP; 5293.129 was `9a90a36`'s).
     `scripts/handedness_drc.py` measures the first and third of these on every CI run, in the
     kernel that wrote the files; this is the check in one that did not.
 
@@ -970,8 +972,11 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
   - **Six Ø2.0 bores (R1.0, true cylinders), full cavity height**, one through each supercap
     keep-out corner the finisher could not otherwise reach — at the four corner bosses and the two
     east mid-span ones, centres (4.940, 1.054), (45.624, 1.051), (5.010, 87.846), (45.811, 87.846),
-    (45.430, 30.341), (45.602, 58.555), on all three shells. Every flat is where it was; no bore
-    comes nearer a boss axis than 1.475 mm (`THREAD_KEEP` 1.30).
+    (45.430, 30.341), (45.602, 58.555), on all three shells. Every flat is where it was,
+    **1.475–1.676 mm** from its screw axis; the bores' edges stand **1.754–2.030 mm** off theirs.
+    Both are outside `THREAD_KEEP` 1.30. _(This read "no bore comes nearer a boss axis than
+    1.475 mm" until 2026-11-14: true, and loose — 1.475 is the nearest FLAT. A bore at 1.50 would
+    have passed that sentence and been a quarter of a millimetre from where the rule puts it.)_
   - **With every concave corner of the cavity filled to R1.0** (the Ø2.0 the sheet calls for):
     the brace clear at every level, and each supercap at max material (+0.60 on its two free
     edges, +0.10 on its datum edges, `fit_rules.part_envelope`) **0.150 clear** — S1 and S2 of the
@@ -985,6 +990,12 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
   - **The max STEP:** still no edge shared by four faces (the export gate holds it); the
     rim pinch at (24.4, −34.45) is gone with the scalar lip outline, and one zero-length seam per
     break cutter stands at board (27.07, 0.78), z seat − 0.15 (`scripts/check_mesh.py` ledgers it).
+  - **The max brace was rebuilt once more, on 2026-11-14 (`6fb264f`)**, when C4, C13 and C23 took
+    their datasheet maximum heights (`enclosure/part_heights.py`): the pockets over C4 and C13 are
+    0.05 deeper and the one over C23 0.10 deeper. **1917.48 mm³** where it was 1918.42. Its
+    footprint did not move — the datum face is the same 1313.172 mm², with no difference between
+    the two outlines — so every brace-to-shell figure above stands. Shells, lite brace and shim
+    are as that round's merge run left them (`a4f951e`).
 
 - [ ] **[SOURCING — lite/air] Pick the thin supercap MPN**
   _(2026-08-07, opened with the three-variant round.)_ `part_heights.SUPERCAP_H_THIN = 1.00`
