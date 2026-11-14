@@ -337,7 +337,7 @@ supercaps; the floor is a **true uniform 1.00 mm** (the old 0.05 mm U7 relief po
 **3.55 mm**. **Eight** bosses on the v4 8-hole pattern (four corner, concentric with the r3.0
 fillets, plus four panel-corner), each **scalloped** clear of whatever fouls it — a supercap by
 that can's own bay clearance, since its body tolerance lands on the edge the boss faces — while
-keeping ≥ 82.3 % of its M2 thread annulus. Retention is **eight M2×3 slotted brass screws**, not a press
+keeping ≥ 80.3 % of its M2 thread annulus. Retention is **eight M2×3 slotted brass screws**, not a press
 fit; the head is Ø3.0 and the tip lands **flush** in a Ø3.0 back spotface.
 
 **Measured independently on 2026-11-12, and two things on this page were not true of the parts.**

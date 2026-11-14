@@ -25,7 +25,7 @@ measured and rejected before this one:
 | Thickness | **0.60 mm** — must stay under `part_heights.SUPERCAP_H` (1.70) so it never stands proud of the caps |
 | Outline | `fit_rules.brace_footprint(span=0.0)` — `span=0` makes **every** part a blocker, so the plate lands only on bare laminate |
 | Cap clearance | **0.10 mm** — `SHIM_CLR`, **PROVISIONAL** (see below) |
-| Area | 969.6 mm², one connected piece _(976.3 until 2026-11-12: the outline is the brace footprint, and that lost a 0.25 mm strip along its east edge when it was cut back to the cavity the shell really has — the plate now stops at x 49.50. No datum side moved.)_ |
+| Area | 969.2 mm², one connected piece _(976.3 until 2026-11-12: the outline is the brace footprint, and that lost a 0.25 mm strip along its east edge when it was cut back to the cavity the shell really has — the plate now stops at x 49.50. Then 969.6 until 2026-11-13, when the footprint took the R1.0 fillet a Ø2.0 finisher leaves in the two east boss-to-wall corners: 0.17 mm² off each, near (49.1, 31.7) and (49.0, 57.2). No datum side moved either time. This row still read 969.6 on 2026-11-14, after the DXF had become 969.2 — `python3 scripts/reflow_shim.py` prints the figure; this is a copy of it.)_ |
 | Pad contact | **zero** across all 208 B-side pads |
 
 Because the outline is the complement of the parts, the plate cannot rest on a component —

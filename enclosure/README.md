@@ -181,8 +181,10 @@ part positions from `enclosure/board_parts.py` (true 3D body ∪ pads, with the 
   _(2026-11-12: this was true of `fit_rules.boss_island()` and NOT of the shell — the CAD never
   made the cut, and by the time anyone measured it four supercaps were inside those bosses. See
   the section above. On today's board each boss is fouled by exactly one part, a supercap; the
-  flats are 1.475–1.676 mm from the hole axes and the worst boss keeps 82.3 % of its annulus —
-  `python3 enclosure/fit_rules.py` prints all eight.)_
+  flats are 1.475–1.676 mm from the hole axes and the worst boss keeps 80.3 % of its annulus —
+  `python3 enclosure/fit_rules.py` prints all eight. That was 82.3 % until the 2026-11-13 corner
+  bores, which take a little more from six of the eight (their edges stand 1.754–2.030 mm from
+  the axes); the sentence went on saying 82.3 until 2026-11-14.)_
 
 **No board change was required for any of it.**
 
