@@ -325,6 +325,18 @@ red, the check itself fails.
   `container:` — every `pip install` there is runner-side and cannot see the image at all.
   `cadquery` pulls numba onto the runner. Right ceiling, right version, wrong provenance — and
   the wrong provenance is what made it read as someone else's problem to fix.
+  **THE SCHEDULE ITSELF CAN LAPSE, AND THE REPORT USED TO SAY NOTHING** (2026-11-14). GitHub
+  turns a public repo's scheduled workflows off after 60 days without repository activity, and
+  the only trace is `disabled_inactivity` on the Actions tab. Main took no commit from
+  2026-08-29 to 2026-11-12, the schedule lapsed as the 2026-11-02 run fired, and for twelve
+  days the issue went on saying "canaries success" about a check that was not running. The
+  Monday issue upsert does not count as activity — it ran every week and the schedule lapsed
+  anyway. So the report now carries its own expiry: a **stale-after** date under the timestamp
+  (the next Monday plus a day), and a **schedule-health** footer giving main's newest commit and
+  the date the 60-day rule bites. The run also re-enables itself through the API
+  (`actions: write`); that is harmless, but GitHub does not document that it resets the clock,
+  so the footer's commit-based date is the deadline. Past the stale-after date: re-enable on
+  Actions → Weekly freshness, then dispatch a run.
 - `consistency.yml` — runs the drift guard on doc/board/firmware changes, plus
   `scripts/mask_art.py` (check [6] regenerates the mask art through it), `scripts/part_colors.py`
   (check [10]), `scripts/panelize.py` (check [19] imports its `stub_layer()`), `kibot.yml`
