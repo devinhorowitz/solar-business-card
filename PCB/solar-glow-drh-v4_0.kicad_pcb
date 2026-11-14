@@ -5861,7 +5861,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Datasheet" "datasheets/U7  MB85RC512TYPN-GS-AWEWE1  $10.19.pdf"
+		(property "Datasheet" "datasheets/U7  MB85RC512TYPN-GS-AWEWE1  $7.92.pdf"
 			(at 0 0 180)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -11682,7 +11682,7 @@
 				)
 			)
 		)
-		(property "Datasheet" "datasheets/U3  ADXL367BCCZ-RL7  $7.50.pdf"
+		(property "Datasheet" "datasheets/U3  ADXL367BCCZ-RL7  $8.50.pdf"
 			(at 0 0 0)
 			(layer "B.Fab")
 			(hide yes)
