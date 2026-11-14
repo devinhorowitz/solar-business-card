@@ -9,7 +9,7 @@
 > Refresh: `python3 BOM/check_stock.py` (needs `DIGIKEY_CLIENT_ID`,
 > `DIGIKEY_CLIENT_SECRET`, `MOUSER_PART_API_KEY` in the environment; ~1 min).
 
-**Checked: 2026-11-14 04:03 UTC** · DigiKey Product Information v4 + Mouser Search API, queried by MPN (stored distributor P/Ns are shown as found live, not trusted from the sheet).
+**Checked: 2026-11-14 08:47 UTC** · DigiKey Product Information v4 + Mouser Search API, queried by MPN (stored distributor P/Ns are shown as found live, not trusted from the sheet).
 
 **27 of 30 lines fully available** · 0 on substitute only · **3 dead (❌)** · 0 unverifiable this run · 0 manual-order.
 
@@ -24,8 +24,8 @@
 | ✅ | Q2 | 1 | Diodes Incorporated | `DMG1012T-7` | `DMG1012T-7DICT-ND` | DigiKey | Active | 109,969 | $0.82 |
 | ✅ | RN2 | 1 | Panasonic | `EXB-24V472JX` | `Y5472CT-ND` | DigiKey | Active | 39,387 | $0.10 |
 | ✅ | RN1 | 1 | Panasonic | `EXB-28V151JX` | `Y7151CT-ND` | DigiKey | Active | 94,325 | $0.10 |
-| ✅ | C11 | 1 | Murata | `GCM155R71C224KE02D` | `490-10671-1-ND` | DigiKey | Active | 490 | $0.11 |
-| ✅ | C24 | 1 | Murata | `GCM155R71H103KA55D` | `490-4762-1-ND` | DigiKey | Active | 985,733 | $0.10 |
+| ✅ | C11 | 1 | Murata | `GCM155R71C224KE02D` | `81-GCM155R71C224KE2D` | Mouser | Active (listed) | 17,858 | $0.12 |
+| ✅ | C24 | 1 | Murata | `GCM155R71H103KA55D` | `490-4762-1-ND` | DigiKey | Active | 987,175 | $0.10 |
 | ✅ | C23 | 1 | Murata | `GRM188Z71E225ME43D` | `490-GRM188Z71E225ME43DCT-ND` | DigiKey | Active | 276,610 | $0.18 |
 | ✅ | C26, C27 | 2 | Murata | `GRM319R61E106KA12D` | `490-5525-1-ND` | DigiKey | Active | 229,013 | $0.47 |
 | ✅ | C1, C3, C5, C6, C8, C12, C28, C29 | 8 | Murata | `GRT155R71H104KE01D` | `490-GRT155R71H104KE01DCT-ND` | DigiKey | Active | 1,288,300 | $0.11 |
@@ -38,7 +38,7 @@
 | ✅ | U5 | 1 | NXP Semiconductors | `NT3H2211W0FHKH` | `568-12901-1-ND` | DigiKey | Active | 3,495 | $1.56 |
 | ✅ | C9 | 1 | Johanson Technology | `QSCP251Q470G1GV001T` | `712-QSCP251Q470G1GV001TCT-ND` | DigiKey | Active | 84,068 | $0.40 |
 | ✅ | U6 | 1 | Texas Instruments | `TPS22916CYFPR` | `595-TPS22916CYFPR` | Mouser | Active (listed) | 637 | $0.55 |
-| ✅ | U9 | 1 | Texas Instruments | `TPS7A0233PDQNR` | `296-TPS7A0233PDQNRCT-ND` | DigiKey | Active | 4,659 | $0.95 |
+| ✅ | U9 | 1 | Texas Instruments | `TPS7A0233PDQNR` | `296-TPS7A0233PDQNRCT-ND` | DigiKey | Active | 4,759 | $0.95 |
 | ✅ | U8 | 1 | e-peas | `10AEM10300C0000` | `120-AEM10300-QFN` | Mouser | Active (listed) | 271 | $3.77 |
 | ✅ | PV1, PV2 | 2 | ANYSOLAR | `SM141K06TF` | `2994-SM141K06TF-ND` | DigiKey | Active | 410 | $7.61 |
 | ❌ | SC2, SC4 | 2 | SCHURTER | `3-153-438` | `693-3-153-438` | Mouser | End of Life | 198 | $16.69 |
