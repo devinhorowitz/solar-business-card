@@ -569,6 +569,14 @@ red, the check itself fails.
   still computed and are exactly what `SINGLE_PIECE` drops — `fit_rules.DROPPED`. **Accepted by DRH
   on 2026-11-13:** the air frame has no brace at all, so the card must take unbacked tabs anyway, and
   a first-article press test in `TODO.md` is what proves it does.
+  **And a typed REFDES list is the same copy** (2026-11-14). `enclosure/assembly_render.py` drew
+  bodies for two lists typed into it — the four supercaps and five ICs — and nothing else on the
+  back: 37 of the 46 fitted, modelled parts were bare lands in the explode and the exploded
+  still, the four LEDs among them, under a docstring saying "B-side parts are drawn". Nothing
+  failed, so nothing said so; DRH saw it in the picture. The views now draw whatever
+  `board_parts.bodies()` reads off the board, at `part_heights`' height and in the colour the
+  model itself carries (`board_parts.model_color()`), and print the count. KiCad's own renders
+  (`scripts/render.py`, the `populated` views) were complete throughout.
 - **The STEP keeps every inside corner sharp; the part has the finisher's radius in each — so a
   gate on the model is not a gate on the machined part** (2026-11-13). The sheet tells the shop to
   finish the cavity's concave corners with a Ø2.0 (`fit_rules.TOOL_R`), and every check measured

@@ -273,9 +273,12 @@ proud of the back face. Engagement is 2.40 mm — more than the 1.80 mm boss, so
 deliberately continues into the floor, whose pilot is tap-drilled clean through.
 
 Views regenerate with `python3 enclosure/assembly_render.py`. They are a **fit and material
-check, not the raytraced article** — B-side parts are drawn as bounding boxes (exact for the
-supercap cans, conservative for small passives), and the photographic renders come from
-`scripts/render.py` into `Generated/docs/`.
+check, not the raytraced article** — every fitted B-side part that carries a 3D model is drawn
+as its model's bounding box (exact for the supercap cans, a plain block for a passive or an
+IC), and the photographic renders come from `scripts/render.py` into `Generated/docs/`.
+_(Until 2026-11-14 only nine parts were: the four supercaps and five ICs, from two refdes
+lists typed into the script. The other 37 — every passive, U3, U5, U10 and the four LEDs —
+showed as bare lands. The parts are read from the board by `board_parts.bodies()` now.)_
 
 ### The gate
 
