@@ -3032,7 +3032,7 @@
 				(justify mirror)
 			)
 		)
-		(property "MPN" "GRT188R61C106KE13D"
+		(property "MPN" "GXT188R61C106KE13D"
 			(at 0 0 180)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -3074,7 +3074,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Supplier P/N" "490-12317-1-ND"
+		(property "Supplier P/N" "490-GXT188R61C106KE13DCT-ND"
 			(at 0 0 180)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -6555,7 +6555,7 @@
 				)
 			)
 		)
-		(property "MPN" "GRT155R71H103KE01D"
+		(property "MPN" "GCM155R71H103KA55D"
 			(at 0 0 180)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -6597,7 +6597,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Supplier P/N" "490-GRT155R71H103KE01DCT-ND"
+		(property "Supplier P/N" "490-4762-1-ND"
 			(at 0 0 180)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -7255,7 +7255,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" "22uF 16V 1206 X5R LOW-PROFILE (GRM319: 0.85 +/-0.10 -> 0.95 MAX), AEM CSRC buffer at BUFSRC (aem10300 Table 6: min 13uF EFFECTIVE - footnote 1 names tolerance + DC-bias derating). Re-picked 2026-08-06 off the height wall (was TDK 0805, 1.45 max): K-tol worst 19.8uF; even -25% bias at the 4.15V Voc worst case plus 5% aging leaves ~14.1uF >= 13. Same 16V/X5R point as the incumbent, and a 1206 derates LESS than the 0805 it replaces. The 2026-07-30 note that 1206 does NOT fit was bounded by SB2, deleted 2026-08-05; refit is the board round. Confirm the exact bias curve on SimSurfing there."
+		(property "Description" "22uF 16V 1206 X5R LOW-PROFILE (0.95 MAX), AEM CSRC buffer at BUFSRC (aem10300 Table 6: min 13uF EFFECTIVE - footnote 1 names tolerance + DC-bias derating). Samsung CL31A226KOCLNNC since 2026-11-14: Murata GRM319R61C226KE15D went to 2 in stock at DigiKey and 0 at Mouser; this is the same 22uF/16V/X5R/+-10%/1206/0.95-max point. NOT the +-20% GRM319R61C226ME15D: 17.6uF x 0.75 bias x 0.95 aging = 12.5uF < 13. K-tol worst 19.8uF; -25% bias at the 4.15V Voc worst case plus 5% aging leaves ~14.1uF >= 13 -- the -25% is an assumption for this class and body, never confirmed on a vendor curve: confirm on Samsung data before relying on it."
 			(at 0 0 270)
 			(layer "B.Fab")
 			(hide yes)
@@ -7280,7 +7280,7 @@
 				(justify mirror)
 			)
 		)
-		(property "MPN" "GRM319R61C226KE15D"
+		(property "MPN" "CL31A226KOCLNNC"
 			(at 0 0 90)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -7294,7 +7294,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Manufacturer" "Murata"
+		(property "Manufacturer" "Samsung Electro-Mechanics"
 			(at 0 0 90)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -7322,7 +7322,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Supplier P/N" "490-GRM319R61C226KE15DCT-ND"
+		(property "Supplier P/N" "1276-1803-1-ND"
 			(at 0 0 90)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -8870,7 +8870,7 @@
 				(justify mirror)
 			)
 		)
-		(property "MPN" "GRT188R61C106KE13D"
+		(property "MPN" "GXT188R61C106KE13D"
 			(at 0 0 180)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -8912,7 +8912,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Supplier P/N" "490-12317-1-ND"
+		(property "Supplier P/N" "490-GXT188R61C106KE13DCT-ND"
 			(at 0 0 180)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -14578,7 +14578,7 @@
 				)
 			)
 		)
-		(property "MPN" "GRT155R71C224KE01D"
+		(property "MPN" "GCM155R71C224KE02D"
 			(at 0 0 180)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -14620,7 +14620,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Supplier P/N" "490-GRT155R71C224KE01DCT-ND"
+		(property "Supplier P/N" "490-10671-1-ND"
 			(at 0 0 180)
 			(unlocked yes)
 			(layer "B.Fab")

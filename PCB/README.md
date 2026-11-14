@@ -669,9 +669,9 @@ Summary of the **orderable** lines:
 | RN2 | 1 | 2×4.7 kΩ isolated array, ±5% (I²C pull-ups need no matching — placement consolidation, 2026-08-08) | 0404 convex (`R_Array_Convex_2x0402`, stock land — see the re-link warning below) | `EXB-24V472JX` |
 | C1 | 1 | 100 nF, X7R, 50 V | 0402 | `GRT155R71H104KE01D` |
 | C3 | 1 | 100 nF, X7R, 50 V | 0402 | `GRT155R71H104KE01D` |
-| C4 | 1 | 10 µF, X5R, 16 V | 0603 | `GRT188R61C106KE13D` |
+| C4 | 1 | 10 µF, X5R, 16 V, ±10%, AEC-Q200 (0.95 max) | 0603 | `GXT188R61C106KE13D` |
 | C6 | 1 | 100 nF, X7R, 50 V | 0402 | `GRT155R71H104KE01D` |
-| C11 | 1 | 0.22 µF (220 nF), X7R, 16 V | 0402 | `GRT155R71C224KE01D` |
+| C11 | 1 | 0.22 µF (220 nF), X7R, 16 V, ±10%, AEC-Q200 | 0402 | `GCM155R71C224KE02D` |
 | C12 | 1 | 100 nF, X7R, 50 V | 0402 | `GRT155R71H104KE01D` |
 | SW2 | 1 | 2-pad bridge (was 3-pad until TINY left, 2026-08-05) | solder-bridge | **(none — PCB bridge)** |
 | TC1 | 1 | TC2030-MCP-FP | TC2030 legged land | **(no part — pogo interface)** |
@@ -682,7 +682,7 @@ Summary of the **orderable** lines:
 | U5 | 1 | NTAG I²C plus, 2 KB, I²C 0x55 | XQFN8 (SOT902-3, 1.6×1.6×0.5 mm) | `NT3H2211W0FHKH` |
 | C8 | 1 | 100 nF, X7R, 50 V | 0402 | `GRT155R71H104KE01D` |
 | C9 | 1 | 47 pF, C0G/NP0, ±2 %, 250 V, High-Q (S-series) | 0603 (`Capacitor_SMD:C_0603_1608Metric`, 0.89 max) — **was 0805 High-Q `QSCT251Q470G1GV001E` (1.17) until the 2026-08-06 low-profile respin; same purpose-built family one case down (no flat RF 1206 exists); board sync pending** | `QSCP251Q470G1GV001T` |
-| C13 | 1 | 10 µF, X5R, 16 V | 0603 | `GRT188R61C106KE13D` |
+| C13 | 1 | 10 µF, X5R, 16 V, ±10%, AEC-Q200 (0.95 max) | 0603 | `GXT188R61C106KE13D` |
 | L1 | 1 | 2.76 µH design value | PCB copper — no package | **(no part — PCB feature)** |
 | U6 | 1 | Ultra-low-leakage load switch (ISD 10 nA typ, IQ 0.5 µA, QOD, RCB) | DSBGA-4 (`solarglow:TPS22916_YFP0004`, 0.4 mm pitch, 0.5 max) — **was SC-70-6 `TPS22919DCKR` until the 2026-08-06 ultrathin swap; on the board since the same day's rework round** | `TPS22916CYFPR` |
 | U10 | 1 | Ultra-low-leakage load switch — **the STO sense-divider gate** (2026-08-09). Second instance of U6's part. Feeds R15 from STO only while a conversion is in flight, so the 3 MΩ divider stops drawing **1.55 µA from the tank** around the clock. **High-side by necessity**: gating the low leg would let C24 float `STO_SNS` to STO, above VDD, forward-biasing PD1's ESD clamp — still ~0.4 µA *and* injecting into an ADC pin. Needs **no external pulldown** (cf. R14 on U6): the TPS22916 has a smart 750 kΩ ON pulldown that auto-disconnects once driven high. | DSBGA-4 (`solarglow:TPS22916_YFP0004`, 0.4 mm pitch, 0.5 max) | `TPS22916CYFPR` |
@@ -694,8 +694,8 @@ Summary of the **orderable** lines:
 | FB1 | 1 | 0603 bead | 0603 (`L_0603_1608Metric` — the true 0603 land since DRH's 2026-08-08 island round; the 0402-land debt is paid) | `BLM18PG221SN1D` |
 | C22 | 1 | 1 uF, 25 V, 0603, X7R | 0603 (C_0603_1608Metric) | `GRT188R71E105KE13D` |
 | C23 | 1 | 2.2 µF, 25 V, 0603, X7R | 0603 (C_0603_1608Metric) | `GRM188Z71E225ME43D` |
-| C24 | 1 | **10 nF**, 0402, X7R — ADC reservoir on `STO_SNS`, shrunk from 100 nF on 2026-08-09 so the **gated** divider settles in ~33 ms instead of ~335 ms (still ~2000× the ADC sample cap). **±10%, and X7R adds ±15% over −55…+125 °C** — the worst-case-high 12.65 nF stretches τ from 6.68 to 8.45 ms, which is why `STO_SNS_SETTLE_MS` is 53 and not the nominal-cap 33; `firmware/board.h` owns that arithmetic. **Second source `GRT155R71C103KE01J`** — see the sourcing note below | 0402 | `GRT155R71H103KE01D` |
-| C25 | 1 | 22 uF, 16 V, 1206 low-profile (0.95 max), X5R | 1206 (`solarglow:C_1206_3216Metric_HS_LP085`) | `GRM319R61C226KE15D` |
+| C24 | 1 | **10 nF**, 0402, X7R — ADC reservoir on `STO_SNS`, shrunk from 100 nF on 2026-08-09 so the **gated** divider settles in ~33 ms instead of ~335 ms (still ~2000× the ADC sample cap). **±10%, and X7R adds ±15% over −55…+125 °C** — the worst-case-high 12.65 nF stretches τ from 6.68 to 8.45 ms, which is why `STO_SNS_SETTLE_MS` is 53 and not the nominal-cap 33; `firmware/board.h` owns that arithmetic. Any X7R ±10% part leaves it unchanged — see the sourcing note below | 0402 | `GCM155R71H103KA55D` |
+| C25 | 1 | 22 uF, 16 V, ±10%, 1206 low-profile (0.95 max), X5R — Samsung (the land's 3D model is still the Murata GRM319 body: same 3.2 × 1.6 × 0.95 envelope) | 1206 (`solarglow:C_1206_3216Metric_HS_LP085`) | `CL31A226KOCLNNC` |
 | C26, C27 | 2 | 10 µF, 25 V, 1206 low-profile (0.95 max), X5R | 1206 (`solarglow:C_1206_3216Metric_HS_LP085`) | `GRM319R61E106KA12D` |
 | C28 | 1 | 100 nF, 0402, X7R | 0402 | `GRT155R71H104KE01D` |
 | R15 | 1 | 2 M, 0603, ±0.1%, 25 ppm | 0603 (R_0603_1608Metric) | `MCT0603MD2004BP500` |
@@ -1121,7 +1121,34 @@ Work outside-in by heat sensitivity:
    > the land wants 0.4 — and shaved the SDA-trunk gap to 0.124. All four pads carry `270`
    > now; anything that regenerates them must keep it.
    >
-   > **C24 sourcing, and why its "low stock" is not a risk (2026-08-17).** The 2026-08-17
+   > **The 2026-11-14 swaps (C4/C13, C11, C24, C25), and a correction to what this note used to
+   > say.** On 2026-11-14 the live stock check found `GRT155R71C224KE01D` (C11),
+   > `GRT155R71H103KE01D` (C24) and `GRT188R61C106KE13D` (C4/C13) at **zero at both DigiKey and
+   > Mouser**, and `GRM319R61C226KE15D` (C25) at 2 and 0. Each was replaced by a part that
+   > matches it on every parameter DigiKey publishes — value, ±10 %, rated voltage, dielectric,
+   > case, thickness max, temperature range — and keeps AEC-Q200 wherever the original had it:
+   > C11 → Murata **`GCM155R71C224KE02D`** and C24 → **`GCM155R71H103KA55D`** (Murata's GCM
+   > automotive line, 0.55 max like the GRT); C4/C13 → **`GXT188R61C106KE13D`** (Murata's GXT, the
+   > same KE13 body, 0.95 max); C25 → Samsung **`CL31A226KOCLNNC`** (±10 %, 0.95 max). C25 did
+   > NOT go to the obvious same-series `GRM319R61C226ME15D`: it is ±20 %, and C25's own arithmetic
+   > (its Description field) needs ±10 % — 17.6 µF × 0.75 bias × 0.95 aging is 12.5 µF, under the
+   > AEM10300's 13 µF effective minimum. That −25 % bias figure is an assumption for this body and
+   > class, never checked against a vendor curve, for the old part or the new one.
+   > Reading thickness for these swaps also showed `enclosure/part_heights.py` declaring C4/C13 at
+   > 0.90 against a 0.95 max (the GRT188 was 0.95 too) and C23 at 0.90 against 1.00; both are
+   > corrected there, with the sweep that found them, and the max brace's pockets deepened to suit.
+   >
+   > **The correction: the GRT parts were never soft-termination.** This note used to call the
+   > whole GRT 10 nF 0402 family "soft-termination X7R" and reason from it. DigiKey's parametric
+   > record for every GRT part on this board lists **no soft-termination feature**, and Murata
+   > sells soft termination (a conductive-resin layer in the external electrode) as its **GCJ**
+   > (automotive) and **GRJ** (general) lines — GRT is its standard-termination AEC-Q200 line. So
+   > the board has had AEC-Q200 parts, not flex-crack-protected ones, and the swap to GCM loses
+   > nothing it had. Whether the 0402 decoupling should MOVE to GCJ for a 0.6 mm board in a wallet
+   > is a real question, left open; this note no longer answers it by assumption.
+   >
+   > **C24 sourcing, and why its "low stock" was not a risk (2026-08-17; overtaken by the swap
+   > above).** The 2026-08-17
    > availability regen showed `GRT155R71H103KE01D` at **50 in stock** — the thinnest real line
    > in the BOM, and easy to misread as a part at risk. It is not. **The shortage is in the
    > VOLTAGE RATING, not the part.** The whole GRT 10 nF 0402 family is the same
@@ -1139,7 +1166,9 @@ Work outside-in by heat sensitivity:
    > abundant (`GRM1555C1E103GE01D`, ±2 %, 25 V, 1.3 M in stock). Being Class 1 it is ±2 % with
    > ~30 ppm/°C, no DC-bias effect and no aging, which collapses the worst-case corner from
    > 12.65 nF to **10.23 nF** — τ 8.45 → **6.83 ms**, 19 % shorter, and `STO_SNS_SETTLE_MS`
-   > could come back from 53 to **43**. It is rejected because **no soft-termination C0G exists
+   > could come back from 53 to **43**. _(2026-11-14: the soft-termination half of the reason below
+   > rested on GRT being soft-termination, which it is not — see the correction above. The
+   > AEC-Q200 half stands: every C0G candidate here is GRM.)_ It is rejected because **no soft-termination C0G exists
    > at this size and value**: every GRT 10 nF 0402 is X7R, every C0G candidate is GRM standard
    > termination and not AEC-Q200. Soft termination is flex-crack protection, and this is a
    > **0.6 mm** board that lives in a wallet and gets handled — which is presumably why the
