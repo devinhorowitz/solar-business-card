@@ -76,6 +76,7 @@ resin walls beside blind pockets in both braces, since fixed, with its own row b
 | the brace's ridge east of the ferrite channel | tapers to **nothing** at both ends (y 31.40 and 57.50; 0.20 wide 0.19 from the point) | ends square at y 31.67 and 57.23, **0.25** wide there — the wall the print spec's printer holds | fixed 2026-11-14 |
 | where a boss meets the lip's wall | a **sharp inside corner** at all twelve junctions (51.5° on the east wall, 81.8° on the west), left to the finisher's radius _(this repo's instruments; DRH, from a render)_ | a modeled concave blend, a true cylinder, with the lip's and the boss's 0.10×45° break carried round it: ten at **R2.00**, two at **R1.00** where the ferrite sheet stands beside one | changed 2026-11-14 |
 | beside each corner boss | a **slot** of void between the boss and the recess wall, 0.17 mm at its narrowest, closed at one end, that no cutter enters | **metal**: boss, web and wall are one piece, and the boss's Ø2.0 bore runs out to the wall | changed 2026-11-14 |
+| where a boss annulus meets the frame, on the back | a **sharp inside corner** at all sixteen junctions (71.6°, as tall as the frame, 0.15), left to the back tool's radius — on the face that is seen _(this repo's instruments; DRH)_ | a modeled concave blend at each, **R2.00**, a true cylinder, with the frame's own 0.10×45° break running round frame, blend and annulus as one edge; the reeded fields stand 0.40 off a blend as they do off an annulus | changed 2026-11-14 |
 | the ferrite sheet against the shell | never measured. Its two east corners stand **0.24 / 0.15 mm** from the as-milled titanium at the bosses at y 28.63 / y 60.27 — a clearance nobody chose | the same, and printed by `assembly_drc` [F] and [H] on every run | **DRH's call** |
 
 The right-hand column was measured in the cloud with OpenCascade and by slicing the STLs — an
@@ -138,6 +139,15 @@ What changed, in one line each — the reasoning is in the generators and in `CL
   corners, with every gate green, because none had ever held the sheet against the shell.
   `scripts/assembly_drc.py` **[J]** probes the sectioned shells for every blend and web, and **[F]**
   and **[H]** now carry the ferrite sheet as a body.
+- **…and each annulus to the frame, on the back (2026-11-14).** The same junction, on the side that
+  is seen: each boss's proud r2.60 annulus crossed the inner edge of the proud frame at 71.6°, two
+  places a boss, sixteen in all. `fit_rules.back_blends()` lays the same `BLEND_R` blend at each,
+  by the same construction (`_blend_at`) on the art field's own straight edges. Nothing limits a
+  radius there — no part, no coil, no ferrite — so all sixteen are R2.00. The shell CAD adds them
+  before the deburr, so the back's one edge-break runs round frame, blend and annulus as a single
+  outline. On the max shell the reeded fields give way: the pour wraps a blend at `FIN_BOSS_CLR`
+  as it wraps an annulus, and the ribs beside a boss end a little shorter. **[J]** probes the
+  back blends on a section through the frame's height.
 - **The channel's ridge ends square (2026-11-14).** Being let off `SLA_WALL` had let the ridge east
   of the ferrite channel off everything: where the brace's edge turns in round a boss fillet the
   ridge ran on with it to a point. `fit_rules.PRINT_WALL` (0.25) is the floor under the exception
@@ -483,7 +493,7 @@ Expect the instant price to move: the thin floor routes this to manual engineeri
 - Bounding box: **52.70 × 90.80 × 3.55 mm**.
 - Datum **Z0 = outer back face**. +Z is into the part toward the PCB.
 - Z stack from the back face:
-  - back frame, 4 boss annuli **and the medallion crests**: **proud 0.15 mm** (to Z −0.15
+  - back frame, the 8 boss annuli, the 16 blends that join them to it **and the medallion crests**: **proud 0.15 mm** (to Z −0.15
     — the bearing plane; `medallion.py`)
   - recessed rear art field: at Z 0; fin rib tops proud 0.10 (Z −0.10), fin groove
     floors at **Z +0.60** (`FIN_VALLEY` — 0.40 web under each groove, see §3 addendum)
@@ -595,7 +605,7 @@ The PCB recess is cut **0.05 mm smaller than the board on every flat** (relieved
 
 ### 9. Internal radii and tooling
 
-**Where a mount boss meets the lip's wall the junction is modeled** (2026-11-14): a concave blend at each of the twelve places a boss's circle crosses the wall — ten at **R2.00**, two at **R1.00** beside the ferrite sheet — each a true cylinder, and each corner boss is solid to the recess wall, its Ø2.0 bore running out to it. Any other internal concave junction is modeled **sharp**; a round tool leaves its own fillet there (standard for a milled pocket). The whole solid is analytic (planes, cylinders, cones), zero spline/Bezier. Rough the cavity with a Ø3–4 mm tool; finish corners/walls with a Ø2.0 **or smaller — never larger**. R2.00 is twice that tool's radius on purpose: it sweeps the blend and never dwells in a corner.
+**Where a mount boss meets the lip's wall the junction is modeled** (2026-11-14): a concave blend at each of the twelve places a boss's circle crosses the wall — ten at **R2.00**, two at **R1.00** beside the ferrite sheet — each a true cylinder, and each corner boss is solid to the recess wall, its Ø2.0 bore running out to it. On the back, each r2.60 annulus is blended into the proud frame the same way — sixteen, all **R2.00**, cut with the other back-face features. Any other internal concave junction is modeled **sharp**; a round tool leaves its own fillet there (standard for a milled pocket). The whole solid is analytic (planes, cylinders, cones), zero spline/Bezier. Rough the cavity with a Ø3–4 mm tool; finish corners/walls with a Ø2.0 **or smaller — never larger**. R2.00 is twice that tool's radius on purpose: it sweeps the blend and never dwells in a corner.
 
 Everything that has to clear those fillets is **sized for the Ø2.0's R1.0** (2026-11-13): the brace is cut to the cavity as that tool leaves it (`fit_rules.cavity_as_milled()`), and wherever a supercap keep-out corner lands where the tool could not reach, the boss carries a modeled **Ø2.0 bore** through that corner (`fit_rules.boss_cuts()` — six of them, at all four corner bosses and the two east mid-span ones), placed as far from the thread as the tool can be and still reach it. `scripts/assembly_drc.py` **[H]** sections the emitted shell, gives every sharp inside corner the R1.0, and holds the brace, every B-side part and the four supercaps **at max material** to that. Before it, the Ø2.0 put titanium 0.225 mm into the brace at the east boss-to-wall corners and 0.13 mm into a max-material SC4, on shells every other gate passed.
 

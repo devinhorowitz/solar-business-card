@@ -1287,31 +1287,44 @@ def _blends_cached(_c={}):
     return _c["b"]
 
 
+def _boss_crossings(mx, my, x0, y0, x1, y1):
+    """[(J, t, room)] -- where the straight run (x0, y0)-(x1, y1) crosses the boss circle about
+    (mx, my): the crossing J, the unit vector t along the run AWAY from the boss, and how far
+    the run goes on straight from J in that direction."""
+    L = math.hypot(x1 - x0, y1 - y0)
+    if L < 1e-9:
+        return []
+    ux, uy = (x1 - x0) / L, (y1 - y0) / L
+    fx, fy = x0 - mx, y0 - my
+    b = fx * ux + fy * uy
+    disc = b * b - (fx * fx + fy * fy - BOSS_R * BOSS_R)
+    if disc <= 0:
+        return []
+    out = []
+    for sg in (-1.0, 1.0):                           # -1: the run ENTERS the disc here; +1: leaves it
+        lam = -b + sg * math.sqrt(disc)
+        if 0.0 <= lam <= L:
+            out.append(((x0 + lam * ux, y0 + lam * uy), (sg * ux, sg * uy),
+                        (L - lam) if sg > 0 else lam))
+    return out
+
+
+def _into(region, J, t):
+    """The unit normal to t at J that points INTO `region` (the cavity, or the back's art field)."""
+    n = (-t[1], t[0])
+    if not region.contains(Point(J[0] + 0.05 * t[0] + 0.05 * n[0], J[1] + 0.05 * t[1] + 0.05 * n[1])):
+        n = (-n[0], -n[1])
+    return n
+
+
 def _boss_blends(mx, my):
     v = void_as_cut()
     fer = box(*FER)
     cs = list(v.exterior.coords)
     out = []
     for (x0, y0), (x1, y1) in zip(cs[:-1], cs[1:]):
-        L = math.hypot(x1 - x0, y1 - y0)
-        if L < 1e-9:
-            continue
-        ux, uy = (x1 - x0) / L, (y1 - y0) / L
-        fx, fy = x0 - mx, y0 - my
-        b = fx * ux + fy * uy
-        disc = b * b - (fx * fx + fy * fy - BOSS_R * BOSS_R)
-        if disc <= 0:
-            continue
-        for sg in (-1.0, 1.0):                       # -1: the wall ENTERS the disc here; +1: leaves it
-            lam = -b + sg * math.sqrt(disc)
-            if not (0.0 <= lam <= L):
-                continue
-            J = (x0 + lam * ux, y0 + lam * uy)
-            t = (sg * ux, sg * uy)                   # along the wall, away from the boss
-            n = (-t[1], t[0])
-            if not v.contains(Point(J[0] + 0.05 * t[0] + 0.05 * n[0], J[1] + 0.05 * t[1] + 0.05 * n[1])):
-                n = (-n[0], -n[1])                   # into the cavity
-            room = (L - lam) if sg > 0 else lam      # how far the wall runs straight from J
+        for J, t, room in _boss_crossings(mx, my, x0, y0, x1, y1):
+            n = _into(v, J, t)
             bl = _blend_at(mx, my, J, t, n, BLEND_R, room)
             if bl is None:
                 continue                             # the wall turns before the foot: not a blend
@@ -1606,6 +1619,103 @@ def _boss_webs(mx, my):
     return out
 
 
+# ---- ...and on the BACK FACE (2026-11-14, the same day, DRH: "give the back face the same
+# blends") -------------------------------------------------------------------------------
+# The back has the junction too, and it is the side that is seen. Each mount carries a proud
+# annulus there (r BOSS_R, as tall as the frame), and the annulus crosses the inner edge of the
+# proud frame at a sharp inside corner, 71.6 degrees: two per boss, sixteen in all -- a corner
+# boss crosses BOTH frame edges it sits beside. They were left to the back tool's own radius.
+# Each is a BLEND_R blend now, laid out exactly as the cavity's are (_blend_at) on the art
+# field's own straight edges, which the shell CAD draws from the same two numbers
+# (_back_field: the board less EDGE_FIT, less BACK_BORDER).
+#
+# Three things differ from the cavity side, and only three:
+#   * nothing limits a radius here -- no part, no coil, no ferrite: all sixteen are BLEND_R;
+#   * the edge-break is the one the back already has. The blends go on BEFORE the deburr, so
+#     OCC's chamfer runs round frame, blend and annulus as one outline (no cone to cut);
+#   * THE REEDED FIELDS GIVE WAY. Twelve of the sixteen stand in a fin field, and the pour
+#     wraps each at FIN_BOSS_CLR as it wraps an annulus (fin_runs), so the ribs beside a boss
+#     end a little shorter than they did.
+def _back_edges():
+    """The art field's four straight edges as runs [(x0, y0, x1, y1)], corners excluded."""
+    fx0, fy0, fx1, fy1 = _back_field().bounds
+    r = max(BOARD_R + EDGE_FIT - BACK_BORDER, 0.3)
+    return [(fx0, fy0 + r, fx0, fy1 - r), (fx1, fy0 + r, fx1, fy1 - r),
+            (fx0 + r, fy0, fx1 - r, fy0), (fx0 + r, fy1, fx1 - r, fy1)]
+
+
+def back_frame_poly():
+    """The proud back frame in plan: the recess outline less the art field."""
+    return recess_poly().difference(_back_field())
+
+
+def back_blends(mx, my):
+    """[blend] -- the back-face blends of the mount at (mx, my): boss_blends()' dicts, one for
+    each place its annulus crosses a straight edge of the art field. Every one is BLEND_R."""
+    return _back_blends_cached()[(mx, my)]
+
+
+def _back_blends_cached(_c={}):
+    if "b" not in _c:
+        field = _back_field()
+        out = {}
+        for mx, my in MOUNTS:
+            bl = []
+            for x0, y0, x1, y1 in _back_edges():
+                for J, t, room in _boss_crossings(mx, my, x0, y0, x1, y1):
+                    b = _blend_at(mx, my, J, t, _into(field, J, t), BLEND_R, room)
+                    if b is None:
+                        raise RuntimeError(
+                            f"back face: no R{BLEND_R:g} blend fits where the annulus at "
+                            f"({mx}, {my}) crosses the frame at ({J[0]:.2f}, {J[1]:.2f}) -- the "
+                            f"edge turns into the field's corner before the blend's foot")
+                    bl.append(b)
+            out[(mx, my)] = bl
+        _c["b"] = out
+        _audit_back_blends(out)
+    return _c["b"]
+
+
+def back_blend_added(mx, my, b):
+    """What ONE back blend adds in plan: its cover outside the blend's circle, the frame and
+    the annulus -- the new proud metal, which is what the fin fields have to wrap."""
+    g = (b["cover"].difference(_blend_disc(b)).difference(back_frame_poly())
+         .difference(Point(mx, my).buffer(BOSS_R, resolution=256)))
+    return unary_union([q for q in getattr(g, "geoms", [g]) if q.geom_type == "Polygon" and q.area > 1e-7])
+
+
+def _audit_back_blends(blends):
+    frame = back_frame_poly()
+    for (mx, my), bl in blends.items():
+        c = Point(mx, my)
+        disc = c.buffer(BOSS_R, resolution=256)
+        for b in bl:
+            at = f"back blend at ({b['J'][0]:.2f}, {b['J'][1]:.2f}) of the mount at ({mx}, {my})"
+            new = back_blend_added(mx, my, b)
+            if new.is_empty or new.geom_type != "Polygon":
+                raise RuntimeError(f"{at}: the cover does not leave ONE piece of new metal")
+            stray = (b["cover"].difference(_blend_disc(b)).difference(new)
+                     .difference(frame.buffer(1e-6)).difference(disc.buffer(1e-6)))
+            if stray.area > 1e-6:
+                raise RuntimeError(f"{at}: {stray.area:.5f} mm2 of its cover lies in the open art field")
+            if b["cover"].distance(c) < BOSS_R - 0.75:
+                raise RuntimeError(f"{at}: its cover comes within {b['cover'].distance(c):.2f} mm of "
+                                   f"the hole axis, where the back spotface is")
+
+
+def back_blend_metal():
+    """Every back blend's new metal, one geometry: what fin_runs() keeps the pour off."""
+    return unary_union([back_blend_added(mx, my, b) for mx, my in MOUNTS for b in back_blends(mx, my)])
+
+
+def back_proud_poly():
+    """Everything on the back that stands at the frame's height, in plan: the frame, the eight
+    annuli and the sixteen blends that join them. One piece, and its inner outline is the edge
+    of the recessed art field as it is cut -- what the shell drawing draws there."""
+    return unary_union([back_frame_poly(), back_blend_metal()]
+                       + [Point(mx, my).buffer(BOSS_R, resolution=256) for mx, my in MOUNTS])
+
+
 # ---- back-side fin fields ----------------------------------------------------------------
 # Texture on the exterior back: two fin fields with a clear band between them. Called "cooling
 # fins" and they cool nothing -- Ti-6Al-4V conducts at ~6.7 W/m*K against aluminium's ~150, and
@@ -1772,6 +1882,9 @@ FIN_ROWS, FIN_GROOVE, FIN_PITCH = _fin_layout()   # 19 / 0.792 / 1.392 today; de
                                                   # remainder at the outer edge
 
 
+_FIN_ARC = 0.0005     # mm: (BOSS_R + FIN_BOSS_CLR) * (1 - cos(90 deg / 48 / 2)) = 0.0004
+
+
 def fin_runs(rib_w=FIN_RIB_W):
     """Per-field rib centrelines and the pour zone.
 
@@ -1786,8 +1899,17 @@ def fin_runs(rib_w=FIN_RIB_W):
     n, g, pitch = _fin_layout(rib_w)
     field = _back_field()
     fx0, fy0, fx1, fy1 = field.bounds
+    # the pads the pour wraps: each annulus, and since 2026-11-14 the blend that joins it to
+    # the frame -- same clearance, so the valley's edge runs round boss and blend as one curve.
+    # Every vertex of a blocker becomes a wall face of the valley, and the blend metal's
+    # outline is drawn far finer than these circles (it is audited to 1e-4): left as it
+    # comes, the sixteen blends put 5,172 more faces on the max shell. _FIN_ARC is the chord
+    # the circles themselves give up at resolution 48, so blend and annulus are drawn alike
+    # (48 vertices a blend).
     blockers = unary_union([Point(mx, my).buffer(BOSS_R + FIN_BOSS_CLR, resolution=48)
-                            for mx, my in MOUNTS])
+                            for mx, my in MOUNTS]
+                           + [back_blend_metal().buffer(FIN_BOSS_CLR, join_style=1, resolution=48)
+                                                .simplify(_FIN_ARC)])
     ys = sorted({my for _mx, my in MOUNTS})
     inner_bot, inner_top = ys[1], ys[2]               # 28.5 / 60.4: the mid-boss lines
     runs = []

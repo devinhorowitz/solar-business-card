@@ -421,8 +421,13 @@ def sheet(vname, v):
     ax.add_patch(MplPoly(rrect(X(oxmin),Y(oymin),outW*S1,outH*S1,outR*S1),closed=True,fill=False,ec=INK,lw=1.0))
     ax.add_patch(MplPoly(rrect(X(oxmin)+wall*S1,Y(oymin)+wall*S1,cavW*S1,cavH*S1,cavR*S1),closed=True,fill=False,ec=GRY,lw=0.5))
     if border > 0:
-        _afw,_afh = cavW-2*bbw, cavH-2*bbw      # symmetric recessed art field (equal border all sides)
-        ax.add_patch(MplPoly(rrect(X(0.05+bbw),Y(0.05+bbw),_afw*S1,_afh*S1,max(cavR-bbw,0.3)*S1),closed=True,fill=False,ec=INK,lw=0.8))
+        # THE EDGE OF THE ART FIELD AS IT IS CUT (2026-11-14). This was a rounded rectangle
+        # (equal border all sides) with the eight annuli drawn across it as full circles:
+        # two primitives, the outline of neither. The proud metal on the back is ONE piece --
+        # the frame, the annuli, and since that day the R-blend that joins each annulus to the
+        # frame (fit_rules.back_blends) -- so what is drawn is that piece's inner outline.
+        for _ring in _fr.back_proud_poly().interiors:
+            ax.add_patch(MplPoly([(X(px),Y(py)) for px,py in _ring.coords],closed=True,fill=False,ec=INK,lw=0.8))
         for lx,ly,rot in [(0.05+bbw/2,44,90),(W-0.05-bbw/2,44,90),(25.4,0.05+bbw/2,0),(25.4,H-0.05-bbw/2,0)]:
             ax.text(X(lx),Y(ly),f"{bbw:.1f}",ha="center",va="center",fontsize=4.8,color="#2f5bd0",rotation=rot)
     # MOUNT-BOSS FLATS (2026-11-12). Each boss is cut back from whatever fouls it -- today a
@@ -586,6 +591,12 @@ def sheet(vname, v):
     # The block only exists on the variant that carries the art; where the whole view
     # collapses (lite: physics-forced off; air: no back face at all) it is REPLACED by a
     # note that says so, rather than left as an empty region.
+    # HOW EACH ANNULUS MEETS THE FRAME (2026-11-14): counted and sized from fit_rules, the way
+    # the cavity-side callout counts its own blends. One sentence for both variants with a back.
+    _nbb = sum(len(_fr.back_blends(mx, my)) for mx, my in mounts) if border > 0 else 0
+    _rbb = sorted({b["r"] for mx, my in mounts for b in _fr.back_blends(mx, my)}) if border > 0 else []
+    _backbl = ("BOSS ANNULUS TO FRAME (PLAN): %d× R%s CONCAVE BLEND, FRAME HEIGHT, MODELED."
+               % (_nbb, "/".join("%.2f" % r for r in _rbb)))
     if has_fins and has_med:
         ax.text(150,140,"REAR ART — MACHINED-IN GEOMETRY  (REFERENCE; STEP GOVERNS)",fontsize=6.8,fontweight="bold",color=INK)
         _ra=[
@@ -599,6 +610,8 @@ def sheet(vname, v):
          "VERTICAL WALLS, NO DETACHED ISLAND UNDER %.2f. DO NOT EDGE-BREAK" % _mdl.MIN_ISLAND_AUDIT,
          "CREST EDGES. SERIAL (“No %s”) IS PER-UNIT VARIABLE TEXT." % _mdl.SERIAL,
          "",
+         _backbl,
+         "",
          "OP ORDER: ALL BACK-FACE FEATURES BEFORE CAVITY HOLLOW (SOLID-STOCK",
          "RULE). STRESS-RELIEVED STOCK — STATE CONDITION ON QUOTE.",
         ]
@@ -608,7 +621,9 @@ def sheet(vname, v):
          "THE %.2f FLOOR CANNOT TAKE THE FIN VALLEYS (%.2f DEEP) OR THE" % (floor,_fr.FIN_VALLEY),
          "MEDALLION FLOORS (~0.55-0.75) — PHYSICS-FORCED OFF IN fit_rules.VARIANTS,",
          "NOT STYLING. BACK FACE = PLAIN RECESSED ART FIELD INSIDE THE %.1f" % bbw,
-         "BORDER + 8 BOSS ANNULI, NOTHING ELSE.",
+         "BORDER, THE 8 BOSS ANNULI AND THEIR BLENDS (BELOW), NOTHING ELSE.",
+         "",
+         _backbl,
         ]
     else:
         ax.text(150,140,"REAR ART / BACK-FACE VIEW — NONE",fontsize=6.8,fontweight="bold",color=INK)

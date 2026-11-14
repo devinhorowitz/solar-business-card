@@ -586,6 +586,27 @@ def check_enclosure_fit():
             f"read what moved (fit_rules.boss_blends / boss_webs), then re-ledger the counts "
             f"here and in the docs that quote them")
         bad += 1
+    # 4c. ...and on the back face (2026-11-14): each proud annulus runs into the proud frame
+    #     through the same blend, two per mount. Nothing limits a radius there, so all are
+    #     BLEND_R; what answers to them is the reeded pour, which must wrap each at the
+    #     clearance it wraps an annulus at. Same tripwire, same reason: sixteen is this board's.
+    _bb = [(m, b) for m in fr.MOUNTS for b in fr.back_blends(*m)]
+    _bbm = fr.back_blend_metal()
+    _ribgap = min(r.distance(_bbm) for r in fr.fin_ribs())
+    _valgap = fr.fin_region().distance(_bbm)
+    if any(abs(b["r"] - fr.BLEND_R) > 1e-9 for _m, b in _bb):
+        err("a back-face blend is not BLEND_R -- nothing on the back limits one")
+        bad += 1
+    # 2e-3 of slack: the wrap is a 48-segment buffer, whose chords stand a hair inside the arc
+    if _valgap < fr.FIN_BOSS_CLR - 2e-3 or _ribgap < fr.FIN_BOSS_CLR - 2e-3:
+        err(f"the reeded pour comes within {_valgap:.3f} mm of a back-face blend (a rib within "
+            f"{_ribgap:.3f}), inside FIN_BOSS_CLR {fr.FIN_BOSS_CLR} -- fin_runs() is not "
+            f"wrapping the blends")
+        bad += 1
+    if len(_bb) != 16:
+        err(f"{len(_bb)} back-face blends, where this board has had 16 (two per mount) -- read "
+            f"what moved (fit_rules.back_blends), then re-ledger the count here and in the docs")
+        bad += 1
     # mechanism self-test: a synthetic part planted INSIDE a blend's new metal must be refused
     (_m0, _b0) = _bl[0]
     _pt = fr.blend_added(_m0[0], _m0[1], _b0).representative_point()
@@ -633,7 +654,8 @@ def check_enclosure_fit():
            f"blends ({len(_bl) - len(_held)} at R{fr.BLEND_R:g}, {len(_held)} held to "
            f"R{fr.TOOL_R:g} by the ferrite sheet, {_bfer:.2f} off it) stand {_bgap:.2f} off the "
            f"nearest part ({_bref}) and {_bcoil:.2f} off the coil, {len(_wb)} corner webs "
-           f"{_wgap:.2f} off theirs (the polygon -- the metal is assembly_drc [J]); guaranteed ring "
+           f"{_wgap:.2f} off theirs, and {len(_bb)} back-face blends the reeded pour wraps at "
+           f"{_valgap:.2f} (the polygon -- the metal is assembly_drc [J]); guaranteed ring "
            f"relieved around {len(_reliefs)} part(s), all bodies >={fr.LIP_CLR} clear of it")
 
 

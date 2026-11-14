@@ -653,6 +653,14 @@ red, the check itself fails.
   titanium at the boss at y 60.27 — is a clearance nobody chose, and is DRH's to accept or change.
   The face counts went DOWN on every shell (max 9,654 → 9,647): count the faces under 0.001 mm²
   before and after any feature you add, because a boolean that "worked" says nothing about them.
+  **(5) Every vertex of an outline that is extruded becomes a face, and nothing gates face
+  count** (the same day, on the back). Each boss's proud annulus is joined to the proud frame by
+  the same blend (`fit_rules.back_blends()`, sixteen, all R2.00), and the reeded fields' pour is
+  kept `FIN_BOSS_CLR` off the new metal. The first build took that keep-out as it came from the
+  blend metal's outline, which is drawn far finer than the circles beside it: **5,172 more faces
+  on the max shell** (9,647 → 14,851) and a STEP half as big again, valid, every gate green. The
+  keep-out is drawn at the circles' own chord now (`_FIN_ARC`; 10,453 faces). Triangle and face
+  counts are ungated on purpose, so when a change adds a 2D keep-out, count the faces yourself.
 - **A ledger entry is a standing waiver, so a ledger audits itself.** `scripts/interference_drc.py`'s
   `EDGE_LEDGER` excused seven parts from the cavity rectangle and had excused nothing since
   2026-08-08: six had been moved inboard and the seventh, C7, was deleted from the board the day
