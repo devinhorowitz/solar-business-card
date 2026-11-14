@@ -501,7 +501,18 @@ red, the check itself fails.
   called a right-handed shell wrong. That mirror's real collision is the bare JP1/TP1 pads under
   its west lip, which KiCad exports no body for; `[S]` now takes the bare-pad footprints from
   `board_parts` (the reader `[P]` ties to KiCad). When a change to the shell moves a boss or a
-  lip, expect `[S]`'s two placements to need looking at, not just its verdict. The plate's labels are modelled mirror-written ON PURPOSE, so that the
+  lip, expect `[S]`'s two placements to need looking at, not just its verdict.
+  **`[E]` tells the hand by SURFACES, because a tell that is a sum can cancel** (2026-11-14). It
+  used to read the centre of mass in y, which a reflection negates — and which is a sum, so metal
+  on one side can be balanced by other metal on the other. The shells' stood 0.006 to 0.023 mm off
+  the centre line when its bar was set and had already crept to 0.0029 (max) and 0.0053 (lite);
+  the boss blends and corner webs moved them to **0.0003** and 0.0024, the gate's own self-test
+  went red on a right-handed shell, and the lite shell turned out to be passing by 0.002. It now measures the farthest any vertex of either file stands from
+  the other file's surface, as written and with one reflected: 0.0095 mm at most against 0.435 at
+  least (the bars are 0.05 and 0.20). That is zero only for a solid that is its own mirror image.
+  The self-test did its job — it failed rather than go quiet — but **when a gate measures a
+  difference between two nearly equal things, ask whether an unrelated edit can make them equal.**
+  The plate's labels are modelled mirror-written ON PURPOSE, so that the
   reflection puts them right; if you touch them or the medallion, look at the result from the side
   a person reads it.
   **A solid in this tree is the part: cut or print it as written, and never mirror one.** What an

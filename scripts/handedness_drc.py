@@ -42,7 +42,10 @@ WHAT IT MEASURES
   [E]  each STEP against its own STL. [B] reads the braces' STEPs and [S] the shells' STLs,
        but the printer is sent the brace's STL and the machinist the shell's STEP -- so the
        two files of every solid, the pogo plate's included, must be the same solid in the
-       same hand: one centre of mass, which a mirror image does not share.
+       same hand: no point of either file's surface may stand off the other's by more than
+       a tessellation gives up. CANARY: one of the two REFLECTED must stand well off. (Until
+       2026-11-14 the hand was read off the centre of mass in y, which a mirror image
+       negates -- and which one design change put 0.0003 mm from zero on the max shell.)
   [T]  the pogo plate against KiCad's export of the PANEL it carries. The panel's two
        tooling holes are asymmetric on purpose; with the plate's outline centred under the
        panel's, a dowel bore must sit under each. CANARY: the plate mirrored must miss.
@@ -120,18 +123,35 @@ CANARY_PARTS = 5
 REACH = 0.5
 CROWD_MARGIN = 0.05
 
-# [E]: a STEP's centre of mass against its STL's. Two different questions, two tolerances.
-# SAME SOLID: all three coordinates, loosely -- a mesh inscribes every arc, so the two differ
-# by what the tessellation gives up (measured up to 0.0016 mm, on the plate's lettering).
-# SAME HAND: y alone, tightly -- a reflection in y moves the centre of mass from y to -y and
-# nothing else, and tessellation error all but cancels across the mirror plane (measured
-# 0.00003 mm at worst). The shells are the hard case: nearly symmetric, their centre of mass
-# is only 0.006 to 0.023 mm off the centre line, so opposite hands would disagree by 0.011
-# to 0.046 mm -- still 300 times the noise. COM_TELL is the least a pair in opposite hands
-# must disagree by for the comparison to count as able to tell.
+# [E]: a STEP against its STL. Two questions, two measurements.
+# SAME HAND, by SURFACES: the farthest any vertex of either file's surface stands from the
+# other file's surface. The STEP is tessellated finer than any STL here is written
+# (SURF_TESS against export tolerances of 0.03 and 0.04), so as written that distance is
+# what the meshes give up on an arc -- measured 0.0048 mm on the shells and 0.0093 on the
+# plate, 2026-11-14 -- and can never exceed the coarser tolerance: SURF_SAME. With one of
+# the two REFLECTED it is the size of whatever the solid has on one side and not the other:
+# 0.43 mm on the lite and air shells (the strip of lip between the two supercaps on a short
+# edge, which the caps' own positions end 0.5 mm farther east at the north than at the
+# south), 0.60 on the max shell (the rear art), 1.2 and 2.8 on the braces, 88.9 on the
+# plate. SURF_TELL is the least that must be for the comparison to count as able to tell a
+# hand.
+# WHY NOT THE CENTRE OF MASS, which is what this read until 2026-11-14 (y alone, to 0.001,
+# with a bar of 0.003 on how far opposite hands must disagree). A reflection negates it, so
+# it tells the hand only as well as the solid is lopsided -- and it is a SUM, so what is on
+# one side can be balanced by something else on the other. The shells' stood 0.006 to
+# 0.023 mm off the centre line when that bar was set. By `5a36638` the max shell's was at
+# 0.0029 and the lite shell's at 0.0053; the boss blends and corner webs then moved them
+# to 0.0003 and 0.0024: the self-test went red on a shell in the right hand, and the lite
+# shell was passing by 0.002. A distance between surfaces has no such cancellation: it is
+# zero only for a solid that IS its own mirror image, and then there is no hand to get
+# wrong.
+# SAME SOLID, by the centre of mass after all, in all three coordinates and loosely: a
+# second witness of a different kind, for what a vertex cannot see (a mesh with the right
+# skin and a void inside it). Measured up to 0.0016 mm apart, on the plate's lettering.
+SURF_TESS = 0.01
+SURF_SAME = 0.05
+SURF_TELL = 0.20
 COM_SAME = 0.01
-COM_HAND = 0.001
-COM_TELL = 0.003
 
 # [T]: a tooling hole is found by its size in KiCad's export, and a dowel bore under it by
 # position. The plate's bores are modelled on the holes' own coordinates, so a plate in the
@@ -255,6 +275,96 @@ def round_holes(mesh, z, trimesh):
     probe = np.array([[*f.representative_point().coords[0], z] for f in faces])
     return [(f.centroid.x, f.centroid.y, 2.0 * (f.area / np.pi) ** 0.5)
             for f, solid in zip(faces, mesh.contains(probe)) if not solid], bbox
+
+
+def off_surface(points, mesh, trimesh):
+    """How far each of `points` stands from `mesh`'s surface, mm. A point more than SURF_TELL
+    outside the mesh's bounding box is not searched for: its distance to the box is returned
+    instead, which is never more than its distance to the surface -- so the figure is exact
+    wherever it is small, and a lower bound where it is already past every bar. (The plate
+    and its mirror image do not overlap at all; searching that is a minute spent on 88.9.)"""
+    import numpy as np
+    points = np.asarray(points, dtype=float)
+    lo, hi = mesh.bounds
+    d = np.linalg.norm(np.maximum(np.maximum(lo - points, points - hi), 0.0), axis=1)
+    near = d <= SURF_TELL
+    if near.any():
+        d[near] = trimesh.proximity.closest_point(mesh, points[near])[1]
+    if not np.isfinite(d).all():
+        # a NaN compares False against every bar in [E]: it would PASS. Refuse instead.
+        raise ValueError(f"{int((~np.isfinite(d)).sum())} of {len(d)} distances to a surface "
+                         f"came back undefined -- a triangle with no area is still in the mesh")
+    return d
+
+
+def with_area(mesh, trimesh):
+    """`mesh` without its zero-area triangles. Nothing can stand off a triangle that has no
+    surface, and trimesh divides by a zero edge length looking for the closest point on one.
+    Each shell's STL carries one such triangle pair: the rim pinch check_mesh.py ledgers."""
+    keep = mesh.area_faces > 1e-12
+    return mesh if keep.all() else trimesh.Trimesh(mesh.vertices, mesh.faces[keep], process=False)
+
+
+def surface_gaps(solid, stl, trimesh):
+    """(as written, reflected): the farthest any vertex of either surface -- `solid` (OCC,
+    tessellated here) or `stl` (a mesh) -- stands from the other surface; and the same after
+    one of the two has been reflected in y, which is the reflection export_solid() makes."""
+    import numpy as np
+    verts, tris = solid.tessellate(SURF_TESS, 0.1)
+    pts = np.array([(v.x, v.y, v.z) for v in verts])
+    # process=False: this mesh is only ever measured TO, triangle by triangle; welding its
+    # vertices would be work for nothing
+    of_step = with_area(trimesh.Trimesh(pts, np.array(tris), process=False), trimesh)
+    of_stl, stl = np.asarray(stl.vertices), with_area(stl, trimesh)
+    return tuple(max(off_surface(pts * s, stl, trimesh).max(),
+                     off_surface(of_stl * s, of_step, trimesh).max())
+                 for s in (np.array([1.0, 1.0, 1.0]), np.array([1.0, -1.0, 1.0])))
+
+
+def step_vs_stl(trimesh):
+    """[E] -- every emitted solid's STEP against its own STL. Needs neither KiCad export."""
+    import fit_rules as fr
+    pre, pairs, rows = len(_ERRORS), [], []
+    for vname, v in fr.VARIANTS.items():
+        pairs.append((f"{vname} shell", ROOT / "enclosure" / v["shell_name"]))
+        if v["brace_name"]:
+            pairs.append((f"{vname} brace", ROOT / "enclosure" / "brace" / v["brace_name"]))
+    pairs.append(("pogo plate", ROOT / "enclosure" / "solar-glow-drh-pogo-testplate"))
+    for label, stem in pairs:
+        step, stl = Path(str(stem) + ".step"), Path(str(stem) + ".stl")
+        if not (step.exists() and stl.exists()):
+            err(f"{label}: {stem.name}.step / .stl are not both there -- CI emits them together")
+            continue
+        solid, mesh = load_step(step), trimesh.load(stl, force="mesh")
+        written, mirrored = surface_gaps(solid, mesh, trimesh)
+        c, m = solid.Center(), mesh.center_mass
+        com = max(abs(c.x - m[0]), abs(c.y - m[1]), abs(c.z - m[2]))
+        print(f"          {label}: surfaces {written:.4f} mm apart at most as written, "
+              f"{mirrored:.3f} with one reflected; centres of mass {com:.4f} apart")
+        if written > SURF_SAME and mirrored <= SURF_SAME:
+            err(f"{label}: the STEP's surface and the STL's stand {written:.3f} mm apart, and "
+                f"within {mirrored:.4f} once one of them is reflected -- THE TWO FILES ARE IN "
+                f"OPPOSITE HANDS")
+        elif written > SURF_SAME:
+            err(f"{label}: the STEP's surface and the STL's stand {written:.3f} mm apart "
+                f"({mirrored:.3f} with one reflected; an STL gives up {SURF_SAME} at most) -- "
+                f"they are not the same solid")
+        elif mirrored < SURF_TELL:
+            err(f"SELF-TEST: {label}: reflected, its surface stands only {mirrored:.4f} mm off "
+                f"itself at most (the bar is {SURF_TELL}) -- the solid is too nearly its own "
+                f"mirror image for this to tell a STEP and an STL in opposite hands apart")
+        elif com > COM_SAME:
+            err(f"{label}: the two surfaces agree but the centres of mass are {com:.4f} mm "
+                f"apart (({c.x:.4f}, {c.y:.4f}, {c.z:.4f}) against ({m[0]:.4f}, {m[1]:.4f}, "
+                f"{m[2]:.4f})) -- they are not the same solid")
+        else:
+            rows.append((mirrored, written, label))
+    if len(_ERRORS) == pre:
+        least = min(rows)
+        ok(f"all {len(pairs)} STEP/STL pairs are one solid in one hand: no vertex of either "
+           f"file stands more than {max(r[1] for r in rows):.4f} mm off the other's surface "
+           f"(an STL may give up {SURF_SAME}); reflected, the least any pair stands off is "
+           f"{least[0]:.3f} mm, the {least[2]} (the bar is {SURF_TELL})")
 
 
 def fit(metal_cuts, bodies):
@@ -523,39 +633,7 @@ def check(board_step, panel_step=None):
 
     # ---- [E] each STEP is its own STL, in the same hand ------------------------------
     print("[E] each STEP against its own STL")
-    pre, pairs, margins = len(_ERRORS), [], []
-    for vname, v in fr.VARIANTS.items():
-        pairs.append((f"{vname} shell", ROOT / "enclosure" / v["shell_name"]))
-        if v["brace_name"]:
-            pairs.append((f"{vname} brace", ROOT / "enclosure" / "brace" / v["brace_name"]))
-    pairs.append(("pogo plate", ROOT / "enclosure" / "solar-glow-drh-pogo-testplate"))
-    for label, stem in pairs:
-        step, stl = Path(str(stem) + ".step"), Path(str(stem) + ".stl")
-        if not (step.exists() and stl.exists()):
-            err(f"{label}: {stem.name}.step / .stl are not both there -- CI emits them together")
-            continue
-        c = load_step(step).Center()
-        m = trimesh.load(stl, force="mesh").center_mass
-        dxz, dy = max(abs(c.x - m[0]), abs(c.z - m[2])), abs(c.y - m[1])
-        mirrored = abs(c.y + m[1])                                # the y disagreement if one were reflected
-        both = f"({c.x:.4f}, {c.y:.4f}, {c.z:.4f}) against ({m[0]:.4f}, {m[1]:.4f}, {m[2]:.4f})"
-        if dxz > COM_SAME or (dy > COM_HAND and mirrored > COM_HAND):
-            err(f"{label}: the STEP's centre of mass and its STL's are {max(dxz, dy):.4f} mm "
-                f"apart ({both}) -- they are not the same solid")
-        elif dy > COM_HAND:
-            err(f"{label}: the STEP's centre of mass and its STL's differ by {dy:.4f} mm in y "
-                f"({both}) and agree if one of them is reflected -- THE TWO FILES ARE IN "
-                f"OPPOSITE HANDS")
-        elif mirrored < COM_TELL:
-            err(f"SELF-TEST: {label}: its centre of mass is only {abs(c.y):.4f} mm off the "
-                f"mirror plane, so a STEP and an STL in opposite hands would disagree by just "
-                f"{mirrored:.4f} (the bar is {COM_TELL}) -- this cannot tell them apart")
-        else:
-            margins.append(mirrored / max(dy, 1e-5))
-    if len(_ERRORS) == pre:
-        ok(f"all {len(pairs)} STEP/STL pairs are one solid in one hand (centres of mass agree "
-           f"within {COM_HAND} mm in y; in opposite hands they would be at least "
-           f"{min(margins):.0f}x farther apart)")
+    step_vs_stl(trimesh)
 
     # ---- [T] the pogo plate under the panel -----------------------------------------
     print("[T] the pogo plate vs the tooling holes in KiCad's export of the panel")

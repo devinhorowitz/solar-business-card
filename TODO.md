@@ -795,9 +795,10 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
       mirrored: the **max brace overlaps one part, L2, by 0.047 mm³** (KiCad's generic 1008 body,
       1.20 tall where the part fitted is 1.00 — the item on L2 below) and the **lite brace
       nothing**. Mirrored, they must collide: 52.8 mm³ over 33 parts and 487.6 over 28 (max),
-      52.9 over 34 and 301.5 over 28 (lite). Those are the braces at `5a36638`; the two west
-      corners cut back since (the last block of this item) will move them a little, and the
-      merge run's `handedness_drc` log has the new ones. The 53.1 / 493.9 SolidCraft first
+      52.9 over 34 and 301.5 over 28 (lite). Cutting the two west corners back (the last
+      block of this item) did not move them: the gate printed 52.833 over 33, 487.572 over 28,
+      52.933 over 34 and 301.511 over 28 on the braces at `c448408`, as it had at `5a36638`
+      — no part stands at either corner. The 53.1 / 493.9 SolidCraft first
       reported were the braces at `d060215`, before the level opening;
     - **the medallion reads correctly from behind** — DRH, No 001, and SOLAR · NFC · TITANIUM ·
       ATL GA · MMXXVI clockwise round the ring;
