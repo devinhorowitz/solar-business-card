@@ -106,7 +106,10 @@ sentence that preceded the boss and brace findings above. So [J] probes the sect
 shell: just outside each blend's circle there must be metal and just inside it air, at
 three places along the arc on every level, and the middle of each web's pocket must be
 metal. Its canary is the same section with the junctions put back the way they were --
-the blend's own region and the pocket taken out of the metal -- which must fail.
+the blend's own region and the pocket taken out of the metal -- which must fail. The BACK
+FACE has the junction too (each proud annulus against the proud frame, sixteen blends,
+fit_rules.back_blends) and [J] probes it the same way, on a cut through the frame's own
+0.15 mm of height, wherever the variant has a back face.
 
 Variant policy, stated rather than implied:
   * max / lite -- every check, parameterized (floor, cavity, screw_len, stack).
@@ -194,6 +197,10 @@ RIDGE_TOL = 0.01
 # the thinnest a blend is at the stations probed (0.13 mm, the west bosses at 0.3 of the arc).
 JUNC_PROBE = 0.06
 JUNC_AT = (0.3, 0.5, 0.7)
+# [J] on the back face: where the cut is taken, as a fraction of the frame's height measured
+# from the art field. The frame's 0.10x45 edge-break takes the outer two thirds of a 0.15
+# frame; at 0.2 of the height the outline is still the blend's own circle.
+BACK_CUT_FRAC = 0.2
 RIDGE_STEP = 0.02
 OVERLAP_EPS = 1e-3    # mm2 of plan overlap that counts as metal inside a body, not noise
 SECTION_GRID = 1e-5   # mm: snap for stitching section segments into closed outlines
@@ -998,37 +1005,44 @@ def check_variant(vname, v, fr, bp, trimesh):
     import math as _m
     from shapely.geometry import Polygon as _Poly
     pre = len(_ERRORS)
-    n_bl = n_web = 0
     blind = []
+
+    def probe_blend(b, mx, my, cuts, canary_cut, where):
+        """One blend against the sections `cuts`: metal just outside its circle, air just
+        inside, at JUNC_AT along the arc; and the canary -- `canary_cut` with the junction
+        put back sharp must lose the metal at the arc's middle."""
+        (ox, oy), r = b["O"], b["r"]
+        a0 = _m.atan2(b["F"][1] - oy, b["F"][0] - ox)
+        a1 = _m.atan2(b["T"][1] - oy, b["T"][0] - ox)
+        da = (a1 - a0 + _m.pi) % (2 * _m.pi) - _m.pi
+        at = lambda k, rr: _Pt(ox + rr * _m.cos(a0 + k * da), oy + rr * _m.sin(a0 + k * da))
+        metal_at = [at(k, r + JUNC_PROBE) for k in JUNC_AT]
+        air_at = [at(k, r - JUNC_PROBE) for k in JUNC_AT]
+        for lbl, z, metal in cuts:
+            gone = [q for q in metal_at if not metal.contains(q)]
+            full = [q for q in air_at if metal.contains(q)]
+            if gone:
+                err(f"{where}: no metal {JUNC_PROBE} mm outside its R{r:g} circle {lbl} "
+                    f"(z {z:.2f}) at board ({gone[0].x:.2f}, {gone[0].y:.2f}) -- less metal "
+                    f"than the blend the sheet calls: a tighter one, or none")
+            if full:
+                err(f"{where}: metal {JUNC_PROBE} mm INSIDE its R{r:g} circle {lbl} "
+                    f"(z {z:.2f}) at board ({full[0].x:.2f}, {full[0].y:.2f}) -- more metal "
+                    f"than the blend the sheet calls: a wider one, or one somewhere else")
+        # canary: everything between the wall, the boss and the chord from the foot to the
+        # boss taken out again
+        boss = _Pt(mx, my).buffer(fr.BOSS_R, quad_segs=64)
+        sharp = canary_cut.difference(_Poly([b["J"], b["F"], b["T"]]).difference(boss))
+        if sharp.contains(metal_at[len(metal_at) // 2]):
+            blind.append(where)
+
+    n_bl = n_web = 0
     mid = shell_cuts[1][2]
     for mx, my in fr.MOUNTS:
-        boss = _Pt(mx, my).buffer(fr.BOSS_R, quad_segs=64)
         for b in fr.boss_blends(mx, my):
             n_bl += 1
-            (ox, oy), r = b["O"], b["r"]
-            a0 = _m.atan2(b["F"][1] - oy, b["F"][0] - ox)
-            a1 = _m.atan2(b["T"][1] - oy, b["T"][0] - ox)
-            da = (a1 - a0 + _m.pi) % (2 * _m.pi) - _m.pi
-            at = lambda k, rr: _Pt(ox + rr * _m.cos(a0 + k * da), oy + rr * _m.sin(a0 + k * da))
-            metal_at = [at(k, r + JUNC_PROBE) for k in JUNC_AT]
-            air_at = [at(k, r - JUNC_PROBE) for k in JUNC_AT]
-            where = f"the blend at board ({b['J'][0]:.2f}, {b['J'][1]:.2f}), boss ({mx}, {my})"
-            for lbl, z, metal in shell_cuts:
-                gone = [q for q in metal_at if not metal.contains(q)]
-                full = [q for q in air_at if metal.contains(q)]
-                if gone:
-                    err(f"{where}: no metal {JUNC_PROBE} mm outside its R{r:g} circle {lbl} "
-                        f"(z {z:.2f}) at board ({gone[0].x:.2f}, {gone[0].y:.2f}) -- less metal "
-                        f"than the blend the sheet calls: a tighter one, or none")
-                if full:
-                    err(f"{where}: metal {JUNC_PROBE} mm INSIDE its R{r:g} circle {lbl} "
-                        f"(z {z:.2f}) at board ({full[0].x:.2f}, {full[0].y:.2f}) -- more metal "
-                        f"than the blend the sheet calls: a wider one, or one somewhere else")
-            # canary: the junction put back sharp -- everything between the wall, the boss
-            # and the chord from the foot to the boss taken out again
-            sharp = mid.difference(_Poly([b["J"], b["F"], b["T"]]).difference(boss))
-            if sharp.contains(metal_at[len(metal_at) // 2]):
-                blind.append(where)
+            probe_blend(b, mx, my, shell_cuts, mid,
+                        f"the blend at board ({b['J'][0]:.2f}, {b['J'][1]:.2f}), boss ({mx}, {my})")
         for pocket, _cover in fr.boss_webs(mx, my):
             n_web += 1
             q = pocket.representative_point()
@@ -1039,6 +1053,27 @@ def check_variant(vname, v, fr, bp, trimesh):
                         f"boss and the recess wall is still in the solid")
             if mid.difference(pocket.buffer(0.01)).contains(q):
                 blind.append(where)
+    # THE BACK FACE (2026-11-14): each proud annulus runs into the proud frame through the
+    # same blend. Cut through the frame's own height, above its edge-break (the break takes
+    # the outer 0.10 of the 0.15, so the base of it is the only level where the outline is
+    # the blend's own circle).
+    n_back = 0
+    border = v["border_h"]
+    if border > 0:
+        zb = -BACK_CUT_FRAC * border
+        back_cut = [("through the back frame", zb, section(shell, zb, trimesh))]
+        if back_cut[0][2].is_empty:
+            err(f"the shell has no metal at z {zb:.3f} -- the back frame is not where "
+                f"VARIANTS puts it ({border} proud), so the back blends cannot be checked")
+        else:
+            for mx, my in fr.MOUNTS:
+                for b in fr.back_blends(mx, my):
+                    n_back += 1
+                    probe_blend(b, mx, my, back_cut, back_cut[0][2],
+                                f"the BACK blend at board ({b['J'][0]:.2f}, {b['J'][1]:.2f}), "
+                                f"mount ({mx}, {my})")
+            if n_back == 0:
+                err("fit_rules.back_blends() returned no blend on a variant with a back face")
     if blind:
         err(f"SELF-TEST: with the junction put back sharp, the probe still reads metal at "
             f"{blind[0]}" + (f" and {len(blind) - 1} more" if len(blind) > 1 else "") +
@@ -1051,8 +1086,11 @@ def check_variant(vname, v, fr, bp, trimesh):
         ok(f"{n_bl} blends are in the metal as the arcs fit_rules lays out ({said}: metal "
            f"{JUNC_PROBE} mm outside "
            f"each circle, air {JUNC_PROBE} mm inside it, at {len(JUNC_AT)} places on "
-           f"{len(shell_cuts)} levels) and {n_web} corner webs are solid; the same section with "
-           f"each junction put back sharp fails all {n_bl + n_web}, as it must")
+           f"{len(shell_cuts)} levels) and {n_web} corner webs are solid"
+           + (f"; {n_back} back-face blends at R{fr.BLEND_R:g} likewise, on a cut through the "
+              f"frame" if n_back else "; no back face on this variant")
+           + f"; the same sections with "
+           f"each junction put back sharp fail all {n_bl + n_web + n_back}, as they must")
 
     return len(_ERRORS), len(_WARNS)
 

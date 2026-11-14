@@ -340,7 +340,8 @@ that can's own bay clearance, since its body tolerance lands on the edge the bos
 keeping ≥ 80.3 % of its M2 thread annulus. Each runs into the lip's wall through a modeled concave
 blend (twelve: ten R2.00, two R1.00 beside the ferrite sheet), and the four corner ones are solid
 to the recess wall (2026-11-14; until then those junctions were sharp corners in the STEP, and
-each corner boss stood beside a 0.17 mm slot no cutter could enter). Retention is **eight M2×3 slotted brass screws**, not a press
+each corner boss stood beside a 0.17 mm slot no cutter could enter). On the back, each boss's
+proud annulus runs into the frame through the same R2.00 blend (sixteen). Retention is **eight M2×3 slotted brass screws**, not a press
 fit; the head is Ø3.0 and the tip lands **flush** in a Ø3.0 back spotface.
 
 **Measured independently on 2026-11-12, and two things on this page were not true of the parts.**

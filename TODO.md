@@ -769,10 +769,11 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
     a wall at 49.550.
   - **The four downward faces at seat level are gone** (24.896 mm², max and lite; the air frame had
     them too).
-  - **The max shell STEP imports with no edge repair.** Expect **28,512 edges, none shared by more
-    than two faces; 9,647 faces, 35 of them under 0.001 mm²**; no upward faces at z +0.02. _(Counts
+  - **The max shell STEP imports with no edge repair.** Expect **30,914 edges, none shared by more
+    than two faces; 10,453 faces, 35 of them under 0.001 mm²**; no upward faces at z +0.02. _(Counts
     by OCC on a local build with CI's pins, 2026-11-14, of the shell with each boss joined to the
-    wall — the last block of this item. They were 28,544 / 9,654 / 36 with the coil relief alone,
+    wall and each back annulus to the frame — the last two blocks of this item. They were
+    28,512 / 9,647 / 35 with the cavity's junctions alone; 28,544 / 9,654 / 36 with the coil relief alone,
     the shell at `5a36638`; 28,526 / 9,648 / 36 on the STEP built at `a4f951e`, which is what the
     2026-11-14 ArtCraft record below measured; and 28,403 / 9,626 / 82 at `9a90a36`, which is what
     the 2026-11-13 MEASURED block reads.)_
@@ -806,7 +807,8 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
       (−4.9, −20.0) and (55.7, −85.0); the plate is un-centred, a board point (x, y) is at
       (x, −y)), and its title and net labels reading correctly from above;
     - the max shell STEP's counts are what they were — the reflection changes no face, edge or
-      volume (**5307.193 mm³** by OCC with each boss joined to the wall; 5289.748 at `5a36638`,
+      volume (**5312.813 mm³** by OCC with each boss joined to the wall and each back annulus to
+      the frame; 5307.193 with the cavity's junctions alone; 5289.748 at `5a36638`,
       with the coil relief alone; 5289.905 at `a4f951e`; 5293.129 was `9a90a36`'s).
     `scripts/handedness_drc.py` measures the first and third of these on every CI run, in the
     kernel that wrote the files; this is the check in one that did not.
@@ -1193,9 +1195,57 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
     MODELED: 10× R2.00 + 2× R1.00 BLEND …"), draws them on the plan with a stub of the wall each
     runs into — hidden behind a floor, visible on the open frame — and no longer calls those
     corners sharp. The tool rule stands for whatever concave corner the model still leaves square.
-  - **Not done, and DRH's to ask for:** the BACK face has the same junction. Each r2.60 annulus
-    meets the proud frame at a sharp inside corner, 0.15 tall, left to the Ø1.0 back tool — on the
-    side of the shell that is seen. Nothing here touches it.
+  **…AND EACH ANNULUS JOINED TO THE FRAME, ON THE BACK, 2026-11-14 (DRH: "give the back face the
+  same blends") — SO THE MAX AND LITE SHELLS CHANGED ONCE MORE.** The air frame has no back face
+  and the braces sit in the cavity, so those three solids are as the block above leaves them.
+  Board coordinates; this repo's instruments, on a local build with CI's pins — none of it is a
+  SolidCraft figure yet.
+  - **Sixteen blends, all R2.00.** On the back each mount carries a proud annulus (r 2.60, as
+    tall as the frame, 0.15), and the annulus crossed the inner edge of the proud frame — the
+    edge of the recessed art field, at x 2.05 and 48.75, y 2.05 and 86.85 — at a sharp inside
+    corner of 71.6°, left to the back tool's radius on the side of the shell that is seen. Two
+    a boss: a mid-span boss crosses its long edge twice, a corner boss crosses both edges it
+    sits beside. Each is a modelled concave blend now, a true cylinder as tall as the frame,
+    laid out as the cavity's are (`fit_rules.back_blends()`, the same `_blend_at`) and set the
+    same 0.002 mm past tangent. **That offset is a crease, on both faces, and a measurement
+    will find it:** a blend does not meet its neighbours at a true tangent but at 2.56° to the
+    wall and 3.41° to the boss or annulus (3.62° and 4.26° at the cavity's two R1.00). It is
+    0.002 mm of metal, there so that a kernel is handed a crossing and not a tangency. Nothing
+    limits a radius on the back — no part, no coil, no ferrite — so none is held to R1.00. Axes: at the corner boss at (2.87, 2.87), (4.048, 7.315)
+    and (7.315, 4.048), and the same at the other three corners by symmetry — (46.752, 7.315)
+    and (43.485, 4.048); (4.048, 81.585) and (7.315, 84.852); (46.752, 81.585) and
+    (43.485, 84.852). At the mid-span bosses, x 4.048 on the west and 46.752 on the east, at
+    y 24.185, 33.075, 55.825 and 64.715. Each meets the frame 1.977 mm beyond the old corner
+    and adds 0.667 mm² in plan, 10.678 in all.
+  - **The edge-break is the back's own.** The blends go on before the deburr, so the frame's
+    0.10×45° break runs round frame, blend and annulus as one edge. No cone is cut for it.
+  - **The reeded fields give way (max only).** Twelve of the sixteen stand in a fin field. The
+    pour wraps each at `FIN_BOSS_CLR` 0.40, as it wraps an annulus, so the valley's edge runs
+    round boss and blend as one curve and the ribs beside a boss end a little shorter: still
+    38 ribs, rib area 979.398 → 974.016 mm², valley 2456.246 → 2443.553. No rib stands closer
+    than 1.189 mm to a blend.
+  - **The numbers.**
+    - Max STEP: **30,914 edges, 10,453 faces**, 35 under 0.001 mm², none shared
+      by more than two faces; **5312.813 mm³** (was 28,512 / 9,647 / 35 / 5307.193). STL
+      5312.64. Of the 806 faces more, 32 are the blends and their breaks and the rest are the
+      valleys' walls where they now run round a blend.
+    - Lite STEP: **1,103 edges, 415 faces**, 35 under 0.001 mm²; **3935.970 mm³** (was 1,023 /
+      383 / 35 / 3934.199): 32 faces more, a cylinder and a break for each blend. STL 3935.83.
+    - `scripts/assembly_drc.py` **[J]** probes the sixteen on a cut through the frame's height,
+      as it probes the cavity's twelve: metal 0.06 mm outside each blend's circle, air 0.06 mm
+      inside it, at three places along the arc, with the junction put back sharp as its canary.
+      `check_consistency` **[8]** counts sixteen, all at `BLEND_R`, and holds the pour to
+      `FIN_BOSS_CLR` off them.
+  - **The sheet.** The plan's back outline was a rounded rectangle with eight full circles
+    drawn across it — two primitives, the outline of neither. It is now the inner outline of
+    the proud metal itself (`fit_rules.back_proud_poly()`: frame, annuli and blends, one
+    piece), and the rear-art block says "BOSS ANNULUS TO FRAME (PLAN): 16× R2.00 CONCAVE BLEND,
+    FRAME HEIGHT, MODELED." on the max and lite sheets. The air sheet is unchanged to the byte.
+  - **What the first build got wrong.** The pour's keep-out round each blend was taken as it
+    came from the blend metal's outline, which is drawn far finer than the circles beside it,
+    and every vertex of a keep-out becomes a wall face of the valley: the max shell came out at
+    14,851 faces and a 62 MB STEP, valid, with every gate green. Face count is ungated on
+    purpose. The keep-out is drawn at the circles' own chord now (`_FIN_ARC`).
 
 - [ ] **[SOURCING — lite/air] Pick the thin supercap MPN**
   _(2026-08-07, opened with the three-variant round.)_ `part_heights.SUPERCAP_H_THIN = 1.00`

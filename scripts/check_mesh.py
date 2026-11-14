@@ -97,7 +97,13 @@ BASELINE = {
     # slots beside the corner bosses, 1.370 mm2: 9.641 mm2 x 1.80 = 17.35 predicted, 17.59
     # measured. The 0.24 over is the lip's and the bosses' edge-breaks along the stretches
     # that are inside metal now. bbox, seam and facets unchanged. Triangles 48,801, ungated.
-    volume_mm3=5307.10, bbox=(-26.35, -45.4, -0.15, 26.35, 45.4, 3.4),
+    # re-ledgered 2026-11-14 (later still), 5307.10 -> 5312.64: each back annulus is joined to
+    # the proud frame (fit_rules.back_blends). Sixteen R2.00 blends, 10.678 mm2 x 0.15 = 1.60,
+    # and the reeded valleys give way to them (fin_runs): 12.693 mm2 less valley x 0.60 = 7.62,
+    # less the rib metal that went with it, 5.382 mm2 x 0.70 = 3.77. 1.60 + 7.62 - 3.77 = 5.45
+    # predicted, 5.54 measured (the rest is edge-break). bbox, seam and facets unchanged.
+    # Triangles 52,505, ungated.
+    volume_mm3=5312.64, bbox=(-26.35, -45.4, -0.15, 26.35, 45.4, 3.4),
         max_boundary_edges=1, max_open_len_mm=0.001, max_degenerate=3),
     "solar-glow-drh-pogo-testplate.stl": dict(
         # re-ledgered 2026-11-13: the y range flips, -10.4..99.3 -> -99.3..10.4, and nothing
@@ -297,7 +303,10 @@ BASELINE = {
         # re-ledgered 2026-11-14 (later), 3922.21 -> 3934.15: the twelve blends and four webs
         # that join each boss to the wall, 9.641 mm2 x 1.22 = 11.76 predicted, 11.94 measured
         # (the rest is buried edge-break, as on max). bbox, seam and facets unchanged.
-        volume_mm3=3934.15, bbox=(-26.35, -45.4, -0.15, 26.35, 45.4, 2.42),
+        # re-ledgered 2026-11-14 (later still), 3934.15 -> 3935.83: the sixteen back blends,
+        # 10.678 mm2 x 0.15 = 1.60 predicted, 1.68 measured. No rear art here, so nothing
+        # gives way. bbox, seam and facets unchanged.
+        volume_mm3=3935.83, bbox=(-26.35, -45.4, -0.15, 26.35, 45.4, 2.42),
         max_boundary_edges=1, max_open_len_mm=0.001, max_degenerate=3),
     "solar-glow-drh-frame-air-316L.stl": dict(
         # air: OPEN frame, no floor -- walls + recess + 8 bosses only, z 0..1.80 exactly

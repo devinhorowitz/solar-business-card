@@ -333,6 +333,7 @@ from fit_rules import (lip_bands,
                        BOSS_CLR, THREAD_KEEP, export_solid,
                        boss_cuts as _boss_cuts, boss_coil_cuts as _boss_coil_cuts,
                        boss_blends as _boss_blends, boss_webs as _boss_webs,
+                       back_blends as _back_blends,
                        void_as_cut as _void_as_cut, BLEND_R as _BLEND_R,
                        recess_poly as _recess_poly, TOOL_R as _TOOL_R,
                        fin_region as _fin_region, fin_ribs as _fin_ribs,
@@ -718,8 +719,21 @@ def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pill
         for mx, my in mounts:
             bwp = bwp.moveTo(wx(mx), wy(my)).circle(boss_r)
         res = res.union(bwp.extrude(border_h))
-        # round-tool relief on the BACK (OFF by default, same reason as the cavity): the annulus-frame
-        # junctions are left sharp so the back stays analytic; the finisher leaves its own radius.
+        # EACH ANNULUS RUNS INTO THE FRAME THROUGH A BLEND (2026-11-14, fit_rules "...and on the
+        # BACK FACE"). The annulus crossed the frame's inner edge at a sharp inside corner, two
+        # per mount, on the side of the shell that is seen. Same construction as the cavity's
+        # blends -- a straight-sided cover as tall as the frame, less a TRUE CYLINDER -- and
+        # unioned HERE, before the holes, the spotfaces and the deburr: the deburr's chamfer
+        # then breaks frame, blend and annulus as one outline, so the blend needs no cone of
+        # its own.
+        for mx, my in mounts:
+            for _b in _back_blends(mx, my):
+                _sol = _poly_solid(_b["cover"], -border_h, border_h)
+                res = res.union(_sol.cut(
+                    cq.Workplane("XY").workplane(offset=-border_h - 0.01)
+                      .moveTo(wx(_b["O"][0]), wy(_b["O"][1])).circle(_b["r"]).extrude(border_h + 0.02)))
+        # round-tool relief on the BACK (OFF by default): superseded at the mounts by the blends
+        # above; kept for the experiment flags (ribs, braces), whose junctions are still sharp.
         if tool_relief:
             for poly in _relief_for(_back_islands(), BACK_TOOL_R):
                 res = res.union(_poly_solid(poly, -border_h, border_h))
@@ -916,7 +930,9 @@ print(f"cavity={cavity} general (max; per-variant from fit_rules.VARIANTS); U7 p
       f"medallion Ø0.4 coin + Ø0.3 rest (islands, vertical walls; crests ON the bearing plane -- lap after blast)  "
       f"deburr: outer rim {edge_ease}, ends {EDGE_BREAK}  reflector-frame {GLOW_WIN[2]-GLOW_WIN[0]:.1f}x{GLOW_WIN[3]-GLOW_WIN[1]:.1f} laser-marked (full floor under it)  "
       f"boss junctions: R{_BLEND_R:g} blends x{sum(len(_boss_blends(mx, my)) for mx, my in mounts)}, "
-      f"webs x{sum(len(_boss_webs(mx, my)) for mx, my in mounts)} (true cylinders; every other concave corner left sharp, the round tool leaves its radius)")
+      f"webs x{sum(len(_boss_webs(mx, my)) for mx, my in mounts)}, "
+      f"back blends x{sum(len(_back_blends(mx, my)) for mx, my in mounts)} where there is a back face "
+      f"(true cylinders; every other concave corner left sharp, the round tool leaves its radius)")
 for _vn, name, fl, wl, bd, cav_v, sl, mk, fn, gm, mat in jobs:
     del _DEBURR_SKIPS[:]
     solid = build(floor=fl, wall_th=wl, border_h=bd, cavity=cav_v, screw_len=sl,

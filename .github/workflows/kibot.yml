@@ -247,14 +247,13 @@ jobs:
       # dowel bore under each of the PANEL's two tooling holes (the panel built earlier in
       # this job -- it is not committed, so this is the only place that check can run).
       # Calibrated on the solids it exists to catch: it reproduces the independent
-      # measurement to the digit. ~10 s for the exports, ~2 min for the check. Fails BEFORE
-      # the commit-back, so a solid in the wrong hand cannot land.
-      # About a minute of the check is [E] (2026-11-14): it holds each STEP's SURFACE to its
-      # STL's, where it used to compare centres of mass -- a sum, which the boss blends
-      # balanced to 0.0003 mm on the max shell, so the gate could no longer tell that shell
-      # from its mirror image and said so. The surface search is trimesh's closest-point
-      # query: it needs rtree (installed by the mesh gate above) and scipy (a declared
-      # dependency of the pinned cadquery).
+      # measurement to the digit. The whole step measured 68 s on 2026-11-14, exports
+      # included. Fails BEFORE the commit-back, so a solid in the wrong hand cannot land.
+      # [E] holds each STEP's SURFACE to its STL's (2026-11-14), where it used to compare
+      # centres of mass -- a sum, which the boss blends balanced to 0.0003 mm on the max
+      # shell, so the gate could no longer tell that shell from its mirror image and said
+      # so. The surface search is trimesh's closest-point query: it needs rtree (installed
+      # by the mesh gate above) and scipy (a declared dependency of the pinned cadquery).
       - name: Gate the hand the solids are written in
         run: |
           docker run --rm -u "$(id -u):$(id -g)" -e HOME=/tmp -v "$PWD":/wk -v "$RUNNER_TEMP":/out -w /wk \
