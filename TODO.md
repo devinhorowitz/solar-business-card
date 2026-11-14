@@ -997,6 +997,75 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
     the two outlines — so every brace-to-shell figure above stands. Shells, lite brace and shim
     are as that round's merge run left them (`a4f951e`).
 
+  **MEASURED 2026-11-14 on `4b49641` — the local ArtCraft review (SolidCraft 0.40.1, CADCraft,
+  PdfCraft; `kicad-cli` 10.0.3 for the board export only).** Every measured file is identical at
+  `9e335ef`. _(The box above stays open: releasing an order is DRH's call. The full report, every
+  command, raw outputs and canaries are kept outside the tree, beside the earlier reviews'.)_
+  Measured unless marked _inferred_; every instrument was made to fail first. The canaries:
+  a mirrored brace collides; a brace shifted 0.30 east overlaps 7.86 mm³; the `9a90a36` shell reads
+  its old 0.85 bearing; a planted false sheet sentence reads back false; a board lowered into the
+  recess stops at the press fit; a 0.2 × 0.2 square subtracted from the shim drops its area by
+  exactly 0.04.
+  - **Disagree or new — DRH's to weigh:**
+    - **Coil stand-off 0.8772, not 1.000** (max and lite). The nearest metal to LA/LB copper is the
+      top edge of the east mid-span boss (47.93, 60.27), from board (47.180, 57.781) at z seat −
+      0.10 to copper at (46.929, 56.947). The east lip is 1.0026 from the copper's x-max in plan,
+      which agrees with `COIL_CLR` as a lip rule.
+    - **R1.0 closest approach 0.0462, not 0.048** (max and lite): from the brace vertex at
+      (49.109, 31.404) to the fillet of the east mid-span boss-to-wall junction, axis (48.550,
+      32.176). **What R1.25 first touches: the four mid-span junctions**, overlapping 0.1467 mm³
+      (lite) and 0.2217 (max).
+    - **The ferrite channel's east ridge (x 49.10–49.50) ends in ~45° resin wedges** at y ≈ 31.40
+      and ≈ 57.50, max and lite. It is 0.2015 thick 0.19 from the tip, and the last facet is 0.009
+      off the channel wall. It is the channel's own wall, so it falls inside the stated exception;
+      whether a tapering tip counts as "a wall under 0.10" is DRH's call. The 0.4632 neck is
+      unchanged.
+    - **Max STEP: 28,525 edges in SolidCraft's kernel**, against 28,526. Faces agree (9,648, 36 under
+      0.001 mm²); none is shared by more than two faces. SolidCraft lists no zero-length edge;
+      there is a vertex at (27.075, 0.785), z 2.65. _Inferred:_ the one-edge difference is that
+      degenerate seam.
+    - **Max sheet note 6, "FLOOR IS A TRUE 1.00, UNIFORM":** the cavity-side floor is one face at
+      z 1.000, but the metal under it is 0.40 at the reeded valleys (1476.85 mm²) and 0.55 under the
+      coin. The sheet's own rear-art block says 0.40 web.
+    - **"STEPS BLEND AT R1.00"** fits 1.000 / 1.10 / 0.89 through facet vertices. The R16 step and
+      both south-lip ends also carry 0.005–0.06 micro-steps.
+    - **Air frame, cavity-wall resting break at y 49.0 (C24 band): 0.092 × 45°**, not 0.10.
+    - **Five inside corners SolidCraft cannot fillet at R1.0:** four 61–76° wedges where a corner
+      boss meets its relief, by the recess line, and one 149° corner at (27.10, 0.56). All are ≥ 1.4
+      from the brace; each envelope corner is 0.79 from its bore's axis. _Inferred_ clear.
+    - **L2 0.0466 holds only with the repo's card-underside seating.** With the brace mated to
+      KiCad's laminate (KiCad 10.0.3 puts parts 0.085 off it) it is 0.1658.
+    - **Shim datum coverage reads 0.4–2.6 points off** (SC1 E 92.4 against 95.0). The plate's
+      facing edges are 0.0999–0.1092 from KiCad's can bodies and slightly non-parallel.
+  - **Agree:**
+    - Volumes: all six STEPs to the last digit.
+    - The hand: L2, and the four mirrored figures (487.5719/28, 52.8334/33, 301.5107/28,
+      52.9328/34).
+    - Supercap to boss: no overlap on any shell; caps 0.7500 off metal. With every pair checked on
+      the full max shell, the only overlaps are the PCB press fit (5.9307 mm³) and L2.
+    - No brace-to-shell overlap; no seat-level downward faces; old rim pinch gone; the 0.0068 wall
+      gone.
+    - Six bores R1.000 at the listed centres; flats 1.475–1.676 and bore edges 1.7536–2.0296 from
+      the screw axes.
+    - Air frame: resting break and the eight 45° feet.
+    - Medallion and pogo plate read correctly.
+    - S2: every max-material envelope 0.1500 clear, sharp and at R1.0, on all three shells.
+    - Lips: east 1.25 flat from 49.6497 with one 0.10 × 45° break at every y; west
+      2.50 / 2.3214 / 2.2514; south and north 2.00 with no lip beside a can; a break on every lip
+      edge.
+    - Rim, mouth and frame facets; recess 50.70 × 88.80.
+    - C24 0.2962 in plan.
+    - Shim: 9 contours, 969.2317 mm², one piece, no pad or body overlap, east edge 49.50.
+    - Brace sheets: 12.400 channel, 14.0666 to the nearest tab, both note-8 lists exact. Max sheet:
+      island 0.5494, 19 ribs at 1.399.
+    - Masses: 23.434 / 17.377 / 7.820 / 2.205 / 1.306 g.
+  - **Not measured:**
+    - The max brace swept into the full max shell: SolidCraft refuses it (tessellation budget). The
+      section proxy clears.
+    - The full-board copper export with zones: `kicad-cli` 10.0.3 segfaults.
+    - The R1.0 sweeps stop on a mesh-tolerance contact (0.105). The exact seated pose shows no
+      overlap, so the sweep is not decisive.
+
 - [ ] **[SOURCING — lite/air] Pick the thin supercap MPN**
   _(2026-08-07, opened with the three-variant round.)_ `part_heights.SUPERCAP_H_THIN = 1.00`
   is **PROVISIONAL — DRH's working number, no MPN, no datasheet behind it**, unlike every

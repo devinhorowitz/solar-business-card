@@ -34,8 +34,11 @@ enclosure drawings were hand-restated and quietly went on describing a part that
 changed underneath them.
 
 CAVEATS, because a render invites more trust than it has earned:
-  * B-side parts are drawn as bounding boxes -- exact for the supercap cans, slightly
-    conservative for small passives.
+  * Every fitted B-side part that carries a 3D model is drawn -- all of them, read from the
+    board by board_parts.bodies(), never from a list typed here -- as its model's bounding
+    box, at the height enclosure/part_heights.py gives it, in the colour the model itself
+    carries. A box, not the model: exact for the supercap cans, a plain block for a passive
+    (no terminations) or an IC (no leads).
   * This is VTK Phong shading, NOT the raytracer. It is a fit and material check; the
     photographic article is what scripts/render.py produces into Generated/docs/.
   * The screwdriver slot is drawn as a recessed element rather than cut, because
@@ -85,7 +88,6 @@ MASK    = (0.075, 0.075, 0.080)              # matte black soldermask
 SOLAR   = (0.045, 0.055, 0.090)              # near-black, hint of blue
 SILVER  = (0.780, 0.790, 0.810)
 BRASS   = (0.78, 0.60, 0.24)
-IC      = (0.100, 0.100, 0.105)
 
 
 def poly_prism(shape, z0, dz):
@@ -461,8 +463,59 @@ def part_boxes(plist, refs, zbase, up=True):
 
 solar_refs = {r for r, *_ in front if r.startswith("PV")}
 solar_pds = part_boxes(front, solar_refs, Z_FRONT)        # stand on the show face
-cap_pds = part_boxes(back, {"SC1", "SC2", "SC3", "SC4"}, Z_BOARD, up=False)
-ic_pds = part_boxes(back, {"U1", "U7", "U8", "U6", "U9"}, Z_BOARD, up=False)
+
+# ---- every B-side body, from the board ------------------------------------------------
+# Until 2026-11-14 this was two typed lists: the four supercaps, and five ICs. Nothing else
+# on the back was drawn at all -- 37 of the 46 fitted, modelled parts, among them every
+# passive, three ICs (U3, U5, U10) and the four amber LEDs the card exists to drive -- so the
+# explode and the card flip showed bare lands where those parts sit. Nothing had FAILED: the
+# lists were simply never extended, while the docstring above went on saying "B-side parts are
+# drawn". DRH saw it in the exploded still. A typed list of refdes is a copy of the board,
+# and the copy is the failure mode (CLAUDE.md), so there is no list now: whatever the board
+# carries on its back with a model is drawn, and a part added tomorrow appears by itself.
+#
+# Height is part_heights' (it raises on a refdes it does not know -- no default, which is how
+# a wrong height once passed for a body; the old lists drew anything without one at 1.70). Colour is the model's own (bp.model_color): the same
+# value scripts/part_colors.py gates for the project's models and KiCad's library ships in
+# the stock ones. One exception, stated: the supercap cans keep SILVER, lighter than the
+# aluminium the model carries, because this is Phong shading and a 58 % grey under it reads
+# as plastic. (spec, power) is the can's or the moulded-body default; nothing else varies.
+from part_heights import part_height as _part_height
+
+
+def _back_bodies():
+    """[(polydata, rgb, spec, power)] for every fitted B-side part with a model."""
+    out, drawn = [], []
+    for ref, body, model in bp.bodies("B"):
+        x0, y0, x1, y1 = body.bounds
+        can = ref.startswith("SC")
+        # a supercap's height is the VARIANT's (part_heights gives None for it: 1.70 on max,
+        # the thin can on lite and air), and this script draws the max shell
+        hh = _V["cap_h"] if can else _part_height(ref)
+        if not hh:
+            raise SystemExit(f"{ref}: no height to draw it at (enclosure/part_heights.py)")
+        pd = poly_prism(sbox(x0, y0, x1, y1), Z_BOARD - hh, hh)
+        if can:
+            out.append((pd, SILVER, 0.75, 60))
+        else:
+            out.append((pd, bp.model_color(model), 0.22, 18))
+        drawn.append(ref)
+    modelled = {r for r, _p, _h, src in back if src == "model"}
+    missing = sorted(modelled - set(drawn))
+    if missing:
+        # bodies() leaves out only a `dnp` footprint; say so rather than drop one quietly
+        print(f"  not drawn (dnp, by design -- the assembled board has no such part): "
+              f"{', '.join(missing)}")
+    pads_only = sorted(r for r, _p, _h, src in back if src == "pads")
+    print(f"B side: {len(drawn)} bodies drawn of {len(modelled)} modelled parts; "
+          f"{len(pads_only)} footprints are bare lands by design ({', '.join(pads_only)})")
+    if not drawn:
+        raise SystemExit("no B-side body was read from the board -- the assembly views would "
+                         "show a bare card")
+    return out
+
+
+body_parts = _back_bodies()
 
 # M2x3 SLOTTED brass. Head sized to the back spotface, CBORE_D = 3.0 -- the shell's own
 # constant -- rather than the Ø3.7 pan head first drawn. The design notes cap it at
@@ -542,8 +595,7 @@ groups["shell"] = [actor(shell_pd, TI, spec=0.55, power=42)]
 groups["brace"] = [actor(brace_pd, RESIN, spec=0.12, power=8)]
 groups["board"] = ([textured_back(actor(board_pd, MASK, spec=0.30, power=26))]
                    + [actor(p, SOLAR, spec=0.42, power=48) for p in solar_pds]
-                   + [actor(p, SILVER, spec=0.75, power=60) for p in cap_pds]
-                   + [actor(p, IC, spec=0.22, power=18) for p in ic_pds])
+                   + [actor(p, rgb, spec=sp, power=pw) for p, rgb, sp, pw in body_parts])
 groups["ferrite"] = [actor(ferrite_pd, FERRITE, spec=0.06, power=6)]
 groups["screw"] = []
 for k, pd, mx, my in screws:
@@ -896,8 +948,7 @@ _board_actor = textured(_mat(board_pd, MASK, 0.85, 0.30, 26, 0.16))
 card_flip([_mat(shell_pd, TI, 0.85, 0.55, 42, 0.16), _mat(brace_pd, RESIN, 0.85, 0.12, 8, 0.16),
            _board_actor]
           + [_mat(p, SOLAR, 0.85, 0.42, 48, 0.16) for p in solar_pds]
-          + [_mat(p, SILVER, 0.85, 0.75, 60, 0.16) for p in cap_pds]
-          + [_mat(p, IC, 0.85, 0.22, 18, 0.16) for p in ic_pds]
+          + [_mat(p, rgb, 0.85, sp, pw, 0.16) for p, rgb, sp, pw in body_parts]
           + [_mat(pd, (0.22, 0.16, 0.07) if k == "slot" else BRASS, 0.85,
                   0.20 if k == "slot" else 0.70, 12 if k == "slot" else 55, 0.16)
              for k, pd, _mx, _my in screws],
