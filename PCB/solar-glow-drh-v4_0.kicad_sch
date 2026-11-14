@@ -21265,7 +21265,7 @@
 				)
 			)
 		)
-		(property "Datasheet" "datasheets/U3  ADXL367BCCZ-RL7  $7.50.pdf"
+		(property "Datasheet" "datasheets/U3  ADXL367BCCZ-RL7  $8.50.pdf"
 			(at 350.52 38.1 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -22632,7 +22632,7 @@
 				)
 			)
 		)
-		(property "Datasheet" "datasheets/U7  MB85RC512TYPN-GS-AWEWE1  $10.19.pdf"
+		(property "Datasheet" "datasheets/U7  MB85RC512TYPN-GS-AWEWE1  $7.92.pdf"
 			(at 855.98 372.11 0)
 			(hide yes)
 			(show_name no)

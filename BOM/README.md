@@ -9,7 +9,7 @@
 > Refresh: `python3 BOM/check_stock.py` (needs `DIGIKEY_CLIENT_ID`,
 > `DIGIKEY_CLIENT_SECRET`, `MOUSER_PART_API_KEY` in the environment; ~1 min).
 
-**Checked: 2026-11-14 01:59 UTC** · DigiKey Product Information v4 + Mouser Search API, queried by MPN (stored distributor P/Ns are shown as found live, not trusted from the sheet).
+**Checked: 2026-11-14 04:03 UTC** · DigiKey Product Information v4 + Mouser Search API, queried by MPN (stored distributor P/Ns are shown as found live, not trusted from the sheet).
 
 **27 of 30 lines fully available** · 0 on substitute only · **3 dead (❌)** · 0 unverifiable this run · 0 manual-order.
 
@@ -21,13 +21,13 @@
 | ✅ | FB1 | 1 | Murata | `BLM18PG221SN1D` | `490-5221-1-ND` | DigiKey | Active | 183,329 | $0.14 |
 | ✅ | C25 | 1 | Samsung Electro-Mechanics | `CL31A226KOCLNNC` | `1276-1803-1-ND` | DigiKey | Active | 29,798 | $0.57 |
 | ✅ | L2 | 1 | Murata | `DFE252010F-100M=P2` | `490-13039-1-ND` | DigiKey | Active | 10,379 | $0.25 |
-| ✅ | Q2 | 1 | Diodes Incorporated | `DMG1012T-7` | `DMG1012T-7DICT-ND` | DigiKey | Active | 109,819 | $0.82 |
+| ✅ | Q2 | 1 | Diodes Incorporated | `DMG1012T-7` | `DMG1012T-7DICT-ND` | DigiKey | Active | 109,969 | $0.82 |
 | ✅ | RN2 | 1 | Panasonic | `EXB-24V472JX` | `Y5472CT-ND` | DigiKey | Active | 39,387 | $0.10 |
 | ✅ | RN1 | 1 | Panasonic | `EXB-28V151JX` | `Y7151CT-ND` | DigiKey | Active | 94,325 | $0.10 |
 | ✅ | C11 | 1 | Murata | `GCM155R71C224KE02D` | `490-10671-1-ND` | DigiKey | Active | 490 | $0.11 |
-| ✅ | C24 | 1 | Murata | `GCM155R71H103KA55D` | `490-4762-1-ND` | DigiKey | Active | 982,710 | $0.10 |
+| ✅ | C24 | 1 | Murata | `GCM155R71H103KA55D` | `490-4762-1-ND` | DigiKey | Active | 985,733 | $0.10 |
 | ✅ | C23 | 1 | Murata | `GRM188Z71E225ME43D` | `490-GRM188Z71E225ME43DCT-ND` | DigiKey | Active | 276,610 | $0.18 |
-| ✅ | C26, C27 | 2 | Murata | `GRM319R61E106KA12D` | `490-5525-1-ND` | DigiKey | Active | 233,013 | $0.47 |
+| ✅ | C26, C27 | 2 | Murata | `GRM319R61E106KA12D` | `490-5525-1-ND` | DigiKey | Active | 229,013 | $0.47 |
 | ✅ | C1, C3, C5, C6, C8, C12, C28, C29 | 8 | Murata | `GRT155R71H104KE01D` | `490-GRT155R71H104KE01DCT-ND` | DigiKey | Active | 1,288,300 | $0.11 |
 | ✅ | C22 | 1 | Murata | `GRT188R71E105KE13D` | `490-GRT188R71E105KE13DCT-ND` | DigiKey | Active | 4,280 | $0.14 |
 | ✅ | C4, C13 | 2 | Murata | `GXT188R61C106KE13D` | `490-GXT188R61C106KE13DCT-ND` | DigiKey | Active | 5,393 | $0.37 |
@@ -62,7 +62,7 @@ Hand-kept sourcing knowledge — availability shown live. Older entries were tra
 | U6 | `TPS22918TDBVRQ1` | Active (DigiKey) | 1,481 | $0.75 | pin-identical AEC-Q100 sibling, ~50x the OFF leakage -- last resort only; NEVER TPS22917L (inverted EN) (U6 row note) |
 | FER1 | `3641014` | Active (DigiKey) | 372 | $4.19 | 0.14 mm sheet -- stack 3x for equivalent ferrite thickness (FER1 row note) |
 | FER1 | `MHLL6060-300` | Active (DigiKey) | 9,881 | $5.17 | Laird 0.09 mm -- weakest shielding, last resort (FER1 row note) |
-| PRG1 | `PG164100` | Active (DigiKey) | 780 | $11.68 | MPLAB Snap -- the Makefile already speaks it (PROG=snap_updi), and it puts no high voltage on the UPDI line. Confirm whether yours can power the target: a flat card has no supply of its own, and if the programmer cannot provide one, use the charge-in-light path in firmware/README.md step 3 |
+| PRG1 | `PG164100` | Active (DigiKey) | 782 | $11.68 | MPLAB Snap -- the Makefile already speaks it (PROG=snap_updi), and it puts no high voltage on the UPDI line. Confirm whether yours can power the target: a flat card has no supply of its own, and if the programmer cannot provide one, use the charge-in-light path in firmware/README.md step 3 |
 
 ## Datasheet filename prices
 
@@ -70,26 +70,26 @@ The `datasheets/` naming convention embeds a `$price` — a copy of a live numbe
 
 | | File | Maps to | $ in name | $ live |
 |---|---|---|---|---|
-| 🔻 | `C9  QSCP251Q470G1GV001T  $0.37.pdf` | C9 | $0.37 | $0.40 |
+| ✅ | `C9  QSCP251Q470G1GV001T  $0.40.pdf` | C9 | $0.40 | $0.40 |
 | ✅ | `D2-D5  LA P47F-V2BB-24-3B5A-30-R18-Z  $0.43.pdf` | D2, D3, D4, D5 | $0.43 | $0.43 |
-| 🔻 | `FER1  Wurth WE-FSFS 364006  $13.18.pdf` | FER1 | $13.18 | $17.43 |
+| ✅ | `FER1  Wurth WE-FSFS 364006  $17.43.pdf` | FER1 | $17.43 | $17.43 |
 | ✅ | `FER1-alt  Laird MHLL6060-300  $5.22.pdf` | FER1 sub | $5.22 | $5.17 |
 | ✅ | `FER1-alt  Wurth WE-FSFS 3641014  $4.19.pdf` | FER1 sub | $4.19 | $4.19 |
 | ✅ | `PV1,PV2  SM141K06TF  $7.61.pdf` | PV1, PV2 | $7.61 | $7.61 |
-| 🔻 | `Q2  DMG1012T-7  $1.17.pdf` | Q2 | $1.17 | $0.82 |
+| ✅ | `Q2  DMG1012T-7  $0.82.pdf` | Q2 | $0.82 | $0.82 |
 | ✅ | `SC1-SC4  SCHURTER 3-153-438  $16.69.pdf` | SC2, SC4 | $16.69 | $16.69 |
 | ❓ | `TC1  Tag-Connect TC2030-MCP  $0.pdf` | (secondary/reference doc) (no live match) | $0.00 | — |
 | — | `TIM (SC1-SC4)  t-Global T62-1 graphite  0.16mm.pdf` | (secondary/reference doc) (no price segment) | — | — |
 | — | `U1  AVR64EA28 errata DS80001048C.pdf` | (secondary/reference doc) (no price segment) | — | — |
 | ✅ | `U1  AVR64EA28-E-STX  $1.23.pdf` | U1 | $1.23 | $1.23 |
-| 🔻 | `U3  ADXL367BCCZ-RL7  $7.50.pdf` | U3 | $7.50 | $8.50 |
+| ✅ | `U3  ADXL367BCCZ-RL7  $8.50.pdf` | U3 | $8.50 | $8.50 |
 | ✅ | `U5  NT3H2211W0FHKH  $1.56.pdf` | U5 | $1.56 | $1.56 |
 | ✅ | `U6  TPS22916CYFPR  $0.55.pdf` | U6 | $0.55 | $0.55 |
-| 🔻 | `U7  MB85RC512TYPN-GS-AWEWE1  $10.19.pdf` | U7 | $10.19 | $7.92 |
+| ✅ | `U7  MB85RC512TYPN-GS-AWEWE1  $7.92.pdf` | U7 | $7.92 | $7.92 |
 | ✅ | `U8  10AEM10300C0000  $3.77.pdf` | U8 | $3.77 | $3.77 |
-| 🔻 | `U9  TPS7A0233PDQNR  $0.89.pdf` | U9 | $0.89 | $0.95 |
+| ✅ | `U9  TPS7A0233PDQNR  $0.95.pdf` | U9 | $0.95 | $0.95 |
 
-**6 name(s) drifted past ±5%** — refresh with `python3 BOM/check_stock.py --fix-names`, re-run the consistency check, commit.
+All priced names within ±5% of live.
 
 ---
 *Prices are qty-1 USD list at the checked timestamp; stock numbers age by the hour — re-run before ordering. Every line here is derived from the design, so the split between what PCBWay places and what you hand-solder is the one in `Generated/fabdocs/` (`…-pcbway-assembly.csv` and `…-handbuy-*.csv`), generated by the same `scripts/bom_split.py` this table is built from.*
