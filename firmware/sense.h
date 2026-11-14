@@ -22,6 +22,7 @@
 #define SENSE_H
 
 #include <stdint.h>
+#include "board.h"          /* SNS_EN_PORT, for the PIT-edge hook below */
 
 /* Configure the ADC: 12-bit, DIV2 presc (the only legal prescaler at CLK_PER 1 MHz --
  * CLK_ADC must be 300..2000 kHz), 2.048 V reference (NOT 2.500 V -- that option is out
@@ -94,22 +95,70 @@ void     sense_sun_tick(void);
  *   sense_temp_c()       : one-shot die temperature in degrees C (pulsed ADC read against
  *                          the internal 1.024 V ref + SIGROW cal, per DS40002443 sec 31.3.3.7).
  *                          Returns INT16_MIN on a stuck ADC.
- *   sense_temp_log()     : call every poll; samples sparsely (every TEMP_SAMPLE_POLLS) and
- *                          writes EEPROM only when a new lifetime max is seen.
+ *   sense_temp_log()     : call every poll, after sense_rail_tick(); samples sparsely (every
+ *                          TEMP_SAMPLE_POLLS) and writes EEPROM only when a new lifetime max is
+ *                          seen AND a deferred STO sample shows a safe rail.
  *   sense_temp_max_get() : the stored lifetime max in degrees C (signed; erased EEPROM = -1).
  *                          Uncalled on-chip BY DESIGN (UPDI/NDEF readout), like sense_count_get. */
 int16_t  sense_temp_c(void);
 void     sense_temp_log(void);
 int8_t   sense_temp_max_get(void);
 
+/* ---------- deferred STO sample service (USE_TEMP_LOG / USE_HEALTH_LOG) ----------
+ * The ONE way anything on the poll path reads the tank. sense.c's "STO sense-divider gate"
+ * header has the reasoning; this is the contract.
+ *
+ *   IDLE      divider off, nothing asked for.
+ *   WANT      a logger asked for a sample (main loop). Nothing is switched yet.
+ *   SETTLING  the PIT interrupt saw WANT and switched the divider on AT THAT EDGE.
+ *   READY     the NEXT PIT edge has passed: the divider has been on for one whole PIT
+ *             period, edge to edge. sense_rail_tick() converts and switches it off.
+ *
+ * The divider is switched on by the interrupt, not by the main loop, because only the
+ * interrupt runs AT the edge. A tick branch can start a whole period late -- every glow
+ * outlasts a poll -- and a divider switched on from a late branch is sampled at the next
+ * edge after a settle of anywhere between nothing and a period. Switched at one edge and
+ * read after the next, the settle is a full period however late either branch ran.
+ *
+ * sense_rail_edge()   : PIT ISR ONLY. Two compares when idle.
+ * sense_rail_tick()   : first thing in the tick's logger work. Publishes this tick's sample
+ *                       to the loggers below, or none.
+ * sense_rail_cancel() : drop any sample in flight. Call BEFORE rewriting RTC.PITCTRLA: the
+ *                       interval that straddles a period change is not a whole period (the
+ *                       PIT taps a free-running prescaler, DS40002443 "Timing of the First
+ *                       Interrupt"), so a settle that spans one proves nothing. */
+#define RAIL_IDLE      0u
+#define RAIL_WANT      1u
+#define RAIL_SETTLING  2u
+#define RAIL_READY     3u
+extern volatile uint8_t sense_rail_state;
+
+static inline void sense_rail_edge(void)
+{
+    uint8_t s = sense_rail_state;
+    if (s == RAIL_WANT) {
+        SNS_EN_PORT.OUTSET = SNS_EN_PIN_bm;       /* divider on, AT the edge */
+        sense_rail_state = RAIL_SETTLING;
+    } else if (s == RAIL_SETTLING) {
+        sense_rail_state = RAIL_READY;            /* one whole period later */
+    }
+}
+
+void     sense_rail_tick(void);
+void     sense_rail_cancel(void);
+
 /* EEPROM "black box" (USE_HEALTH_LOG): lowest rail ever + power-cycle count. Both defer their EEPROM
  * write to a healthy rail (>= EE_WRITE_FLOOR_MV) so a write never lands on a collapsing rail (the
  * corruption window, DS40002443 sec 11.3.3): the min-rail is tracked in RAM and committed on recovery,
  * and the power-cycle count is flagged at boot and committed once the rail has charged.
- *   sense_vmin_tick()      : call every poll; samples STO every VMIN_SAMPLE_POLLS, keeps the RAM min, commits when safe.
+ * Neither reads the tank itself: both act on the sample sense_rail_tick() published this tick, so
+ * call that first.
+ *   sense_vmin_tick()      : call every poll; asks for an STO sample every VMIN_SAMPLE_POLLS, keeps the RAM min, commits when safe.
  *   sense_vmin_get()       : lowest tank (STO) mV ever seen (0xFFFF = never sampled).
  *   sense_boot_log()       : call once at boot; flags a power-on reset (POR) for a deferred +1 to the power-cycle count.
- *   sense_boot_commit()    : call every poll; writes the flagged power cycle once the rail is safe.
+ *   sense_boot_commit()    : call every poll AFTER sense_vmin_tick(); writes the flagged power cycle on the first
+ *                            sample that shows a safe rail. It asks for no sample of its own -- it rides the
+ *                            rail-min sampler's, so a slow cold start costs it nothing.
  *   sense_boot_count_get() : power-cycle (full-drain) count (erased EEPROM = 0).
  * The getters are uncalled on-chip BY DESIGN (UPDI/NDEF readout), like sense_count_get. */
 uint16_t sense_vmin_get(void);

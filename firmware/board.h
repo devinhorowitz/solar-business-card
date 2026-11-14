@@ -140,13 +140,18 @@
  *   latency is imperceptible. (The 33- and 42-era figures here read 0.14% / 0.18% against a
  *   charge basis that was never written down -- a uC numerator over a joule denominator. The
  *   denominator is stated now, so the ratio can be checked rather than inherited.)
- *   The PERIODIC read (sense_vmin_tick, every VMIN_SAMPLE_POLLS) must NOT busy-wait. It
- *   originally did, and at 16 s spacing that was 59 uC/sample = 3.71 uA average -- MORE than
- *   the 1.55 uA the gate saves, i.e. the whole change was a net loss. It now arms the gate on
- *   one poll and samples on the next, so the settle elapses while the MCU is ASLEEP: cost is
- *   the divider's own current for 1 poll in 17 = ~0.09 uA, and zero extra awake time.
- * Anything new that reads STO on a RECURRING schedule must use the deferred pattern, not
- * sto_raw(). The busy-wait is only cheap next to an animation. */
+ *   PERIODIC reads must NOT busy-wait. The rail-min sampler originally did, and at 16 s
+ *   spacing that was 59 uC/sample = 3.71 uA average -- MORE than the 1.55 uA the gate saves,
+ *   i.e. the whole change was a net loss. They go through the DEFERRED SAMPLE SERVICE in
+ *   sense.c instead: a logger asks, the PIT interrupt switches the divider on at the next
+ *   edge, and the tick after the edge after that converts. The settle is one whole PIT
+ *   period spent ASLEEP: cost is the divider's own current for one period in
+ *   VMIN_SAMPLE_POLLS = ~0.10 uA, and zero extra awake time.
+ * Anything new that reads STO on a RECURRING schedule must use that service, not
+ * sto_raw() -- INCLUDING a "wait until the rail is safe" loop, which is a recurring read
+ * for exactly as long as the rail is not. sense_boot_commit() was one until 2026-11-14:
+ * 53 ms awake on every poll of a slow cold start. The busy-wait is only cheap next to an
+ * animation. */
 
 /* ---- supercap-state sense on PD1 (AEM10300 STO via divide-by-3) ----
  * VS is now the regulated 3.3 V LDO output (constant), so the old VDD/10 read no longer tracks

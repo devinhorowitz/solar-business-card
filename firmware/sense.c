@@ -223,7 +223,7 @@ uint8_t sense_vin_flags(void)
  * R15/R16 only exist while we convert. There are TWO ways to use the gate, and the split
  * is a power decision, not a style one.
  *
- * sto_raw() -- the EVENT path. Stateless: enable, settle, read, disable, every time, so no
+ * sto_raw() -- the EVENT path. Self-contained: enable, settle, read, every time, so no
  * caller can be ordered wrong and silently read a divider that was never switched on. It
  * pays STO_SNS_SETTLE_MS of BUSY-WAIT, which is only acceptable because these reads happen
  * on tap / sweep / EEPROM-safety branches where a glow is about to burn ~0.4 J (~100 mC off
@@ -233,23 +233,57 @@ uint8_t sense_vin_flags(void)
  * that way through the 42 bump because the same fact lived in two comments and only one was
  * updated. If you change the constant, change them here AND there.)
  *
- * sense_vmin_tick() -- the PERIODIC path, which must NOT busy-wait. This comment used to
- * claim STO reads were "never on the 1 Hz poll path, so the duty a card in a drawer sees is
- * ZERO". That was FALSE and it cost real power: USE_HEALTH_LOG's rail-min sampler runs every
- * VMIN_SAMPLE_POLLS (16 s), before the dormancy gate, so a card face-down in a drawer sat in
- * _delay_ms for 33 ms every 16 s. At ~1.8 mA active that is 59 uC/sample = 3.71 uA average,
- * against the 1.55 uA the gate saves -- the gate was a NET LOSS of ~2.2 uA. Fixed 2026-08-09
- * by DEFERRING that read across ticks: arm the gate on one poll, sample on the next. The
- * ~1 s gap is ~118 tau even at C24's tolerance corner (board.h has that arithmetic) -- stated
- * against tau, not against STO_SNS_SETTLE_MS, so raising the constant cannot silently erode
- * this margin the way it would a "30x the settle" claim. It elapses while the MCU is ASLEEP,
- * so the cost is the divider's own 1.55 uA for one poll in seventeen = ~0.09 uA, with zero
- * extra awake time.
- * That is 38x better than the busy-wait and self-scaling: face-down deep sleep only
- * lengthens the PIT period, so the 1-in-VMIN_SAMPLE_POLLS duty holds at any poll rate.
+ * The DEFERRED SAMPLE SERVICE -- the PERIODIC path, which must NOT busy-wait. Everything
+ * that reads the tank on a schedule goes through it: the rail-min sampler asks for a sample
+ * every VMIN_SAMPLE_POLLS, and the power-cycle commit and the max-temp commit act on
+ * whatever sample lands. sense.h has the state machine; the history is why it looks the way
+ * it does.
+ *
+ * (1) 2026-08-09. This comment used to claim STO reads were "never on the 1 Hz poll path,
+ * so the duty a card in a drawer sees is ZERO". That was FALSE and it cost real power:
+ * USE_HEALTH_LOG's rail-min sampler ran every 16 s, before the dormancy gate, so a card
+ * face-down in a drawer sat in _delay_ms for 33 ms every 16 s. At ~1.8 mA active that is
+ * 59 uC/sample = 3.71 uA average, against the 1.55 uA the gate saves -- a NET LOSS of
+ * ~2.2 uA. Fixed by deferring that read across ticks, so the settle elapses ASLEEP.
+ *
+ * (2) 2026-11-14. That fix reached one caller of three. sense_boot_commit() still went
+ * through sense_ee_safe() -> sto_raw() on EVERY poll for as long as a power-on reset was
+ * waiting on the write floor: from the BOD's 2.60 V release to 2.85 V on a slow cold
+ * start, 53 ms awake in every second -- 53-95 uC a poll, ~50-95 uA average, on the one
+ * card that has the least to give. sense_temp_log() did the same once per
+ * TEMP_SAMPLE_POLLS while a new max waited on a low rail. Both now act on the deferred
+ * sample and never read the tank themselves.
+ *
+ * (3) 2026-11-14, found while fixing (2). The 2026-08-09 sampler switched the divider on
+ * from the tick branch and converted on the next tick, on the stated ground that "the ~1 s
+ * gap is ~118 tau". The gap is only a period when the arming branch ran ON TIME. Every
+ * glow outlasts a poll (GLOW_BREATH_MS alone is 1.6 s), so the tick branch that follows
+ * one starts at a random phase of the free-running PIT; if that branch is the one in
+ * seventeen that arms, the convert comes at the next edge after a settle uniform in
+ * (0, period). Under ~31 ms the read is more than 1% LOW -- about 1 arming in 30, so
+ * roughly 1 glow in 550 -- and the low goes straight into the lifetime minimum, which is
+ * a one-way ratchet: one phantom is forever. (By inspection of the control flow; never
+ * observed on hardware, there being none yet.) The divider is therefore switched on BY
+ * THE PIT INTERRUPT, at the edge after the request, and converted after the edge after
+ * that: one whole period, edge to edge, however late either tick branch ran.
+ *
+ * Cost of a deferred sample: the divider's own 1.55 uA for one period in every
+ * VMIN_SAMPLE_POLLS = ~0.10 uA average, zero extra awake time, and two compares in the PIT
+ * interrupt. (One period in sixteen now, not the "one poll in seventeen" of the 2026-08-09
+ * cut -- the request counter free-runs rather than pausing for its own sample.) It is
+ * self-scaling: face-down deep sleep only lengthens the PIT period, so the duty holds at
+ * any poll rate.
+ *
+ * The two paths SHARE the divider, and the rule is one line: the deferred service owns the
+ * gate from the edge that switches it on until its convert; an event read borrows the
+ * divider and switches it off afterwards ONLY if the service is not using it. (Until
+ * 2026-11-14 an event read always switched it off and cancelled the pending sample. With a
+ * sweep or a boot commit reading every poll, that cancelled every sample there was --
+ * the black box went blind in exactly the states it is for.)
  *
  * See board.h SNS_EN_PORT for why the gate is high-side and needs no external pulldown. */
-static uint8_t sto_armed;      /* gate left ON by the deferred path, awaiting its sample */
+volatile uint8_t sense_rail_state;      /* RAIL_* -- sense.h. Written by the PIT ISR too. */
+static uint16_t  tick_mv;               /* this tick's deferred STO sample, mV; 0 = none */
 
 static uint16_t sto_raw(void)
 {
@@ -259,11 +293,17 @@ static uint16_t sto_raw(void)
                                               * tolerance corner -- board.h has the
                                               * double-corner arithmetic behind 53 */
     uint16_t raw = adc_read_raw(STO_SNS_AIN);
-    SNS_EN_PORT.OUTCLR = SNS_EN_PIN_bm;      /* back to zero tank draw */
-    /* An event read collapses the node, so any deferred sample still pending has been
-     * invalidated -- it would otherwise read a partly-discharged divider on the next tick
-     * and record a phantom "new low" into EEPROM. Disarm; the sampler simply re-arms. */
-    sto_armed = 0;
+    /* Switch the divider off UNLESS a deferred sample is settling on it: collapsing the
+     * node now would hand that sample a part-discharged divider, and it would write a
+     * phantom low into EEPROM. The test and the pin write are one atomic step. Without
+     * the cli, a PIT edge landing between them can see WANT, switch the divider on and go
+     * to SETTLING -- and the OUTCLR below would then switch it off underneath a sample
+     * that believes it is settling. */
+    uint8_t sreg = SREG;
+    cli();
+    if (sense_rail_state < RAIL_SETTLING)
+        SNS_EN_PORT.OUTCLR = SNS_EN_PIN_bm;  /* back to zero tank draw */
+    SREG = sreg;
     return raw;
 }
 
@@ -273,6 +313,39 @@ static uint16_t sto_mv_from_raw(uint16_t raw)
 {
     uint32_t mv = ((uint32_t)raw * ADC_VREF_MV) >> 12;
     return (uint16_t)(mv * STO_DIVIDER);                    /* undo the divider -> STO mV */
+}
+
+/* Ask for a deferred sample. Main loop only. A request made while one is already in
+ * flight is that one -- every logger sees the same sample. Safe against the PIT edge
+ * without a cli: the interrupt never moves the state OUT of IDLE, so the test cannot go
+ * stale between the compare and the store. */
+static void rail_request(void)
+{
+    if (sense_rail_state == RAIL_IDLE)
+        sense_rail_state = RAIL_WANT;
+}
+
+void sense_rail_tick(void)
+{
+    tick_mv = 0;
+    if (sense_rail_state != RAIL_READY)
+        return;
+    /* READY is set only by the PIT interrupt, only from SETTLING, and nothing switches the
+     * divider off while the state is SETTLING or READY -- so it has been on across one
+     * whole PIT period. Convert and release. A stuck ADC reads 0 = "no sample", which is
+     * the fail-safe every logger wants: nothing is recorded and nothing is written. */
+    tick_mv = sto_mv_from_raw(adc_read_raw(STO_SNS_AIN));
+    sense_rail_state = RAIL_IDLE;
+    SNS_EN_PORT.OUTCLR = SNS_EN_PIN_bm;       /* divider off -> back to zero tank draw */
+}
+
+void sense_rail_cancel(void)
+{
+    /* State FIRST, pin second. In this order a PIT edge between the two sees IDLE and does
+     * nothing; in the other it could see WANT, switch the divider on, and be left on by
+     * the IDLE that follows. */
+    sense_rail_state = RAIL_IDLE;
+    SNS_EN_PORT.OUTCLR = SNS_EN_PIN_bm;
 }
 
 uint16_t sense_vdd_mv(void)
@@ -535,20 +608,29 @@ void sense_temp_log(void)
 {
     static uint8_t ctr;
     static int8_t  tmax_ram = -128;                /* session max in RAM; committed to EEPROM only from a safe rail */
+    static uint8_t dirty;                          /* the RAM max is above the stored one, awaiting a safe rail */
+    /* commit a new lifetime max only from a healthy rail: a heat spell can coincide with a draining
+     * rail (a dark hot car), and an EEPROM write on a collapsing rail can corrupt (DS40002443 sec
+     * 11.3.3). The RAM max means a peak-while-low is still written once the rail recovers, not lost.
+     * The rail is whatever deferred sample landed THIS tick -- ours (asked for below) or the
+     * rail-min sampler's. Never a read of our own: until 2026-11-14 this called sense_ee_safe(),
+     * 53 ms of busy-wait once per sample for as long as a max was waiting on a low rail. */
+    if (dirty && tick_mv >= EE_WRITE_FLOOR_MV) {
+        eeprom_update_byte(EE_TMAX_ADDR, (uint8_t)tmax_ram);
+        dirty = 0;
+    }
     if (++ctr < TEMP_SAMPLE_POLLS)
         return;                                    /* not time to sample yet */
     ctr = 0;
     int16_t c = sense_temp_c();
-    if (c == INT16_MIN)                            /* stuck ADC -> skip this sample */
-        return;
-    if (c > 127) c = 127;                          /* clamp into the signed-byte store */
-    if ((int16_t)c > tmax_ram) tmax_ram = (int8_t)c;   /* track the true max in RAM -- wear-free, rail-safe */
-    /* commit a new lifetime max only from a healthy rail: a heat spell can coincide with a draining
-     * rail (a dark hot car), and an EEPROM write on a collapsing rail can corrupt (DS40002443 sec
-     * 11.3.3). The RAM max means a peak-while-low is still written once the rail recovers, not lost. */
-    int8_t stored = (int8_t)eeprom_read_byte(EE_TMAX_ADDR);
-    if ((int16_t)stored < tmax_ram && sense_ee_safe())
-        eeprom_update_byte(EE_TMAX_ADDR, (uint8_t)tmax_ram);
+    if (c != INT16_MIN) {                          /* stuck ADC -> skip this sample */
+        if (c > 127) c = 127;                      /* clamp into the signed-byte store */
+        if ((int16_t)c > tmax_ram) tmax_ram = (int8_t)c;   /* track the true max in RAM -- wear-free, rail-safe */
+        if ((int8_t)eeprom_read_byte(EE_TMAX_ADDR) < tmax_ram)
+            dirty = 1;
+    }
+    if (dirty)
+        rail_request();                            /* lands two ticks on; retried here every sample until it commits */
 }
 
 int8_t sense_temp_max_get(void)
@@ -576,31 +658,21 @@ static uint16_t vmin_ram = 0xFFFF;      /* lowest rail this power session, RAM-t
 
 void sense_vmin_tick(void)
 {
-    /* DEFERRED read, in two halves across consecutive polls -- see the sto_raw() header for
-     * why this path must never busy-wait. Second half first: the gate was armed on the last
-     * poll and has been settling ever since, through a whole sleep, so just convert and
-     * release. No _delay_ms, no extra awake time. */
-    if (sto_armed) {
-        uint16_t mv = sto_mv_from_raw(adc_read_raw(STO_SNS_AIN));
-        SNS_EN_PORT.OUTCLR = SNS_EN_PIN_bm;       /* divider off -> back to zero tank draw */
-        sto_armed = 0;
-        if (mv == 0) return;                      /* stuck ADC -> skip */
-        if (mv < vmin_ram) vmin_ram = mv;         /* track the true low in RAM -- wear-free */
+    /* The read itself is the deferred service's (see the sto_raw() header for why this path
+     * must never busy-wait, and never switch the divider on from here). A sample that
+     * landed this tick -- whoever asked for it -- is a rail reading, so take it. */
+    if (tick_mv) {
+        if (tick_mv < vmin_ram) vmin_ram = tick_mv;   /* track the true low in RAM -- wear-free */
         /* commit only from a healthy rail, so the write never lands on the sag itself (the
          * corruption window); erased 0xFFFF is the ceiling -> the first real low wins. */
-        if (mv >= EE_WRITE_FLOOR_MV && vmin_ram < eeprom_read_word(EE_VMIN_ADDR))
+        if (tick_mv >= EE_WRITE_FLOOR_MV && vmin_ram < eeprom_read_word(EE_VMIN_ADDR))
             eeprom_update_word(EE_VMIN_ADDR, vmin_ram);
-        return;
     }
 
     if (++vmin_ctr < VMIN_SAMPLE_POLLS)
         return;                                   /* not time to sample yet */
     vmin_ctr = 0;
-    /* First half: arm and leave. The settle happens during the sleep to the next poll.
-     * If an event read (sto_raw) intervenes it disarms us and we simply re-arm later --
-     * a missed health sample is free, a phantom low written to EEPROM is not. */
-    SNS_EN_PORT.OUTSET = SNS_EN_PIN_bm;
-    sto_armed = 1;
+    rail_request();                               /* divider on at the next PIT edge, sample the tick after that */
 }
 
 uint16_t sense_vmin_get(void)
@@ -613,7 +685,10 @@ uint16_t sense_vmin_get(void)
  * sense_boot_log() reads and clears RSTCTRL.RSTFR at boot so only a genuine POR is flagged, but it
  * DEFERS the EEPROM write: a cold boot happens right at the reset-release voltage (a poor moment for
  * a ~4 ms write), so sense_boot_commit() does the write once the rail has charged past the write
- * floor. One write per drain, and drains are rare, so endurance is a non-issue. */
+ * floor. One write per drain, and drains are rare, so endurance is a non-issue.
+ * KNOWN UNDERCOUNT, noted 2026-11-14 and not changed: a cold start that browns out again before
+ * reaching the floor is never counted. The pending flag is RAM, and the BOD reset that follows sets
+ * BORF without PORF, so nothing is pending afterwards. */
 #define EE_BOOT_ADDR  ((uint16_t *)9)   /* 2-byte power-cycle count at EEPROM offset 9 */
 
 static uint8_t boot_pending;            /* a power-on reset seen at boot, awaiting a safe rail to record */
@@ -628,7 +703,12 @@ void sense_boot_log(void)
 
 void sense_boot_commit(void)
 {
-    if (!boot_pending || !sense_ee_safe())        /* wait for a healthy rail before the write */
+    /* Wait for a healthy rail before the write -- on the rail-min sampler's sample, not a
+     * read of our own. This was `!sense_ee_safe()` until 2026-11-14: a 53 ms busy-wait on
+     * every poll of a slow cold start (sto_raw() header, history item 2). It now costs a
+     * compare. The write lands on the first sample at or above the floor, at most
+     * VMIN_SAMPLE_POLLS + 2 polls after the tank gets there. */
+    if (!boot_pending || tick_mv < EE_WRITE_FLOOR_MV)
         return;
     boot_pending = 0;
     uint16_t n = sense_boot_count_get();

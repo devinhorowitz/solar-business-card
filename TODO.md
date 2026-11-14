@@ -383,6 +383,37 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
   **(c) Revival hooks only if a companion app ever exists:** SRAM-mailbox telemetry /
   orientation-keyed NFC (declined for v4 — they endanger the offline-first vCard).
 
+- [ ] **[BENCH/FIRMWARE — first-article gate] The linked EEPROM write never issues NOCMD — confirm a multi-byte write lands whole**
+  _(2026-11-14 firmware check. A question for silicon, not a known bug; no code was changed for it.)_
+  Every EEPROM cell here is written through avr-libc's `eeprom_update_*`, and on this part the body
+  of that routine comes out of the AVR-Ex pack. Disassembled from the build (`eeprom_write_r18`): wait
+  for `NVMCTRL.STATUS` EEBUSY to clear, store the byte into the page buffer, `CCP = 0x9D`,
+  `NVMCTRL.CTRLA = 0x15` (EEPERW). **It never writes NOCMD**, so CTRLA still holds EEPERW when the next
+  byte's EEPERW arrives. DS40002443A §11.5.1: _"It is recommended to include a NOCMD or NOOP
+  instruction when going from one command to the next to avoid Command Collision error being set"_ —
+  and `STATUS.ERROR` = 0x03 is CMDCOLLISION, _"Selecting a new write command while a write command is
+  already selected"_. DxCore's EEPROM library for the EA/EB does write 0 to CTRLA before each 0x15
+  (its source, read 2026-11-14). The datasheet in `datasheets/` is revision A and marked Preliminary
+  (2022), so how binding "recommended" is on real silicon is exactly what is not known.
+  - **What it would break.** Every multi-byte cell: the tap ring's dwords, sun hours, min-rail and the
+    power-cycle count. `eeprom_update_word` is two byte writes back to back, **high byte first**; if
+    the second command is refused, the cell keeps its new high byte over a stale low one — a value
+    that looks plausible and is wrong. And if a command is refused whenever CTRLA is not NOCMD, then
+    only the first byte written after each reset ever lands.
+  - **Bench, with the production image and no special build.** From an erased EEPROM (a fresh part
+    is), power up cold, hold STO above `EE_WRITE_FLOOR_MV` (2.85 V) for 20 s without tapping, then
+    read offsets 7–10 over UPDI. The first sample writes the min-rail word (7–8) and then the power-cycle word (9–10), four
+    byte writes in a row. **Pass: `LL HH 01 00`**, where `HHLL` is the tank in mV (3900 mV reads
+    `3C 0F 01 00`). **The collision signature is `FF HH FF FF`**: only the first byte landed.
+  - Then tap once and read the ring at 12–43: one slot must read `01 00 00 00`. That write follows
+    a sleep rather than a reset, so both cases are covered.
+  - If a debugger is on the bench, also read `NVMCTRL.STATUS` (0x1006) straight after a write:
+    `ERROR` (bits 6:4) must be 0, not 3.
+  - **If it fails:** stop using the library routine. Write a local byte-write that issues
+    `NVMCTRL_CMD_NOCMD_gc` under CCP before each EEPERW (the DxCore sequence), point the five writers
+    in `sense.c` at it, and take it through `make check` and the size gate. Until then the counters
+    cannot be trusted and nothing else on the card is affected.
+
 - [ ] **[BENCH/DESIGN] SWEEP_SUN_VIN_MV measures the wrong thing — retune or retire it**
   _(2026-07-26 PCB audit; board.h comment already corrected in full, constant deliberately left
   at 3600 pending this decision.)_ The AEM10300 does not let SRC float to a light-dependent

@@ -84,7 +84,7 @@ card's largest idle load. See **NFC contact card** below.
 | `led.h/.c` | TCA0 split-mode PWM on PA0–PA3 + gamma breathing glow + in-sun loading sweep. |
 | `sense.h/.c` | ADC rail/light/temp reads, rail-scaled glow (brownout stretch), EEPROM telemetry: activation counter + sun diary + max-temp log + black box (min-rail, power-cycles). |
 | `main.c` | init (per hardware doc §7), sleep/wake state machine, ISRs. |
-| `Makefile` | build + UPDI flash. |
+| `Makefile` | build + UPDI flash + `make check` (lint, erratum scan, proofs — below). |
 
 ## Build & flash
 
@@ -117,12 +117,34 @@ cd firmware
 make DFP=/path/to/Microchip/AVR-Ex_DFP/<version>
 ```
 Produces `solar-glow.hex`; the `avr-size` line reports usage (the part has 64 KB
-flash / 6 KB RAM, so this firmware — 5,042 B flash, 30 B RAM (5034 text + 8 data +
-22 bss, measured 2026-08-12 after the two ASIC-experiment back-ports: the accel-init
-retry-once and the un-fused-F_CPU settle fix, +8 B over the 2026-08-09 deferred-read
-figure; the batch before that was the 2026-08-02 audit findings: ADC time bound, accel
+flash / 6 KB RAM, so this firmware — 5,162 B flash, 33 B RAM (5154 text + 8 data +
+25 bss, measured 2026-11-14 after the deferred STO sample service replaced the last
+poll-path busy-waits: +120 B flash and +3 B RAM over the 2026-08-12 figure, which was
+the two ASIC-experiment back-ports — the accel-init retry-once and the un-fused-F_CPU
+settle fix; the batch before that was the 2026-08-02 audit findings: ADC time bound, accel
 data-valid window, wear-levelled tap ring, clean bus-clear STOP, ballast guard,
 dark dormancy and face-down deep sleep) — leaves room to spare).
+
+### Static checks (`make check`)
+```sh
+cd firmware
+make DFP=/path/to/Microchip/AVR-Ex_DFP/<version> check    # ~20 s; needs cppcheck + cbmc
+```
+Three readings of the firmware that the compiler does not give. CI runs them on every
+firmware change and they are a **gate**, like the warning-free build. Each one also proves,
+on every run, that it is still looking — a planted defect it must catch — because a check
+that finds nothing and a check that has stopped reading print the same line.
+
+| step | script | what it holds |
+|---|---|---|
+| lint | `scripts/fw_lint.py` | `cppcheck` over all six sources, told the real target: the AVR8 data model and this pack's device header, selected with the `-D` flags read out of the pack's own spec file. Gates on cppcheck's error / warning / performance / portability tiers. |
+| erratum scan | `scripts/fw_erratum_scan.py` | The Rev. B1 erratum 2.2.3 guard, checked in the **binary**: every store to `SLPCTRL.CTRLA` is found in the disassembly and none may follow another store. `board.h`'s `slp_*` wrappers are the rule about what gets typed; this is the check on what the compiler emitted. |
+| proofs | `scripts/fw_prove.py` | Two [CBMC](https://www.cprover.org/cbmc/) proofs on the function text taken verbatim from the tree. **`sense_glow_peak()`**, for every rail reading and every requested peak: never brighter than asked, dark below the floor, full on a healthy rail, ballast clamp holds, monotonic, no overflow. **The deferred STO sample service** — state shared between the main loop and the PIT interrupt — as an inductive invariant over every interleaving: a deferred sample is converted only after the divider has been on across one whole PIT period, and the divider is never left on with nobody waiting. |
+
+What the proofs do **not** cover: the pin, the ADC and time are modelled (the script's
+header says how), and nothing here has run on hardware. cppcheck's `style` tier is left
+out on purpose — its only two findings on this tree are false, an avr-libc typedef it
+misreads as 16-bit — and that reasoning lives in the header of `scripts/fw_lint.py`.
 
 ### 3. Wire UPDI and power the board
 UPDI is a single wire on **pin 23**, broken out to the **TC2030 pad (TC1)** (a
@@ -596,6 +618,12 @@ the sensor.
   reset, gated on `RSTCTRL.RSTFR` PORF so watchdog/UPDI resets don't count). With max-temp, that's the
   four-way forensic — heat vs. starvation vs. shipped-dark vs. overuse — from one UPDI scan
   (`sense_vmin_get()` / `sense_boot_count_get()`). Both near-free and run even while dormant.
+  Neither reads the tank itself. They share one **deferred STO sample service**: a logger asks,
+  the PIT interrupt switches the sense divider on at the next edge, and the tick after the edge
+  after that converts — so the settle is one whole poll period spent asleep, and the divider's
+  1.55 µA is drawn for one period in sixteen (~0.10 µA). The power-cycle count and the max-temp
+  commit ride whatever sample lands; until 2026-11-14 each did its own 53 ms busy-wait read while
+  waiting on a low rail, every poll during a slow cold start. `sense.c`'s gate header has the history.
 
 ### In-sun loading sweep (`board.h`; animation in `led.c`)
 The "charging in the sun" tell: on the ~1 s poll, when the SRC solar node is under
