@@ -222,7 +222,18 @@ BASELINE = {
     # MILLED (fit_rules.cavity_as_milled) -- it had run 0.225 mm into the R1.0 the Ø2.0 leaves
     # at the east boss-to-wall corners. Footprint 1313.584 -> 1313.172 mm2; 0.413 x 1.80 = 0.74
     # predicted, 0.74 measured. bbox unchanged; one piece, watertight, 0 open, 0 degenerate.
-    volume_mm3=1918.42, bbox=(-22.85, -42.4, 0.0, 24.10, 42.4, 1.8),
+    # re-ledgered 2026-11-14, 1918.42 -> 1917.48, ITEMISED by building the middle state: the
+    # part_heights 0603 row corrected to datasheet max (C4/C13 0.90 -> 0.95, C23 0.90 -> 1.00;
+    # the part_heights comment has the sweep that found them):
+    #    -0.470  C4/C13 pockets 0.05 deeper. 2 x 4.28 mm2 (0603 pad box + 0.25) x 0.05 = 0.43
+    #            predicted; the rest is the U6-C4, C6-C4 and C13-RN1 bridges, which take the
+    #            deeper pocket's depth.
+    #    -0.467  C23's pocket 0.10 deeper. 4.28 x 0.10 = 0.43 predicted; the rest is the
+    #            FB1-C23 and C23-U9 bridges.
+    # Still blind pockets (1.00 <= SPAN_LIMIT 1.18), through-holes still none. The LITE brace
+    # is byte-identical: all four 0603s were already through-holes at its 0.60 span. bbox
+    # unchanged; one piece, watertight, 0 open, 0 degenerate. Transition note as above.
+    volume_mm3=1917.48, bbox=(-22.85, -42.4, 0.0, 24.10, 42.4, 1.8),
         max_boundary_edges=0, max_open_len_mm=0.0, max_degenerate=0),
     # ---- the 2026-08-07 enclosure variants (fit_rules.VARIANTS) --------------------------
     # Ledgered from local builds in the variants commit itself -- the chicken-and-egg rule:

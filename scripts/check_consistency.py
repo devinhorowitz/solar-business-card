@@ -2027,7 +2027,17 @@ OPAQUE_PN_LEDGER = {
                                                  #            verified live 2026-08-06
                                                  #            (42,386 in stock, cut tape;
                                                  #            the DSBGA ultrathin swap)
-    ("GRT188R61C106KE13D", "490-12317-1-ND"),    # C4/C13     DigiKey legacy numeric
+    # C4/C13's ("GRT188R61C106KE13D", "490-12317-1-ND") left 2026-11-14: the GRT part went
+    # to zero at both distributors and its Murata GXT successor's P/N is self-describing.
+    # The three below arrived the same day, each verified live then (DigiKey cut tape):
+    ("GCM155R71C224KE02D", "490-10671-1-ND"),    # C11        490 in stock; GRT155R71C224KE01D
+                                                 #            was 0 at both distributors
+    ("GCM155R71H103KA55D", "490-4762-1-ND"),     # C24        985,840 in stock; same
+                                                 #            10nF/+-10%/X7R/50V the settle
+                                                 #            arithmetic in board.h assumes
+    ("CL31A226KOCLNNC", "1276-1803-1-ND"),       # C25        29,798 in stock; Samsung, the
+                                                 #            +-10% 0.95-max point (GRM319 KE15D
+                                                 #            was 2 in stock)
     ("NT3H2211W0FHKH", "568-12901-1-ND"),        # U5         DigiKey legacy numeric
     ("5879", "485-5879"),                        # PRG1       Adafruit via Mouser; 4-char
                                                  #            MPN is below the 6-char

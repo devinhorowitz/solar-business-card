@@ -67,7 +67,19 @@ HEIGHTS = {
     "FB1": 0.80,   # 0603 ferrite bead. Was falling through to the 0.60 default.
     # Capacitors above 0402 -- the prefix rule below is the 0402 number and undershoots
     # these. Each is set to cover its modelled body with a little air.
-    "C4":  0.90, "C13": 0.90, "C22": 0.90, "C23": 0.90,                # 0603 (0.80)
+    # 0603s. The row read 0.90 for all four ("0603 (0.80)" -- the generic model's body plus
+    # air) until 2026-11-14, and two of the four were declared UNDER their datasheet max: the
+    # MOUNTS-era gap class above, found by sweeping every MPN'd part's DigiKey "Thickness
+    # (Max)" against this table and confirmed on Murata's own product pages (T = 0.8 +/- tol):
+    #   C4/C13  GXT188R61C106KE13D  0.8 +/-0.15 -> 0.95 max  (the GRT188...KE13 it replaced
+    #                               that day had the same body, so 0.90 was always 0.05 short)
+    #   C22     GRT188R71E105KE13D  0.8 +/-0.10 -> 0.90 max  (correct as it stood)
+    #   C23     GRM188Z71E225ME43D  0.8 +/-0.20 -> 1.00 max  (0.10 short)
+    # All four are B-side and all stay under SPAN_LIMIT (1.18), so the max brace keeps blind
+    # pockets over them, now 0.05 / 0.10 deeper; the lite span is shallower than all four, so
+    # they were already through-holes there. Check [7] saw none of it: the model is the
+    # generic C_0603_1608Metric (0.80), and an overshoot of the model is what it permits.
+    "C4":  0.95, "C13": 0.95, "C22": 0.90, "C23": 1.00,
     # C25 re-picked 2026-07-30 (audit #2) to an 0805/16V part (TDK C2012X5R1C226M125AC)
     # because the 0603/10V one derated under the AEM's CSRC minimum. The land sync landed
     # 2026-07-30 (87f7af1, moved to x 25.875 -- every neighbour gap >=0.525); this entry
@@ -101,7 +113,11 @@ HEIGHTS = {
     # MURATA_GRM319_1206LP.step at the 0.95 max, so declaration and model agree exactly and
     # check [7] measures rather than tolerates these. Flipped 1.45 -> 0.95 in the same round
     # the bodies landed on the board -- the C9/C25 sequencing rule, both halves this time.
-    "C25": 0.95,                                          # 1206 LP, GRM319 0.85 +/-0.10 -> 0.95 max
+    # C25 alone moved again on 2026-11-14, to Samsung CL31A226KOCLNNC (the GRM319 22 uF went to
+    # 2 at DigiKey, 0 at Mouser): the same "Low Profile" 1206 at the same 0.95 max (DigiKey
+    # Thickness (Max) 0.95), so this number and the GRM319 model it is checked against still
+    # agree. The body in the render is Murata's; the height is right for both.
+    "C25": 0.95,                                          # 1206 LP, CL31...KOC 0.95 max (was GRM319)
     "RN1": 0.45,   # EXB-28V151JX 4x150R ballast array (catalog T 0.35+/-0.10 -> 0.45 MAX;
                    # DigiKey seated-height max agrees. 0.15 under the lite 0.60 span limit.
                    # Replaced R1-R4, 2026-08-07)
