@@ -190,7 +190,10 @@ beside `296-48370-1-ND`, the TPS22917's orderable. The distributor ships what th
 says. Self-describing P/Ns are matched textually; bare catalog codes (`490-5221-1-ND`,
 `YAG3443CT-ND`) live in `OPAQUE_PN_LEDGER`, verified live once and keyed by **(MPN, P/N)** so
 an MPN change orphans the pair and goes red in the same commit — the FRONT_SIDE-snapshot
-shape. The check re-classifies both historical failures on every run; if either stops going
+shape. So, since 2026-11-14, do distributor **abbreviations** of a long MPN (Mouser's
+`81-GCM155R71C224KE2D` is `GCM155R71C224KE02D` with a digit dropped): the classifier rightly
+calls those a conflict, so the ledger is consulted *before* it, and a self-test refuses to let
+either historical failure pair be ledgered. The check re-classifies both historical failures on every run; if either stops going
 red, the check itself fails.
 
 ## CI

@@ -1999,6 +1999,15 @@ def check_plating_bus():
 # -- the exact U6 failure -- orphans its pair and goes red in the same commit, which is
 # the FRONT_SIDE-snapshot shape. A new opaque pairing gets one live lookup and one line
 # here.
+#
+# Since 2026-11-14 the ledger also holds the other kind of pair no static rule can tie:
+# a distributor's ABBREVIATION of a long MPN. Mouser's number for C11's Murata
+# GCM155R71C224KE02D is 81-GCM155R71C224KE2D -- a digit dropped -- and the classifier
+# calls that a CONFLICT, exactly as it should for a P/N that names a different part.
+# Loosening the classifier to forgive dropped characters would also forgive the U9 class,
+# so the classifier stays strict and the LEDGER is consulted first instead: an exact,
+# live-verified (MPN, P/N) pair passes whatever the verdict, an MPN change still orphans
+# it, and the self-test refuses to let either historical failure be ledgered.
 OPAQUE_PN_LEDGER = {
     ("EXB-28V151JX", "Y7151CT-ND"),             # RN1        Panasonic Digi-Key code, verified live 2026-08-07 (136,179 in stock)
     ("EXB-24V472JX", "Y5472CT-ND"),             # RN2        Panasonic Digi-Key code, verified live 2026-08-07 (43,319 in stock)
@@ -2029,9 +2038,15 @@ OPAQUE_PN_LEDGER = {
                                                  #            the DSBGA ultrathin swap)
     # C4/C13's ("GRT188R61C106KE13D", "490-12317-1-ND") left 2026-11-14: the GRT part went
     # to zero at both distributors and its Murata GXT successor's P/N is self-describing.
-    # The three below arrived the same day, each verified live then (DigiKey cut tape):
-    ("GCM155R71C224KE02D", "490-10671-1-ND"),    # C11        490 in stock; GRT155R71C224KE01D
-                                                 #            was 0 at both distributors
+    # The three below arrived the same day, each verified live then. C11's first pair,
+    # ("GCM155R71C224KE02D", "490-10671-1-ND") at DigiKey, left the same day too: DigiKey
+    # sold through its 490 within hours, and C11 moved to Mouser:
+    ("GCM155R71C224KE02D", "81-GCM155R71C224KE2D"),  # C11    Mouser ABBREVIATION (see the
+                                                 #            header), verified live
+                                                 #            2026-11-14 by Mouser P/N
+                                                 #            search: resolves to
+                                                 #            GCM155R71C224KE02D, Murata
+                                                 #            Electronics, 17,858 in stock
     ("GCM155R71H103KA55D", "490-4762-1-ND"),     # C24        985,840 in stock; same
                                                  #            10nF/+-10%/X7R/50V the settle
                                                  #            arithmetic in board.h assumes
@@ -2099,6 +2114,15 @@ def check_supplier_pns():
         err("self-test: the U6-class stale P/N (opaque 296-48370-1-ND under a changed "
             "MPN) no longer classifies as opaque -- the ledger guard is bypassed")
         return
+    # Since 2026-11-14 the ledger is consulted BEFORE the classifier (see its header), so a
+    # ledgered pair can waive a "conflict" verdict too. That power is exact-pair only, and
+    # it must never reach the two failures this check exists for.
+    for _hist in (("TPS7A0233PDQNR", "296-TPS7A0233PDBVRCT-ND"),
+                  ("TPS22919DCKR", "296-48370-1-ND")):
+        if _hist in OPAQUE_PN_LEDGER:
+            err(f"self-test: historical stale pair {_hist!r} is in OPAQUE_PN_LEDGER, "
+                f"which now waives any verdict for its pair -- remove it")
+            return
 
     rows = [(", ".join(r["refs"]), r["mpn"], r["supplier"], r["dist_pn"])
             for r in asm + hand]
@@ -2110,15 +2134,22 @@ def check_supplier_pns():
         if not (dpn or "").strip():
             continue          # nothing to validate; missing-P/N policing is bom_split's
         cls = _pn_classify(mpn, sup, dpn)
+        if (mpn, dpn) in OPAQUE_PN_LEDGER:
+            n_led += 1        # verified live, exact pair -- consulted before the verdict
+            if cls == "ok":
+                warn(f"{refs}: ledgered pair ({mpn!r}, {dpn!r}) is self-describing -- "
+                     f"the classifier ties it without help; drop the entry")
+            continue
         if cls == "ok":
             n_ok += 1
         elif cls == "conflict":
             err(f"{refs}: Supplier P/N {dpn!r} embeds a part number that is not the "
                 f"MPN {mpn!r} beside it -- the distributor ships what the NUMBER says, "
                 f"so an order off this line buys a different part. (The U9-class "
-                f"failure: a part swap updated the MPN and left the P/N.)")
-        elif (mpn, dpn) in OPAQUE_PN_LEDGER:
-            n_led += 1
+                f"failure: a part swap updated the MPN and left the P/N.) If the P/N is "
+                f"instead the distributor's ABBREVIATION of this MPN (Mouser shortens "
+                f"long Murata numbers: 81-GCM155R71C224KE2D is GCM155R71C224KE02D), "
+                f"verify it live and ledger the exact pair.")
         else:
             err(f"{refs}: Supplier P/N {dpn!r} is an opaque catalog code that no "
                 f"static rule can tie to MPN {mpn!r}, and the pair is not in "

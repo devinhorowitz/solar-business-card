@@ -17380,7 +17380,7 @@
 				)
 			)
 		)
-		(property "Supplier" "DigiKey"
+		(property "Supplier" "Mouser"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
@@ -17391,7 +17391,7 @@
 				)
 			)
 		)
-		(property "Supplier P/N" "490-10671-1-ND"
+		(property "Supplier P/N" "81-GCM155R71C224KE2D"
 			(at 459.74 372.11 0)
 			(hide yes)
 			(show_name no)
