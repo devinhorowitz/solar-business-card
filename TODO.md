@@ -42,6 +42,21 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
 
 ## Cross-domain (link two+ teams — easiest to forget)
 
+- [ ] **[CI — HELD until the three personal builds are done] Bump the six drifted pip pins**
+  _(2026-11-14; DRH's call)._ As of 2026-11-14 the weekly freshness report showed matplotlib
+  3.11.1 → 3.11.2, numpy 2.5.2 → 2.5.4, pillow 12.3.0 → **13.0.0** (a major), shapely 2.1.2 →
+  2.2.0, trimesh 5.0.0 → 5.2.1 and vtk 9.6.2 → 9.7.2 — re-read the standing "Weekly freshness
+  report" issue for today's numbers rather than these. **Why held:** every one of them feeds a
+  render or a solid. shapely is pinned in the CAD step beside cadquery, so a bump can move the
+  enclosure STEP/STL, not just the pictures; the three units (max Ti, lite brass, air Al) should be
+  made from the files that were checked, not from a regeneration in flight. **When the builds are
+  done:** move all six in one PR — they are pinned in `.github/workflows/kibot.yml` (five lines)
+  and `.github/workflows/consistency.yml` (matplotlib) — and read the merge run's `Generated/`
+  diff before calling it done. Expect `scripts/check_mesh.py` re-ledgers if a solid moves, and
+  byte-churn in every render and drawing. The KiCad image digest has drifted too; that is the
+  same kind of call (dispatch the freshness workflow with `bump_kicad=true`) and is NOT part of
+  this item unless DRH adds it.
+
 - [ ] **[BOM] Buy the low-stock / long-lead parts early** _(2026-07-23; numbers refreshed 2026-07-30
   from a live DUAL-distributor sweep of all 31 orderable MPNs — DigiKey and Mouser, exact-MPN matched.)_
   - **U3 accel `ADXL367BCCZ-RL7` — the new alarm: DigiKey went 731 → 0 in seven days.** Mouser holds
