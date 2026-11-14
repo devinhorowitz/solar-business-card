@@ -96,7 +96,7 @@ permissions:
 # runner-owned and the commit step below can stage it, with HOME pointed somewhere
 # writable for kibot/kicad-cli's config.
 env:
-  KICAD_IMAGE: ghcr.io/inti-cmnb/kicad10_auto_full@sha256:dd3b846da945f204fa7b61916df34a99170b2a2095b49c3879cd96d414b8a7b8
+  KICAD_IMAGE: ghcr.io/inti-cmnb/kicad10_auto_full@sha256:96e75f885b15617c6b38aef11db7856a93f4367cab7a0b6c2b30465557619330
 
 jobs:
   kibot:
