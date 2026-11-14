@@ -213,6 +213,10 @@ static void rtc_pit_init(void)
  * from face-down in a half-configured state. */
 static void facedown_deepsleep(uint8_t on)
 {
+    /* Both arms rewrite RTC.PITCTRLA, and the interval that straddles a period change is
+     * not a whole period -- so a deferred STO sample settling across it has proved nothing
+     * about its settle. Drop it; the logger that wanted it asks again on its own cadence. */
+    sense_rail_cancel();
     if (on) {
         /* CHARGING FIRST, and this ordering is load-bearing. The FD ISR is what
          * re-enables the AEM after a read (gate LOW = charging on), and we are about
@@ -286,8 +290,8 @@ static void go_to_sleep(void)
  *
  *   [ 0.. 3] magic 'DRHc'
  *   [ 4.. 7] cold boots        u32 BE     (v1 field, preserved across the migration)
- *   [ 8..11] taps              u32 BE
- *   [12..15] double taps       u32 BE
+ *   [ 8..11] taps              u32 BE     (every tap event, single or double)
+ *   [12..15] double taps       u32 BE     (the subset the accelerometer validated as a double)
  *   [16..19] NFC field reads   u32 BE
  *   [20..23] motion trips      u32 BE
  */
@@ -522,6 +526,12 @@ int main(void)
 #else
             adxl367_clear_tap();                 /* drop the tap latch */
 #endif
+            /* The record has carried a double-tap counter since v2 and nothing ever
+             * incremented it: EV_DBL was defined in both halves of the USE_FRAM_LOG
+             * fence and noted nowhere (found 2026-11-14, dormant only because the log
+             * is still off). A double is ALSO a tap event, so EV_TAP above stays
+             * unconditional and this counts the subset. */
+            if (dbl) ev_note(EV_DBL);
             /* free gate BEFORE the rail read (2026-08-01 pressure-test fix, all three
              * event branches): sense_glow_peak costs a full ADC + reference cold-start
              * per call, and paying it just to zero the result afterwards made every
@@ -701,6 +711,13 @@ int main(void)
 #if USE_NFC_ACK_COOLDOWN
             if (nfc_cooldown) nfc_cooldown--;   /* age the NFC-ack rate-limit on the poll tick (~1 s) */
 #endif
+#if USE_TEMP_LOG || USE_HEALTH_LOG
+            /* FIRST of the logger work: convert the deferred STO sample if one has settled
+             * (the PIT interrupt switched the divider on a whole period ago -- sense.h), and
+             * publish it to the loggers below. None of them reads the tank itself any more;
+             * on a tick with no sample they see none and write nothing. */
+            sense_rail_tick();
+#endif
 #if USE_TEMP_LOG
             /* lifetime max die temp -- self-rate-limited (samples every TEMP_SAMPLE_POLLS)
              * and writes EEPROM only on a new max. Before the dormancy gate on purpose, so a
@@ -714,7 +731,7 @@ int main(void)
              * it can't corrupt (DS40002443 sec 11.3.3, "Preventing Flash/EEPROM Corruption"; the DD
              * documents the same window). */
             sense_vmin_tick();
-            sense_boot_commit();   /* write a boot-flagged power cycle once the rail has charged past the write floor */
+            sense_boot_commit();   /* write a boot-flagged power cycle on the first sample past the write floor */
 #endif
 #if USE_FACEDOWN_DORMANT
             /* orientation watch. Accumulate face-down time and go dormant past the timer;
@@ -863,4 +880,10 @@ ISR(RTC_PIT_vect)
 {
     RTC.PITINTFLAGS = RTC_PI_bm;
     f_tick = 1;
+#if USE_TEMP_LOG || USE_HEALTH_LOG
+    /* The deferred STO sample is switched on HERE, at the edge, not from the tick branch:
+     * the branch can start a whole period late (every glow outlasts a poll), the edge
+     * cannot. sense.h has the state machine. Two compares when nothing is in flight. */
+    sense_rail_edge();
+#endif
 }

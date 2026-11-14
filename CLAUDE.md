@@ -63,6 +63,16 @@ that used to sit here had quietly gone stale against the EA port's figures, whic
 numbers now have one home, and since 2026-08-01 that home is GATED: `scripts/check_fw_size.py`
 fails the firmware build if the README figure stops matching the ELF.
 
+**Firmware static checks** (needs `cppcheck` and `cbmc` on PATH besides the toolchain; ~20 s):
+```sh
+make -C firmware DFP=/path/to/Microchip/AVR-Ex_DFP check
+```
+Three gates, each with canaries that must be caught on every run: `scripts/fw_lint.py`
+(cppcheck against the real device header), `scripts/fw_erratum_scan.py` (the erratum 2.2.3
+guard, read out of the ELF's disassembly) and `scripts/fw_prove.py` (two CBMC proofs on the
+function text taken verbatim from the tree). `firmware/README.md` → "Static checks" has the
+table; what each proof does and does not cover is in that script's header.
+
 **PCB** (KiCad 10 `kicad-cli`):
 ```sh
 kicad-cli sch erc --severity-all PCB/solar-glow-drh-v4_0.kicad_sch
@@ -245,7 +255,21 @@ red, the check itself fails.
 - `firmware.yml` — builds the firmware on `firmware/**` changes (warning-free is a GATE:
   CI passes `WERROR=1`), uploads the hex, and gates the README's measured size figures
   against the build (`scripts/check_fw_size.py` — a size-changing edit lands with its
-  README figure update in the same commit, or fails).
+  README figure update in the same commit, or fails). Since 2026-11-14 it then runs
+  **`make check`** — lint, erratum scan, proofs — as a gate. The three scripts live in
+  `scripts/`, outside `firmware/**`, so each is named in the workflow's trigger paths (the
+  #132 gap class: a checker edit that triggers nothing checks nothing). `cppcheck` and
+  `cbmc` come from apt **unpinned**, for `asic.yml`'s reason and with its remedy: neither
+  touches the uploaded hex, which the pinned toolchain has already built by the time they
+  are installed, and their versions are printed in the log. A runner-image roll can
+  therefore change a *verdict* but never an artifact.
+  **The lint's header canary is load-bearing, and it earned that on its first run.** avr-libc's
+  top-level I/O header picks the device header through `__AVR_DEV_LIB_NAME__`, a computed include, so
+  the obvious `-D__AVR_AVR64EA28__` alone selects *nothing*: every register is an unknown
+  identifier and cppcheck reports a clean tree it has not really read. The first cut of the
+  gate did exactly that, and so had the one-off cppcheck run that prompted it. The `-D` flags
+  are now read from the pack's own spec file — the ones avr-gcc itself passes — and the
+  canary is an out-of-bounds write that exists only if a register mask resolved.
 - `asic.yml` — the DRH-1 companion-ASIC core (2026-08-17). Runs `make -C asic sim` (6
   `$fatal`-armed testbenches; a bench that stops asserting cannot pass by going quiet — the
   Makefile fails on a non-zero `vvp` exit **and** on a missing `TB PASS` line) then
@@ -673,6 +697,24 @@ red, the check itself fails.
 - **The energy budget is the #1 open gate** — harvest vs. LED draw under real indoor
   light has never been measured. Treat firmware duty-cycle / glow constants as
   provisional until it is. See README → "The open question."
+- **Nothing on the poll path reads the tank itself — it asks the deferred STO sample service
+  (`sense.h`), and a "wait until the rail is safe" check is a poll-path read.** `sto_raw()` is a
+  53 ms busy-wait and is only cheap beside a glow. The rail-min sampler was moved off it on
+  2026-08-09; `sense_boot_commit()` was not, and called it on **every poll** for as long as a
+  power-on reset was waiting on the EEPROM write floor — 2.60 V to 2.85 V on a slow cold start,
+  ~50–95 µA average on the card with the least to give (found 2026-11-14). The fix also found
+  that the 2026-08-09 sampler's own premise was false: it switched the divider on from the tick
+  branch and converted on the next tick, trusting "the ~1 s gap", but every glow outlasts a
+  poll, so the tick branch after one starts at a random phase of the PIT and the settle could be
+  anything down to nothing — a phantom low, written into a lifetime minimum that only ratchets
+  down. **The divider is now switched on by the PIT interrupt, at an edge, and converted after
+  the next one.** That makes it state shared between an interrupt and the main loop, which no
+  bench here can exercise and a real one would have to be lucky to catch — so it is *proved*
+  (`scripts/fw_prove.py` [P2], every interleaving, with four canaries), and the proof reads the
+  tree for any code outside its five functions that touches the state or the pin. Add a writer
+  and the gate goes red until the model covers it. **Anything that rewrites `RTC.PITCTRLA` must
+  call `sense_rail_cancel()` first** — the interval straddling a period change is not a period —
+  and the same script holds `main.c` to that.
 - **SW2** (LED master switch) is pure hardware; firmware can't sense it. Board dark? Check SW2 first.
 - The **accelerometer is the only actuator** (no button by design; to add one later: pin 3 / PA5 -> momentary switch -> GND, active-low).
 - LED PWM **`INVEN` polarity in `led.c` is load-bearing** for the dark idle state — don't

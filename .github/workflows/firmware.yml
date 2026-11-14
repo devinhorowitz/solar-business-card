@@ -16,11 +16,18 @@ on:
       # the size gate reads the ELF this job builds; an edit to the gate must re-run it
       # (the #132 gap class: a checker edit that triggers nothing checks nothing)
       - 'scripts/check_fw_size.py'
+      # same for the three `make check` gates: they live in scripts/, outside firmware/**
+      - 'scripts/fw_lint.py'
+      - 'scripts/fw_erratum_scan.py'
+      - 'scripts/fw_prove.py'
       - '.github/workflows/firmware.yml'
   pull_request:
     paths:
       - 'firmware/**'
       - 'scripts/check_fw_size.py'
+      - 'scripts/fw_lint.py'
+      - 'scripts/fw_erratum_scan.py'
+      - 'scripts/fw_prove.py'
       - '.github/workflows/firmware.yml'
 
 jobs:
@@ -61,6 +68,34 @@ jobs:
       # edit must land with its README update in the same commit, or fail here.
       - name: Gate the README size figures against the build
         run: python3 scripts/check_fw_size.py firmware/solar-glow.elf
+
+      # `make check` -- three readings of the firmware the compiler does not give, each a
+      # GATE and each self-testing (firmware/README.md "Static checks"):
+      #   fw_lint.py          cppcheck, told the real target (AVR8 model + the pack's header)
+      #   fw_erratum_scan.py  erratum 2.2.3 guard, checked in the BINARY this job just built
+      #   fw_prove.py         CBMC: glow-brightness chokepoint for every input; the deferred
+      #                       STO sample service's loop/interrupt state machine for every
+      #                       interleaving
+      # The two apt packages are DELIBERATELY UNPINNED, against this repo's pinning doctrine
+      # and for asic.yml's stated reason: neither tool touches the artifact this job
+      # uploads -- the hex is built above, by the pinned toolchain, before they are even
+      # installed -- so no output's reproducibility hangs on their version, and an apt pin
+      # against `ubuntu-latest` turns a runner-image roll into rot. Versions are printed
+      # instead. What a roll CAN do is change a verdict: a newer cppcheck may report
+      # something this one does not. That lands as a red check on a firmware push, with the
+      # finding in the log -- which is the right place for it to land.
+      - name: Install the static-check tools (cppcheck, CBMC)
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends cppcheck cbmc
+          echo "----- provenance -----"
+          cppcheck --version
+          cbmc --version
+          python3 --version
+
+      - name: Static checks (lint, erratum scan, proofs)
+        run: make -C firmware DFP="$HOME/avr/AVR-Ex_DFP" WERROR=1 check
 
       - name: Upload firmware image
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9   # v7.0.2

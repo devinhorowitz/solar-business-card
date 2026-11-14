@@ -8,6 +8,7 @@
 #   make                # build solar-glow.hex
 #   make flash          # UPDI flash via avrdude (set PROG/PORT below)
 #   make fuses          # (optional) set fuses (sampled BOD, 16 MHz OSCHF, EESAVE), see note
+#   make check          # static checks: lint, erratum scan on the ELF, CBMC proofs (see below)
 #   make clean
 #
 # Point DFP at your pack, e.g.:
@@ -57,7 +58,7 @@ SRC      = main.c led.c adxl367.c nfc.c fram.c sense.c
 OBJ      = $(SRC:.c=.o)
 TARGET   = solar-glow
 
-.PHONY: all flash fuses clean
+.PHONY: all flash fuses clean check
 
 all: $(TARGET).hex
 
@@ -109,6 +110,26 @@ fuses:
 	@echo "  avrdude -c $(PROG) -P $(PORT) -p $(MCU) -U osccfg:w:0x08:m   # OSCHF base 16 MHz -> /16 = exactly 1 MHz (see clocks_init)"
 	@echo "  avrdude -c $(PROG) -P $(PORT) -p $(MCU) -U syscfg0:w:0xD1:m  # factory 0xD0 + EESAVE (keep the black box across reflash)"
 	@echo "  # syscfg1: leave at factory default (EA has no MVSYSCFG; SUT default is fine)"
+
+# ---- static checks. A GATE in CI (firmware.yml), same as WERROR. ----
+# Three readings of the firmware that the compiler does not give, each of which says so
+# out loud if it has stopped looking (canaries / self-tests inside each script):
+#   1. fw_lint.py         cppcheck, told the real target (AVR8 data model + this pack's
+#                         device header, selected the way avr-gcc selects it)
+#   2. fw_erratum_scan.py the Rev. B1 erratum 2.2.3 guard, checked in the BINARY: no
+#                         store immediately before any write to SLPCTRL.CTRLA
+#   3. fw_prove.py        CBMC proofs on the source as written: the glow-brightness
+#                         chokepoint for every input, and the deferred STO sample
+#                         service's main-loop/interrupt state machine for every
+#                         interleaving
+# Needs cppcheck and cbmc on PATH (apt-get install cppcheck cbmc) besides the toolchain.
+# ~20 s. The scripts live in ../scripts with the repo's other gates.
+PYTHON   ?= python3
+OBJDUMP   = avr-objdump
+check: $(TARGET).elf
+	$(PYTHON) ../scripts/fw_lint.py --dfp $(DFP) --cc $(CC) $(SRC)
+	$(PYTHON) ../scripts/fw_erratum_scan.py --dfp $(DFP) --objdump $(OBJDUMP) $(TARGET).elf
+	$(PYTHON) ../scripts/fw_prove.py
 
 clean:
 	rm -f $(OBJ) $(TARGET).elf $(TARGET).hex $(TARGET).eep
