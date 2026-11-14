@@ -25,6 +25,24 @@
 # workflow token don't start their own CI (a GitHub guard against workflow
 # loops) — close/reopen the PR or push an empty commit to it to run checks
 # pre-merge, or read the blast radius off the merge run.
+#
+# THIS WORKFLOW CAN STOP RUNNING AND SAY NOTHING (2026-11-14). GitHub turns a public
+# repo's scheduled workflows off after 60 days with no repository activity, and the
+# state it leaves (`disabled_inactivity`) is visible only on the Actions tab. Main took
+# no commit from 2026-08-29 to 2026-11-12, so GitHub disabled this schedule as the
+# 2026-11-02 run fired; there was no 2026-11-09 run, and for twelve days the standing
+# issue kept saying "canaries success, all probes reached upstream" about a check that
+# was not running -- the silence-read-as-green failure this report exists to prevent,
+# in its purest form, because nothing that could have said otherwise ran either. The
+# weekly issue upsert did not count as activity: it ran every Monday and the schedule
+# lapsed anyway. So the report now carries its own expiry, which works even when
+# nothing runs: a STALE-AFTER date under the timestamp, and a schedule-health footer
+# naming main's newest commit and the date the 60-day rule bites. The run also calls
+# the enable endpoint on itself (`actions: write`) -- harmless on an enabled workflow,
+# and third-party keepalive tools say it resets the 60-day clock, but GitHub does not
+# document that, so the footer treats the commit-date deadline as the real one.
+# Re-enabling is one click on Actions -> Weekly freshness, or
+# `gh workflow enable weekly-freshness.yml`; then dispatch a run so the issue is current.
 name: Weekly freshness
 
 on:
@@ -41,6 +59,7 @@ permissions:
   contents: write
   issues: write
   pull-requests: write
+  actions: write   # the sweep re-enables this workflow on itself (see the header's 60-day note)
 
 jobs:
   # ---- canary 1: the firmware world still exists and still builds ----
@@ -101,10 +120,21 @@ jobs:
         run: |
           set -uo pipefail   # no -e ON PURPOSE (see the shell: line above) -- probes report, never abort
           R=report.md
+          # The report's own expiry -- see the header's 60-day note. The next scheduled run is
+          # the coming Monday, a full week out when this runs ON a Monday (the 06:17 schedule
+          # itself); a day's grace covers GitHub's cron lag. Weekday arithmetic, not
+          # `date -d 'next monday'`, so the rule can be tested against any date. Written into
+          # the body because the body is the one thing still there when nothing runs.
+          TODAY=$(date -u +%F)
+          TO_MONDAY=$(( (8 - $(date -u -d "$TODAY" +%u)) % 7 )); [ "$TO_MONDAY" -eq 0 ] && TO_MONDAY=7
+          NEXT_RUN=$(date -u -d "$TODAY + $TO_MONDAY days" +%F)
+          STALE_AFTER=$(date -u -d "$NEXT_RUN + 1 day" +%F)
           {
             echo "# Weekly freshness report"
             echo
             echo "_Updated $(date -u +'%Y-%m-%d %H:%M UTC') by \`.github/workflows/weekly-freshness.yml\` run [${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})._"
+            echo
+            echo "**Stale after ${STALE_AFTER}.** The next scheduled run is Monday ${NEXT_RUN}, 06:17 UTC. Reading this later than ${STALE_AFTER} means everything below is a snapshot of a check that has stopped: open Actions → Weekly freshness and look for \`disabled_inactivity\` (GitHub turns scheduled workflows off after 60 days without repository activity and says so nowhere else), re-enable it, and dispatch a run."
             echo
             echo "**Canaries this run:** firmware-canary = **${{ needs.firmware-canary.result }}**, consistency-canary = **${{ needs.consistency-canary.result }}** (failure = the pinned world broke: act now, that is rot, not drift)."
             echo
@@ -227,16 +257,53 @@ jobs:
               elif [ -z "$latest" ]; then
                 verdict="ℹ️ upstream probe failed — re-run before concluding anything"
               else
-                pv=${claim#v}; pv=${pv%%.*}
-                lv=${latest#v}; lv=${lv%%.*}
+                # Compared on the WHOLE version since 2026-11-14. Majors alone reported
+                # upload-artifact pinned v7.0.1 against upstream v7.0.2 as "✅ current", with the
+                # newer release printed in the column beside it -- while every pip row calls any
+                # difference drift. A claim that names only a major (`# v4`) still compares on
+                # the major, because it makes no finer claim to check.
+                pv=${claim#v}; lv=${latest#v}
+                pmaj=${pv%%.*}; lmaj=${lv%%.*}
+                newest=$(printf '%s\n%s\n' "$pv" "$lv" | sort -V | tail -1)
                 if [ "$pv" = "$lv" ]; then
                   verdict="✅ current (\`$claim\`)"
+                elif [ "$newest" != "$lv" ]; then
+                  verdict="✅ ahead of the latest release (\`$claim\` vs \`$latest\`)"
+                elif [ "$pmaj" != "$lmaj" ]; then
+                  verdict="🔻 pinned \`$claim\`, upstream \`$latest\` — $((lmaj - pmaj)) major(s) behind"
+                elif [ "$pv" = "$pmaj" ]; then
+                  verdict="✅ current major (\`$claim\` names no minor, so there is nothing finer to check)"
                 else
-                  verdict="🔻 pinned \`$claim\`, upstream \`$latest\` — $((lv - pv)) major(s) behind"
+                  verdict="🔻 pinned \`$claim\`, upstream \`$latest\` — same major, behind: read the release notes, then move the SHA"
                 fi
               fi
               echo "| action \`$repo\` | \`${sha:0:12}…\` ${claim:+\`$claim\`} | ${latest:-probe failed} | $verdict |" >> "$R"
             done
+
+          # ---- schedule health: when the 60-day rule bites, and the keepalive attempt ----
+          # GitHub's docs say only "repository activity". A commit is the activity we KNOW counts
+          # (the weekly issue upsert evidently does not -- it ran every Monday and the schedule
+          # lapsed anyway), so the deadline is computed from one: on a scheduled run the
+          # checkout's HEAD is main's newest commit. The self re-enable
+          # is best-effort and must never redden this job (see the shell: line), so its outcome
+          # is reported, not enforced. It is NOT documented to reset the clock -- which is why
+          # the footer names the commit deadline either way.
+          LAST_COMMIT=$(git log -1 --format=%cs 2>/dev/null)
+          if [ -n "$LAST_COMMIT" ]; then
+            DEADLINE=$(date -u -d "$LAST_COMMIT + 60 days" +%F)
+            HEALTH="the newest commit on \`${{ github.ref_name }}\` is ${LAST_COMMIT}, so with no new commit GitHub turns this schedule off around **${DEADLINE}**"
+          else
+            HEALTH="the newest commit's date could not be read from the checkout, so the 60-day deadline is UNKNOWN this run"
+          fi
+          if gh api -X PUT "repos/${{ github.repository }}/actions/workflows/weekly-freshness.yml/enable" >/dev/null 2>&1; then
+            KEEPALIVE="This run re-enabled the workflow on itself through the API; GitHub does not document whether that restarts the 60-day clock, so take the date above as the deadline."
+          else
+            KEEPALIVE="This run **could not re-enable the workflow on itself** (the API call failed: check the workflow's \`actions: write\` permission), so the date above is the deadline."
+          fi
+          {
+            echo
+            echo "**Schedule health:** ${HEALTH}. ${KEEPALIVE}"
+          } >> "$R"
 
           {
             echo
