@@ -88,7 +88,10 @@ BASELINE = {
     # (27.05, 0.78), with the three zero-area facets of the same seam beside it --
     # one cutter here, the lip break, at z 2.65.
     # Open length 0.000; more seams, or one with length, is a finding.
-    volume_mm3=5289.66, bbox=(-26.35, -45.4, -0.15, 26.35, 45.4, 3.4),
+    # re-ledgered 2026-11-14, 5289.66 -> 5289.51: the two east mid-span bosses hollowed back to
+    # COIL_CLR from the NFC coil (fit_rules.boss_coil_cuts). 0.0759 + 0.0091 mm2 of boss x 1.80
+    # = 0.153 predicted, 0.150 measured. bbox, seam and facets unchanged.
+    volume_mm3=5289.51, bbox=(-26.35, -45.4, -0.15, 26.35, 45.4, 3.4),
         max_boundary_edges=1, max_open_len_mm=0.001, max_degenerate=3),
     "solar-glow-drh-pogo-testplate.stl": dict(
         # re-ledgered 2026-11-13: the y range flips, -10.4..99.3 -> -99.3..10.4, and nothing
@@ -233,7 +236,11 @@ BASELINE = {
     # Still blind pockets (1.00 <= SPAN_LIMIT 1.18), through-holes still none. The LITE brace
     # is byte-identical: all four 0603s were already through-holes at its 0.60 span. bbox
     # unchanged; one piece, watertight, 0 open, 0 degenerate. Transition note as above.
-    volume_mm3=1917.48, bbox=(-22.85, -42.4, 0.0, 24.10, 42.4, 1.8),
+    # re-ledgered 2026-11-14 (later), 1917.48 -> 1917.45: the ridge east of the ferrite channel
+    # ends square where it would be under fit_rules.PRINT_WALL -- its two feather tips, y 31.40-
+    # 31.67 and 57.23-57.50, 0.036 mm2 each over the channel's 0.33. The lite brace loses the
+    # same two tips. bbox unchanged; watertight, 0 open, 0 degenerate.
+    volume_mm3=1917.45, bbox=(-22.85, -42.4, 0.0, 24.10, 42.4, 1.8),
         max_boundary_edges=0, max_open_len_mm=0.0, max_degenerate=0),
     # ---- the 2026-08-07 enclosure variants (fit_rules.VARIANTS) --------------------------
     # Ledgered from local builds in the variants commit itself -- the chicken-and-egg rule:
@@ -273,7 +280,9 @@ BASELINE = {
         # (27.05, 0.78), with the three zero-area facets of the same seam beside it --
         # one cutter, z 1.67.
         # Open length 0.000; more seams, or one with length, is a finding.
-        volume_mm3=3922.31, bbox=(-26.35, -45.4, -0.15, 26.35, 45.4, 2.42),
+        # re-ledgered 2026-11-14, 3922.31 -> 3922.21: the coil relief in the two east mid-span
+        # bosses, as the max shell. 0.085 mm2 x 1.22 = 0.104 predicted, 0.100 measured.
+        volume_mm3=3922.21, bbox=(-26.35, -45.4, -0.15, 26.35, 45.4, 2.42),
         max_boundary_edges=1, max_open_len_mm=0.001, max_degenerate=3),
     "solar-glow-drh-frame-air-316L.stl": dict(
         # air: OPEN frame, no floor -- walls + recess + 8 bosses only, z 0..1.80 exactly
@@ -312,7 +321,10 @@ BASELINE = {
         # Open length 0.000; more seams, or one with length, is a finding.
         # The resting-face break is a boolean now (the shell CAD, _resting_face_break): ~999.8 here
         # still means it was lost.
-        volume_mm3=978.58, bbox=(-26.35, -45.4, 0.0, 26.35, 45.4, 1.8),
+        # re-ledgered 2026-11-14, 978.58 -> 978.48: the coil relief in the two east mid-span
+        # bosses, with its 45-degree foot at the resting face. 0.085 mm2 x 1.20 = 0.102
+        # predicted, 0.099 measured. Still two seams and four facets.
+        volume_mm3=978.48, bbox=(-26.35, -45.4, 0.0, 26.35, 45.4, 1.8),
         max_boundary_edges=2, max_open_len_mm=0.001, max_degenerate=4),
     "solar-glow-drh-diffuser-brace-lite.stl": dict(
         # the lite brace: gap 1.22, span 0.60, 31 pockets, 0 through-holes, single piece
@@ -350,7 +362,9 @@ BASELINE = {
         # moves nothing here (measured: 1144.28 exactly). The max entry has the story.
         # re-ledgered 2026-11-13 (later), 1136.29 -> 1135.81: cut to the cavity as milled, as
         # the max brace. Footprint 1084.123 -> 1083.728; 0.395 x 1.22 = 0.48, 0.48 measured.
-        volume_mm3=1135.81, bbox=(-22.85, -42.4, 0.0, 24.10, 42.4, 1.22),
+        # re-ledgered 2026-11-14, 1135.81 -> 1135.78: the channel ridge's two feather tips,
+        # as the max brace.
+        volume_mm3=1135.78, bbox=(-22.85, -42.4, 0.0, 24.10, 42.4, 1.22),
         max_boundary_edges=0, max_open_len_mm=0.0, max_degenerate=0),
 }
 VOL_TOL = 0.005

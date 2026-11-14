@@ -331,7 +331,8 @@ from fit_rules import (lip_bands, cavity_void_poly as _cavity_void_poly,
                        LIP_CLR, LIP_MAX, COIL_EAST,
                        ring_reliefs as _ring_reliefs,
                        BOSS_CLR, THREAD_KEEP, export_solid,
-                       boss_cuts as _boss_cuts, recess_poly as _recess_poly, TOOL_R as _TOOL_R,
+                       boss_cuts as _boss_cuts, boss_coil_cuts as _boss_coil_cuts,
+                       recess_poly as _recess_poly, TOOL_R as _TOOL_R,
                        fin_region as _fin_region, fin_ribs as _fin_ribs,
                        FIN_PROUD, FIN_VALLEY,
                        MOUNTS as mounts)                                      # noqa: E402
@@ -425,11 +426,18 @@ def _boss_scallop_tool(x, y, floor, cavity, foot=0.0):
 
     Every cut face is a plane or a true cylinder: square-cornered part outlines against the
     original cylinder, and an R = TOOL_R bore for each dogbone (fit_rules.boss_cuts -- where the
-    Ø2.0 finisher has to go to reach a keep-out corner), nothing faceted for a CAM seat to choke on."""
+    Ø2.0 finisher has to go to reach a keep-out corner), nothing faceted for a CAM seat to choke on.
+
+    THE COIL'S KEEP-OUT COMES OUT THE SAME WAY (2026-11-14, fit_rules.boss_coil_cuts): the
+    straight band beside a track is one more plane-sided polygon, and the round end about a
+    track's corner is one more bore -- of its own radius, the clearance plus half the track,
+    which is why a bore here is (x, y, r) and not a centre with TOOL_R understood."""
     kps, dbs = _boss_cuts(x, y)
-    fouls = [g for kp in kps for g in (kp.geoms if kp.geom_type == "MultiPolygon" else [kp])]
-    bores = [cc for d in dbs for cc in d]
-    if not fouls:
+    coil_discs, coil_slabs = _boss_coil_cuts(x, y)
+    fouls = [g for kp in list(kps) + coil_slabs
+             for g in (kp.geoms if kp.geom_type == "MultiPolygon" else [kp])]
+    bores = [(cx, cy, _TOOL_R) for d in dbs for cx, cy in d] + list(coil_discs)
+    if not fouls and not bores:
         return None
     # Upward the tool overshoots into the board recess, which is air. Downward it may only
     # overshoot on the open frame: anywhere else `floor` is the cavity FLOOR, and a tool that
@@ -442,9 +450,9 @@ def _boss_scallop_tool(x, y, floor, cavity, foot=0.0):
     island = fat
     for g in fouls:
         island = island.cut(_poly_solid(g, z0 - 0.01, dz + 0.02))
-    for cx, cy in bores:
+    for cx, cy, br in bores:
         island = island.cut(cq.Workplane("XY").workplane(offset=z0 - 0.01)
-                              .moveTo(wx(cx), wy(cy)).circle(_TOOL_R).extrude(dz + 0.02))
+                              .moveTo(wx(cx), wy(cy)).circle(br).extrude(dz + 0.02))
     island = _axis_piece(island, x, y, floor + cavity / 2)
     tool = fat.cut(island)
     if foot > 0:
@@ -455,11 +463,11 @@ def _boss_scallop_tool(x, y, floor, cavity, foot=0.0):
                        .extrude(foot, taper=45))
             wedge = wedge.union(_poly_solid(grown, z0, floor - z0))    # ...and on down past the face
             tool = tool.union(wedge.intersect(fat))
-        for cx, cy in bores:
+        for cx, cy, br in bores:
             cone = (cq.Workplane("XY").workplane(offset=floor).moveTo(wx(cx), wy(cy))
-                      .circle(_TOOL_R + foot).extrude(foot, taper=45))
+                      .circle(br + foot).extrude(foot, taper=45))
             cone = cone.union(cq.Workplane("XY").workplane(offset=z0).moveTo(wx(cx), wy(cy))
-                                .circle(_TOOL_R + foot).extrude(floor - z0))
+                                .circle(br + foot).extrude(floor - z0))
             tool = tool.union(cone.intersect(fat))
     return tool
 

@@ -136,7 +136,7 @@ from shapely.geometry import box as _bx2                                     # n
 # and would build one variant's geometry under another's name (the consumer-map hazard
 # this refactor exists to dodge). GAP/SPAN_LIMIT are deliberately NOT imported by value.
 from fit_rules import (brace_footprint as _brace_footprint,
-                       blockers as _fit_blockers, SLA_WEB, SLA_WALL, VARIANTS)   # noqa: E402
+                       blockers as _fit_blockers, SLA_WEB, SLA_WALL, PRINT_WALL, VARIANTS)   # noqa: E402
 import fit_rules as _fit                                                      # noqa: E402
 
 # The rules live in enclosure/fit_rules.py, shared with the shell generator and asserted by
@@ -144,6 +144,31 @@ import fit_rules as _fit                                                      # 
 # is what went stale against the supercaps.
 _cav = _fit.brace_cavity()          # the shell's actual void less the wall fit -- NOT cavity_rect() alone,
                                     # which is 0.25 mm wider than the cavity on the east (see fit_rules.brace_cavity)
+
+
+def _thin_runs(zone, floor_w, step=0.005):
+    """[(y_lo, y_hi)] -- the stretches of y over which `zone`, a wall that runs north-south,
+    is narrower in x than floor_w. Measured as a wall's thickness is: straight across it,
+    every `step`. Each stretch is returned one step long at both ends, so what is left
+    standing beside it is never under floor_w by the width of a sample."""
+    from shapely.geometry import LineString as _Ln
+    runs = []
+    for g in (list(zone.geoms) if hasattr(zone, "geoms") else [zone]):
+        if g.is_empty or g.geom_type != "Polygon":
+            continue
+        x0, y0, x1, y1 = g.bounds
+        n = int(round((y1 - y0) / step))
+        cur = None
+        for k in range(n + 1):
+            y = y0 + k * step
+            w = g.intersection(_Ln([(x0 - 1.0, y), (x1 + 1.0, y)])).length
+            if 1e-9 < w < floor_w - 1e-9 or (k in (0, n) and w <= 1e-9):   # the tip itself reads 0
+                cur = [y, y] if cur is None else [cur[0], y]
+            elif cur is not None:
+                runs.append(cur); cur = None
+        if cur is not None:
+            runs.append(cur)
+    return [(lo - step, hi + step) for lo, hi in runs]
 
 
 def _build(vname):
@@ -246,12 +271,14 @@ def _build(vname):
         _bands.append((gap - d, gap - _prev, [g for g, dd in _feats if dd >= d - 1e-9]))
         _prev = d
     _bands.append((0.0, gap - _prev, [g for g, dd in _feats if dd > gap]))   # through-only base
-    nedge = 0; _level_area = 0.0
+    nedge = 0; _level_area = 0.0; _top_resin = None
     for z_lo, z_hi, active in _bands:
         if z_hi - z_lo < 1e-6:
             continue
         mat = _fpU.difference(_uu(active)) if active else _fpU
         kept = mat.buffer(-_r, join_style=2).buffer(_r, join_style=2)
+        if z_hi >= gap - 1e-9:
+            _top_resin = kept                               # what stands at the board-facing face
         gone = mat.difference(kept)
         pieces = [g for g in (list(gone.geoms) if hasattr(gone, "geoms") else [gone])
                   if not g.is_empty and g.area > 1e-7]
@@ -295,8 +322,32 @@ def _build(vname):
     # both ends so the ferrite can be cut long/short and extend slightly past the brace.
     fx0, fx1 = max(FER[0]-FER_CLR, BX0+0.2), min(FER[2]+FER_CLR, BX1)   # width walls
     fy0, fy1 = BY0-1.0, BY1+1.0                                          # y open
-    brace = brace.cut(cq.Workplane("XY").box(fx1-fx0, fy1-fy0, FER_POCKET_DEPTH+0.05, centered=(False, False, False))
-                      .translate((wx(fx0), wy(fy0), gap-FER_POCKET_DEPTH)))
+    _chan = (cq.Workplane("XY").box(fx1-fx0, fy1-fy0, FER_POCKET_DEPTH+0.05, centered=(False, False, False))
+               .translate((wx(fx0), wy(fy0), gap-FER_POCKET_DEPTH)))
+    # THE RIDGE EAST OF THE CHANNEL ENDS SQUARE (2026-11-14). The channel is cut after the
+    # levels on purpose, so its own walls are let off SLA_WALL -- and the east one, the 0.40
+    # ridge between the channel wall and the brace's edge, was let off everything. Where the
+    # brace's edge turns in round the as-milled fillet of each east mid-span boss, the ridge
+    # ran on with it and tapered to nothing: two tips 0.78 mm long, 0.20 wide 0.19 from the
+    # point, found by measuring the built braces (SolidCraft, 2026-11-14). Nothing here could
+    # see them -- the level pass runs before there is a channel, and its mitred opening
+    # restores a wedge's point by design.
+    # So the channel takes the tip with it: wherever the resin east of its wall would be
+    # narrower than PRINT_WALL -- the wall the print spec's printer class holds -- the channel
+    # runs out to the brace's edge. One tool, one floor: the tips are boxes fused to the
+    # channel box before the cut, not a second cut laid beside its face.
+    _ridge = (_top_resin if _top_resin is not None else _fpU).intersection(
+        _box(fx1, BY0 - 1.0, BX1 + 1.0, BY1 + 1.0))
+    _tips = _thin_runs(_ridge, PRINT_WALL)
+    for y_lo, y_hi in _tips:
+        _chan = _chan.union(
+            cq.Workplane("XY").box(BX1 + 0.5 - (fx1 - 0.02), y_hi - y_lo, FER_POCKET_DEPTH + 0.05,
+                                   centered=(False, False, False))
+              .translate((wx(fx1 - 0.02), wy(y_lo), gap - FER_POCKET_DEPTH)))
+    print(f"[{vname}] channel ridge x{fx1:.2f}..{BX1:.2f}: {len(_tips)} end(s) cut square where it "
+          f"would be under PRINT_WALL {PRINT_WALL}: "
+          + ", ".join(f"y{lo:.3f}..{hi:.3f}" for lo, hi in _tips))
+    brace = brace.cut(_chan)
     for sx, sy in STUBS:
         wpr = cq.Workplane("XY").workplane(offset=-0.01).moveTo(wx(sx), wy(sy))
         prof = wpr.slot2D(4.0, RECESS_R*2, 45) if (sx, sy) == (33.0, 55.0) else wpr.circle(RECESS_R)

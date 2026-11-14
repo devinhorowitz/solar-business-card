@@ -83,6 +83,18 @@ STEP keeps those corners sharp and both earlier checks measured the STEP: the br
 0.225 mm into the east boss-to-wall fillets and a max-material SC2 / SC4 sat 0.113 / 0.130
 inside the mid-span boss corners on every committed shell, all of it green.
 
+THE COIL CHECK ([I], 2026-11-14) holds the one clearance on the sheet that is not to a
+part: grounded metal stands fit_rules.COIL_CLR off NFC coil copper, because titanium over
+the antenna detunes it. The rule was written for the east lip, and the lip was the only
+feature ever held to it -- check [8] compares the lip bands with the coil's east edge and
+nothing else. The two east mid-span bosses are the same metal at the same height, and on
+every committed shell they stood 0.874 and 0.966 mm from the coil, under a note printing
+1.00. An independent measurement of the STEP found it (SolidCraft, 0.877); nothing here
+could have, because nothing here measured it. So [I] takes the copper off the board and
+the metal out of the sections -- every level, and again as the finisher leaves it -- and
+measures one against the other. Its canary is a coil 0.25 mm fatter, which must read as
+too close at the east lip and at each boss the cut was made in, separately.
+
 Variant policy, stated rather than implied:
   * max / lite -- every check, parameterized (floor, cavity, screw_len, stack).
   * air -- open_back, no brace: the cavity-floor probe and every brace/ferrite
@@ -149,6 +161,22 @@ LIP_BLEND = 1.35
 # blend): a probe there runs along metal, and "width" stops meaning anything.
 LIP_CORNER = 3.6
 LIP_STEP = 0.1
+# ---- the coil check ([I]) ----------------------------------------------------------------
+# What a section of a HOLLOW arc can resolve. The boss relief is an R1.15 hollow, the STL
+# inscribes it with chords, and a chord of a hollow lies on the metal's side: at the 0.2 rad
+# the shell is tessellated to that is R(1 - cos 0.1) = 0.006 mm of metal the STEP does not
+# have. Three times that, and still under the 0.034 mm the shallower of the two original
+# violations stood inside the rule by.
+COIL_TOL = 0.02
+# The canary's coil is this much fatter than the board's. The lip and the relieved bosses
+# are cut to stand EXACTLY the clearance off, so any growth past COIL_TOL must read as a
+# violation at each of them; a quarter millimetre leaves no doubt which side of it we are.
+COIL_FAT = 0.25
+# ---- the channel ridge ([C]) -------------------------------------------------------------
+# The ridge's faces are planes and section exactly; this is headroom for the 0.005 mm the
+# generator samples its width at, not a clearance.
+RIDGE_TOL = 0.01
+RIDGE_STEP = 0.02
 OVERLAP_EPS = 1e-3    # mm2 of plan overlap that counts as metal inside a body, not noise
 SECTION_GRID = 1e-5   # mm: snap for stitching section segments into closed outlines
 # Heights are fractions of the cavity plus an irrational-looking nudge, so no cut ever lands
@@ -502,6 +530,59 @@ def check_variant(vname, v, fr, bp, trimesh):
                     f"the cavity walls, so tightening the screws bows the PCB over the coil "
                     f"instead of clamping the sheet. Deepen the pocket or thin the stack")
 
+        # THE RIDGE EAST OF THE CHANNEL (2026-11-14). It is let off fit_rules.SLA_WALL on
+        # purpose -- it is what locates the ferrite's critical width -- and until this check
+        # it was let off everything: at both ends it followed the brace's edge round a boss
+        # fillet and tapered to a point, found by measuring the built braces. The floor it
+        # is held to is fit_rules.PRINT_WALL, the wall the print spec says the printer must
+        # hold. Measured as a wall's thickness is, straight across, on the emitted brace.
+        from shapely.geometry import LineString as _Ln, Point as _Pp
+        zc = cavity - fr.FER_POCKET_DEPTH / 2.0 + _NUDGE * 0.1
+        resin = section(brace, zc, trimesh)
+        mid_y = (fy0 + fy1) / 2.0
+        # the cut must be IN the channel: the sheet's own centre void, the brace's floor
+        # 0.2 mm lower solid at the same spot (a cut above the brace, or under the channel's
+        # floor, would read every chord wrong and say nothing)
+        under = section(brace, cavity - fr.FER_POCKET_DEPTH - 0.2, trimesh)
+        centre = _Pp((fx0 + fx1) / 2.0, mid_y)
+        if resin.is_empty or resin.contains(centre) or not under.contains(centre):
+            err(f"SELF-TEST: the cut at z {zc:.3f} is not through the ferrite channel (the "
+                f"sheet's centre must read as void there, and as resin 0.2 mm under the "
+                f"channel's floor) -- the ridge cannot be measured on it")
+        else:
+            widths = []
+            n = int(round((fy1 - fy0 + 2.0) / RIDGE_STEP))
+            for k in range(n + 1):
+                y = fy0 - 1.0 + k * RIDGE_STEP
+                w = resin.intersection(_Ln([(fx1, y), (W + 1.0, y)])).length
+                if w > 1e-6:
+                    widths.append((y, w))
+            if len(widths) < 100:
+                err(f"only {len(widths)} stations found resin east of the ferrite at the "
+                    f"channel's level -- the ridge that walls the sheet's critical width is "
+                    f"not there to measure")
+            else:
+                need_w = fr.PRINT_WALL - RIDGE_TOL
+                thin = [(y, w) for y, w in widths if w < need_w]
+                wmax = max(w for _y, w in widths)
+                # canary: the same ridge shaved to half the floor must fail at every station
+                shave = wmax - fr.PRINT_WALL / 2.0
+                if any(w - shave >= need_w for _y, w in widths):
+                    err("SELF-TEST: a ridge shaved to half of PRINT_WALL still passes at some "
+                        "station -- the width comparison is not live")
+                if thin:
+                    y, w = min(thin, key=lambda t: t[1])
+                    err(f"the ridge east of the ferrite channel is under the "
+                        f"{fr.PRINT_WALL} mm wall the print spec's printer holds at "
+                        f"{len(thin)} of {len(widths)} stations (y {thin[0][0]:.2f}.."
+                        f"{thin[-1][0]:.2f}; thinnest {w:.3f} mm at y {y:.2f}) -- a feather "
+                        f"tip that prints as flash or not at all")
+                else:
+                    ok(f"the ridge east of the channel stands y {widths[0][0]:.2f}.."
+                       f"{widths[-1][0]:.2f}, {min(w for _y, w in widths):.3f}..{wmax:.3f} mm "
+                       f"wide at {len(widths)} stations -- nowhere under PRINT_WALL "
+                       f"{fr.PRINT_WALL}; shaved to half of that it fails everywhere, as it must")
+
     # ---- 4. the screws have something to bite, and stop before the back --------------
     print("[D] screws")
     pre_screw_errs = len(_ERRORS)
@@ -795,6 +876,82 @@ def check_variant(vname, v, fr, bp, trimesh):
         ok(f"{len(rows)} bodies (the supercaps also at max material, fit_rules.part_envelope) "
            f"clear the shell as an R{R:g} finisher leaves it (tightest {rows[0][1]} "
            f"{rows[0][0]:.3f}); the planted fillet speck reads as milled metal, as it must")
+
+    # ---- 9. grounded metal against the NFC coil --------------------------------------
+    # The number held is fit_rules.COIL_CLR ON PURPOSE: it is what the sheet prints ("THE
+    # LIP STOPS 1.00 SHORT OF NFC COIL COPPER"), so this is [G]'s shape -- a printed claim
+    # held to the metal. What it owes nothing to is fit_rules' polygons: the metal is the
+    # sectioned STL and the copper is read off the board.
+    print("[I] grounded metal vs the NFC coil (sectioned)")
+    from shapely.geometry import LineString as _LS, Point as _Pt
+    from shapely.ops import nearest_points as _near, unary_union as _uu
+    pre = len(_ERRORS)
+    tracks = bp.coil_tracks()
+    cu = _uu([(_Pt(a) if a == b else _LS([a, b])).buffer(w / 2.0, quad_segs=32)
+              for a, b, w in tracks])
+    fat = cu.buffer(COIL_FAT, quad_segs=32)
+    need = fr.COIL_CLR - COIL_TOL
+    reach = fr.BOSS_R + 0.1
+    relieved = [(mx, my) for mx, my in fr.MOUNTS if any(fr.boss_coil_cuts(mx, my))]
+    east_by_coil = any(fr.COIL_REF in who for _lo, _hi, _w, who in fr.lip_as_cut("E"))
+    all_bosses = _uu([_Pt(mx, my).buffer(reach) for mx, my in fr.MOUNTS])
+    tight, blind = {}, []          # site -> [as modelled, as milled, where it was tightest]
+    for lbl, z, metal, mm in milled:
+        if metal.is_empty:
+            err(f"the shell has no metal {lbl} (z {z:.2f}) -- nothing to hold to the coil")
+            continue
+        # site by site, so the second-worst boss is named too and not hidden under the worst
+        for name, cut in [("the lip", None)] + [
+                (f"the boss at ({mx}, {my})", _Pt(mx, my).buffer(reach)) for mx, my in fr.MOUNTS]:
+            row = tight.setdefault(name, [1e9, 1e9, ""])
+            for k, m in enumerate((metal, mm)):
+                g = m.difference(all_bosses) if cut is None else m.intersection(cut)
+                if g.is_empty:
+                    continue
+                d = g.distance(cu)
+                if d < row[k]:
+                    row[k] = d
+                    if k == 1:
+                        on_metal, _on_cu = _near(g, cu)
+                        row[2] = f"{lbl}, z {z:.2f}, at board ({on_metal.x:.2f}, {on_metal.y:.2f})"
+        # canary: the fatter coil, at the lip and at each relieved boss SEPARATELY, so a
+        # section that has lost one of them cannot hide behind the others
+        if east_by_coil and metal.difference(all_bosses).distance(fat) >= need:
+            blind.append(f"the east lip {lbl}")
+        for mx, my in relieved:
+            g = metal.intersection(_Pt(mx, my).buffer(reach))
+            if g.is_empty or g.distance(fat) >= need:
+                blind.append(f"boss ({mx}, {my}) {lbl}")
+    for name, (d_model, d_milled, where) in tight.items():
+        if d_milled < need:
+            err(f"{name} stands {d_milled:.3f} mm from NFC coil copper ({where}) -- inside the "
+                f"{fr.COIL_CLR:.2f} mm the sheet prints, and grounded metal that close to the "
+                f"antenna detunes it"
+                + ("" if d_model < need else
+                   f". The model clears it ({d_model:.3f}); the R{R:g} the finisher leaves in "
+                   f"a corner beside it does not"))
+    if blind:
+        err(f"SELF-TEST: a coil {COIL_FAT} mm fatter than the board's still reads as clear of "
+            f"{'; '.join(blind)} -- metal fit_rules says is cut to stand exactly "
+            f"{fr.COIL_CLR:.2f} off it. The section is not seeing that metal, so every "
+            f"'clear' here is unproven")
+    near = sorted((d_milled, n) for n, (_dm, d_milled, _w) in tight.items()
+                  if d_milled < fr.COIL_CLR + 1.0)
+    for d, n in near:
+        print(f"          {n:28s} nearest coil copper {d:.3f} mm")
+    if not near and len(_ERRORS) == pre:
+        err(f"no shell metal within {fr.COIL_CLR + 1.0:.2f} mm of the coil at any level -- the "
+            f"east lip is cut to stand {fr.COIL_CLR:.2f} off it, so the section or the coil "
+            f"reader has lost one of them")
+    if not relieved:
+        note("no boss is within reach of the coil on this board -- the fatter-coil canary "
+             "has only the east lip to prove itself on")
+    if len(_ERRORS) == pre:
+        ok(f"no shell metal within {fr.COIL_CLR:.2f} mm of the coil's {len(tracks)} copper "
+           f"pieces at any of {len(milled)} levels, as modelled or as milled (tightest "
+           f"{near[0][1]} at {near[0][0]:.3f}); a coil {COIL_FAT} mm fatter reads too close at "
+           f"{'the east lip and ' if east_by_coil else ''}{len(relieved)} relieved boss(es), "
+           f"as it must")
 
     return len(_ERRORS), len(_WARNS)
 

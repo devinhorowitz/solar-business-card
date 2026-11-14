@@ -769,15 +769,18 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
     a wall at 49.550.
   - **The four downward faces at seat level are gone** (24.896 mm², max and lite; the air frame had
     them too).
-  - **The max shell STEP imports with no edge repair.** Expect **28,526 edges, none shared by more
-    than two faces; 9,648 faces, 36 of them under 0.001 mm²**; no upward faces at z +0.02. _(Counts
-    re-taken 2026-11-14 by OCC on the STEP `main` carries, built at `a4f951e`. The 28,403 / 9,626 /
-    82 that stood here until then were of `9a90a36`, the solids before the enclosure-calls round —
-    which is why the MEASURED block below, a record of that commit, still reads them.)_
+  - **The max shell STEP imports with no edge repair.** Expect **28,544 edges, none shared by more
+    than two faces; 9,654 faces, 36 of them under 0.001 mm²**; no upward faces at z +0.02. _(Counts
+    by OCC on a local build with CI's pins, 2026-11-14, of the shell with the coil relief in its two
+    east mid-span bosses — the last block of this item. They were 28,526 / 9,648 / 36 on the STEP
+    built at `a4f951e`, which is what the 2026-11-14 ArtCraft record below measured, and 28,403 /
+    9,626 / 82 at `9a90a36`, which is what the 2026-11-13 MEASURED block reads.)_
   - **The open frame still has its resting-face edge-break**, including a 45° foot on each boss flat.
   - **No brace resin wall under 0.10 mm**, max and lite, and none under `SLA_WALL` 0.60 except the
-    ferrite channel's own walls (x 36.2–36.7 and 49.10, top 0.33 mm only). The 0.0068 mm wall at
-    (4.411, 49.653) is the canary: it must be gone.
+    ferrite channel's own walls (x 36.2–36.7 and 49.10, top 0.33 mm only) — **and none of those
+    under 0.25** (`fit_rules.PRINT_WALL`): the ridge east of the channel now stops square at y 31.67
+    and y 57.23, where it is 0.25 wide, instead of tapering to a point at 31.40 and 57.50. The
+    0.0068 mm wall at (4.411, 49.653) is the canary: it must be gone.
   - **The files are the parts, not their mirror images** (written right-handed since 2026-11-13).
     In a shell's or a brace's file a board point (x, y) is at **(x − 25.4, 44.45 − y)**: y runs UP
     now, so every board coordinate in this list reads that way in SolidCraft. Expect:
@@ -793,7 +796,8 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
       (−4.9, −20.0) and (55.7, −85.0); the plate is un-centred, a board point (x, y) is at
       (x, −y)), and its title and net labels reading correctly from above;
     - the max shell STEP's counts are what they were — the reflection changes no face, edge or
-      volume (**5289.905 mm³** by OCC on today's STEP; 5293.129 was `9a90a36`'s).
+      volume (**5289.748 mm³** by OCC with the coil relief; 5289.905 at `a4f951e`; 5293.129 was
+      `9a90a36`'s).
     `scripts/handedness_drc.py` measures the first and third of these on every CI run, in the
     kernel that wrote the files; this is the check in one that did not.
 
@@ -1066,6 +1070,53 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
     - The R1.0 sweeps stop on a mesh-tolerance contact (0.105). The exact seated pose shows no
       overlap, so the sweep is not decisive.
 
+  **THREE OF THOSE FINDINGS ACTED ON, 2026-11-14 (DRH's call) — SO THE SOLIDS CHANGED ONCE MORE.**
+  All three shells and both braces are rebuilt by this change's merge run, and the measurement this
+  item waits on is of THOSE solids. Everything in the two "what to expect" lists above stands except
+  where a bullet here says otherwise. Board coordinates; this repo's instruments, on a local build
+  with CI's pins — none of it is a SolidCraft figure yet.
+  - **The two east mid-span bosses stand 1.00 mm from coil copper** (they were 0.874 and 0.966;
+    ArtCraft's 0.8772 is the first). `COIL_CLR` was written for the east lip and the lip was the
+    only feature held to it. Each boss now carries one hollow, **R1.15, a true cylinder about the
+    coil's own corner vertex** — axis (46.9, 56.8) in the boss at (47.93, 60.27), and (46.9, 32.2)
+    in the boss at (47.93, 28.63) — full cavity height, with a 45° foot on the air frame. R1.15 is
+    the clearance plus half the 0.30 track, so the Ø2.0 finisher cuts it; the boss at y 60.27 also
+    takes a sliver of flat at y 57.95 over x 46.76–46.90, the band beside the coil's straight run.
+    They take 0.076 and 0.009 mm² off the two bosses, 0.13 and 0.03 mm deep, 2.47 and 2.57 mm from
+    the screw axes; the six bores and every flat are where they were. Nothing else on the shell moved: the
+    lip, the other six bosses and the void are unchanged, and so is the brace's outline.
+    - Volumes by OCC on the STEPs: **5289.748 / 3922.362 / 978.605 mm³** (max / lite / air; they
+      were 5289.905 / 3922.466 / 978.708). STL: 5289.51 / 3922.21 / 978.48.
+    - The max STEP: **28,544 edges, 9,654 faces**, 36 under 0.001 mm², none shared by more than two
+      faces. Lite 1,055 / 390 / 36; air 1,310 / 472 / 38.
+    - `scripts/assembly_drc.py` **[I]** now sections every shell and measures its metal against
+      the coil's copper read off the board. On the solids as committed before this it is red at
+      both bosses (0.870 and 0.966 through the mesh); on the rebuilt ones the bosses read 0.998 /
+      0.999 and the lip 1.000. Its canary is a coil 0.25 mm fatter, which must read too close at
+      the lip and at each relieved boss separately.
+  - **The brace's ridge east of the ferrite channel ends square** (max and lite). The two tips
+    ArtCraft found — the ridge following the brace's edge round each boss fillet and tapering to
+    nothing at y 31.40 and 57.50 — are cut off where the ridge would be narrower than **0.25 mm**,
+    the wall the print spec's printer class holds (`fit_rules.PRINT_WALL`, new: an exception from
+    `SLA_WALL` 0.60 is not an exception from that). The ridge now stands **y 31.67–57.23, 0.25 wide
+    at each end and 0.40 between**, 0.33 tall. The channel takes the tips with it: one tool, one
+    floor. Volumes **1917.453 / 1135.782 mm³** by OCC (were 1917.478 / 1135.807); max 1,035 edges
+    / 353 faces, lite 1,143 / 379. `assembly_drc` **[C]** measures the ridge straight across on the
+    emitted brace, every 0.02 mm of its length: red on the braces as committed before this
+    (thinnest 0.003 mm), 0.257–0.400 on the rebuilt ones.
+  - **Max sheet, note 6** no longer says "FLOOR IS A TRUE 1.00, UNIFORM". It says the cavity floor
+    is one flat face at 1.00 and what the metal is under it — 1.00 uncut, **0.40 under the reeded
+    valleys, 0.55 under the medallion's coin floor** — from `fit_rules.FIN_VALLEY` and
+    `medallion.COIN_D`, the constants that make the cuts. Notes 4 and 7 and the caption in Section
+    A-A said the same thing in other words and are corrected with it; that caption was also set
+    across the wall's hatching, unreadable on every committed sheet, and now sits in the cavity.
+    The sheet's boss callout gains the coil relief: how many, the radius, the measured stand-off.
+    The lite sheet's floor IS a uniform 0.60 and still says so.
+  - **Not acted on, and why:** the other seven ArtCraft items above are instrument differences or
+    informational (a one-edge kernel difference, blend radii within a facet, a 0.092 break, the
+    five corners SolidCraft cannot fillet, L2's seating, the shim's coverage against KiCad's
+    bodies, the 0.0462 closest approach). None changes a part.
+
 - [ ] **[SOURCING — lite/air] Pick the thin supercap MPN**
   _(2026-08-07, opened with the three-variant round.)_ `part_heights.SUPERCAP_H_THIN = 1.00`
   is **PROVISIONAL — DRH's working number, no MPN, no datasheet behind it**, unlike every
@@ -1195,8 +1246,9 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
     cracks a joint.
   - **The brace keeps its four sub-`SLA_WALL` features (DRH):** the ferrite channel's 0.40 east
     ridge and 0.265–0.52 west walls, and the 0.46 TP2/TP3 neck. The print spec names a printer
-    class that holds 0.25 mm walls (`enclosure/brace/README.md`). Re-open only if no such service
-    will print it.
+    class that holds 0.25 mm walls (`enclosure/brace/README.md`; `fit_rules.PRINT_WALL` since
+    2026-11-14, when the ridge's two tapering ends were cut back to it). Re-open only if no such
+    service will print it.
   - **There is no lip beside a supercap, and there cannot be.** Every cap's free edge faces the
     board edge, so a max-material can stands 0.40 mm off it; `lip_bands()` says none there by rule
     (`fit_rules.part_envelope`, `LIP_MIN`). Not a preference — a can's tolerance owns that strip.

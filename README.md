@@ -354,7 +354,9 @@ The electrical gotchas: the screws tie the metal body to board GND, so the enclo
 grounded shell; the **accelerometer tap is the actuator** (cap-touch dies behind a grounded
 plate); and the east lip is held **1.00 mm clear of NFC coil copper measured at x48.550** — a
 grounded feature over the antenna detunes it, and the constant it used to be sized against
-(48.40) was optimistic enough to overhang.
+(48.40) was optimistic enough to overhang. The two mount bosses beside the coil are held to the
+same 1.00 since 2026-11-14 (they stood 0.87 and 0.97 off it, unmeasured, until an outside review
+found them); `scripts/assembly_drc.py` [I] measures both on the emitted shells.
 
 ---
 

@@ -253,6 +253,12 @@ def part_keepout(ref, poly, sides=None):
 CLR = 0.25                 # in-plane clearance around a part
 SLA_WEB = 0.40             # thinnest resin that may remain OVER a pocket
 SLA_WALL = 0.60            # thinnest in-plane feature we will print
+PRINT_WALL = 0.25          # ...and the floor UNDER that, for the few features let off SLA_WALL on
+                           # purpose (the ferrite channel's own walls, the TP2/TP3 neck): the wall
+                           # the print spec's printer class holds (enclosure/brace/README.md, DRH
+                           # 2026-11-13). An exception from 0.60 is not an exception from this --
+                           # the channel's east ridge tapered to NOTHING at both ends until
+                           # 2026-11-14, two feather tips no printer class holds.
 SPAN_LIMIT = GAP - AIR - SLA_WEB          # 1.18 (comment said 1.28 until 2026-08-07 --
                                           # written when AIR was 0.12 and never updated;
                                           # the number here is DERIVED, trust the formula)
@@ -328,14 +334,16 @@ def ring_reliefs(ps=None):
     return out
 COIL_CLR = 1.00            # grounded metal to coil copper. Raised from 0.30 on request:
                            # the east lip is the only grounded feature that comes near the
-                           # antenna, and 1.00 gives 3.3x the standoff while still leaving a
+                           # antenna [NOT SO -- the two east mid-span bosses do too, and stood
+                           # 0.874 / 0.966 off it until 2026-11-14: boss_coil_cuts() below],
+                           # and 1.00 gives 3.3x the standoff while still leaving a
                            # 1.25 mm lip -- wider than the flat 1.0 the original design used.
                            # The tradeoff is linear and lives on one line: 0.30 -> 1.95 mm
                            # lip / 490 mm2, 1.00 -> 1.25 / 463, 1.25 -> 1.00 / 442, and
                            # 1.50 leaves 0.75 mm, below the design's own floor.
 # MEASURED from the board, not asserted. The hard-coded 48.40 was 0.15 mm optimistic --
 # LA/LB copper reaches x48.550 -- so the lip sized against it overhung the antenna.
-from board_parts import coil_extent as _coil_extent          # noqa: E402
+from board_parts import coil_extent as _coil_extent, coil_tracks as _coil_tracks   # noqa: E402
 COIL_EAST = round(_coil_extent()[1] + COIL_CLR, 3)
 # NUDGED 0.13 mm DIAGONALLY OUTBOARD, 2026-08-03, off a bench fit. Every mount moved 0.13 in
 # BOTH axes, away from the nearest solar cell corner: x away from the board centreline, y away
@@ -921,10 +929,19 @@ def boss_fouls(mx, my):
     R1.0 fillet there. At the two east mid-span bosses that fillet reached a max-material
     SC2 / SC4 by 0.113 / 0.130 mm (SolidCraft 0.134), while every gate measured the sharp
     corner. boss_cuts() adds the disc the tool sweeps to reach the corner, so the cut is one a
-    TOOL_R cutter can make and the polygon is the metal."""
+    TOOL_R cutter can make and the polygon is the metal.
+
+    AND THE COIL IS A KEEP-OUT TOO (2026-11-14). COIL_CLR was written for the east lip, "the
+    only grounded feature that comes near the antenna" -- and the lip was the only feature
+    held to it. The two east mid-span bosses are grounded titanium at the same height, and
+    they stood 0.874 and 0.966 mm from coil copper against the 1.00 the sheet prints for the
+    lip beside them (ArtCraft measured 0.877 off the STEP; nothing here measured it at all).
+    boss_coil_keepout() is the last entry of this list wherever the coil is within reach."""
     kps, dbs = boss_cuts(mx, my)
-    return [kp.union(unary_union([Point(c).buffer(TOOL_R, resolution=64) for c in d]))
-            if d else kp for kp, d in zip(kps, dbs)]
+    out = [kp.union(unary_union([Point(c).buffer(TOOL_R, resolution=64) for c in d]))
+           if d else kp for kp, d in zip(kps, dbs)]
+    coil = boss_coil_keepout(mx, my)
+    return out + ([coil] if coil is not None else [])
 
 
 def boss_cuts(mx, my):
@@ -1001,6 +1018,73 @@ def _lip_metal_cached(_c={}):
     if "m" not in _c:
         _c["m"] = lip_metal_poly()
     return _c["m"]
+
+
+def _coil_cached(_c={}):
+    if "t" not in _c:
+        _c["t"] = _coil_tracks()
+    return _c["t"]
+
+
+def boss_coil_cuts(mx, my):
+    """([(cx, cy, r)], [slab]) -- what COIL_CLR takes out of the boss at (mx, my): the coil's
+    copper grown by the clearance, as the pieces a cutter makes it from. Both lists are empty
+    for a boss the coil is nowhere near, which today is six of the eight.
+
+    A track grown by a distance is a round-ended slot: a disc of r = COIL_CLR + half the
+    track's width about each end, and the straight band between them. They are handed over
+    separately because the shell CAD cuts the discs as true cylinders and the bands as
+    planes (the rule boss_cuts() already keeps: nothing faceted for a CAM seat to choke on);
+    everything 2D reads boss_coil_keepout(), their union.
+
+    NO DOGBONES, and the reason is geometry rather than luck. The union of a track's discs
+    and bands has no outward-pointing corner -- every band end is buried in a disc of its own
+    half-width -- so the metal it leaves has no inside corner, only arcs of radius r hollowed
+    into the boss. A TOOL_R finisher cuts those exactly so long as r >= TOOL_R, and that is
+    checked below rather than assumed: with COIL_CLR at 1.00 the smallest r on this board is
+    1.076."""
+    c = Point(mx, my)
+    disc = c.buffer(BOSS_R, resolution=64)
+    win = box(mx - BOSS_R - 1.0, my - BOSS_R - 1.0, mx + BOSS_R + 1.0, my + BOSS_R + 1.0)
+    discs, slabs = {}, []
+    for a, b, w in _coil_cached():
+        r = round(w / 2.0 + COIL_CLR, 6)
+        for p in {a, b}:
+            if c.distance(Point(p)) < BOSS_R + r - 1e-9:
+                discs[p] = max(r, discs.get(p, 0.0))
+        if a != b:
+            band = LineString([a, b]).buffer(r, cap_style=2)        # flat ends: the band alone
+            if band.intersection(disc).area > 1e-9:
+                slabs.append(band.intersection(win))
+    small = [(p, r) for p, r in discs.items() if r < TOOL_R - 1e-9]
+    if small:
+        (px, py), r = small[0]
+        raise RuntimeError(
+            f"boss at ({mx}, {my}): the coil keep-out about ({px}, {py}) is R{r:.3f}, a hollow "
+            f"the Ø{2 * TOOL_R:g} finisher cannot cut -- COIL_CLR {COIL_CLR} is too small for "
+            f"this rule to be machined as modelled")
+    return [(px, py, r) for (px, py), r in sorted(discs.items())], slabs
+
+
+def boss_coil_keepout(mx, my):
+    """The coil keep-out at the boss at (mx, my) as one polygon, or None where the coil is out
+    of reach: boss_coil_cuts() united, for boss_fouls(), the drawing and every 2D check."""
+    discs, slabs = boss_coil_cuts(mx, my)
+    if not discs and not slabs:
+        return None
+    return unary_union([Point(x, y).buffer(r, resolution=64) for x, y, r in discs] + slabs)
+
+
+def boss_coil_gap(mx, my):
+    """How far the finished boss at (mx, my) stands from coil copper, or None where the coil
+    took nothing out of it. MEASURED island-to-copper, for the sheet's callout -- the same
+    reason boss_cutbacks() measures instead of printing BOSS_CLR."""
+    if boss_coil_keepout(mx, my) is None:
+        return None
+    cu = unary_union([Point(a).buffer(w / 2.0, resolution=64) if a == b
+                      else LineString([a, b]).buffer(w / 2.0, resolution=64)
+                      for a, b, w in _coil_cached()])
+    return boss_island(mx, my).distance(cu)
 
 
 def _boss_keepout(ref, poly):

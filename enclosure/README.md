@@ -72,6 +72,8 @@ resin walls beside blind pockets in both braces, since fixed, with its own row b
 | a Ø2.0 finisher vs a max-material supercap | SC2 / SC4 **0.113 / 0.130** inside the boss-corner fillet (SolidCraft 0.134 on a square corner); SC1 / SC3 0.050 at the outer corners | all four **0.150 clear** (the keep-out's full margin): Ø2.0 bores modeled where the tool must reach | fixed |
 | a Ø2.0 finisher vs the brace | brace **0.225 mm** into the east boss-to-wall fillets, 0.055 west | clear at every level, closest 0.048 | fixed |
 | C24 (STO_SNS pad) to the lip | **0.097** to its pad box (0.152 to the rounded pad; SolidCraft 0.157), against `LIP_CLR` 0.30 | **0.296** | fixed |
+| a mount boss to NFC coil copper | the two east mid-span bosses **0.874 / 0.966 mm** off it (ArtCraft 0.8772), under a sheet printing 1.00 for the lip beside them | **1.00**: each hollowed R1.15 about the coil's own corner, a cut the Ø2.0 makes | fixed 2026-11-14 |
+| the brace's ridge east of the ferrite channel | tapers to **nothing** at both ends (y 31.40 and 57.50; 0.20 wide 0.19 from the point) | ends square at y 31.67 and 57.23, **0.25** wide there — the wall the print spec's printer holds | fixed 2026-11-14 |
 
 The right-hand column was measured in the cloud with OpenCascade and by slicing the STLs — an
 instrument that reproduces every SolidCraft figure on the committed solids to the last digit, and
@@ -114,6 +116,20 @@ What changed, in one line each — the reasoning is in the generators and in `CL
   is opened at `SLA_WALL` 0.60, the rule `brace_footprint()` already applies to the plan. A level
   is computed whole, so no cut can stand beside another. The ferrite channel is cut after, and its
   walls are deliberately outside the rule: its width is the critical dimension.
+- **The coil is a keep-out for the bosses too (2026-11-14).** `COIL_CLR` — grounded metal 1.00 mm
+  off NFC coil copper — was written for the east lip, and the lip was the only feature held to it.
+  The two east mid-span bosses are the same metal at the same height. `fit_rules.boss_coil_cuts()`
+  now grows the coil's own tracks (`board_parts.coil_tracks()`, the one reader of the coil) by the
+  clearance and takes that out of any boss it reaches: a true cylinder about each track corner, a
+  plane beside each straight run. No dogbones — a grown track has no outward corner — and the
+  radius is checked against the finisher rather than assumed. `scripts/assembly_drc.py` **[I]**
+  holds every shell's sectioned metal to the copper.
+- **The channel's ridge ends square (2026-11-14).** Being let off `SLA_WALL` had let the ridge east
+  of the ferrite channel off everything: where the brace's edge turns in round a boss fillet the
+  ridge ran on with it to a point. `fit_rules.PRINT_WALL` (0.25) is the floor under the exception
+  — the wall the print spec asks the printer to hold — and wherever the ridge would be narrower the
+  channel runs out to the brace's edge instead. `assembly_drc` **[C]** measures it on the emitted
+  brace.
 
 And what now looks at the parts instead of at the rules: `scripts/assembly_drc.py` slices the
 emitted shell and brace and compares the metal that is there with the part outlines read off the
