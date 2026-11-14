@@ -298,6 +298,55 @@ def cell_tab_lands(pcb: str | None = None):
 COIL_NETS = ("LA", "LB")
 
 
+def coil_tracks(pcb: str | None = None):
+    """[((x1, y1), (x2, y2), width)] -- the NFC coil's copper as the board routes it: every
+    LA/LB track on either face, and each via as a zero-length piece of its own diameter.
+
+    Both faces on purpose. The coil crosses between F.Cu and B.Cu, and to a grounded shell
+    beside it a turn 0.6 mm further away is the same conductor. Pads on these nets are not
+    read: they belong to parts (C9, the tag), and parts() is where a part is measured.
+
+    The ONE reader of the coil. coil_extent() below is its bounding box, and
+    fit_rules.boss_coil_cuts() offsets these pieces to cut the mount bosses clear -- so the
+    lip and the bosses cannot be held to two different ideas of where the antenna is.
+
+    An ARC on a coil net raises. There are none today, nothing here knows how to offset
+    one, and a reader that skipped it would go on reporting a clearance to a coil it had
+    not finished reading. Teach this function arcs before routing one."""
+    with open(pcb or PCB, encoding="utf-8", errors="replace") as fh:
+        text = fh.read()
+    num = r"(-?[\d.]+)"
+    out = []
+    for tag in ("segment", "arc", "via"):
+        for b in _blocks(text, tag):
+            nm = re.search(r'\(net "([^"]*)"', b)
+            if not nm or nm.group(1) not in COIL_NETS:
+                continue
+            if tag == "arc":
+                raise RuntimeError(
+                    f"the NFC coil (net {nm.group(1)}) has an arc, and board_parts.coil_tracks() "
+                    f"reads only straight tracks and vias -- every coil clearance in the "
+                    f"enclosure would be measured to an incomplete coil. Teach it arcs first.")
+            if tag == "via":
+                at = re.search(rf"\(at {num} {num}\)", b)
+                sz = re.search(rf"\(size {num}\)", b)
+                if not at or not sz:
+                    raise RuntimeError(f"coil via with no position or size: {b[:80]!r}")
+                p = (float(at.group(1)), float(at.group(2)))
+                out.append((p, p, float(sz.group(1))))
+                continue
+            s = re.search(rf"\(start {num} {num}\)", b)
+            e = re.search(rf"\(end {num} {num}\)", b)
+            w = re.search(rf"\(width {num}\)", b)
+            if not s or not e or not w:
+                raise RuntimeError(f"coil track with no start, end or width: {b[:80]!r}")
+            out.append(((float(s.group(1)), float(s.group(2))),
+                        (float(e.group(1)), float(e.group(2))), float(w.group(1))))
+    if not out:
+        raise RuntimeError("no LA/LB coil copper found on the board")
+    return out
+
+
 def coil_extent(pcb: str | None = None):
     """(min_x, max_x) of the NFC coil copper, measured from the board.
 
@@ -305,21 +354,7 @@ def coil_extent(pcb: str | None = None):
     copper actually reaches x 48.550 -- so the constant was 0.15 mm optimistic and the
     grounded titanium lip, sized against it, overhung the antenna. Derive it instead.
     """
-    with open(pcb or PCB, encoding="utf-8", errors="replace") as fh:
-        text = fh.read()
-    xs = []
-    for tag in ("segment", "arc"):
-        for b in _blocks(text, tag):
-            nm = re.search(r'\(net "([^"]*)"', b)
-            if not nm or nm.group(1) not in COIL_NETS:
-                continue
-            wm = re.search(r'\(width ([\d.]+)\)', b)
-            half = float(wm.group(1)) / 2 if wm else 0.0
-            for pm in re.finditer(r'\((?:start|end|mid) (-?[\d.]+) (-?[\d.]+)\)', b):
-                x = float(pm.group(1))
-                xs.append(x - half); xs.append(x + half)
-    if not xs:
-        raise RuntimeError("no LA/LB coil copper found on the board")
+    xs = [x + k * w / 2.0 for a, b, w in coil_tracks(pcb) for x in (a[0], b[0]) for k in (-1, 1)]
     return min(xs), max(xs)
 
 

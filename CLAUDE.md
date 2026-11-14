@@ -110,7 +110,8 @@ python3 scripts/interference_drc.py    # 3D interference DRC: brace STL ray-cast
 ```sh
 python3 scripts/assembly_drc.py        # the assembled stack: Z budget, ferrite, screws, cells --
                                        # and the SECTIONED shell-vs-parts and brace-vs-shell checks,
-                                       # and [G]: the lip the shell drawing describes vs the metal
+                                       # [G]: the lip the shell drawing describes vs the metal,
+                                       # and [I]: every shell's metal vs the NFC coil's copper
 ```
 ```sh
 # which HAND the solids are in: each one against KiCad's own STEP export of the board/panel.
@@ -589,6 +590,28 @@ red, the check itself fails.
   material (`fit_rules.part_envelope()`), not nominal. `scripts/assembly_drc.py` **[H]** sections the
   emitted shell, opens it by the radius, and holds the brace, every part and the max-material cans
   to that. **A finisher larger than `TOOL_R` breaks all of it** — the sheet says so.
+- **A clearance belongs to every feature it is true of, and a gate on one of them reads as a gate
+  on the rule** (2026-11-14). `fit_rules.COIL_CLR` — grounded metal 1.00 mm off NFC coil copper —
+  was written beside the words "the east lip is the only grounded feature that comes near the
+  antenna", the lip was cut to it, check [8] compared the lip with the coil's east edge, and the
+  sheet printed "1.00 SHORT OF NFC COIL COPPER". The two east mid-span bosses are the same titanium
+  at the same height and stood **0.874 and 0.966 mm** off the coil on every shell; an outside
+  measurement of the STEP found it (ArtCraft, 0.877). `fit_rules.boss_coil_cuts()` now grows the
+  coil's tracks by the clearance and takes that out of any boss in reach — a true cylinder about
+  each track corner, a plane beside each straight run, no dogbones because a grown track has no
+  outward corner — and `scripts/assembly_drc.py` **[I]** holds the SECTIONED shell to the copper,
+  with a fatter-coil canary at the lip and at each relieved boss. `board_parts.coil_tracks()` is
+  the one reader of the coil (`coil_extent()` is its bounding box) and **raises on an arc** rather
+  than measure to a coil it has not finished reading. When a rule names a feature, ask what else
+  is made of the same thing.
+- **An exception from a rule is not an exception from the floor under it** (2026-11-14). The
+  brace's ferrite channel is cut after the `SLA_WALL` levels on purpose — its walls locate the
+  sheet's critical width — and so its east ridge was let off everything: it followed the brace's
+  edge round a boss fillet and tapered to a point at both ends, and the level pass could not have
+  caught it even in order, because a mitred opening restores a wedge's tip by design.
+  `fit_rules.PRINT_WALL` (0.25, the wall the print spec asks the printer to hold) is the floor;
+  the channel runs out to the brace's edge wherever the ridge would be under it, and
+  `assembly_drc` [C] measures the ridge on the emitted brace.
 - **A ledger entry is a standing waiver, so a ledger audits itself.** `scripts/interference_drc.py`'s
   `EDGE_LEDGER` excused seven parts from the cavity rectangle and had excused nothing since
   2026-08-08: six had been moved inboard and the seventh, C7, was deleted from the board the day

@@ -297,7 +297,7 @@ def sheet(vname, v):
         # describing a brace that no longer existed (SolidCraft finds no resin within 14.0 mm
         # of a solar-cell tab; the repo's own section of the STL, 14.067).
         _npc = len(_fr.brace_footprint(span=v["span"]))
-        notes.append(("brace", [f"BRACE REGISTRATION: THE RESIN BRACE ({_npc} PIECE{'S' if _npc != 1 else ''}, ITS FOOTPRINT COMPUTED FROM THE BOARD) REGISTERS TO THIS SHELL BY FITMENT - ITS OUTLINE, {_fr.WALL_FIT:.2f} OFF THE CAVITY WALLS WHERE IT REACHES THEM, + THE COMPONENT POCKETS + THE BOARD IN ITS RECESS ({_fit}). NO LOCATOR PILLARS; THE CAVITY FLOOR IS A FULL {floor:.2f} EVERYWHERE."]))
+        notes.append(("brace", [f"BRACE REGISTRATION: THE RESIN BRACE ({_npc} PIECE{'S' if _npc != 1 else ''}, ITS FOOTPRINT COMPUTED FROM THE BOARD) REGISTERS TO THIS SHELL BY FITMENT - ITS OUTLINE, {_fr.WALL_FIT:.2f} OFF THE CAVITY WALLS WHERE IT REACHES THEM, + THE COMPONENT POCKETS + THE BOARD IN ITS RECESS ({_fit}). NO LOCATOR PILLARS; THE CAVITY FLOOR IS ONE FLAT FACE AT {floor:.2f}."]))
     else:
         notes.append(("brace", ["NO BRACE: AN OPEN FRAME HAS NO FLOOR TO RETAIN ONE (fit_rules.VARIANTS: brace_name=None). THE PCB REGISTERS IN THE %.2f RECESS AND ON THE 8 BOSSES." % board]))
     # The finisher sentence, computed from fit_rules.TOOL_R (2026-11-13). Until then it was typed
@@ -330,16 +330,36 @@ def sheet(vname, v):
         _guide = ("AT THE ~1.0 Ti MIN-WALL GUIDANCE SO IT ALSO CLEARS ALUMINIUM / COPPER / STAINLESS."
                   if floor >= 1.0 - 1e-9 else
                   "BELOW THE ~1.0 Ti MIN-WALL GUIDANCE - THE %.2f IS THE SHOP-MINIMUM CONVERSATION (fit_rules.VARIANTS); CONFIRM THE SHOP HOLDS IT BEFORE QUOTING." % floor)
-        _fl_main = (("FLOOR IS A TRUE %.2f (%.2f LOCAL UNDER THE U7 POCKET), %s" % (floor, floor - u7_pocket, _guide))
-                    if u7_pocket > 0 else
-                    ("FLOOR IS A TRUE %.2f, UNIFORM ACROSS THE CAVITY, %s" % (floor, _guide)))
+        # WHAT THE REAR ART LEAVES OF THE FLOOR (2026-11-14). This note said "FLOOR IS A TRUE
+        # 1.00, UNIFORM ACROSS THE CAVITY" on every sheet, and on the max sheet that is true
+        # of one face only: the cavity side is flat at 1.00, and the back is cut into -- 0.40
+        # of metal under the reeded valleys (1476.85 mm2 of the floor) and 0.55 under the
+        # medallion's coin, measured on the STEP (SolidCraft, 2026-11-14), on a sheet whose own
+        # rear-art block already says "0.40 WEB". A shop quoting the floor read 1.00. So the
+        # note says which face is flat and what the metal is under each cut it carries, from
+        # the constants that make the cuts; a variant with no rear art keeps the plain claim.
+        _webs = ([("THE REEDED VALLEYS", floor - _fr.FIN_VALLEY)] if has_fins else []) + \
+                ([("THE MEDALLION'S COIN FLOOR", floor - _mdl.COIN_D)] if has_med else [])
+        if u7_pocket > 0:
+            _fl_main = "FLOOR IS A TRUE %.2f (%.2f LOCAL UNDER THE U7 POCKET), %s" % (floor, floor - u7_pocket, _guide)
+        elif _webs:
+            _fl_main = ("CAVITY FLOOR IS ONE FLAT FACE AT %.2f, NO LOCAL RELIEF. METAL UNDER IT: "
+                        "%.2f UNCUT, %s (REAR ART BLOCK). THE UNCUT %.2f IS %s"
+                        % (floor, floor, " AND ".join("%.2f UNDER %s" % (t, n) for n, t in _webs),
+                           floor, _guide))
+        else:
+            _fl_main = "FLOOR IS A TRUE %.2f, UNIFORM ACROSS THE CAVITY, %s" % (floor, _guide)
         _cap_desc = (f"WS17 {cap_h:.2f} MAX (DATASHEET CASE WS17 HEIGHT)" if abs(cap_h - _CAPH) < 1e-9
                      else f"THIN CAP {cap_h:.2f} MAX (PROVISIONAL — part_heights.SUPERCAP_H_THIN)")
-        notes.append(("floor", [_fl_main,
-                                f"CAVITY {cavity:.2f} ±0.05 -> {cavity-0.05:.2f} WORST-CASE, MINUS {_cap_desc} = {cavity-0.05-cap_h:.2f} NON-CONTACT; THE BRACE + SOLAR-CELL SANDWICHES CARRY THE BOARD."]))
+        _cav_main = f"CAVITY {cavity:.2f} ±0.05 -> {cavity-0.05:.2f} WORST-CASE, MINUS {_cap_desc} = {cavity-0.05-cap_h:.2f} NON-CONTACT; THE BRACE + SOLAR-CELL SANDWICHES CARRY THE BOARD."
+        # with the rear art named, the floor sentence is two lines of the block on its own, and
+        # the max sheet's block was already full: the two sentences run on as one paragraph
+        # there (the notes' doubled-space separator) rather than each opening a line
+        notes.append(("floor", [_fl_main + "  " + _cav_main] if _webs and u7_pocket <= 0
+                               else [_fl_main, _cav_main]))
         notes.append(("u7", [("U7 RELIEF POCKET: 7.8 x 5.4 CENTERED (28.1, 37.3) ON THE CAVITY FLOOR, %.2f DEEP (LOCAL FLOOR %.2f) - U7 (%.2f) KEEPS 0.10 AIR. GENERAL FLOOR %.2f. MODELED IN THE STEP." % (u7_pocket, floor - u7_pocket, U7_H, floor))
                              if u7_pocket > 0 else
-                             ("NO U7 RELIEF POCKET. U7 IS THE %.2f mm MB85RC512TY DFN-8, WELL UNDER THE %.2f CAVITY, SO THE FLOOR IS UNIFORM %.2f. (A POCKET EXISTED FOR A 1.75 SOIC-8 THE v4 BOARD DOES NOT CARRY.)" % (U7_H, cavity, floor))]))
+                             ("NO U7 RELIEF POCKET. U7 IS THE %.2f mm MB85RC512TY DFN-8, WELL UNDER THE %.2f CAVITY, SO THE CAVITY FLOOR IS ONE FLAT FACE AT %.2f. (A POCKET EXISTED FOR A 1.75 SOIC-8 THE v4 BOARD DOES NOT CARRY.)" % (U7_H, cavity, floor))]))
     else:
         notes.append(("floor", ["NO FLOOR - OPEN FRAME. THE BACK OF EVERY B-SIDE COMPONENT FACES THE TABLE; THE FRAME'S RESTING PLANE (BOTTOM FACE) CARRIES THE ASSEMBLY.",
                                 f"DEPTH {cavity:.2f} = TALLEST B-SIDE PART {cavity - 2*_fr.CAP_AIR:.2f} + 2×{_fr.CAP_AIR:.2f} RESTING CLEARANCE (fit_rules.VARIANTS: resting-clearance-limited)."]))
@@ -462,12 +482,25 @@ def sheet(vname, v):
         _cbtxt = f"{_cb[0]:.2f}" if _cb[-1] - _cb[0] < 0.005 else f"{_cb[0]:.2f}\u2013{_cb[-1]:.2f}"
         # (141, 213): right of the hole-position leader, which runs diagonally through the
         # column the other two plan callouts sit in, and clear of Section A-A's own leaders
+        # THE COIL TAKES A BITE TOO (2026-11-14). Where a boss stood inside COIL_CLR of the
+        # antenna it is hollowed back to it (fit_rules.boss_coil_cuts) -- drawn above with the
+        # flats, since boss_fouls() carries it, and SAID here: how many, at what radius (the
+        # shop has to know a Ø2.0 finisher can cut it), and the stand-off measured off the
+        # finished island rather than the constant that asked for it.
+        _coil = [(_bx, _by) for _bx, _by in mounts if _fr.boss_coil_keepout(_bx, _by) is not None]
+        _coiltxt = " "
+        if _coil:
+            _rr = sorted({r for _bx, _by in _coil for _x, _y, r in _fr.boss_coil_cuts(_bx, _by)[0]})
+            _rtxt = f"R{_rr[0]:.2f}" if _rr[-1] - _rr[0] < 0.005 else f"R{_rr[0]:.2f}\u2013{_rr[-1]:.2f}"
+            _gap = min(_fr.boss_coil_gap(_bx, _by) for _bx, _by in _coil)
+            _coiltxt = (f" {len(_coil)} ALSO HOLLOWED {_rtxt}, TO STAND\n"
+                        f"{_gap:.2f} OFF {_fr.COIL_REF} COPPER. ")
         leader(X(_c.x), Y(_c.y), 141, 213,
                f"{len(_flats)}\u00d7 BOSS FLAT" + (" (HIDDEN \u2014 CAVITY SIDE)" if not open_back else "") +
                f": EACH \u00d8{2*boss_r:.2f} BOSS CUT BACK {_cbtxt}\n"
                f"CLEAR OF THE PART IT WOULD FOUL ({_whotxt}), FULL\n"
                f"DEPTH; FLATS {_dd[0]:.2f}\u2013{_dd[-1]:.2f} FROM THE HOLE AXIS (THREAD KEEP-OUT\n"
-               f"r{_fr.THREAD_KEEP:.2f} UNTOUCHED). MODELED \u2014 STEP GOVERNS.", fs=4.9)
+               f"r{_fr.THREAD_KEEP:.2f} UNTOUCHED).{_coiltxt}MODELED \u2014 STEP GOVERNS.", fs=4.9)
 
     # U7 relief pocket (cavity-floor recess; hidden in back-face view -> dashed).
     # Drawn ONLY if the arithmetic still calls for one -- see the import block above.
@@ -569,11 +602,19 @@ def sheet(vname, v):
         leader(xl(1.08),zl(-0.10),xl(1.35),zl(-border)-9,"0.10×45° FRAME (2 PL)",ha="left",fs=5.0)
         leader(xl(3.42),zl(-0.10),xl(1.35),zl(-border)-9,"",ha="left")
     if not open_back:
-        ax.text(xl(0.06),zl(floor)+0.8,
-                ("  floor %.2f TRUE (%.2f local under the U7 pocket, note %d)   •   PCB recess %.2f (%.2f mm board)"
-                 % (floor, floor-u7_pocket, note_no['u7'], board, board)) if u7_pocket > 0 else
-                ("  floor %.2f TRUE, UNIFORM (no local relief)   •   PCB recess %.2f (%.2f mm board)" % (floor, board, board)),
-                fontsize=5.7,color=GRY,va="bottom")
+        # Two lines, IN THE CAVITY (2026-11-14). This caption was one line starting at the
+        # section's outer wall, so its first half -- the half that says what the floor is --
+        # was set across the wall's hatching and could not be read on any committed sheet.
+        # And what it said there, "floor 1.00 TRUE, UNIFORM", is note 6's claim again: true of
+        # the cavity face, not of the metal wherever the rear art is cut into the back.
+        _cap_floor = (("floor %.2f TRUE (%.2f local under the U7 pocket, note %d)"
+                       % (floor, floor - u7_pocket, note_no['u7'])) if u7_pocket > 0 else
+                      ("cavity floor flat at %.2f \u2014 metal under it: note %d"
+                       % (floor, note_no['floor'])) if (has_fins or has_med) else
+                      ("floor %.2f TRUE, UNIFORM (no local relief)" % floor))
+        ax.text(xl(wall + lip_w) + 1.6, zl(floor) + 0.8,
+                "PCB recess %.2f (%.2f mm board)\n%s" % (board, board, _cap_floor),
+                fontsize=5.7, color=GRY, va="bottom", linespacing=1.25)
     else:
         ax.text(xl(6.4),zl(0.55),
                 "open frame — no floor, no back face (note %d)\nPCB recess %.2f (%.2f mm board)"
