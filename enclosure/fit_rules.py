@@ -424,13 +424,14 @@ def brace_cavity():
 
 def cavity_as_milled(tool_r=TOOL_R):
     """The cavity void at the board-rest plane AS A RADIUS-tool_r FINISHER LEAVES IT: board
-    area less the lip metal and the boss islands, opened by the tool. Every inside corner of
-    the metal that the model leaves sharp comes back as a tool_r fillet; nothing else moves.
+    area less the modelled metal (shell_metal_poly(): the lip, the boss islands, and since
+    2026-11-14 the blends and webs that join each boss to the wall), opened by the tool.
+    Every inside corner of the metal that the model leaves sharp comes back as a tool_r
+    fillet; nothing else moves.
 
     The brace is cut to this, and scripts/assembly_drc.py [H] applies the same opening to
     the SECTIONED shell, so the rule and the part are measured by two different readers."""
-    void = (box(0.0, 0.0, W, H).difference(lip_metal_poly())
-            .difference(unary_union([boss_island(mx, my) for mx, my in MOUNTS])))
+    void = box(0.0, 0.0, W, H).difference(shell_metal_poly())
     return (void.buffer(-tool_r, join_style=1, resolution=48)
                 .buffer(tool_r, join_style=1, resolution=48))
 
@@ -1009,9 +1010,61 @@ def boss_cuts(mx, my):
                 raise RuntimeError(f"boss at ({mx}, {my}): no Ø{2 * TOOL_R:g} tool position "
                                    f"reaches keep-out corner ({v[0]:.3f}, {v[1]:.3f}) without "
                                    f"cutting the lip or the recess wall")
-            cen.append((round(best[1][0], 6), round(best[1][1], 6)))
+            cen.append(_park_on_wall(v, best[1], fixed))
         out.append(cen)
     return kps, out
+
+
+def _park_on_wall(v, cc, fixed):
+    """The bore centre `cc` the search above found for keep-out corner `v`, made EXACT where
+    the tool is parked against one straight wall.
+
+    The search steps half a degree, so a bore the wall stops comes back up to 0.004 mm short
+    of it. Nobody could see that while the sliver of void between a corner boss and the
+    recess wall was left in the model. Since 2026-11-14 that sliver is metal (boss_webs), and
+    the bore's cylinder is the face that metal ends on: 0.004 short of the wall, it would
+    leave a skin of titanium 0.004 mm thick running under the bore. So the centre is put on
+    the circle of TOOL_R about the corner, TOOL_R - BLEND_BITE off the wall: the bore then
+    CROSSES the wall plane instead of grazing it, which is a join a kernel can build, and the
+    shell CAD never cuts the wall with it (the scallop tool is the boss's own cylinder, and a
+    web is cut before it is unioned). A bore nothing stops, or one wedged between two walls,
+    is returned as found."""
+    rings = []
+    for g in getattr(fixed, "geoms", [fixed]):
+        if g.geom_type == "Polygon":
+            rings += [g.exterior] + list(g.interiors)
+    hits = []
+    for ring in rings:
+        cs = list(ring.coords)
+        for (x0, y0), (x1, y1) in zip(cs[:-1], cs[1:]):
+            L = math.hypot(x1 - x0, y1 - y0)
+            if L < 0.5:
+                continue
+            ux, uy = (x1 - x0) / L, (y1 - y0) / L
+            lam = (cc[0] - x0) * ux + (cc[1] - y0) * uy
+            if not (0.0 <= lam <= L):
+                continue
+            nx, ny = -uy, ux
+            d = (cc[0] - x0) * nx + (cc[1] - y0) * ny
+            if d < 0:
+                nx, ny, d = -nx, -ny, -d
+            if abs(d - TOOL_R) < 0.01:
+                hits.append(((x0, y0), (nx, ny)))
+    if len(hits) != 1:
+        return (round(cc[0], 6), round(cc[1], 6))
+    (ax, ay), (nx, ny) = hits[0]
+    k = (TOOL_R - BLEND_BITE - ((v[0] - ax) * nx + (v[1] - ay) * ny)) / TOOL_R
+    if abs(k) > 1.0:
+        return (round(cc[0], 6), round(cc[1], 6))
+    tn, dt = math.atan2(ny, nx), math.acos(k)
+    cands = [(v[0] + TOOL_R * math.cos(tn + sg * dt), v[1] + TOOL_R * math.sin(tn + sg * dt))
+             for sg in (1.0, -1.0)]
+    q = min(cands, key=lambda c: math.hypot(c[0] - cc[0], c[1] - cc[1]))
+    if math.hypot(q[0] - cc[0], q[1] - cc[1]) > 0.02:
+        raise RuntimeError(f"bore at ({cc[0]:.4f}, {cc[1]:.4f}): parking it against its wall "
+                           f"would move it {math.hypot(q[0] - cc[0], q[1] - cc[1]):.4f} mm -- "
+                           f"the search and the exact position disagree")
+    return (round(q[0], 9), round(q[1], 9))
 
 
 def _lip_metal_cached(_c={}):
@@ -1131,6 +1184,426 @@ def boss_island(mx, my):
         keep = [g for g in scal.geoms if g.contains(Point(mx, my))]
         scal = keep[0] if keep else disc
     return scal.simplify(0.005, preserve_topology=True)
+
+
+# ---- where a boss meets the wall: BLENDS and WEBS (2026-11-14) ---------------------------
+# Until now the model left two things at every mount boss that no cutter makes.
+#
+#   * Where the boss's circle crosses the lip's cavity wall -- twelve places: both sides of the
+#     four mid-span bosses, and the long-edge side of the four corner bosses -- it kept a sharp
+#     inside corner, acute on the east. The sheet told the shop to finish those with the Ø2.0,
+#     the brace was cut to the R1.0 that leaves (cavity_as_milled), and assembly_drc [H]
+#     measured the part that way; but the solid a shop is handed said "sharp", and a sharp
+#     acute corner is a place where a tool dwells and chatters to make its own radius.
+#   * Beside each CORNER boss, on the short-edge side, it kept a slot of void between the boss
+#     and the recess wall: 0.17 mm wide at its narrowest, closed at one end, and ending at the
+#     boss's own Ø2.0 bore. No tool enters it. It is there because the short-edge lip is cut
+#     to none beside a supercap (LIP_MIN) while the boss disc stands 0.22 off the wall -- an
+#     accident of two rules meeting, not a feature. DRH saw both in a render and asked for the
+#     first to be a modelled curve and the second explained.
+#
+# BLENDS. Each of the twelve junctions gets a concave blend of BLEND_R: a true circle, tangent
+# to the wall and to the boss. BLEND_R is twice the finisher's radius on purpose -- the tool
+# sweeps it with its centre on an R1.0 arc and never stops in a corner. The wall it is tangent
+# to is the one the shell is CUT to (void_as_cut(): cavity_void_poly() is simplified by 0.01
+# for the kernel's sake, and its long walls lean by up to 0.0005 mm; a blend laid out on the
+# ideal wall met the cut one with a step, and the first prototype of this added 49 sliver
+# faces to the max shell that way).
+#
+# WEBS. The slot beside a corner boss is filled: boss, web and wall are one piece of metal,
+# and the bore that used to end in the slot becomes an ordinary R1.0 relief running from the
+# boss's flat out to the wall. The bore stays. Without it the finisher's own radius would
+# leave metal 0.05 mm inside a max-material supercap's corner (boss_cuts).
+#
+# THE FERRITE LIMITS TWO OF THEM. The sheet behind the coil (FER) lies in the cavity at the
+# height the blends stand at, and its two east corners are 0.43 and 0.34 mm from the bosses at
+# y28.63 and y60.27. At BLEND_R the blends on the ferrite's side of those two bosses would
+# stand INSIDE the sheet's corners -- 0.035 and 0.075 mm2 of titanium where the ferrite goes
+# -- and the first full build of this did exactly that with every gate green, because no gate
+# had ever held the sheet against the shell (assembly_drc [F] and [H] do now). So a blend
+# that would come within FER_CLR of the sheet is cut at TOOL_R instead: the radius the
+# finisher leaves in that corner whatever the model says, so the part does not move there.
+# That leaves the sheet's corners where they have always been as milled, 0.24 and 0.15 mm
+# from titanium -- a clearance nobody chose, now printed by [H] instead of unknown.
+#
+# BLEND_BITE. A circle exactly tangent to a plane meets it along a line of zero angle, and a
+# boolean built on that is a coin toss. So each blend is set BLEND_BITE deeper than tangent
+# into the lip and into the boss, and a wall-parked bore the same into its wall
+# (_park_on_wall): every join is then a crossing at two to four degrees. Two microns; the
+# radius itself is exact.
+BLEND_R = 2.00             # concave blend, boss to lip wall. Must exceed TOOL_R (checked).
+BLEND_BITE = 0.002         # how far past tangent a blend or a parked bore is set, for the kernel
+_BLEND_LIP = 0.20          # how far a blend's cover reaches into the lip   } both more than
+_BLEND_BOSS = 0.30         # ...and into the boss                           } the 0.10 edge-break
+_BLEND_PAST = 0.60         # ...and along the wall past the old corner, under the boss
+_WEB_INTO = 0.20           # how far a web's cover reaches into the metal round it
+
+
+def void_as_cut(_c={}):
+    """The cavity void THE SHELL IS CUT TO, board coords: cavity_void_poly() (simplified, as
+    the shell CAD has always cut it) held inside the board recess -- the recess is EDGE_FIT
+    smaller than the board, and a void that ran out to the board edge would be cut under the
+    recess wall. The shell CAD's own _void_in_recess() until 2026-11-14; here now because the
+    blends below have to be laid out on the wall the cutter is actually given."""
+    if "v" not in _c:
+        v = cavity_void_poly().intersection(recess_poly())
+        if v.geom_type != "Polygon":             # a clip can shed dust; the void is the big piece
+            v = max((g for g in v.geoms if g.geom_type == "Polygon"), key=lambda g: g.area)
+        _c["v"] = v
+    return _c["v"]
+
+
+def boss_blends(mx, my):
+    """[blend] -- one for each place the boss at (mx, my) crosses a straight run of the lip's
+    cavity wall. Each is a dict:
+
+        O, r     the blend's circle, a TRUE cylinder in the shell. r is BLEND_R, or TOOL_R
+                 where BLEND_R would bring metal within FER_CLR of the ferrite sheet
+        limit    None, or the name of what held r to TOOL_R ("FER1")
+        F        its foot on the wall (the tangent point, but for BLEND_BITE)
+        T        the point of the boss it is tangent to (likewise)
+        J        the sharp corner it replaces
+        t, n     unit vectors at J: along the wall away from the boss, and into the cavity
+        cover    a straight-sided polygon holding the blend, reaching into the lip and the
+                 boss: the shell CAD extrudes this and cuts the cylinder out of it
+
+    The cover's two ends lie on lines through O -- through F square to the wall, and through
+    T and the boss axis. Those are meridian planes of the blend AND of the edge-break cones
+    the shell cuts round it, so the break on the blend runs into the lip's and the boss's own
+    with nothing left standing at either end.
+
+    A crossing whose wall does not run straight as far as the foot gets no blend (the stub of
+    short-edge lip under a corner boss, where the wall is a fillet 0.2 mm long). boss_webs()
+    then has to account for whatever a tool cannot reach there, and raises if it cannot."""
+    return _blends_cached()[(mx, my)]
+
+
+def _blends_cached(_c={}):
+    if "b" not in _c:
+        if BLEND_R <= TOOL_R:
+            raise RuntimeError(f"BLEND_R {BLEND_R} must exceed the finisher's radius {TOOL_R}")
+        _c["b"] = {m: _boss_blends(*m) for m in MOUNTS}
+        audit_blends(_c["b"])
+    return _c["b"]
+
+
+def _boss_blends(mx, my):
+    v = void_as_cut()
+    fer = box(*FER)
+    cs = list(v.exterior.coords)
+    out = []
+    for (x0, y0), (x1, y1) in zip(cs[:-1], cs[1:]):
+        L = math.hypot(x1 - x0, y1 - y0)
+        if L < 1e-9:
+            continue
+        ux, uy = (x1 - x0) / L, (y1 - y0) / L
+        fx, fy = x0 - mx, y0 - my
+        b = fx * ux + fy * uy
+        disc = b * b - (fx * fx + fy * fy - BOSS_R * BOSS_R)
+        if disc <= 0:
+            continue
+        for sg in (-1.0, 1.0):                       # -1: the wall ENTERS the disc here; +1: leaves it
+            lam = -b + sg * math.sqrt(disc)
+            if not (0.0 <= lam <= L):
+                continue
+            J = (x0 + lam * ux, y0 + lam * uy)
+            t = (sg * ux, sg * uy)                   # along the wall, away from the boss
+            n = (-t[1], t[0])
+            if not v.contains(Point(J[0] + 0.05 * t[0] + 0.05 * n[0], J[1] + 0.05 * t[1] + 0.05 * n[1])):
+                n = (-n[0], -n[1])                   # into the cavity
+            room = (L - lam) if sg > 0 else lam      # how far the wall runs straight from J
+            bl = _blend_at(mx, my, J, t, n, BLEND_R, room)
+            if bl is None:
+                continue                             # the wall turns before the foot: not a blend
+            if blend_added(mx, my, bl).distance(fer) < FER_CLR:
+                bl = _blend_at(mx, my, J, t, n, TOOL_R, room)
+                if bl is None:
+                    continue
+                bl["limit"] = FER_REF
+            out.append(bl)
+    return out
+
+
+FER_REF = "FER1"           # the ferrite sheet's refdes, for whatever has to say what limited a blend
+
+
+def _blend_at(mx, my, J, t, n, r, room):
+    """One blend of radius r at corner J (wall direction t, cavity side n), or None if the
+    wall does not run straight for `room` as far as the blend's foot."""
+    # centre: (r - bite) off the wall, (BOSS_R + r - bite) from the boss axis
+    dx, dy = J[0] + (r - BLEND_BITE) * n[0] - mx, J[1] + (r - BLEND_BITE) * n[1] - my
+    dt = dx * t[0] + dy * t[1]
+    rho = BOSS_R + r - BLEND_BITE
+    q = dt * dt - (dx * dx + dy * dy) + rho * rho
+    if q < 0:
+        return None
+    s = -dt + math.sqrt(q)
+    if not (0.0 <= s <= room):
+        return None
+    F = (J[0] + s * t[0], J[1] + s * t[1])
+    O = (F[0] + (r - BLEND_BITE) * n[0], F[1] + (r - BLEND_BITE) * n[1])
+    d = math.hypot(O[0] - mx, O[1] - my)
+    u = ((O[0] - mx) / d, (O[1] - my) / d)
+    T = (mx + BOSS_R * u[0], my + BOSS_R * u[1])
+    cover = Polygon([O, F,
+                     (F[0] - _BLEND_LIP * n[0], F[1] - _BLEND_LIP * n[1]),
+                     (J[0] - _BLEND_PAST * t[0] - _BLEND_LIP * n[0],
+                      J[1] - _BLEND_PAST * t[1] - _BLEND_LIP * n[1]),
+                     (mx + (BOSS_R - _BLEND_BOSS) * u[0], my + (BOSS_R - _BLEND_BOSS) * u[1])])
+    return {"O": O, "r": r, "F": F, "T": T, "J": J, "t": t, "n": n, "cover": cover, "limit": None}
+
+
+def _blend_disc(b, grow=0.0):
+    return Point(b["O"]).buffer(b["r"] + grow, resolution=256)
+
+
+def boss_blend_metal(mx, my):
+    """The blends of the boss at (mx, my) as plan polygons, each WITH the part of its cover
+    that lies in the lip and the boss -- so a union with those is seamless. For every 2D rule
+    and check; the shell CAD builds from boss_blends()."""
+    return [b["cover"].difference(_blend_disc(b)) for b in boss_blends(mx, my)]
+
+
+def blend_added(mx, my, b):
+    """What ONE blend adds to the shell in plan: its cover outside the blend's circle, the lip
+    and the boss disc -- the new metal, which is what answers to LIP_CLR and COIL_CLR."""
+    lip = box(0.0, 0.0, W, H).difference(void_as_cut())
+    g = (b["cover"].difference(_blend_disc(b)).difference(lip)
+         .difference(Point(mx, my).buffer(BOSS_R, resolution=256)))
+    return unary_union([q for q in getattr(g, "geoms", [g]) if q.geom_type == "Polygon" and q.area > 1e-7])
+
+
+def audit_blends(blends, ps=None):
+    """Refuse a blend the shell could not be built from, or that a rule forbids. Run once on
+    the real blends; `ps` takes the parts-list shape so check_consistency [8] can plant a
+    synthetic part against one and see this refuse it."""
+    lip = box(0.0, 0.0, W, H).difference(void_as_cut())
+    cu = unary_union([Point(a).buffer(w / 2.0, resolution=64) if a == b_
+                      else LineString([a, b_]).buffer(w / 2.0, resolution=64)
+                      for a, b_, w in _coil_cached()])
+    for (mx, my), bl in blends.items():
+        c = Point(mx, my)
+        disc = c.buffer(BOSS_R, resolution=256)
+        fouls = boss_fouls(mx, my)
+        cut = unary_union(fouls) if fouls else None
+        for b in bl:
+            at = f"blend at ({b['J'][0]:.2f}, {b['J'][1]:.2f}) of the boss at ({mx}, {my})"
+            cov = b["cover"]
+            if not cov.is_valid or cov.area < 1e-3:
+                raise RuntimeError(f"{at}: its cover is not a polygon")
+            new = blend_added(mx, my, b)
+            if new.is_empty or new.geom_type != "Polygon":
+                raise RuntimeError(f"{at}: the cover does not leave ONE piece of new metal")
+            # everything of the cover that is not new metal must already be metal (lip or boss)
+            stray = cov.difference(_blend_disc(b)).difference(new).difference(lip.buffer(1e-6)) \
+                       .difference(disc.buffer(1e-6))
+            if stray.area > 1e-6:
+                raise RuntimeError(f"{at}: {stray.area:.5f} mm2 of its cover lies in open cavity")
+            # the cover may not refill anything cut out of the boss, nor reach the hole
+            if cut is not None:
+                gone = disc.difference(cut)
+                crumbs = unary_union([g for g in getattr(gone, "geoms", [gone]) if not g.contains(c)])
+                kept = cov.difference(_blend_disc(b))            # the cover less the blend's own circle
+                if kept.intersection(cut).area > 1e-9 or kept.intersection(crumbs).area > 1e-9:
+                    raise RuntimeError(f"{at}: a keep-out of this boss reaches the blend -- cutting "
+                                       f"a blend back for a part or the coil is a rule nobody has "
+                                       f"written; BLEND_R {BLEND_R} is too large here")
+            if cov.distance(c) < BOSS_R - 0.75:
+                raise RuntimeError(f"{at}: its cover comes within {cov.distance(c):.2f} mm of the "
+                                   f"boss axis, where the tapped hole and its spotface are")
+            # the edge-break zones the cover has to bury: the lip's strip from the old corner to
+            # the foot, and the boss's ring from the old corner to T (each 0.10 wide, taken 0.12)
+            J, t, n, F = b["J"], b["t"], b["n"], b["F"]
+            s = math.hypot(F[0] - J[0], F[1] - J[1])
+            strip = Polygon([(J[0] - 0.30 * t[0], J[1] - 0.30 * t[1]),
+                             (J[0] + (s - 0.01) * t[0], J[1] + (s - 0.01) * t[1]),
+                             (J[0] + (s - 0.01) * t[0] - 0.12 * n[0], J[1] + (s - 0.01) * t[1] - 0.12 * n[1]),
+                             (J[0] - 0.30 * t[0] - 0.12 * n[0], J[1] - 0.30 * t[1] - 0.12 * n[1])])
+            strip = strip.difference(c.buffer(BOSS_R - 0.12, resolution=256))
+            a0 = math.atan2(J[1] - my, J[0] - mx)
+            a1 = math.atan2(b["T"][1] - my, b["T"][0] - mx)
+            da = (a1 - a0 + math.pi) % (2 * math.pi) - math.pi
+            a1 = a0 + da * (1.0 - 0.01 / max(abs(da) * BOSS_R, 1e-9))     # stop 0.01 short of T
+            arc = [(mx + rr * math.cos(a0 + (a1 - a0) * k / 40.0), my + rr * math.sin(a0 + (a1 - a0) * k / 40.0))
+                   for rr, ks in ((BOSS_R, range(41)), (BOSS_R - 0.12, range(40, -1, -1))) for k in ks]
+            ring = Polygon(arc)
+            for name, z in (("lip", strip), ("boss", ring)):
+                if z.difference(cov.buffer(1e-9)).area > 1e-7:
+                    raise RuntimeError(f"{at}: its cover leaves {z.difference(cov).area:.5f} mm2 of "
+                                       f"the {name}'s edge-break standing open beside the blend")
+            # the rules new metal answers to: LIP_CLR off every part at its largest, COIL_CLR off copper
+            for ref, poly, _h, _s in (ps if ps is not None else _cached_parts()):
+                gap = new.distance(part_envelope(ref, poly))
+                if gap < LIP_CLR - 1e-6:
+                    raise RuntimeError(f"{at}: {gap:.3f} mm from {ref}, inside LIP_CLR {LIP_CLR}")
+            if new.distance(cu) < COIL_CLR - 1e-6:
+                raise RuntimeError(f"{at}: {new.distance(cu):.3f} mm from NFC coil copper, inside "
+                                   f"COIL_CLR {COIL_CLR}")
+            # ...and the ferrite sheet: FER_CLR off it, or -- where the blend was already cut
+            # back to the finisher's own radius for it -- at least not IN it
+            fgap = new.distance(box(*FER))
+            if fgap < (1e-6 if b.get("limit") == FER_REF else FER_CLR - 1e-6):
+                raise RuntimeError(f"{at}: R{b['r']:g} stands {fgap:.3f} mm from the ferrite sheet "
+                                   f"({FER_REF}) -- titanium where the sheet goes")
+
+
+def blend_radii():
+    """{radius: count} over all blends -- for the sheet, which has to say how many of which."""
+    out = {}
+    for bl in _blends_cached().values():
+        for b in bl:
+            out[b["r"]] = out.get(b["r"], 0) + 1
+    return out
+
+
+def blend_gaps():
+    """(nearest part, gap), coil gap, ferrite gap over all blends -- MEASURED, for the sheet
+    and the docs."""
+    cu = unary_union([Point(a).buffer(w / 2.0, resolution=64) if a == b_
+                      else LineString([a, b_]).buffer(w / 2.0, resolution=64)
+                      for a, b_, w in _coil_cached()])
+    best, coil, fer = None, None, None
+    for (mx, my), bl in _blends_cached().items():
+        for b in bl:
+            new = blend_added(mx, my, b)
+            for ref, poly, _h, _s in _cached_parts():
+                g = new.distance(part_envelope(ref, poly))
+                if best is None or g < best[1]:
+                    best = (ref, g)
+            g = new.distance(cu)
+            coil = g if coil is None else min(coil, g)
+            g = new.distance(box(*FER))
+            fer = g if fer is None else min(fer, g)
+    return best, coil, fer
+
+
+def _shell_metal(with_webs, _c={}):
+    if with_webs not in _c:
+        m = unary_union([_lip_metal_cached()] + [boss_island(mx, my) for mx, my in MOUNTS]
+                        + [g for mx, my in MOUNTS for g in boss_blend_metal(mx, my)])
+        if with_webs:
+            m = unary_union([m] + [u for mx, my in MOUNTS for u, _cov in boss_webs(mx, my)])
+        _c[with_webs] = m
+    return _c[with_webs]
+
+
+def shell_metal_poly():
+    """The shell's metal at the board-rest plane AS MODELLED, board coords: the lip, the eight
+    boss islands, the blends and the webs. What cavity_as_milled() opens, and so what the
+    brace is cut clear of."""
+    return _shell_metal(True)
+
+
+def boss_webs(mx, my):
+    """[(P, cover)] -- the pockets of void beside the boss at (mx, my) that lie beyond its own
+    bores and keep-outs and that no TOOL_R cutter can reach. They stay metal whatever the
+    model says, so the model says so: today that is the slot between each corner boss and the
+    recess wall. P is the pocket; `cover` is the polygon the shell CAD extrudes and then cuts
+    with THIS BOSS'S OWN bores and keep-outs, so the only faces a web adds are those cylinders
+    and planes -- everything else of it is buried in the boss, the lip stub or the wall by
+    _WEB_INTO.
+
+    The pocket is outlined by the cutters, not by an opening of the void: its edge on the
+    bore side is then the bore's own circle, right down to where that crosses the wall, and
+    the web ends there with no skin under the bore (_park_on_wall). Whether it is a web is
+    decided by the opening: a piece the finisher reaches is cavity and is left alone (there
+    is one beside the boss at y60.27, between its bore and its coil flat). It raises rather
+    than return a web the cuts do not bound, one a tool half reaches, or one that ends in a
+    feather."""
+    return _webs_cached()[(mx, my)]
+
+
+def _webs_cached(_c={}):
+    if "w" not in _c:
+        _c["w"] = {m: _boss_webs(*m) for m in MOUNTS}
+    return _c["w"]
+
+
+def _boss_webs(mx, my):
+    c = Point(mx, my)
+    kps, dbs = boss_cuts(mx, my)
+    cdiscs, cslabs = boss_coil_cuts(mx, my)
+    cutters = (list(kps) + [Point(q).buffer(TOOL_R, resolution=256) for d in dbs for q in d]
+               + [Point(x, y).buffer(r, resolution=256) for x, y, r in cdiscs] + list(cslabs))
+    if not cutters:
+        return []
+    cuts = unary_union(cutters)
+    win = c.buffer(BOSS_R + 3.2)
+    wallm = box(-5.0, -5.0, W + 5.0, H + 5.0).difference(recess_poly())
+    metal = unary_union([_shell_metal(False), wallm]).intersection(win)
+    isl = boss_island(mx, my)
+    void = win.difference(metal)
+    reach = void.buffer(-TOOL_R, join_style=1, resolution=64).buffer(TOOL_R, join_style=1, resolution=64)
+    left = void.difference(cuts)
+    out = []
+    for P in getattr(left, "geoms", [left]):
+        if (P.geom_type != "Polygon" or P.area < 5e-3 or P.distance(isl) > 1e-3
+                or P.distance(win.exterior) < 0.5):
+            continue                                  # dust; not this boss's; or the cavity itself
+        at = f"boss at ({mx}, {my}): the web at ({P.centroid.x:.2f}, {P.centroid.y:.2f})"
+        got = P.intersection(reach).area
+        if got > 0.5 * P.area:
+            continue                                  # the finisher reaches it: cavity, not a web
+        if got > 2e-3:
+            raise RuntimeError(f"{at}: the finisher reaches {got:.4f} of its {P.area:.4f} mm2 -- "
+                               f"neither a pocket to leave nor a web to fill")
+        hull = P.convex_hull
+        cover = hull.union(hull.buffer(_WEB_INTO, join_style=2).intersection(metal)).buffer(0)
+        # THE COVER STOPS AT THE BORE THAT ENDS THE WEB. Its reach into the wall runs _WEB_INTO
+        # past the web's tip, to the far side of the bore -- and on the open frame the wall has
+        # an edge-break there that is none of the web's business. The bore's own break cone
+        # clears the cover only within 0.07 mm of the bore's centre line, so beyond that the
+        # first build left a plug of fill in the wall's break, 0.07 long, ending in a step.
+        # Held to the web's side of each such bore's centre line, the cover ends inside the cone.
+        others = metal.difference(isl.buffer(1e-3))
+        for d in dbs:
+            for q in d:
+                cb = Point(q)
+                if abs(P.distance(cb) - TOOL_R) > 5e-3:
+                    continue                          # this bore does not bound the web
+                foot = others.exterior.interpolate(others.exterior.project(cb)) \
+                    if others.geom_type == "Polygon" else min(
+                        (g.exterior.interpolate(g.exterior.project(cb)) for g in others.geoms
+                         if g.geom_type == "Polygon"), key=lambda f: f.distance(cb))
+                if foot.distance(cb) > TOOL_R + 0.01:
+                    continue                          # not parked against anything
+                ux, uy = foot.x - cb.x, foot.y - cb.y
+                un = math.hypot(ux, uy)
+                wx_, wy_ = -uy / un, ux / un          # along the wall
+                if (P.centroid.x - cb.x) * wx_ + (P.centroid.y - cb.y) * wy_ < 0:
+                    wx_, wy_ = -wx_, -wy_
+                big = 4.0 * (BOSS_R + TOOL_R)
+                half = Polygon([(cb.x - big * ux / un, cb.y - big * uy / un),
+                                (cb.x + big * ux / un, cb.y + big * uy / un),
+                                (cb.x + big * ux / un + big * wx_, cb.y + big * uy / un + big * wy_),
+                                (cb.x - big * ux / un + big * wx_, cb.y - big * uy / un + big * wy_)])
+                if P.difference(half).area > 1e-9:
+                    raise RuntimeError(f"{at} lies on both sides of the bore that ends it")
+                cover = cover.intersection(half)
+        if cover.geom_type != "Polygon":
+            cover = max(cover.geoms, key=lambda g: g.area)
+        # OCC cannot build a wire through vertices nanometres apart: drop them. The hull's own
+        # edges are straight and survive untouched; whatever moves is inside existing metal.
+        cover = Polygon(cover.exterior).simplify(1e-3, preserve_topology=True)
+        pts = [cover.exterior.coords[0]]
+        for q in list(cover.exterior.coords)[1:-1]:
+            if math.hypot(q[0] - pts[-1][0], q[1] - pts[-1][1]) > 2e-3:
+                pts.append(q)
+        cover = Polygon(pts)
+        if cover.distance(c) < BOSS_R - 0.75:
+            raise RuntimeError(f"{at}: its cover comes within {cover.distance(c):.2f} mm of the "
+                               f"boss axis, where the tapped hole and its spotface are")
+        made = cover.difference(cuts).difference(metal)
+        if made.symmetric_difference(P).area > 2e-3:
+            raise RuntimeError(f"{at} is not bounded by this boss's own bores and keep-outs "
+                               f"({made.area:.4f} mm2 built against a pocket of {P.area:.4f}, "
+                               f"{made.symmetric_difference(P).area:.4f} apart)")
+        thin = made.area - made.buffer(-0.002, join_style=2).buffer(0.002, join_style=2).area
+        if thin > 5e-4:
+            raise RuntimeError(f"{at} ends in a feather ({thin:.4f} mm2 of it is under 0.004 mm "
+                               f"thick): a bore that should close it does not reach its wall")
+        out.append((P, cover))
+    return out
 
 
 # ---- back-side fin fields ----------------------------------------------------------------

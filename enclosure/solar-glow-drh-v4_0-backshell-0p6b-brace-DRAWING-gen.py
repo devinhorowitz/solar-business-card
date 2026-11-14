@@ -306,9 +306,19 @@ def sheet(vname, v):
     # 0.13 mm into a max-material supercap. They are sized to the cut now (cavity_as_milled,
     # boss_cuts' dogbones), and scripts/assembly_drc.py [H] measures the emitted shell that way.
     # So the sheet can say the thing a machinist needs: this tool or smaller, never larger.
-    _fin = (f"CONCAVE JUNCTION CORNERS LEFT SHARP IN THE MODEL: FINISH WITH A \u00d8{2 * _fr.TOOL_R:.1f} mm "
-            f"TOOL = R{_fr.TOOL_R:.1f} AS-MILLED; ALL CLEARANCES ALLOW FOR IT (BOSS-CORNER "
-            f"\u00d8{2 * _fr.TOOL_R:.1f} BORES MODELED). SMALLER IS FINE, LARGER IS NOT.")
+    # THE BOSS JUNCTIONS ARE MODELED NOW (2026-11-14, fit_rules "BLENDS and WEBS"), so the
+    # sentence no longer calls them sharp: it says what is in the STEP there -- how many blends
+    # and at what radius, counted off fit_rules -- and keeps the tool rule for whatever concave
+    # corner the model does still leave square.
+    _nbl = sum(len(_fr.boss_blends(mx, my)) for mx, my in mounts)
+    # how many at which radius: a blend the ferrite sheet stands beside is held to the
+    # finisher's own radius (fit_rules, "THE FERRITE LIMITS TWO OF THEM"), and the sheet says so
+    _radii = sorted(_fr.blend_radii().items(), reverse=True)
+    _bltxt = " + ".join(f"{n}\u00d7 R{r:.2f}" for r, n in _radii)
+    _fin = (f"BOSS-TO-WALL JUNCTIONS ARE MODELED: {_bltxt} BLEND, AND THE "
+            f"\u00d8{2 * _fr.TOOL_R:.1f} BOSS-CORNER BORES. ANY OTHER CONCAVE CORNER LEFT SHARP IN THE "
+            f"MODEL: FINISH WITH A \u00d8{2 * _fr.TOOL_R:.1f} mm TOOL = R{_fr.TOOL_R:.1f} AS-MILLED; ALL "
+            f"CLEARANCES ALLOW FOR IT. SMALLER IS FINE, LARGER IS NOT.")
     if is_ti:
         # 2026-11-13, from the SolidCraft review of 9a90a36: the LIP break was listed as MODELED
         # and is only in part (the cutter is the old scalar lip outline, so it misses the R16
@@ -444,6 +454,32 @@ def sheet(vname, v):
                 if _ln.geom_type == "LineString":
                     ax.plot([X(px) for px, _py in _ln.coords], [Y(py) for _px, py in _ln.coords],
                             color=INK, lw=0.55, ls="-" if open_back else (0, (2.2, 1.4)))
+        # BLENDS AND WEBS (2026-11-14). Where a boss meets the lip's wall the shell carries a
+        # concave blend, and each corner boss is joined to the recess wall by a web that ends
+        # on its bore (fit_rules.boss_blends / boss_webs). Drawn from those, the way the flats
+        # are: hidden behind a floor, visible on the open frame. The blend is its true arc,
+        # foot to boss; the web is the stretch of its bore's circle that it ends on.
+        _ls = "-" if open_back else (0, (2.2, 1.4))
+        for _b in _fr.boss_blends(mx, my):
+            _a0 = np.arctan2(_b["F"][1] - _b["O"][1], _b["F"][0] - _b["O"][0])
+            _a1 = np.arctan2(_b["T"][1] - _b["O"][1], _b["T"][0] - _b["O"][0])
+            _da = (_a1 - _a0 + np.pi) % (2 * np.pi) - np.pi
+            _th = _a0 + _da * np.linspace(0.0, 1.0, 24)
+            ax.plot([X(_b["O"][0] + _b["r"] * np.cos(t)) for t in _th],
+                    [Y(_b["O"][1] + _b["r"] * np.sin(t)) for t in _th], color=INK, lw=0.55, ls=_ls)
+            # ...and a stub of the wall it runs into. This plan has never drawn the lip's
+            # inner wall (the note and Section A-A carry the lip), and an arc that ends on a
+            # line nobody drew reads as a whisker; 1.5 mm of that wall says what it is tangent to.
+            ax.plot([X(_b["F"][0]), X(_b["F"][0] + 1.5 * _b["t"][0])],
+                    [Y(_b["F"][1]), Y(_b["F"][1] + 1.5 * _b["t"][1])], color=INK, lw=0.55, ls=_ls)
+        for _pocket, _cover in _fr.boss_webs(mx, my):
+            for _d in _fr.boss_cuts(mx, my)[1]:
+                for _q in _d:
+                    _arc = _Pt(_q).buffer(_fr.TOOL_R, resolution=128).exterior.intersection(_pocket.buffer(2e-3))
+                    for _ln in getattr(_arc, "geoms", [_arc]):
+                        if _ln.geom_type == "LineString":
+                            ax.plot([X(px) for px, _py in _ln.coords], [Y(py) for _px, py in _ln.coords],
+                                    color=INK, lw=0.55, ls=_ls)
         ax.add_patch(plt.Circle((X(mx),Y(my)),cbore/2*S1,fill=False,ec=GRY,lw=0.5))
         ax.add_patch(plt.Circle((X(mx),Y(my)),pilot_r*S1,fill=False,ec=INK,lw=0.9))
         ax.plot([X(mx)-1.6*S1,X(mx)+1.6*S1],[Y(my),Y(my)],lw=0.4,color=INK)
@@ -495,12 +531,26 @@ def sheet(vname, v):
             _gap = min(_fr.boss_coil_gap(_bx, _by) for _bx, _by in _coil)
             _coiltxt = (f" {len(_coil)} ALSO HOLLOWED {_rtxt}, TO STAND\n"
                         f"{_gap:.2f} OFF {_fr.COIL_REF} COPPER. ")
+        # ...AND HOW EACH BOSS MEETS THE WALL (2026-11-14): the blends and the webs, counted
+        # off fit_rules like everything else in this callout.
+        _nweb = sum(len(_fr.boss_webs(_bx, _by)) for _bx, _by in mounts)
+        # wrapped by hand to the callout's column: it runs on from the coil sentence when there
+        # is one, and opens its own line when there is not
+        _held = sorted({b["limit"] for _bx, _by in mounts for b in _fr.boss_blends(_bx, _by) if b["limit"]})
+        _heldtxt = (f" (THE R{_radii[-1][0]:.2f} PAIR BESIDE FERRITE {' '.join(_held)})"
+                    if _held and len(_radii) > 1 and _radii[-1][1] == 2 else
+                    f" (R{_radii[-1][0]:.2f} BESIDE FERRITE {' '.join(_held)})"
+                    if _held and len(_radii) > 1 else "")
+        _jointxt = (f"BOSS TO LIP WALL:\n{_bltxt.replace(' + ', ', ')} BLEND{_heldtxt}, FULL DEPTH" if _coil
+                    else f"\nBOSS TO LIP WALL: {_bltxt.replace(' + ', ', ')} BLEND{_heldtxt}, FULL DEPTH")
+        _jointxt += (f";\n{_nweb} CORNER BOSSES SOLID TO THE RECESS WALL (NO SLOT), TO THEIR BORE.\n"
+                     if _nweb else ". ")
         leader(X(_c.x), Y(_c.y), 141, 213,
                f"{len(_flats)}\u00d7 BOSS FLAT" + (" (HIDDEN \u2014 CAVITY SIDE)" if not open_back else "") +
                f": EACH \u00d8{2*boss_r:.2f} BOSS CUT BACK {_cbtxt}\n"
                f"CLEAR OF THE PART IT WOULD FOUL ({_whotxt}), FULL\n"
                f"DEPTH; FLATS {_dd[0]:.2f}\u2013{_dd[-1]:.2f} FROM THE HOLE AXIS (THREAD KEEP-OUT\n"
-               f"r{_fr.THREAD_KEEP:.2f} UNTOUCHED).{_coiltxt}MODELED \u2014 STEP GOVERNS.", fs=4.9)
+               f"r{_fr.THREAD_KEEP:.2f} UNTOUCHED).{_coiltxt}{_jointxt}MODELED \u2014 STEP GOVERNS.", fs=4.9)
 
     # U7 relief pocket (cavity-floor recess; hidden in back-face view -> dashed).
     # Drawn ONLY if the arithmetic still calls for one -- see the import block above.

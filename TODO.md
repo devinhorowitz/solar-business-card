@@ -769,12 +769,19 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
     a wall at 49.550.
   - **The four downward faces at seat level are gone** (24.896 mm², max and lite; the air frame had
     them too).
-  - **The max shell STEP imports with no edge repair.** Expect **28,544 edges, none shared by more
-    than two faces; 9,654 faces, 36 of them under 0.001 mm²**; no upward faces at z +0.02. _(Counts
-    by OCC on a local build with CI's pins, 2026-11-14, of the shell with the coil relief in its two
-    east mid-span bosses — the last block of this item. They were 28,526 / 9,648 / 36 on the STEP
-    built at `a4f951e`, which is what the 2026-11-14 ArtCraft record below measured, and 28,403 /
-    9,626 / 82 at `9a90a36`, which is what the 2026-11-13 MEASURED block reads.)_
+  - **The max shell STEP imports with no edge repair.** Expect **28,512 edges, none shared by more
+    than two faces; 9,647 faces, 35 of them under 0.001 mm²**; no upward faces at z +0.02. _(Counts
+    by OCC on a local build with CI's pins, 2026-11-14, of the shell with each boss joined to the
+    wall — the last block of this item. They were 28,544 / 9,654 / 36 with the coil relief alone,
+    the shell at `5a36638`; 28,526 / 9,648 / 36 on the STEP built at `a4f951e`, which is what the
+    2026-11-14 ArtCraft record below measured; and 28,403 / 9,626 / 82 at `9a90a36`, which is what
+    the 2026-11-13 MEASURED block reads.)_
+  - **Each boss runs into the wall through a blend, and no corner boss stands beside a slot** (max /
+    lite / air; since 2026-11-14, the last block of this item). Expect twelve concave cylinders
+    where a boss meets the lip's wall — **ten of R2.000 and two of R1.000**, the two on the
+    ferrite's side of the bosses at (47.93, 28.63) and (47.93, 60.27) — and solid metal from each
+    corner boss to the recess wall, with that boss's Ø2.0 bore running out to the wall. The axes
+    are in the last block.
   - **The open frame still has its resting-face edge-break**, including a 45° foot on each boss flat.
   - **No brace resin wall under 0.10 mm**, max and lite, and none under `SLA_WALL` 0.60 except the
     ferrite channel's own walls (x 36.2–36.7 and 49.10, top 0.33 mm only) — **and none of those
@@ -788,16 +795,19 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
       mirrored: the **max brace overlaps one part, L2, by 0.047 mm³** (KiCad's generic 1008 body,
       1.20 tall where the part fitted is 1.00 — the item on L2 below) and the **lite brace
       nothing**. Mirrored, they must collide: 52.8 mm³ over 33 parts and 487.6 over 28 (max),
-      52.9 over 34 and 301.5 over 28 (lite). Those are this tree's braces; the 53.1 / 493.9
-      SolidCraft first reported were the braces at `d060215`, before the level opening;
+      52.9 over 34 and 301.5 over 28 (lite). Cutting the two west corners back (the last
+      block of this item) did not move them: the gate printed 52.833 over 33, 487.572 over 28,
+      52.933 over 34 and 301.511 over 28 on the braces at `c448408`, as it had at `5a36638`
+      — no part stands at either corner. The 53.1 / 493.9 SolidCraft first
+      reported were the braces at `d060215`, before the level opening;
     - **the medallion reads correctly from behind** — DRH, No 001, and SOLAR · NFC · TITANIUM ·
       ATL GA · MMXXVI clockwise round the ring;
     - **the pogo plate takes the panel face-UP**: its two dowel bores under TH1 and TH2 (file
       (−4.9, −20.0) and (55.7, −85.0); the plate is un-centred, a board point (x, y) is at
       (x, −y)), and its title and net labels reading correctly from above;
     - the max shell STEP's counts are what they were — the reflection changes no face, edge or
-      volume (**5289.748 mm³** by OCC with the coil relief; 5289.905 at `a4f951e`; 5293.129 was
-      `9a90a36`'s).
+      volume (**5307.193 mm³** by OCC with each boss joined to the wall; 5289.748 at `5a36638`,
+      with the coil relief alone; 5289.905 at `a4f951e`; 5293.129 was `9a90a36`'s).
     `scripts/handedness_drc.py` measures the first and third of these on every CI run, in the
     kernel that wrote the files; this is the check in one that did not.
 
@@ -1116,6 +1126,76 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
     informational (a one-edge kernel difference, blend radii within a facet, a 0.092 break, the
     five corners SolidCraft cannot fillet, L2's seating, the shim's coverage against KiCad's
     bodies, the 0.0462 closest approach). None changes a part.
+
+  **EACH BOSS JOINED TO THE WALL, 2026-11-14 (DRH, from a render of the bosses) — SO THE SOLIDS
+  CHANGED AGAIN.** All three shells and both braces are rebuilt by this change's merge run, and the
+  measurement this item waits on is of THOSE solids; an ArtCraft run started against `5a36638`
+  measures the shells as they were before it. Everything in the lists above stands except where a
+  bullet here says otherwise. Board coordinates; this repo's instruments, on a local build with
+  CI's pins — none of it is a SolidCraft figure yet.
+  - **Twelve blends.** Where a boss's circle crosses the lip's cavity wall the STEP kept a sharp
+    inside corner — 51.5° on the east wall, 81.8° on the west — and left it to the finisher's
+    radius. Each is now a modelled concave blend: a true cylinder through the full cavity height,
+    carrying the 0.10×45° break of the lip and the boss it joins, and on the air frame the same
+    at the resting face. **Ten are R2.00**, axes (4.498, 7.170), (4.498, 24.330), (4.498, 32.930),
+    (4.498, 55.970), (4.498, 64.570) and (4.498, 81.730) on the west, (47.552, 7.452),
+    (47.552, 24.048), (47.552, 64.852) and (47.552, 81.448) on the east; they meet the wall
+    1.73 mm (west) and 2.55 mm (east) beyond the old corner. **Two are R1.00**, axes
+    (48.552, 32.174) and (48.552, 56.726): the blends on the ferrite's side of the bosses at
+    (47.93, 28.63) and (47.93, 60.27) — the next bullet. Each circle is set 0.002 mm past tangent
+    into the lip and the boss, so that a kernel is handed a crossing and not a tangency; the radii
+    are exact.
+  - **The ferrite sheet is why two are R1.00, and it is a finding of its own.** At R2.00 those two
+    blends stood INSIDE the sheet's east corners at (48.9, 31.5) and (48.9, 57.5): 0.035 and
+    0.075 mm² of titanium where the ferrite goes. The first full build did exactly that with every
+    gate green, because nothing had ever held the sheet against the shell. So a blend that would
+    come within `FER_CLR` (0.20) of the sheet is cut at `TOOL_R` instead — the radius the Ø2.0
+    leaves in that corner whatever the model says, so the part does not move there, and neither do
+    the brace's two east corners or the ridge east of the ferrite channel. `scripts/assembly_drc.py`
+    **[F]** and **[H]** now carry the sheet as a body. What they print is new information about
+    the shells as they have always been: **the sheet's corners stand 0.24 and 0.15 mm from the
+    as-milled titanium**, at the boss at y 28.63 and the one at y 60.27. No rule chose that
+    clearance. **The two stay at R1.00 (DRH, 2026-11-14)**: the alternative was R2.00 there as
+    well, with about 1 mm snipped off the sheet's two east corners, and it was turned down.
+    **Still DRH's call:** whether 0.15 mm is enough for a hand-laid sheet.
+  - **Four webs.** Beside each corner boss, on its short-edge side, the STEP had a slot of void
+    between the boss and the recess wall — 0.17 mm wide at its narrowest, closed at one end and
+    running out into the boss's own Ø2.0 bore. No cutter enters it. It is metal now (0.37, 0.42,
+    0.26 and 0.32 mm² in plan): boss, web and wall are one piece, and the bore is an ordinary
+    R1.0 relief from the boss's flat out to the wall. **The bore stays**: without it the
+    finisher's own radius would leave metal 0.04–0.05 mm inside a max-material supercap's corner.
+    The four corner bores are parked exactly against the recess wall now — axes (4.948, 1.048),
+    (45.620, 1.048), (5.017, 87.852) and (45.803, 87.852), 0.005–0.010 mm from where a half-degree
+    search had left them 0.001–0.004 short of it. They stand 1.76–1.94 mm from the screw axes
+    (were 1.75–1.94). The two mid-span bores, every flat and both coil hollows are where they
+    were.
+  - **The numbers.**
+    - Volumes by OCC on the STEPs: **5307.193 / 3934.199 / 990.335 mm³** (max / lite / air; they
+      were 5289.748 / 3922.362 / 978.605). STL: 5307.10 / 3934.15 / 990.31. The blends add
+      8.271 mm² in plan and the webs 1.370.
+    - The max STEP: **28,512 edges, 9,647 faces**, 35 under 0.001 mm², none shared by more than
+      two faces. Lite 1,023 / 383 / 35; air 1,244 / 460 / 36. Fewer than before on every shell:
+      the webs bury more facets than the blends add.
+    - The braces lose the two WEST corners beside their band to the R2.00 blends there
+      (footprint 1313.17 → 1312.70 mm²): **1916.609 / 1135.278 mm³** by OCC (were 1917.453 /
+      1135.782), max 1,038 edges / 354 faces, lite 1,146 / 380, closest approach to the shell
+      0.048. The ridge east of the ferrite channel still stands y 31.67–57.23.
+    - `scripts/assembly_drc.py` **[J]**, new: on every level of every shell there is metal
+      0.06 mm outside each blend's circle and air 0.06 mm inside it, at three places along the
+      arc, and metal in the middle of each web's pocket. Its canary is the same section with
+      each junction put back the way it was, which must fail all sixteen. On the shells as
+      committed before this it is red at every junction on every level (48 per shell); and on a
+      build with all twelve at R2.00, **[F]** and **[H]** are red at the ferrite sheet (0.111 mm²,
+      0.187 mm deep).
+    - **[G]** skips the stations a blend stands on, as it always has a boss's: 1,880 stations
+      where there were 2,102. **[I]**: the two relieved bosses 0.998 / 0.999, the lip 0.999.
+  - **The sheet** calls the blends in its boss callout and in note 5 ("BOSS-TO-WALL JUNCTIONS ARE
+    MODELED: 10× R2.00 + 2× R1.00 BLEND …"), draws them on the plan with a stub of the wall each
+    runs into — hidden behind a floor, visible on the open frame — and no longer calls those
+    corners sharp. The tool rule stands for whatever concave corner the model still leaves square.
+  - **Not done, and DRH's to ask for:** the BACK face has the same junction. Each r2.60 annulus
+    meets the proud frame at a sharp inside corner, 0.15 tall, left to the Ø1.0 back tool — on the
+    side of the shell that is seen. Nothing here touches it.
 
 - [ ] **[SOURCING — lite/air] Pick the thin supercap MPN**
   _(2026-08-07, opened with the three-variant round.)_ `part_heights.SUPERCAP_H_THIN = 1.00`
