@@ -103,7 +103,15 @@ BASELINE = {
     # less the rib metal that went with it, 5.382 mm2 x 0.70 = 3.77. 1.60 + 7.62 - 3.77 = 5.45
     # predicted, 5.54 measured (the rest is edge-break). bbox, seam and facets unchanged.
     # Triangles 52,505, ungated.
-    volume_mm3=5312.64, bbox=(-26.35, -45.4, -0.15, 26.35, 45.4, 3.4),
+    # re-ledgered 2026-11-14 (the contouring pass), 5312.64 -> 5301.51: the bosses and the two
+    # short-edge tabs made even, symmetric and round-cornered (fit_rules "EVEN AND SYMMETRIC",
+    # "ROUNDS", tab_rounds). Only ever less metal: 6.260 mm2 in plan -- 3.720 off the eight
+    # boss islands (one flat distance, full-chord flats, the coil hollow mirrored, twenty R1.00
+    # rounds), 1.361 less blend (the twins of the two the ferrite holds to R1.00), 0.983 off
+    # the lip (the ring's strip beside the south tab, four R1.00 tip rounds) -- x 1.80 = 11.27
+    # predicted, 11.13 measured (the difference is edge-break that went with the metal). bbox,
+    # seam and facets unchanged. Triangles 53,372, ungated.
+    volume_mm3=5301.51, bbox=(-26.35, -45.4, -0.15, 26.35, 45.4, 3.4),
         max_boundary_edges=1, max_open_len_mm=0.001, max_degenerate=3),
     "solar-glow-drh-pogo-testplate.stl": dict(
         # re-ledgered 2026-11-13: the y range flips, -10.4..99.3 -> -99.3..10.4, and nothing
@@ -306,7 +314,10 @@ BASELINE = {
         # re-ledgered 2026-11-14 (later still), 3934.15 -> 3935.83: the sixteen back blends,
         # 10.678 mm2 x 0.15 = 1.60 predicted, 1.68 measured. No rear art here, so nothing
         # gives way. bbox, seam and facets unchanged.
-        volume_mm3=3935.83, bbox=(-26.35, -45.4, -0.15, 26.35, 45.4, 2.42),
+        # re-ledgered 2026-11-14 (the contouring pass), 3935.83 -> 3928.31: bosses and tabs
+        # even, symmetric and round-cornered, 6.260 mm2 x 1.22 = 7.64 predicted, 7.52 measured.
+        # bbox, seam and facets unchanged.
+        volume_mm3=3928.31, bbox=(-26.35, -45.4, -0.15, 26.35, 45.4, 2.42),
         max_boundary_edges=1, max_open_len_mm=0.001, max_degenerate=3),
     "solar-glow-drh-frame-air-316L.stl": dict(
         # air: OPEN frame, no floor -- walls + recess + 8 bosses only, z 0..1.80 exactly
@@ -352,7 +363,11 @@ BASELINE = {
         # 9.641 mm2 x 1.20 = 11.57 predicted, 11.83 measured. More over than on the floored
         # shells because here the buried edge-breaks are at both ends: the seat and the
         # resting face. Both seams and the four facets are where they were.
-        volume_mm3=990.31, bbox=(-26.35, -45.4, 0.0, 26.35, 45.4, 1.8),
+        # re-ledgered 2026-11-14 (the contouring pass), 990.31 -> 982.99: bosses and tabs even,
+        # symmetric and round-cornered, 6.260 mm2 x 1.20 = 7.51 predicted, 7.32 measured -- and
+        # 0.74 % of this frame, so the tolerance caught it, as it should. Both seams and the
+        # four facets are where they were.
+        volume_mm3=982.99, bbox=(-26.35, -45.4, 0.0, 26.35, 45.4, 1.8),
         max_boundary_edges=2, max_open_len_mm=0.001, max_degenerate=4),
     "solar-glow-drh-diffuser-brace-lite.stl": dict(
         # the lite brace: gap 1.22, span 0.60, 31 pockets, 0 through-holes, single piece

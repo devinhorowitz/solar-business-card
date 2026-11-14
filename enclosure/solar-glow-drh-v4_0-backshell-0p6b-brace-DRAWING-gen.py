@@ -154,7 +154,11 @@ def _lip_note():
          "BRACKETS:"]
         + [s + "." for s in edges]
         + ([rule + "."] if rule else [])
-        + [f"STEPS BLEND AT R{_fr.TOOL_R:.2f}."])
+        + [f"STEPS BLEND AT R{_fr.TOOL_R:.2f}."]
+        # the tab between the two supercaps on each short edge: its tip corners are rounds
+        # (fit_rules.tab_rounds), true cylinders in the STEP, and the note says so
+        + ([f"TAB TIP CORNERS {len(_fr.tab_rounds())}\u00d7 R{_fr.CONTOUR_R:.2f}, MODELED."]
+           if _fr.tab_rounds() else []))
 
 
 # ---- THE NOTES BLOCK: measured, wrapped, and refused if it does not fit (2026-11-12) ----
@@ -442,11 +446,16 @@ def sheet(vname, v):
     # visible outline, so the circle gives way to the island itself.
     from shapely.geometry import Point as _Pt
     from shapely.ops import unary_union as _uu
+    # ...AND ITS OUTSIDE CORNERS ARE ROUNDED (2026-11-14, fit_rules.boss_rounds), so what is
+    # drawn is no longer the keep-outs' edges but the finished island's own outline, less the
+    # stretch of it that is still the boss's circle: the flat, the bores and hollows, and the
+    # rounds between them, as one line.
     _flats = {}
     for mx,my in mounts:
         _kp = _fr.boss_fouls(mx, my)
         if _kp:
-            _seg = _uu(_kp).boundary.intersection(_Pt(mx, my).buffer(boss_r, resolution=64))
+            _seg = _fr.boss_island(mx, my).exterior.difference(
+                _Pt(mx, my).buffer(boss_r, resolution=64).exterior.buffer(0.012))
             _flats[(mx, my)] = (_seg, _uu(_kp).distance(_Pt(mx, my)))
     for mx,my in mounts:
         if open_back and (mx, my) in _flats:
@@ -529,33 +538,44 @@ def sheet(vname, v):
         # shop has to know a Ø2.0 finisher can cut it), and the stand-off measured off the
         # finished island rather than the constant that asked for it.
         _coil = [(_bx, _by) for _bx, _by in mounts if _fr.boss_coil_keepout(_bx, _by) is not None]
-        _coiltxt = " "
+        _coiltxt = ""
         if _coil:
             _rr = sorted({r for _bx, _by in _coil for _x, _y, r in _fr.boss_coil_cuts(_bx, _by)[0]})
             _rtxt = f"R{_rr[0]:.2f}" if _rr[-1] - _rr[0] < 0.005 else f"R{_rr[0]:.2f}\u2013{_rr[-1]:.2f}"
             _gap = min(_fr.boss_coil_gap(_bx, _by) for _bx, _by in _coil)
-            _coiltxt = (f" {len(_coil)} ALSO HOLLOWED {_rtxt}, TO STAND\n"
-                        f"{_gap:.2f} OFF {_fr.COIL_REF} COPPER. ")
+            _coiltxt = (f"{len(_coil)} ALSO HOLLOWED {_rtxt} TO STAND {_gap:.2f} OFF {_fr.COIL_REF} "
+                        f"COPPER, AND THE SAME ON THE FAR SIDE TO MATCH.")
         # ...AND HOW EACH BOSS MEETS THE WALL (2026-11-14): the blends and the webs, counted
         # off fit_rules like everything else in this callout.
         _nweb = sum(len(_fr.boss_webs(_bx, _by)) for _bx, _by in mounts)
-        # wrapped by hand to the callout's column: it runs on from the coil sentence when there
-        # is one, and opens its own line when there is not
         _held = sorted({b["limit"] for _bx, _by in mounts for b in _fr.boss_blends(_bx, _by) if b["limit"]})
-        _heldtxt = (f" (THE R{_radii[-1][0]:.2f} PAIR BESIDE FERRITE {' '.join(_held)})"
-                    if _held and len(_radii) > 1 and _radii[-1][1] == 2 else
-                    f" (R{_radii[-1][0]:.2f} BESIDE FERRITE {' '.join(_held)})"
-                    if _held and len(_radii) > 1 else "")
-        _jointxt = (f"BOSS TO LIP WALL:\n{_bltxt.replace(' + ', ', ')} BLEND{_heldtxt}, FULL DEPTH" if _coil
-                    else f"\nBOSS TO LIP WALL: {_bltxt.replace(' + ', ', ')} BLEND{_heldtxt}, FULL DEPTH")
-        _jointxt += (f";\n{_nweb} CORNER BOSSES SOLID TO THE RECESS WALL (NO SLOT), TO THEIR BORE.\n"
-                     if _nweb else ". ")
-        leader(X(_c.x), Y(_c.y), 141, 213,
-               f"{len(_flats)}\u00d7 BOSS FLAT" + (" (HIDDEN \u2014 CAVITY SIDE)" if not open_back else "") +
-               f": EACH \u00d8{2*boss_r:.2f} BOSS CUT BACK {_cbtxt}\n"
-               f"CLEAR OF THE PART IT WOULD FOUL ({_whotxt}), FULL\n"
-               f"DEPTH; FLATS {_dd[0]:.2f}\u2013{_dd[-1]:.2f} FROM THE HOLE AXIS (THREAD KEEP-OUT\n"
-               f"r{_fr.THREAD_KEEP:.2f} UNTOUCHED).{_coiltxt}{_jointxt}MODELED \u2014 STEP GOVERNS.", fs=4.9)
+        # a blend held to the smaller radius by the ferrite takes its twin with it (the two
+        # blends of a mid-span boss are alike), so what is said is which BOSSES, not which blends
+        _nhb = sum(1 for _bx, _by in mounts if any(b["limit"] for b in _fr.boss_blends(_bx, _by)))
+        _heldtxt = (f" (R{_radii[-1][0]:.2f} AT THE {_nhb} BOSS{'ES' if _nhb != 1 else ''} BESIDE "
+                    f"FERRITE {' '.join(_held)})" if _held and len(_radii) > 1 else "")
+        _jointxt = (f"BOSS TO LIP WALL: {_bltxt.replace(' + ', ', ')} BLEND, FULL DEPTH{_heldtxt}"
+                    + (f"; {_nweb} CORNER BOSSES SOLID TO THE RECESS WALL (NO SLOT), TO THEIR BORE."
+                       if _nweb else "."))
+        # EVEN, AND ROUND-CORNERED (2026-11-14, DRH). One flat distance for all eight (the
+        # tightest any supercap asks for, fit_rules.boss_flat_d), so the cut-back is said as
+        # what it is -- a flat at a distance from the axis -- and the clearance it leaves each
+        # part is the range measured off the islands. And every outside corner is a round.
+        _ddtxt = (f"{_dd[0]:.2f} FROM ITS HOLE AXIS, ALIKE ON ALL {len(_flats)}" if _dd[-1] - _dd[0] < 0.005
+                  else f"{_dd[0]:.2f}\u2013{_dd[-1]:.2f} FROM ITS HOLE AXIS")
+        _nrd = sum(len(_fr.boss_rounds(_bx, _by)) for _bx, _by in mounts)
+        _rdtxt = (f"EVERY OUTSIDE CORNER OF A BOSS R{_fr.CONTOUR_R:.2f} ({_nrd}\u00d7)." if _nrd else "")
+        # WRAPPED, NOT HAND-BROKEN (2026-11-14). The callout was broken into lines by hand, and
+        # every clause that grew pushed one of them into the rim's own label to its right; it
+        # is one paragraph now, wrapped to the column that clears that label.
+        import textwrap as _tw
+        _calltxt = " ".join(t for t in (
+            f"{len(_flats)}\u00d7 BOSS FLAT" + (" (HIDDEN \u2014 CAVITY SIDE)" if not open_back else "") +
+            f": EACH \u00d8{2*boss_r:.2f} BOSS CUT BACK TO A FLAT {_ddtxt} (THREAD KEEP-OUT "
+            f"r{_fr.THREAD_KEEP:.2f} UNTOUCHED), FULL DEPTH, {_cbtxt} CLEAR OF THE PART BESIDE IT "
+            f"({_whotxt}).",
+            _coiltxt, _jointxt, _rdtxt, "MODELED \u2014 STEP GOVERNS.") if t)
+        leader(X(_c.x), Y(_c.y), 141, 213, "\n".join(_tw.wrap(_calltxt, 68)), fs=4.9)
 
     # U7 relief pocket (cavity-floor recess; hidden in back-face view -> dashed).
     # Drawn ONLY if the arithmetic still calls for one -- see the import block above.

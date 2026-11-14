@@ -607,6 +607,83 @@ def check_enclosure_fit():
         err(f"{len(_bb)} back-face blends, where this board has had 16 (two per mount) -- read "
             f"what moved (fit_rules.back_blends), then re-ledger the count here and in the docs")
         bad += 1
+    # 4d. EVEN, SYMMETRIC AND ROUND-CORNERED (2026-11-14, DRH's contouring pass). Three things
+    #     the sheet now says about the bosses and the two short-edge tabs, each measured off
+    #     the polygons here and off the metal by assembly_drc [J] and the shell generator's own
+    #     export check:
+    #       EVEN        one flat distance for all eight bosses;
+    #       SYMMETRIC   each mid-span boss mirrors itself about the line through its axis, the
+    #                   corner bosses are one shape (north-south exactly; east-west but for the
+    #                   last 0.003 mm of one round, which rests on a blend on the west and on
+    #                   the boss's own circle on the east, where the lip is narrower);
+    #       ROUND       no outside corner on a boss that a ball of CONTOUR_R cannot roll round,
+    #                   and the four tab tips are rounds (tab_rounds() refuses a lopsided tab).
+    from shapely.affinity import scale as _scale
+    _fd = [min(kp.distance(_P(m)) for kp in fr.boss_cuts(*m)[0]) for m in fr.MOUNTS]
+    if max(_fd) - min(_fd) > 1e-6:
+        err(f"the boss flats stand {min(_fd):.4f} to {max(_fd):.4f} mm from their axes -- the "
+            f"sheet says they are alike on all eight (fit_rules.boss_flat_d)")
+        bad += 1
+    _isl = {m: fr.boss_island(*m, exact=True) for m in fr.MOUNTS}
+    _corner = [m for m in fr.MOUNTS if fr._is_corner_boss(*m)]
+    _lop = {m: _isl[m].symmetric_difference(_scale(_isl[m], 1.0, -1.0, origin=m)).area
+            for m in fr.MOUNTS if m not in _corner}
+    for m, a in _lop.items():
+        if a > 1e-3:
+            err(f"the mid-span boss at {m} does not mirror itself about y{m[1]:g}: {a:.4f} mm2 "
+                f"differs between its two sides")
+            bad += 1
+    _ns = _ew = 0.0
+    for a_ in _corner:
+        for b_ in _corner:
+            if a_ < b_ and a_[0] == b_[0]:
+                _ns = max(_ns, _isl[a_].symmetric_difference(
+                    _scale(_isl[b_], 1.0, -1.0, origin=(0.0, fr.H / 2.0))).area)
+            if a_ < b_ and a_[1] == b_[1]:
+                _ew = max(_ew, _isl[a_].symmetric_difference(
+                    _scale(_isl[b_], -1.0, 1.0, origin=(fr.W / 2.0, 0.0))).area)
+    if _ns > 1e-3 or _ew > 1e-2:
+        err(f"the four corner bosses are no longer one shape: a north-south pair differs by "
+            f"{_ns:.4f} mm2 and an east-west pair by {_ew:.4f} (0.0000 and 0.0016 when ledgered)")
+        bad += 1
+    # ROUND, by an instrument that owes boss_rounds() nothing: roll a slightly smaller ball
+    # round the metal near each boss and see what it cannot reach. The buffer is good to a
+    # few 1e-3 mm2 (GEOS simplifies inside it); one hard corner is 0.015 or more.
+    _HARD = 0.02
+    _wallm = _box(-5.0, -5.0, fr.W + 5.0, fr.H + 5.0).difference(fr.recess_poly())
+    _rr = fr.CONTOUR_R - 0.05
+
+    def _hard(metal, m):
+        w = metal.intersection(_P(m).buffer(fr.BOSS_R + 2.5))
+        gone = w.difference(w.buffer(-_rr, join_style=1, quad_segs=64).buffer(_rr, join_style=1, quad_segs=64))
+        near = _P(m).buffer(fr.BOSS_R + 0.15)
+        return sum(k.area for k in getattr(gone, "geoms", [gone]) if near.contains(k))
+
+    _rds = [(m, rd) for m in fr.MOUNTS for rd in fr.boss_rounds(*m)]
+    _built = unary_union([fr.shell_metal_poly(), _wallm])
+    _sharp = unary_union([_built] + [rd["took"] for _m, rd in _rds])
+    _hc = {m: _hard(_built, m) for m in fr.MOUNTS}
+    for m, a in _hc.items():
+        if a > _HARD:
+            err(f"the boss at {m} still has a hard outside corner: a ball of R{_rr:g} cannot "
+                f"reach {a:.4f} mm2 of it (the sheet calls every outside corner R{fr.CONTOUR_R:g})")
+            bad += 1
+    for m in fr.MOUNTS:
+        if _hard(_sharp, m) < 2.5 * _HARD:
+            err(f"SELF-TEST: with the rounds of the boss at {m} put back sharp, the rolled ball "
+                f"still reaches everything -- the hard-corner test above cannot fail")
+            bad += 1
+    _tabs = fr.tab_rounds()
+    if len(_rds) != 20 or len(_tabs) != 4:
+        # a tripwire, like the twelve and four above: the sheet and the docs quote both counts
+        err(f"{len(_rds)} boss rounds and {len(_tabs)} tab-tip rounds, where this board has had "
+            f"20 and 4 -- read what moved (fit_rules.boss_rounds / tab_rounds), then re-ledger "
+            f"the counts here and in the docs that quote them")
+        bad += 1
+    if any(abs(rd["r"] - fr.CONTOUR_R) > 1e-9 for _m, rd in _rds) or \
+            any(abs(rd["r"] - fr.CONTOUR_R) > 1e-9 for rd in _tabs):
+        err("a round is not CONTOUR_R")
+        bad += 1
     # mechanism self-test: a synthetic part planted INSIDE a blend's new metal must be refused
     (_m0, _b0) = _bl[0]
     _pt = fr.blend_added(_m0[0], _m0[1], _b0).representative_point()
@@ -651,12 +728,21 @@ def check_enclosure_fit():
            f"keeps a >={fr.SLA_WEB} mm web; {sum(len(fr.lip_bands(e)) for e in 'WESN')} lip "
            f"bands all stand off their parts and clear the coil; 8 boss islands clear, "
            f"thread intact (the polygon -- the metal is assembly_drc [F]); {len(_bl)} boss "
-           f"blends ({len(_bl) - len(_held)} at R{fr.BLEND_R:g}, {len(_held)} held to "
-           f"R{fr.TOOL_R:g} by the ferrite sheet, {_bfer:.2f} off it) stand {_bgap:.2f} off the "
+           f"blends ({len(_bl) - len(_held)} at R{fr.BLEND_R:g}, "
+           f"{sum(1 for b in _held if not b.get('twin'))} held to "
+           f"R{fr.TOOL_R:g} by the ferrite sheet, {_bfer:.2f} off it, and "
+           f"{sum(1 for b in _held if b.get('twin'))} more to match them) stand {_bgap:.2f} off the "
            f"nearest part ({_bref}) and {_bcoil:.2f} off the coil, {len(_wb)} corner webs "
            f"{_wgap:.2f} off theirs, and {len(_bb)} back-face blends the reeded pour wraps at "
-           f"{_valgap:.2f} (the polygon -- the metal is assembly_drc [J]); guaranteed ring "
-           f"relieved around {len(_reliefs)} part(s), all bodies >={fr.LIP_CLR} clear of it")
+           f"{_valgap:.2f} (the polygon -- the metal is assembly_drc [J]); all 8 boss flats "
+           f"{_fd[0]:.3f} from their axes, every mid-span boss its own mirror image "
+           f"({max(_lop.values()):.4f} mm2 at worst), the corner bosses one shape (N-S "
+           f"{_ns:.4f}, E-W {_ew:.4f} mm2), {len(_rds)} boss corners and {len(_tabs)} tab tips "
+           f"rounded R{fr.CONTOUR_R:g} with no hard corner left on a boss "
+           f"({max(_hc.values()):.4f} mm2 at worst against {_HARD}; the rounds put back sharp "
+           f"fail all 8); guaranteed ring "
+           f"relieved around {len(_reliefs) - len(fr.lip_tabs())} part(s) and given up at the "
+           f"{len(fr.lip_tabs())} short-edge tabs, all bodies >={fr.LIP_CLR} clear of it")
 
 
 def check_doc_file_refs():

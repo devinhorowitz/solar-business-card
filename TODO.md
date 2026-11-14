@@ -1182,6 +1182,9 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
       (footprint 1313.17 → 1312.70 mm²): **1916.609 / 1135.278 mm³** by OCC (were 1917.453 /
       1135.782), max 1,038 edges / 354 faces, lite 1,146 / 380, closest approach to the shell
       0.048. The ridge east of the ferrite channel still stands y 31.67–57.23.
+    - The reflow shim's DXF (`enclosure/shim/`) was rebuilt by this change too, and moved: at most
+      0.0023 mm, at its two east corners, net area 969.232 → 969.230 mm². _(Added 2026-11-14,
+      later: the block went out without saying so.)_
     - `scripts/assembly_drc.py` **[J]**, new: on every level of every shell there is metal
       0.06 mm outside each blend's circle and air 0.06 mm inside it, at three places along the
       arc, and metal in the middle of each web's pocket. Its canary is the same section with
@@ -1246,6 +1249,113 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
     and every vertex of a keep-out becomes a wall face of the valley: the max shell came out at
     14,851 faces and a 62 MB STEP, valid, with every gate green. Face count is ungated on
     purpose. The keep-out is drawn at the circles' own chord now (`_FIN_ARC`).
+  **THE CONTOURING PASS, 2026-11-14 (DRH, looking at the eight bosses and the two tabs from the
+  cavity side: "eliminate the hard corners and radius them … make them mostly symmetric or
+  even") — SO ALL THREE SHELLS CHANGED ONCE MORE.** Only ever less metal. The braces and the
+  reflow shim move by microns (last bullet). Board coordinates; this repo's instruments, on a
+  local build with CI's pins — none of it is a SolidCraft figure yet, and **an ArtCraft or
+  SolidCraft run against `466e1de` or earlier measures the bosses and tabs as they were before
+  this.**
+  - **Even: one flat for all eight.** Each boss was cut back for its own supercap by that cap's
+    own numbers, so the flats stood 1.475, 1.524, 1.545 and 1.676 mm from their axes. Every flat
+    is now **1.475** (`fit_rules.boss_flat_d()`: the least any cap leaves any boss, so no cap is
+    cleared by less than its bay asks). The bosses stand 0.75–0.95 mm off their caps' nominal
+    outlines (were 0.75 at all eight), and each keeps 79.8–81.6 % of its annulus (were
+    80.4–85.9 %). The thread keep-out is r1.30; nothing comes nearer an axis than the flats.
+  - **Symmetric: the flat runs the whole boss.** A mid-span boss kept a lump of itself beyond the
+    end of its cap's keep-out, on one side only, with a Ø2.0 bore in the corner. The flat is a
+    full chord now, so **the two mid-span bores are gone** (they were at (45.430, 30.341) and
+    (45.602, 58.555)) and each mid-span boss is its own mirror image about the line through its
+    axis (0.0000 mm² of difference, `check_consistency` [8]). To keep it so:
+    - **the coil hollow is cut on both sides** of the two east mid-span bosses — the real one
+      about (46.9, 32.2) and (46.9, 56.8), R1.15, and its mirror image about (46.9, 25.06) and
+      (46.9, 63.74), where no copper asks for it;
+    - **the blend opposite a ferrite-limited one is R1.00 too**: (48.552, 25.086) and
+      (48.552, 63.814) join (48.552, 32.174) and (48.552, 56.726). **Eight blends are R2.00 and
+      four R1.00** (were ten and two); the sheet says "R1.00 AT THE 2 BOSSES BESIDE FERRITE
+      FER1".
+    At a corner boss the flat runs out to the short-edge wall, and the one bore a corner boss
+    still needs is parked the same distance from that wall at all four: axes (4.947, 1.048),
+    (45.853, 1.048), (4.947, 87.852), (45.853, 87.852), each 1.763 mm from its screw axis (were
+    1.76–1.94). The four are one shape: north–south pairs mirror exactly, east–west pairs but
+    for 0.0016 mm² (next bullet).
+  - **Round: twenty R1.00 rounds on the bosses.** Every outside corner of a boss is a round of
+    `CONTOUR_R` (the finisher's radius) and a true cylinder in the STEP
+    (`fit_rules.boss_rounds()`), 1.081 mm² in plan:
+    - 4 where a corner boss's flat meets its bore (0.015 mm² each);
+    - 6 where a west boss's flat meets its BLEND (0.070): the west lip is 2.5 wide, the blend
+      takes over the boss's circle 0.63 mm from the end of the flat, and the round rests on
+      flat and blend with that stretch of circle gone;
+    - 2 where an east corner boss's flat meets the boss's own circle (0.071): the east lip is
+      1.25 wide, the blend starts farther round, and the round ends on the circle 0.57 mm short
+      of it. This is the 0.0016 mm² by which a west corner boss is not the mirror image of an
+      east one;
+    - 4 where an east mid-span boss's flat meets a coil hollow (0.092 at y 28.63, 0.133 at
+      y 60.27 — the coil's two corners are not the same distance from their bosses, 3.57 and
+      3.47 mm, so those two bosses differ by 0.1 mm in where the hollow sits);
+    - 4 where a coil hollow runs out into the boss's circle, at 150° or more: 0.0005 and
+      0.0056 mm², the removed corner 0.007 and 0.035 mm deep. They are cut all the same, so
+      that the sheet can say EVERY outside corner.
+    Like the blends, a round is set 0.002 mm past tangent into each face it rests on, so it
+    meets them at a 3.62° crease and not a tangency. No break is modelled on a round's top
+    edge (nor on a flat's or a bore's — the deburr note); on the air frame each carries the
+    resting face's 45° break.
+  - **The two short-edge tabs.** Between the supercaps on each short edge the lip stands as a
+    tab: x 23.5–27.0 on the south, 23.5–27.5 on the north, 2.00 deep. The guaranteed ring used
+    to add a strip 0.1 mm wide down one side of the south tab; the ring gives way at a tab now
+    (`fit_rules.ring_reliefs()`), so each tab is what the void leaves and mirrors itself. **Four
+    R1.00 rounds** take the tip corners (`fit_rules.tab_rounds()`, axes (24.498, 1.002),
+    (26.002, 1.002), (24.498, 87.898), (26.502, 87.898); 0.838 mm² in all), true cylinders
+    carrying the lip's own 0.10×45° break. A tab is 2 × R1.00 deep, so its root fillet ends
+    where its tip round begins: the side of a tab is an ogee with no straight in it. The two
+    tabs are still different widths, because the south and north supercaps stand 0.5 mm apart
+    in x — which is also the 0.5 mm by which a lite or air shell is not its own mirror image.
+  - **The numbers.**
+    - Plan metal at the seat 458.431 → **452.171 mm²** (−6.260): 3.720 off the bosses, 1.361
+      less blend, 0.983 off the lip, the rest where they overlap.
+    - Volumes by OCC on the STEPs: **5301.692 / 3928.453 / 983.025 mm³** (max / lite / air; were
+      5312.813 / 3935.970 / 990.335). STL 5301.51 / 3928.31 / 982.99. **That is 0.049 g of a
+      23.5 g max shell, 0.033 g of the lite and 0.058 g of the 316L frame** — the pass is for
+      the shape; the floor is where a shell's mass is.
+    - Max STEP **30,979 edges, 10,476 faces**; lite **1,168 / 438**; air **1,347 / 503**; 35
+      faces under 0.001 mm² on each (the air frame had 36), none shared by more than two.
+    - `scripts/assembly_drc.py`, all three variants 0 errors. **[H]**: the max-material
+      supercaps stand 0.150 (SC1), 0.199 and 0.220 from as-milled metal, or more (all four were
+      0.150); the ferrite sheet 0.149, as before. **[I]** 0.999 at both relieved bosses and the
+      lip. **[G]** 1,922 stations. **[J]** now probes the rounds as it probes the blends, the
+      other way round — metal 0.03 mm inside each circle, air 0.03 mm outside it, with the
+      corner put back sharp as its canary: **16 of the 20 boss rounds and all 4 tab tips**. The
+      four slight ones take off less than a section of an STL can see, and [J] says so.
+    - **So the shell generator holds all 24 itself:** it refuses to export a solid unless each
+      round's cylinder — its radius, about its axis — is among the solid's faces, and proves on
+      every run that a round moved 0.5 mm is reported missing.
+    - `check_consistency` **[8]**, new step 4d: one flat distance; each mid-span boss its own
+      mirror image; the corner bosses one shape; and, by an instrument that owes
+      `boss_rounds()` nothing, no outside corner left on a boss that a ball of R0.95 cannot
+      roll round (0.004 mm² at worst against a bar of 0.02; with the rounds put back sharp all
+      eight bosses fail, 0.086–0.281).
+    - `handedness_drc` **[E]**, the STEP against its own STL reflected: 0.600 / 0.501 / 0.501 mm
+      (were 0.600 / 0.465 / 0.435; the bar is 0.20). **[S], [T], [K], [P], [M] and [B] need
+      KiCad's own export and have not been run on these solids here** — the merge run does.
+  - **The braces and the shim.** The brace footprint is 1312.70 mm² still. The solids move in
+    the sixth figure — **1916.605 / 1135.276 mm³** by OCC (were 1916.609 / 1135.278), same edge
+    and face counts — and the reflow shim's outline by at most 0.0079 mm beside the two east
+    mid-span bosses (969.230 → 969.229 mm²): both follow the cavity as milled, and that moved
+    where two R2.00 blends became R1.00.
+  - **The sheet.** The boss callout is one wrapped paragraph now (it was broken by hand, and
+    each clause that grew pushed a line into the rim's label beside it): "CUT BACK TO A FLAT
+    1.47 FROM ITS HOLE AXIS, ALIKE ON ALL 8 … 0.75–0.95 CLEAR OF THE PART BESIDE IT … 2 ALSO
+    HOLLOWED R1.15 … AND THE SAME ON THE FAR SIDE TO MATCH … 8× R2.00, 4× R1.00 BLEND … EVERY
+    OUTSIDE CORNER OF A BOSS R1.00 (20×)". Note 8 adds "TAB TIP CORNERS 4× R1.00, MODELED."
+    The plan draws each boss's finished outline — flat, hollows and rounds as one line.
+  - **What the first builds got wrong.**
+    - The rounds were first found AND solved by rolling a ball in polygons. That is good to
+      0.005 mm, and on the west bosses the question it had to answer — flat and blend, or flat
+      and circle — is decided by 0.0026. It chose the circle and left a 0.01 mm step in each
+      of six blends. The polygons find the corners now; the faces themselves decide.
+    - The tab tips were first rounded in the void's own polygon, which is simplified to 0.01
+      for the kernel: each came out as three or four flats, a different three or four at each
+      corner, on a pass whose point was symmetry. They are cylinders now, cut after the void.
 
 - [ ] **[SOURCING — lite/air] Pick the thin supercap MPN**
   _(2026-08-07, opened with the three-variant round.)_ `part_heights.SUPERCAP_H_THIN = 1.00`

@@ -197,6 +197,13 @@ RIDGE_TOL = 0.01
 # the thinnest a blend is at the stations probed (0.13 mm, the west bosses at 0.3 of the arc).
 JUNC_PROBE = 0.06
 JUNC_AT = (0.3, 0.5, 0.7)
+# [J], the outside rounds: how far each side of a round's circle the probes stand. A round is
+# a CONVEX cylinder of R1.0, and at the STL's 0.2 rad its facets stand at most 0.005 inside
+# it, so these can stand closer than a blend's -- and have to, because a round on a shallow
+# corner takes little: 0.075 mm deep where a flat meets a bore. ROUND_IN is how far inside
+# the removed corner an air probe has to stand before a section is trusted to see it.
+ROUND_PROBE = 0.03
+ROUND_IN = 0.01
 # [J] on the back face: where the cut is taken, as a fraction of the frame's height measured
 # from the art field. The frame's 0.10x45 edge-break takes the outer two thirds of a 0.15
 # frame; at 0.2 of the height the outline is still the blend's own circle.
@@ -381,6 +388,15 @@ def lip_disagreements(rows, edge, lip_cut, recess_cut, mounts, boss_r, W, H, ski
                     worst = max(worst, abs(got - hi))
         t = round(t + LIP_STEP, 6)
     return bad, n, worst
+
+
+def _slight_depth(rd):
+    """How deep the corner a round took off was: the farthest the removed metal stands from
+    the round's own circle."""
+    ox, oy = rd["O"]
+    return max(((x - ox) ** 2 + (y - oy) ** 2) ** 0.5
+               for g in getattr(rd["took"], "geoms", [rd["took"]])
+               for x, y in g.exterior.coords) - rd["r"]
 
 
 def deepest(overlap, body):
@@ -1001,7 +1017,7 @@ def check_variant(vname, v, fr, bp, trimesh):
            f"as it must")
 
     # ---- 10. each boss meets the wall the way the sheet says ---------------------------
-    print("[J] boss blends and webs (sectioned)")
+    print("[J] boss blends, webs and outside rounds (sectioned)")
     import math as _m
     from shapely.geometry import Polygon as _Poly
     pre = len(_ERRORS)
@@ -1035,6 +1051,36 @@ def check_variant(vname, v, fr, bp, trimesh):
         sharp = canary_cut.difference(_Poly([b["J"], b["F"], b["T"]]).difference(boss))
         if sharp.contains(metal_at[len(metal_at) // 2]):
             blind.append(where)
+
+    def probe_round(rd, cuts, canary_cut, where):
+        """One outside round against the sections `cuts`: metal just inside its circle, and
+        air just outside it wherever the corner it took off was deep enough for a section to
+        tell (ROUND_IN inside the removed metal). The canary: that corner put back must fill
+        those probes. Returns how many stations could be probed for air -- 0 means the round
+        is too slight for an STL, and the caller says so instead of calling it checked."""
+        (ox, oy), r = rd["O"], rd["r"]
+        a0 = _m.atan2(rd["A"][1] - oy, rd["A"][0] - ox)
+        a1 = _m.atan2(rd["B"][1] - oy, rd["B"][0] - ox)
+        da = (a1 - a0 + _m.pi) % (2 * _m.pi) - _m.pi
+        at = lambda k, rr: _Pt(ox + rr * _m.cos(a0 + k * da), oy + rr * _m.sin(a0 + k * da))
+        metal_at = [at(k, r - ROUND_PROBE) for k in JUNC_AT]
+        deep = rd["took"].buffer(-ROUND_IN)
+        air_at = [q for q in (at(k, r + ROUND_PROBE) for k in JUNC_AT) if deep.contains(q)]
+        for lbl, z, metal in cuts:
+            gone = [q for q in metal_at if not metal.contains(q)]
+            full = [q for q in air_at if metal.contains(q)]
+            if gone:
+                err(f"{where}: no metal {ROUND_PROBE} mm inside its R{r:g} circle {lbl} "
+                    f"(z {z:.2f}) at board ({gone[0].x:.2f}, {gone[0].y:.2f}) -- more has come "
+                    f"off this corner than the round the sheet calls")
+            if full:
+                err(f"{where}: metal {ROUND_PROBE} mm OUTSIDE its R{r:g} circle {lbl} "
+                    f"(z {z:.2f}) at board ({full[0].x:.2f}, {full[0].y:.2f}) -- the corner is "
+                    f"still there, or rounded tighter than the sheet calls")
+        sharp = canary_cut.union(rd["took"])
+        if any(not sharp.contains(q) for q in air_at):
+            blind.append(where)
+        return len(air_at)
 
     n_bl = n_web = 0
     mid = shell_cuts[1][2]
@@ -1074,6 +1120,26 @@ def check_variant(vname, v, fr, bp, trimesh):
                                 f"mount ({mx}, {my})")
             if n_back == 0:
                 err("fit_rules.back_blends() returned no blend on a variant with a back face")
+    # THE OUTSIDE CORNERS (2026-11-14): every outside corner of a boss, and the tip corners
+    # of the two short-edge tabs, are rounds of fit_rules.CONTOUR_R -- on the sheet as a count
+    # and a radius. Probed like the blends, the other way round.
+    n_rd = n_tab = 0
+    slight = []
+    for mx, my in fr.MOUNTS:
+        for rd in fr.boss_rounds(mx, my):
+            n_rd += 1
+            where = f"the round about board ({rd['O'][0]:.2f}, {rd['O'][1]:.2f}), boss ({mx}, {my})"
+            if probe_round(rd, shell_cuts, mid, where) == 0:
+                slight.append(rd)
+    for rd in fr.tab_rounds():
+        n_tab += 1
+        where = f"the tab-tip round about board ({rd['O'][0]:.2f}, {rd['O'][1]:.2f})"
+        if probe_round(rd, shell_cuts, mid, where) == 0:
+            err(f"{where} takes off too little for a section to see -- a tab tip is a square "
+                f"corner, and a round of R{rd['r']:g} on one is 0.41 mm deep")
+    if n_rd == 0 or n_tab == 0:
+        err(f"fit_rules returned {n_rd} boss rounds and {n_tab} tab-tip rounds -- the sheet "
+            f"calls both, and nothing was checked")
     if blind:
         err(f"SELF-TEST: with the junction put back sharp, the probe still reads metal at "
             f"{blind[0]}" + (f" and {len(blind) - 1} more" if len(blind) > 1 else "") +
@@ -1089,8 +1155,16 @@ def check_variant(vname, v, fr, bp, trimesh):
            f"{len(shell_cuts)} levels) and {n_web} corner webs are solid"
            + (f"; {n_back} back-face blends at R{fr.BLEND_R:g} likewise, on a cut through the "
               f"frame" if n_back else "; no back face on this variant")
+           + f"; {n_rd - len(slight)} of the {n_rd} boss rounds and all {n_tab} tab-tip rounds "
+           f"are R{fr.CONTOUR_R:g} in the metal (metal {ROUND_PROBE} mm inside each circle, air "
+           f"{ROUND_PROBE} mm outside it)"
+           + (f", and {len(slight)} take off less than a section can see (the deepest "
+              f"{max(_slight_depth(rd) for rd in slight):.3f} mm) -- those are held by the shell "
+              f"generator, which refuses to export a solid without each round's cylinder among "
+              f"its faces" if slight else "")
            + f"; the same sections with "
-           f"each junction put back sharp fail all {n_bl + n_web + n_back}, as they must")
+           f"each junction and corner put back sharp fail all "
+           f"{n_bl + n_web + n_back + n_rd - len(slight) + n_tab}, as they must")
 
     return len(_ERRORS), len(_WARNS)
 

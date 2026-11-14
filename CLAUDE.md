@@ -508,8 +508,12 @@ red, the check itself fails.
   the centre line when its bar was set and had already crept to 0.0029 (max) and 0.0053 (lite);
   the boss blends and corner webs moved them to **0.0003** and 0.0024, the gate's own self-test
   went red on a right-handed shell, and the lite shell turned out to be passing by 0.002. It now measures the farthest any vertex of either file stands from
-  the other file's surface, as written and with one reflected: 0.0095 mm at most against 0.435 at
-  least (the bars are 0.05 and 0.20). That is zero only for a solid that is its own mirror image.
+  the other file's surface, as written and with one reflected: 0.0095 mm at most against 0.501 at
+  least (the bars are 0.05 and 0.20; 0.435 until the contouring pass of the same day took the
+  ring's strip off the south tab). That is zero only for a solid that is its own mirror image —
+  **and a lite or air shell is 0.5 mm from being one**: what tells its hand is that the north
+  lip tab is half a millimetre wider than the south, because the two pairs of supercaps stand
+  that far apart in x. Make the two tabs alike and that tell is gone.
   The self-test did its job — it failed rather than go quiet — but **when a gate measures a
   difference between two nearly equal things, ask whether an unrelated edit can make them equal.**
   The plate's labels are modelled mirror-written ON PURPOSE, so that the
@@ -661,6 +665,42 @@ red, the check itself fails.
   on the max shell** (9,647 → 14,851) and a STEP half as big again, valid, every gate green. The
   keep-out is drawn at the circles' own chord now (`_FIN_ARC`; 10,453 faces). Triangle and face
   counts are ungated on purpose, so when a change adds a 2D keep-out, count the faces yourself.
+- **The bosses and the two short-edge tabs are EVEN, SYMMETRIC and ROUND-CORNERED, by rule**
+  (2026-11-14, DRH's contouring pass: "eliminate the hard corners and radius them … make them
+  mostly symmetric or even"). One flat distance for all eight bosses (`fit_rules.boss_flat_d()`,
+  the least any supercap leaves any boss — computed, never typed); the flat runs the whole boss,
+  so a mid-span boss is its own mirror image, and what one side of it has the other has too (the
+  coil hollow is cut on the side with no coil; the twin of a ferrite-limited blend takes its
+  R1.00); every outside corner of a boss is a true cylinder of `CONTOUR_R`
+  (`fit_rules.boss_rounds()`, twenty), and so are the four tab tips (`tab_rounds()`). **Only ever
+  less metal** — an evened keep-out is the part's own keep-out UNITED with what evens it. It is
+  for the shape, not the weight: 6.26 mm² in plan, 0.05 g of a 23.5 g shell. Three things the
+  first builds got wrong, each now a rule:
+  **(1) A polygon can FIND a corner; it cannot say which two faces the corner is between.** A
+  round is the corner a rolled ball cannot fill, and opening the metal's polygon finds every
+  one — to about 0.005 mm, because the outline is simplified and **GEOS simplifies again inside
+  every `buffer()`, by a hundredth of the distance** (an R1.0 opening of an exact outline came
+  back 0.002 short of a straight wall). On the west bosses the ball stops on the flat and the
+  BLEND with the boss's own circle 0.0026 mm behind it; decided off polygons, the round was
+  solved against the circle and left a 0.01 mm step in six blends. `_boss_rounds()` now takes
+  the candidate faces two at a time and keeps the pair a ball can touch at once while lying in
+  the metal, each **where that face is still the surface**. When a tolerance and the thing it
+  must tell apart are the same size, stop measuring and solve.
+  **(2) An AREA is the wrong audit for a shape with a hairline in it.** Rolled and solved
+  corners differ by a crescent microns thick and a millimetre long — 0.005 mm² of nothing. The
+  audit erodes the difference and asks whether anything with body is left.
+  **(3) A feature that has to be symmetric, or true, does not go into the void's polygon.** The
+  tab tips were first rounded there; that outline is simplified to 0.01 for the kernel, and each
+  round came out as three or four flats, a different three or four at each corner. They are cut
+  after the void, as cylinders (`void_as_cut()` has the tips square on purpose).
+  Gates: the shell generator refuses to export a solid without each round's cylinder among its
+  faces (`_rounds_missing`, with a round moved 0.5 mm as its canary) — the only instrument that
+  can see all 24, since four take off less than an STL can show; `assembly_drc` **[J]** probes
+  the other twenty and says which four it cannot; `check_consistency` **[8]** step 4d holds the
+  evenness and the symmetry and rolls its own ball for hard corners. **Two bosses still differ
+  from their partners, and that is the board:** a west round rests on a blend where an east one
+  rests on the boss's circle (the east lip is 1.25 wide, the west 2.5), and the coil's two
+  corners stand 3.57 and 3.47 mm from their bosses.
 - **A ledger entry is a standing waiver, so a ledger audits itself.** `scripts/interference_drc.py`'s
   `EDGE_LEDGER` excused seven parts from the cavity rectangle and had excused nothing since
   2026-08-08: six had been moved inboard and the seventh, C7, was deleted from the board the day
