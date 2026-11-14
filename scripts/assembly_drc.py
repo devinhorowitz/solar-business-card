@@ -95,6 +95,19 @@ the metal out of the sections -- every level, and again as the finisher leaves i
 measures one against the other. Its canary is a coil 0.25 mm fatter, which must read as
 too close at the east lip and at each boss the cut was made in, separately.
 
+THE JUNCTION CHECK ([J], 2026-11-14) holds the newest thing the sheet says about a boss:
+that it meets the lip's wall in a modelled blend, twelve of them (fit_rules.BLEND_R, or
+the finisher's own radius where the ferrite sheet stands beside one), and that each corner
+boss is solid to the recess wall. Until that day every such junction was
+a sharp inside corner in the STEP and each corner boss stood beside a 0.17 mm slot no tool
+could enter; DRH saw both in a render. The blends and webs are laid out in fit_rules and
+cut by the shell CAD -- two files, and "the rule moved into fit_rules" is exactly the
+sentence that preceded the boss and brace findings above. So [J] probes the sectioned
+shell: just outside each blend's circle there must be metal and just inside it air, at
+three places along the arc on every level, and the middle of each web's pocket must be
+metal. Its canary is the same section with the junctions put back the way they were --
+the blend's own region and the pocket taken out of the metal -- which must fail.
+
 Variant policy, stated rather than implied:
   * max / lite -- every check, parameterized (floor, cavity, screw_len, stack).
   * air -- open_back, no brace: the cavity-floor probe and every brace/ferrite
@@ -176,6 +189,11 @@ COIL_FAT = 0.25
 # The ridge's faces are planes and section exactly; this is headroom for the 0.005 mm the
 # generator samples its width at, not a clearance.
 RIDGE_TOL = 0.01
+# [J]: how far each side of a blend's circle the probes stand. More than the shell STL's
+# 0.04 chord error (a concave cylinder's facets lie on the AIR side of it), and less than
+# the thinnest a blend is at the stations probed (0.13 mm, the west bosses at 0.3 of the arc).
+JUNC_PROBE = 0.06
+JUNC_AT = (0.3, 0.5, 0.7)
 RIDGE_STEP = 0.02
 OVERLAP_EPS = 1e-3    # mm2 of plan overlap that counts as metal inside a body, not noise
 SECTION_GRID = 1e-5   # mm: snap for stitching section segments into closed outlines
@@ -315,7 +333,7 @@ def edge_reach(metal, edge, t, W, H, depth=6.0):
     return None
 
 
-def lip_disagreements(rows, edge, lip_cut, recess_cut, mounts, boss_r, W, H):
+def lip_disagreements(rows, edge, lip_cut, recess_cut, mounts, boss_r, W, H, skip=None):
     """([(t, got, lo, hi)], n_stations, worst) -- where the sectioned shell does not have the
     lip `rows` describes along `edge`. `rows` is fit_rules.lip_as_cut()'s shape,
     [(lo, hi, width, names)], width 0.0 meaning no lip.
@@ -326,16 +344,21 @@ def lip_disagreements(rows, edge, lip_cut, recess_cut, mounts, boss_r, W, H):
     ledge inboard of the recess wall, which is measured on its own section (the recess is
     not the board outline: it is 0.05 mm inside it today, and that is DRH's open fit
     decision, not something to assume here). Stations a mount boss stands on are skipped --
-    a boss is not lip -- and `worst` is the largest error where a single row governs."""
+    a boss is not lip -- and `worst` is the largest error where a single row governs.
+
+    `skip` is {mount: half-width} for the bosses whose footprint along this edge is wider
+    than the disc: since 2026-11-14 a boss runs into the lip's wall through a blend
+    (fit_rules.boss_blends), and the blend is not lip either. What it IS is [J]'s to hold."""
     span = H if edge in "WE" else W
     off = lambda m: (m[0] if edge == "W" else W - m[0]) if edge in "WE" else \
                     (m[1] if edge == "S" else H - m[1])
     along = lambda m: m[1] if edge in "WE" else m[0]
-    bosses = [along(m) for m in mounts if off(m) < boss_r + 3.0]
+    bosses = [(along(m), max(boss_r + 0.3, (skip or {}).get(m, 0.0)))
+              for m in mounts if off(m) < boss_r + 3.0]
     bad, n, worst = [], 0, 0.0
     t = LIP_CORNER
     while t <= span - LIP_CORNER + 1e-9:
-        if not any(abs(t - b) <= boss_r + 0.3 for b in bosses):
+        if not any(abs(t - b) <= hw for b, hw in bosses):
             near = [w for lo, hi, w, _n in rows if lo <= t + LIP_BLEND and hi >= t - LIP_BLEND]
             got = edge_reach(lip_cut, edge, t, W, H)
             wall = edge_reach(recess_cut, edge, t, W, H)
@@ -692,7 +715,17 @@ def check_variant(vname, v, fr, bp, trimesh):
     from shapely.geometry import box as _box
     seat = floor + cavity
     rows, pre = [], len(_ERRORS)
-    for ref, poly, h, src in bp.parts("B"):
+    # THE FERRITE SHEET IS A BODY TOO (2026-11-14). It is not on the board -- it lies in the
+    # brace's channel, under the coil -- so board_parts does not return it, and until that day
+    # nothing held it against the shell at all: [C] proved the pocket under it and stopped.
+    # The first build of the boss blends put titanium inside both of its east corners (0.035
+    # and 0.075 mm2) with every gate green. It is cut here like any other body, over its own
+    # thickness under the seat, wherever there is a brace to carry it.
+    bodies = list(bp.parts("B"))
+    if brace is not None:
+        bodies.append((fr.FER_REF, _box(*fr.FER), fr.FER_T, "sheet"))
+    kind = {"model": "body", "pads": "pads", "sheet": "sheet"}
+    for ref, poly, h, src in bodies:
         if h is None and ref.startswith("SC"):
             h = v["cap_h"]               # the supercaps: None in the table, the cavity is built on them
         if h is None:
@@ -729,7 +762,7 @@ def check_variant(vname, v, fr, bp, trimesh):
         err("no B-side bodies came back from board_parts -- nothing was checked")
     rows.sort()
     for gap, ref, h, src in rows[:6]:
-        print(f"          {ref:6s} h={h:.2f} {'body' if src == 'model' else 'pads'}  "
+        print(f"          {ref:6s} h={h:.2f} {kind.get(src, src):5s} "
               f"nearest shell metal {gap:.3f} mm")
     # canary: a 0.3 mm "part" planted in the thread land of each boss -- between the bore
     # and THREAD_KEEP, the one ring no scallop is ever allowed into -- must read as
@@ -744,7 +777,9 @@ def check_variant(vname, v, fr, bp, trimesh):
         err(f"SELF-TEST: a synthetic part planted in the boss at {blind} reads as CLEAR -- "
             f"the section does not see the shell there, so every 'clear' above is unproven")
     if len(_ERRORS) == pre:
-        ok(f"all {len(rows)} B-side bodies clear the shell's metal at every cut through "
+        ok(f"all {len(rows)} B-side bodies"
+           + (f" (the ferrite sheet {fr.FER_REF} among them)" if brace is not None else "")
+           + f" clear the shell's metal at every cut through "
            f"them (tightest {rows[0][1]} at {rows[0][0]:.3f} mm; six tightest above); "
            f"{len(fr.MOUNTS)} planted canaries all read as collisions")
 
@@ -759,8 +794,13 @@ def check_variant(vname, v, fr, bp, trimesh):
     n_all, worst_all, canary_hits, said = 0, 0.0, 0, []
     for edge in "WESN":
         rows = fr.lip_as_cut(edge)
+        # how far along this edge each boss's blends run: the foot of each, plus the margin
+        # a bare boss already gets
+        _along = (lambda q: q[1]) if edge in "WE" else (lambda q: q[0])
+        skip = {m: max([abs(_along(b["F"]) - _along(m)) + 0.3 for b in fr.boss_blends(*m)] or [0.0])
+                for m in fr.MOUNTS}
         bad, n, worst = lip_disagreements(rows, edge, lip_cut, recess_cut,
-                                          fr.MOUNTS, fr.BOSS_R, W, H)
+                                          fr.MOUNTS, fr.BOSS_R, W, H, skip)
         n_all += n
         worst_all = max(worst_all, worst)
         if n < 100:
@@ -781,7 +821,7 @@ def check_variant(vname, v, fr, bp, trimesh):
         # canary: the same measurement against a description 0.5 mm too wide on every row
         wide = [(lo, hi, w + 0.5, names) for lo, hi, w, names in rows]
         canary_hits += len(lip_disagreements(wide, edge, lip_cut, recess_cut,
-                                             fr.MOUNTS, fr.BOSS_R, W, H)[0])
+                                             fr.MOUNTS, fr.BOSS_R, W, H, skip)[0])
     if canary_hits < n_all / 2.0:
         err(f"SELF-TEST: a lip description 0.5 mm too wide on every row disagrees with the "
             f"shell at only {canary_hits} of {n_all} stations -- the section is not measuring "
@@ -844,7 +884,7 @@ def check_variant(vname, v, fr, bp, trimesh):
                f"(closest {worst:.3f} mm)")
     rows = []
     seat = floor + cavity
-    for ref, poly, h, src in bp.parts("B"):
+    for ref, poly, h, src in bodies:             # [F]'s list: the board's parts and the ferrite sheet
         if h is None and ref.startswith("SC"):
             h = v["cap_h"]
         if h is None:
@@ -952,6 +992,67 @@ def check_variant(vname, v, fr, bp, trimesh):
            f"{near[0][1]} at {near[0][0]:.3f}); a coil {COIL_FAT} mm fatter reads too close at "
            f"{'the east lip and ' if east_by_coil else ''}{len(relieved)} relieved boss(es), "
            f"as it must")
+
+    # ---- 10. each boss meets the wall the way the sheet says ---------------------------
+    print("[J] boss blends and webs (sectioned)")
+    import math as _m
+    from shapely.geometry import Polygon as _Poly
+    pre = len(_ERRORS)
+    n_bl = n_web = 0
+    blind = []
+    mid = shell_cuts[1][2]
+    for mx, my in fr.MOUNTS:
+        boss = _Pt(mx, my).buffer(fr.BOSS_R, quad_segs=64)
+        for b in fr.boss_blends(mx, my):
+            n_bl += 1
+            (ox, oy), r = b["O"], b["r"]
+            a0 = _m.atan2(b["F"][1] - oy, b["F"][0] - ox)
+            a1 = _m.atan2(b["T"][1] - oy, b["T"][0] - ox)
+            da = (a1 - a0 + _m.pi) % (2 * _m.pi) - _m.pi
+            at = lambda k, rr: _Pt(ox + rr * _m.cos(a0 + k * da), oy + rr * _m.sin(a0 + k * da))
+            metal_at = [at(k, r + JUNC_PROBE) for k in JUNC_AT]
+            air_at = [at(k, r - JUNC_PROBE) for k in JUNC_AT]
+            where = f"the blend at board ({b['J'][0]:.2f}, {b['J'][1]:.2f}), boss ({mx}, {my})"
+            for lbl, z, metal in shell_cuts:
+                gone = [q for q in metal_at if not metal.contains(q)]
+                full = [q for q in air_at if metal.contains(q)]
+                if gone:
+                    err(f"{where}: no metal {JUNC_PROBE} mm outside its R{r:g} circle {lbl} "
+                        f"(z {z:.2f}) at board ({gone[0].x:.2f}, {gone[0].y:.2f}) -- less metal "
+                        f"than the blend the sheet calls: a tighter one, or none")
+                if full:
+                    err(f"{where}: metal {JUNC_PROBE} mm INSIDE its R{r:g} circle {lbl} "
+                        f"(z {z:.2f}) at board ({full[0].x:.2f}, {full[0].y:.2f}) -- more metal "
+                        f"than the blend the sheet calls: a wider one, or one somewhere else")
+            # canary: the junction put back sharp -- everything between the wall, the boss
+            # and the chord from the foot to the boss taken out again
+            sharp = mid.difference(_Poly([b["J"], b["F"], b["T"]]).difference(boss))
+            if sharp.contains(metal_at[len(metal_at) // 2]):
+                blind.append(where)
+        for pocket, _cover in fr.boss_webs(mx, my):
+            n_web += 1
+            q = pocket.representative_point()
+            where = f"the web at board ({q.x:.2f}, {q.y:.2f}), boss ({mx}, {my})"
+            for lbl, z, metal in shell_cuts:
+                if not metal.contains(q):
+                    err(f"{where}: no metal there {lbl} (z {z:.2f}) -- the slot between the "
+                        f"boss and the recess wall is still in the solid")
+            if mid.difference(pocket.buffer(0.01)).contains(q):
+                blind.append(where)
+    if blind:
+        err(f"SELF-TEST: with the junction put back sharp, the probe still reads metal at "
+            f"{blind[0]}" + (f" and {len(blind) - 1} more" if len(blind) > 1 else "") +
+            " -- the section cannot tell a blended shell from the old one, so every pass "
+            "above is unproven")
+    if n_bl == 0:
+        err("fit_rules.boss_blends() returned no blend for any boss -- nothing was checked")
+    if len(_ERRORS) == pre:
+        said = ", ".join(f"{n} at R{r:g}" for r, n in sorted(fr.blend_radii().items(), reverse=True))
+        ok(f"{n_bl} blends are in the metal as the arcs fit_rules lays out ({said}: metal "
+           f"{JUNC_PROBE} mm outside "
+           f"each circle, air {JUNC_PROBE} mm inside it, at {len(JUNC_AT)} places on "
+           f"{len(shell_cuts)} levels) and {n_web} corner webs are solid; the same section with "
+           f"each junction put back sharp fails all {n_bl + n_web}, as it must")
 
     return len(_ERRORS), len(_WARNS)
 

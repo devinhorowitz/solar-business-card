@@ -545,6 +545,59 @@ def check_enclosure_fit():
                 f"{fr.THREAD_KEEP} mm M2 thread keep-out")
             bad += 1
 
+    # 4b. Where each boss meets the wall (2026-11-14). The junction is modelled now: a blend
+    #     of fit_rules.BLEND_R at every straight wall a boss crosses, and a web where a corner
+    #     boss stood beside a slot no tool could enter. Both are NEW METAL, so both answer to
+    #     the rules metal answers to -- a blend to the lip's (LIP_CLR off every part at its
+    #     largest, COIL_CLR off the coil), a web to the boss's (it ends on the boss's own bore,
+    #     so it stands where the boss stands). fit_rules.audit_blends() refuses a blend that
+    #     breaks them; this states the numbers and proves the refusal still fires. AGAIN THE
+    #     POLYGON: whether the blends and webs are in the titanium is assembly_drc [J].
+    _bl = [(m, b) for m in fr.MOUNTS for b in fr.boss_blends(*m)]
+    _wb = [(m, pk) for m in fr.MOUNTS for pk, _cv in fr.boss_webs(*m)]
+    (_bref, _bgap), _bcoil, _bfer = fr.blend_gaps()
+    if _bgap < fr.LIP_CLR - 1e-6 or _bcoil < fr.COIL_CLR - 1e-6 or _bfer < 1e-6:
+        err(f"a boss blend stands {_bgap:.3f} mm from {_bref}, {_bcoil:.3f} mm from the coil and "
+            f"{_bfer:.3f} mm from the ferrite sheet (LIP_CLR {fr.LIP_CLR}, COIL_CLR {fr.COIL_CLR}, "
+            f"and never inside the sheet)")
+        bad += 1
+    # which blends the ferrite held to the finisher's own radius -- said, not hidden in a count
+    _held = [b for _m, b in _bl if b.get("limit")]
+    for b in _held:
+        if abs(b["r"] - fr.TOOL_R) > 1e-9:
+            err(f"the blend at ({b['J'][0]:.2f}, {b['J'][1]:.2f}) is limited by {b['limit']} but "
+                f"is R{b['r']:g}, not the finisher's R{fr.TOOL_R:g}")
+            bad += 1
+    _wgap = None
+    for (mx, my), pk in _wb:
+        for ref, poly, _h, _src in ps:
+            d = pk.distance(poly)
+            _wgap = d if _wgap is None else min(_wgap, d)
+            if pk.intersection(fr.part_envelope(ref, poly)).area > 1e-6 or d < fr.BOSS_CLR - 1e-6:
+                err(f"the web beside the boss at ({mx}, {my}) stands {d:.3f} mm from {ref} "
+                    f"(BOSS_CLR {fr.BOSS_CLR}), or inside its max-material outline")
+                bad += 1
+    if len(_bl) != 12 or len(_wb) != 4:
+        # not a rule of geometry -- a tripwire: twelve and four are what this board's eight
+        # bosses give (two per mid-span boss, one per corner boss; one slot per corner boss),
+        # and the sheet, the READMEs and TODO.md all say so. A board move that changes either
+        # count is a change to read before it is a change to ship.
+        err(f"{len(_bl)} boss blends and {len(_wb)} webs, where this board has had 12 and 4 -- "
+            f"read what moved (fit_rules.boss_blends / boss_webs), then re-ledger the counts "
+            f"here and in the docs that quote them")
+        bad += 1
+    # mechanism self-test: a synthetic part planted INSIDE a blend's new metal must be refused
+    (_m0, _b0) = _bl[0]
+    _pt = fr.blend_added(_m0[0], _m0[1], _b0).representative_point()
+    try:
+        fr.audit_blends({_m0: [_b0]}, list(ps) + [("SELFTEST", _box(_pt.x - 0.1, _pt.y - 0.1,
+                                                                   _pt.x + 0.1, _pt.y + 0.1), 0.5, "model")])
+        err("audit_blends() accepted a blend with a synthetic part planted inside it -- the "
+            "rule that keeps a blend off the parts does not fire")
+        bad += 1
+    except RuntimeError:
+        pass
+
     # 8.5 -- the GUARANTEED lip ring must never win against a part (2026-08-07). The shell
     # unions fit_rules.RING as a minimum board seat and cuts ring_reliefs() out of it; this
     # asserts the RESULT clears every real body by LIP_CLR. Born from six probed collisions
@@ -576,7 +629,11 @@ def check_enclosure_fit():
         ok(f"braces [{_covtxt}] above their ledgered coverage floors, every covered part "
            f"keeps a >={fr.SLA_WEB} mm web; {sum(len(fr.lip_bands(e)) for e in 'WESN')} lip "
            f"bands all stand off their parts and clear the coil; 8 boss islands clear, "
-           f"thread intact (the polygon -- the metal is assembly_drc [F]); guaranteed ring "
+           f"thread intact (the polygon -- the metal is assembly_drc [F]); {len(_bl)} boss "
+           f"blends ({len(_bl) - len(_held)} at R{fr.BLEND_R:g}, {len(_held)} held to "
+           f"R{fr.TOOL_R:g} by the ferrite sheet, {_bfer:.2f} off it) stand {_bgap:.2f} off the "
+           f"nearest part ({_bref}) and {_bcoil:.2f} off the coil, {len(_wb)} corner webs "
+           f"{_wgap:.2f} off theirs (the polygon -- the metal is assembly_drc [J]); guaranteed ring "
            f"relieved around {len(_reliefs)} part(s), all bodies >={fr.LIP_CLR} clear of it")
 
 

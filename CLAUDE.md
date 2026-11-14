@@ -590,6 +590,8 @@ red, the check itself fails.
   material (`fit_rules.part_envelope()`), not nominal. `scripts/assembly_drc.py` **[H]** sections the
   emitted shell, opens it by the radius, and holds the brace, every part and the max-material cans
   to that. **A finisher larger than `TOOL_R` breaks all of it** — the sheet says so.
+  _(Since 2026-11-14 the twelve boss-to-wall junctions are no longer among those corners: they are
+  modelled, the bullet after next. The three rules stand for every corner that still is.)_
 - **A clearance belongs to every feature it is true of, and a gate on one of them reads as a gate
   on the rule** (2026-11-14). `fit_rules.COIL_CLR` — grounded metal 1.00 mm off NFC coil copper —
   was written beside the words "the east lip is the only grounded feature that comes near the
@@ -612,6 +614,34 @@ red, the check itself fails.
   `fit_rules.PRINT_WALL` (0.25, the wall the print spec asks the printer to hold) is the floor;
   the channel runs out to the brace's edge wherever the ridge would be under it, and
   `assembly_drc` [C] measures the ridge on the emitted brace.
+- **Each boss is joined to the wall by modelled metal — and adding metal found four things removing
+  it never had** (2026-11-14). DRH saw two things in a render that every gate had passed: a sharp
+  inside corner wherever a boss's circle crosses the lip's wall (twelve, 51.5° on the east), and
+  beside each corner boss a slot of void 0.17 mm wide running out into the boss's own Ø2.0 bore.
+  `fit_rules.boss_blends()` now lays a concave blend at each crossing (`BLEND_R` 2.00, twice the
+  finisher's radius so the tool sweeps it; a true cylinder in the shell) and `boss_webs()` fills
+  each slot, so the bore ends on the recess wall. **The bore stays** — without it the finisher's
+  radius leaves metal inside a max-material supercap's corner. `scripts/assembly_drc.py` **[J]**
+  probes the sectioned shells for all sixteen, with the junctions put back sharp as its canary.
+  What the first builds got wrong, each of which is now a rule:
+  **(1) Lay new metal out on the wall that is CUT.** `cavity_void_poly()` is simplified by 0.01 for
+  the kernel's sake and its long walls lean by up to 0.0005 mm; a blend tangent to the ideal wall
+  met the cut one with a step, and the prototype added 49 sliver faces. `fit_rules.void_as_cut()`
+  is the polygon the shell cuts — the shell CAD's own `_void_in_recess()` until then.
+  **(2) Never hand a boolean a tangency.** Each blend is set `BLEND_BITE` (0.002) past tangent into
+  the lip and the boss, and a wall-parked bore the same into its wall (`_park_on_wall`: the
+  half-degree search had left the corner bores up to 0.004 short, which nobody could see while the
+  slot was void), so every join is a crossing.
+  **(3) Metal unioned after the corner relief must be cut by it** (`_under_corner_relief`), or it
+  stands 0.01 proud inside the four relief circles: 22 sliver faces a shell.
+  **(4) THE FERRITE SHEET IS A BODY, and nothing had ever held it against the shell.** At R2.00 the
+  two blends facing it stood inside its east corners, 0.035 and 0.075 mm², every gate green — it is
+  not on the board, so `board_parts` does not return it. A blend that would come within `FER_CLR`
+  of the sheet is cut at `TOOL_R` instead (the radius the finisher leaves there anyway, so the part
+  does not move), and `[F]` and `[H]` carry the sheet now. What they print — 0.15 mm from as-milled
+  titanium at the boss at y 60.27 — is a clearance nobody chose, and is DRH's to accept or change.
+  The face counts went DOWN on every shell (max 9,654 → 9,647): count the faces under 0.001 mm²
+  before and after any feature you add, because a boolean that "worked" says nothing about them.
 - **A ledger entry is a standing waiver, so a ledger audits itself.** `scripts/interference_drc.py`'s
   `EDGE_LEDGER` excused seven parts from the cavity rectangle and had excused nothing since
   2026-08-08: six had been moved inboard and the seventh, C7, was deleted from the board the day

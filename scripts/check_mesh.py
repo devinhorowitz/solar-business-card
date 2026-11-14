@@ -91,7 +91,13 @@ BASELINE = {
     # re-ledgered 2026-11-14, 5289.66 -> 5289.51: the two east mid-span bosses hollowed back to
     # COIL_CLR from the NFC coil (fit_rules.boss_coil_cuts). 0.0759 + 0.0091 mm2 of boss x 1.80
     # = 0.153 predicted, 0.150 measured. bbox, seam and facets unchanged.
-    volume_mm3=5289.51, bbox=(-26.35, -45.4, -0.15, 26.35, 45.4, 3.4),
+    # re-ledgered 2026-11-14 (later), 5289.51 -> 5307.10: each boss is joined to the wall
+    # (fit_rules "BLENDS and WEBS"). Twelve blends where a boss crosses the lip's wall -- ten
+    # at R2.00, two at R1.00 beside the ferrite sheet -- 8.271 mm2, and four webs in the
+    # slots beside the corner bosses, 1.370 mm2: 9.641 mm2 x 1.80 = 17.35 predicted, 17.59
+    # measured. The 0.24 over is the lip's and the bosses' edge-breaks along the stretches
+    # that are inside metal now. bbox, seam and facets unchanged. Triangles 48,801, ungated.
+    volume_mm3=5307.10, bbox=(-26.35, -45.4, -0.15, 26.35, 45.4, 3.4),
         max_boundary_edges=1, max_open_len_mm=0.001, max_degenerate=3),
     "solar-glow-drh-pogo-testplate.stl": dict(
         # re-ledgered 2026-11-13: the y range flips, -10.4..99.3 -> -99.3..10.4, and nothing
@@ -240,7 +246,13 @@ BASELINE = {
     # ends square where it would be under fit_rules.PRINT_WALL -- its two feather tips, y 31.40-
     # 31.67 and 57.23-57.50, 0.036 mm2 each over the channel's 0.33. The lite brace loses the
     # same two tips. bbox unchanged; watertight, 0 open, 0 degenerate.
-    volume_mm3=1917.45, bbox=(-22.85, -42.4, 0.0, 24.10, 42.4, 1.8),
+    # re-ledgered 2026-11-14 (later still), 1917.45 -> 1916.61: the brace is cut to the cavity
+    # as milled, and at the two WEST bosses beside its band the cavity now has an R2.00 blend
+    # where it had the finisher's R1.00. Footprint 1313.17 -> 1312.70 mm2; x 1.80 is 0.85,
+    # measured 0.84. The two east corners -- and with them the ridge east of the ferrite
+    # channel, y 31.68-57.22 -- did not move: the blends there are held to R1.00 by the
+    # ferrite sheet. bbox unchanged; watertight, 0 open, 0 degenerate.
+    volume_mm3=1916.61, bbox=(-22.85, -42.4, 0.0, 24.10, 42.4, 1.8),
         max_boundary_edges=0, max_open_len_mm=0.0, max_degenerate=0),
     # ---- the 2026-08-07 enclosure variants (fit_rules.VARIANTS) --------------------------
     # Ledgered from local builds in the variants commit itself -- the chicken-and-egg rule:
@@ -282,7 +294,10 @@ BASELINE = {
         # Open length 0.000; more seams, or one with length, is a finding.
         # re-ledgered 2026-11-14, 3922.31 -> 3922.21: the coil relief in the two east mid-span
         # bosses, as the max shell. 0.085 mm2 x 1.22 = 0.104 predicted, 0.100 measured.
-        volume_mm3=3922.21, bbox=(-26.35, -45.4, -0.15, 26.35, 45.4, 2.42),
+        # re-ledgered 2026-11-14 (later), 3922.21 -> 3934.15: the twelve blends and four webs
+        # that join each boss to the wall, 9.641 mm2 x 1.22 = 11.76 predicted, 11.94 measured
+        # (the rest is buried edge-break, as on max). bbox, seam and facets unchanged.
+        volume_mm3=3934.15, bbox=(-26.35, -45.4, -0.15, 26.35, 45.4, 2.42),
         max_boundary_edges=1, max_open_len_mm=0.001, max_degenerate=3),
     "solar-glow-drh-frame-air-316L.stl": dict(
         # air: OPEN frame, no floor -- walls + recess + 8 bosses only, z 0..1.80 exactly
@@ -324,7 +339,11 @@ BASELINE = {
         # re-ledgered 2026-11-14, 978.58 -> 978.48: the coil relief in the two east mid-span
         # bosses, with its 45-degree foot at the resting face. 0.085 mm2 x 1.20 = 0.102
         # predicted, 0.099 measured. Still two seams and four facets.
-        volume_mm3=978.48, bbox=(-26.35, -45.4, 0.0, 26.35, 45.4, 1.8),
+        # re-ledgered 2026-11-14 (later), 978.48 -> 990.31: the twelve blends and four webs,
+        # 9.641 mm2 x 1.20 = 11.57 predicted, 11.83 measured. More over than on the floored
+        # shells because here the buried edge-breaks are at both ends: the seat and the
+        # resting face. Both seams and the four facets are where they were.
+        volume_mm3=990.31, bbox=(-26.35, -45.4, 0.0, 26.35, 45.4, 1.8),
         max_boundary_edges=2, max_open_len_mm=0.001, max_degenerate=4),
     "solar-glow-drh-diffuser-brace-lite.stl": dict(
         # the lite brace: gap 1.22, span 0.60, 31 pockets, 0 through-holes, single piece
@@ -364,7 +383,9 @@ BASELINE = {
         # the max brace. Footprint 1084.123 -> 1083.728; 0.395 x 1.22 = 0.48, 0.48 measured.
         # re-ledgered 2026-11-14, 1135.81 -> 1135.78: the channel ridge's two feather tips,
         # as the max brace.
-        volume_mm3=1135.78, bbox=(-22.85, -42.4, 0.0, 24.10, 42.4, 1.22),
+        # re-ledgered 2026-11-14 (later still), 1135.78 -> 1135.28: the same two west corners
+        # cut back to the R2.00 blends, as on the max brace. bbox unchanged; watertight.
+        volume_mm3=1135.28, bbox=(-22.85, -42.4, 0.0, 24.10, 42.4, 1.22),
         max_boundary_edges=0, max_open_len_mm=0.0, max_degenerate=0),
 }
 VOL_TOL = 0.005

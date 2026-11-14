@@ -326,12 +326,14 @@ def _recess_mouth_ease(wt, c):
 # The lip bands, the cavity void and the boss scallops are all computed in
 # enclosure/fit_rules.py -- ONE home, shared with the brace generator and asserted by
 # check_consistency [8]. See that module for why they are not four scalars any more.
-from fit_rules import (lip_bands, cavity_void_poly as _cavity_void_poly,
+from fit_rules import (lip_bands,
                        boss_island as _boss_island, boss_fouls as _boss_fouls,
                        LIP_CLR, LIP_MAX, COIL_EAST,
                        ring_reliefs as _ring_reliefs,
                        BOSS_CLR, THREAD_KEEP, export_solid,
                        boss_cuts as _boss_cuts, boss_coil_cuts as _boss_coil_cuts,
+                       boss_blends as _boss_blends, boss_webs as _boss_webs,
+                       void_as_cut as _void_as_cut, BLEND_R as _BLEND_R,
                        recess_poly as _recess_poly, TOOL_R as _TOOL_R,
                        fin_region as _fin_region, fin_ribs as _fin_ribs,
                        FIN_PROUD, FIN_VALLEY,
@@ -383,11 +385,11 @@ def _void_in_recess():
     so the recess is 0.05 mm smaller than the board on every flat and a void that runs out to
     the board edge would still be cut 0.05 mm under the recess wall. Clipping to the recess
     footprint (same rounded rectangle build() cuts at the seat) means the floor-to-seat cut can
-    never pass beneath the wall above it."""
-    v = _cavity_void_poly().intersection(_recess_fp())
-    if v.geom_type != "Polygon":                 # a clip can shed dust; the void is the big piece
-        v = max((g for g in v.geoms if g.geom_type == "Polygon"), key=lambda g: g.area)
-    return v
+    never pass beneath the wall above it.
+
+    fit_rules.void_as_cut() since 2026-11-14 -- the same polygon, moved to the module the
+    boss blends are laid out in, because a blend has to be tangent to the wall that is CUT."""
+    return _void_as_cut()
 
 def _axis_piece(wp, x, y, z):
     """Of the solids a scallop cut can leave, keep the one the boss axis runs through --
@@ -432,44 +434,147 @@ def _boss_scallop_tool(x, y, floor, cavity, foot=0.0):
     straight band beside a track is one more plane-sided polygon, and the round end about a
     track's corner is one more bore -- of its own radius, the clearance plus half the track,
     which is why a bore here is (x, y, r) and not a centre with TOOL_R understood."""
+    fouls, bores = _boss_cutters(x, y)
+    if not fouls and not bores:
+        return None
+    z0, dz = _scallop_span(floor, cavity)
+    fat = (cq.Workplane("XY").workplane(offset=z0).moveTo(wx(x), wy(y))
+             .circle(boss_r + _SCALLOP_FAT).extrude(dz))
+    island = _cut_boss_cutters(fat, fouls, bores, z0, dz)
+    island = _axis_piece(island, x, y, floor + cavity / 2)
+    tool = fat.cut(island)
+    for brk in _boss_foot_breaks(fouls, bores, floor, z0, foot):
+        tool = tool.union(brk.intersect(fat))
+    return tool
+
+
+def _boss_cutters(x, y):
+    """(fouls, bores): the plane-sided polygons and the (cx, cy, r) cylinders fit_rules takes
+    out of the boss at (x, y). ONE list, because two solids are cut with it: the boss itself
+    (_boss_scallop_tool) and, since 2026-11-14, the web that joins a corner boss to the wall
+    (_web_solid) -- the bore that ends a web is the same cylinder that relieves the boss, and
+    it has to be the same cylinder in the kernel too."""
     kps, dbs = _boss_cuts(x, y)
     coil_discs, coil_slabs = _boss_coil_cuts(x, y)
     fouls = [g for kp in list(kps) + coil_slabs
              for g in (kp.geoms if kp.geom_type == "MultiPolygon" else [kp])]
     bores = [(cx, cy, _TOOL_R) for d in dbs for cx, cy in d] + list(coil_discs)
-    if not fouls and not bores:
-        return None
-    # Upward the tool overshoots into the board recess, which is air. Downward it may only
-    # overshoot on the open frame: anywhere else `floor` is the cavity FLOOR, and a tool that
-    # started below it would mill a 0.02 mm pocket into the floor under every scallop (it
-    # did, on the first build of this -- 0.18 mm3 the lite shell had no reason to lose).
+    return fouls, bores
+
+
+def _scallop_span(floor, cavity):
+    """(z0, dz) of a boss cut. Upward it overshoots into the board recess, which is air.
+    Downward it may only overshoot on the open frame: anywhere else `floor` is the cavity
+    FLOOR, and a tool that started below it would mill a 0.02 mm pocket into the floor under
+    every scallop (it did, on the first build of this -- 0.18 mm3 the lite shell had no
+    reason to lose)."""
     z0 = floor - (_SCALLOP_FAT if floor == 0 else 0.0)
-    dz = floor + cavity + _SCALLOP_FAT - z0
-    fat = (cq.Workplane("XY").workplane(offset=z0).moveTo(wx(x), wy(y))
-             .circle(boss_r + _SCALLOP_FAT).extrude(dz))
-    island = fat
+    return z0, floor + cavity + _SCALLOP_FAT - z0
+
+
+def _cut_boss_cutters(sol, fouls, bores, z0, dz):
     for g in fouls:
-        island = island.cut(_poly_solid(g, z0 - 0.01, dz + 0.02))
+        sol = sol.cut(_poly_solid(g, z0 - 0.01, dz + 0.02))
     for cx, cy, br in bores:
-        island = island.cut(cq.Workplane("XY").workplane(offset=z0 - 0.01)
-                              .moveTo(wx(cx), wy(cy)).circle(br).extrude(dz + 0.02))
-    island = _axis_piece(island, x, y, floor + cavity / 2)
-    tool = fat.cut(island)
+        sol = sol.cut(cq.Workplane("XY").workplane(offset=z0 - 0.01)
+                        .moveTo(wx(cx), wy(cy)).circle(br).extrude(dz + 0.02))
+    return sol
+
+
+def _boss_foot_breaks(fouls, bores, floor, z0, foot):
+    """OPEN FRAME ONLY (foot > 0): the 45-degree break each boss cutter leaves on the resting
+    face -- a wedge for a plane, a true cone for a bore -- and on down past the face."""
+    out = []
+    if foot <= 0:
+        return out
+    for g in fouls:
+        grown = g.buffer(foot, join_style=2)
+        xy = [(wx(px), wy(py)) for px, py in list(grown.exterior.coords)[:-1]]
+        wedge = (cq.Workplane("XY").workplane(offset=floor).polyline(xy).close()
+                   .extrude(foot, taper=45))
+        out.append(wedge.union(_poly_solid(grown, z0, floor - z0)))
+    for cx, cy, br in bores:
+        cone = (cq.Workplane("XY").workplane(offset=floor).moveTo(wx(cx), wy(cy))
+                  .circle(br + foot).extrude(foot, taper=45))
+        out.append(cone.union(cq.Workplane("XY").workplane(offset=z0).moveTo(wx(cx), wy(cy))
+                                .circle(br + foot).extrude(floor - z0)))
+    return out
+
+
+_RELIEF_CORNERS = [(R, R), (W - R, R), (R, H - R), (W - R, H - R)]
+
+def _corner_relief(bb):
+    """The corner relief of the board recess: a circle of R + corner_clr about each board
+    corner's centre, cut from 0.01 below the board-rest plane up through the recess. build()
+    cuts it before the lip ring and the bosses go on, so inside those four circles only the
+    ring and the bosses come back up to the plane and everything else stands 0.01 under it."""
+    cwp = cq.Workplane("XY").workplane(offset=bb - 0.01)
+    for ccx, ccy in _RELIEF_CORNERS:
+        cwp = cwp.moveTo(wx(ccx), wy(ccy)).circle(R + corner_clr)
+    return cwp.extrude(board_th + 0.04)
+
+
+def _under_corner_relief(sol, poly, bb):
+    """`sol` (new lip-height metal over the plan polygon `poly`) with the corner relief taken
+    out of it, where it reaches one. A blend or a web is unioned long after build() cut the
+    relief, so left alone its top would stand at the board-rest plane inside a relief circle:
+    0.01 proud of the lip it grows out of, with a 0.01 step round its whole outline (22 sliver
+    faces per shell, on the first build of this). Cut the same way, it is flush."""
+    if min(poly.distance(Point(c)) for c in _RELIEF_CORNERS) >= R + corner_clr:
+        return sol
+    return sol.cut(_corner_relief(bb))
+
+
+def _cone(cx, cy, z0, r0, z1, r1):
+    """A true cone about the vertical through board point (cx, cy): radius r0 at z0, r1 at z1."""
+    return cq.Workplane("XY").newObject(
+        [cq.Solid.makeCone(r0, r1, z1 - z0, cq.Vector(wx(cx), wy(cy), z0), cq.Vector(0, 0, 1))])
+
+
+def _blend_solid(b, floor, cavity, top_break, foot):
+    """One boss-to-wall blend (fit_rules.boss_blends) as the metal to ADD: its straight-sided
+    cover from the floor to the board-rest plane, less the blend's own cylinder.
+
+    A TRUE CYLINDER, cut from a prism -- the reason these junctions were left sharp until
+    2026-11-14 was that the only relief on offer was a polygon offset, which exports as a
+    fan of facets no CAM seat can measure (tool_relief, still dormant below).
+
+    AND IT CARRIES THE EDGE-BREAKS ITS NEIGHBOURS HAVE. The cover reaches into the lip and
+    the boss, so along the stretch that is now inside metal it buries their breaks: the lip's
+    0.10 strip, the boss's 0.10 ring. Left at that, the blend's own top edge would be the one
+    sharp edge on the seat and each buried break would end in a little triangular wall. So a
+    true 45-degree cone about the blend's axis is cut with the cylinder -- at the seat, and
+    on the open frame at the resting face too. The cover ends on two planes through that
+    axis, and in each of them a cone about the axis IS the neighbour's break in section, so
+    the three run into each other. Each cone starts _BREAK_DIP inside the cylinder for the
+    reason _lip_break_cut's frustum does: so that it crosses the wall instead of lying on it."""
+    ox, oy = b["O"]
+    r = b["r"]
+    bb = floor + cavity
+    zlo = floor - (0.02 if floor == 0 else 0.0)
+    sol = _poly_solid(b["cover"], floor, cavity)
+    sol = sol.cut(cq.Workplane("XY").workplane(offset=zlo - 0.01).moveTo(wx(ox), wy(oy))
+                    .circle(r).extrude(bb + 0.02 - (zlo - 0.01)))
+    if top_break > 0:
+        sol = sol.cut(_cone(ox, oy, bb - top_break - _BREAK_DIP, r - _BREAK_DIP,
+                            bb + 0.01, r + top_break + 0.01))
     if foot > 0:
-        for g in fouls:
-            grown = g.buffer(foot, join_style=2)
-            xy = [(wx(px), wy(py)) for px, py in list(grown.exterior.coords)[:-1]]
-            wedge = (cq.Workplane("XY").workplane(offset=floor).polyline(xy).close()
-                       .extrude(foot, taper=45))
-            wedge = wedge.union(_poly_solid(grown, z0, floor - z0))    # ...and on down past the face
-            tool = tool.union(wedge.intersect(fat))
-        for cx, cy, br in bores:
-            cone = (cq.Workplane("XY").workplane(offset=floor).moveTo(wx(cx), wy(cy))
-                      .circle(br + foot).extrude(foot, taper=45))
-            cone = cone.union(cq.Workplane("XY").workplane(offset=z0).moveTo(wx(cx), wy(cy))
-                                .circle(br + foot).extrude(floor - z0))
-            tool = tool.union(cone.intersect(fat))
-    return tool
+        sol = sol.cut(_cone(ox, oy, -0.02, r + foot + 0.02, foot + _BREAK_DIP, r - _BREAK_DIP))
+    return _under_corner_relief(sol, b["cover"], bb)
+
+
+def _web_solid(x, y, cover, floor, cavity, foot):
+    """One web (fit_rules.boss_webs) as the metal to ADD: the slot between a corner boss and
+    the recess wall, which no cutter enters. Its cover, cut by the boss's own cutters -- so
+    the face it shows the cavity is the boss's bore, continued out to the wall, and on the
+    open frame it carries that bore's break at the resting face."""
+    fouls, bores = _boss_cutters(x, y)
+    z0, dz = _scallop_span(floor, cavity)
+    sol = _cut_boss_cutters(_poly_solid(cover, floor, cavity), fouls, bores, z0, dz)
+    for brk in _boss_foot_breaks(fouls, bores, floor, z0, foot):
+        sol = sol.cut(brk)
+    return _under_corner_relief(sol, cover, floor + cavity)
+
 
 def _maker_text(txt, lx, cy, capH, fontpath):
     """Readable all-caps engraving text: LEFT edge at x=lx, vertically centered at y=cy, cap height ~capH.
@@ -549,10 +654,7 @@ def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pill
     _vz0 = floor if floor > 0 else -0.20
     res = res.cut(_poly_solid(_void_in_recess(), _vz0, cavity + (floor - _vz0)))
     # corner relief (recess depth)
-    cwp = cq.Workplane("XY").workplane(offset=bb - 0.01)
-    for ccx, ccy in [(R, R), (W - R, R), (R, H - R), (W - R, H - R)]:
-        cwp = cwp.moveTo(wx(ccx), wy(ccy)).circle(R + corner_clr)
-    res = res.cut(cwp.extrude(board_th + 0.04))
+    res = res.cut(_corner_relief(bb))
     # INNER supports: perimeter lip
     lip = (cq.Workplane("XY").workplane(offset=floor).rect(cavW, cavH)
              .extrude(cavity).edges("|Z").fillet(cavR))
@@ -702,10 +804,23 @@ def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pill
     # both use that -- and the boss loop above unions the bare cylinder, so until 2026-11 the
     # cut never reached the metal (fit_rules.boss_fouls has the measured overlaps). After the
     # deburr on purpose: see _boss_scallop_tool.
+    _foot = EDGE_BREAK if floor == 0 else 0.0
     for mx, my in mounts:
-        _tool = _boss_scallop_tool(mx, my, floor, cavity, foot=EDGE_BREAK if floor == 0 else 0.0)
+        _tool = _boss_scallop_tool(mx, my, floor, cavity, foot=_foot)
         if _tool is not None:
             res = res.cut(_tool)
+    # JOIN EACH BOSS TO THE WALL (2026-11-14, fit_rules "BLENDS and WEBS"). Until now the
+    # boss circle met the lip's wall at a sharp inside corner -- acute on the east -- and
+    # each corner boss stood beside a slot of void 0.17 mm wide that ran out into its own
+    # bore. Neither is a thing a cutter makes. The corners get a true-cylinder blend of
+    # fit_rules.BLEND_R, the slots are filled. AFTER the scallops, so that what fit_rules
+    # checked in plan (no blend reaches a keep-out; a web is bounded by this boss's cutters)
+    # is the order the metal is made in: nothing added here is cut again.
+    for mx, my in mounts:
+        for _b in _boss_blends(mx, my):
+            res = res.union(_blend_solid(_b, floor, cavity, lip_break, _foot))
+        for _pocket, _cover in _boss_webs(mx, my):
+            res = res.union(_web_solid(mx, my, _cover, floor, cavity, _foot))
     # rear MEDALLION (Z9F, replaced the engraved maker's mark 2026-07-31): the coin. Cut
     # AFTER the deburr, deliberately: the 0.1 edge-break must never see the crest edges --
     # on a 0.30 letter stroke it would eat two-thirds of the lap face, and walking OCC
@@ -800,7 +915,8 @@ print(f"cavity={cavity} general (max; per-variant from fit_rules.VARIANTS); U7 p
       f"cavity tool R{TOOL_R} (Ø{2*TOOL_R}) / back tool R{BACK_TOOL_R} (Ø{2*BACK_TOOL_R}) / fin groove tool Ø0.6 (grooves 0.8, its work alone) / "
       f"medallion Ø0.4 coin + Ø0.3 rest (islands, vertical walls; crests ON the bearing plane -- lap after blast)  "
       f"deburr: outer rim {edge_ease}, ends {EDGE_BREAK}  reflector-frame {GLOW_WIN[2]-GLOW_WIN[0]:.1f}x{GLOW_WIN[3]-GLOW_WIN[1]:.1f} laser-marked (full floor under it)  "
-      f"relief: OFF (concave junctions left sharp -> clean analytic STEP; round tool leaves its radius)")
+      f"boss junctions: R{_BLEND_R:g} blends x{sum(len(_boss_blends(mx, my)) for mx, my in mounts)}, "
+      f"webs x{sum(len(_boss_webs(mx, my)) for mx, my in mounts)} (true cylinders; every other concave corner left sharp, the round tool leaves its radius)")
 for _vn, name, fl, wl, bd, cav_v, sl, mk, fn, gm, mat in jobs:
     del _DEBURR_SKIPS[:]
     solid = build(floor=fl, wall_th=wl, border_h=bd, cavity=cav_v, screw_len=sl,
