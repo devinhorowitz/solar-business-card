@@ -1154,8 +1154,9 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
     **[F]** and **[H]** now carry the sheet as a body. What they print is new information about
     the shells as they have always been: **the sheet's corners stand 0.24 and 0.15 mm from the
     as-milled titanium**, at the boss at y 28.63 and the one at y 60.27. No rule chose that
-    clearance. **DRH's call, both halves:** whether 0.15 mm is enough for a hand-laid sheet, and
-    whether to have R2.00 at those two junctions as well by snipping the sheet's two east corners.
+    clearance. **The two stay at R1.00 (DRH, 2026-11-14)**: the alternative was R2.00 there as
+    well, with about 1 mm snipped off the sheet's two east corners, and it was turned down.
+    **Still DRH's call:** whether 0.15 mm is enough for a hand-laid sheet.
   - **Four webs.** Beside each corner boss, on its short-edge side, the STEP had a slot of void
     between the boss and the recess wall — 0.17 mm wide at its narrowest, closed at one end and
     running out into the boss's own Ø2.0 bore. No cutter enters it. It is metal now (0.37, 0.42,
