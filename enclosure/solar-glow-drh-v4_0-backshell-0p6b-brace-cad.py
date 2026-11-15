@@ -512,24 +512,25 @@ _RELIEF_CORNERS = [(R, R), (W - R, R), (R, H - R), (W - R, H - R)]
 
 def _corner_relief(bb):
     """The corner relief of the board recess: a circle of R + corner_clr about each board
-    corner's centre, cut from 0.01 below the board-rest plane up through the recess. build()
-    cuts it before the lip ring and the bosses go on, so inside those four circles only the
-    ring and the bosses come back up to the plane and everything else stands 0.01 under it."""
-    cwp = cq.Workplane("XY").workplane(offset=bb - 0.01)
+    corner's centre, cut FROM the board-rest plane up through the recess. It is there for the
+    recess WALL -- 0.20 mm of it comes out round each corner, so the press grips the board's
+    flats and never its corner arc -- and it has no business below the plane.
+
+    IT USED TO START 0.01 UNDER THE PLANE, AND THAT WAS A STEP IN THE SEAT (2026-11-15). The
+    0.01 was there so the cutter's end face did not lie on the recess floor. What it cost:
+    build() cuts the relief before the lip ring and the bosses go on, so inside those four
+    circles only the ring and the bosses came back up to the plane, and everything else --
+    the crescent of floor under the relieved wall, and since 2026-11-14 every blend, web and
+    root, each of which was cut down to match -- stood 0.01 mm under it. 10.16 mm2 over the
+    four corners, measured on the committed max shell: a mosaic of two heights on the face
+    the board rests on, outlined on every corner boss. DRH saw it in a render as "something
+    overlapping on the surface". Nothing was overlapping; the seat was in two pieces. The
+    cutter starts ON the plane now, as the recess cut it widens always has, and there is one
+    height -- so metal added later needs no cutting down, and the helper that did it is gone."""
+    cwp = cq.Workplane("XY").workplane(offset=bb)
     for ccx, ccy in _RELIEF_CORNERS:
         cwp = cwp.moveTo(wx(ccx), wy(ccy)).circle(R + corner_clr)
-    return cwp.extrude(board_th + 0.04)
-
-
-def _under_corner_relief(sol, poly, bb):
-    """`sol` (new lip-height metal over the plan polygon `poly`) with the corner relief taken
-    out of it, where it reaches one. A blend or a web is unioned long after build() cut the
-    relief, so left alone its top would stand at the board-rest plane inside a relief circle:
-    0.01 proud of the lip it grows out of, with a 0.01 step round its whole outline (22 sliver
-    faces per shell, on the first build of this). Cut the same way, it is flush."""
-    if min(poly.distance(Point(c)) for c in _RELIEF_CORNERS) >= R + corner_clr:
-        return sol
-    return sol.cut(_corner_relief(bb))
+    return cwp.extrude(board_th + 0.03)
 
 
 def _cone(cx, cy, z0, r0, z1, r1):
@@ -589,7 +590,7 @@ def _blend_solid(b, floor, cavity, top_break, foot):
     if foot > 0:
         sol = sol.cut(_held(_cone(ox, oy, -0.02, r + foot + 0.02, foot + _BREAK_DIP, r - _BREAK_DIP),
                             -0.03, foot + _BREAK_DIP + 0.04))
-    return _under_corner_relief(sol, b["cover"], bb)
+    return sol
 
 
 def _web_solid(x, y, cover, floor, cavity, foot):
@@ -602,7 +603,7 @@ def _web_solid(x, y, cover, floor, cavity, foot):
     sol = _cut_boss_cutters(_poly_solid(cover, floor, cavity), fouls, bores, z0, dz)
     for brk in _boss_foot_breaks(fouls, bores, floor, z0, foot):
         sol = sol.cut(brk)
-    return _under_corner_relief(sol, cover, floor + cavity)
+    return sol
 
 
 def _round_tool(rd, floor, cavity, foot, top_break=0.0):

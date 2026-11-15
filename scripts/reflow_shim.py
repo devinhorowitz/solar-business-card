@@ -60,7 +60,9 @@ def outline(clr=SHIM_CLR):
         if ref in fr.CAP_DATUM:
             return fr.part_keepout(ref, poly, sides={s: clr for s in "EWNS"})
         return fr.part_keepout(ref, poly)
-    return unary_union(list(fr.brace_footprint(span=0.0, keepout=_ko)))
+    # nest=False: the plate lies on the bare board at reflow -- no shell round it, so no tab
+    # to hug and no boss to nest against (fit_rules.brace_cavity). The outline it has had.
+    return unary_union(list(fr.brace_footprint(span=0.0, keepout=_ko, nest=False)))
 
 
 def coverage(shim):
@@ -167,7 +169,7 @@ def check(verbose=True):
     # of this test could never fire. It was written that way first, and said so.
     from shapely.ops import unary_union
     z_tot, _ = pad_overlap(unary_union(list(fr.brace_footprint(
-        span=0.0,
+        span=0.0, nest=False,
         keepout=lambda r, g: fr.part_keepout(r, g, sides={s: 0.0 for s in "EWNS"})))))
     if z_tot <= 1e-6:
         bad.append("SELF-TEST: a zero-clearance shim overlaps no pad either, so the pad "

@@ -168,7 +168,11 @@ def check_variant(vname, v):
     import board_parts
     import fit_rules
 
-    cav = fit_rules.cavity_rect()
+    # The outline the brace is cut INSIDE -- brace_cavity(), not cavity_rect(). The rectangle's
+    # short edges are the two tab tips, and since 2026-11-15 the brace's long arm runs on
+    # either side of each tab to the recess wall, 1.9 mm past them: held to the rectangle, a
+    # correct brace read as "generator frame broke" (it did, on the first build of that).
+    cav = fit_rules.brace_cavity()
     cavity_h = v["cavity"]
     mesh = trimesh.load(str(ROOT / "enclosure" / "brace" / (v["brace_name"] + ".stl")),
                         force="mesh")

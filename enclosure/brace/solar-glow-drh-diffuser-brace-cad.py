@@ -124,11 +124,14 @@ _KEEPOUT = {ref: poly for ref, poly, _h, _src in _board_parts("B")}
 # Anything taller is a BLOCKER and is subtracted from the footprint instead. That makes
 # interference structurally impossible: the thing that would collide is the thing removed.
 #
-#   footprint = cavity - blockers(+part_keepout, DIRECTIONAL for SC1-4) - boss reliefs,
+#   footprint = cavity as milled, less WALL_FIT - blockers(+part_keepout, DIRECTIONAL for SC1-4),
 #              morphologically opened at SLA_WALL
 #
-# Opening is what keeps it printable: subtracting round reliefs from rails leaves slivers,
-# and the opening deletes anything narrower than SLA_WALL and rounds the necks it leaves.
+# No boss reliefs since 2026-11-15: the cavity as milled already has every boss out of it, and
+# the brace nests against the ones it reaches (fit_rules.brace_cavity).
+# Opening is what keeps it printable: what is left between a boss or a tab and a supercap's bay
+# can be a sliver, and the opening deletes anything narrower than SLA_WALL and rounds the necks
+# it leaves -- which is where each prong beside a short-edge tab ends, 0.07 mm short of the wall.
 # ---------------------------------------------------------------------------------------
 from shapely.geometry import box as _bx2                                     # noqa: E402
 # VARIANT-AWARE since 2026-08-07: the per-variant numbers come as EXPLICIT values from
@@ -142,8 +145,8 @@ import fit_rules as _fit                                                      # 
 # The rules live in enclosure/fit_rules.py, shared with the shell generator and asserted by
 # check_consistency [8]. They are NOT restated here: the copy that used to sit in this file
 # is what went stale against the supercaps.
-_cav = _fit.brace_cavity()          # the shell's actual void less the wall fit -- NOT cavity_rect() alone,
-                                    # which is 0.25 mm wider than the cavity on the east (see fit_rules.brace_cavity)
+_cav = _fit.brace_cavity()          # the shell's void AS MILLED less the wall fit: every wall, boss and tab
+                                    # the brace may lie along (nested since 2026-11-15, fit_rules.brace_cavity)
 
 
 def _thin_runs(zone, floor_w, step=0.005):
@@ -360,7 +363,7 @@ def _build(vname):
         from OCP.GProp import GProp_GProps
         from OCP.BRepGProp import BRepGProp
         g = GProp_GProps(); BRepGProp.VolumeProperties_s(brace.val().wrapped, g)
-        print(f"[{vname}] brace volume {g.Mass()/1000:.2f} cm^3 (~{g.Mass()/1000*1.15:.1f} g tough white SLA)")
+        print(f"[{vname}] brace volume {g.Mass()/1000:.2f} cm^3 (~{g.Mass()/1000*1.15:.1f} g white SLA resin, taken at 1.15 g/cm3)")
     except Exception as e: print("vol:", e)
     print(f"[{vname}] brace {len(_pieces)} piece(s), {sum(g.area for g in _pieces):.1f} mm2 = "
           f"{100*sum(g.area for g in _pieces)/_cav.area:.1f}% of the {_cav.area:.0f} mm2 cavity floor "

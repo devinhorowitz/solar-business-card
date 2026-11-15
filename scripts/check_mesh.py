@@ -144,7 +144,15 @@ BASELINE = {
     # sooner at the four corner bosses and 0.5 later at the tabs (132.86 -> 132.28 mm):
     # +2.55 predicted, +2.646 on the STEP, +2.64 here. bbox unchanged; 0 open edges,
     # 0 degenerate. Triangles 53,678, ungated.
-    volume_mm3=5298.64, bbox=(-26.35, -45.4, -0.15, 26.35, 45.4, 3.4),
+    # re-ledgered 2026-11-15 (the seat is one plane, DRH from a render: "it looks like something
+    # is overlapping on the surface"), 5298.64 -> 5298.75. The board recess's corner relief was
+    # cut from 0.01 mm UNDER the board-rest plane, and inside its four circles everything but
+    # the lip ring and the bosses stood that far low: 10.4 mm2, 316 triangles on the lite
+    # shell. It starts on the plane now. 10.4 x 0.01 = +0.104 predicted, +0.105 on the STEP,
+    # +0.11 here -- inside this ledger's tolerance, so the gate did not ask; re-ledgered so the
+    # number is the part's. What a volume cannot say: the STEP has 10,337 faces where it had
+    # 10,409, and NONE under 0.001 mm2 where it had 33. bbox unchanged; 0 open, 0 degenerate.
+    volume_mm3=5298.75, bbox=(-26.35, -45.4, -0.15, 26.35, 45.4, 3.4),
         max_boundary_edges=0, max_open_len_mm=0.0, max_degenerate=0),
     "solar-glow-drh-pogo-testplate.stl": dict(
         # re-ledgered 2026-11-13: the y range flips, -10.4..99.3 -> -99.3..10.4, and nothing
@@ -307,7 +315,27 @@ BASELINE = {
     # two east mid-span bosses, now cut straight. x 1.80 would be 11.88; 10.06 measured, the
     # rest being the pockets of the parts the new strip reaches. Watertight, 0 open, 0
     # degenerate.
-    volume_mm3=1926.67, bbox=(-23.10, -42.4, 0.0, 24.10, 42.4, 1.8),
+    # re-ledgered 2026-11-15 (the brace nests, DRH: "matching the inverse at the ferrite side
+    # such that the plastic nests along the curve of the bosses" and "hugs either side of the
+    # tabs along that curve"), 1926.67 -> 1950.66, AND THE BBOX GROWS: y +/-42.40 -> +/-44.35.
+    # The outline is the shell's void as milled, inside the recess wall, less WALL_FIT
+    # (fit_rules.brace_cavity) -- no rectangle whose short edges are the tab tips, no circle
+    # of RELIEF_R round a boss axis. Footprint 1319.30 -> 1333.19 mm2, itemised in plan:
+    #    +4.58 / +4.75  the long arm runs on either side of each short-edge tab, to the wall
+    #    +2.00 / +2.03  the block lies along each east mid-span boss's straight cut
+    #    +0.24 / +0.27  the arm's end pads follow each west mid-span boss's circle
+    #    +0.10          the outline is simplified at 0.005 where it was 0.01
+    #    -0.03          the west edge follows the wall as cut, which leans 0.001 mm
+    # x 1.80 = 25.0, less 1.33 where the ferrite channel (0.33 deep) runs over the two east
+    # nests: +23.7 predicted, +23.99 measured on the STEP and here. The west face is -23.099
+    # (it was -23.100, the idealised wall). Watertight, 0 open, 0 degenerate.
+    # re-ledgered 2026-11-15 (the fit, DRH: "6A Protolabs, 6B 0.07 everywhere"), 1950.66 ->
+    # 1947.99, and the bbox comes in 0.02 on all four sides: fit_rules.WALL_FIT 0.05 -> 0.07,
+    # so every face that stands off the shell stands 0.02 further. Footprint 1333.19 -> 1331.60
+    # mm2 (about 80 mm of its outline faces the shell); x 1.80 = -2.87, less 0.18 where the
+    # ferrite channel (0.33 deep) runs along the east face: -2.69 predicted, -2.68 measured on
+    # the STEP and here. Watertight, 0 open, 0 degenerate.
+    volume_mm3=1947.99, bbox=(-23.08, -44.33, 0.0, 24.08, 44.33, 1.8),
         max_boundary_edges=0, max_open_len_mm=0.0, max_degenerate=0),
     # ---- the 2026-08-07 enclosure variants (fit_rules.VARIANTS) --------------------------
     # Ledgered from local builds in the variants commit itself -- the chicken-and-egg rule:
@@ -370,7 +398,10 @@ BASELINE = {
         # re-ledgered 2026-11-15 (the corner bosses and the tabs), 3933.04 -> 3934.78: as the
         # max shell, +1.487 mm2 in plan x 1.22 less 0.12 of fillet = +1.69 predicted, +1.745 on
         # the STEP, +1.74 here. bbox unchanged; 0 open edges, 0 degenerate.
-        volume_mm3=3934.78, bbox=(-26.35, -45.4, -0.15, 26.35, 45.4, 2.42),
+        # re-ledgered 2026-11-15 (the seat is one plane), 3934.78 -> 3934.89: as the max shell,
+        # 10.4 mm2 of seat no longer 0.01 low. +0.105 on the STEP; 299 faces where it had 371,
+        # none under 0.001 mm2 where it had 33. bbox unchanged; 0 open edges, 0 degenerate.
+        volume_mm3=3934.89, bbox=(-26.35, -45.4, -0.15, 26.35, 45.4, 2.42),
         max_boundary_edges=0, max_open_len_mm=0.0, max_degenerate=0),
     "solar-glow-drh-frame-air-316L.stl": dict(
         # air: OPEN frame, no floor -- walls + recess + 8 bosses only, z 0..1.80 exactly
@@ -428,7 +459,9 @@ BASELINE = {
         # re-ledgered 2026-11-15 (the corner bosses and the tabs), 961.83 -> 963.68: +1.487 mm2
         # in plan x 1.20 = +1.78 predicted, +1.852 on the STEP, +1.85 here (0.19 % of this
         # frame). No floor, so no fillet term. bbox unchanged; 0 open edges, 0 degenerate.
-        volume_mm3=963.68, bbox=(-26.35, -45.4, 0.0, 26.35, 45.4, 1.8),
+        # re-ledgered 2026-11-15 (the seat is one plane), 963.68 -> 963.79: as the max shell.
+        # +0.104 on the STEP; 294 faces where it had 366, none under 0.001 mm2 where it had 33.
+        volume_mm3=963.79, bbox=(-26.35, -45.4, 0.0, 26.35, 45.4, 1.8),
         max_boundary_edges=0, max_open_len_mm=0.0, max_degenerate=0),
     "solar-glow-drh-diffuser-brace-lite.stl": dict(
         # the lite brace: gap 1.22, span 0.60, 31 pockets, 0 through-holes, single piece
@@ -473,7 +506,13 @@ BASELINE = {
         # re-ledgered 2026-11-15 (the simpler cuts), 1135.28 -> 1141.41, west face -22.85 ->
         # -23.10: the brace follows the west wall to the one-width lip, as the max brace.
         # Footprint 1083.31 -> 1089.83 mm2; x 1.22 would be 7.95, 6.13 measured (pockets).
-        volume_mm3=1141.41, bbox=(-23.10, -42.4, 0.0, 24.10, 42.4, 1.22),
+        # re-ledgered 2026-11-15 (the brace nests), 1141.41 -> 1157.43, bbox y +/-42.40 ->
+        # +/-44.35: as the max brace. Footprint 1089.83 -> 1103.78 mm2; x 1.22 = 17.0, less 1.35
+        # under the ferrite channel: +15.7 predicted, +16.01 measured.
+        # re-ledgered 2026-11-15 (the fit, WALL_FIT 0.05 -> 0.07), 1157.43 -> 1155.67, bbox in
+        # 0.02 on all four sides: as the max brace. Footprint 1103.78 -> 1102.19 mm2; x 1.22 =
+        # -1.94, less 0.18 along the ferrite channel: -1.76 predicted, -1.76 measured.
+        volume_mm3=1155.67, bbox=(-23.08, -44.33, 0.0, 24.08, 44.33, 1.22),
         max_boundary_edges=0, max_open_len_mm=0.0, max_degenerate=0),
 }
 VOL_TOL = 0.005

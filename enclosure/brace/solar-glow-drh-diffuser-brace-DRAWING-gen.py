@@ -23,15 +23,17 @@ _s0.path.insert(0, _o0.path.join(_o0.path.dirname(_o0.path.abspath(__file__)), "
 import fit_rules as _fit                        # noqa: E402
 from fit_rules import (AIR, air_for, VARIANTS, FER, FER_CLR,           # noqa: E402
                        FER_POCKET_DEPTH as FER_DEPTH, SLA_WEB, WALL_FIT)
-YB = 86.80                                      # page anchor for the plan's y-flip (max cavity N
-                                                # wall); real extents come from computed bounds
+YB = 88.85                                      # page anchor for the plan's y-flip: the recess's
+                                                # far short-edge wall, which the arm's prongs reach
+                                                # since 2026-11-15 (it was 86.80, the tab's tip);
+                                                # real extents come from computed bounds
 GLOW = (14.95,40.8,35.85,47.0)                  # monogram-window footprint (LED-hug backing behind it)
 U7 = (28.1,37.3,7.8,5.4)                        # U7 (MB85RC512TY FRAM DFN-8) pocket footprint. Re-keyed from the removed U2 balancer, essentially where U2 sat (old (30.10,37.64)).
 # Heights come from enclosure/part_heights.py -- the single home, verified against each
 # part's 3D model by check_consistency [7]. Nothing on this sheet may restate one.
 from part_heights import part_height as _ph     # noqa: E402
 from board_parts import cell_tab_lands as _tab_lands   # noqa: E402
-from shapely.geometry import Point as _spt      # noqa: E402
+from shapely.geometry import Point as _spt, box as _sbox   # noqa: E402
 TAB_REACH = 1.5                                 # a tab is BACKED if resin comes this close to its land's centre
 
 def _covered(ref, pieces, span):
@@ -84,6 +86,20 @@ def build(vname):
     # void less the wall fit). The bare rectangle is what left both braces 0.20 mm wider than
     # their cavities on the east until 2026-11; nothing on this sheet reads it any more.
     reach_n = BY1 >= _fit.brace_cavity().bounds[3] - 0.2     # does the footprint still reach the N wall?
+    # WHAT THE BRACE NESTS AGAINST, COUNTED OFF THE FOOTPRINT (2026-11-15). Since that day the
+    # outline is the shell's as-milled void less WALL_FIT (fit_rules.brace_cavity), so it lies
+    # along every boss and tab it reaches. Note 4 used to say "THE FOUR CORNER BOSSES + ROUNDED
+    # CORNERS ARE RELIEVED (NEED NOT FIT)" over a circle of r2.85 cut round all eight; what it
+    # says now is counted here: a boss is nested if resin stands within the fit of its island,
+    # a tab is straddled if resin stands on both sides of it short of its tip.
+    _near = WALL_FIT + 0.02
+    nested = [m for m in _fit.MOUNTS if pieces[0].distance(_fit.boss_island(*m)) <= _near]
+    straddled = []
+    for _e, _lo, _hi, _w, _win in _fit.lip_tabs():
+        _y0, _y1 = (0.0, _w) if _e == "S" else (_fit.H - _w, _fit.H)
+        if all(pieces[0].intersection(_sbox(*_b)).area > 0.25
+               for _b in ((_lo - 1.5, _y0, _lo, _y1), (_hi, _y0, _hi + 1.5, _y1))):
+            straddled.append(_e)
 
     fig=plt.figure(figsize=(420/25.4,297/25.4))
     ax=fig.add_axes([0,0,1,1]); ax.set_xlim(0,420); ax.set_ylim(0,297)
@@ -228,16 +244,30 @@ def build(vname):
                      f"({dropped_area:.0f} mm2) WOULD BACK {len(would)} OF THEM" if would else ""))
     notes=[
      "1. PART = SOLAR-GLOW DRH DIFFUSER BRACE [%s]. A DROP-IN INSERT, NOT A FASTENED OR BONDED PART. 3D STEP GOVERNS ALL GEOMETRY; THE STL IS THE PRINT SOURCE." % vname.upper(),
-     "2. PROCESS: SLA / RESIN 3D PRINT (e.g. PCBWay). MATERIAL: TOUGH WHITE RESIN. IT MUST BE OPAQUE-WHITE AND NON-CONDUCTIVE - NO CARBON / GRAPHITE-FILLED RESIN",
-     "    (WEAKLY CONDUCTIVE): THE BRACE RESTS ON GND / VS / SIGNAL COPPER, SO A DIELECTRIC IS REQUIRED. WHITE ALSO DRIVES THE WINDOW BACKING (NOTE 6).",
+     # The printer is named since 2026-11-15 (DRH: "6A Protolabs"). It read "(e.g. PCBWay)" and
+     # "TOUGH WHITE RESIN" until then -- an example and a class, under a fit that only one
+     # service's stated accuracy covers (note 4).
+     *textwrap.wrap(
+         "2. PROCESS: STEREOLITHOGRAPHY AT PROTOLABS - ITS OWN 'STEREOLITHOGRAPHY' LINE, NOT 'FORMLABS SLA' - AT HIGH RESOLUTION (0.05 LAYERS). MATERIAL: ABS-LIKE WHITE "
+         "(ACCURA XTREME WHITE 200). WHATEVER IS PRINTED MUST BE OPAQUE-WHITE AND NON-CONDUCTIVE - NO CARBON / GRAPHITE-FILLED RESIN (WEAKLY CONDUCTIVE): THE BRACE RESTS ON "
+         "GND / VS / SIGNAL COPPER, SO A DIELECTRIC IS REQUIRED. WHITE ALSO DRIVES THE WINDOW BACKING (NOTE 6).", width=190, subsequent_indent="    "),
      f"3. FIT: PRINT ~0.1 PROUD IN HEIGHT AND SAND THE FLAT BOTTOM (DATUM) DOWN TO A ZERO-AIR FIT IN THE {gap:.2f} CAVITY. ALL POCKETS ARE ON THE TOP FACE, SO THE",
      "    BOTTOM LAPS FLAT ON GLASS WITHOUT TOUCHING THEM. DO NOT SAND THE TOP (IT SETS THE POCKET DEPTHS).",
      # Wrapped like note 8: its last clause is as long as what it has to say, and that is
      # computed -- see _rails above. (It was two typed lines that happened to fit.)
      *textwrap.wrap(
-         f"4. PRECISION FIT, NO RATTLE: THE OUTER EDGES CONTACT THE FLAT CAVITY WALLS AT ~{WALL_FIT:.2f} WHERE THE FOOTPRINT REACHES THEM (COMPUTED EXTENT x {BX0:.2f}-{BX1:.2f}, "
-         f"y {BY0:.2f}-{BY1:.2f}; E EDGE STEPPED -- THE PLAN IS THE COMPUTED FOOTPRINT). THE FOUR CORNER BOSSES (r{_fit.BOSS_R:.1f}) + ROUNDED CORNERS ARE RELIEVED (NEED NOT "
-         f"FIT). {_rails}; POCKETS KEY TO THE BOARD.", width=190, subsequent_indent="    "),
+         f"4. PRECISION FIT, NO RATTLE: THE OUTLINE STANDS {WALL_FIT:.2f} OFF THE SHELL ON EVERY FACE IT REACHES (COMPUTED EXTENT x {BX0:.2f}-{BX1:.2f}, "
+         f"y {BY0:.2f}-{BY1:.2f}; THE PLAN IS THE COMPUTED FOOTPRINT): THE FLAT CAVITY WALLS"
+         + (f", THE {len(nested)} MID-SPAN BOSSES IT NESTS AGAINST" if nested else "")
+         + (f", AND THE {len(straddled)} SHORT-EDGE TABS ITS LONG ARM RUNS EITHER SIDE OF" if straddled else "")
+         # computed, like the fit: the printer's stated tolerance on this brace's own longest
+         # dimension, against the fit at its two ends (fit_rules.print_xy_tol; check [8] 4g
+         # refuses a fit that does not cover it)
+         + f". THE FIT IS SIZED TO THE PRINTER'S STATED X/Y TOLERANCE: +/-{_fit.print_xy_tol(max(BX1-BX0, BY1-BY0)):.3f} ON THE "
+           f"{max(BX1-BX0, BY1-BY0):.2f} LENGTH, AGAINST {2*WALL_FIT:.2f} AT ITS TWO ENDS"
+         + (". A FLAT EDGE THAT PRINTS TIGHT CAN BE SANDED; THE CURVES ROUND A BOSS OR A TAB CANNOT -- THEY ARE CUT TO THE FIT, SO IF A PRINT BINDS THERE "
+            "MEASURE IT AGAINST THE STEP AND HAVE IT REPRINTED" if (nested or straddled) else "")
+         + f". THE CORNER BOSSES ARE NOT REACHED. {_rails}; POCKETS KEY TO THE BOARD.", width=190, subsequent_indent="    "),
      f"5. FERRITE CHANNEL (OVER THE NFC COIL): OPEN-ENDED, WALLED {_chw:.2f} = FERRITE {FER[2]-FER[0]:.1f} + {FER_CLR:.2f} EACH SIDE (CRITICAL - EDGE-LIMITED), OPEN AT BOTH Y-ENDS, {FER_DEPTH:.2f} DEEP.",
      f"    FERRITE (Wurth WE-FSFS 364006, NOMINAL {FER[2]-FER[0]:.0f} × {FER[3]-FER[1]:.0f} mm, EVEN ON THE 2mm SCORE GRID) IS PSA'd IN; LENGTH IS FORGIVING AND MAY OVERHANG THE ENDS SLIGHTLY.",
      ("6. WINDOW = LED-HUG DIFFUSER BACKING: SOLID WHITE RESIN FILLS THE MONOGRAM-WINDOW FOOTPRINT BEHIND THE FR4, MINUS THE TIGHT D2-D5 LED POCKETS."
@@ -253,6 +283,13 @@ def build(vname):
     ]
     yy=91.5
     for n in notes: ax.text(20,yy,n,fontsize=5.9,color=INK); yy-=3.9
+    # The block is wrapped, and three of its notes are as long as what they compute. It ends at
+    # the sheet's frame, not at the last note: refuse a block that runs under it rather than
+    # print one (the shell sheet's block has refused since 2026-11-12; this one only happened
+    # to fit).
+    if yy + 3.9 < 14.0:
+        raise SystemExit(f"[{vname}] the notes block runs {14.0 - (yy + 3.9):.1f} mm under the sheet frame "
+                         f"({len(notes)} lines at 3.9) -- shorten a note or give the block room")
 
     # ===================== TITLE BLOCK =====================
     tb_x,tb_y,tb_w,tb_h=288,12,120,44
@@ -262,7 +299,7 @@ def build(vname):
     ax.text(tb_x+tb_w/2,tb_y+38,"SOLAR-GLOW DRH  —  RESIN DIFFUSER BRACE [%s]"%vname.upper(),ha="center",va="center",fontsize=8.0,fontweight="bold",color=INK)
     ax.text(tb_x+3,tb_y+27.5,f"DWG  {base}",fontsize=6.0,va="center",color=INK)
     ax.text(tb_x+tb_w-3,tb_y+27.5,"REV  B",ha="right",fontsize=6.4,va="center",color=INK)
-    ax.text(tb_x+3,tb_y+18.5,"MATERIAL  TOUGH WHITE SLA (opaque, non-conductive)",fontsize=5.6,va="center",color=INK)
+    ax.text(tb_x+3,tb_y+18.5,"MATERIAL  ABS-LIKE WHITE SLA, ACCURA XTREME WHITE 200 (opaque, non-conductive)",fontsize=5.6,va="center",color=INK)
     ax.text(tb_x+3,tb_y+10.5,"UNITS  mm",fontsize=6.2,va="center",color=INK)
     ax.text(tb_x+63,tb_y+10.5,"SCALE  AS NOTED",fontsize=6.2,va="center",color=INK)
     # envelope is COMPUTED from the footprint bounds (the hand-typed "47.1 x 84.7 x 1.80" is
@@ -296,6 +333,8 @@ def build(vname):
           f"tabs backed {len(backed)}/{len(tabs)} (nearest resin {min(tab_gap.values()):.2f}-"
           f"{max(tab_gap.values()):.2f} mm from a tab centre; the {len(dropped)} dropped piece(s), "
           f"{dropped_area:.1f} mm2, would back {len(would)})")
+    print(f"[{vname}] nests against {len(nested)} boss(es) {nested} and straddles {len(straddled)} tab(s) "
+          f"{straddled} at WALL_FIT {WALL_FIT}")
     print(f"[{vname}] saved {base}-DRAWING.pdf/.png "
           f"(envelope {BX1-BX0:.1f} x {BY1-BY0:.1f} x {gap:.2f})")
 

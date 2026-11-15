@@ -686,7 +686,9 @@ red, the check itself fails.
   half-degree search had left the corner bores up to 0.004 short, which nobody could see while the
   slot was void), so every join is a crossing.
   **(3) Metal unioned after the corner relief must be cut by it** (`_under_corner_relief`), or it
-  stands 0.01 proud inside the four relief circles: 22 sliver faces a shell.
+  stands 0.01 proud inside the four relief circles: 22 sliver faces a shell. _(True of the relief
+  as it was. Since 2026-11-15 the relief starts ON the seat plane and nothing has to be cut down
+  to match it — the bullet on the seat's 0.01 mm step.)_
   **(4) THE FERRITE SHEET IS A BODY, and nothing had ever held it against the shell.** At R2.00 the
   two blends facing it stood inside its east corners, 0.035 and 0.075 mm², every gate green — it is
   not on the board, so `board_parts` does not return it. A blend that would come within `FER_CLR`
@@ -860,6 +862,80 @@ red, the check itself fails.
   slit two microns wide was left up two of the four flats, and the test read a sharp corner as
   reachable. And measure "what the ball cannot reach" by area inside the corner's own square,
   not by which pieces happen to lie wholly near it.
+- **A cut taken 0.01 mm past a face, for the kernel's sake, is a step in the part — and "benign"
+  was a verdict on the number, not on the face it was in** (2026-11-15). The board recess's corner
+  relief (`_corner_relief`: a circle of `R + corner_clr` round each board corner, so the press
+  grips the flats) was cut from 0.01 mm UNDER the board-rest plane, so that the cutter's end did
+  not lie on the recess floor. The lip ring and the bosses were unioned afterwards and came back
+  up to the plane; everything else inside those four circles did not — and since 2026-11-14 every
+  blend, web and root there was deliberately cut down to match. **10.4 mm² of the seat stood
+  0.01 mm low, in two or three patches on each corner boss** (316 triangles on the lite shell).
+  SolidCraft measured it on 2026-11-13 (finding C4, 3.51 mm² in 22 faces), the cause was confirmed
+  here the same day, and the record says "benign, nothing changed". DRH saw it two days later in a
+  render, as lines on the corner bosses: "it looks like something is overlapping on the surface".
+  Nothing was — the seat was in two pieces. The relief starts ON the plane now, as the recess cut
+  it widens always has, `_under_corner_relief` is gone, and **every one of the 33 faces under
+  0.001 mm² that each shell's STEP carried went with it** (72 faces fewer on every shell; that
+  count had been reported with each change as a floor nobody could get under). When a tool is set past a face to
+  dodge a coincidence, ask what is left standing at the two heights — and when a measurement is
+  filed as benign, look at the face it is on before the number.
+- **The brace is the shell's void AS MILLED, less ONE fit — it nests against whatever it reaches**
+  (2026-11-15, DRH: "matching the inverse at the ferrite side such that the plastic nests along
+  the curve of the bosses", and "hugs either side of the tabs along that curve").
+  `fit_rules.brace_cavity()` used to be held twice more than that: inside `cavity_rect()`, whose
+  short edges are the tab TIPS, and outside a circle of `RELIEF_R` round every boss axis — a full
+  round boss's shape, typed before two bosses were cut straight. Both were approximations of the
+  shell written before the shell could be asked; `cavity_as_milled()` can be. Five things:
+  **(1) `nest=False` is the old outline, and the reflow shim asks for it.** `scripts/reflow_shim.py`
+  cuts its plate from `brace_footprint(span=0)`, and that plate lies on the BARE BOARD: it has no
+  tab to hug and no boss to nest against. A rule shared by two parts is a rule about both — find
+  the second caller before changing what the first one means (`grep brace_footprint`).
+  **(2) Inside the recess.** `cavity_as_milled()` is board area less metal, and beside a supercap
+  there is no lip, so the void's own edge is the BOARD's — 0.05 mm outside the recess wall that is
+  really there (`EDGE_FIT`). Nothing reached those strips while the rectangle held the outline.
+  **(3) "No brace near this wall" was asked of the whole stretch, and a prong stands at the end of
+  four of them.** `floor_runs()` gave a floor fillet to every stretch of wall no brace came near
+  ANYWHERE along it; the prongs beside each tab stand over the last 0.2 mm of the four short-edge
+  stretches, past where each run has already ended in its scoop. Asked the old way, the request
+  would have silently deleted four of the eight fillets DRH asked for the same week. It is asked
+  of the run's own metal now, scoops taken out (`FLOOR_BRACE_CLR`; 0.17 mm at the nearest), and
+  check [8] 4f lays the scooped fillet out itself — it used to measure to the run's wall and
+  take `FLOOR_R` off, a fillet with square ends, which nothing had ever stood near enough to
+  tell apart. **Before changing where a part reaches, list the rules that say "nothing is there".**
+  **(4) A chord across an arc that hugs a CONVEX corner stands nearer the metal than the arc.** The
+  outline was simplified to 0.01, which was free while every arc on it was convex on the brace's
+  side; nested round a tab's tip it came 0.040 mm from titanium against a fit of 0.050. It is
+  0.005 when nested (0.045 at the least), and no finer: at 0.002 the opening's 0.004 mm nicks at
+  the corners of a through-cut survive as edges.
+  **(5) The fit is tighter than the printer, and the printer in the docs was not the printer.**
+  The brace's print spec named a Formlabs Form 3/4-class machine (DRH's 2026-11-13 call, to
+  justify 0.25 mm walls), and the first write-up of the nested fit compared it with Formlabs'
+  figures. DRH, the same day: "it's going to be pcbway. Check against their capabilities before
+  we make decisions on sizing constraints." PCBWay's own pages give SLA ±0.2 mm on a length
+  under 100 mm, 0.1 mm layers, and a minimum wall that grows with the wall (0.5 mm at 5 × 5 mm,
+  0.8 at 10 × 10). Four dimensions seat the brace and each has 0.10 mm in all to give; the four
+  ferrite-channel walls are under the smallest wall in that table; so are thirteen webs on the
+  lite brace and two on the max. None of it was resized then: `TODO.md`, "The brace against PCBWay",
+  has the comparison, the five US services DRH then asked for (Protolabs' industrial SLA is the
+  closest, and was chosen: (6)), and what is still open. **Do the sum as the part meets it:** a dimension seats if
+  the print's worst oversize is no more than the allowance at BOTH ends together — the first
+  write-up set ±0.2 against the 0.05 at one end and called it four times too tight; it is twice. **A fit is a claim about a process — find out
+  whose process before choosing the number**, and when a spec names a class of machine, ask
+  whether anyone has said where the part will actually be made.
+  **(6) Decided the same day: Protolabs, and 0.07 a side** (DRH: "6A Protolabs, 6B 0.07
+  everywhere"). `fit_rules.WALL_FIT` is 0.07, `PRINT_XY_TOL` is Protolabs' stated X/Y tolerance,
+  and check [8] 4g refuses a fit that does not cover it on the brace's longest dimension. Two
+  things that change found, each a rule. **List the dimensions a fit has to cover by asking
+  the outline which of its faces face each other, not by naming the ones that come to mind:**
+  the comparison the decision was made on counted four and took 84.80 (fork seat to fork
+  seat) as the longest, and the prongs' noses stand at the fit from the two recess walls as
+  well, 88.66 apart — 0.07 covers that by 0.001 mm, on the wider reading of Protolabs'
+  sentence. **And a fit shared with a second part is that part's too:** the reflow shim's
+  plate stood `WALL_FIT` inside the cavity rectangle and would have moved with a decision
+  about a printer it is not made on; it stands `fit_rules.SHIM_INSET` there now, unchanged.
+  The shells do not read the fit and did not move. What is still open with the printer — a
+  quote, the 0.33 mm channel walls against a 0.406 mm minimum feature in Z, heat, opacity — is
+  in `TODO.md`.
 - **A ledger entry is a standing waiver, so a ledger audits itself.** `scripts/interference_drc.py`'s
   `EDGE_LEDGER` excused seven parts from the cavity rectangle and had excused nothing since
   2026-08-08: six had been moved inboard and the seventh, C7, was deleted from the board the day

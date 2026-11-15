@@ -310,7 +310,7 @@ def sheet(vname, v):
         # describing a brace that no longer existed (SolidCraft finds no resin within 14.0 mm
         # of a solar-cell tab; the repo's own section of the STL, 14.067).
         _npc = len(_fr.brace_footprint(span=v["span"]))
-        notes.append(("brace", [f"BRACE REGISTRATION: THE RESIN BRACE ({_npc} PIECE{'S' if _npc != 1 else ''}, ITS FOOTPRINT COMPUTED FROM THE BOARD) REGISTERS TO THIS SHELL BY FITMENT - ITS OUTLINE, {_fr.WALL_FIT:.2f} OFF THE CAVITY WALLS WHERE IT REACHES THEM, + THE COMPONENT POCKETS + THE BOARD IN ITS RECESS ({_fit}). NO LOCATOR PILLARS; THE CAVITY FLOOR IS ONE FLAT FACE AT {floor:.2f}."]))
+        notes.append(("brace", [f"BRACE REGISTRATION: THE RESIN BRACE ({_npc} PIECE{'S' if _npc != 1 else ''}, ITS FOOTPRINT COMPUTED FROM THE BOARD) REGISTERS TO THIS SHELL BY FITMENT - ITS OUTLINE, {_fr.WALL_FIT:.2f} OFF THE CAVITY WALLS, BOSSES AND TABS WHERE IT REACHES THEM, + THE COMPONENT POCKETS + THE BOARD IN ITS RECESS ({_fit}). NO LOCATOR PILLARS; THE CAVITY FLOOR IS ONE FLAT FACE AT {floor:.2f}."]))
     else:
         notes.append(("brace", ["NO BRACE: AN OPEN FRAME HAS NO FLOOR TO RETAIN ONE (fit_rules.VARIANTS: brace_name=None). THE PCB REGISTERS IN THE %.2f RECESS AND ON THE 8 BOSSES." % board]))
     # The finisher sentence, computed from fit_rules.TOOL_R (2026-11-13). Until then it was typed
