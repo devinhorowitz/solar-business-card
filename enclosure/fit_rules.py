@@ -2426,6 +2426,254 @@ def _boss_webs(mx, my):
 #   * THE REEDED FIELDS GIVE WAY. Twelve of the sixteen stand in a fin field, and the pour
 #     wraps each at FIN_BOSS_CLR as it wraps an annulus (fin_runs), so the ribs beside a boss
 #     end a little shorter than they did.
+# ---- THE FLOOR MEETS THE WALL THROUGH A RADIUS (2026-11-15, DRH) -----------------------------
+# "To aid in a small amount of structural rigidity, to have the floor meet the sides at a curve
+# using a ball endmill, so as to again eliminate harsh corners and to give a slight amount of
+# support to the thin 1mm floor" -- then "stick with a R1.0", "for any place that has an
+# interface between the brace and titanium, that's where we simply don't use a R1.0 ball
+# endmill", and, on a prototype of eight straight runs, "apply as you displayed".
+#
+# WHERE. On each long straight stretch of the cavity's wall that no brace comes near anywhere
+# along it: the two stretches of each short-edge wall between a corner boss and the tab, and the
+# stretch of each long wall between a corner boss and a mid-span boss -- the walls of the four
+# supercap bays, where the floor has no brace over it and (on the max shell) the reeded valleys
+# behind it leave it thinnest. Not the middle of either long wall: the brace bears on the east
+# one from end to end and on the middle of the west one, and a run is a WHOLE stretch or none,
+# so that no run ends in mid-wall. Not round the bosses: their flats are 2.3 to 3.2 mm long.
+#
+# HOW A RUN ENDS. FLOOR_STOP short of the feature at each end of its stretch (a boss's blend, a
+# corner boss's bore, a tab's root), in the scoop a FLAT cutter of the same radius leaves where
+# it finishes the sharp corner beyond: a vertical cylinder of TOOL_R, set BLEND_BITE past
+# tangent to the wall like every other cylinder here. Two cutters of one radius leave the last
+# 0.3 mm of a run as a feather against the wall; that is the part, and the deburr note's.
+#
+# WHAT IT STANDS UNDER. On the two short-edge walls, the edge of a supercap: a can at nominal
+# stands 0.95 off that wall, past the fillet's toe, and clears it. A can at MAX MATERIAL
+# (part_envelope) stands 0.35 off, where the fillet is 0.24 mm high and the can's underside
+# 0.05 to 0.10 above the floor. THAT IS NOT CLEARED, AND IS ACCEPTED (DRH, with a photograph
+# of a WS17F): the can is a foil pouch, "rectangular pillows with a general maximum height ...
+# the thickness is not even, particularly on the extreme edges", and its outline is the sealed
+# margin, not the body. The datasheet does not dimension that margin. So the rule is stated as
+# what it needs -- floor_cap_margin_needed(): how far in from its max-material outline a can
+# must still be thinner than its stated maximum, 0.33 mm on the max shell -- and held to
+# FLOOR_CAP_MARGIN, what a can is TAKEN to give, which is PROVISIONAL until a caliper has been
+# put on one (TODO.md). Everything else that hangs over a fillet is held to FLOOR_PART_CLR at
+# the cavity's worst case, and a run that cannot give it is refused, not shortened.
+FLOOR_R = TOOL_R           # the ball end mill's radius; the flat finisher's too, on purpose
+FLOOR_STOP = 0.50          # a run stops this far short of the feature at each end of its stretch
+FLOOR_MIN_RUN = 5.0        # a straight stretch shorter than this gets no run
+FLOOR_BRACE_CLR = 0.10     # air between a fillet's toe and the foot of a brace
+FLOOR_PART_CLR = 0.10      # air between a fillet and a part hanging over it, worst case
+CAVITY_TOL = 0.05          # the cavity's depth tolerance (the sheet's C1), for that worst case
+FLOOR_CAP_MARGIN = 0.50    # PROVISIONAL: a supercap is TAKEN to reach its full thickness no nearer
+                           # its max-material outline than this (its sealed margin). See above.
+_FLOOR_ON = 8e-4           # mm: an outline vertex this near a wall's line is on it (the east
+                           # wall leans 0.0005 end to end, void_as_cut). A blend leaves the wall
+                           # at BLEND_BITE's angle, so a stretch reads under 0.02 mm long
+
+
+def floor_fillet_h(u, r=None):
+    """How high above the floor a fillet of radius r stands at distance u from its wall, as
+    it is cut: the cylinder is set BLEND_BITE into wall and floor, so it is a hair lower than
+    a tangent one would be. 0 beyond its toe."""
+    r = FLOOR_R if r is None else r
+    dd = r - BLEND_BITE
+    if u >= dd:                                                 # past the axis: the far side of the cylinder
+        return 0.0
+    return max(0.0, dd - math.sqrt(max(0.0, r * r - (dd - max(u, 0.0)) ** 2)))
+
+
+def floor_fillet_toe(r=None):
+    """How far from its wall a fillet's metal ends on the floor, as modelled: BLEND_BITE makes
+    it 0.935 for R1.00, where a tangent fillet's would be 1.00. Everything that has to CLEAR
+    a fillet is measured to r, the tangent one -- what a shop cutting to the note leaves."""
+    r = FLOOR_R if r is None else r
+    dd = r - BLEND_BITE
+    return dd - math.sqrt(r * r - dd * dd)
+
+
+def _floor_walls():
+    """[(edge, axis, wall, sg)] -- the cavity's four walls at the floor: which coordinate runs
+    ALONG each, where the wall is on the other, and the sign that points into the cavity."""
+    x0, y0, x1, y1 = recess_poly().bounds
+    return [("S", "x", y0, 1.0), ("N", "x", y1, -1.0),
+            ("W", "y", lip_as_cut("W")[0][2] if len(lip_as_cut("W")) == 1 else None, 1.0),
+            ("E", "y", W - lip_as_cut("E")[0][2] if len(lip_as_cut("E")) == 1 else None, -1.0)]
+
+
+def _floor_outline():
+    """The cavity as it is at the floor, board coords: the recess less every piece of metal
+    the shell stands on it (lip, bosses, blends, webs, tab roots, with the rounds taken off)."""
+    wall = box(-5.0, -5.0, W + 5.0, H + 5.0).difference(recess_poly())
+    v = box(0.0, 0.0, W, H).difference(unary_union([shell_metal_poly(), wall]))
+    return max(getattr(v, "geoms", [v]), key=lambda g: g.area)
+
+
+def floor_runs(_c={}):
+    """[run] -- the floor-to-wall fillets, one dict each, board coords:
+
+        edge, axis   which wall, and the coordinate that runs along it ("x" or "y")
+        wall, sg     the wall's own coordinate, and +1 / -1 toward the cavity
+        lo, hi       the straight stretch of wall the run stands on, feature to feature
+        s0, s1       the run itself: FLOOR_STOP in from each end; the scoops' axes are at these
+        r            FLOOR_R
+        cover        the plan of the block the fillet is cut from: the run's length, from
+                     inside the wall out past the toe
+        reach        the plan of the fillet's metal as modelled, to its toe (no scoops)
+
+    The same eight on every floored variant: a stretch a brace comes near on ANY variant gets
+    no run on any. Raises if a run would stand in anything but void, under a part it cannot
+    clear, or under a supercap's NOMINAL outline."""
+    if "r" not in _c:
+        r, dd = FLOOR_R, FLOOR_R - BLEND_BITE
+        toe = r                                                 # the tangent fillet's: what must be cleared
+        void = _floor_outline()
+        braces = {vn: unary_union(brace_footprint(span=v["span"]))
+                  for vn, v in VARIANTS.items() if v["brace"]}
+        floored = {vn: v for vn, v in VARIANTS.items() if v["floor"] > 0}
+        out = []
+        for edge, axis, wall, sg in _floor_walls():
+            if wall is None:
+                continue                                        # a stepped lip: no single wall to run on
+
+            def P(s_, u_, _a=axis, _w=wall, _g=sg):             # station along the wall, distance into the cavity
+                return (s_, _w + _g * u_) if _a == "x" else (_w + _g * u_, s_)
+
+            span = W if axis == "x" else H
+            on = void.exterior.intersection(Polygon([P(0.0, -_FLOOR_ON), P(span, -_FLOOR_ON),
+                                                     P(span, _FLOOR_ON), P(0.0, _FLOOR_ON)]))
+            segs = [g for g in getattr(on, "geoms", [on]) if g.geom_type == "LineString" and g.length > 1e-6]
+            ivs = sorted((min(c[0 if axis == "x" else 1] for c in g.coords),
+                          max(c[0 if axis == "x" else 1] for c in g.coords)) for g in segs)
+            merged = []
+            for lo, hi in ivs:
+                if merged and lo <= merged[-1][1] + 1e-6:
+                    merged[-1][1] = max(merged[-1][1], hi)
+                else:
+                    merged.append([lo, hi])
+            for lo, hi in merged:
+                if hi - lo < FLOOR_MIN_RUN:
+                    continue
+                band = Polygon([P(lo, 0.0), P(hi, 0.0), P(hi, toe + FLOOR_BRACE_CLR), P(lo, toe + FLOOR_BRACE_CLR)])
+                if any(band.intersects(b) for b in braces.values()):
+                    continue                                    # a brace bears here: sharp, the whole stretch
+                s0, s1 = lo + FLOOR_STOP, hi - FLOOR_STOP
+                at = f"floor fillet on the {edge} wall, {axis}{s0:.2f}..{s1:.2f}"
+                reach = Polygon([P(s0, 0.0), P(s1, 0.0), P(s1, toe), P(s0, toe)])
+                stray = reach.difference(void.buffer(_FLOOR_ON))
+                if stray.area > 1e-6:
+                    raise RuntimeError(f"{at}: {stray.area:.4f} mm2 of it would stand in metal, near "
+                                       f"({stray.centroid.x:.2f}, {stray.centroid.y:.2f}) -- the wall "
+                                       f"is not clear to the fillet's toe along the whole run")
+                run = {"edge": edge, "axis": axis, "wall": wall, "sg": sg,
+                       "lo": round(lo, 6), "hi": round(hi, 6), "s0": round(s0, 6), "s1": round(s1, 6),
+                       "r": r, "reach": reach,
+                       # out to r + 0.03 and no further: the cylinder dips BLEND_BITE under the
+                       # floor between 0.935 and 1.061 from the wall and comes up again beyond,
+                       # so a cover that reached 1.07 would leave a ridge 0.004 mm high there
+                       "cover": Polygon([P(s0, -0.20), P(s1, -0.20), P(s1, r + 0.03), P(s0, r + 0.03)])}
+                run["scoops"] = [P(s0, dd), P(s1, dd)]
+                run["axis_pts"] = (P(s0, dd), P(s1, dd))
+                run["under"] = floor_run_clearances(run, floored)
+                for vn, rows in run["under"].items():
+                    for ref, kind, gap in rows:
+                        if kind == "part" and gap < FLOOR_PART_CLR - 1e-9:
+                            raise RuntimeError(
+                                f"{at}: {ref} hangs {gap:.3f} mm over it on the {vn} shell at the "
+                                f"cavity's worst case, inside FLOOR_PART_CLR {FLOOR_PART_CLR}")
+                        if kind == "cap nominal" and gap < 0.0:
+                            raise RuntimeError(
+                                f"{at}: {ref} at its NOMINAL outline stands {-gap:.3f} mm into it "
+                                f"on the {vn} shell -- that is not the pouch's margin, it is the can")
+                        if kind == "cap margin" and gap < 0.0:
+                            raise RuntimeError(
+                                f"{at}: {ref} stands {-gap:.3f} mm into it on the {vn} shell even "
+                                f"{FLOOR_CAP_MARGIN} mm in from its max-material outline -- more than "
+                                f"the margin a pouch is TAKEN to have (FLOOR_CAP_MARGIN, provisional)")
+                out.append(run)
+        _c["r"] = out
+    return _c["r"]
+
+
+def floor_run_clearances(run, variants=None, ps=None):
+    """{variant: [(ref, kind, gap)]} -- what hangs over one run, and by how much it clears the
+    fillet with the cavity CAVITY_TOL shallow. kind is "part" (a machine-placed body: the gap
+    is air, and must be FLOOR_PART_CLR), "cap nominal" (a supercap at its nominal outline),
+    "cap margin" (the same can FLOOR_CAP_MARGIN in from its max-material outline -- what the
+    PROVISIONAL rule holds) or "cap max" (at max material, square-edged: negative today, and
+    printed so that nobody takes the rule for more than it is). `ps` takes the parts-list
+    shape so a check can plant a synthetic part."""
+    variants = {vn: v for vn, v in VARIANTS.items() if v["floor"] > 0} if variants is None else variants
+    wall_line = (LineString([(run["s0"], run["wall"]), (run["s1"], run["wall"])]) if run["axis"] == "x"
+                 else LineString([(run["wall"], run["s0"]), (run["wall"], run["s1"])]))
+    out = {}
+    for vn, v in variants.items():
+        rows = []
+        for ref, poly, h, src in (ps if ps is not None else _cached_parts()):
+            if src != "model":
+                continue
+            is_cap = ref in CAP_DATUM
+            hh = v["cap_h"] if is_cap else h
+            under = v["cavity"] - CAVITY_TOL - hh                 # the body's underside above the floor
+            shapes = ([("cap nominal", poly), ("cap margin", part_envelope(ref, poly).buffer(-FLOOR_CAP_MARGIN, join_style=2)),
+                       ("cap max", part_envelope(ref, poly))] if is_cap else [("part", poly)])
+            if not shapes[-1][1].intersects(run["reach"]):
+                continue                                          # nothing of it over this run
+            for kind, g in shapes:
+                over = g.intersection(run["reach"].buffer(1e-9)) if not g.is_empty else g
+                u = over.distance(wall_line) if not over.is_empty else run["r"]
+                rows.append((ref, kind, round(under - floor_fillet_h(u, run["r"]), 4)))
+        out[vn] = rows
+    return out
+
+
+def floor_cap_margin_needed(_c={}):
+    """{variant: mm} -- how far in from its max-material outline a supercap must still be
+    thinner than its stated maximum for every fillet to clear it, with the cavity CAVITY_TOL
+    shallow: the distance from where the can's outline may stand to where the fillet has come
+    down to the can's underside. What the caliper check in TODO.md has to beat."""
+    if "m" not in _c:
+        out = {}
+        for vn, v in VARIANTS.items():
+            if v["floor"] <= 0:
+                continue
+            under = v["cavity"] - CAVITY_TOL - v["cap_h"]
+            need = 0.0
+            for run in floor_runs():
+                wall_line = (LineString([(run["s0"], run["wall"]), (run["s1"], run["wall"])]) if run["axis"] == "x"
+                             else LineString([(run["wall"], run["s0"]), (run["wall"], run["s1"])]))
+                for ref, poly, _h, src in _cached_parts():
+                    if src != "model" or ref not in CAP_DATUM:
+                        continue
+                    env = part_envelope(ref, poly)
+                    if not env.intersects(run["reach"]):
+                        continue
+                    u0 = env.intersection(run["reach"].buffer(1e-9)).distance(wall_line)
+                    lo, hi = 0.0, run["r"]                        # bisect: h(u0 + m) = under
+                    for _ in range(60):
+                        mid = (lo + hi) / 2.0
+                        if floor_fillet_h(u0 + mid, run["r"]) > under:
+                            lo = mid
+                        else:
+                            hi = mid
+                    need = max(need, hi)
+            out[vn] = round(need, 3)
+        _c["m"] = out
+    return _c["m"]
+
+
+def floor_fillet_metal():
+    """Every run as plan metal, to its toe -- the scoops at the ends taken out. For the sheet
+    and the 2D checks; the shell CAD builds from floor_runs()."""
+    out = []
+    for run in floor_runs():
+        g = run["reach"]
+        for c in run["scoops"]:
+            g = g.difference(Point(c).buffer(run["r"], resolution=128))
+        out.append(g)
+    return out
+
+
 def _back_edges():
     """The art field's four straight edges as runs [(x0, y0, x1, y1)], corners excluded."""
     fx0, fy0, fx1, fy1 = _back_field().bounds

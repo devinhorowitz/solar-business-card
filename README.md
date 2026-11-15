@@ -343,7 +343,11 @@ image, every outside corner a modeled R1.00 (sixteen), and the tip corners of th
 lip tabs likewise (four). Since 2026-11-15 the cuts are simpler too: the west lip is one width
 the whole edge (2.25, so the cavity's west wall is a single straight face), the two east
 mid-span bosses are cut straight across for the coil (2.32 mm from the axis, both sides), and
-each tab runs into the short-edge wall through a modeled R1.00. Each boss runs into the lip's wall through a modeled concave
+each tab runs into the short-edge wall through a modeled R1.00. On the max and lite shells the
+floor meets the wall through a modeled **R1.00 fillet** (a ball end mill's) on the eight long
+straight walls of the supercap bays, 133 mm in all — nowhere the brace bears; under the
+supercaps' edges it rests on a provisional figure for the pouch's sealed margin, with a caliper
+check in `TODO.md`. Each boss runs into the lip's wall through a modeled concave
 blend (twelve: eight R2.00, four R1.00 at the two bosses beside the ferrite sheet), and the four corner ones are solid
 to the recess wall (2026-11-14; until then those junctions were sharp corners in the STEP, and
 each corner boss stood beside a 0.17 mm slot no cutter could enter). On the back, each boss's

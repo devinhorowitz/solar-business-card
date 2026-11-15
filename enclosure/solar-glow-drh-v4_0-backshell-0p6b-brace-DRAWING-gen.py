@@ -360,12 +360,13 @@ def sheet(vname, v):
         if u7_pocket > 0:
             _fl_main = "FLOOR IS A TRUE %.2f (%.2f LOCAL UNDER THE U7 POCKET), %s" % (floor, floor - u7_pocket, _guide)
         elif _webs:
-            _fl_main = ("CAVITY FLOOR IS ONE FLAT FACE AT %.2f, NO LOCAL RELIEF. METAL UNDER IT: "
+            _fl_main = ("CAVITY FLOOR IS ONE FLAT FACE AT %.2f, NO U7 POCKET. METAL UNDER IT: "
                         "%.2f UNCUT, %s (REAR ART BLOCK). THE UNCUT %.2f IS %s"
                         % (floor, floor, " AND ".join("%.2f UNDER %s" % (t, n) for n, t in _webs),
                            floor, _guide))
         else:
-            _fl_main = "FLOOR IS A TRUE %.2f, UNIFORM ACROSS THE CAVITY, %s" % (floor, _guide)
+            _fl_main = ("FLOOR IS A TRUE %.2f, UNIFORM ACROSS THE CAVITY (NO U7 POCKET), %s"
+                        % (floor, _guide))
         _cap_desc = (f"WS17 {cap_h:.2f} MAX (DATASHEET CASE WS17 HEIGHT)" if abs(cap_h - _CAPH) < 1e-9
                      else f"THIN CAP {cap_h:.2f} MAX (PROVISIONAL — part_heights.SUPERCAP_H_THIN)")
         _cav_main = f"CAVITY {cavity:.2f} ±0.05 -> {cavity-0.05:.2f} WORST-CASE, MINUS {_cap_desc} = {cavity-0.05-cap_h:.2f} NON-CONTACT; THE BRACE + SOLAR-CELL SANDWICHES CARRY THE BOARD."
@@ -374,9 +375,24 @@ def sheet(vname, v):
         # there (the notes' doubled-space separator) rather than each opening a line
         notes.append(("floor", [_fl_main + "  " + _cav_main] if _webs and u7_pocket <= 0
                                else [_fl_main, _cav_main]))
-        notes.append(("u7", [("U7 RELIEF POCKET: 7.8 x 5.4 CENTERED (28.1, 37.3) ON THE CAVITY FLOOR, %.2f DEEP (LOCAL FLOOR %.2f) - U7 (%.2f) KEEPS 0.10 AIR. GENERAL FLOOR %.2f. MODELED IN THE STEP." % (u7_pocket, floor - u7_pocket, U7_H, floor))
-                             if u7_pocket > 0 else
-                             ("NO U7 RELIEF POCKET. U7 IS THE %.2f mm MB85RC512TY DFN-8, WELL UNDER THE %.2f CAVITY, SO THE CAVITY FLOOR IS ONE FLAT FACE AT %.2f. (A POCKET EXISTED FOR A 1.75 SOIC-8 THE v4 BOARD DOES NOT CARRY.)" % (U7_H, cavity, floor))]))
+        # A U7 note only when there IS a U7 pocket (2026-11-15). With none, this was a note of
+        # its own saying so -- "NO U7 RELIEF POCKET ... (A POCKET EXISTED FOR A 1.75 SOIC-8 THE
+        # v4 BOARD DOES NOT CARRY.)" -- a line of a full block spent on a feature that is not
+        # there. The floor note says it now, in a bracket, and the line went to the floor fillet.
+        if u7_pocket > 0:
+            notes.append(("u7", ["U7 RELIEF POCKET: 7.8 x 5.4 CENTERED (28.1, 37.3) ON THE CAVITY FLOOR, %.2f DEEP (LOCAL FLOOR %.2f) - U7 (%.2f) KEEPS 0.10 AIR. GENERAL FLOOR %.2f. MODELED IN THE STEP." % (u7_pocket, floor - u7_pocket, U7_H, floor)]))
+        # THE FLOOR-TO-WALL FILLET (2026-11-15, fit_rules.floor_runs). Every figure in it is
+        # read off the runs the shell is built from: the radius, how many, how long, where each
+        # one is, and how far short of the next feature it stops.
+        _runs = _fr.floor_runs()
+        if _runs:
+            # ONE LINE, and the runs themselves are on the plan (heavy dash, to scale). With
+            # each run's coordinates in it the note was two lines and the block two over its
+            # eighteen; where a run is, is a thing a drawing shows better than a sentence.
+            notes.append(("ffil", [
+                f"FLOOR MEETS WALL THROUGH R{_fr.FLOOR_R:.2f} (\u00d8{2 * _fr.FLOOR_R:.1f} BALL END MILL), MODELED, ON "
+                f"{len(_runs)} RUNS ({sum(_r['s1'] - _r['s0'] for _r in _runs):.1f} mm; HEAVY DASH ON THE PLAN), EACH "
+                f"STOPPING {_fr.FLOOR_STOP:.2f} SHORT OF THE BOSS OR TAB AT EITHER END. FLOOR CORNER SHARP ELSEWHERE."]))
     else:
         notes.append(("floor", ["NO FLOOR - OPEN FRAME. THE BACK OF EVERY B-SIDE COMPONENT FACES THE TABLE; THE FRAME'S RESTING PLANE (BOTTOM FACE) CARRIES THE ASSEMBLY.",
                                 f"DEPTH {cavity:.2f} = TALLEST B-SIDE PART {cavity - 2*_fr.CAP_AIR:.2f} + 2×{_fr.CAP_AIR:.2f} RESTING CLEARANCE (fit_rules.VARIANTS: resting-clearance-limited)."]))
@@ -591,6 +607,21 @@ def sheet(vname, v):
             _coiltxt, _jointxt, _rdtxt, "MODELED \u2014 STEP GOVERNS.") if t)
         leader(X(_c.x), Y(_c.y), 141, 213, "\n".join(_tw.wrap(_calltxt, 68)), fs=4.9)
 
+    # THE FLOOR FILLETS (fit_rules.floor_runs): each run drawn to scale along its wall, on the
+    # cavity side of it, as a heavy dash -- hidden in this view, like the boss flats. The note
+    # gives the radius, the count and the rule; WHERE is here.
+    if not open_back and _fr.floor_runs():
+        _ft = _fr.floor_fillet_toe() / 2.0
+        for _r in _fr.floor_runs():
+            _u = _r["wall"] + _r["sg"] * _ft
+            _pts = ([(_r["s0"], _u), (_r["s1"], _u)] if _r["axis"] == "x" else [(_u, _r["s0"]), (_u, _r["s1"])])
+            ax.plot([X(px) for px, _py in _pts], [Y(py) for _px, py in _pts],
+                    color=INK, lw=1.5, ls=(0, (2.2, 1.1)), solid_capstyle="butt")
+        _re = [_r for _r in _fr.floor_runs() if _r["edge"] == "E"][0]      # the one nearest the callout
+        leader(X(_re["wall"] - _ft), Y((_re["s0"] + _re["s1"]) / 2.0), 124, 166,
+               f"{len(_fr.floor_runs())}\u00d7 R{_fr.FLOOR_R:.2f} FLOOR FILLET\n(HIDDEN \u2014 CAVITY SIDE;\nNOTE {note_no['ffil']})",
+               fs=5.2)
+
     # U7 relief pocket (cavity-floor recess; hidden in back-face view -> dashed).
     # Drawn ONLY if the arithmetic still calls for one -- see the import block above.
     u7x,u7y,pw,ph = 28.1,37.3,7.8,5.4
@@ -673,8 +704,22 @@ def sheet(vname, v):
     S2=13.0; EX,EY=265,202
     xl=lambda v_:EX+v_*S2; zl=lambda z:EY+(z+border)*S2
     if not open_back:
+        # the corner where the floor meets the west wall: an R1.00 fillet where a floor run
+        # stands (fit_rules.floor_runs -- two of the eight are on this wall), drawn as the arc
+        # the shell is cut to; a sharp corner if this variant had none
+        _wr = [_r for _r in _fr.floor_runs() if _r["edge"] == "W"]
+        if _wr:
+            _rr, _dd = _wr[0]["r"], _wr[0]["r"] - _fr.BLEND_BITE
+            _t = _fr.floor_fillet_toe(_rr)
+            _a0, _a1 = _math.atan2(-_dd, _t - _dd), _math.atan2(_t - _dd, -_dd)     # floor end, wall end
+            if _a1 > _a0:
+                _a1 -= 2.0 * _math.pi
+            _corner = [(wall + lip_w + _dd + _rr * _math.cos(_a0 + k * (_a1 - _a0) / 24.0),
+                        floor + _dd + _rr * _math.sin(_a0 + k * (_a1 - _a0) / 24.0)) for k in range(25)]
+        else:
+            _corner = [(wall+lip_w,floor)]
         prof=[(0.10,0.0),(wall,0.0),(wall,-border+lb),(wall+lb,-border),(wall+bbw-lb,-border),(wall+bbw,-border+lb),(wall+bbw,0.0),
-              (8.5,0.0),(8.5,floor),(wall+lip_w,floor),(wall+lip_w,bb-lb),(wall+lip_w-lb,bb),(wall,bb),
+              (8.5,0.0),(8.5,floor)]+_corner+[(wall+lip_w,bb-lb),(wall+lip_w-lb,bb),(wall,bb),
               (wall,wt-ease),(wall-ease,wt),(ease,wt),(0.0,wt-ease),(0.0,0.10)]
     else:
         # open frame: wall + lip only -- no floor to draw, no proud back frame
@@ -696,10 +741,15 @@ def sheet(vname, v):
     leader(xl(0.90),zl(wt-0.06),xl(4.2),zl(wt)+9.5,"0.10×45° MOUTH",ha="left",fs=5.2)
     fcf(xl(3.4),zl(bb)+8,["FLAT","0.05"]); leader(xl(2.2),zl(bb),xl(3.4),zl(bb)+8+2.3,"",ha="left")
     leader(xl(3.36),zl(bb-0.04),xl(5.7),zl(bb+0.25),"0.10×45° LIP",ha="left",fs=5.2)
+    if not open_back and _wr:
+        leader(xl(wall+lip_w+0.29),zl(floor+0.29),xl(wall+lip_w)+7.0,zl(floor)+10.5,
+               f"R{_wr[0]['r']:.2f} FLOOR FILLET (note {note_no['ffil']})",ha="left",fs=5.2)
     leader(xl(0.05),zl(0.06),xl(-2.6),zl(0.55),"0.10×45° RIM (btm)",ha="right",fs=5.0)
     if border > 0:
-        leader(xl(1.08),zl(-0.10),xl(1.35),zl(-border)-9,"0.10×45° FRAME (2 PL)",ha="left",fs=5.0)
-        leader(xl(3.42),zl(-0.10),xl(1.35),zl(-border)-9,"",ha="left")
+        # at -6.6, not -9 (2026-11-15): at -9 this label was set across "SECTION A-A", the
+        # title under it, on every committed sheet
+        leader(xl(1.08),zl(-0.10),xl(1.35),zl(-border)-6.6,"0.10×45° FRAME (2 PL)",ha="left",fs=5.0)
+        leader(xl(3.42),zl(-0.10),xl(1.35),zl(-border)-6.6,"",ha="left")
     if not open_back:
         # Two lines, IN THE CAVITY (2026-11-14). This caption was one line starting at the
         # section's outer wall, so its first half -- the half that says what the floor is --
@@ -711,7 +761,8 @@ def sheet(vname, v):
                       ("cavity floor flat at %.2f \u2014 metal under it: note %d"
                        % (floor, note_no['floor'])) if (has_fins or has_med) else
                       ("floor %.2f TRUE, UNIFORM (no local relief)" % floor))
-        ax.text(xl(wall + lip_w) + 1.6, zl(floor) + 0.8,
+        # ...and clear of the fillet where the section has one: the caption starts past its toe
+        ax.text(xl(wall + lip_w + (_fr.floor_fillet_toe() if _wr else 0.0)) + 1.6, zl(floor) + 0.8,
                 "PCB recess %.2f (%.2f mm board)\n%s" % (board, board, _cap_floor),
                 fontsize=5.7, color=GRY, va="bottom", linespacing=1.25)
     else:

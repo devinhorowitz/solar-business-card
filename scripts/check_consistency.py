@@ -523,7 +523,7 @@ def check_enclosure_fit():
     #    carries the scallop is scripts/assembly_drc.py [F], which sections the STL --
     #    this check cannot know and must not be read as saying so.
     import math
-    from shapely.geometry import Point as _P, box as _box
+    from shapely.geometry import LineString as _LS, Point as _P, box as _box
     from shapely.ops import unary_union
     for mx, my in fr.MOUNTS:
         island = fr.boss_island(mx, my)
@@ -792,6 +792,55 @@ def check_enclosure_fit():
         err("SELF-TEST: with the tab roots taken out, the rolled ball still reaches everything "
             "-- the tab-root test above cannot fail")
         bad += 1
+    # 4f. THE FLOOR MEETS THE WALL THROUGH A RADIUS (2026-11-15, DRH). fit_rules.floor_runs():
+    #     an R1.00 fillet on the long straight walls of the supercap bays -- never where a
+    #     brace bears, never under a machine-placed part it cannot clear, and under a supercap
+    #     only as far as the pouch's sealed margin is TAKEN to allow (FLOOR_CAP_MARGIN,
+    #     provisional). The polygons here; the metal is assembly_drc [K].
+    _fruns = fr.floor_runs()
+    _fmetal = unary_union(fr.floor_fillet_metal())
+    if len(_fruns) != 8:
+        err(f"{len(_fruns)} floor fillets, where this board has had 8 (two a wall) -- read what "
+            f"moved (fit_rules.floor_runs), then re-ledger the count here and in the docs")
+        bad += 1
+    _fbr = {}
+    for vn, v in fr.VARIANTS.items():
+        if not v["brace"]:
+            continue
+        _bfp = unary_union(fr.brace_footprint(span=v["span"]))
+        # by an instrument that owes floor_runs() nothing: the brace's footprint against each
+        # run's wall, which a tangent fillet of FLOOR_R reaches FLOOR_R from
+        for run in _fruns:
+            _wl = (_LS([(run["s0"], run["wall"]), (run["s1"], run["wall"])]) if run["axis"] == "x"
+                   else _LS([(run["wall"], run["s0"]), (run["wall"], run["s1"])]))
+            _fbr[vn] = min(_fbr.get(vn, 1e9), _bfp.distance(_wl) - fr.FLOOR_R)
+        if _fbr[vn] < fr.FLOOR_BRACE_CLR - 1e-9:
+            err(f"the {vn} brace stands {_fbr[vn]:.3f} mm from the toe of a floor fillet, inside "
+                f"FLOOR_BRACE_CLR {fr.FLOOR_BRACE_CLR} -- DRH's rule is no fillet where the brace "
+                f"meets the titanium")
+            bad += 1
+    _fneed = fr.floor_cap_margin_needed()
+    if max(_fneed.values()) > fr.FLOOR_CAP_MARGIN + 1e-9:
+        err(f"the floor fillets need a supercap to be thin for {max(_fneed.values()):.2f} mm in "
+            f"from its max-material outline, more than the {fr.FLOOR_CAP_MARGIN} it is TAKEN to "
+            f"be (FLOOR_CAP_MARGIN, provisional)")
+        bad += 1
+    _fpart = [g for run in _fruns for rows in run["under"].values() for _r, k, g in rows if k == "part"]
+    if _fpart and min(_fpart) < fr.FLOOR_PART_CLR - 1e-9:
+        err(f"a machine-placed part hangs {min(_fpart):.3f} mm over a floor fillet, inside "
+            f"FLOOR_PART_CLR {fr.FLOOR_PART_CLR}")
+        bad += 1
+    # mechanism self-test: a part 0.2 mm short of the floor planted over a run must be seen
+    _r0 = next(r_ for r_ in _fruns if r_["edge"] == "W")
+    _ym = (_r0["s0"] + _r0["s1"]) / 2.0
+    _fake = [("SELFTEST", _box(_r0["wall"] + 0.3, _ym - 0.5, _r0["wall"] + 1.3, _ym + 0.5),
+              min(v["cavity"] for v in fr.VARIANTS.values() if v["floor"] > 0) - 0.2, "model")]
+    _seen = [g for rows in fr.floor_run_clearances(_r0, ps=_fake).values() for _r, k, g in rows if k == "part"]
+    if not _seen or min(_seen) >= fr.FLOOR_PART_CLR:
+        err("SELF-TEST: a synthetic part planted 0.3 mm from the west wall, hanging to 0.2 mm above "
+            "the floor over a fillet, was not seen as fouling it -- floor_run_clearances() does "
+            "not measure what hangs over a run")
+        bad += 1
     # mechanism self-test: a synthetic part planted INSIDE a blend's new metal must be refused
     (_m0, _b0) = _bl[0]
     _pt = fr.blend_added(_m0[0], _m0[1], _b0).representative_point()
@@ -852,7 +901,13 @@ def check_enclosure_fit():
            f"({', '.join(f'{e_} {fr.lip_as_cut(e_)[0][2]:g}' for e_ in fr.LIP_ONE_WIDTH)}) and "
            f"their walls straight between the bosses, {len(_cut)} mid-span bosses cut straight "
            f"{_cd:g} from their axes for the coil, {len(_roots)} tab roots R{fr.TOOL_R:g} on the "
-           f"recess wall ({max(_ur):.4f} mm2 unreached at worst; taken out, all fail); guaranteed ring "
+           f"recess wall ({max(_ur):.4f} mm2 unreached at worst; taken out, all fail); "
+           f"{len(_fruns)} floor fillets R{fr.FLOOR_R:g}, {sum(r_['s1'] - r_['s0'] for r_ in _fruns):.1f} mm "
+           f"of wall ({_fmetal.area:.1f} mm2 in plan), "
+           + ", ".join(f"{g:.2f} mm from the {vn} brace" for vn, g in _fbr.items())
+           + f", under no machine-placed part, and under the supercaps' edges for "
+           f"{max(_fneed.values()):.2f} mm of a margin TAKEN to be {fr.FLOOR_CAP_MARGIN} "
+           f"(PROVISIONAL); guaranteed ring "
            f"relieved around {len(_reliefs) - len(fr.lip_tabs())} part(s) and given up at the "
            f"{len(fr.lip_tabs())} short-edge tabs, all bodies >={fr.LIP_CLR} clear of it")
 

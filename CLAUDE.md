@@ -758,6 +758,38 @@ red, the check itself fails.
   A bonus worth knowing how to read: the STLs' one ledgered zero-length seam was that kink. A
   ledgered artefact is sometimes a real defect's shadow — when the cause goes, tighten the
   ledger the same day.
+- **The floor meets the wall through a radius on EIGHT runs, and under the supercaps that is a
+  PROVISIONAL rule** (2026-11-15, DRH: a ball end mill's R1.00, none "for any place that has an
+  interface between the brace and titanium", then "apply as you displayed" on a prototype).
+  `fit_rules.floor_runs()` finds each long straight stretch of cavity wall that no brace comes
+  near ANYWHERE along it — a run is a whole stretch or none, so none ends in mid-wall — and
+  that is the walls of the four supercap bays on the max and lite shells (the air frame has no
+  floor). Each run is three true cylinders: one lying along the wall, and at each end the scoop
+  a flat cutter of the same radius leaves, `FLOOR_STOP` short of the next boss or tab. Four
+  things to know before touching it:
+  **(1) The south and north runs stand under the supercaps' edges, and a square-edged can at
+  max material is NOT cleared** (0.187 mm into the fillet on max). DRH accepted that with a
+  photograph: the can is a foil pouch and its outline is the sealed margin. So the rule is
+  stated as what it NEEDS — `floor_cap_margin_needed()`, how far in from its max-material
+  outline a can must still be thinner than 1.70 (0.33 mm) — against `FLOOR_CAP_MARGIN`, what a
+  pouch is TAKEN to give. The datasheet does not dimension it; `TODO.md` has the caliper
+  check. `assembly_drc` [K] prints all three figures and the word PROVISIONAL on every run. Do
+  not "fix" the negative number by measuring to a smaller can.
+  **(2) A cylinder set past tangent crosses the floor TWICE.** With `BLEND_BITE` the lying
+  cylinder leaves the floor 0.935 from the wall, dips 0.002 under it, and comes up again at
+  1.061. The first rules took 1.061 for the fillet's toe and cut its cover out to 1.11: a ridge
+  0.004 mm high along every run. The prototype's cover had stopped at 1.05 by luck. The toe is
+  `floor_fillet_toe()` (0.935); what must CLEAR a fillet is measured to the tangent one, 1.00;
+  and the cover stops at 1.03.
+  **(3) A gate that sections "mid-cavity" is sectioning the fillet on the lite shell.** R1.00
+  on a 1.22 cavity is still 0.07 mm of metal at mid-height. `assembly_drc` [G] read the lip
+  there and would have called the lip 0.07 too wide along every run; it reads the cut just
+  under the seat now. Any new check that wants the WALL has to look above 0.935.
+  **(4) The sheet's notes block is full.** Eighteen lines at its minimum pitch, and the
+  generator refuses a nineteenth. The fillet's note is one line because WHERE the runs are is
+  drawn on the plan (heavy dash) instead of written; and the note that said only "NO U7 RELIEF
+  POCKET" gave its line up — the floor note says so. A new note has to take a line from
+  somewhere, and every later note's number is cited in `enclosure/README.md`.
 - **A ledger entry is a standing waiver, so a ledger audits itself.** `scripts/interference_drc.py`'s
   `EDGE_LEDGER` excused seven parts from the cavity rectangle and had excused nothing since
   2026-08-08: six had been moved inboard and the seventh, C7, was deleted from the board the day

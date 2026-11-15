@@ -111,6 +111,17 @@ FACE has the junction too (each proud annulus against the proud frame, sixteen b
 fit_rules.back_blends) and [J] probes it the same way, on a cut through the frame's own
 0.15 mm of height, wherever the variant has a back face.
 
+THE FLOOR FILLETS ([K], 2026-11-15). The floor meets the wall through an R1.00 on eight
+straight runs (fit_rules.floor_runs: the long walls of the supercap bays, nowhere a brace
+bears), each ending in a flat cutter's scoop. [K] probes them on the one cut that passes
+through them, just above the floor: metal inside each fillet's edge, air outside it, air
+at and beyond both ends of every run; its canary is that cut with the fillet taken out.
+It also PRINTS what the rule rests on and no section can show -- the supercaps' edges
+stand over four of the runs, a square-edged can at max material is not cleared, and the
+margin a foil pouch is taken to have is PROVISIONAL (TODO.md). And because a fillet of
+R1.00 is still metal at mid-height on the 1.22 cavity, [G] reads the lip just under the
+seat, above them.
+
 Variant policy, stated rather than implied:
   * max / lite -- every check, parameterized (floor, cavity, screw_len, stack).
   * air -- open_back, no brace: the cavity-floor probe and every brace/ferrite
@@ -211,6 +222,12 @@ ROUND_IN = 0.01
 # from the art field. The frame's 0.10x45 edge-break takes the outer two thirds of a 0.15
 # frame; at 0.2 of the height the outline is still the blend's own circle.
 BACK_CUT_FRAC = 0.2
+# [K], the floor fillets: how far each side of a fillet's edge the probes stand, on the cut just
+# above the floor. A lying concave cylinder sections as a straight line, and its facets stand at
+# most R(1 - cos 0.1) = 0.005 on the air side of it; at that cut the fillet reaches 0.57 mm from
+# the wall, so 0.06 either side is far inside what is there and far outside the error.
+FLOOR_PROBE = 0.06
+FLOOR_AT = (0.2, 0.5, 0.8)
 RIDGE_STEP = 0.02
 OVERLAP_EPS = 1e-3    # mm2 of plan overlap that counts as metal inside a body, not noise
 SECTION_GRID = 1e-5   # mm: snap for stitching section segments into closed outlines
@@ -812,10 +829,13 @@ def check_variant(vname, v, fr, bp, trimesh):
     # ---- 7. the lip the shell drawing describes is the lip the shell has -------------
     # fit_rules.lip_as_cut() is what the drawing's lip note is written from. It is checked
     # against fit_rules' own polygon where it is computed; this is the check that matters,
-    # against the metal. Mid-cavity, clear of the lip-break at the seat.
+    # against the metal. Just under the seat: below the lip-break (the break's frustum is still
+    # 0.03 inside the void at this level) and ABOVE the floor fillets. It was the mid-cavity
+    # cut until 2026-11-15; a fillet of R1.00 on a 1.22 cavity is still 0.07 mm of metal at
+    # mid-height, and the lip note describes the lip, not the fillet under it.
     print("[G] support lip vs its description (sectioned)")
     pre = len(_ERRORS)
-    lip_cut = shell_cuts[1][2]
+    lip_cut = shell_cuts[0][2]
     recess_cut = section(shell, seat + fr.BOARD_TH / 2.0 + _NUDGE, trimesh)
     n_all, worst_all, canary_hits, said = 0, 0.0, 0, []
     for edge in "WESN":
@@ -1186,6 +1206,83 @@ def check_variant(vname, v, fr, bp, trimesh):
            + f"; {n_root} tab roots are R{fr.TOOL_R:g} on the recess wall; the same sections with "
            f"each junction and corner put back sharp fail all "
            f"{n_bl + n_web + n_back + n_rd - len(slight) + n_tab + n_root}, as they must")
+
+    # ---- 11. the floor meets the wall through a radius ---------------------------------
+    # fit_rules.floor_runs(): an R1.00 fillet on the long straight walls of the supercap bays,
+    # each run ending in a flat cutter's scoop. On the sheet as a count, a radius and a length;
+    # here as metal -- on the one cut that passes through it, just above the floor.
+    print("[K] floor-to-wall fillets (sectioned)")
+    pre = len(_ERRORS)
+    if floor <= 0:
+        note("open frame -- no floor, so no floor fillet by design")
+    else:
+        runs = fr.floor_runs()
+        lbl, zlow, low = shell_cuts[2]
+        zrel = zlow - floor
+        blind, n_pr = [], 0
+        for run in runs:
+            r_ = run["r"]
+            dd_ = r_ - fr.BLEND_BITE
+            if zrel >= dd_:
+                err(f"the cut {lbl} (z {zlow:.2f}) is above a fillet's axis -- nothing of it to probe")
+                break
+            reach = dd_ - _m.sqrt(r_ * r_ - (dd_ - zrel) ** 2)       # how far from the wall it stands at this cut
+            at = (lambda s_, u_, _r=run: _Pt(s_, _r["wall"] + _r["sg"] * u_) if _r["axis"] == "x"
+                  else _Pt(_r["wall"] + _r["sg"] * u_, s_))
+            where = f"the floor fillet on the {run['edge']} wall, {run['axis']}{run['s0']:.2f}..{run['s1']:.2f}"
+            a, b = run["s0"] + r_ + 0.3, run["s1"] - r_ - 0.3         # clear of both scoops
+            metal_at = [at(a + k * (b - a), reach - FLOOR_PROBE) for k in FLOOR_AT]
+            air_at = [at(a + k * (b - a), reach + FLOOR_PROBE) for k in FLOOR_AT]
+            # the ends: air on the scoop's axis line half way out, and air beyond the run
+            ends_air = [at(run["s0"], reach / 2.0), at(run["s1"], reach / 2.0),
+                        at(run["s0"] - 0.3, 0.3), at(run["s1"] + 0.3, 0.3)]
+            n_pr += len(metal_at) + len(air_at) + len(ends_air)
+            gone = [q for q in metal_at if not low.contains(q)]
+            full = [q for q in air_at if low.contains(q)]
+            ended = [q for q in ends_air if low.contains(q)]
+            if gone:
+                err(f"{where}: no metal {FLOOR_PROBE} mm inside its edge {lbl} (z {zlow:.2f}) at "
+                    f"board ({gone[0].x:.2f}, {gone[0].y:.2f}) -- the fillet is not there, or is "
+                    f"smaller than the R{r_:g} the sheet calls")
+            if full:
+                err(f"{where}: metal {FLOOR_PROBE} mm OUTSIDE its edge {lbl} (z {zlow:.2f}) at "
+                    f"board ({full[0].x:.2f}, {full[0].y:.2f}) -- more metal than an R{r_:g} leaves")
+            if ended:
+                err(f"{where}: metal at board ({ended[0].x:.2f}, {ended[0].y:.2f}) {lbl}, where the "
+                    f"run has ended -- it runs on past its stop, or ends square instead of in the "
+                    f"flat cutter's scoop")
+            # canary: the same cut with this run's metal taken out must lose every metal probe
+            bare = low.difference(run["reach"].buffer(0.01))
+            if any(bare.contains(q) for q in metal_at):
+                blind.append(where)
+        if not runs:
+            err("fit_rules.floor_runs() returned no run on a shell with a floor -- the sheet calls "
+                "them, and nothing was checked")
+        if blind:
+            err(f"SELF-TEST: with the fillet taken out of the section, the probe still reads metal "
+                f"at {blind[0]}" + (f" and {len(blind) - 1} more" if len(blind) > 1 else "") +
+                " -- the section cannot tell a filleted floor from a sharp one")
+        # WHAT HANGS OVER THEM. The rule's own numbers, printed where the metal is checked: a
+        # machine-placed part must clear a fillet; a supercap does at nominal, and at max
+        # material only if the pouch's edge is the thin margin it is taken to be.
+        rows = [(gap, ref, kind) for run in runs for ref, kind, gap in run["under"].get(vname, [])]
+        for kind in ("part", "cap nominal", "cap margin", "cap max"):
+            sel = sorted(x for x in rows if x[2] == kind)
+            if sel:
+                print(f"          over a fillet, {kind:11s} tightest {sel[0][1]} {sel[0][0]:+.3f} mm"
+                      + ("   <- a square-edged can at max material; see the note below" if kind == "cap max" and sel[0][0] < 0 else ""))
+        need = fr.floor_cap_margin_needed().get(vname, 0.0)
+        if any(x[2] == "cap max" and x[0] < 0 for x in rows):
+            note(f"PROVISIONAL: the fillets under the supercaps' edges clear a can only if it is "
+                 f"thinner than its stated maximum for {need:.2f} mm in from its max-material "
+                 f"outline (taken to be so for {fr.FLOOR_CAP_MARGIN:.2f}: a foil pouch's sealed "
+                 f"margin, which the datasheet does not dimension) -- TODO.md has the caliper check")
+        if len(_ERRORS) == pre:
+            ok(f"{len(runs)} floor fillets are R{runs[0]['r']:g} in the metal "
+               f"({sum(r_['s1'] - r_['s0'] for r_ in runs):.1f} mm of wall; {n_pr} probes {lbl}: metal "
+               f"{FLOOR_PROBE} mm inside each edge, air {FLOOR_PROBE} mm outside it and at both "
+               f"ends of every run); the same cut with each fillet taken out fails all "
+               f"{len(runs)}, as it must")
 
     return len(_ERRORS), len(_WARNS)
 

@@ -145,6 +145,23 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   the options are the ones the decision passed over: print the four rails as separate pieces, or
   bridge each past its mid-edge boss.
 
+- [ ] **[BENCH — before the titanium is ordered] Put a caliper on a supercap's edge: the floor fillets stand under it**
+  _(2026-11-15, opened with the floor fillets.)_ The south and north floor fillets of the max
+  and lite shells stand under the outer edge of all four supercaps. A can at nominal clears
+  them. A can at max material does so **only if it is thinner than its stated 1.70 mm for the
+  first 0.33 mm in from its outline** (max shell; 0.09 on lite) — `fit_rules.floor_cap_margin_needed()`,
+  held against `FLOOR_CAP_MARGIN` 0.50, which is an ASSUMPTION about a foil pouch's sealed
+  margin that the SCHURTER datasheet does not dimension (DRH's photograph of a WS17F shows the
+  margin; nothing here has measured one). **Measure, on an SS17 and a WS17, along a short
+  edge: thickness at the edge, and 0.1, 0.2 and 0.35 mm in from it.** On the max shell it
+  passes if the can is no thicker than **1.51 mm at its edge, 1.58 at 0.1 mm in, 1.64 at
+  0.2**, and reaches its full 1.70 no nearer than 0.33 mm in; the governing figures are
+  printed by `scripts/assembly_drc.py` [K] on every run. Then set `FLOOR_CAP_MARGIN` to what
+  was measured and delete "PROVISIONAL" where it is said. If the measurement is under the
+  need, `floor_runs()` refuses to build — by design, a run is refused, not shortened — and
+  the four short-wall runs have to come off; the four long-wall runs stand under nothing and
+  stay.
+
 - [ ] **[BENCH — first-article gate] Sweep the LED's I-V curve, and the loop current in situ**
   _(2026-08-20. Added after an ASIC-side analysis published a wrong finding off the back of the
   gap: `asic/analog/README.md` briefly claimed a worst-bin LED cannot light at the 2.75 V glow
@@ -1492,6 +1509,77 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
       straight wall has no vertices between its ends to test, a round's arc comes within any
       tolerance of the line it is tangent to, and a rolled ball cannot reach the corners of
       its own window.
+
+  **THE FLOOR MEETS THE WALL THROUGH A RADIUS, 2026-11-15 (DRH: "to have the floor meet the sides
+  at a curve using a ball endmill ... to give a slight amount of support to the thin 1mm floor";
+  then R1.0, and none "for any place that has an interface between the brace and titanium";
+  then, on a prototype of eight straight runs, "apply as you displayed") — SO THE MAX AND LITE
+  SHELLS CHANGED ONCE MORE.** The air frame has no floor and did not. Board coordinates; this
+  repo's instruments, on a local build with CI's pins.
+  - **Eight runs, 133.37 mm.** An R1.00 fillet (`fit_rules.floor_runs()`) on each long straight
+    stretch of cavity wall that no brace comes near anywhere along it — the walls of the four
+    supercap bays:
+    - south wall x 5.37–22.08 and x 28.42–45.43; north wall x 5.37–22.08 and x 28.92–45.43;
+    - west wall y 7.65–23.85 and y 65.05–81.25; east wall y 7.85–24.89 and y 64.02–81.04.
+    Not the middle of either long wall: the brace bears on the east one from end to end and on
+    the middle of the west one, and a run is a whole stretch or none, so no run ends in mid-wall.
+    Not round the bosses, whose flats are 2.3–3.2 mm long. The same eight on both shells.
+  - **How a run ends.** 0.50 short of the feature at each end of its stretch (a boss's blend, a
+    corner boss's bore, a tab's root), in the scoop a FLAT cutter of the same radius leaves where
+    it finishes the sharp corner beyond: a vertical R1.00 cylinder. Two cutters of one radius
+    leave the last 0.3 mm of each run as a feather against the wall; that is the deburr note's.
+  - **Each run is three true cylinders** — one lying along the wall, one standing at each end —
+    each set 0.002 mm past tangent like every blend here, so the fillet as modelled reaches
+    0.935 mm from the wall and 0.935 up it. Everything that has to clear it is measured to a
+    tangent one, 1.00. The nearest brace is 1.05 mm past that.
+  - **WHAT STANDS OVER IT, AND WHAT IS NOT CLEARED.** Nothing machine-placed hangs over any
+    run. The south and north runs stand under the supercaps' edges:
+    - a can at its nominal outline is 0.95 from the wall, past the toe: **0.050 mm clear** on
+      the max shell with the cavity 0.05 shallow (0.170 on lite);
+    - a can at MAX MATERIAL, taken as square-edged, stands 0.35 from the wall where the fillet
+      is 0.24 high: **0.187 mm into it** on max (0.067 on lite). That is not cleared. DRH's
+      answer, with a photograph of a WS17F: the can is a foil pouch — "rectangular pillows with
+      a general maximum height ... the thickness is not even, particularly on the extreme
+      edges" — and its outline is the sealed margin, not the body;
+    - so the rule is stated as what it needs: **the can must still be thinner than its stated
+      1.70 for 0.33 mm in from its max-material outline** on the max shell (0.09 on lite,
+      `floor_cap_margin_needed()`), against a margin TAKEN to be 0.50
+      (`FLOOR_CAP_MARGIN`, **PROVISIONAL**). The datasheet does not dimension the margin. The
+      bench item above ("Put a caliper on a supercap's edge") is what makes it a measurement.
+  - **The numbers.**
+    - OCC on the STEPs: **5296.159 / 3933.158 mm³** (max / lite; were 5269.930 / 3906.929), air
+      961.850 unchanged. STL 5296.11 / 3933.15. +26.23 mm³ each, **0.12 g** of titanium: the
+      fillet's section as cut is 0.2108 mm², 28.11 mm³ over the eight runs before the sixteen
+      ends are scooped.
+    - Max STEP **30,783 edges, 10,411 faces**; lite **972 / 373** (+72 / +24 each: three faces a
+      run). 37 faces under 0.001 mm², as before; none shared by more than two.
+    - `scripts/assembly_drc.py` **[K]**, new: on the cut just above the floor, metal 0.06 mm
+      inside each fillet's edge and air 0.06 mm outside it at three stations, air at both ends
+      of every run and beyond them — 80 probes a shell — and the same cut with each fillet
+      taken out fails all eight. It prints the three supercap figures above and says
+      PROVISIONAL. All three variants 0 errors.
+    - **[G] moved up.** The lip check sectioned the shell at mid-cavity; on the lite shell an
+      R1.00 fillet is still 0.07 mm of metal there, and the lip note describes the lip. It
+      reads the cut just under the seat now, below the lip-break and above the fillets.
+    - `check_consistency` **[8]**, new step 4f: eight runs; each brace's footprint against
+      each run's wall, by an instrument that owes `floor_runs()` nothing; the margin needed
+      against the margin taken; and a synthetic part planted over a run must be seen.
+    - The shell generator refuses to export a floored shell without each run's lying cylinder
+      among its faces, and proves a run moved 0.5 mm off its wall is reported missing.
+  - **The sheet.** Note 7 is the fillet — "FLOOR MEETS WALL THROUGH R1.00 (Ø2.0 BALL END MILL),
+    MODELED, ON 8 RUNS (133.4 mm; HEAVY DASH ON THE PLAN), EACH STOPPING 0.50 SHORT OF THE BOSS
+    OR TAB AT EITHER END. FLOOR CORNER SHARP ELSEWHERE." — the plan draws each run to scale,
+    and Section A-A shows the arc. The block was full, so the note that said only "NO U7 RELIEF
+    POCKET" gave up its line: the floor note says "NO U7 POCKET" itself. Every later note keeps
+    its number. Also moved: the "0.10×45° FRAME (2 PL)" label, which had been set across the
+    section's own title on every committed sheet.
+  - **What the first build got wrong.** The fillet's toe. A cylinder set 0.002 into wall and
+    floor leaves the floor at 0.935 from the wall, dips under it, and comes up again at 1.061;
+    the first rules took 1.061 for the toe and cut the cover out to 1.11, which would have left
+    a ridge 0.004 mm high along every run. The prototype's cover stopped at 1.05 by luck. The
+    cover stops at 1.03 now, on purpose, and says why.
+  - **Still DRH's, and the fillet follows whichever way they go:** the bore beside each corner
+    boss (the south and north runs end 0.50 short of it) and the two tabs' widths.
 
 - [ ] **[SOURCING — lite/air] Pick the thin supercap MPN**
   _(2026-08-07, opened with the three-variant round.)_ `part_heights.SUPERCAP_H_THIN = 1.00`
