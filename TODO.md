@@ -145,7 +145,7 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   the options are the ones the decision passed over: print the four rails as separate pieces, or
   bridge each past its mid-edge boss.
 
-- [ ] **[DECISION — DRH] The brace against PCBWay: its fit, its thin walls and its layers are all finer than what PCBWay states**
+- [ ] **[DECISION — DRH] The brace against PCBWay, and against five US services: its fit, its thin walls and its layers are finer than what PCBWay states, and nearly inside what Protolabs does**
   _(2026-11-15. DRH: "it's going to be pcbway. Check against their capabilities before we make
   decisions on sizing constraints." Checked; NOTHING is resized yet.)_
   - **What PCBWay states for SLA** (their pages, read 2026-11-15; where two disagree both are
@@ -176,8 +176,10 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
     every level, and the resin's thickness read under every pocket on a 0.1 mm grid):
     - **Fit:** 0.05 mm a side to every face of the shell. Four dimensions seat it, each with
       0.10 mm in all to give: 47.20 wall to wall, 84.80 between the forks' seats, 26.90
-      between the two east bosses, 3.60 across a fork's slot. **±0.2 is four times that;
-      ±0.1 is twice it.** Two of the four are flat walls and can be sanded. The fork and
+      between the two east bosses, 3.60 across a fork's slot. **A print 0.2 over is twice
+      that; 0.1 over is all of it.** _(This read "four times ... twice" at first: ±0.2 set
+      against the 0.05 at ONE end. A dimension seats if the worst oversize is no more than
+      the allowance at both ends together.)_ Two of the four are flat walls and can be sanded. The fork and
       the boss nests cannot.
     - **Walls under 0.5 mm:** four, on both braces, all of them the ferrite channel's own —
       0.33 tall on a 1.47 (max) or 0.89 (lite) base: the ridge east of it, 0.40 wide for
@@ -201,7 +203,38 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
     - **Height:** the sheet says print 0.1 proud and sand the bottom. The committed STL is
       the sanded size, so there is no file to send that IS proud — and ±0.2 on thickness is
       twice the 0.1.
+  - **US services, read the same day** (DRH, on the comparison above: "Let's look for an
+    American printer instead that fits our requirements better"). Each one's own published
+    figures, with one exception: Stratasys Direct's pages refused the connection, and its row
+    is what a search quoted of them. Four of the five list Accura Xtreme White 200 (Stratasys
+    Direct's whites were not read), an ABS-like white: 55 ± 10 MPa, 9 ± 5 % elongation,
+    heat-deflection 47 °C at 0.46 MPa — "the lowest of all SLA materials", in Protolabs'
+    words; opacity is stated by none.
+
+    | service | X/Y tolerance as stated | on 3.60 / 26.90 / 47.20 / 84.80 | fit a side that covers it | minimum wall or feature | layer |
+    |---|---|---|---|---|---|
+    | **Protolabs, industrial SLA** (its own plants — Raleigh area, NC, by the trade press; its page does not say) | ±0.05 mm for the first inch plus 0.1 % of length | 0.054 / 0.077 / 0.097 / 0.135 | **0.067** — three of the four are inside 0.05 | wall 0.152 mm in ABS-Like White at high resolution (0.305 at normal); feature 0.127 in X–Y, 0.406 in Z | 0.0508 high, 0.1016 normal |
+    | Stratasys Direct, HD SL | ±0.005 in or ±0.001 in/in, the greater | 0.127 on all four | 0.064 — none inside 0.05 | feature 0.254, smaller case by case | not read (their pages refused the connection) |
+    | Prototek (Contoocook, NH) | ±0.005 in first inch + 0.0015 in/in | 0.127 / 0.129 / 0.160 / 0.216 | 0.108 | feature 0.152 "depends on geometry"; its guide gives walls 0.51 supported, 1.02 unsupported | 0.0508 / 0.1016 |
+    | Xometry (partner network; where a part is made is not stated) | ±0.005 in first inch + 0.002 in/in | 0.127 / 0.130 / 0.171 / 0.246 | 0.123 | high res: under 0.51 at risk, under 0.254 will not build | 0.05 / 0.1 |
+    | Quickparts | ±0.005 in first inch + 0.002 in/in | as Xometry | 0.123 | high res: wall 0.381, feature 0.254 | 0.051 / 0.102 |
+    | PCBWay, for comparison | ±0.2 mm under 100 mm | 0.200 on all four | 0.100 | 0.5 at 5 × 5 mm | 0.1 |
+
+    Ruled out by their own minimum walls: PolyJet white (Protolabs' Digital White, 0.762 mm),
+    Carbon DLS (about 1 mm), and Formlabs-machine lines (Protolabs' own: wall 0.5 mm, ±0.3 %
+    with a ±0.3 mm floor — and fulfilled through its network, not its US plant).
+    - **Closest: Protolabs, industrial SLA, high resolution, ABS-Like White.** Against the
+      brace as built: no wall or web is under its minimum (0.26 the thinnest wall, 0.45 the
+      thinnest web); layers half PCBWay's; three of the four seating dimensions inside the
+      0.05 fit, and the fourth — 84.80 between the forks — over by 0.035 mm in all, which
+      0.07 a side covers.
+    - **Open at Protolabs:** the channel's walls are 0.33 tall, under its 0.406 minimum
+      feature in Z; its Z tolerance is ±0.127 mm for the first inch, on a channel whose depth
+      has 0.10 to play with; the resin's 47 °C; and no price has been read — that needs the
+      file put into their quoting tool, which is DRH's to do.
   - **To decide (each is DRH's):**
+    0. **The printer.** PCBWay, as first said, or Protolabs (above). The other sizes follow
+       from it.
     1. **The fit.** Keep 0.05 and let a first print say what PCBWay really holds; or open it
        to 0.10 a side, which covers their stated ±0.2 at its worst; or ask them for a
        tolerance on the four dimensions (their "manual quote review").
@@ -1889,7 +1922,7 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
     apart and each stands 0.05 mm off its tab; a Form 4's stated tolerance on a feature that
     long is ±0.3 % (lower limit ±0.15 mm), three times the allowance at its smallest. _(That
     was the wrong printer — the brace's print spec named a Formlabs class. It is PCBWay, whose
-    stated ±0.2 mm is four times the allowance on all four seating dimensions, not just this
+    stated ±0.2 mm is twice the allowance on all four seating dimensions, not just this
     one: the DECISION item above.)_ The
     square-ended arm had the same 0.05 at each tip, and could be sanded. DRH asked for the
     exact fit knowing the curves cannot be ("let's try"), so it is cut as asked, and the bench

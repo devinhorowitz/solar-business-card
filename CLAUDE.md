@@ -916,7 +916,10 @@ red, the check itself fails.
   0.8 at 10 × 10). Four dimensions seat the brace and each has 0.10 mm in all to give; the four
   ferrite-channel walls are under the smallest wall in that table; so are thirteen webs on the
   lite brace and two on the max. None of it is resized: `TODO.md`, "The brace against PCBWay",
-  has the comparison and the open decisions. **A fit is a claim about a process — find out
+  has the comparison, the five US services DRH then asked for (Protolabs' industrial SLA is the
+  closest), and the open decisions. **Do the sum as the part meets it:** a dimension seats if
+  the print's worst oversize is no more than the allowance at BOTH ends together — the first
+  write-up set ±0.2 against the 0.05 at one end and called it four times too tight; it is twice. **A fit is a claim about a process — find out
   whose process before choosing the number**, and when a spec names a class of machine, ask
   whether anyone has said where the part will actually be made.
 - **A ledger entry is a standing waiver, so a ledger audits itself.** `scripts/interference_drc.py`'s
