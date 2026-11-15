@@ -915,13 +915,27 @@ red, the check itself fails.
   under 100 mm, 0.1 mm layers, and a minimum wall that grows with the wall (0.5 mm at 5 × 5 mm,
   0.8 at 10 × 10). Four dimensions seat the brace and each has 0.10 mm in all to give; the four
   ferrite-channel walls are under the smallest wall in that table; so are thirteen webs on the
-  lite brace and two on the max. None of it is resized: `TODO.md`, "The brace against PCBWay",
+  lite brace and two on the max. None of it was resized then: `TODO.md`, "The brace against PCBWay",
   has the comparison, the five US services DRH then asked for (Protolabs' industrial SLA is the
-  closest), and the open decisions. **Do the sum as the part meets it:** a dimension seats if
+  closest, and was chosen: (6)), and what is still open. **Do the sum as the part meets it:** a dimension seats if
   the print's worst oversize is no more than the allowance at BOTH ends together — the first
   write-up set ±0.2 against the 0.05 at one end and called it four times too tight; it is twice. **A fit is a claim about a process — find out
   whose process before choosing the number**, and when a spec names a class of machine, ask
   whether anyone has said where the part will actually be made.
+  **(6) Decided the same day: Protolabs, and 0.07 a side** (DRH: "6A Protolabs, 6B 0.07
+  everywhere"). `fit_rules.WALL_FIT` is 0.07, `PRINT_XY_TOL` is Protolabs' stated X/Y tolerance,
+  and check [8] 4g refuses a fit that does not cover it on the brace's longest dimension. Two
+  things that change found, each a rule. **List the dimensions a fit has to cover by asking
+  the outline which of its faces face each other, not by naming the ones that come to mind:**
+  the comparison the decision was made on counted four and took 84.80 (fork seat to fork
+  seat) as the longest, and the prongs' noses stand at the fit from the two recess walls as
+  well, 88.66 apart — 0.07 covers that by 0.001 mm, on the wider reading of Protolabs'
+  sentence. **And a fit shared with a second part is that part's too:** the reflow shim's
+  plate stood `WALL_FIT` inside the cavity rectangle and would have moved with a decision
+  about a printer it is not made on; it stands `fit_rules.SHIM_INSET` there now, unchanged.
+  The shells do not read the fit and did not move. What is still open with the printer — a
+  quote, the 0.33 mm channel walls against a 0.406 mm minimum feature in Z, heat, opacity — is
+  in `TODO.md`.
 - **A ledger entry is a standing waiver, so a ledger audits itself.** `scripts/interference_drc.py`'s
   `EDGE_LEDGER` excused seven parts from the cavity rectangle and had excused nothing since
   2026-08-08: six had been moved inboard and the seventh, C7, was deleted from the board the day

@@ -958,6 +958,34 @@ def check_enclosure_fit():
                 err(f"SELF-TEST: the {vn} brace with resin planted {fr.FLOOR_BRACE_CLR / 2:.2f} mm "
                     f"from a floor fillet still reads as clear of it -- the test above cannot fail")
                 bad += 1
+    # 4g. THE FIT COVERS WHAT THE PRINTER STATES (2026-11-15, DRH: "6A Protolabs, 6B 0.07
+    # everywhere"). A fit is a claim about a process, and until that day it was a number beside
+    # a sentence: 0.05 mm a side, under a print spec that named one class of machine and then a
+    # service whose stated accuracy was twice what 0.05 allows. The brace lies between facing
+    # faces of the shell at WALL_FIT a side, so a dimension seats if the print's worst oversize
+    # is no more than 2 x WALL_FIT. Held here on the footprint's two extents, which bound every
+    # such dimension from above (88.66 is one: the prongs' noses on the two recess walls).
+    _pfit = {}
+    for vn, v in fr.VARIANTS.items():
+        if not v["brace"]:
+            continue
+        _bx0, _by0, _bx1, _by1 = unary_union(fr.brace_footprint(span=v["span"])).bounds
+        for _ax, _len in (("x", _bx1 - _bx0), ("y", _by1 - _by0)):
+            _pfit[(vn, _ax)] = (_len, fr.print_xy_tol(_len))
+            if fr.print_xy_tol(_len) > 2 * fr.WALL_FIT + 1e-9:
+                err(f"the {vn} brace is {_len:.2f} mm in {_ax} between faces of the shell it stands "
+                    f"WALL_FIT {fr.WALL_FIT} off at each end, and the printer states "
+                    f"+/-{fr.print_xy_tol(_len):.3f} on that length (fit_rules.PRINT_XY_TOL): a "
+                    f"print at the top of its tolerance is {fr.print_xy_tol(_len) - 2 * fr.WALL_FIT:.3f} mm "
+                    f"too long to drop in. Open the fit, or change the printer WITH its figures")
+                bad += 1
+    # canary: the fit this replaced, 0.05, must be refused on the longest of them
+    _plong = max(l_ for l_, _t in _pfit.values())
+    if fr.print_xy_tol(_plong) <= 2 * 0.05 + 1e-9:
+        err("SELF-TEST: a 0.05 mm fit reads as covering the printer's stated tolerance on the "
+            f"brace's {_plong:.2f} mm length -- it was 0.035 mm short on a shorter one, so the "
+            "test above cannot fail")
+        bad += 1
     _fneed = fr.floor_cap_margin_needed()
     if max(_fneed.values()) > fr.FLOOR_CAP_MARGIN + 1e-9:
         err(f"the floor fillets need a supercap to be thin for {max(_fneed.values()):.2f} mm in "
@@ -1050,7 +1078,9 @@ def check_enclosure_fit():
            + ", ".join(f"{g:.2f} mm from the {vn} brace" for vn, g in _fbr.items())
            + f", under no machine-placed part, and under the supercaps' edges for "
            f"{max(_fneed.values()):.2f} mm of a margin TAKEN to be {fr.FLOOR_CAP_MARGIN} "
-           f"(PROVISIONAL); guaranteed ring "
+           f"(PROVISIONAL); the brace's fit, {fr.WALL_FIT} a side, covers the printer's stated "
+           f"+/-{fr.print_xy_tol(_plong):.3f} on its longest dimension ({_plong:.2f} mm) by "
+           f"{2 * fr.WALL_FIT - fr.print_xy_tol(_plong):.3f} (0.05 a side does not); guaranteed ring "
            f"relieved around {len(_reliefs) - len(fr.lip_tabs())} part(s) and given up at the "
            f"{len(fr.lip_tabs())} short-edge tabs, all bodies >={fr.LIP_CLR} clear of it")
 

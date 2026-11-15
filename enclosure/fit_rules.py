@@ -255,9 +255,12 @@ CLR = 0.25                 # in-plane clearance around a part
 SLA_WEB = 0.40             # thinnest resin that may remain OVER a pocket
 SLA_WALL = 0.60            # thinnest in-plane feature we will print
 PRINT_WALL = 0.25          # ...and the floor UNDER that, for the few features let off SLA_WALL on
-                           # purpose (the ferrite channel's own walls, the TP2/TP3 neck): the wall
-                           # the print spec's printer class holds (enclosure/brace/README.md, DRH
-                           # 2026-11-13). An exception from 0.60 is not an exception from this --
+                           # purpose (the ferrite channel's own walls, the TP2/TP3 neck). Set
+                           # 2026-11-13 as the wall a Formlabs Form 3/4-class machine holds; the
+                           # printer is Protolabs since 2026-11-15, which states a 0.152 mm
+                           # minimum wall for ABS-Like White at high resolution, so 0.25 is
+                           # inside what it states with 0.10 to spare and is left where it was
+                           # (enclosure/brace/README.md). An exception from 0.60 is not an exception from this --
                            # the channel's east ridge tapered to NOTHING at both ends until
                            # 2026-11-14, two feather tips no printer class holds.
 SPAN_LIMIT = GAP - AIR - SLA_WEB          # 1.18 (comment said 1.28 until 2026-08-07 --
@@ -269,7 +272,46 @@ DROPPED_AREA = 0.0         # set by brace_footprint(): support given up to stay 
 DROPPED_COUNT = 0
 DROPPED = []               # ...and the pieces themselves, so a caller can say WHAT was given up
                            # (the brace drawing: all four solar-cell tab rails, 2026-11-12)
-WALL_FIT = 0.05            # brace-to-cavity-wall contact fit
+WALL_FIT = 0.07            # brace to shell, a side, on EVERY face the brace reaches: walls,
+                           # bosses, tabs. 0.05 until 2026-11-15, when DRH chose the printer
+                           # and the fit together ("6A Protolabs, 6B 0.07 everywhere"). A
+                           # dimension between two FACING faces of the shell seats if the
+                           # print's worst oversize is no more than the fit at both its
+                           # ends, 2 x WALL_FIT = 0.14. Against print_xy_tol() below, as
+                           # measured on the footprint:
+                           #    88.66  nose to nose, the prongs' ends on the recess walls
+                           #           +/-0.139   inside by 0.001
+                           #    84.76  fork seat to fork seat (the tabs' tips)
+                           #           +/-0.135   inside by 0.005  (0.035 OVER at 0.05)
+                           #    47.16  wall to wall                +/-0.097
+                           #    28.67  the block between two mid-span bosses, at most
+                           #           +/-0.079
+                           #     3.65  the slot across a tab (an inside dimension: it is
+                           #           the worst UNDERSIZE that binds)   +/-0.054
+                           # The fork seats and the boss nests are curves and cannot be
+                           # sanded; the noses and the long walls are flat and can. The sum
+                           # counts the print alone: what the machined cavity is off by
+                           # adds to it. check_consistency [8] 4g holds the fit to the
+                           # stated tolerance; TODO.md has the services compared.
+PRINT_XY_TOL = (0.05, 0.001)   # the printer's stated accuracy in the build plane, as (mm, mm
+                           # per mm of length): Protolabs, stereolithography, "X/Y axis:
+                           # +/-0.002 in. (+/-0.05mm) for the first inch (25.4mm), plus 0.1%
+                           # of nominal length" (their SLA page, read 2026-11-15; one row,
+                           # not split by resolution). Taken as 0.05 + 0.1 % of the WHOLE
+                           # length, the wider of the two ways that sentence reads. In Z
+                           # they state +/-0.127 the same way; no fit here is held to it.
+SHIM_INSET = 0.05          # ...and what a plate that is NOT a brace stands inside the same
+                           # outline (brace_cavity(nest=False): scripts/reflow_shim.py). It
+                           # was WALL_FIT while that was 0.05, and it is a fit to nothing --
+                           # the plate lies on the bare board at reflow, with no shell round
+                           # it -- so it does not follow the brace's fit to a printer the
+                           # plate is not made on. The shim's outline is unchanged.
+
+
+def print_xy_tol(length):
+    """+/- what the printer states it holds on a dimension of `length` mm in the build plane."""
+    return PRINT_XY_TOL[0] + PRINT_XY_TOL[1] * length
+
 
 # ---- shell ----------------------------------------------------------------------------
 BOSS_R = 2.60
@@ -463,7 +505,8 @@ def brace_cavity(nest=True):
 
     nest=False is the outline as it was: the rectangle, and (in brace_footprint) the boss
     circles. scripts/reflow_shim.py asks for it -- that plate lies on the bare board at reflow,
-    with no shell round it, and has no tab to hug or boss to nest against.
+    with no shell round it, and has no tab to hug or boss to nest against. Nor a fit to hold:
+    it stands SHIM_INSET inside the rectangle, where the brace stands WALL_FIT inside the void.
 
     WHY IT IS THE VOID AND NOT THE RECTANGLE ALONE (2026-11-12). cavity_rect() is the scalar
     rectangle _CAV -- a 1.00 mm east lip -- and the brace used to be cut from it alone. The
@@ -482,9 +525,9 @@ def brace_cavity(nest=True):
     is the void with the finisher's radius applied."""
     if nest:
         region = cavity_as_milled().intersection(recess_poly())
-    else:
-        region = cavity_rect().intersection(cavity_as_milled())
-    return region.buffer(-WALL_FIT, join_style=1, resolution=64)
+        return region.buffer(-WALL_FIT, join_style=1, resolution=64)
+    region = cavity_rect().intersection(cavity_as_milled())
+    return region.buffer(-SHIM_INSET, join_style=1, resolution=64)
 
 
 def cavity_as_milled(tool_r=TOOL_R):
@@ -526,10 +569,11 @@ def brace_footprint(span=None, keepout=None, nest=True):
                     key=lambda g: -g.area)
     # 0.01 until the outline nested. A chord across an arc that hugs a CONVEX corner of the
     # shell (a tab's tip, a boss's round) stands nearer the metal than the arc does, by up to
-    # the tolerance: at 0.01 the nested outline came 0.040 mm from titanium where WALL_FIT says
-    # 0.050. At 0.005 it is 0.045 at the least and 0.055 at the most, on 220 vertices instead
+    # the tolerance: at 0.01 the nested outline came 0.040 mm from titanium where WALL_FIT said
+    # 0.050. At 0.005 it was 0.045 at the least and 0.055 at the most, on 220 vertices instead
     # of 160 -- and still coarse enough to lose the 0.004 mm nicks the opening leaves at the
-    # corners of a through-cut, which a finer pass kept as edges (lite, six of them).
+    # corners of a through-cut, which a finer pass kept as edges (lite, six of them). (With
+    # the fit at 0.07 the same tolerance gives 0.065 at the least.)
     _tol = 0.005 if nest else 0.01
     pieces = [g.simplify(_tol, preserve_topology=True) for g in pieces if g.area >= MIN_PIECE]
 
@@ -602,6 +646,8 @@ def _mk_variants():
             shell_name="solar-glow-drh-v4_0-backshell-0p6b-brace-Ti-max",
             brace_name="solar-glow-drh-diffuser-brace",
             coverage_floor=0.32,   # ledgered min. UNCHANGED 2026-11-15 and re-measured: 32.82 %.
+                                   # (32.83 % with the fit at 0.07, later that day: brace and
+                                   # denominator both stand 0.02 further in, 1331.60 of 4056.5.)
                                    # Both terms moved when the brace nested (brace_cavity):
                                    # the footprint 1319.30 -> 1333.19 mm2, and the floor it is
                                    # a share of 3912.9 -> 4062.1 mm2, because the void beside

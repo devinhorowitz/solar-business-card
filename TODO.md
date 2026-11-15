@@ -145,9 +145,58 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   the options are the ones the decision passed over: print the four rails as separate pieces, or
   bridge each past its mid-edge boss.
 
-- [ ] **[DECISION — DRH] The brace against PCBWay, and against five US services: its fit, its thin walls and its layers are finer than what PCBWay states, and nearly inside what Protolabs does**
+- [ ] **[DECIDED IN PART — DRH, 2026-11-15: the printer is Protolabs and the fit is 0.07 mm a side. Open: a quote, and four things to ask or accept] The brace against PCBWay, and against five US services**
   _(2026-11-15. DRH: "it's going to be pcbway. Check against their capabilities before we make
-  decisions on sizing constraints." Checked; NOTHING is resized yet.)_
+  decisions on sizing constraints." Then, on the PCBWay comparison: "Let's look for an American
+  printer instead that fits our requirements better." Then, on the US comparison: **"6A
+  Protolabs, 6B 0.07 everywhere."**)_
+  - **WHAT WAS DECIDED, AND WHAT IT DID.** The brace is printed by Protolabs — its own
+    Stereolithography line, high resolution (0.05 mm layers), ABS-Like White (Accura Xtreme
+    White 200) — and `fit_rules.WALL_FIT` went 0.05 → 0.07 on every face. Rebuilt and
+    measured:
+    - the brace stands 0.064 mm from titanium at the least (it was 0.045), 47.16 × 88.66 mm
+      overall; footprint 1331.60 mm² max and 1102.19 lite (−1.59 each: about 80 mm of the
+      outline faces the shell); volume 1947.99 and 1155.67 mm³. The shells did not move — no
+      rule of theirs reads the fit, and the eight floor fillets are the same eight.
+    - **the fit covers Protolabs' stated X/Y tolerance on every dimension that lies between
+      two facing faces of the shell**, taken as 0.05 mm + 0.1 % of the whole length:
+
+      | between | mm | stated ± | fit at both ends | margin |
+      |---|---|---|---|---|
+      | the prongs' noses, on the two recess walls | 88.66 | 0.139 | 0.14 | +0.001 |
+      | the two forks' seats, on the tabs' tips | 84.76 | 0.135 | 0.14 | +0.005 |
+      | the two long walls | 47.16 | 0.097 | 0.14 | +0.043 |
+      | two mid-span bosses, across a block (at most) | 28.67 | 0.079 | 0.14 | +0.061 |
+      | a fork's slot, across a tab (inside: undersize binds) | 3.65 | 0.054 | 0.14 | +0.086 |
+
+      **The first row was not in the comparison DRH decided on.** That counted four seating
+      dimensions and took 84.80 as the longest; the prongs' noses stand at the fit from the
+      recess walls too, 88.70 apart at the 0.05 fit. It needs 0.0694 a side where 84.80
+      needed 0.0674, so 0.07 still covers it — by a thousandth, on the wider reading of
+      Protolabs' sentence (0.1 % of the length beyond the first inch would be ±0.113). The
+      noses are flat ends and can be touched with a file; the forks' seats cannot.
+    - `scripts/check_consistency.py` [8] 4g now refuses a fit that does not cover
+      `fit_rules.PRINT_XY_TOL` on the brace's longest dimension, with 0.05 as its canary.
+    - the reflow shim did not move: its plate stood `WALL_FIT` inside the cavity rectangle,
+      which is a fit to nothing, and stands `fit_rules.SHIM_INSET` 0.05 there now.
+    - the brace sheet's notes 2 and 4, its title block, `PRINT_WALL`'s comment and the brace
+      README's print spec name the printer and the resin.
+  - **STILL OPEN — each needs DRH or Protolabs:**
+    1. **A quote.** No price has been read. It needs the STL put into Protolabs' quoting
+       tool, which is DRH's to do; the tool also reports thin features. Send the brace from
+       the merged build, not the one committed before the nest (84.8 mm long).
+    2. **The channel walls' height.** 0.33 mm, under Protolabs' 0.406 mm minimum feature in
+       Z. They are low ribs on a thick base; ask with the quote.
+    3. **Z.** Their stated Z tolerance is ±0.127 mm. The channel's depth has 0.10 in all
+       (a 0.38 sheet stands 0.05 proud by design), and the height fit plans to sand 0.1 off
+       the bottom. 0.33 is also not on a 0.0508 layer.
+    4. **The resin's heat.** Heat-deflection 47 °C at 0.46 MPa. Nothing here states a
+       temperature the brace must stand; a card left in a car will pass it.
+    5. **Opacity.** Not stated on any page; the brace must be opaque white.
+    6. **The file.** Whether the generator should also write a print file with stock on the
+       bottom for sanding — unchanged from before.
+  - **The record of the comparison follows.** Its "what the brace asks" figures are the
+    brace at the 0.05 fit (`56680ce`).
   - **What PCBWay states for SLA** (their pages, read 2026-11-15; where two disagree both are
     given):
     - **Accuracy:** "L<100mm, ±0.2mm. L>100mm, ±0.2%*L" (SLA page and 3D-printing page, the
@@ -232,7 +281,9 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
       feature in Z; its Z tolerance is ±0.127 mm for the first inch, on a channel whose depth
       has 0.10 to play with; the resin's 47 °C; and no price has been read — that needs the
       file put into their quoting tool, which is DRH's to do.
-  - **To decide (each is DRH's):**
+  - **What there was to decide, as it stood before DRH's answer** (0 and 1 are decided at
+    the top of this item; with Protolabs 2, 3 and 5 fall away — no wall or web is under its
+    minimum and the resin is named — and 4 and 6 are in the open list there):
     0. **The printer.** PCBWay, as first said, or Protolabs (above). The other sizes follow
        from it.
     1. **The fit.** Keep 0.05 and let a first print say what PCBWay really holds; or open it
@@ -249,31 +300,31 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
        and says of itself that it is not.
     6. **The file.** Whether the generator should also write a print file with stock on the
        bottom for sanding.
-  - **What would settle most of it at once:** one message to PCBWay with the STL and the four
-    dimensions — what will you hold, will your wall analysis pass it, which resin is opaque
-    white — and one test print.
-  - **Left as it is until this is decided:** `PRINT_WALL`'s comment in `fit_rules` and the
-    brace sheet's note 4 ("correct the printer's XY scale") still speak of a printer one sets
-    up oneself. Both are rewritten with whichever sizes are chosen.
+  - **What would settle most of what is open at once:** the quote, with the questions in
+    the open list put to Protolabs, and one test print.
+  - **Rewritten 2026-11-15, with the decision:** `PRINT_WALL`'s comment in `fit_rules` and
+    the brace sheet's note 4, which said "correct the printer's XY scale" of a printer nobody
+    here sets up.
 
-- [ ] **[BENCH — first brace print] Measure the print over its two forks before trusting the fit, and set the printer's XY scale from it**
-  _(2026-11-15, opened when the brace nested.)_ The brace's long arm now runs on either side of
-  each short-edge tab, and the outline stands 0.05 mm off every face of the shell it reaches
-  (`fit_rules.WALL_FIT`) — the curves round a tab or a boss included, which cannot be sanded to
-  fit the way a flat edge can. The two forks' seats are **84.80 mm apart** (y 2.05 and 86.85),
-  so the whole allowance along the brace's length is 0.10 mm. The printer is PCBWay (DRH,
-  2026-11-15), whose stated SLA accuracy is ±0.2 mm on a length under 100 mm: **a print inside
-  that can be 0.2 mm long, and will not seat** (the item above has the whole comparison; this
-  one read "Formlabs ... ±0.3 %" for an hour, from a print spec that named the wrong printer).
-  So, on the first print, before any filing: **measure seat to seat between the two
-  forks (84.80 nominal; 88.70 over the prongs' noses), across the ferrite block between the two
-  east bosses (26.90 nominal, y 31.00–57.90, on the 1 mm of flat each side has at x 47.5–48.5),
-  and the width from the west face to the east face (47.20 nominal)**. If the long figure is
-  out by more than the short ones, in proportion, it is the printer's scale: the MODEL is rescaled
-  to answer it (PCBWay prints the file as sent), and reprinted. If a
-  print at the right scale still binds on a curve, say so — the fix is then a looser fit
-  (`brace_cavity()` shrinks the void by one number, everywhere), which is DRH's call, not a
-  file. Tick this when a print has dropped in without being touched.
+- [ ] **[BENCH — first brace print] Measure the print nose to nose and over its two forks before trusting the fit**
+  _(2026-11-15, opened when the brace nested; rewritten the same day when DRH chose Protolabs
+  and a 0.07 mm fit.)_ The brace's long arm runs on either side of each short-edge tab, and the
+  outline stands 0.07 mm off every face of the shell it reaches (`fit_rules.WALL_FIT`) — the
+  curves round a tab or a boss included, which cannot be sanded to fit the way a flat edge can.
+  The fit covers what Protolabs states in X/Y on every dimension that seats the brace (the item
+  above has the table), by 0.001 mm on the longest and on the wider reading of their sentence,
+  and it counts the print's error alone: what the machined cavity is off by adds to it. So, on
+  the first print, before any filing: **measure nose to nose over the prongs (88.66 nominal),
+  seat to seat between the two forks (84.76), across the ferrite block between the two east
+  bosses (26.86, y 31.02–57.88, on the 1 mm of flat each side has at x 47.5–48.5), and the
+  width from the west face to the east face (47.16)** — and the same four openings in the
+  shell, when there is one. If the long figures are out by more than the short ones, in
+  proportion, it is scale: say so to Protolabs with the numbers and have it reprinted (the
+  model can be rescaled to answer a printer that is consistently long). If a print inside
+  their stated tolerance still binds on a curve, the fix is a looser fit (`WALL_FIT`, one
+  number, everywhere), which is DRH's call, not a file. Tick this when a print has dropped in
+  without being touched. _(This item read "Formlabs ... ±0.3 %" for an hour and "PCBWay ...
+  ±0.2 mm" for a few more, each from the printer the spec named at the time.)_
 
 - [ ] **[BENCH — before the titanium is ordered] Put a caliper on a supercap's edge: the floor fillets stand under it, and the corner-boss roots in its corner**
   _(2026-11-15, opened with the floor fillets.)_ The south and north floor fillets of the max
@@ -1921,12 +1972,12 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
   - **What is not settled: whether a print will drop in.** The two forks' seats are 84.80 mm
     apart and each stands 0.05 mm off its tab; a Form 4's stated tolerance on a feature that
     long is ±0.3 % (lower limit ±0.15 mm), three times the allowance at its smallest. _(That
-    was the wrong printer — the brace's print spec named a Formlabs class. It is PCBWay, whose
-    stated ±0.2 mm is twice the allowance on all four seating dimensions, not just this
-    one: the DECISION item above.)_ The
+    was the wrong printer — the brace's print spec named a Formlabs class. It was then PCBWay,
+    whose stated ±0.2 mm is twice that allowance on all four seating dimensions, and is
+    Protolabs since later that day: the item above on the printers, and the next record.)_ The
     square-ended arm had the same 0.05 at each tip, and could be sanded. DRH asked for the
     exact fit knowing the curves cannot be ("let's try"), so it is cut as asked, and the bench
-    item above ("Measure the print over its two forks") is what turns the first print into a
+    item above ("Measure the print nose to nose and over its two forks") is what turns the first print into a
     measurement of the printer instead of a part that will not go in. A looser nest is one
     number — but one number everywhere: a second fit for the curves alone would put a step in
     the outline wherever a curve meets a flat.
@@ -1934,6 +1985,39 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
     itemised), `interference_drc`, `assembly_drc` on all three variants, the handedness
     rehearsal and [E], and the kicad-free part of `check_consistency`. The merge run's
     handedness gate, with KiCad's export, is still the gate.
+
+  **THE BRACE'S FIT IS 0.07 AND ITS PRINTER IS PROTOLABS, 2026-11-15 (DRH: "6A Protolabs, 6B
+  0.07 everywhere") — SO BOTH BRACES CHANGED AGAIN, AND NO SHELL DID.**
+  - **What changed.** `fit_rules.WALL_FIT` 0.05 → 0.07: every face of the brace that stands off
+    the shell stands 0.02 further. 47.16 × 88.66 mm overall (47.20 × 88.70), footprint 1331.60
+    and 1102.19 mm² (−1.59 each), volume 1947.99 and 1155.67 mm³ (−2.68 and −1.76, as the
+    plan predicts once the ferrite channel along the east face is taken off), closest approach
+    to titanium 0.064 mm as modelled and 0.065 as milled. The ridge east of the ferrite
+    channel is 0.38 wide (0.40) and ends square at y 31.49 and 57.42. Coverage 32.83 % and
+    27.17 %, on a denominator that came in with the brace. The three shells' STEPs are byte
+    for byte what they were: nothing they are cut from reads the fit, and
+    `fit_rules.floor_runs()` returns the same eight runs.
+  - **What it was sized against, and the gate.** `fit_rules.PRINT_XY_TOL` is Protolabs' stated
+    X/Y tolerance and `print_xy_tol()` applies it to a length; `check_consistency` [8] 4g
+    refuses a fit that does not cover it on the brace's longest dimension, and fails itself if
+    0.05 would pass. The item above on the printers has the table.
+  - **Two things found doing it.**
+    - **The longest seating dimension had not been counted.** The comparison DRH decided on
+      listed four and took 84.80, between the forks' seats, as the longest. The prongs' noses
+      stand at the fit from the two recess walls as well — 88.70 apart then, 88.66 now — and
+      nothing had measured it because the list was made by naming the faces that came to
+      mind, where it should have been made by asking the outline which of its faces face
+      each other. It needs 0.0694 mm a side; 0.07 covers it by a thousandth. Had the answer
+      been 0.068, the gate written the same hour would have refused it.
+    - **A second part was reading the brace's fit.** `scripts/reflow_shim.py` cuts its plate
+      from `brace_footprint(nest=False)`, which stood `WALL_FIT` inside the cavity rectangle.
+      That is a fit to nothing — the plate lies on the bare board — and it would have moved
+      0.02 mm with a decision about a printer it is not made on. It has its own number now
+      (`SHIM_INSET`, 0.05), and the shim's outline is unchanged to the last digit (969.437
+      mm²).
+  - **All local gates 0 errors** on the rebuilt braces against the unchanged shells:
+    `check_mesh` (the two braces re-ledgered), `interference_drc`, `assembly_drc` on all three
+    variants, and the kicad-free part of `check_consistency`.
 
 - [ ] **[SOURCING — lite/air] Pick the thin supercap MPN**
   _(2026-08-07, opened with the three-variant round.)_ `part_heights.SUPERCAP_H_THIN = 1.00`

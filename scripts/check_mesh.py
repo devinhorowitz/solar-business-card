@@ -329,7 +329,13 @@ BASELINE = {
     # x 1.80 = 25.0, less 1.33 where the ferrite channel (0.33 deep) runs over the two east
     # nests: +23.7 predicted, +23.99 measured on the STEP and here. The west face is -23.099
     # (it was -23.100, the idealised wall). Watertight, 0 open, 0 degenerate.
-    volume_mm3=1950.66, bbox=(-23.10, -44.35, 0.0, 24.10, 44.35, 1.8),
+    # re-ledgered 2026-11-15 (the fit, DRH: "6A Protolabs, 6B 0.07 everywhere"), 1950.66 ->
+    # 1947.99, and the bbox comes in 0.02 on all four sides: fit_rules.WALL_FIT 0.05 -> 0.07,
+    # so every face that stands off the shell stands 0.02 further. Footprint 1333.19 -> 1331.60
+    # mm2 (about 80 mm of its outline faces the shell); x 1.80 = -2.87, less 0.18 where the
+    # ferrite channel (0.33 deep) runs along the east face: -2.69 predicted, -2.68 measured on
+    # the STEP and here. Watertight, 0 open, 0 degenerate.
+    volume_mm3=1947.99, bbox=(-23.08, -44.33, 0.0, 24.08, 44.33, 1.8),
         max_boundary_edges=0, max_open_len_mm=0.0, max_degenerate=0),
     # ---- the 2026-08-07 enclosure variants (fit_rules.VARIANTS) --------------------------
     # Ledgered from local builds in the variants commit itself -- the chicken-and-egg rule:
@@ -503,7 +509,10 @@ BASELINE = {
         # re-ledgered 2026-11-15 (the brace nests), 1141.41 -> 1157.43, bbox y +/-42.40 ->
         # +/-44.35: as the max brace. Footprint 1089.83 -> 1103.78 mm2; x 1.22 = 17.0, less 1.35
         # under the ferrite channel: +15.7 predicted, +16.01 measured.
-        volume_mm3=1157.43, bbox=(-23.10, -44.35, 0.0, 24.10, 44.35, 1.22),
+        # re-ledgered 2026-11-15 (the fit, WALL_FIT 0.05 -> 0.07), 1157.43 -> 1155.67, bbox in
+        # 0.02 on all four sides: as the max brace. Footprint 1103.78 -> 1102.19 mm2; x 1.22 =
+        # -1.94, less 0.18 along the ferrite channel: -1.76 predicted, -1.76 measured.
+        volume_mm3=1155.67, bbox=(-23.08, -44.33, 0.0, 24.08, 44.33, 1.22),
         max_boundary_edges=0, max_open_len_mm=0.0, max_degenerate=0),
 }
 VOL_TOL = 0.005

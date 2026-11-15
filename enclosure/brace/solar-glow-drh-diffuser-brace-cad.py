@@ -363,7 +363,7 @@ def _build(vname):
         from OCP.GProp import GProp_GProps
         from OCP.BRepGProp import BRepGProp
         g = GProp_GProps(); BRepGProp.VolumeProperties_s(brace.val().wrapped, g)
-        print(f"[{vname}] brace volume {g.Mass()/1000:.2f} cm^3 (~{g.Mass()/1000*1.15:.1f} g tough white SLA)")
+        print(f"[{vname}] brace volume {g.Mass()/1000:.2f} cm^3 (~{g.Mass()/1000*1.15:.1f} g white SLA resin, taken at 1.15 g/cm3)")
     except Exception as e: print("vol:", e)
     print(f"[{vname}] brace {len(_pieces)} piece(s), {sum(g.area for g in _pieces):.1f} mm2 = "
           f"{100*sum(g.area for g in _pieces)/_cav.area:.1f}% of the {_cav.area:.0f} mm2 cavity floor "

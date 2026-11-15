@@ -244,19 +244,29 @@ def build(vname):
                      f"({dropped_area:.0f} mm2) WOULD BACK {len(would)} OF THEM" if would else ""))
     notes=[
      "1. PART = SOLAR-GLOW DRH DIFFUSER BRACE [%s]. A DROP-IN INSERT, NOT A FASTENED OR BONDED PART. 3D STEP GOVERNS ALL GEOMETRY; THE STL IS THE PRINT SOURCE." % vname.upper(),
-     "2. PROCESS: SLA / RESIN 3D PRINT (e.g. PCBWay). MATERIAL: TOUGH WHITE RESIN. IT MUST BE OPAQUE-WHITE AND NON-CONDUCTIVE - NO CARBON / GRAPHITE-FILLED RESIN",
-     "    (WEAKLY CONDUCTIVE): THE BRACE RESTS ON GND / VS / SIGNAL COPPER, SO A DIELECTRIC IS REQUIRED. WHITE ALSO DRIVES THE WINDOW BACKING (NOTE 6).",
+     # The printer is named since 2026-11-15 (DRH: "6A Protolabs"). It read "(e.g. PCBWay)" and
+     # "TOUGH WHITE RESIN" until then -- an example and a class, under a fit that only one
+     # service's stated accuracy covers (note 4).
+     *textwrap.wrap(
+         "2. PROCESS: STEREOLITHOGRAPHY AT PROTOLABS - ITS OWN 'STEREOLITHOGRAPHY' LINE, NOT 'FORMLABS SLA' - AT HIGH RESOLUTION (0.05 LAYERS). MATERIAL: ABS-LIKE WHITE "
+         "(ACCURA XTREME WHITE 200). WHATEVER IS PRINTED MUST BE OPAQUE-WHITE AND NON-CONDUCTIVE - NO CARBON / GRAPHITE-FILLED RESIN (WEAKLY CONDUCTIVE): THE BRACE RESTS ON "
+         "GND / VS / SIGNAL COPPER, SO A DIELECTRIC IS REQUIRED. WHITE ALSO DRIVES THE WINDOW BACKING (NOTE 6).", width=190, subsequent_indent="    "),
      f"3. FIT: PRINT ~0.1 PROUD IN HEIGHT AND SAND THE FLAT BOTTOM (DATUM) DOWN TO A ZERO-AIR FIT IN THE {gap:.2f} CAVITY. ALL POCKETS ARE ON THE TOP FACE, SO THE",
      "    BOTTOM LAPS FLAT ON GLASS WITHOUT TOUCHING THEM. DO NOT SAND THE TOP (IT SETS THE POCKET DEPTHS).",
      # Wrapped like note 8: its last clause is as long as what it has to say, and that is
      # computed -- see _rails above. (It was two typed lines that happened to fit.)
      *textwrap.wrap(
-         f"4. PRECISION FIT, NO RATTLE: THE OUTLINE STANDS ~{WALL_FIT:.2f} OFF THE SHELL ON EVERY FACE IT REACHES (COMPUTED EXTENT x {BX0:.2f}-{BX1:.2f}, "
+         f"4. PRECISION FIT, NO RATTLE: THE OUTLINE STANDS {WALL_FIT:.2f} OFF THE SHELL ON EVERY FACE IT REACHES (COMPUTED EXTENT x {BX0:.2f}-{BX1:.2f}, "
          f"y {BY0:.2f}-{BY1:.2f}; THE PLAN IS THE COMPUTED FOOTPRINT): THE FLAT CAVITY WALLS"
          + (f", THE {len(nested)} MID-SPAN BOSSES IT NESTS AGAINST" if nested else "")
          + (f", AND THE {len(straddled)} SHORT-EDGE TABS ITS LONG ARM RUNS EITHER SIDE OF" if straddled else "")
+         # computed, like the fit: the printer's stated tolerance on this brace's own longest
+         # dimension, against the fit at its two ends (fit_rules.print_xy_tol; check [8] 4g
+         # refuses a fit that does not cover it)
+         + f". THE FIT IS SIZED TO THE PRINTER'S STATED X/Y TOLERANCE: +/-{_fit.print_xy_tol(max(BX1-BX0, BY1-BY0)):.3f} ON THE "
+           f"{max(BX1-BX0, BY1-BY0):.2f} LENGTH, AGAINST {2*WALL_FIT:.2f} AT ITS TWO ENDS"
          + (". A FLAT EDGE THAT PRINTS TIGHT CAN BE SANDED; THE CURVES ROUND A BOSS OR A TAB CANNOT -- THEY ARE CUT TO THE FIT, SO IF A PRINT BINDS THERE "
-            "CORRECT THE PRINTER'S XY SCALE AND REPRINT" if (nested or straddled) else "")
+            "MEASURE IT AGAINST THE STEP AND HAVE IT REPRINTED" if (nested or straddled) else "")
          + f". THE CORNER BOSSES ARE NOT REACHED. {_rails}; POCKETS KEY TO THE BOARD.", width=190, subsequent_indent="    "),
      f"5. FERRITE CHANNEL (OVER THE NFC COIL): OPEN-ENDED, WALLED {_chw:.2f} = FERRITE {FER[2]-FER[0]:.1f} + {FER_CLR:.2f} EACH SIDE (CRITICAL - EDGE-LIMITED), OPEN AT BOTH Y-ENDS, {FER_DEPTH:.2f} DEEP.",
      f"    FERRITE (Wurth WE-FSFS 364006, NOMINAL {FER[2]-FER[0]:.0f} × {FER[3]-FER[1]:.0f} mm, EVEN ON THE 2mm SCORE GRID) IS PSA'd IN; LENGTH IS FORGIVING AND MAY OVERHANG THE ENDS SLIGHTLY.",
@@ -273,6 +283,13 @@ def build(vname):
     ]
     yy=91.5
     for n in notes: ax.text(20,yy,n,fontsize=5.9,color=INK); yy-=3.9
+    # The block is wrapped, and three of its notes are as long as what they compute. It ends at
+    # the sheet's frame, not at the last note: refuse a block that runs under it rather than
+    # print one (the shell sheet's block has refused since 2026-11-12; this one only happened
+    # to fit).
+    if yy + 3.9 < 14.0:
+        raise SystemExit(f"[{vname}] the notes block runs {14.0 - (yy + 3.9):.1f} mm under the sheet frame "
+                         f"({len(notes)} lines at 3.9) -- shorten a note or give the block room")
 
     # ===================== TITLE BLOCK =====================
     tb_x,tb_y,tb_w,tb_h=288,12,120,44
@@ -282,7 +299,7 @@ def build(vname):
     ax.text(tb_x+tb_w/2,tb_y+38,"SOLAR-GLOW DRH  —  RESIN DIFFUSER BRACE [%s]"%vname.upper(),ha="center",va="center",fontsize=8.0,fontweight="bold",color=INK)
     ax.text(tb_x+3,tb_y+27.5,f"DWG  {base}",fontsize=6.0,va="center",color=INK)
     ax.text(tb_x+tb_w-3,tb_y+27.5,"REV  B",ha="right",fontsize=6.4,va="center",color=INK)
-    ax.text(tb_x+3,tb_y+18.5,"MATERIAL  TOUGH WHITE SLA (opaque, non-conductive)",fontsize=5.6,va="center",color=INK)
+    ax.text(tb_x+3,tb_y+18.5,"MATERIAL  ABS-LIKE WHITE SLA, ACCURA XTREME WHITE 200 (opaque, non-conductive)",fontsize=5.6,va="center",color=INK)
     ax.text(tb_x+3,tb_y+10.5,"UNITS  mm",fontsize=6.2,va="center",color=INK)
     ax.text(tb_x+63,tb_y+10.5,"SCALE  AS NOTED",fontsize=6.2,va="center",color=INK)
     # envelope is COMPUTED from the footprint bounds (the hand-typed "47.1 x 84.7 x 1.80" is
