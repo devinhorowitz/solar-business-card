@@ -145,6 +145,24 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   the options are the ones the decision passed over: print the four rails as separate pieces, or
   bridge each past its mid-edge boss.
 
+- [ ] **[BENCH — first brace print] Measure the print over its two forks before trusting the fit, and set the printer's XY scale from it**
+  _(2026-11-15, opened when the brace nested.)_ The brace's long arm now runs on either side of
+  each short-edge tab, and the outline stands 0.05 mm off every face of the shell it reaches
+  (`fit_rules.WALL_FIT`) — the curves round a tab or a boss included, which cannot be sanded to
+  fit the way a flat edge can. The two forks' seats are **84.80 mm apart** (y 2.05 and 86.85),
+  so the whole allowance along the brace's length is 0.10 mm, 0.12 %. Formlabs' own figure for
+  a Form 4 is ±0.3 % (lower limit ±0.15 mm) on an 81–150 mm feature, ±0.15 % (±0.02 mm) on a
+  1–30 mm one: **a print inside the printer's specification can be 0.25 mm long, and will not
+  seat.** So, on the first print, before any filing: **measure seat to seat between the two
+  forks (84.80 nominal; 88.70 over the prongs' noses), across the ferrite block between the two
+  east bosses (26.90 nominal, y 31.00–57.90, on the 1 mm of flat each side has at x 47.5–48.5),
+  and the width from the west face to the east face (47.20 nominal)**. If the long figure is
+  out by more than the short ones, in proportion, it is the printer's scale: correct it in the
+  slicer and reprint. If a
+  print at the right scale still binds on a curve, say so — the fix is then a looser fit
+  (`brace_cavity()` shrinks the void by one number, everywhere), which is DRH's call, not a
+  file. Tick this when a print has dropped in without being touched.
+
 - [ ] **[BENCH — before the titanium is ordered] Put a caliper on a supercap's edge: the floor fillets stand under it, and the corner-boss roots in its corner**
   _(2026-11-15, opened with the floor fillets.)_ The south and north floor fillets of the max
   and lite shells stand under the outer edge of all four supercaps. A can at nominal clears
@@ -979,7 +997,8 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
       pairs by name ("diagonal corner nick").
     - **It is a gap, not a wall.** A Ø0.6 disc of resin fits over every point of it. The decision
       is below.
-  - **C4 — two small things, both benign, nothing changed.**
+  - **C4 — two small things, both benign, nothing changed.** _(The first of them WAS changed, on
+    2026-11-15: DRH saw it in a render. "THE SEAT IS ONE PLANE" below.)_
     - Faces 0.010 below the seat: SolidCraft has 3.51 mm² in 22 faces. Here, on the lite STL,
       5.217 mm² in 229 triangles sit at z 1.810. The scopes differ: this count likely also takes in
       the corner-relief floors outside the board outline. The cause is confirmed in the shell CAD:
@@ -1711,6 +1730,95 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
       of the four flats, it joined the corner to the test window's own corner, and the test
       read "reachable" where it should have read a sharp corner. The metal is BUILT without
       the roots now, and the corner is measured by area inside its own square.
+
+  **THE SEAT IS ONE PLANE, AND THE BRACE NESTS, 2026-11-15 (DRH, on a render of the brace in the
+  shell with the four corner bosses circled: "it looks like something is overlapping on the
+  surface"; then "I want the brace to get a tighter fit, matching the inverse at the ferrite
+  side such that the plastic nests along the curve of the bosses", "on the northern and
+  southern tabs, I want the brace extended such that it hugs either side of the tabs along that
+  curve", and "let's try to make a somewhat exact fit, since these are complex curves that
+  would be hard to sand out of the plastic") — SO ALL FIVE SOLIDS CHANGED.** The SolidCraft
+  re-measure checkbox above is still open and still what an order waits on.
+  - **The marks on the corner bosses were a step in the part, not in the picture.**
+    - `_corner_relief()` cut the board recess's corner relief — a circle of R + 0.15 round each
+      board corner, so the press grips the flats — from **0.01 mm under** the board-rest plane,
+      to keep the cutter's end off the recess floor. The lip ring and the bosses are unioned
+      afterwards and came back up to the plane. Nothing else inside those four circles did,
+      and since 2026-11-14 every blend, web and root there was cut down on purpose to match
+      (`_under_corner_relief`).
+    - Measured on main's solids: **10.375 mm² of upward flat face at seat − 0.010, 316
+      triangles, on the lite shell** (10.16 mm² by a 0.02 mm ray grid on the max shell), in a
+      crescent under the relieved wall and two or three patches on each corner boss. That is
+      SolidCraft's C4 of 2026-11-13, which this file called benign.
+    - The relief starts ON the plane now, as the recess cut it widens always has;
+      `_under_corner_relief` is deleted. On the rebuilt shells: **no upward flat face at
+      seat − 0.010; in a 6.5 mm square at a corner, 22.69 mm² at 2.800 and nothing else flat
+      between the floor and the rim.** What is still outlined there is the 0.10 × 45° break
+      on the R1.00 corner and on the blend.
+    - **The 33 faces under 0.001 mm² that every shell's STEP carried were all its steps.**
+      Max 10,409 → **10,337** faces, 30,777 → 30,565 edges; lite 371 → **299**, 966 → 754;
+      air 366 → **294**, 936 → 724; **none under 0.001 mm² on any of the three**, none
+      shared by more than two faces. OCC volumes 5298.801 / 3934.900 / 963.806 mm³ (+0.105 /
+      +0.105 / +0.104; 10.4 × 0.01 predicted).
+    - The lite and air shells stand **0.005 mm** off their own reflection now, by
+      `handedness_drc` [E]'s measure; it read 0.010 on main.
+  - **The brace is the shell's void as milled, less one fit.**
+    - `fit_rules.brace_cavity()` was held twice more than that: inside `cavity_rect()`, whose
+      short edges are the tab tips, and outside a circle of `RELIEF_R` 2.85 round every boss
+      axis. Both are gone from the brace (`nest=False` still gives them, and
+      `scripts/reflow_shim.py` asks for it — that plate lies on the bare board; its outline is
+      unchanged to the square micron, 969.437 mm²).
+    - **At the two east mid-span bosses** the block now lies along each boss's straight cut
+      and follows the round at its corner: it stood 0.317 mm off the corner and 0.53 off the
+      cut. +2.00 and +2.03 mm². **At the two west ones** the arm's end pads follow the boss's
+      circle and corner round, +0.24 and +0.27 (they already lay along the R2.00 blends).
+    - **At each short-edge tab** the arm runs on as a prong on either side, following the
+      tip's round, the side and the root's curve, to an R0.30 nose at the recess wall: +4.58
+      and +4.75 mm². The prongs are 1.04 to 1.41 mm wide beside the tab — what the supercaps'
+      bays leave. The two east ones follow all 90° of their root to the wall; the two west
+      ones follow 83° and 77° and stop 0.06 and 0.09 mm short, where they would be thinner
+      than `SLA_WALL` 0.60.
+    - Footprint **1319.30 → 1333.19 mm²** (max), 1089.83 → 1103.78 (lite); the brace is
+      **88.70 mm long, was 84.80**. STEP volumes 1950.663 and 1157.425 mm³ (+23.99, +16.01;
+      25.0 less 1.33 under the ferrite channel predicted for max). 474 and 531 faces, none
+      under 0.001 mm².
+    - **The fit, as built:** `assembly_drc` [B] sections the emitted brace against the emitted
+      shell at three levels and finds no overlap, closest **0.045 mm**; [H], with every inside
+      corner given the Ø2.0 finisher's radius, 0.045 as well. It read 0.048 on main: the
+      outline is a polyline, and a chord across an arc that hugs a convex corner stands
+      nearer the metal than the arc. Its tolerance went 0.01 → 0.005 for that; at 0.01 the
+      nested outline came to 0.040.
+    - Coverage 32.82 % and 27.17 % of a floor that now counts the void beside the supercaps
+      (4062.1 mm², was 3912.9): both ledgered floors hold, max by 0.82 of a point.
+  - **Three rules that said "nothing stands there", and one that would have cost four fillets.**
+    - `floor_runs()` gave a fillet to each stretch of wall no brace came near *anywhere along
+      it*. The prongs stand over the last 0.2 mm of the four short-edge stretches, past where
+      each run has already ended in its scoop — asked that way, **four of the eight floor
+      fillets would have gone**, silently, in a change to the brace. It asks about the run's
+      own metal now, scoops taken out: 0.17 mm at the nearest, against `FLOOR_BRACE_CLR`
+      0.10. The eight runs are the same eight, 132.28 mm.
+    - `check_consistency` [8] 4f measured the brace to a run's wall and took `FLOOR_R` off — a
+      fillet with square ends. It lays the scooped fillet out itself now, and plants resin
+      within 0.05 mm of one as its canary.
+    - `interference_drc` held the brace's bounding box inside `cavity_rect()` as a check on
+      the file frame, and read the new brace as "generator frame broke". It holds it inside
+      `brace_cavity()`.
+    - `cavity_as_milled()` is board area less metal, and beside a supercap there is no lip:
+      the void's edge there is the BOARD's, 0.05 mm outside the recess wall. The nested
+      outline is clipped to the recess first.
+  - **What is not settled: whether a print will drop in.** The two forks' seats are 84.80 mm
+    apart and each stands 0.05 mm off its tab; a Form 4's stated tolerance on a feature that
+    long is ±0.3 % (lower limit ±0.15 mm), three times the allowance at its smallest. The
+    square-ended arm had the same 0.05 at each tip, and could be sanded. DRH asked for the
+    exact fit knowing the curves cannot be ("let's try"), so it is cut as asked, and the bench
+    item above ("Measure the print over its two forks") is what turns the first print into a
+    measurement of the printer instead of a part that will not go in. A looser nest is one
+    number — but one number everywhere: a second fit for the curves alone would put a step in
+    the outline wherever a curve meets a flat.
+  - **All local gates 0 errors** on the rebuilt solids: `check_mesh` (five re-ledgered, each
+    itemised), `interference_drc`, `assembly_drc` on all three variants, the handedness
+    rehearsal and [E], and the kicad-free part of `check_consistency`. The merge run's
+    handedness gate, with KiCad's export, is still the gate.
 
 - [ ] **[SOURCING — lite/air] Pick the thin supercap MPN**
   _(2026-08-07, opened with the three-variant round.)_ `part_heights.SUPERCAP_H_THIN = 1.00`

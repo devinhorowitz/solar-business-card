@@ -686,7 +686,9 @@ red, the check itself fails.
   half-degree search had left the corner bores up to 0.004 short, which nobody could see while the
   slot was void), so every join is a crossing.
   **(3) Metal unioned after the corner relief must be cut by it** (`_under_corner_relief`), or it
-  stands 0.01 proud inside the four relief circles: 22 sliver faces a shell.
+  stands 0.01 proud inside the four relief circles: 22 sliver faces a shell. _(True of the relief
+  as it was. Since 2026-11-15 the relief starts ON the seat plane and nothing has to be cut down
+  to match it — the bullet on the seat's 0.01 mm step.)_
   **(4) THE FERRITE SHEET IS A BODY, and nothing had ever held it against the shell.** At R2.00 the
   two blends facing it stood inside its east corners, 0.035 and 0.075 mm², every gate green — it is
   not on the board, so `board_parts` does not return it. A blend that would come within `FER_CLR`
@@ -860,6 +862,58 @@ red, the check itself fails.
   slit two microns wide was left up two of the four flats, and the test read a sharp corner as
   reachable. And measure "what the ball cannot reach" by area inside the corner's own square,
   not by which pieces happen to lie wholly near it.
+- **A cut taken 0.01 mm past a face, for the kernel's sake, is a step in the part — and "benign"
+  was a verdict on the number, not on the face it was in** (2026-11-15). The board recess's corner
+  relief (`_corner_relief`: a circle of `R + corner_clr` round each board corner, so the press
+  grips the flats) was cut from 0.01 mm UNDER the board-rest plane, so that the cutter's end did
+  not lie on the recess floor. The lip ring and the bosses were unioned afterwards and came back
+  up to the plane; everything else inside those four circles did not — and since 2026-11-14 every
+  blend, web and root there was deliberately cut down to match. **10.4 mm² of the seat stood
+  0.01 mm low, in two or three patches on each corner boss** (316 triangles on the lite shell).
+  SolidCraft measured it on 2026-11-13 (finding C4, 3.51 mm² in 22 faces), the cause was confirmed
+  here the same day, and the record says "benign, nothing changed". DRH saw it two days later in a
+  render, as lines on the corner bosses: "it looks like something is overlapping on the surface".
+  Nothing was — the seat was in two pieces. The relief starts ON the plane now, as the recess cut
+  it widens always has, `_under_corner_relief` is gone, and **every one of the 33 faces under
+  0.001 mm² that each shell's STEP carried went with it** (72 faces fewer on every shell; that
+  count had been reported with each change as a floor nobody could get under). When a tool is set past a face to
+  dodge a coincidence, ask what is left standing at the two heights — and when a measurement is
+  filed as benign, look at the face it is on before the number.
+- **The brace is the shell's void AS MILLED, less ONE fit — it nests against whatever it reaches**
+  (2026-11-15, DRH: "matching the inverse at the ferrite side such that the plastic nests along
+  the curve of the bosses", and "hugs either side of the tabs along that curve").
+  `fit_rules.brace_cavity()` used to be held twice more than that: inside `cavity_rect()`, whose
+  short edges are the tab TIPS, and outside a circle of `RELIEF_R` round every boss axis — a full
+  round boss's shape, typed before two bosses were cut straight. Both were approximations of the
+  shell written before the shell could be asked; `cavity_as_milled()` can be. Five things:
+  **(1) `nest=False` is the old outline, and the reflow shim asks for it.** `scripts/reflow_shim.py`
+  cuts its plate from `brace_footprint(span=0)`, and that plate lies on the BARE BOARD: it has no
+  tab to hug and no boss to nest against. A rule shared by two parts is a rule about both — find
+  the second caller before changing what the first one means (`grep brace_footprint`).
+  **(2) Inside the recess.** `cavity_as_milled()` is board area less metal, and beside a supercap
+  there is no lip, so the void's own edge is the BOARD's — 0.05 mm outside the recess wall that is
+  really there (`EDGE_FIT`). Nothing reached those strips while the rectangle held the outline.
+  **(3) "No brace near this wall" was asked of the whole stretch, and a prong stands at the end of
+  four of them.** `floor_runs()` gave a floor fillet to every stretch of wall no brace came near
+  ANYWHERE along it; the prongs beside each tab stand over the last 0.2 mm of the four short-edge
+  stretches, past where each run has already ended in its scoop. Asked the old way, the request
+  would have silently deleted four of the eight fillets DRH asked for the same week. It is asked
+  of the run's own metal now, scoops taken out (`FLOOR_BRACE_CLR`; 0.17 mm at the nearest), and
+  check [8] 4f lays the scooped fillet out itself — it used to measure to the run's wall and
+  take `FLOOR_R` off, a fillet with square ends, which nothing had ever stood near enough to
+  tell apart. **Before changing where a part reaches, list the rules that say "nothing is there".**
+  **(4) A chord across an arc that hugs a CONVEX corner stands nearer the metal than the arc.** The
+  outline was simplified to 0.01, which was free while every arc on it was convex on the brace's
+  side; nested round a tab's tip it came 0.040 mm from titanium against a fit of 0.050. It is
+  0.005 when nested (0.045 at the least), and no finer: at 0.002 the opening's 0.004 mm nicks at
+  the corners of a through-cut survive as edges.
+  **(5) The fit is tighter than the printer over the brace's length, and that is on the record.**
+  The two forks' seats are 84.80 mm apart and stand 0.05 mm off a tab at each end; Formlabs gives
+  a Form 4 ±0.3 % (lower limit ±0.15 mm) for a feature that long. A square end could be sanded;
+  the inside of a fork cannot. DRH asked for the exact fit knowing the curves cannot be sanded
+  ("let's try"), so it is cut, and `enclosure/brace/README.md` says what the first print is for:
+  measuring the printer's scale. **One fit everywhere, or a different outline rule** — a second,
+  looser number for the curves alone puts a step in the outline wherever a curve meets a flat.
 - **A ledger entry is a standing waiver, so a ledger audits itself.** `scripts/interference_drc.py`'s
   `EDGE_LEDGER` excused seven parts from the cavity rectangle and had excused nothing since
   2026-08-08: six had been moved inboard and the seventh, C7, was deleted from the board the day

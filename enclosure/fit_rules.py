@@ -377,8 +377,11 @@ COIL_EAST = round(_coil_extent()[1] + COIL_CLR, 3)
 # check [16] is what makes that true rather than hoped-for.
 MOUNTS = [(2.87, 2.87), (47.93, 2.87), (2.87, 86.03), (47.93, 86.03),
           (2.87, 28.63), (47.93, 28.63), (2.87, 60.27), (47.93, 60.27)]
-RELIEF_R = BOSS_R + CLR    # 2.85 -- brace relief around a boss; was a flat 3.00, which
-                           # pinched every rail to a 0.750 mm waist at all eight bosses.
+RELIEF_R = BOSS_R + CLR    # 2.85 -- the circle a plate that is NOT nested keeps clear round a
+                           # boss axis (brace_footprint(nest=False): the reflow shim, which lies
+                           # on the bare board). The BRACE has not used it since 2026-11-15: it
+                           # nests against the bosses themselves, at WALL_FIT. Was a flat 3.00,
+                           # which pinched every rail to a 0.750 mm waist at all eight bosses.
 
 # the shell's own cavity void, before the lip is applied
 _CAV = (2.50, 2.00, 49.80, 86.90)
@@ -430,28 +433,58 @@ def cavity_rect():
     return c
 
 
-def brace_cavity():
-    """The outline a brace may fill: cavity_rect() cut back to the shell's ACTUAL void, then
-    shrunk by the wall fit.
+def brace_cavity(nest=True):
+    """The outline a brace may fill: the shell's void AS MILLED, inside the recess wall, shrunk
+    by the wall fit.
 
-    cavity_rect() is the scalar rectangle _CAV -- a 1.00 mm east lip -- and the brace used
-    to be cut from it alone. The shell is cut from cavity_void_poly(), whose east lip the
-    coil clamp in _lip_reach() sets at W - COIL_EAST = 1.25 mm. Same module, two answers:
-    the committed braces came out 0.20 mm WIDER than the committed cavities along the whole
-    middle band (east face x49.750 against a wall at x49.550; 9.02 mm3 of overlap on max,
-    5.94 on lite, measured on the STEPs 2026-11-12), and check [8] measured the brace
-    against cavity_rect() again, so it agreed. Wherever the per-band lip is no wider than
-    the ring -- west, north, south today -- the intersection changes nothing.
+    NESTED SINCE 2026-11-15 (DRH: "I want the brace to get a tighter fit, matching the inverse
+    at the ferrite side such that the plastic nests along the curve of the bosses", and "on the
+    northern and southern tabs, I want the brace extended such that it hugs either side of the
+    tabs along that curve"). Until then the outline was held twice more: inside cavity_rect(),
+    whose short edges are the tab TIPS (y 2.00 / 86.90), so the long arm stopped square against
+    each tab and never ran beside it; and outside a circle of RELIEF_R round every boss axis,
+    which is a full round boss's shape plus CLR -- and the east mid-span bosses are cut straight
+    across (boss_coil_cuts), so the brace stood 0.53 mm and more off a face it could lie along.
+    Both were approximations of the shell, typed before the shell could be asked. It can be:
+    cavity_as_milled() is every boss, blend, flat, round, tab, tab root and lip the cutter
+    leaves, so the void less ONE fit is the inverse of all of them.
+
+    ONE FIT, WALL_FIT, ON EVERY FACE. "Let's try to make a somewhat exact fit, since these are
+    complex curves that would be hard to sand out of the plastic": the curves are cut at the
+    fit the flat walls have, not left fat to be fitted by hand. What that asks of the print is
+    in enclosure/brace/README.md -- a flat wall that comes out tight can be sanded, the inside
+    of a fork round a tab cannot.
+
+    INSIDE THE RECESS. cavity_as_milled() is board area less metal, and the recess the board
+    presses into is EDGE_FIT smaller than the board all round: beside a supercap, where there
+    is no lip, the void's own edge is the board's, 0.05 mm outside the wall that is really
+    there. Nothing reached those strips while the rectangle held the outline; a brace that
+    runs beside a tab does.
+
+    nest=False is the outline as it was: the rectangle, and (in brace_footprint) the boss
+    circles. scripts/reflow_shim.py asks for it -- that plate lies on the bare board at reflow,
+    with no shell round it, and has no tab to hug or boss to nest against.
+
+    WHY IT IS THE VOID AND NOT THE RECTANGLE ALONE (2026-11-12). cavity_rect() is the scalar
+    rectangle _CAV -- a 1.00 mm east lip -- and the brace used to be cut from it alone. The
+    shell is cut from cavity_void_poly(), whose east lip the coil clamp in _lip_reach() sets
+    at W - COIL_EAST = 1.25 mm. Same module, two answers: the committed braces came out 0.20
+    mm WIDER than the committed cavities along the whole middle band (east face x49.750
+    against a wall at x49.550; 9.02 mm3 of overlap on max, 5.94 on lite, measured on the
+    STEPs), and check [8] measured the brace against cavity_rect() again, so it agreed.
 
     AND THE VOID IS THE ONE THE CUTTER LEAVES (2026-11-13). The shell is modelled with its
-    boss-to-wall junctions sharp, and the sheet tells the shop to finish them with a Ø2.0
+    boss-to-wall junctions sharp, and the sheet tells the shop to finish them with a O2.0
     tool -- which leaves R1.0 of metal in each. The brace was cut to the sharp model, so at
     the four bosses whose discs meet the cavity wall beside the brace's band it ran 0.225
     mm (east) and 0.055 mm (west) into those fillets: sectioned on the committed STLs, and
     invisible to assembly_drc [B], which measured the sharp shell too. cavity_as_milled()
     is the void with the finisher's radius applied."""
-    return (cavity_rect().intersection(cavity_as_milled())
-            .buffer(-WALL_FIT, join_style=1, resolution=64))
+    if nest:
+        region = cavity_as_milled().intersection(recess_poly())
+    else:
+        region = cavity_rect().intersection(cavity_as_milled())
+    return region.buffer(-WALL_FIT, join_style=1, resolution=64)
 
 
 def cavity_as_milled(tool_r=TOOL_R):
@@ -468,24 +501,37 @@ def cavity_as_milled(tool_r=TOOL_R):
                 .buffer(tool_r, join_style=1, resolution=48))
 
 
-def brace_footprint(span=None, keepout=None):
+def brace_footprint(span=None, keepout=None, nest=True):
     """[polygon] -- the pieces the brace is actually made of, largest first.
 
     `span=None` is the max variant (module SPAN_LIMIT); per-variant callers pass
     variant_span(name). DROPPED_AREA/DROPPED_COUNT describe the LAST call -- a
-    per-variant caller should read them immediately, before any other call."""
-    cav = brace_cavity()
+    per-variant caller should read them immediately, before any other call.
+
+    `nest` (brace_cavity): True, the brace -- it follows the shell's bosses and tabs at
+    WALL_FIT, and the boss is kept off by being metal, not by a circle. False, a plate with no
+    shell round it -- the rectangle, and RELIEF_R round every boss axis, as both were until
+    2026-11-15."""
+    cav = brace_cavity(nest)
     _ko = keepout or part_keepout
     keep = unary_union([_ko(_r, p) for _r, p in blockers(span=span)])
-    boss = unary_union([Point(b).buffer(RELIEF_R, resolution=64) for b in MOUNTS])
-    fp = cav.difference(keep).difference(boss)
+    fp = cav.difference(keep)
+    if not nest:
+        fp = fp.difference(unary_union([Point(b).buffer(RELIEF_R, resolution=64) for b in MOUNTS]))
     t = SLA_WALL / 2.0
     fp = (fp.buffer(-t, join_style=1, resolution=32)
             .buffer(t, join_style=1, resolution=32)
             .intersection(cav))
     pieces = sorted((list(fp.geoms) if fp.geom_type == "MultiPolygon" else [fp]),
                     key=lambda g: -g.area)
-    pieces = [g.simplify(0.01, preserve_topology=True) for g in pieces if g.area >= MIN_PIECE]
+    # 0.01 until the outline nested. A chord across an arc that hugs a CONVEX corner of the
+    # shell (a tab's tip, a boss's round) stands nearer the metal than the arc does, by up to
+    # the tolerance: at 0.01 the nested outline came 0.040 mm from titanium where WALL_FIT says
+    # 0.050. At 0.005 it is 0.045 at the least and 0.055 at the most, on 220 vertices instead
+    # of 160 -- and still coarse enough to lose the 0.004 mm nicks the opening leaves at the
+    # corners of a through-cut, which a finer pass kept as edges (lite, six of them).
+    _tol = 0.005 if nest else 0.01
+    pieces = [g.simplify(_tol, preserve_topology=True) for g in pieces if g.area >= MIN_PIECE]
 
     # SINGLE PIECE ONLY. The computation naturally yields a second island east of SC4 (~85
     # mm2) which cannot reach the main body without crossing SC4. It is real support, but a
@@ -555,7 +601,15 @@ def _mk_variants():
             material="Ti Gr5 (reference; brass or 6061 acceptable -- non-magnetic, machinable)",
             shell_name="solar-glow-drh-v4_0-backshell-0p6b-brace-Ti-max",
             brace_name="solar-glow-drh-diffuser-brace",
-            coverage_floor=0.32,   # ledgered min. UNCHANGED 2026-11-12 and re-measured: 33.01 %,
+            coverage_floor=0.32,   # ledgered min. UNCHANGED 2026-11-15 and re-measured: 32.82 %.
+                                   # Both terms moved when the brace nested (brace_cavity):
+                                   # the footprint 1319.30 -> 1333.19 mm2, and the floor it is
+                                   # a share of 3912.9 -> 4062.1 mm2, because the void beside
+                                   # the supercaps out to the recess wall counts now that a
+                                   # brace may stand in it. Against the OLD denominator this
+                                   # brace would read 34.07 %. Closer to the floor than it has
+                                   # been (0.82 of a point), by the denominator alone.
+                                   # UNCHANGED 2026-11-12 and re-measured: 33.01 %,
                                    # the same figure as before by coincidence of two moves.
                                    # The footprint lost the 0.25 mm east strip it never had
                                    # room for (1320.3 -> 1313.6 mm2, see brace_cavity()), and
@@ -595,7 +649,10 @@ def _mk_variants():
             material="Ti Gr5 (thinned floor; the 0.60 is the shop-minimum conversation)",
             shell_name="solar-glow-drh-shell-lite-Ti",
             brace_name="solar-glow-drh-diffuser-brace-lite",
-            coverage_floor=0.25,   # ledgered min. UNCHANGED 2026-11-12: 27.28 % -> 27.25 % of the
+            coverage_floor=0.25,   # ledgered min. UNCHANGED 2026-11-15: 27.17 % (footprint
+                                   # 1089.83 -> 1103.78 mm2 of a floor 3912.9 -> 4062.1, as
+                                   # max; 28.21 % against the old denominator).
+                                   # UNCHANGED 2026-11-12: 27.28 % -> 27.25 % of the
                                    # true cavity (footprint 1090.9 -> 1084.1 mm2, same east
                                    # strip as max; 27.11 % against the old rectangle).
                                    # RESTORED 2026-08-23 evening, 0.24 -> 0.25 --
@@ -2600,8 +2657,9 @@ def boss_root_cap_need():
 # interface between the brace and titanium, that's where we simply don't use a R1.0 ball
 # endmill", and, on a prototype of eight straight runs, "apply as you displayed".
 #
-# WHERE. On each long straight stretch of the cavity's wall that no brace comes near anywhere
-# along it: the two stretches of each short-edge wall between a corner boss and the tab, and the
+# WHERE. On each long straight stretch of the cavity's wall whose run no brace comes near (since
+# 2026-11-15 "near" is FLOOR_BRACE_CLR from the run's own metal -- see floor_runs(); it was the
+# whole stretch): the two stretches of each short-edge wall between a corner boss and the tab, and the
 # stretch of each long wall between a corner boss and a mid-span boss -- the walls of the four
 # supercap bays, where the floor has no brace over it and (on the max shell) the reeded valleys
 # behind it leave it thinnest. Not the middle of either long wall: the brace bears on the east
@@ -2741,11 +2799,24 @@ def floor_runs(_c={}):
             for lo, hi in merged:
                 if hi - lo < FLOOR_MIN_RUN:
                     continue
-                band = Polygon([P(lo, 0.0), P(hi, 0.0), P(hi, toe + FLOOR_BRACE_CLR), P(lo, toe + FLOOR_BRACE_CLR)])
-                if any(band.intersects(b) for b in braces.values()):
+                # A BRACE NEAR THE RUN, NOT NEAR THE STRETCH (2026-11-15). The test used to be the
+                # whole stretch, wall to toe: right while no brace came near a supercap bay's wall
+                # at all. The brace's long arm now runs on either side of each short-edge tab
+                # (brace_cavity), and its prongs stand over the last 0.2 mm of the four short-edge
+                # stretches -- past where each run has ALREADY ended, FLOOR_STOP short of the tab's
+                # root, in its scoop. So the question is asked of the run's own metal, scoops
+                # taken out: a brace within FLOOR_BRACE_CLR of THAT costs the stretch its run,
+                # whole (never a shorter one -- no run ends in mid-wall to make room for resin).
+                # Asked before the evening below, on the run as first found: evening only ever
+                # shortens a run, and a shorter run's metal lies inside the longer one's.
+                s0_, s1_ = lo + FLOOR_STOP, hi - FLOOR_STOP
+                first = Polygon([P(s0_, 0.0), P(s1_, 0.0), P(s1_, toe), P(s0_, toe)])
+                for ax_ in (P(s0_, dd), P(s1_, dd)):
+                    first = first.difference(Point(ax_).buffer(r, resolution=128))
+                if any(b.distance(first) < FLOOR_BRACE_CLR - 1e-9 for b in braces.values()):
                     continue                                    # a brace bears here: sharp, the whole stretch
                 cands.append({"edge": edge, "axis": axis, "wall": wall, "sg": sg, "lo": lo, "hi": hi,
-                              "s0": lo + FLOOR_STOP, "s1": hi - FLOOR_STOP})
+                              "s0": s0_, "s1": s1_})
 
         # EVENED, TOP FOR BOTTOM (the block above): each run is cut back to what its twin
         # under y -> H - y also covers. Decided on the runs as first found, so that the order

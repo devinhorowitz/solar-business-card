@@ -73,7 +73,7 @@ resin walls beside blind pockets in both braces, since fixed, with its own row b
 | a Ø2.0 finisher vs the brace | brace **0.225 mm** into the east boss-to-wall fillets, 0.055 west | clear at every level, closest 0.048 | fixed |
 | C24 (STO_SNS pad) to the lip | **0.097** to its pad box (0.152 to the rounded pad; SolidCraft 0.157), against `LIP_CLR` 0.30 | **0.296** | fixed |
 | a mount boss to NFC coil copper | the two east mid-span bosses **0.874 / 0.966 mm** off it (ArtCraft 0.8772), under a sheet printing 1.00 for the lip beside them | **1.07 / 1.17**: each cut straight across, 2.32 mm from its axis, on both sides (2026-11-15; an R1.15 hollow about the coil's own corner, to exactly 1.00, from 2026-11-14 until then) | fixed 2026-11-14 |
-| the brace's ridge east of the ferrite channel | tapers to **nothing** at both ends (y 31.40 and 57.50; 0.20 wide 0.19 from the point) | ends square at y 31.67 and 57.23, **0.25** wide there — the wall the print spec's printer holds | fixed 2026-11-14 |
+| the brace's ridge east of the ferrite channel | tapers to **nothing** at both ends (y 31.40 and 57.50; 0.20 wide 0.19 from the point) | ends square at y 31.45 and 57.46 (31.67 and 57.23 until the east bosses were cut straight on 2026-11-15), **0.25** wide there — the wall the print spec's printer holds | fixed 2026-11-14 |
 | where a boss meets the lip's wall | a **sharp inside corner** at all twelve junctions (51.5° on the east wall, 81.8° on the west), left to the finisher's radius _(this repo's instruments; DRH, from a render)_ | a modeled concave blend, a true cylinder, with the lip's and the boss's 0.10×45° break carried round it: eight at **R2.00**, four at **R1.00** — both sides of the two bosses the ferrite sheet stands beside (ten and two until the contouring pass below made each boss symmetric) | changed 2026-11-14 |
 | beside each corner boss | a **slot** of void between the boss and the recess wall, 0.17 mm at its narrowest, closed at one end, that no cutter enters | **metal**: boss, web and wall are one piece, and the boss's Ø2.0 bore runs out to the wall | changed 2026-11-14 |
 | where a boss annulus meets the frame, on the back | a **sharp inside corner** at all sixteen junctions (71.6°, as tall as the frame, 0.15), left to the back tool's radius — on the face that is seen _(this repo's instruments; DRH)_ | a modeled concave blend at each, **R2.00**, a true cylinder, with the frame's own 0.10×45° break running round frame, blend and annulus as one edge; the reeded fields stand 0.40 off a blend as they do off an annulus | changed 2026-11-14 |
@@ -82,6 +82,8 @@ resin walls beside blind pockets in both braces, since fixed, with its own row b
 | where the cavity floor meets the wall | a **sharp corner** everywhere, on a floor 1.00 thick (0.40 under the reeded valleys) _(DRH: "have the floor meet the sides at a curve using a ball endmill ... a slight amount of support to the thin 1mm floor"; none "for any place that has an interface between the brace and titanium")_ | an **R1.00 fillet**, modeled, on the eight long straight walls of the supercap bays — 132.9 mm, each run stopping 0.50 or more short of the boss or tab at either end in a flat cutter's own radius, and the same top for bottom; sharp wherever a brace bears. Max and lite only (the air frame has no floor). +26.1 mm³, 0.12 g. **Under the supercaps' edges it clears a can at nominal by 0.05 and relies on the pouch's sealed margin at max material — PROVISIONAL, caliper check in `TODO.md`** | changed 2026-11-15 |
 | where a corner boss's flat meets the short-edge wall | the flat stopped 0.25 short of the wall; in the corner a **Ø2.0 bore**, a round 0.66 mm long, and the web the bore ended _(DRH: "yes" to the simpler cut)_ | the flat **runs to the wall through one true R1.00** (four, `fit_rules.boss_roots()`); no bore on any boss, 12 boss rounds (were 16), the web ends on the flat. **It stands 0.07 mm into the very corner of a square-cornered SC1 at max material (0.005 mm²; clear of a nominal can by 0.75) — PROVISIONAL, on the same caliper check as the floor fillet** | changed 2026-11-15 |
 | the two short-edge tabs | **3.5 mm** (south) and **4.0 mm** (north): the only thing that made the inside of a shell differ top for bottom _(DRH: "yes" to the same width)_ | both **3.5 mm**; the south and north lips are one table. The inside of every shell is its own mirror image top for bottom, so **the lite and air shells have no hand at all** (0.010 mm off their own reflection) and the max shell's hand is its rear art, which `assembly_drc` [L] now reads | changed 2026-11-15 |
+| the face the board rests on, at the four corner bosses | **two heights**: 10.4 mm² of it 0.01 mm under the rest, in patches outlined on each corner boss — the board recess's corner relief was cut from 0.01 under the plane, and only the lip ring and the bosses came back up to it _(SolidCraft's C4 on 2026-11-13, filed as benign; then DRH, from a render: "it looks like something is overlapping on the surface")_ | **one plane**: the relief starts on it. 72 fewer faces in each shell's STEP, and **none under 0.001 mm² where each had 33** | fixed 2026-11-15 |
+| the brace against the bosses and the tabs | **relieved**: a circle of r2.85 clear round every boss axis (0.32 mm off the nearest corner of an east mid-span boss, 0.53 off its straight cut), and the long arm stopped square against each short-edge tab's tip _(DRH: "matching the inverse at the ferrite side such that the plastic nests along the curve of the bosses"; "hugs either side of the tabs along that curve")_ | **nested**: the outline is the shell's void as milled less the 0.05 mm wall fit, so it lies along the four mid-span bosses and runs as a prong on either side of each tab to the recess wall. Max footprint 1319.3 → 1333.2 mm², the brace 84.8 → 88.7 mm long. Closest approach to titanium **0.045 mm**, sectioned at three levels. **The fit is tighter than a Form 4's stated ±0.3 % over the 84.8 mm between the two forks** — `brace/README.md` has what the first print is for | changed 2026-11-15 |
 | the ferrite sheet against the shell | never measured. Its two east corners stand **0.24 / 0.15 mm** from the as-milled titanium at the bosses at y 28.63 / y 60.27 — a clearance nobody chose | **0.35 mm** since those two bosses were cut straight (2026-11-15), against `FER_CLR` 0.20; printed by `assembly_drc` [F] and [H] on every run | **DRH's call**, if 0.35 is not enough |
 
 The right-hand column was measured in the cloud with OpenCascade and by slicing the STLs — an
@@ -99,7 +101,10 @@ What changed, in one line each — the reasoning is in the generators and in `CL
   0.40 inside the can the brace is told to expect.
 - **Brace outline.** It was cut from the scalar rectangle `_CAV` (a 1.00 mm east lip) while the
   shell's cavity came from `cavity_void_poly()` (1.25 mm). It is cut from
-  `fit_rules.brace_cavity()` now, the intersection of the two. The reflow shim follows it.
+  `fit_rules.brace_cavity()` now, the intersection of the two. The reflow shim follows it. _(Both
+  sentences describe `brace_cavity(nest=False)` since 2026-11-15: the brace itself is cut from the
+  void as milled with no rectangle at all, and the shim, which lies on the bare board, keeps the
+  outline it had — the bullet on the nested brace below.)_
 - **Void.** Clipped to the board, and in the shell to the recess footprint.
 - **Medallion.** Its three families are simplified together, as one coverage, and audited.
 - **Hand.** The model stays in board coordinates; `fit_rules.export_solid()` reflects it once on
@@ -189,8 +194,9 @@ What changed, in one line each — the reasoning is in the generators and in `CL
   decide — the bore beside each corner boss, and the two tabs' widths — and are the bullet
   after next.
 - **The floor meets the wall through a radius (2026-11-15).** `fit_rules.floor_runs()`: an R1.00
-  fillet — the ball end mill's — on each long straight stretch of cavity wall that no brace
-  comes near anywhere along it. That is eight runs, the walls of the four supercap bays, where
+  fillet — the ball end mill's — on each long straight stretch of cavity wall whose run no
+  brace comes near (within `FLOOR_BRACE_CLR` of the run's own metal since the brace nested; it
+  was "anywhere along the stretch"). That is eight runs, the walls of the four supercap bays, where
   the floor has nothing over it; a run is a whole stretch or none, so none ends in mid-wall,
   and each stops `FLOOR_STOP` (0.50) short of the feature at either end in the scoop a flat
   cutter of the same radius leaves. **Evened top for bottom:** a run reaches no further than its
@@ -221,6 +227,23 @@ What changed, in one line each — the reasoning is in the generators and in `CL
   islands are, and that its monogram reads "DRH" from the back. `check_consistency` **[8]**
   holds the roots, the one lip table and the cavity's own reflection; `assembly_drc` **[H]**
   measures the corner's cost in the metal and **[J]** probes the four roots.
+- **The seat is one plane, and the brace nests (2026-11-15).** Two things DRH saw in renders of
+  the cavity. **The seat:** `_corner_relief()` cut the board recess's corner relief from 0.01 mm
+  under the board-rest plane, to keep the cutter's end off the recess floor, and inside its four
+  circles only the lip ring and the bosses came back up — 10.4 mm² of the face the board rests on
+  stood 0.01 low, outlined on every corner boss. It starts on the plane now; nothing has to be
+  cut down to match it, and the 33 faces under 0.001 mm² in each shell's STEP were all its steps.
+  **The brace:** `fit_rules.brace_cavity()` is the void as milled, inside the recess wall, less
+  `WALL_FIT` — the rectangle whose short edges were the tab tips and the r2.85 circle round each
+  boss axis are gone from it (they are `nest=False`, which the reflow shim asks for). So the
+  brace lies along each mid-span boss and runs either side of each short-edge tab, at the fit
+  the flat walls have. Two rules had to learn that a brace can stand near the end of a supercap
+  bay's wall: `floor_runs()` asks whether a brace is near a run's own metal (it asked about the
+  whole stretch, and would have dropped four of the eight fillets), and `check_consistency`
+  **[8]** 4f measures to the fillet with its scooped ends (it measured to a square-ended one).
+  `interference_drc` holds the brace's box to `brace_cavity()`, no longer to the rectangle.
+  `assembly_drc` **[B]** and **[H]** section the emitted brace against the emitted shell as
+  before: closest 0.045 mm, as modelled and as milled.
 - **The channel's ridge ends square (2026-11-14).** Being let off `SLA_WALL` had let the ridge east
   of the ferrite channel off everything: where the brace's edge turns in round a boss fillet the
   ridge ran on with it to a point. `fit_rules.PRINT_WALL` (0.25) is the floor under the exception
@@ -278,8 +301,9 @@ Three findings deserve naming, because none was visible by eye:
 part positions from `enclosure/board_parts.py` (true 3D body ∪ pads, with the model's own
 `rotate`/`offset` applied on top of the footprint's `at x y rot`).
 
-- **Brace** — `footprint = cavity − blockers(+CLR) − boss reliefs`, morphologically opened at
-  `SLA_WALL`. A part is coverable only if the resin above it still prints
+- **Brace** — `footprint = cavity as milled, less WALL_FIT − blockers(+CLR)`, morphologically opened at
+  `SLA_WALL` (no boss reliefs since 2026-11-15: the bosses are out of the cavity as milled already, and the
+  brace nests against the ones it reaches). A part is coverable only if the resin above it still prints
   (`web = GAP − (h + AIR) ≥ SLA_WEB`, i.e. `h ≤ 1.28`); anything taller is *subtracted* rather
   than pocketed. Interference is structurally impossible — the thing that would collide is the
   thing removed. Ceiling is 38.5%: the caps are 1.70 mm in a 1.80 mm cavity and occupy 58.8% of
@@ -418,7 +442,7 @@ below is derived there, with its limiter rule beside it), three shells out of ev
 | Floor | 1.00 | 0.60 thinned (shop-minimum conversation) | **none — open frame** |
 | Total stack | 3.40 (3.55 at frame) | 2.42 (2.57 at frame) | **1.80** |
 | Screws | M2×3 (HW1) | **M2×2** (HW2 — an M2×3 stands 0.58 proud) | **M2×1.6** (HW3 — tip hides 0.20 in the boss spotface) |
-| Brace | yes (33.0% coverage) | yes, own build (27.2% — see TODO's relocation plan) | none (nothing retains it) |
+| Brace | yes (32.8% coverage) | yes, own build (27.2% — see TODO's relocation plan) | none (nothing retains it) |
 | Medallion / fins | yes | **no — physics**: fin valleys (0.60) and coin floors would cut the 0.60 floor through | no back face at all |
 | Material | Ti Gr5 reference; brass or 6061 fine | Ti Gr5 | **316L stainless only** — austenitic, µr≈1.02. Carbon/martensitic steel beside the NFC coil adds hysteresis loss the (absent) ferrite can't shield: the ENIG-over-coil lesson, one material over |
 | Ferrite | in the brace channel | in the brace channel | **adheres to the board** — and the open back removes the titanium the ferrite partly shields against, so **C9's 47 pF does not carry over: bench re-tune required** |

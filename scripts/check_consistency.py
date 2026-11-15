@@ -925,17 +925,39 @@ def check_enclosure_fit():
         if not v["brace"]:
             continue
         _bfp = unary_union(fr.brace_footprint(span=v["span"]))
-        # by an instrument that owes floor_runs() nothing: the brace's footprint against each
-        # run's wall, which a tangent fillet of FLOOR_R reaches FLOOR_R from
+        # by an instrument that owes floor_runs() nothing but where each run starts and stops:
+        # the brace's footprint against the fillet's own plan, laid out here -- FLOOR_R out from
+        # the run's wall, and at each end the flat cutter's scoop taken out (a disc of FLOOR_R
+        # about a point FLOOR_R off the wall at the run's end).
+        # THE SCOOPS ARE IN IT SINCE 2026-11-15. This used to measure to the run's WALL and take
+        # FLOOR_R off -- a fillet with square ends, a stadium 1.1 mm round each end of a run.
+        # Nothing stood there to be told apart. The brace's arm now runs on either side of each
+        # short-edge tab, 0.27 to 0.37 mm along the wall from where a run ends, and the old
+        # measure called that 0.7 mm INSIDE a fillet that has been scooped away to nothing there.
+        _worst = None
         for run in _fruns:
-            _wl = (_LS([(run["s0"], run["wall"]), (run["s1"], run["wall"])]) if run["axis"] == "x"
-                   else _LS([(run["wall"], run["s0"]), (run["wall"], run["s1"])]))
-            _fbr[vn] = min(_fbr.get(vn, 1e9), _bfp.distance(_wl) - fr.FLOOR_R)
+            _q = (lambda s_, u_, _r=run: (s_, _r["wall"] + _r["sg"] * u_) if _r["axis"] == "x"
+                  else (_r["wall"] + _r["sg"] * u_, s_))
+            _fm = _box(*_LS([_q(run["s0"], 0.0), _q(run["s1"], fr.FLOOR_R)]).bounds)
+            for _e in (run["s0"], run["s1"]):
+                _fm = _fm.difference(_P(_q(_e, fr.FLOOR_R)).buffer(fr.FLOOR_R, resolution=128))
+            _d = _bfp.distance(_fm)
+            _fbr[vn] = min(_fbr.get(vn, 1e9), _d)
+            if _worst is None or _d < _worst[0]:
+                _worst = (_d, _fm)
         if _fbr[vn] < fr.FLOOR_BRACE_CLR - 1e-9:
-            err(f"the {vn} brace stands {_fbr[vn]:.3f} mm from the toe of a floor fillet, inside "
+            err(f"the {vn} brace stands {_fbr[vn]:.3f} mm from a floor fillet, inside "
                 f"FLOOR_BRACE_CLR {fr.FLOOR_BRACE_CLR} -- DRH's rule is no fillet where the brace "
                 f"meets the titanium")
             bad += 1
+        # canary: the same brace with a foot planted FLOOR_BRACE_CLR / 2 off the nearest fillet
+        # must be refused
+        if _worst is not None:
+            _near = _worst[1].buffer(fr.FLOOR_BRACE_CLR / 2.0).difference(_worst[1].buffer(fr.FLOOR_BRACE_CLR / 4.0))
+            if _bfp.union(_near).distance(_worst[1]) >= fr.FLOOR_BRACE_CLR - 1e-9:
+                err(f"SELF-TEST: the {vn} brace with resin planted {fr.FLOOR_BRACE_CLR / 2:.2f} mm "
+                    f"from a floor fillet still reads as clear of it -- the test above cannot fail")
+                bad += 1
     _fneed = fr.floor_cap_margin_needed()
     if max(_fneed.values()) > fr.FLOOR_CAP_MARGIN + 1e-9:
         err(f"the floor fillets need a supercap to be thin for {max(_fneed.values()):.2f} mm in "
