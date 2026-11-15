@@ -145,20 +145,99 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   the options are the ones the decision passed over: print the four rails as separate pieces, or
   bridge each past its mid-edge boss.
 
+- [ ] **[DECISION — DRH] The brace against PCBWay: its fit, its thin walls and its layers are all finer than what PCBWay states**
+  _(2026-11-15. DRH: "it's going to be pcbway. Check against their capabilities before we make
+  decisions on sizing constraints." Checked; NOTHING is resized yet.)_
+  - **What PCBWay states for SLA** (their pages, read 2026-11-15; where two disagree both are
+    given):
+    - **Accuracy:** "L<100mm, ±0.2mm. L>100mm, ±0.2%*L" (SLA page and 3D-printing page, the
+      same table). Their medical-device page gives UTR 8360, UTR 8220 and Somos Ledo "±0.1 per
+      100mm"; the SLA page's prose says ±0.004 in per inch. "Improved tolerances may be
+      possible with a manual quote review, after successful completion of a prototype build
+      ... case-by-case."
+    - **Minimum wall:** 0.8 mm (SLA page). The help centre's "Wall thickness issue" has it
+      by the wall's size — **0.5 mm at 5 × 5 mm, 0.8 at 10 × 10, 1.0 at 50 × 50, 1.2 at
+      100 × 100, 1.5 at 200 × 200** — for SLA and DLP alike. Under it the order is paused,
+      they email pictures of the thin places, and you revise or accept the risk; the order
+      form has a "Wall thickness risk taken" box that skips the pause.
+    - **Layers:** 0.1 mm (UFSH100's page; the medical page's table for the other resins).
+    - **Thin flat parts:** "large in size and thin in thickness, distortion can become a
+      problem" — the same pause and choice. No number.
+    - **White resins:** Standard white UTR 8360 (matte white; 53.7 MPa, 5.1 % elongation,
+      Shore D 84; its own page lists "general strength and toughness" as the drawback),
+      UFSH100 (white; 65–77 MPa, 6.2–10 %), Somos Ledo (white; 52.3 MPa, 11 %; "high
+      toughness and high strength"). Their tough UTR 8220 is yellow-green. Opacity is not
+      stated for any.
+    - **DLP** is ±0.1 mm under 100 mm, but the only DLP materials listed are a flexible one
+      and a dental-model one. Not an option for a rigid white part.
+    - **Not published at all:** a minimum feature, slot or gap; which way up a part is
+      printed; where the supports go.
+  - **What the brace asks** (measured on the solids of `56680ce`: each brace sectioned at
+    every level, and the resin's thickness read under every pocket on a 0.1 mm grid):
+    - **Fit:** 0.05 mm a side to every face of the shell. Four dimensions seat it, each with
+      0.10 mm in all to give: 47.20 wall to wall, 84.80 between the forks' seats, 26.90
+      between the two east bosses, 3.60 across a fork's slot. **±0.2 is four times that;
+      ±0.1 is twice it.** Two of the four are flat walls and can be sanded. The fork and
+      the boss nests cannot.
+    - **Walls under 0.5 mm:** four, on both braces, all of them the ferrite channel's own —
+      0.33 tall on a 1.47 (max) or 0.89 (lite) base: the ridge east of it, 0.40 wide for
+      26.0 mm, and three stretches on its west side, 0.26–0.50 wide and 1.9–2.95 long. These
+      are the walls `PRINT_WALL` 0.25 was accepted for on 2026-11-13, **on the strength of a
+      Formlabs figure**; they are under the smallest wall in PCBWay's table.
+    - **Walls 0.6–0.8 mm:** a dozen or so between pockets, none over 3.2 mm long or 0.78
+      tall. Inside the table's 0.5 at 5 × 5.
+    - **Webs under pockets, max brace:** thinnest 0.58. Two are under the table: 0.58 over
+      12.1 × 11.6 mm near (31, 54) and 0.68 over 9.3 × 7.4 near (28, 37), against 0.8 at
+      10 × 10. The rest are small enough to pass.
+    - **Webs, lite brace:** thinnest 0.45 — thirteen of them, the largest 4.5 × 4.1 mm,
+      against 0.5 at 5 × 5. Its channel floor is 0.89 over 29.4 × 13.5 mm (0.8 at 10 × 10,
+      1.0 at 50 × 50) and the whole plate 1.22 over 88.7 × 47.2 (1.2 at 100 × 100).
+      **`SLA_WEB` at 0.50 there has a price:** the span limit falls from 0.60 to 0.50, the
+      eighteen 0.55 mm passives become blockers (24 → 42), and the footprint goes 1103.8 →
+      988.3 mm² — 24.3 % of the floor, under its ledgered 25 %.
+    - **Heights finer than a 0.1 mm layer:** the ferrite channel's 0.33 (a 0.38 sheet stands
+      0.05 proud by design, 0.10 allowed: at 0.30 it stands 0.08 proud, at 0.40 it is 0.02
+      under and nothing clamps it); the LEDs' 0.16 of air; the lite brace's own 1.22.
+    - **Height:** the sheet says print 0.1 proud and sand the bottom. The committed STL is
+      the sanded size, so there is no file to send that IS proud — and ±0.2 on thickness is
+      twice the 0.1.
+  - **To decide (each is DRH's):**
+    1. **The fit.** Keep 0.05 and let a first print say what PCBWay really holds; or open it
+       to 0.10 a side, which covers their stated ±0.2 at its worst; or ask them for a
+       tolerance on the four dimensions (their "manual quote review").
+    2. **The four channel walls.** Tick "wall thickness risk taken" (they are low ribs on a
+       thick base, not free-standing walls); or widen what can be widened; or give the east
+       ridge up and let the channel run to the brace's edge.
+    3. **The webs.** Accept the risk; or, on the max brace, make the two large ones
+       through-pockets; on the lite brace thickening the thirteen costs a tenth of the
+       footprint (above).
+    4. **The layer.** Put the channel on a layer (0.30) or leave 0.33 to their slicer.
+    5. **The resin.** Somos Ledo is the white one sold as tough; UTR 8360 is the cheap one
+       and says of itself that it is not.
+    6. **The file.** Whether the generator should also write a print file with stock on the
+       bottom for sanding.
+  - **What would settle most of it at once:** one message to PCBWay with the STL and the four
+    dimensions — what will you hold, will your wall analysis pass it, which resin is opaque
+    white — and one test print.
+  - **Left as it is until this is decided:** `PRINT_WALL`'s comment in `fit_rules` and the
+    brace sheet's note 4 ("correct the printer's XY scale") still speak of a printer one sets
+    up oneself. Both are rewritten with whichever sizes are chosen.
+
 - [ ] **[BENCH — first brace print] Measure the print over its two forks before trusting the fit, and set the printer's XY scale from it**
   _(2026-11-15, opened when the brace nested.)_ The brace's long arm now runs on either side of
   each short-edge tab, and the outline stands 0.05 mm off every face of the shell it reaches
   (`fit_rules.WALL_FIT`) — the curves round a tab or a boss included, which cannot be sanded to
   fit the way a flat edge can. The two forks' seats are **84.80 mm apart** (y 2.05 and 86.85),
-  so the whole allowance along the brace's length is 0.10 mm, 0.12 %. Formlabs' own figure for
-  a Form 4 is ±0.3 % (lower limit ±0.15 mm) on an 81–150 mm feature, ±0.15 % (±0.02 mm) on a
-  1–30 mm one: **a print inside the printer's specification can be 0.25 mm long, and will not
-  seat.** So, on the first print, before any filing: **measure seat to seat between the two
+  so the whole allowance along the brace's length is 0.10 mm. The printer is PCBWay (DRH,
+  2026-11-15), whose stated SLA accuracy is ±0.2 mm on a length under 100 mm: **a print inside
+  that can be 0.2 mm long, and will not seat** (the item above has the whole comparison; this
+  one read "Formlabs ... ±0.3 %" for an hour, from a print spec that named the wrong printer).
+  So, on the first print, before any filing: **measure seat to seat between the two
   forks (84.80 nominal; 88.70 over the prongs' noses), across the ferrite block between the two
   east bosses (26.90 nominal, y 31.00–57.90, on the 1 mm of flat each side has at x 47.5–48.5),
   and the width from the west face to the east face (47.20 nominal)**. If the long figure is
-  out by more than the short ones, in proportion, it is the printer's scale: correct it in the
-  slicer and reprint. If a
+  out by more than the short ones, in proportion, it is the printer's scale: the MODEL is rescaled
+  to answer it (PCBWay prints the file as sent), and reprinted. If a
   print at the right scale still binds on a curve, say so — the fix is then a looser fit
   (`brace_cavity()` shrinks the void by one number, everywhere), which is DRH's call, not a
   file. Tick this when a print has dropped in without being touched.
@@ -1808,7 +1887,10 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
       outline is clipped to the recess first.
   - **What is not settled: whether a print will drop in.** The two forks' seats are 84.80 mm
     apart and each stands 0.05 mm off its tab; a Form 4's stated tolerance on a feature that
-    long is ±0.3 % (lower limit ±0.15 mm), three times the allowance at its smallest. The
+    long is ±0.3 % (lower limit ±0.15 mm), three times the allowance at its smallest. _(That
+    was the wrong printer — the brace's print spec named a Formlabs class. It is PCBWay, whose
+    stated ±0.2 mm is four times the allowance on all four seating dimensions, not just this
+    one: the DECISION item above.)_ The
     square-ended arm had the same 0.05 at each tip, and could be sanded. DRH asked for the
     exact fit knowing the curves cannot be ("let's try"), so it is cut as asked, and the bench
     item above ("Measure the print over its two forks") is what turns the first print into a

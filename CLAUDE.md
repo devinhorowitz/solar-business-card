@@ -907,13 +907,18 @@ red, the check itself fails.
   side; nested round a tab's tip it came 0.040 mm from titanium against a fit of 0.050. It is
   0.005 when nested (0.045 at the least), and no finer: at 0.002 the opening's 0.004 mm nicks at
   the corners of a through-cut survive as edges.
-  **(5) The fit is tighter than the printer over the brace's length, and that is on the record.**
-  The two forks' seats are 84.80 mm apart and stand 0.05 mm off a tab at each end; Formlabs gives
-  a Form 4 ±0.3 % (lower limit ±0.15 mm) for a feature that long. A square end could be sanded;
-  the inside of a fork cannot. DRH asked for the exact fit knowing the curves cannot be sanded
-  ("let's try"), so it is cut, and `enclosure/brace/README.md` says what the first print is for:
-  measuring the printer's scale. **One fit everywhere, or a different outline rule** — a second,
-  looser number for the curves alone puts a step in the outline wherever a curve meets a flat.
+  **(5) The fit is tighter than the printer, and the printer in the docs was not the printer.**
+  The brace's print spec named a Formlabs Form 3/4-class machine (DRH's 2026-11-13 call, to
+  justify 0.25 mm walls), and the first write-up of the nested fit compared it with Formlabs'
+  figures. DRH, the same day: "it's going to be pcbway. Check against their capabilities before
+  we make decisions on sizing constraints." PCBWay's own pages give SLA ±0.2 mm on a length
+  under 100 mm, 0.1 mm layers, and a minimum wall that grows with the wall (0.5 mm at 5 × 5 mm,
+  0.8 at 10 × 10). Four dimensions seat the brace and each has 0.10 mm in all to give; the four
+  ferrite-channel walls are under the smallest wall in that table; so are thirteen webs on the
+  lite brace and two on the max. None of it is resized: `TODO.md`, "The brace against PCBWay",
+  has the comparison and the open decisions. **A fit is a claim about a process — find out
+  whose process before choosing the number**, and when a spec names a class of machine, ask
+  whether anyone has said where the part will actually be made.
 - **A ledger entry is a standing waiver, so a ledger audits itself.** `scripts/interference_drc.py`'s
   `EDGE_LEDGER` excused seven parts from the cavity rectangle and had excused nothing since
   2026-08-08: six had been moved inboard and the seventh, C7, was deleted from the board the day
