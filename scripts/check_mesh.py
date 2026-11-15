@@ -135,7 +135,16 @@ BASELINE = {
     # (fit_rules.floor_runs, EVENED -- CI run 663's handedness gate). 132.86 mm of fillet;
     # 0.2108 mm2 x 0.5 = 0.105 predicted, 0.109 measured on the STEP and 0.11 here. Inside this
     # ledger's tolerance, so the gate did not ask; re-ledgered so the number is the part's.
-    volume_mm3=5296.00, bbox=(-26.35, -45.4, -0.15, 26.35, 45.4, 3.4),
+    # re-ledgered 2026-11-15 (the corner bosses and the tabs, DRH: "yes to a b and c"),
+    # 5296.00 -> 5298.64. Each corner boss's flat runs to the short-edge wall through a plain
+    # R1.00 -- its Ø2.0 bore and the short round beside it are gone -- and the north tab is cut
+    # to the south tab's 3.5 mm. In plan: +2.487 mm2 at the four corner bosses, -1.000 at the
+    # north tab (fit_rules.shell_metal_poly, old against new; sectioned on the air frame,
+    # +2.527 and -0.975). x 1.80 = +2.68, less 0.12 for the floor fillets' runs ending 0.4 mm
+    # sooner at the four corner bosses and 0.5 later at the tabs (132.86 -> 132.28 mm):
+    # +2.55 predicted, +2.646 on the STEP, +2.64 here. bbox unchanged; 0 open edges,
+    # 0 degenerate. Triangles 53,678, ungated.
+    volume_mm3=5298.64, bbox=(-26.35, -45.4, -0.15, 26.35, 45.4, 3.4),
         max_boundary_edges=0, max_open_len_mm=0.0, max_degenerate=0),
     "solar-glow-drh-pogo-testplate.stl": dict(
         # re-ledgered 2026-11-13: the y range flips, -10.4..99.3 -> -99.3..10.4, and nothing
@@ -358,7 +367,10 @@ BASELINE = {
         # tolerance caught it. bbox unchanged; 0 open edges, 0 degenerate.
         # re-ledgered the same day (the runs evened top for bottom), 3933.15 -> 3933.04: as the
         # max shell, the south run east of the tab 0.5 mm shorter. Inside the tolerance.
-        volume_mm3=3933.04, bbox=(-26.35, -45.4, -0.15, 26.35, 45.4, 2.42),
+        # re-ledgered 2026-11-15 (the corner bosses and the tabs), 3933.04 -> 3934.78: as the
+        # max shell, +1.487 mm2 in plan x 1.22 less 0.12 of fillet = +1.69 predicted, +1.745 on
+        # the STEP, +1.74 here. bbox unchanged; 0 open edges, 0 degenerate.
+        volume_mm3=3934.78, bbox=(-26.35, -45.4, -0.15, 26.35, 45.4, 2.42),
         max_boundary_edges=0, max_open_len_mm=0.0, max_degenerate=0),
     "solar-glow-drh-frame-air-316L.stl": dict(
         # air: OPEN frame, no floor -- walls + recess + 8 bosses only, z 0..1.80 exactly
@@ -413,7 +425,10 @@ BASELINE = {
         # 17.590 mm2 x 1.20 = 21.11 predicted, 21.16 measured; 2.15 % of this frame. bbox
         # unchanged. BOTH seams (the lip break's and the resting face's, at the old tab
         # root's kink) and their four facets are gone: 0 open edges, 0 degenerate, held there.
-        volume_mm3=961.83, bbox=(-26.35, -45.4, 0.0, 26.35, 45.4, 1.8),
+        # re-ledgered 2026-11-15 (the corner bosses and the tabs), 961.83 -> 963.68: +1.487 mm2
+        # in plan x 1.20 = +1.78 predicted, +1.852 on the STEP, +1.85 here (0.19 % of this
+        # frame). No floor, so no fillet term. bbox unchanged; 0 open edges, 0 degenerate.
+        volume_mm3=963.68, bbox=(-26.35, -45.4, 0.0, 26.35, 45.4, 1.8),
         max_boundary_edges=0, max_open_len_mm=0.0, max_degenerate=0),
     "solar-glow-drh-diffuser-brace-lite.stl": dict(
         # the lite brace: gap 1.22, span 0.60, 31 pockets, 0 through-holes, single piece

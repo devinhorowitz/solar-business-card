@@ -132,11 +132,17 @@ def _lip_note():
                 runs[-1][1].append(where)
             else:
                 runs.append((label, [where]))
-        s = f"{word} {top:.2f}" + (" FULL LENGTH" if len(rows) == 1 else "") \
+        s = f" {top:.2f}" + (" FULL LENGTH" if len(rows) == 1 else "") \
             + (f" ({_who(named)})" if named else "")
         if runs:
             s += "; " + ", ".join(f"{label} " + ", ".join(ws) for label, ws in runs)
-        edges.append(s)
+        # TWO EDGES CUT ALIKE ARE ONE SENTENCE (2026-11-15: the south and north lips are one
+        # table, fit_rules.LIP_TWIN). Said once, it is also a line the notes block gets back.
+        if edges and edges[-1][1] == s:
+            edges[-1] = (edges[-1][0] + [word], s)
+        else:
+            edges.append(([word], s))
+    edges = [" AND ".join(words) + s for words, s in edges]
     # the rules behind the brackets, each stated only if a row above actually uses it
     rule = ""
     if cleared or tooled:
@@ -322,8 +328,15 @@ def sheet(vname, v):
     # finisher's own radius (fit_rules, "THE FERRITE LIMITS TWO OF THEM"), and the sheet says so
     _radii = sorted(_fr.blend_radii().items(), reverse=True)
     _bltxt = " + ".join(f"{n}\u00d7 R{r:.2f}" for r, n in _radii)
-    _fin = (f"BOSS-TO-WALL JUNCTIONS ARE MODELED: {_bltxt} BLEND, AND THE "
-            f"\u00d8{2 * _fr.TOOL_R:.1f} BOSS-CORNER BORES. ANY OTHER CONCAVE CORNER LEFT SHARP IN THE "
+    # WHAT STANDS IN THE CORNER BESIDE A CORNER BOSS, counted off fit_rules: until 2026-11-15
+    # a Ø2.0 bore (boss_cuts), since then a plain R of the finisher where the flat meets the
+    # short-edge wall (boss_roots). Each is said only if it is there.
+    _nbore = sum(len(_d) for mx, my in mounts for _d in _fr.boss_cuts(mx, my)[1])
+    _nbroot = len(_fr.boss_roots())
+    _cornertxt = ((f", AND THE \u00d8{2 * _fr.TOOL_R:.1f} BOSS-CORNER BORES" if _nbore else "")
+                  + (f", AND {_nbroot}\u00d7 R{_fr.TOOL_R:.2f} CORNER-BOSS ROOTS" if _nbroot else ""))
+    _fin = (f"BOSS-TO-WALL JUNCTIONS ARE MODELED: {_bltxt} BLEND{_cornertxt}. "
+            f"ANY OTHER CONCAVE CORNER LEFT SHARP IN THE "
             f"MODEL: FINISH WITH A \u00d8{2 * _fr.TOOL_R:.1f} mm TOOL = R{_fr.TOOL_R:.1f} AS-MILLED; ALL "
             f"CLEARANCES ALLOW FOR IT. SMALLER IS FINE, LARGER IS NOT.")
     if is_ti:
@@ -517,6 +530,20 @@ def sheet(vname, v):
                         if _ln.geom_type == "LineString":
                             ax.plot([X(px) for px, _py in _ln.coords], [Y(py) for _px, py in _ln.coords],
                                     color=INK, lw=0.55, ls=_ls)
+        # ...AND THE ROOT OF A CORNER BOSS'S FLAT (2026-11-15, fit_rules.boss_roots): the flat
+        # runs to the short-edge wall and meets it through a true R of the finisher. Its arc,
+        # and a stub of the wall it runs into, drawn as a blend's are.
+        for _b in _fr.boss_roots():
+            if _b["boss"] != (mx, my):
+                continue
+            _a0 = np.arctan2(_b["F"][1] - _b["O"][1], _b["F"][0] - _b["O"][0])
+            _a1 = np.arctan2(_b["T"][1] - _b["O"][1], _b["T"][0] - _b["O"][0])
+            _da = (_a1 - _a0 + np.pi) % (2 * np.pi) - np.pi
+            _th = _a0 + _da * np.linspace(0.0, 1.0, 24)
+            ax.plot([X(_b["O"][0] + _b["r"] * np.cos(t)) for t in _th],
+                    [Y(_b["O"][1] + _b["r"] * np.sin(t)) for t in _th], color=INK, lw=0.55, ls=_ls)
+            ax.plot([X(_b["F"][0]), X(_b["F"][0] + 1.5 * _b["t"][0])],
+                    [Y(_b["F"][1]), Y(_b["F"][1] + 1.5 * _b["t"][1])], color=INK, lw=0.55, ls=_ls)
         ax.add_patch(plt.Circle((X(mx),Y(my)),cbore/2*S1,fill=False,ec=GRY,lw=0.5))
         ax.add_patch(plt.Circle((X(mx),Y(my)),pilot_r*S1,fill=False,ec=INK,lw=0.9))
         ax.plot([X(mx)-1.6*S1,X(mx)+1.6*S1],[Y(my),Y(my)],lw=0.4,color=INK)
@@ -589,7 +616,9 @@ def sheet(vname, v):
         _heldtxt = (f" (R{_radii[-1][0]:.2f} AT THE {_nhb} BOSS{'ES' if _nhb != 1 else ''} BESIDE "
                     f"FERRITE {' '.join(_held)})" if _held and len(_radii) > 1 else "")
         _jointxt = (f"BOSS TO LIP WALL: {_bltxt.replace(' + ', ', ')} BLEND, FULL DEPTH{_heldtxt}"
-                    + (f"; {_nweb} CORNER BOSSES SOLID TO THE RECESS WALL (NO SLOT), TO THEIR BORE."
+                    + ((f"; {_nweb} CORNER BOSSES SOLID TO THE RECESS WALL (NO SLOT), "
+                        + ("TO THEIR BORE." if _nbore else
+                           f"EACH FLAT RUNNING TO IT THROUGH R{_fr.TOOL_R:.2f}." if _nbroot else "NO BORE."))
                        if _nweb else "."))
         # EVEN, AND ROUND-CORNERED (2026-11-14, DRH). One flat distance for all eight (the
         # tightest any supercap asks for, fit_rules.boss_flat_d), so the cut-back is said as

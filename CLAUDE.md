@@ -111,7 +111,8 @@ python3 scripts/interference_drc.py    # 3D interference DRC: brace STL ray-cast
 python3 scripts/assembly_drc.py        # the assembled stack: Z budget, ferrite, screws, cells --
                                        # and the SECTIONED shell-vs-parts and brace-vs-shell checks,
                                        # [G]: the lip the shell drawing describes vs the metal,
-                                       # and [I]: every shell's metal vs the NFC coil's copper
+                                       # [I]: every shell's metal vs the NFC coil's copper,
+                                       # and [L]: the max shell's rear art, read off the solid
 ```
 ```sh
 # which HAND the solids are in: each one against KiCad's own STEP export of the board/panel.
@@ -518,6 +519,20 @@ red, the check itself fails.
   the max shell's rear art would be the one thing left with a hand, and nothing reads it.
   `[S]`'s verdict is a function (`shell_hand`) so that it can be exercised without `kicad-cli`,
   against `board_parts`' outlines; that is a rehearsal, and the merge run is the gate.
+  **THE TABS WERE MADE ALIKE LATER THAT DAY (DRH), and the sentence above came true.** The
+  lite and air shells are their own mirror images — 0.010 mm off their own reflection — and
+  **have no hand**; the max shell's is its rear art alone. So the gates changed what they ask.
+  `fit_rules.shell_has_hand()` is the EXPECTATION (none, or "rear art"); `[E]` MEASURES it —
+  a shell declared handless must stand within what an STL gives up of its own reflection, and
+  one that grows a hand goes red and asks what holds it; `[S]` accepts a mirror image that fits
+  no worse only if its sections differ from the shell's by NOTHING ("differs, but only where
+  no part stands" is an error again — no gate is left to hold a hand that lives there); and
+  `assembly_drc` **[L]** reads the rear art, because until that day nothing did: where the
+  coin's standing islands are (0.0000 mm² of 136 off; 77 with the shell reflected), and that
+  the monogram reads "DRH" as a person sees the back (0.998 against the font's own letters,
+  0.64–0.80 for any mirrored reading). **When the last feature that told a hand goes, do not
+  go looking for a smaller tell: say the part has none, make a gate prove it, and find where
+  the hand of whatever still has one actually lives.**
   **`[E]` tells the hand by SURFACES, because a tell that is a sum can cancel** (2026-11-14). It
   used to read the centre of mass in y, which a reflection negates — and which is a sum, so metal
   on one side can be balanced by other metal on the other. The shells' stood 0.006 to 0.023 mm off
@@ -529,7 +544,9 @@ red, the check itself fails.
   ring's strip off the south tab). That is zero only for a solid that is its own mirror image —
   **and a lite or air shell is 0.5 mm from being one**: what tells its hand is that the north
   lip tab is half a millimetre wider than the south, because the two pairs of supercaps stand
-  that far apart in x. Make the two tabs alike and that tell is gone.
+  that far apart in x. Make the two tabs alike and that tell is gone. _(They were, on
+  2026-11-15, and it is: `[E]` holds those two shells to BEING their own reflection now, and
+  only the four solids that have a hand to the 0.20 bar.)_
   The self-test did its job — it failed rather than go quiet — but **when a gate measures a
   difference between two nearly equal things, ask whether an unrelated edit can make them equal.**
   The plate's labels are modelled mirror-written ON PURPOSE, so that the
@@ -616,9 +633,12 @@ red, the check itself fails.
   SC2 / SC4 sat 0.113 / 0.130 inside the mid-span boss corners, and C24's STO_SNS pad stood 0.097
   from a band-step fillet — all green. Three rules close it: the brace is cut to
   `fit_rules.cavity_as_milled()`; a boss keep-out corner the tool cannot reach gets a modeled Ø2.0
-  bore (`fit_rules.boss_cuts()`, placed as far from the thread as the tool can be and still reach);
+  bore (`fit_rules.boss_cuts()`, placed as far from the thread as the tool can be and still reach
+  — none is left since 2026-11-15);
   and a lip band steps a tool radius past its part. Metal near a supercap is held to the can at MAX
-  material (`fit_rules.part_envelope()`), not nominal. `scripts/assembly_drc.py` **[H]** sections the
+  material (`fit_rules.part_envelope()`), not nominal — with two stated, PROVISIONAL exceptions
+  since 2026-11-15, the floor fillets and the corner-boss roots, each held to the can's body
+  inside its sealed margin instead (their own bullets). `scripts/assembly_drc.py` **[H]** sections the
   emitted shell, opens it by the radius, and holds the brace, every part and the max-material cans
   to that. **A finisher larger than `TOOL_R` breaks all of it** — the sheet says so.
   _(Since 2026-11-14 the twelve boss-to-wall junctions are no longer among those corners: they are
@@ -653,7 +673,8 @@ red, the check itself fails.
   `fit_rules.boss_blends()` now lays a concave blend at each crossing (`BLEND_R` 2.00, twice the
   finisher's radius so the tool sweeps it; a true cylinder in the shell) and `boss_webs()` fills
   each slot, so the bore ends on the recess wall. **The bore stays** — without it the finisher's
-  radius leaves metal inside a max-material supercap's corner. `scripts/assembly_drc.py` **[J]**
+  radius leaves metal inside a max-material supercap's corner. _(It went on 2026-11-15, on
+  DRH's word and with that cost stated: the bullet on the corner bosses and the tabs.)_ `scripts/assembly_drc.py` **[J]**
   probes the sectioned shells for all sixteen, with the junctions put back sharp as its canary.
   What the first builds got wrong, each of which is now a rule:
   **(1) Lay new metal out on the wall that is CUT.** `cavity_void_poly()` is simplified by 0.01 for
@@ -716,7 +737,8 @@ red, the check itself fails.
   the other twenty and says which four it cannot; `check_consistency` **[8]** step 4d holds the
   evenness and the symmetry and rolls its own ball for hard corners. _(Counts as of that day.
   The next bullet took the four coil hollows and their four slight rounds away: sixteen boss
-  rounds now, all of which [J] can see, and no boss differs from its partner any more.)_
+  rounds, all of which [J] can see, and no boss differs from its partner any more. Twelve
+  since the corner bosses lost their bores later that day.)_
 - **SIMPLER CUTS: one width, one straight line, one true radius** (2026-11-15, DRH, circling two
   places on a plan of the cavity: "smooth contiguous surfaces for the milling to be done
   simpler"). Three rules, and a fourth thing each of them broke on the way in:
@@ -802,13 +824,42 @@ red, the check itself fails.
   run east of the tab stops 1.00 short of the tab's root); `check_consistency` [8] 4f holds the
   fillets' metal to its own mirror image, with the lost half millimetre as its canary. **Any
   feature added near a part must be the same in both hands top for bottom, or fit must be able
-  to tell them apart** — the tabs are the only thing here allowed to differ, and [J] holds
-  them. And **the rehearsal lied before the gate told the truth**: the scratch script that
+  to tell them apart** — the tabs were the only thing allowed to differ, and since they were
+  made alike later that day nothing is (the run east of the south tab is back at 0.50: an
+  evening rule gives nothing up once its two sides agree). And **the rehearsal lied before the gate told the truth**: the scratch script that
   rehearsed [S] gave each supercap 0.5 mm of height (`part_height()` returns `None` for them),
   so its cut above the floor passed through none. `python3 scripts/handedness_drc.py
   --rehearse` is that rehearsal with the parts' own heights, kept beside the verdict it
   rehearses; it refuses a body it has no height for, and fails if its lowest cut misses the
   supercaps on a floored shell. **A stand-in value in a rehearsal is a typed copy too.**
+- **A corner boss meets the short-edge wall through ONE true radius, and the two short edges
+  are cut ALIKE** (2026-11-15, DRH: "yes to a b and c"). `fit_rules.boss_roots()`: each corner
+  boss's flat runs to the recess wall and the corner is an R of the finisher, a true cylinder
+  laid out as a tab's root is — no bore on any boss, twelve boss rounds, the web ending on the
+  flat. `fit_rules.LIP_TWIN`: a short edge's lip at a station is the lesser of what it and its
+  twin allow, so both tabs are 3.5 mm and the sheet says the two edges once. Four things:
+  **(1) The plain corner is NOT clear of a max-material supercap, and that is a PROVISIONAL
+  rule like the floor fillet's.** It stands 0.070 mm into the corner of a square-cornered SC1
+  (0.005 mm²). It is stated as what it needs — `boss_root_cap_need()`: the can's BODY 0.05 mm
+  inside its max-material outline at that corner — against the same `FLOOR_CAP_MARGIN` a pouch
+  is TAKEN to give, with the same caliper check in `TODO.md`. `assembly_drc` [H] lets off only
+  metal inside a root `fit_rules` lays out (by construction, never a coordinate), holds the
+  body to the as-milled shell instead, prints the measured cost, and fails if rule and part
+  disagree about it. If a can's body is square to its corner, the bore comes back.
+  **(2) Two shells have no hand now, and that changed what three gates ask** — the handedness
+  bullet above has it. Do not add a feature that differs top for bottom without deciding which
+  gate will hold the hand it creates.
+  **(3) A cover that reaches into the WALL is not the shell's metal.** A root's cover goes
+  0.20 mm into the recess wall so the kernel can union it, and `shell_metal_poly()` counted
+  that: 0.24 mm² a corner of metal that is not there, every gate green. Found reconciling the
+  new volumes against sectioned shells — plan areas added up, the brace's missing 0.30 mm
+  again. **When a volume moves, predict it from the plan and section the part until the two
+  agree.**
+  **(4) Take a feature out by BUILDING without it, not by subtracting it.** The roots'
+  self-test subtracted them from the finished polygon; an island is simplified by 0.005, a
+  slit two microns wide was left up two of the four flats, and the test read a sharp corner as
+  reachable. And measure "what the ball cannot reach" by area inside the corner's own square,
+  not by which pieces happen to lie wholly near it.
 - **A ledger entry is a standing waiver, so a ledger audits itself.** `scripts/interference_drc.py`'s
   `EDGE_LEDGER` excused seven parts from the cavity rectangle and had excused nothing since
   2026-08-08: six had been moved inboard and the seventh, C7, was deleted from the board the day

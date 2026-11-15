@@ -337,6 +337,7 @@ from fit_rules import (lip_bands,
                        boss_blends as _boss_blends, boss_webs as _boss_webs,
                        boss_rounds as _boss_rounds, CONTOUR_R as _CONTOUR_R,
                        tab_rounds as _tab_rounds, tab_roots as _tab_roots,
+                       boss_roots as _boss_roots,
                        floor_runs as _floor_runs, BLEND_BITE as _BITE,
                        back_blends as _back_blends,
                        void_as_cut as _void_as_cut, BLEND_R as _BLEND_R,
@@ -999,6 +1000,13 @@ def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pill
     # further in at a 19-degree kink.
     for _b in _tab_roots():
         res = res.union(_blend_solid(_b, floor, cavity, lip_break, _foot))
+    # ...AND EACH CORNER BOSS'S FLAT TO THE SHORT-EDGE WALL (2026-11-15, fit_rules.boss_roots).
+    # The flat runs to the wall now -- no bore, no short round beside it -- and the corner is
+    # the same true cylinder of the finisher's radius a tab's root is, standing on the web and
+    # the wall. After the webs, which it stands on; its edge-break is held to its own side of
+    # the flat (`chord`), which is a cut made after the deburr and has none.
+    for _b in _boss_roots():
+        res = res.union(_blend_solid(_b, floor, cavity, lip_break, _foot))
     # ROUND THE OUTSIDE CORNERS OF EACH BOSS (2026-11-14, fit_rules "ROUNDS"). Where a flat
     # leaves the boss's circle, a bore or a coil hollow, the model kept a hard outside corner.
     # Each is a true cylinder of CONTOUR_R now. LAST of the cavity's features, because a round
@@ -1117,7 +1125,8 @@ print(f"cavity={cavity} general (max; per-variant from fit_rules.VARIANTS); U7 p
       f"boss junctions: R{_BLEND_R:g} blends x{sum(len(_boss_blends(mx, my)) for mx, my in mounts)}, "
       f"webs x{sum(len(_boss_webs(mx, my)) for mx, my in mounts)}, "
       f"R{_CONTOUR_R:g} rounds x{sum(len(_boss_rounds(mx, my)) for mx, my in mounts)} on the bosses "
-      f"and x{len(_tab_rounds())} on the tab tips, tab roots x{len(_tab_roots())} R{_TOOL_R:g}, "
+      f"and x{len(_tab_rounds())} on the tab tips, tab roots x{len(_tab_roots())} and "
+      f"corner-boss roots x{len(_boss_roots())} R{_TOOL_R:g}, "
       f"floor fillets x{len(_floor_runs())} R{_floor_runs()[0]['r']:g} "
       f"({sum(_r['s1'] - _r['s0'] for _r in _floor_runs()):.1f} mm, where there is a floor), "
       f"back blends x{sum(len(_back_blends(mx, my)) for mx, my in mounts)} where there is a back face "
@@ -1134,21 +1143,22 @@ for _vn, name, fl, wl, bd, cav_v, sl, mk, fn, gm, mat in jobs:
     # test must be able to fail: a round that is not there -- one of the real ones, its axis
     # moved half a millimetre -- has to be reported missing on every run.
     _rds = ([_rd for mx, my in mounts for _rd in _boss_rounds(mx, my)] + list(_tab_rounds())
-            + list(_tab_roots()))
+            + list(_tab_roots()) + list(_boss_roots()))
     _gone = _rounds_missing(solid, _rds)
     if _gone:
         raise SystemExit(f"[{_vn}] {len(_gone)} of the {len(_rds)} R{_CONTOUR_R:g} rounds and tab "
                          f"roots are not faces of the solid, the first about board "
                          f"({_gone[0]['O'][0]:.3f}, {_gone[0]['O'][1]:.3f}) -- the sheet calls every "
-                         f"outside corner of a boss, every tab tip and every tab root "
-                         f"R{_CONTOUR_R:g}. Not exporting {name}.")
+                         f"outside corner of a boss, every tab tip, every tab root and "
+                         f"every corner-boss root R{_CONTOUR_R:g}. Not exporting {name}.")
     _ghost = dict(_rds[0], O=(_rds[0]["O"][0] + 0.5, _rds[0]["O"][1]))
     if not _rounds_missing(solid, [_ghost]):
         raise SystemExit(f"[{_vn}] SELF-TEST: a round that is not in the solid was not reported "
                          f"missing -- the check above proves nothing. Not exporting {name}.")
     print(f"  [{_vn}] {len(_rds)} R{_CONTOUR_R:g} cylinders are faces of the solid "
-          f"({len(_rds) - len(_tab_rounds()) - len(_tab_roots())} boss corners, "
-          f"{len(_tab_rounds())} tab tips, {len(_tab_roots())} tab roots); a "
+          f"({len(_rds) - len(_tab_rounds()) - len(_tab_roots()) - len(_boss_roots())} boss corners, "
+          f"{len(_tab_rounds())} tab tips, {len(_tab_roots())} tab roots, "
+          f"{len(_boss_roots())} corner-boss roots); a "
           f"round moved 0.5 mm is reported missing, as it must be")
     # ...AND EVERY FLOOR FILLET, on a shell that has a floor: its lying cylinder is a face of
     # the solid, and one moved half a millimetre off its wall is reported missing.

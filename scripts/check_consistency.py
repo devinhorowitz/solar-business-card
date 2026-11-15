@@ -675,14 +675,17 @@ def check_enclosure_fit():
             bad += 1
     _tabs = fr.tab_rounds()
     _roots = fr.tab_roots()
-    if len(_rds) != 16 or len(_tabs) != 4 or len(_roots) != 4:
+    _broots = fr.boss_roots()
+    if len(_rds) != 12 or len(_tabs) != 4 or len(_roots) != 4 or len(_broots) != 4:
         # a tripwire, like the twelve and four above: the sheet and the docs quote the counts.
         # (20 boss rounds until 2026-11-15: the two east mid-span bosses lost two each when the
-        # coil's hollow became a straight cut.)
-        err(f"{len(_rds)} boss rounds, {len(_tabs)} tab-tip rounds and {len(_roots)} tab roots, "
-            f"where this board has had 16, 4 and 4 -- read what moved (fit_rules.boss_rounds / "
-            f"tab_rounds / tab_roots), then re-ledger the counts here and in the docs that "
-            f"quote them")
+        # coil's hollow became a straight cut. 16 until later the same day: each corner boss
+        # lost the short round between its flat and its bore when the bore went and the flat
+        # ran to the wall -- and gained a root, fit_rules.boss_roots.)
+        err(f"{len(_rds)} boss rounds, {len(_tabs)} tab-tip rounds, {len(_roots)} tab roots and "
+            f"{len(_broots)} corner-boss roots, where this board has had 12, 4, 4 and 4 -- read "
+            f"what moved (fit_rules.boss_rounds / tab_rounds / tab_roots / boss_roots), then "
+            f"re-ledger the counts here and in the docs that quote them")
         bad += 1
     if any(abs(rd["r"] - fr.CONTOUR_R) > 1e-9 for _m, rd in _rds) or \
             any(abs(rd["r"] - fr.CONTOUR_R) > 1e-9 for rd in _tabs):
@@ -791,6 +794,90 @@ def check_enclosure_fit():
             unary_union(fr._tab_squares()[1]))), b) for b in _roots) < 5 * _HARD:
         err("SELF-TEST: with the tab roots taken out, the rolled ball still reaches everything "
             "-- the tab-root test above cannot fail")
+        bad += 1
+    # 4e'. A CORNER BOSS MEETS THE SHORT-EDGE WALL THROUGH ONE TRUE RADIUS (2026-11-15, DRH:
+    #     the simpler cut). fit_rules.boss_roots(): the flat runs to the wall, an R of the
+    #     finisher in the corner, no bore. Held three ways: no bore is left at a corner boss;
+    #     each root is that R on the recess wall and on the flat; and a rolled ball, which owes
+    #     boss_roots() nothing, finds no corner there it cannot reach -- and finds all four
+    #     with the roots taken out. What the plain corner costs a max-material supercap is
+    #     computed, printed, and held to the margin a pouch is TAKEN to give (PROVISIONAL).
+    for m in fr.MOUNTS:
+        if fr._is_corner_boss(*m) and any(fr.boss_cuts(*m)[1]):
+            err(f"the corner boss at {m} still carries a bore ({fr.boss_cuts(*m)[1]}) -- its "
+                f"flat is meant to run to the short-edge wall (fit_rules.boss_roots)")
+            bad += 1
+    for b in _broots:
+        _yw = _ry0 if b["boss"][1] < fr.H / 2.0 else _ry1
+        _fx = b["boss"][0] + (1.0 if b["O"][0] > b["boss"][0] else -1.0) * fr.boss_flat_d()
+        if (abs(abs(b["O"][1] - _yw) - (fr.TOOL_R - fr.BLEND_BITE)) > 1e-6
+                or abs(abs(b["O"][0] - _fx) - (fr.TOOL_R - fr.BLEND_BITE)) > 1e-6
+                or abs(b["r"] - fr.TOOL_R) > 1e-9):
+            err(f"the corner-boss root about ({b['O'][0]:.3f}, {b['O'][1]:.3f}) is not an "
+                f"R{fr.TOOL_R:g} tangent to the recess wall at y{_yw:g} and the flat at x{_fx:.3f}")
+            bad += 1
+    _allm = unary_union([fr.shell_metal_poly(), _wallm])
+
+    def _unreached_sq(metal, b):
+        # what the ball cannot reach INSIDE the root's own corner square, by area -- not "the
+        # pieces that lie wholly near it", which is what the tab roots are asked: an island's
+        # outline is simplified by 0.005, and with the roots out a hairline of void runs up
+        # two of the four flats and joins this corner's piece to the window's own corner
+        w = _box(b["J"][0] - 2.0, b["J"][1] - 2.0, b["J"][0] + 2.0, b["J"][1] + 2.0).difference(metal)
+        gone = w.difference(w.buffer(-_rb, join_style=1, quad_segs=64).buffer(_rb, join_style=1, quad_segs=64))
+        e = fr.TOOL_R + 0.02
+        cx, cy = b["J"][0] + e * (b["t"][0] + b["n"][0]), b["J"][1] + e * (b["t"][1] + b["n"][1])
+        return gone.intersection(_box(min(b["J"][0], cx), min(b["J"][1], cy),
+                                      max(b["J"][0], cx), max(b["J"][1], cy))).area
+
+    _ubr = [_unreached_sq(_allm, b) for b in _broots]
+    if _broots and max(_ubr) > _HARD:
+        err(f"a corner-boss root still has an inside corner an R{_rb:g} cutter cannot reach "
+            f"({max(_ubr):.4f} mm2)")
+        bad += 1
+    # "taken out" is BUILT, not subtracted: the metal as fit_rules unions it, less the one step
+    # that adds the roots.
+    _noroot = unary_union([fr._shell_metal(False), _wallm]
+                          + [u for m_ in fr.MOUNTS for u, _c in fr.boss_webs(*m_)])
+    _noroot = _noroot.buffer(1e-4, join_style=2).buffer(-1e-4, join_style=2)
+    if _broots and min(_unreached_sq(_noroot, b) for b in _broots) < 5 * _HARD:
+        err("SELF-TEST: with the corner-boss roots taken out, the rolled ball still reaches "
+            "everything -- the root test above cannot fail")
+        bad += 1
+    _cbite, _cneed = fr.boss_root_cap_need()
+    if _cneed > fr.FLOOR_CAP_MARGIN + 1e-9:
+        err(f"the corner-boss roots need a supercap's body to stay {_cneed:.3f} mm inside its "
+            f"max-material outline, more than the {fr.FLOOR_CAP_MARGIN} it is TAKEN to "
+            f"(FLOOR_CAP_MARGIN, provisional)")
+        bad += 1
+    if _broots and min(b["cap_gap"] for b in _broots) < fr.BOSS_CLR - 1e-9:
+        err(f"a corner-boss root stands {min(b['cap_gap'] for b in _broots):.3f} mm from its "
+            f"supercap's NOMINAL outline, inside BOSS_CLR {fr.BOSS_CLR}")
+        bad += 1
+    # 4e''. THE TWO SHORT EDGES ARE CUT ALIKE (2026-11-15, DRH: the two tabs the same width).
+    #     One lip table for S and N (fit_rules.LIP_TWIN); held on the lip AS CUT, and on the
+    #     metal's own polygon reflected top for bottom, which owes lip_bands() nothing. What
+    #     is left over is the outline's own simplify, well under a hundredth.
+    _geo = lambda rows: [(round(lo, 6), round(hi, 6), round(w, 6)) for lo, hi, w, _n in rows]
+    if _geo(fr.lip_as_cut("S")) != _geo(fr.lip_as_cut("N")):
+        err(f"the south and north lips are not cut alike: {_geo(fr.lip_as_cut('S'))} against "
+            f"{_geo(fr.lip_as_cut('N'))} (fit_rules.LIP_TWIN)")
+        bad += 1
+    from shapely.affinity import affine_transform as _aff0
+    _tb = lambda g: _aff0(g, [1.0, 0.0, 0.0, -1.0, 0.0, fr.H])
+    _tbdiff = lambda m: m.symmetric_difference(_tb(m)).buffer(-0.02).area
+    _cavm = unary_union([fr.shell_metal_poly(), _wallm])
+    _tbd = _tbdiff(_cavm)
+    if _tbd > 1e-6:
+        _d = _cavm.symmetric_difference(_tb(_cavm)).buffer(-0.02)
+        err(f"the cavity's metal is not its own mirror image top for bottom: {_tbd:.4f} mm2 "
+            f"differs, near ({_d.representative_point().x:.2f}, {_d.representative_point().y:.2f}). "
+            f"The lite and air shells are declared to have no hand (fit_rules.shell_has_hand); "
+            f"if this is meant, say what now holds it")
+        bad += 1
+    if _tbdiff(_cavm.union(_box(27.0, 0.0, 27.5, 2.0))) <= 1e-6:
+        err("SELF-TEST: with the south tab made half a millimetre wider than the north, the "
+            "cavity still reads as its own mirror image -- the test above cannot fail")
         bad += 1
     # 4f. THE FLOOR MEETS THE WALL THROUGH A RADIUS (2026-11-15, DRH). fit_rules.floor_runs():
     #     an R1.00 fillet on the long straight walls of the supercap bays -- never where a
@@ -932,6 +1019,10 @@ def check_enclosure_fit():
            f"their walls straight between the bosses, {len(_cut)} mid-span bosses cut straight "
            f"{_cd:g} from their axes for the coil, {len(_roots)} tab roots R{fr.TOOL_R:g} on the "
            f"recess wall ({max(_ur):.4f} mm2 unreached at worst; taken out, all fail); "
+           f"{len(_broots)} corner bosses' flats run to the short-edge wall through R{fr.TOOL_R:g} "
+           f"with no bore ({_cbite:.3f} mm into a max-material supercap's corner; needs "
+           f"{_cneed:.2f} mm of the margin, PROVISIONAL); the south and north lips one table "
+           f"and the cavity its own mirror image top for bottom ({_tbd:.4f} mm2); "
            f"{len(_fruns)} floor fillets R{fr.FLOOR_R:g}, {sum(r_['s1'] - r_['s0'] for r_ in _fruns):.1f} mm "
            f"of wall ({_fmetal.area:.1f} mm2 in plan), "
            + ", ".join(f"{g:.2f} mm from the {vn} brace" for vn, g in _fbr.items())

@@ -339,15 +339,19 @@ fillets, plus four panel-corner), each **scalloped** clear of whatever fouls it 
 that can's own bay clearance, since its body tolerance lands on the edge the boss faces — while
 keeping ≥ 75.8 % of its M2 thread annulus. Since the 2026-11-14 contouring pass the eight are
 even and round-cornered: one flat 1.475 mm from every axis, each mid-span boss its own mirror
-image, every outside corner a modeled R1.00 (sixteen), and the tip corners of the two short-edge
+image, every outside corner a modeled R1.00 (twelve), and the tip corners of the two short-edge
 lip tabs likewise (four). Since 2026-11-15 the cuts are simpler too: the west lip is one width
 the whole edge (2.25, so the cavity's west wall is a single straight face), the two east
 mid-span bosses are cut straight across for the coil (2.32 mm from the axis, both sides), and
 each tab runs into the short-edge wall through a modeled R1.00. On the max and lite shells the
 floor meets the wall through a modeled **R1.00 fillet** (a ball end mill's) on the eight long
-straight walls of the supercap bays, 133 mm in all, the same top for bottom — nowhere the brace bears; under the
+straight walls of the supercap bays, 132 mm in all, the same top for bottom — nowhere the brace bears; under the
 supercaps' edges it rests on a provisional figure for the pouch's sealed margin, with a caliper
-check in `TODO.md`. Each boss runs into the lip's wall through a modeled concave
+check in `TODO.md`. Each corner boss's flat runs to the short-edge wall through a plain R1.00
+(no bore on any boss since 2026-11-15; the same provisional figure covers the 0.07 mm that
+corner stands into a largest-size supercap), and the two short-edge tabs are the same width, so
+the inside of every shell is its own mirror image top for bottom: the lite and air shells have
+no hand at all, and the max shell's is its rear art. Each boss runs into the lip's wall through a modeled concave
 blend (twelve: eight R2.00, four R1.00 at the two bosses beside the ferrite sheet), and the four corner ones are solid
 to the recess wall (2026-11-14; until then those junctions were sharp corners in the STEP, and
 each corner boss stood beside a 0.17 mm slot no cutter could enter). On the back, each boss's

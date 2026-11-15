@@ -642,7 +642,44 @@ def variant_span(name):
 COIL_REF = "NFC COIL"      # the one lip limiter that is not a part: the coil clamp on the east edge
 
 
+# ---- THE TWO SHORT EDGES ARE CUT ALIKE (2026-11-15, DRH: "yes" to making the two tabs the
+# same width) ----------------------------------------------------------------------------
+# The lip between the two supercaps on each short edge stands as a tab, and the two tabs came
+# out 3.5 mm (south) and 4.0 mm (north) wide, because SC2 and SC4 stand 0.152 mm apart in x and
+# the bands are cut on 0.5 mm stations. After the west wall went straight that half millimetre
+# was the ONLY thing that made the inside of a shell differ top for bottom -- and so the only
+# thing that gave the lite and air shells a hand at all. A short edge's lip at a station is now
+# the lesser of what that edge and its twin allow there, so the two edges are one table: the
+# north tab is 3.5 mm too (0.5 x 2.0 less the root fillet: about 1 mm2 of a 340 mm2 seat).
+# Only ever less metal, the contouring pass's rule.
+#
+# WHAT FOLLOWS FROM IT, each held somewhere:
+#   * the floor fillets' evening rule (floor_runs) gives nothing up: both runs east of the tabs
+#     stop FLOOR_STOP short again;
+#   * the LITE and AIR shells are their own mirror images top for bottom -- they have no hand,
+#     and cannot be cut in the wrong one. scripts/handedness_drc.py [S] and [E] ASSERT that
+#     now instead of looking for a tell that is no longer there (shell_has_hand, below);
+#   * the MAX shell's hand is its rear art and nothing else, so something has to read the rear
+#     art: scripts/assembly_drc.py [L].
+LIP_TWIN = {"S": "N", "N": "S"}
+
+
 def _lip_limits(edge, lo, hi, ps=None):
+    """_lip_limits_own() for `edge`, EVENED with its twin edge where it has one (LIP_TWIN):
+    the lesser width of the two, named by whichever edge's parts set it (both, if they agree)."""
+    w, who = _lip_limits_own(edge, lo, hi, ps)
+    twin = LIP_TWIN.get(edge)
+    if twin is None:
+        return w, who
+    wt, whot = _lip_limits_own(twin, lo, hi, ps)
+    if wt < w - 1e-9:
+        return wt, list(whot)
+    if abs(wt - w) <= 1e-9:
+        return w, who + [n for n in whot if n not in who]
+    return w, who
+
+
+def _lip_limits_own(edge, lo, hi, ps=None):
     """(width, [limiter...]) for the stretch lo..hi of `edge` -- the ONE statement of how
     wide the lip may be there and of what stops it being wider.
 
@@ -1508,8 +1545,8 @@ def _boss_keepout(ref, poly):
 #   * THE FLAT RUNS THE WHOLE BOSS. At a mid-span boss it is a full chord: no lump beyond the
 #     keep-out's end, no inside corner for a dogbone to relieve, and the boss mirrors itself
 #     about its own centre line. At a corner boss it runs from the boss out to the short-edge
-#     wall, where the one dogbone a corner boss still needs is parked -- the same distance from
-#     that wall at all four (_boss_end_d()).
+#     wall and meets it through a true R of the finisher (boss_roots, below). Until 2026-11-15
+#     it stopped 0.25 short of that wall and a dogbone was parked in the corner; see there.
 #   * ONLY EVER LESS METAL. An evened keep-out is the cap's own keep-out UNITED with the slab
 #     that evens it, so nothing a cap was cleared by is given back.
 #
@@ -1533,15 +1570,6 @@ def boss_flat_d(_c={}):
     return _c["d"]
 
 
-def _boss_end_d(_c={}):
-    """How far from its short board edge a corner boss's flat ends (the cap keep-out's corner
-    there, where the dogbone goes): the least of the four, so the four are alike."""
-    if "d" not in _c:
-        _c["d"] = min((k.bounds[1] if my < H / 2.0 else H - k.bounds[3])
-                      for mx, my in MOUNTS if _is_corner_boss(mx, my) for k in _cap_keepouts(mx, my))
-    return _c["d"]
-
-
 def _boss_even(mx, my, ref, kp):
     """The keep-out `kp` of the part `ref` at the boss at (mx, my), EVENED: a supercap's is
     united with the slab that puts its flat at boss_flat_d() and runs it the whole boss. Any
@@ -1558,10 +1586,9 @@ def _boss_even(mx, my, ref, kp):
             f"rule is written for a cap lying between the two long-edge rows of bosses")
     fx = mx + sgn * boss_flat_d()
     far = BOSS_R + 2 * TOOL_R + 1.0                  # past every corner boss_cuts() looks at
-    if _is_corner_boss(mx, my):
-        ya, yb = (_boss_end_d(), my + far) if my < H / 2.0 else (my - far, H - _boss_end_d())
-    else:
-        ya, yb = my - far, my + far
+    # the same slab at all eight: at a corner boss it runs on THROUGH the short-edge wall, so
+    # the flat ends on that wall and nowhere short of it (boss_roots lays the corner)
+    ya, yb = my - far, my + far
     out = kp.union(box(min(fx, fx + sgn * far), ya, max(fx, fx + sgn * far), yb))
     if out.geom_type != "Polygon":
         raise RuntimeError(f"boss at ({mx}, {my}): evening {ref}'s keep-out split it in {len(out.geoms)}")
@@ -1904,10 +1931,10 @@ def boss_island(mx, my, rounds=True, exact=False):
 # ideal wall met the cut one with a step, and the first prototype of this added 49 sliver
 # faces to the max shell that way).
 #
-# WEBS. The slot beside a corner boss is filled: boss, web and wall are one piece of metal,
-# and the bore that used to end in the slot becomes an ordinary R1.0 relief running from the
-# boss's flat out to the wall. The bore stays. Without it the finisher's own radius would
-# leave metal 0.05 mm inside a max-material supercap's corner (boss_cuts).
+# WEBS. The slot beside a corner boss is filled: boss, web and wall are one piece of metal.
+# Until 2026-11-15 a web ended on the boss's own Ø2.0 bore; it ends on the boss's FLAT now,
+# which runs to the wall (boss_roots: the bore went, on DRH's word, and what that costs is
+# stated there).
 #
 # THE FERRITE LIMITS TWO OF THEM. The sheet behind the coil (FER) lies in the cavity at the
 # height the blends stand at, and its two east corners are 0.43 and 0.34 mm from the bosses at
@@ -2282,6 +2309,11 @@ def _shell_metal(with_webs, rounds=True, _c={}):
             # what is built, and that is buried in the boss -- but every reader of this
             # polygon had it. Closed by a ten-thousandth; nothing else moves.
             m = m.buffer(_SEAM, join_style=2).buffer(-_SEAM, join_style=2)
+            # ...and the true R at the foot of each corner boss's flat (boss_roots), which
+            # stands on the web and the wall. Held to the recess: a root's cover reaches
+            # _BLEND_LIP into the WALL, which is not this polygon's to count (0.24 mm2 a
+            # corner, found adding up plan areas against the sectioned shells).
+            m = unary_union([m] + [g.intersection(recess_poly()) for g in boss_root_metal()])
         if rounds:
             # off the whole union, not just the islands: a round between a flat and a blend
             # takes a hair of the blend with it
@@ -2407,6 +2439,141 @@ def _boss_webs(mx, my):
                                f"thick): a bore that should close it does not reach its wall")
         out.append((P, cover))
     return out
+
+
+# ---- A CORNER BOSS MEETS THE SHORT-EDGE WALL THROUGH ONE TRUE RADIUS (2026-11-15, DRH: "yes"
+# to the simpler cut) ----------------------------------------------------------------------
+# Until now each corner boss's flat stopped 0.25 mm short of the short-edge wall, and three
+# things stood in the corner: a Ø2.0 bore parked against the wall (boss_cuts' dogbone), a
+# round 0.66 mm long between the bore and the flat, and the web the bore ended. The flat now
+# runs to the wall and the corner is one R of the finisher -- a true cylinder, tangent to the
+# flat and to the recess wall but for BLEND_BITE, laid out exactly as a tab's root is. Four
+# bores and four rounds fewer; the web is still there, and ends on the flat.
+#
+# WHAT IT COSTS, AND WHAT IT RESTS ON. The bore was there so that the finisher's own radius
+# left no metal inside the corner of a MAX-MATERIAL supercap (part_envelope). The plain corner
+# does: boss_root_cap_need() -- 0.067 mm at the very corner, 0.005 mm2 in plan, on all four.
+# A can at its nominal outline clears the corner by 0.75 mm. DRH took the simpler cut on the
+# same ground as the floor fillet (floor_runs): the can is a foil pouch and the outside of its
+# outline is the sealed margin, not the body. So the rule is stated the same way -- as how far
+# in from its max-material outline the can's BODY must stay for the corner to clear it (0.05
+# mm) -- against the same FLOOR_CAP_MARGIN a pouch is TAKEN to give, which is PROVISIONAL
+# until a caliper has been put on one (TODO.md). boss_roots() refuses a corner that needs more
+# than that, or that comes within BOSS_CLR of the can's nominal outline.
+def boss_roots(_c={}):
+    """[blend] -- one per corner boss, each a dict as tab_roots() gives them (O, r, F, T, J, t,
+    n, cover) plus `boss`, `cap` and `chord` True: a concave blend of TOOL_R between the
+    short-edge wall AS CUT and the boss's cap-facing flat. Board coords.
+
+    `chord` because the flat is a cut made after the deburr, like a straight cut across a
+    mid-span boss: the shell CAD holds the blend's edge-break to the blend's own side of it.
+
+    It raises rather than return a root whose wall or flat is not the straight face the layout
+    assumes, whose new metal is not the fillet a square corner takes, that comes within LIP_CLR
+    of a machine-placed part or BOSS_CLR of its supercap's NOMINAL outline, or that needs more
+    of the pouch's margin than FLOOR_CAP_MARGIN."""
+    if "r" not in _c:
+        r, d = TOOL_R, TOOL_R - BLEND_BITE
+        _rx0, ry0, _rx1, ry1 = recess_poly().bounds
+        wallm = box(-5.0, -5.0, W + 5.0, H + 5.0).difference(recess_poly())
+        out = []
+        for mx, my in MOUNTS:
+            if not _is_corner_boss(mx, my):
+                continue
+            caps = [(ref, p) for ref, p in _boss_foul_parts(mx, my) if ref in CAP_DATUM]
+            if not caps:
+                continue                                              # no flat here to run to the wall
+            if len(caps) != 1:
+                raise RuntimeError(f"boss at ({mx}, {my}): {len(caps)} supercaps foul it -- the "
+                                   f"corner rule is written for one flat a corner boss")
+            ref, p = caps[0]
+            sx = 1.0 if p.centroid.x > mx else -1.0                   # along the wall, away from the boss
+            xs = mx + sx * boss_flat_d()
+            yw, sy = (ry0, 1.0) if my < H / 2.0 else (ry1, -1.0)      # the wall, and the way the cavity lies
+            at = f"the corner boss at ({mx}, {my}): its root at ({xs:.3f}, {yw:g})"
+            J = (xs, yw)
+            t, n = (sx, 0.0), (0.0, sy)
+            F = (xs + d * sx, yw)
+            O = (F[0], yw + d * sy)
+            T = (xs, O[1])
+            metal = unary_union([_lip_metal_cached(), wallm, boss_island(mx, my, rounds=False)]
+                                + [u for u, _cov in boss_webs(mx, my)])
+            metal = metal.buffer(_SEAM, join_style=2).buffer(-_SEAM, join_style=2)
+            # the two faces it joins must be there, straight, as far as it reaches and beyond
+            for a, b, what in ((J, (xs + (r + 0.25) * sx, yw), "the short-edge wall"),
+                               (J, (xs, yw + (r + 0.25) * sy), "the boss's flat")):
+                run = LineString([a, b])
+                if run.difference(metal.boundary.buffer(1e-5)).length > 1e-5:
+                    raise RuntimeError(f"{at}: {what} is not a straight face of the metal from "
+                                       f"({a[0]:.3f}, {a[1]:.3f}) to ({b[0]:.3f}, {b[1]:.3f})")
+            cover = Polygon([O, F,
+                             (F[0], F[1] - _BLEND_LIP * sy),
+                             (xs - _BLEND_LIP * sx, yw - _BLEND_LIP * sy),
+                             (xs - _BLEND_LIP * sx, T[1])])
+            b = {"O": (round(O[0], 9), round(O[1], 9)), "r": r, "F": F, "T": T, "J": J,
+                 "t": t, "n": n, "cover": cover, "limit": None, "twin": False, "chord": True,
+                 "boss": (mx, my), "cap": ref}
+            new = cover.difference(_blend_disc(b)).difference(metal)
+            want = (box(min(xs, xs + r * sx), min(yw, yw + r * sy), max(xs, xs + r * sx), max(yw, yw + r * sy))
+                    .difference(Point(xs + r * sx, yw + r * sy).buffer(r, resolution=256)))
+            odd = new.symmetric_difference(want).buffer(-_ROUND_TOL / 2.0)
+            if not odd.is_empty:
+                raise RuntimeError(f"{at}: the blend adds {new.area:.4f} mm2 where a square "
+                                   f"corner takes {want.area:.4f}, near "
+                                   f"({odd.centroid.x:.3f}, {odd.centroid.y:.3f})")
+            for oref, op, _h, src in _cached_parts():
+                if oref != ref and src == "model" and part_envelope(oref, op).distance(new) < LIP_CLR - 1e-9:
+                    raise RuntimeError(f"{at}: its fillet stands "
+                                       f"{part_envelope(oref, op).distance(new):.3f} mm from {oref}, "
+                                       f"inside LIP_CLR {LIP_CLR}")
+            # ...and its supercap. Measured to the TANGENT fillet (`want`), which is what a shop
+            # cutting to the note leaves -- the floor fillet's rule.
+            gap = p.distance(want)
+            if gap < BOSS_CLR - 1e-9:
+                raise RuntimeError(f"{at}: {ref} at its NOMINAL outline stands {gap:.3f} mm from "
+                                   f"it, inside BOSS_CLR {BOSS_CLR} -- that is the can, not its margin")
+            env = part_envelope(ref, p)
+            Ot = (xs + r * sx, yw + r * sy)
+            hit = env.intersection(want)
+            bite = 0.0 if hit.is_empty else max(
+                0.0, max(math.hypot(q[0] - Ot[0], q[1] - Ot[1]) for q in hit.exterior.coords) - r)
+            lo_m, hi_m = 0.0, 2.0 * TOOL_R
+            if hit.is_empty or hit.area < 1e-12:
+                need = 0.0
+            else:
+                for _ in range(40):                                   # the least inset that clears it
+                    mid = (lo_m + hi_m) / 2.0
+                    if env.buffer(-mid, join_style=2).intersection(want).area > 1e-12:
+                        lo_m = mid
+                    else:
+                        hi_m = mid
+                need = hi_m
+            if need > FLOOR_CAP_MARGIN + 1e-9:
+                raise RuntimeError(f"{at}: {ref}'s body would have to stay {need:.3f} mm inside "
+                                   f"its max-material outline to clear it -- more than the "
+                                   f"{FLOOR_CAP_MARGIN} a pouch is TAKEN to give (FLOOR_CAP_MARGIN, provisional)")
+            b["area"] = new.area
+            b["cap_gap"] = gap                    # the can at nominal, to the tangent fillet
+            b["cap_bite"] = bite                  # a square-cornered can at max material, into it
+            b["cap_bite_area"] = 0.0 if hit.is_empty else hit.area
+            b["cap_need"] = need                  # how far inside its max-material outline the body must stay
+            out.append(b)
+        _c["r"] = out
+    return _c["r"]
+
+
+def boss_root_metal():
+    """[polygon] -- each corner-boss root as plan metal, WITH the part of its cover that lies
+    in the wall, the web and the boss, so that a union with those is seamless."""
+    return [b["cover"].difference(_blend_disc(b)) for b in boss_roots()]
+
+
+def boss_root_cap_need():
+    """(bite, margin needed) over the four corner-boss roots: how far a square-cornered can at
+    MAX MATERIAL stands into a root, and how far inside that outline the can's body must stay
+    for every root to clear it. The second is what FLOOR_CAP_MARGIN is held against."""
+    rs = boss_roots()
+    return (max([b["cap_bite"] for b in rs] or [0.0]), max([b["cap_need"] for b in rs] or [0.0]))
 
 
 # ---- ...and on the BACK FACE (2026-11-14, the same day, DRH: "give the back face the same
@@ -3123,6 +3290,21 @@ def board_geom(geom):
     """A shapely geometry in an emitted shell's or brace's file (x, y) -> board coordinates."""
     from shapely.affinity import affine_transform
     return affine_transform(geom, [1.0, 0.0, 0.0, -1.0, W / 2.0, H / 2.0])
+
+
+def shell_has_hand(vname):
+    """What gives the shell of variant `vname` a HAND -- makes it differ from its own mirror
+    image -- or None if nothing does.
+
+    Since 2026-11-15 the inside of every shell is its own mirror image top for bottom (the west
+    wall one width, the bosses even, the two short edges cut alike), and so is the outside of a
+    shell with no rear art. Such a shell cannot be written, cut or printed in the wrong hand:
+    there is no wrong hand. The max shell carries the medallion, whose lettering reads one way
+    only. This is the EXPECTATION the gates are held to, not a measurement: handedness_drc [E]
+    measures each shell against its own reflection and fails if a shell declared handless has
+    grown a hand (say what holds it), or if a shell declared handed has lost the tell;
+    assembly_drc [L] reads the rear art itself."""
+    return "rear art" if VARIANTS[vname]["medallion"] else None
 
 
 def crowded_edges(shape):

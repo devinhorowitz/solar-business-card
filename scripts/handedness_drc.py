@@ -76,8 +76,16 @@ WHAT IT CANNOT SEE, said plainly so it is not mistaken for total:
     [P] and [M] are what tie that gate's frame to this one's.
   * Bare pads. KiCad's export carries component bodies, not copper, so a lip resting on
     JP1's pads is assembly_drc [F]'s to find.
-  * Lettering. Nothing here reads the medallion or the plate's labels; their hand follows
-    from the solid they are cut into, and was checked by eye when the frame was fixed.
+  * Lettering. Nothing HERE reads the medallion or the plate's labels. The medallion is read
+    by assembly_drc [L] since 2026-11-15 -- it had to be: see A SHELL WITH NO HAND below --
+    and the plate's labels follow from the solid they are cut into, checked by eye when the
+    frame was fixed.
+  * A SHELL WITH NO HAND (2026-11-15). With the two short-edge tabs cut alike, the inside of
+    every shell is its own mirror image top for bottom, and a shell with no rear art -- lite,
+    air -- is its own mirror image altogether: there is no wrong hand to write it in. [S] and
+    [E] do not look for a tell on those; they ASSERT there is none (fit_rules.shell_has_hand
+    is the expectation, the solid is the measurement). The max shell's hand is its medallion
+    and nothing else; this gate cannot see it and says so.
 
 USAGE -- two halves, because KiCad lives in the container and cadquery on the runner:
 
@@ -170,6 +178,14 @@ CROWD_MARGIN = 0.05
 # every body with no tabled height -- the four supercaps -- 0.5 mm of height, so the cut
 # above the floor never passed through one. --rehearse is that rehearsal with the parts'
 # own heights, kept here so that it cannot drift from the verdict it rehearses.
+# AND THEN THE TABS WERE CUT ALIKE (later the same day, DRH: "yes" to the same width). The
+# 1.93 mm2 at the tabs is gone, and with it the last thing [J] held: top for bottom the
+# sections of a shell and of its mirror image are now the same sections. So the acceptable
+# answers in that placement are two -- fit tells them apart, or they differ by NOTHING -- and
+# "differs, but only where no part stands" has become an error again, because no gate is left
+# that holds a hand living there (name one if you add such a feature). What the hand then IS
+# comes from fit_rules.shell_has_hand(): none at all for a shell with no rear art, which [E]
+# proves on the whole solid; the rear art for the max shell, which assembly_drc [L] reads.
 SAME_ERODE = 0.03
 # --rehearse: how much lower than its tabled height a body is taken to hang. KiCad's bodies
 # hang a little lower than part_heights' figures (a model seats on its pads, not on the
@@ -190,6 +206,14 @@ REHEARSE_DEEPER = 0.10
 # south), 0.60 on the max shell (the rear art), 1.2 and 2.8 on the braces, 88.9 on the
 # plate. SURF_TELL is the least that must be for the comparison to count as able to tell a
 # hand.
+# SINCE 2026-11-15 TWO OF THE SIX HAVE NO HAND TO TELL. The tabs were cut alike, and the lite
+# and air shells measure 0.010 mm off their own reflection (the east wall's blends differ by
+# that: the cut outline's own simplify). A solid that is its own mirror image cannot be in the
+# wrong hand, and asking it for SURF_TELL would be asking it to be worse. So for a shell that
+# fit_rules.shell_has_hand() declares handless the bar turns round: reflected, it must stand
+# within SURF_SAME of itself -- and if it does not, it has grown a hand nobody declared, which
+# is an error that names itself. The max shell (0.600), the braces and the plate are held to
+# SURF_TELL as before.
 # WHY NOT THE CENTRE OF MASS, which is what this read until 2026-11-14 (y alone, to 0.001,
 # with a bar of 0.003 on how far opposite hands must disagree). A reflection negates it, so
 # it tells the hand only as well as the solid is lopsided -- and it is a SUM, so what is on
@@ -379,9 +403,12 @@ def surface_gaps(solid, stl, trimesh):
 def step_vs_stl(trimesh):
     """[E] -- every emitted solid's STEP against its own STL. Needs neither KiCad export."""
     import fit_rules as fr
-    pre, pairs, rows = len(_ERRORS), [], []
+    pre, pairs, rows, handless = len(_ERRORS), [], [], []
+    no_hand = set()                              # labels fit_rules declares to have no hand
     for vname, v in fr.VARIANTS.items():
         pairs.append((f"{vname} shell", ROOT / "enclosure" / v["shell_name"]))
+        if fr.shell_has_hand(vname) is None:
+            no_hand.add(f"{vname} shell")
         if v["brace_name"]:
             pairs.append((f"{vname} brace", ROOT / "enclosure" / "brace" / v["brace_name"]))
     pairs.append(("pogo plate", ROOT / "enclosure" / "solar-glow-drh-pogo-testplate"))
@@ -404,6 +431,20 @@ def step_vs_stl(trimesh):
             err(f"{label}: the STEP's surface and the STL's stand {written:.3f} mm apart "
                 f"({mirrored:.3f} with one reflected; an STL gives up {SURF_SAME} at most) -- "
                 f"they are not the same solid")
+        elif label in no_hand:
+            # A SHELL WITH NO HAND is held to BEING its own reflection, which is a claim a
+            # measurement can refuse: the day something on it differs top for bottom, this
+            # goes red and asks what holds the hand it has grown.
+            if mirrored > SURF_SAME:
+                err(f"{label}: fit_rules.shell_has_hand() says it has no hand, and reflected its "
+                    f"surface stands {mirrored:.3f} mm off itself (a solid that is its own mirror "
+                    f"image gives up {SURF_SAME} at most) -- it HAS one. Either make the feature "
+                    f"the same in both hands, or declare the hand and name the gate that holds it")
+            elif com > COM_SAME:
+                err(f"{label}: the two surfaces agree but the centres of mass are {com:.4f} mm "
+                    f"apart -- they are not the same solid")
+            else:
+                handless.append((mirrored, written, label))
         elif mirrored < SURF_TELL:
             err(f"SELF-TEST: {label}: reflected, its surface stands only {mirrored:.4f} mm off "
                 f"itself at most (the bar is {SURF_TELL}) -- the solid is too nearly its own "
@@ -416,10 +457,16 @@ def step_vs_stl(trimesh):
             rows.append((mirrored, written, label))
     if len(_ERRORS) == pre:
         least = min(rows)
-        ok(f"all {len(pairs)} STEP/STL pairs are one solid in one hand: no vertex of either "
-           f"file stands more than {max(r[1] for r in rows):.4f} mm off the other's surface "
-           f"(an STL may give up {SURF_SAME}); reflected, the least any pair stands off is "
-           f"{least[0]:.3f} mm, the {least[2]} (the bar is {SURF_TELL})")
+        ok(f"all {len(pairs)} STEP/STL pairs are one solid: no vertex of either "
+           f"file stands more than {max(r[1] for r in rows + handless):.4f} mm off the other's "
+           f"surface (an STL may give up {SURF_SAME}). {len(rows)} have a hand and are in the same "
+           f"one: reflected, the least any of them stands off is {least[0]:.3f} mm, the "
+           f"{least[2]} (the bar is {SURF_TELL})"
+           + (f". {len(handless)} have NONE, as fit_rules.shell_has_hand() declares -- "
+              + ", ".join(f"the {lbl} ({mir:.4f} mm off its own reflection at most)"
+                          for mir, _w, lbl in sorted(handless, key=lambda r: r[2]))
+              + f" -- each is its own mirror image to within what an STL gives up, so there is "
+                f"no wrong hand to write it in" if handless else ""))
 
 
 def felt_difference(cuts_a, cuts_b, bodies):
@@ -517,25 +564,35 @@ def shell_hand(vname, raw, outlines, dz, kcx, kcy, section_floor):
                 f"the shell's is (near KiCad ({at.x:.2f}, {at.y:.2f})) -- this cannot tell "
                 f"the shell's hand, and 'no collision' is not evidence")
             continue
-        differs = ("nothing a section can see" if wbox is None else
-                   f"{whole:.2f} mm2 at most on a level, all of it more than {REACH} from "
-                   f"every part (within KiCad x {wbox[0]:.1f}..{wbox[2]:.1f}, "
-                   f"y {wbox[1]:.1f}..{wbox[3]:.1f})")
-        print(f"          ...and that mirror image IS this cavity wherever a part stands: "
-              f"the two differ by {differs}")
-        same.append((label, differs))
+        if wbox is not None:
+            err(f"the {vname} shell's MIRROR IMAGE, {label}, fits KiCad's board no worse than "
+                f"the shell does and differs from it by {whole:.2f} mm2 at most on a level, all "
+                f"of it more than {REACH} from every part (within KiCad x {wbox[0]:.1f}.."
+                f"{wbox[2]:.1f}, y {wbox[1]:.1f}..{wbox[3]:.1f}) -- so the cavity has a hand that "
+                f"fit cannot tell, and since the two tabs were cut alike no gate holds one that "
+                f"lives where no part stands. Make the feature the same in both hands, or name "
+                f"the gate that reads it (SAME_ERODE, above)")
+            continue
+        print(f"          ...and that mirror image IS this cavity: at every level the two "
+              f"sections differ by nothing a section can see")
+        same.append(label)
     if told == 0 and o_r == 0.0 and g_r is not None and len(_ERRORS) == pre:
         err(f"SELF-TEST: neither mirror image of the {vname} shell fits KiCad's board worse "
             f"than the shell does -- nothing here tells its hand at all")
     if len(_ERRORS) == pre:
+        import fit_rules as fr
+        hand = fr.shell_has_hand(vname)
         ok(f"the {vname} shell as written clears every part KiCad exports (tightest "
            f"{w_r} at {g_r:.3f} mm, crowding {c_r:.3f} mm inside {REACH}); its mirror "
            f"image fits worse in {told} of the 2 placements"
-           + ("".join(f". The mirror image {label} is the same cavity wherever a part "
-                      f"stands -- the two differ by {differs} -- so fit cannot tell that "
-                      f"hand and no part is the worse for it; assembly_drc [J] holds it, by "
-                      f"the two tabs' rounds and roots, through the frame [M] ties to KiCad's"
-                      for label, differs in same)))
+           + ("".join(f". The mirror image {label} is the same cavity at every level: the "
+                      f"inside of this shell has no hand in that placement"
+                      for label in same))
+           + ("" if not same else
+              (". Nor has the shell any other (fit_rules.shell_has_hand): [E] holds that the "
+               "whole solid is its own reflection, so it cannot be written in the wrong hand"
+               if hand is None else
+               f". Its hand is its {hand}, which this gate cannot see: assembly_drc [L] reads it")))
 
 
 def rehearse():

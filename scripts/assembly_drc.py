@@ -122,6 +122,30 @@ margin a foil pouch is taken to have is PROVISIONAL (TODO.md). And because a fil
 R1.00 is still metal at mid-height on the 1.22 cavity, [G] reads the lip just under the
 seat, above them.
 
+THE CORNER-BOSS ROOTS (2026-11-15) are in [J] and in [H]. Each corner boss's flat runs to
+the short-edge wall through a plain R of the finisher (fit_rules.boss_roots) where a Ø2.0
+bore used to stand clear of the supercap; [J] probes the four arcs as it does a tab's
+root. [H] is where the cost shows: that corner stands up to 0.07 mm into the corner of a
+square-cornered can at MAX MATERIAL, which the bore existed to prevent. DRH took the
+simpler cut on the floor fillet's ground, so [H] holds it the floor fillet's way: only
+metal inside a root fit_rules lays out is let off (by construction, never a coordinate),
+the can's BODY -- taken to stand FLOOR_CAP_MARGIN inside its max-material outline,
+PROVISIONAL -- must clear the as-milled shell instead, the measured depth is printed, and
+the gate fails if the rule and the part disagree about what the corner costs or if
+fit_rules says a root reaches a can and the section saw nothing there.
+
+THE REAR ART ([L], 2026-11-15) exists because the two short-edge tabs were cut alike that
+day. Until then the inside of a shell differed top for bottom by half a millimetre of tab,
+and [J] held that -- which was the whole of what told a shell's hand in the one placement
+where a mirror image fits the board. With the tabs alike, a shell with no rear art has no
+hand at all (scripts/handedness_drc.py [E] proves each is its own reflection), and the
+max shell's hand is its medallion and nothing else. Nothing had ever read the medallion.
+[L] sections the proud face and holds the coin's standing islands to medallion.geometry()
+through fit_rules.board_geom(), with the shell reflected top for bottom as its canary; and
+it reads the monogram as a person sees the back, against the letters as the font draws
+them -- which owes medallion.py's own mirror nothing. A variant with no rear art gets a
+note saying it has no hand, not a skipped check.
+
 Variant policy, stated rather than implied:
   * max / lite -- every check, parameterized (floor, cavity, screw_len, stack).
   * air -- open_back, no brace: the cavity-floor probe and every brace/ferrite
@@ -230,6 +254,16 @@ FLOOR_PROBE = 0.06
 FLOOR_AT = (0.2, 0.5, 0.8)
 RIDGE_STEP = 0.02
 OVERLAP_EPS = 1e-3    # mm2 of plan overlap that counts as metal inside a body, not noise
+# [L], the rear art. Measured 2026-11-15 on the max shell: the standing islands in the metal
+# differ from medallion.geometry()'s by 0.0006 mm2 of 136 before the erosion and nothing after
+# it; reflected top for bottom, by 88.5. The monogram matches the font's own letters 0.998 as
+# seen from the back, 0.638 mirrored left for right, 0.795 top for bottom, 0.587 turned half a
+# turn (intersection over union, each normalised to its own box).
+ART_ERODE = 0.02      # mm: takes the tessellation's hairlines off a difference of two outlines
+ART_OFF_MAX = 0.05    # mm2 of standing art that may differ from the layout
+ART_TELL = 10.0       # mm2 the reflected art must differ by, or the art tells no hand
+ART_READS = 0.95      # the monogram against the font's letters, as seen from the back
+ART_MISREADS = 0.90   # ...and the most any mirrored reading may score
 SECTION_GRID = 1e-5   # mm: snap for stitching section segments into closed outlines
 # Heights are fractions of the cavity plus an irrational-looking nudge, so no cut ever lands
 # on a mesh vertex or a horizontal face (floor top, seat, chamfer edge) and degenerates.
@@ -930,6 +964,20 @@ def check_variant(vname, v, fr, bp, trimesh):
                f"(closest {worst:.3f} mm)")
     rows = []
     seat = floor + cavity
+    # THE CORNER-BOSS ROOTS ARE THE ONE PLACE A MAX-MATERIAL CAN IS NOT CLEARED (2026-11-15,
+    # fit_rules.boss_roots; DRH took the simpler cut). Each corner boss's flat runs to the
+    # short-edge wall through a plain R of the finisher, and that corner stands up to 0.07 mm
+    # inside the very corner of a square-cornered can at max material. Accepted on the floor
+    # fillet's ground -- the outside of a pouch's outline is its sealed margin -- and held the
+    # same way: the can's BODY, taken to stand FLOOR_CAP_MARGIN inside that outline
+    # (PROVISIONAL), must clear the as-milled metal, and what the square corner costs is
+    # measured and printed. Recognised BY CONSTRUCTION -- only metal inside a root fit_rules
+    # lays out is let off, never a coordinate -- so anything else inside a can is the old error.
+    from shapely.geometry import Point as _PtH
+    from shapely.ops import unary_union as _uuH
+    rootz = _uuH([b["cover"].difference(_PtH(b["O"]).buffer(b["r"] - 0.03, quad_segs=64)).buffer(0.03)
+                  for b in fr.boss_roots()]) if fr.boss_roots() else None
+    cost = []                                    # (name, mm2, depth) a root stands inside a max-material can
     for ref, poly, h, src in bodies:             # [F]'s list: the board's parts and the ferrite sheet
         if h is None and ref.startswith("SC"):
             h = v["cap_h"]
@@ -938,9 +986,21 @@ def check_variant(vname, v, fr, bp, trimesh):
         env = fr.part_envelope(ref, poly)
         for name, shape in ((ref, poly),) + (((ref + " max-material", env),) if env is not poly else ()):
             gap = None
+            let_off = rootz if (rootz is not None and shape is env and ref.startswith("SC")) else None
             for lbl, z, _metal, mm in milled:
                 if z <= seat - h:
                     continue
+                if let_off is not None:
+                    in_root = mm.intersection(shape).intersection(let_off)
+                    if in_root.area > 1e-6:
+                        depth, _at = deepest(in_root, shape)
+                        cost.append((name, in_root.area, depth))
+                        body = shape.buffer(-fr.FLOOR_CAP_MARGIN, join_style=2)
+                        if mm.intersection(body).area > OVERLAP_EPS or mm.distance(body) < SECTION_FLOOR:
+                            err(f"{name}: a corner-boss root reaches the can's BODY {lbl} (z {z:.2f}) "
+                                f"-- even {fr.FLOOR_CAP_MARGIN} mm inside its max-material outline, "
+                                f"which is all the margin a pouch is taken to have")
+                    mm = mm.difference(let_off)
                 over = mm.intersection(shape)
                 if over.area > OVERLAP_EPS:
                     depth, (px, py) = deepest(over, shape)
@@ -958,10 +1018,38 @@ def check_variant(vname, v, fr, bp, trimesh):
     rows.sort()
     for gap, name in rows[:6]:
         print(f"          {name:18s} nearest as-milled metal {gap:.3f} mm")
+    # what the plain corners cost, measured -- and held to what fit_rules says they cost
+    worst_cost = {}
+    for name, a, d in cost:
+        if name not in worst_cost or d > worst_cost[name][1]:
+            worst_cost[name] = (a, d)
+    for name, (a, d) in sorted(worst_cost.items()):
+        print(f"          {name:18s} a corner-boss root stands {d:.3f} mm into its corner ({a:.4f} mm2)"
+              f"   <- a square-cornered can at max material; see the note below")
+    _bite, _need = fr.boss_root_cap_need()
+    if rootz is not None:
+        said_area = max(b["cap_bite_area"] for b in fr.boss_roots())
+        seen = max([d for _a, d in worst_cost.values()] or [0.0])
+        if said_area > OVERLAP_EPS and not worst_cost:
+            err(f"SELF-TEST: fit_rules.boss_roots() puts a root {_bite:.3f} mm into a max-material "
+                f"supercap's corner ({said_area:.4f} mm2) and this section saw no metal there -- "
+                f"the corner is not being measured, so 'clear' below means nothing at the roots")
+        if seen > _need + 0.03:
+            err(f"a corner-boss root stands {seen:.3f} mm into a max-material supercap in the "
+                f"metal, where fit_rules.boss_root_cap_need() says {_need:.3f} -- the rule and "
+                f"the part disagree about what the plain corner costs")
+        if worst_cost:
+            note(f"PROVISIONAL: the plain R{R:g} corner at each corner boss clears a supercap only "
+                 f"if the can's body stays {_need:.2f} mm inside its max-material outline at that "
+                 f"corner (taken to do so by {fr.FLOOR_CAP_MARGIN:.2f}: a foil pouch's sealed "
+                 f"margin, which the datasheet does not dimension) -- TODO.md has the caliper check")
     if len(_ERRORS) == pre:
         ok(f"{len(rows)} bodies (the supercaps also at max material, fit_rules.part_envelope) "
            f"clear the shell as an R{R:g} finisher leaves it (tightest {rows[0][1]} "
-           f"{rows[0][0]:.3f}); the planted fillet speck reads as milled metal, as it must")
+           f"{rows[0][0]:.3f})"
+           + (f", the {len(fr.boss_roots())} corner-boss roots excepted and held to the cans' "
+              f"bodies instead" if rootz is not None else "")
+           + "; the planted fillet speck reads as milled metal, as it must")
 
     # ---- 9. grounded metal against the NFC coil --------------------------------------
     # The number held is fit_rules.COIL_CLR ON PURPOSE: it is what the sheet prints ("THE
@@ -1046,7 +1134,7 @@ def check_variant(vname, v, fr, bp, trimesh):
            f"as it must")
 
     # ---- 10. each boss meets the wall the way the sheet says ---------------------------
-    print("[J] boss blends, webs, outside rounds and tab roots (sectioned)")
+    print("[J] boss blends, webs, outside rounds, tab roots and corner-boss roots (sectioned)")
     import math as _m
     from shapely.geometry import Polygon as _Poly
     pre = len(_ERRORS)
@@ -1181,6 +1269,15 @@ def check_variant(vname, v, fr, bp, trimesh):
                     f"the {b['edge']} tab's root at board ({b['J'][0]:.2f}, {b['J'][1]:.2f})")
     if n_root == 0:
         err("fit_rules.tab_roots() returned no root -- the sheet calls them, and nothing was checked")
+    # THE CORNER-BOSS ROOTS (2026-11-15): each corner boss's flat runs to the short-edge wall
+    # and meets it through the same true R. A blend between two planes again.
+    n_broot = 0
+    for b in fr.boss_roots():
+        n_broot += 1
+        probe_blend(b, None, None, shell_cuts, mid,
+                    f"the corner-boss root at board ({b['J'][0]:.2f}, {b['J'][1]:.2f}), boss {b['boss']}")
+    if n_broot == 0:
+        err("fit_rules.boss_roots() returned no root -- the sheet calls them, and nothing was checked")
     if blind:
         err(f"SELF-TEST: with the junction put back sharp, the probe still reads metal at "
             f"{blind[0]}" + (f" and {len(blind) - 1} more" if len(blind) > 1 else "") +
@@ -1203,9 +1300,10 @@ def check_variant(vname, v, fr, bp, trimesh):
               f"{max(_slight_depth(rd) for rd in slight):.3f} mm) -- those are held by the shell "
               f"generator, which refuses to export a solid without each round's cylinder among "
               f"its faces" if slight else "")
-           + f"; {n_root} tab roots are R{fr.TOOL_R:g} on the recess wall; the same sections with "
+           + f"; {n_root} tab roots and {n_broot} corner-boss roots are R{fr.TOOL_R:g} on the "
+           f"recess wall; the same sections with "
            f"each junction and corner put back sharp fail all "
-           f"{n_bl + n_web + n_back + n_rd - len(slight) + n_tab + n_root}, as they must")
+           f"{n_bl + n_web + n_back + n_rd - len(slight) + n_tab + n_root + n_broot}, as they must")
 
     # ---- 11. the floor meets the wall through a radius ---------------------------------
     # fit_rules.floor_runs(): an R1.00 fillet on the long straight walls of the supercap bays,
@@ -1283,6 +1381,103 @@ def check_variant(vname, v, fr, bp, trimesh):
                f"{FLOOR_PROBE} mm inside each edge, air {FLOOR_PROBE} mm outside it and at both "
                f"ends of every run); the same cut with each fillet taken out fails all "
                f"{len(runs)}, as it must")
+
+    # ---- 12. the rear art, where it is the shell's only hand ----------------------------
+    # Since 2026-11-15 the inside of every shell is its own mirror image top for bottom (the two
+    # short edges are cut alike), so a shell with no rear art has no hand at all, and the one
+    # with the medallion has its hand THERE and nowhere else. Until that day nothing read the
+    # lettering -- the tabs told the hand, and [J] held the tabs. Two measurements:
+    #   WHERE: the standing islands of the coin, sectioned through the proud face, against
+    #     medallion.geometry() carried through fit_rules.board_geom() -- the frame every other
+    #     section here uses. A shell written in the wrong hand has them reflected top for bottom.
+    #   WHICH WAY ROUND: the monogram, looked at as a person holding the card looks at its back
+    #     (the part turned over about its long axis), against the same letters as the font draws
+    #     them. This one owes medallion.py nothing: it is glyphs.py's outline and three islands.
+    print("[L] the rear art (sectioned)")
+    pre = len(_ERRORS)
+    if fr.shell_has_hand(vname) is None:
+        note("no rear art on this variant, and the cavity is its own mirror image top for bottom "
+             "(check_consistency [8]): this shell has NO HAND -- there is no wrong one to cut it "
+             "in. scripts/handedness_drc.py [E] holds that the solid is its own reflection")
+    elif v["border_h"] <= 0:
+        err("fit_rules.shell_has_hand() names rear art on a variant with no back face")
+    else:
+        import os as _os
+        import shapely.affinity as _aff
+        for _p in (str(ROOT / "enclosure"), str(ROOT / "scripts")):
+            if _p not in sys.path:
+                sys.path.insert(0, _p)
+        import medallion as _md
+        from glyphs import outline as _outline
+        _fd = _os.environ.get("MAKER_FONT_DIR") or str(ROOT / "enclosure" / "fonts")
+        _fr_, _fb_ = _os.path.join(_fd, "JetBrainsMono-Regular.ttf"), _os.path.join(_fd, "JetBrainsMono-Bold.ttf")
+
+        def _text_at(txt, lx, cy_, cap, font):
+            # medallion.geometry()'s text contract: left edge at lx, centred on cy_, cap high
+            g = _outline(txt, font)
+            if g is None or g.is_empty:
+                return None
+            x0, y0, x1, y1 = g.bounds
+            g = _aff.scale(g, xfact=cap / (y1 - y0), yfact=cap / (y1 - y0), origin=(x0, y0))
+            x0, y0, x1, y1 = g.bounds
+            return _aff.translate(g, lx - x0, cy_ - (y0 + y1) / 2.0)
+
+        mg = _md.geometry(_text_at, _fr_, _fb_)
+        zb = -BACK_CUT_FRAC * v["border_h"]
+        art = section(shell, zb, trimesh)
+        inner = mg["disc"].buffer(-0.05)
+        got, want = art.intersection(inner), mg["standing"].intersection(inner)
+        off = got.symmetric_difference(want).buffer(-ART_ERODE).area
+        flip = _aff.scale(art, xfact=1.0, yfact=-1.0, origin=(0.0, H / 2.0)).intersection(inner)
+        off_flip = flip.symmetric_difference(want).buffer(-ART_ERODE).area
+        if want.area < 10.0:
+            err(f"medallion.geometry() returns {want.area:.2f} mm2 of standing art -- nothing to read")
+        elif off > ART_OFF_MAX:
+            err(f"the rear art in the metal is not where medallion.geometry() puts it: {off:.3f} mm2 "
+                f"of the standing islands differ (z {zb:.3f}), against {off_flip:.3f} with the shell "
+                f"reflected top for bottom"
+                + (" -- THE FILE IS WRITTEN IN THE WRONG HAND" if off_flip <= ART_OFF_MAX else ""))
+        if off_flip < ART_TELL:
+            err(f"SELF-TEST: the rear art reflected top for bottom differs from the art as laid out "
+                f"by only {off_flip:.3f} mm2 -- it does not tell this shell's hand, and it is the "
+                f"only thing that does")
+        # ...and which way round it reads. The back as a person sees it: x mirrored, y as drawn.
+        hoop = _Pt(_md.CX, mg["cy"]).buffer(_md.HOOP[0] - 0.2, quad_segs=64)
+        isl = art.intersection(hoop)
+        tall = [g for g in getattr(isl, "geoms", [isl])
+                if g.geom_type == "Polygon" and g.bounds[3] - g.bounds[1] > 0.6 * _md.DIAL[0][1]]
+        scores = None
+        if len(tall) != len(_md.DIAL_MONOGRAM):
+            err(f"{len(tall)} tall islands inside the coin's hoop, where the monogram "
+                f"{_md.DIAL_MONOGRAM!r} has {len(_md.DIAL_MONOGRAM)} letters -- nothing to read it from")
+        else:
+            def _unit(g):
+                x0, y0, x1, y1 = g.bounds
+                return _aff.scale(_aff.translate(g, -x0, -y0), xfact=1.0 / (x1 - x0), yfact=1.0 / (y1 - y0), origin=(0, 0))
+            seen = _aff.affine_transform(_uu(tall), [-1.0, 0.0, 0.0, -1.0, W, 0.0])
+            ref = _unit(_outline(_md.DIAL_MONOGRAM, _fb_))
+            iou = lambda g: (lambda a: a.intersection(ref).area / a.union(ref).area)(_unit(g))
+            scores = (iou(seen),
+                      iou(_aff.scale(seen, xfact=-1.0, yfact=1.0)),
+                      iou(_aff.scale(seen, xfact=1.0, yfact=-1.0)),
+                      iou(_aff.scale(seen, xfact=-1.0, yfact=-1.0)))
+            if scores[0] < ART_READS:
+                err(f"the monogram does not read {_md.DIAL_MONOGRAM!r} from the back: it matches "
+                    f"the font's own letters {scores[0]:.3f} as seen, {scores[1]:.3f} mirrored left "
+                    f"for right, {scores[2]:.3f} top for bottom, {scores[3]:.3f} turned half a turn "
+                    f"(needs {ART_READS})")
+            if max(scores[1:]) > ART_MISREADS:
+                err(f"SELF-TEST: the monogram reads as well mirrored as it does the right way round "
+                    f"({max(scores[1:]):.3f} against {scores[0]:.3f}) -- these letters cannot tell "
+                    f"which way the art reads")
+        if len(_ERRORS) == pre:
+            ok(f"the rear art is in the metal where medallion.geometry() puts it "
+               f"({off:.4f} mm2 of {want.area:.1f} off; reflected top for bottom, as a shell "
+               f"written in the wrong hand would have it, {off_flip:.1f}), and its monogram reads "
+               f"{_md.DIAL_MONOGRAM!r} from the back ({scores[0]:.3f} against the font's letters; "
+               f"{scores[1]:.3f} / {scores[2]:.3f} / {scores[3]:.3f} mirrored left for right, top "
+               f"for bottom, turned half a turn) -- this shell's hand is its rear art, and this "
+               f"is the gate that holds it")
 
     return len(_ERRORS), len(_WARNS)
 
