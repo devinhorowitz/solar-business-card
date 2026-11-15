@@ -1454,9 +1454,13 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
     puts it is inside the blend allowance [G] gives every step. The half-turn mirror still
     lands its lip on the bare JP1 / TP1 pads (7.7 mm² here, against board_parts' outlines).
     [S]'s verdict was split into a function so that it could be exercised here at all — there
-    is no `kicad-cli` outside the pinned image — but **[S] itself, with [K] [P] [M] [B] [T],
-    has run on these solids only against that stand-in; the merge run is the real one.**
-    `handedness_drc` [E]: 0.600 / 0.500 / 0.500 mm reflected (the bar is 0.20).
+    is no `kicad-cli` outside the pinned image. **Against KiCad's own export, in CI on the
+    branch (PCB CI runs 661 on `7d0a776` and 662 on `4955077`, both green): crowding 0.451 mm
+    as written and 0.452 for the top-for-bottom mirror image (tightest JP1 / TP1 at 0.300),
+    the two differing by 1.93 mm² on a level, all of it within x 26.3–28.2; the half-turn
+    mirror 7.714 mm² inside parts; [K] [P] [M] [B] [E] [T] 0 errors.** The merge run measures
+    main's own rebuild. `handedness_drc` [E]: 0.600 / 0.500 / 0.500 mm reflected (the bar is
+    0.20).
   - **What the first builds got wrong.**
     - **The ring put the steps back.** `RING["W"]` guarantees 2.5 mm of seat; the lip rule
       cut the band to 2.25; the shell unions the two; and the ring is relieved only where a
