@@ -42,7 +42,7 @@ import os
 import sys
 
 import cadquery as cq
-from shapely.geometry import Point, box
+from shapely.geometry import Point, Polygon, box
 from shapely.ops import unary_union
 
 # ===== board (committed PCB) =====
@@ -560,11 +560,33 @@ def _blend_solid(b, floor, cavity, top_break, foot):
     sol = _poly_solid(b["cover"], floor, cavity)
     sol = sol.cut(cq.Workplane("XY").workplane(offset=zlo - 0.01).moveTo(wx(ox), wy(oy))
                     .circle(r).extrude(bb + 0.02 - (zlo - 0.01)))
+    # A BLEND ONTO A STRAIGHT CUT BREAKS ONLY ITS OWN SIDE OF THAT CUT (2026-11-15). Where the
+    # second face is a boss's circle, the boss's own chamfer ring is there for the cone to run
+    # into. A straight cut across a boss (fit_rules.boss_coil_cuts) is made after the deburr
+    # and carries no break, like a flat -- so past the cut's line the cone has nothing to run
+    # into, and the first build of this showed what it did instead: inside the boss it was
+    # filled back by the boss, except in the 0.1 mm where the boss's chamfer ring had already
+    # lowered the top, which left a notch and a three-cornered facet at the end of every one of
+    # the four breaks. The cone is held to the blend's side of the cut's line: the break then
+    # runs out to nothing against the cut's own plane, as a west blend's does against its round.
+    keep = None
+    if b.get("chord"):
+        (cx, cy), (tx, ty), (nx, ny) = b["J"], b["t"], b["n"]
+        far = r + 1.0
+        keep = Polygon([(cx - far * nx, cy - far * ny), (cx + far * nx, cy + far * ny),
+                        (cx + far * nx + far * tx, cy + far * ny + far * ty),
+                        (cx - far * nx + far * tx, cy - far * ny + far * ty)])
+
+    def _held(cone, z0, dz):
+        return cone if keep is None else cone.intersect(_poly_solid(keep, z0, dz))
+
     if top_break > 0:
-        sol = sol.cut(_cone(ox, oy, bb - top_break - _BREAK_DIP, r - _BREAK_DIP,
-                            bb + 0.01, r + top_break + 0.01))
+        sol = sol.cut(_held(_cone(ox, oy, bb - top_break - _BREAK_DIP, r - _BREAK_DIP,
+                                  bb + 0.01, r + top_break + 0.01),
+                            bb - top_break - _BREAK_DIP - 0.01, top_break + _BREAK_DIP + 0.03))
     if foot > 0:
-        sol = sol.cut(_cone(ox, oy, -0.02, r + foot + 0.02, foot + _BREAK_DIP, r - _BREAK_DIP))
+        sol = sol.cut(_held(_cone(ox, oy, -0.02, r + foot + 0.02, foot + _BREAK_DIP, r - _BREAK_DIP),
+                            -0.03, foot + _BREAK_DIP + 0.04))
     return _under_corner_relief(sol, b["cover"], bb)
 
 
@@ -741,7 +763,15 @@ def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pill
     # (39.5,40.0) for future revs. Analysis: U7 floor clearance unchanged (rib end is its support).)
     for x, y, rr in [(mx, my, boss_r) for mx, my in mounts] + (list(BRACE) if braces else []) + (list(PILLARS) if pillars else []):
         b = cq.Workplane("XY").workplane(offset=floor).moveTo(wx(x), wy(y)).circle(rr).extrude(cavity)
-        if lip_break > 0:                                   # convex top-edge break that FOLLOWS the boss circle;
+        # ...but NOT on a boss whose circle is nowhere on the part's surface (2026-11-15): one cut
+        # straight across on both sides for the coil (fit_rules.boss_coil_cuts). Its flat, its
+        # two cuts and its rounds are all made after the deburr, and what is left of the circle
+        # is inside the lip or under a blend's cover -- so the ring would only ever be buried,
+        # and where a blend's break meets the cut's plane it was not quite: a three-cornered
+        # facet and a face of 5e-7 mm2 at each, between two coplanar faces that could not merge.
+        _ring = lip_break > 0 and not ((x, y) in mounts and _boss_blends(x, y)
+                                        and all(q.get("chord") for q in _boss_blends(x, y)))
+        if _ring:                                           # convex top-edge break that FOLLOWS the boss circle;
             try: b = b.faces(">Z").chamfer(lip_break)       # chamfer the bare cylinder BEFORE the union (OCC won't
             except Exception: pass                          # chamfer the merged internal tops, but a lone cylinder is fine)
         if EDGE_BREAK > 0 and floor == 0:                   # open frame: the boss foot IS the resting face

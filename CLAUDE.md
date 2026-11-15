@@ -746,6 +746,15 @@ red, the check itself fails.
   comes within any tolerance of the line it is tangent to; a rolled ball cannot reach the
   corners of its own window. Each of the three is measured on the outline's LENGTH on the
   line now, or inside the corner's own box, with a canary.
+  **(5) An edge-break needs something to run into, and only a picture showed that it had
+  not.** A blend's break is a cone that runs into the boss's chamfer ring. On a straight-cut
+  boss the far end is the cut, which has no break (it is made after the deburr, like a flat):
+  the cone ran on into the boss, was filled back by it, and showed through in the 0.1 mm
+  where the buried ring had lowered the boss's top — a notch and a three-cornered facet at
+  the end of all four breaks, every gate green. The cone is held to the blend's side of the
+  cut (`_blend_solid`), and a boss whose circle is nowhere on the part's surface is built
+  without a ring. **After any change to a boss or a blend, render the junction close up and
+  look at the END of each break** — nothing here measures a break.
   A bonus worth knowing how to read: the STLs' one ledgered zero-length seam was that kink. A
   ledgered artefact is sometimes a real defect's shadow — when the cause goes, tighten the
   ledger the same day.

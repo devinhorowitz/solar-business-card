@@ -123,7 +123,7 @@ BASELINE = {
     # the south band-step fillet at x 27.0 meets its wall" -- the kink the old tab root made
     # with the recess wall. With the root tangent to that wall there is nothing for the break
     # cutter to pinch: 0 open edges, 0 degenerate, and the ledger holds it there now.
-    # Triangles 52,676, ungated.
+    # Triangles 52,608, ungated.
     volume_mm3=5269.77, bbox=(-26.35, -45.4, -0.15, 26.35, 45.4, 3.4),
         max_boundary_edges=0, max_open_len_mm=0.0, max_degenerate=0),
     "solar-glow-drh-pogo-testplate.stl": dict(
@@ -392,12 +392,12 @@ BASELINE = {
         # symmetric and round-cornered, 6.260 mm2 x 1.20 = 7.51 predicted, 7.32 measured -- and
         # 0.74 % of this frame, so the tolerance caught it, as it should. Both seams and the
         # four facets are where they were.
-        # re-ledgered 2026-11-15 (the simpler cuts), 982.99 -> 961.82: one-width west lip,
+        # re-ledgered 2026-11-15 (the simpler cuts), 982.99 -> 961.83: one-width west lip,
         # straight cuts on the two east mid-span bosses, true tab roots -- as the max shell.
-        # 17.590 mm2 x 1.20 = 21.11 predicted, 21.17 measured; 2.15 % of this frame. bbox
+        # 17.590 mm2 x 1.20 = 21.11 predicted, 21.16 measured; 2.15 % of this frame. bbox
         # unchanged. BOTH seams (the lip break's and the resting face's, at the old tab
         # root's kink) and their four facets are gone: 0 open edges, 0 degenerate, held there.
-        volume_mm3=961.82, bbox=(-26.35, -45.4, 0.0, 26.35, 45.4, 1.8),
+        volume_mm3=961.83, bbox=(-26.35, -45.4, 0.0, 26.35, 45.4, 1.8),
         max_boundary_edges=0, max_open_len_mm=0.0, max_degenerate=0),
     "solar-glow-drh-diffuser-brace-lite.stl": dict(
         # the lite brace: gap 1.22, span 0.60, 31 pockets, 0 through-holes, single piece

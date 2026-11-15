@@ -1414,11 +1414,11 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
     nothing short or stepped on any of them.
   - **The numbers.**
     - Plan metal at the seat 452.171 → **434.622 mm²** (−17.549).
-    - Volumes by OCC on the STEPs: **5269.929 / 3906.929 / 961.845 mm³** (max / lite / air; were
-      5301.692 / 3928.453 / 983.025). STL 5269.77 / 3906.80 / 961.82. That is **0.14 g of the
+    - Volumes by OCC on the STEPs: **5269.930 / 3906.929 / 961.850 mm³** (max / lite / air; were
+      5301.692 / 3928.453 / 983.025). STL 5269.77 / 3906.80 / 961.83. That is **0.14 g of the
       23.5 g max shell**, 0.10 g of the lite and 0.17 g of the 316L frame.
-    - Max STEP **30,717 edges, 10,389 faces** (were 30,979 / 10,476); lite **906 / 351** (were
-      1,168 / 438); air **912 / 358** (were 1,347 / 503). 37 faces under 0.001 mm² on each
+    - Max STEP **30,711 edges, 10,387 faces** (were 30,979 / 10,476); lite **900 / 349** (were
+      1,168 / 438); air **936 / 366** (were 1,347 / 503). 37 faces under 0.001 mm² on each
       (were 35): the two more are at board (3.2, 0.25), 0.01 mm tall, where the ring's relief
       crosses the corner-relief step — three faces there before, one of them 0.0021 mm²; four
       now, all under 0.001. None shared by more than two.
@@ -1473,6 +1473,17 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
       south tab the simplify kept a vertex 0.008 mm along the tip in place of the corner: one
       side leaned 0.23° and the other did not, under four cylinders laid out as if both were
       square. The tabs are made exact rectangles AFTER the simplify now (`_tabs_squared`).
+    - **A break with nothing to run into.** A blend carries the lip's 0.10×45° break round it
+      as a cone, which at its far end runs into the boss's own chamfer ring. On the two
+      straight-cut bosses the far end is the cut — made after the deburr, no break, like a
+      flat — so the cone ran on into the boss, was filled back by it, and showed through only
+      in the 0.1 mm where the buried chamfer ring had already lowered the boss's top: a notch
+      and a three-cornered facet at the end of each of the four breaks. Every gate was green;
+      it was seen in a close-up render made for DRH. The cone is held to the blend's side of
+      the cut now, and those two bosses are built without a ring that is nowhere on their
+      surface (holding the cone alone left a 5×10⁻⁷ mm² face at two of the four, between two
+      coplanar faces that could not merge across the ring). The break runs out to nothing
+      against the cut's plane, as a west blend's does against its round.
     - Three of the new checks failed on a correct part before they failed on anything else: a
       straight wall has no vertices between its ends to test, a round's arc comes within any
       tolerance of the line it is tangent to, and a rolled ball cannot reach the corners of
