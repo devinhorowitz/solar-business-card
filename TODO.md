@@ -1357,6 +1357,127 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
       for the kernel: each came out as three or four flats, a different three or four at each
       corner, on a pass whose point was symmetry. They are cylinders now, cut after the void.
 
+  **THE SIMPLER CUTS, 2026-11-15 (DRH, on a plan of the cavity with two places circled: "there
+  are two surfaces I want to mill away material so they are smooth contiguous surfaces for the
+  milling to be done simpler", and then "see if there are any others just like those") — SO ALL
+  THREE SHELLS, BOTH BRACES AND THE SHIM CHANGED ONCE MORE.** Board coordinates; this repo's
+  instruments, on a local build with CI's pins. **An ArtCraft or SolidCraft run against
+  `2494c9f` or earlier measures the west wall, the two east mid-span bosses and the tab roots
+  as they were before this.**
+  - **The west wall is one straight face.** The west lip was 2.50 wide and stepped in twice, to
+    2.32 beside R16 and 2.25 beside C24 (0.18 and 0.25 mm, over y 44.5–50.5). It is **2.25 the whole
+    edge** now — the narrowest any part asks for, `fit_rules.LIP_ONE_WIDTH`; the east lip was
+    already one width, 1.25. The sheet's note 8 reads "WEST 2.25 FULL LENGTH (C24)". The
+    guaranteed ring is held to the same width there (`ring_widths()`), and the brace's west
+    edge follows the wall, x 2.55 → **2.30** (`cavity_rect()`).
+  - **The two east mid-span bosses are cut straight.** Each side of each had a hollow (R1.15,
+    about the coil's corner) and a hump beyond it; the contouring pass had mirrored that onto
+    the side with no coil. Each side is now **one straight cut 2.32 mm from the screw axis**
+    (`fit_rules.boss_coil_chord_d()`: the nearest the coil's clearance lets a line come to
+    either boss, used on both sides of both), with an R1.00 round where it meets the flat and an
+    R1.00 blend into the wall. The four hollows, the four slight rounds at their ends and the
+    0.1 mm by which the two bosses differed are gone: the two are one shape, and each is still
+    its own mirror image. Sixteen boss rounds now (were twenty); eight R2.00 blends and four
+    R1.00 still, the four now joining two planes.
+    - The coil stands **1.068 and 1.166 mm** from those bosses in the sectioned metal (was
+      0.999 at both; the rule is 1.00).
+    - **The ferrite sheet's tight corner stands 0.350 mm from titanium** (was 0.149 — the
+      clearance nobody chose; `assembly_drc` [F]). Against `FER_CLR` 0.20 that closes the open
+      question of the 2026-11-14 record, unless DRH wants more.
+    - The cuts are 2.32 from the axis against a thread keep-out of r1.30. **Those two bosses
+      keep 75.8 % of their annulus** (were 81.2 and 80.0); the other six keep 79.8–81.6 as
+      before.
+  - **The four tab roots are true R1.00, on the wall that is there.** Each tab met the
+    short-edge wall through the fillet a finisher-radius opening leaves in the void's polygon,
+    laid out from the BOARD edge. The cavity's wall on a short edge is the RECESS wall, 0.05
+    inside it, so the curve met its own wall at a 19° kink — and, being polygon, as three or
+    four flats. Each root is a cylinder now (`fit_rules.tab_roots()`, axes (22.502, 1.048),
+    (27.998, 1.048), (22.502, 87.852), (28.498, 87.852)), tangent to the recess wall and to
+    the tab's side, carrying the lip's 0.10×45° break. A Ø2.0 finisher cuts exactly this
+    whatever the model says; the model says it now. The tabs themselves are exact rectangles
+    under the rounds (next bullet but one).
+  - **Asked of DRH, not done:**
+    - **the corner bosses.** Between the short wall and each corner boss's flat there is the
+      Ø2.0 bore and a small R1.00 round, 0.66 mm long. Running the flat straight to the wall
+      with a plain R1.00 would remove four bores, four rounds and four webs — and leave that
+      R1.00 **0.07 mm inside the corner of a max-material supercap** (0.005 mm² in plan; a
+      nominal cap clears it by 0.75). The bore exists for exactly that corner. Whether it
+      matters rests on the same thing as the floor fillet: is the pouch's extreme corner thin
+      foil, as DRH's photograph of a WS17F suggests, or full thickness? The datasheet does not
+      dimension it. One caliper check answers both.
+    - **the two tabs alike.** Top to bottom, the inside of every shell now differs only by the
+      north tab being 0.5 mm wider than the south (4.0 against 3.5). Cut alike they cost about
+      1 mm² of seat, and the lite and air shells become their own mirror images.
+  - **Looked at and left:** the west mid-span bosses (R2.00 into R1.00 each side), the east
+    corner bosses (three arcs, tangent), and the whole back face (straight frame edges, R2.00
+    blends, the annuli) — the survey walked both outlines as straights and arcs and flagged
+    nothing short or stepped on any of them.
+  - **The numbers.**
+    - Plan metal at the seat 452.171 → **434.622 mm²** (−17.549).
+    - Volumes by OCC on the STEPs: **5269.929 / 3906.929 / 961.845 mm³** (max / lite / air; were
+      5301.692 / 3928.453 / 983.025). STL 5269.77 / 3906.80 / 961.82. That is **0.14 g of the
+      23.5 g max shell**, 0.10 g of the lite and 0.17 g of the 316L frame.
+    - Max STEP **30,717 edges, 10,389 faces** (were 30,979 / 10,476); lite **906 / 351** (were
+      1,168 / 438); air **912 / 358** (were 1,347 / 503). 37 faces under 0.001 mm² on each
+      (were 35): the two more are at board (3.2, 0.25), 0.01 mm tall, where the ring's relief
+      crosses the corner-relief step — three faces there before, one of them 0.0021 mm²; four
+      now, all under 0.001. None shared by more than two.
+    - **The STLs' one ledgered seam is gone.** `check_mesh` had allowed each shell one
+      zero-length open edge and three zero-area facets "where the south band-step fillet at
+      x 27.0 meets its wall" (two and four on the air frame). That was the tab root's kink.
+      All three shells now read 0 open edges, 0 degenerate, and the ledger holds them there.
+    - Braces **1926.670 / 1141.415 mm³** (were 1916.605 / 1135.276), footprint 1312.70 →
+      **1319.30 mm²**, envelope 46.95 → **47.20** wide: the strip down the west side. Shim net
+      area 969.230 → **969.442 mm²**, its outline moving by at most 0.154 mm, beside the two
+      east mid-span bosses; its eight inner contours are identical.
+    - `scripts/assembly_drc.py`, all three variants 0 errors. **[G]** "W 2.25; E 1.25; S
+      2.00/none; N 2.00/none", 1,926 stations. **[H]** max-material supercaps 0.150 / 0.199 /
+      0.220 from as-milled metal, as before. **[I]** as above; its fatter-coil canary still
+      reaches both bosses and refuses to call itself proven if one ever stands a quarter
+      millimetre past the rule. **[J]** probes the four tab roots as blends between two
+      planes: 56 junctions and corners in all, each failing with the corner put back sharp.
+    - `check_consistency` **[8]**, new step 4e: each of the two long lips one band and its
+      wall one straight run between every pair of bosses (a 0.2 mm step let into the west wall
+      must be seen, and is); each coil-cut boss straight on both sides, the same length on
+      both; each root R1.00 on the recess wall, and by a rolled ball of R0.95 nothing left
+      unreached at a root (0.0003 mm² at worst; with the roots taken out all four fail).
+  - **THE HAND.** The west lip's two steps were what `handedness_drc` [S] told a shell from its
+    top-for-bottom mirror image by (R16 lost 0.18 mm of clearance). With the wall straight
+    that mirror image **is the same cavity wherever a part stands**: the two differ by 1.93 mm²
+    on a level, all of it at the tabs and more than 0.5 mm from every part. [S] used to call
+    "fits no worse" an error without exception; it now accepts it only if it can show that —
+    it lays the mirrored sections over the sections as written and looks for any difference
+    within reach of a part — and says which gate holds that hand instead. **That gate is
+    `assembly_drc` [J], by the two tabs. Tried, not assumed:** each rebuilt shell's STL
+    reflected top for bottom fails [J] at twelve probes (the east side of both tabs, three
+    levels) and passes everything else, [G] included — a step 0.5 mm from where the lip table
+    puts it is inside the blend allowance [G] gives every step. The half-turn mirror still
+    lands its lip on the bare JP1 / TP1 pads (7.7 mm² here, against board_parts' outlines).
+    [S]'s verdict was split into a function so that it could be exercised here at all — there
+    is no `kicad-cli` outside the pinned image — but **[S] itself, with [K] [P] [M] [B] [T],
+    has run on these solids only against that stand-in; the merge run is the real one.**
+    `handedness_drc` [E]: 0.600 / 0.500 / 0.500 mm reflected (the bar is 0.20).
+  - **What the first builds got wrong.**
+    - **The ring put the steps back.** `RING["W"]` guarantees 2.5 mm of seat; the lip rule
+      cut the band to 2.25; the shell unions the two; and the ring is relieved only where a
+      part stands. First build: a west wall at 2.50 with a relief at R16 and one at C24 — the
+      two steps, exactly as before, from a rule that said there were none. `lip_as_cut()`
+      refused it. A guaranteed minimum that is wider than the thing it guarantees is not a
+      floor.
+    - **The brace did not follow.** It is cut inside a scalar rectangle whose west edge was
+      2.50 — the lip's old width, typed. With the wall at 2.25 the brace would have stood
+      0.30 mm off a face it is meant to bear on with 0.05, free to slide the quarter
+      millimetre its pockets clear a part by. Nothing failed: `assembly_drc` [B] asks whether
+      the brace FITS, and a brace that is too small fits. Found adding up the plan areas.
+    - **A tab's side leaned.** The void is simplified by 0.01 for the kernel, and on the
+      south tab the simplify kept a vertex 0.008 mm along the tip in place of the corner: one
+      side leaned 0.23° and the other did not, under four cylinders laid out as if both were
+      square. The tabs are made exact rectangles AFTER the simplify now (`_tabs_squared`).
+    - Three of the new checks failed on a correct part before they failed on anything else: a
+      straight wall has no vertices between its ends to test, a round's arc comes within any
+      tolerance of the line it is tangent to, and a rolled ball cannot reach the corners of
+      its own window.
+
 - [ ] **[SOURCING — lite/air] Pick the thin supercap MPN**
   _(2026-08-07, opened with the three-variant round.)_ `part_heights.SUPERCAP_H_THIN = 1.00`
   is **PROVISIONAL — DRH's working number, no MPN, no datasheet behind it**, unlike every

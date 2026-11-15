@@ -57,10 +57,14 @@ over 34, 493.9 over 29 and 0.05 over one.
 
 WHAT IT CANNOT SEE, said plainly so it is not mistaken for total:
   * THE SHELL'S HAND IS TOLD BY A SMALL MARGIN, because the shell is nearly symmetric: its
-    mirror image overlaps nothing in one placement and merely stands closer to the parts
-    beside the west lip (R16 loses 0.18 mm). [S] scores that over every part in reach,
+    mirror image overlaps nothing in one placement and merely stood closer to the parts
+    beside the west lip (R16 lost 0.18 mm). [S] scores that over every part in reach,
     prints both hands, and fails unless the mirror image fits worse -- it never passes on
-    "no collision" alone. In the OTHER placement the mirror image's west lip lands on the bare
+    "no collision" alone. SINCE 2026-11-15 THAT PLACEMENT IS NOT TOLD BY FIT AT ALL: the
+    west lip is one width, the steps beside R16 and C24 are gone, and top for bottom the
+    cavity is its own mirror image wherever a part stands. [S] now has to SHOW that (see
+    SAME_ERODE) before it will accept a mirror image that fits no worse, and says which
+    gate holds the hand instead: assembly_drc [J], by the two tabs. In the OTHER placement the mirror image's west lip lands on the bare
     JP1 and TP1 pads (8.857 and 1.616 mm2), and nothing else; KiCad exports no body for a
     footprint without a model, so [S] takes those footprints from board_parts. Until
     2026-11-13 it did not need to: a cap-corner flat on each east mid-span boss made the
@@ -122,6 +126,31 @@ CANARY_PARTS = 5
 # sides of the comparison), and the half-turn mirror overlaps them, 8.857 and 1.616 mm2.
 REACH = 0.5
 CROWD_MARGIN = 0.05
+# A MIRROR IMAGE THAT IS THE SAME CAVITY (2026-11-15). The west lip was cut to one width that
+# day (fit_rules.LIP_ONE_WIDTH -- DRH: "smooth contiguous surfaces"), and the two steps beside
+# R16 and C24 that the first placement's verdict rested on went with it. Top to bottom, the
+# inside of every shell is now its own mirror image but for the two short-edge tabs, 0.5 mm
+# apart in width and more than a millimetre from the nearest part. So in that placement the
+# mirror image fits the board exactly as well as the shell does -- and it is right that it
+# does: wherever a part stands, it is the same metal.
+#
+# "Fits no worse" used to be an error without exception, because it meant this gate could not
+# see. It still is one, unless the gate can SHOW why: the mirrored sections are laid over the
+# sections as written, and if no difference between them with any body to it (SAME_ERODE takes
+# off the hairlines two tessellations of one arc leave) comes within REACH of a part, the
+# placement is a symmetry of the cavity as the parts meet it. That is reported, with what
+# does differ and where, and the hand in that placement is then held by the gate that reads
+# the metal in board coordinates: assembly_drc [J], which probes each tab's two tip rounds
+# and two roots where the board puts them, through the frame [M] ties to KiCad's here.
+# TRIED, not assumed (2026-11-15): each rebuilt shell's STL reflected top for bottom fails
+# [J] at twelve probes -- the east side of both tabs, at three levels -- and passes every
+# other section of that gate, [G] included: a step 0.5 mm from where the lip table puts it
+# is inside the blend allowance [G] gives every step. So ONE gate holds that hand, by half a
+# millimetre of tab, and if the two tabs are ever made alike nothing will -- nor need to: the
+# lite and air shells would then be their own mirror images, and only the max shell's rear
+# art, which nothing here reads, would have a hand left.
+# A difference a part COULD feel that fit cannot tell is still the old error.
+SAME_ERODE = 0.03
 
 # [E]: a STEP against its STL. Two questions, two measurements.
 # SAME HAND, by SURFACES: the farthest any vertex of either file's surface stands from the
@@ -367,6 +396,29 @@ def step_vs_stl(trimesh):
            f"{least[0]:.3f} mm, the {least[2]} (the bar is {SURF_TELL})")
 
 
+def felt_difference(cuts_a, cuts_b, bodies):
+    """(area mm2, where) -- the part of the difference between two placements of a shell,
+    [(z, section)] each, that a body could meet: what is left of their symmetric difference
+    once SAME_ERODE has taken the tessellation's hairlines off, within REACH of the outline of
+    any body that cut passes through. Also returns the whole difference's area and extent, so
+    the caller can say what the two placements DO differ by."""
+    from shapely.ops import unary_union
+    felt, where, whole, box_ = 0.0, None, 0.0, None
+    for (z, a), (_z, b) in zip(cuts_a, cuts_b):
+        d = a.symmetric_difference(b).buffer(-SAME_ERODE).buffer(SAME_ERODE)
+        if d.is_empty:
+            continue
+        if d.area > whole:
+            whole, box_ = d.area, d.bounds
+        near = [o.buffer(REACH) for _ref, o, zlo, zhi in bodies if zlo < z < zhi]
+        if not near:
+            continue
+        f = d.intersection(unary_union(near))
+        if f.area > felt:
+            felt, where = f.area, f.representative_point()
+    return felt, where, whole, box_
+
+
 def fit(metal_cuts, bodies):
     """How a shell, as [(z, section)] in KiCad's frame, sits against [(ref, outline, zlo, zhi)]:
     (overlap mm2, tightest gap mm, its ref, crowding mm) over every cut that passes through
@@ -390,6 +442,74 @@ def fit(metal_cuts, bodies):
         if gap is None or mine < gap:
             gap, who = mine, ref
     return overlap, gap, who, crowd
+
+
+def shell_hand(vname, raw, outlines, dz, kcx, kcy, section_floor):
+    """[S] for one shell: `raw` is [(z, section)] in the shell's own file frame, `outlines`
+    [(ref, outline, zlo, zhi)] in KiCad's; the shell is placed by (kcx, kcy, dz) alone, as
+    written and as each of its two mirror images. Split out of check() so that the verdict
+    can be exercised without KiCad's export (there is no kicad-cli outside the pinned image):
+    it reads nothing but its arguments."""
+    from shapely.affinity import scale, translate
+    place = lambda sx, sy: [(z + dz, translate(scale(m, sx, sy, origin=(0, 0)), kcx, kcy)) for z, m in raw]
+    pre = len(_ERRORS)
+    o_r, g_r, w_r, c_r = fit(place(1.0, 1.0), outlines)
+    if o_r > 0.0:
+        err(f"the {vname} shell as written has {o_r:.3f} mm2 of metal inside KiCad's part "
+            f"bodies -- it does not fit the board KiCad exports")
+    elif g_r is None:
+        err(f"no cut through the {vname} shell passes through any of KiCad's parts -- "
+            f"nothing was measured")
+    elif g_r < section_floor:
+        err(f"the {vname} shell as written stands {g_r:.3f} mm from {w_r} in KiCad's "
+            f"export -- inside the {section_floor} a section resolves, i.e. contact")
+    told, same = 0, []
+    for label, (sx, sy) in (("as written", (1.0, -1.0)), ("turned half a turn", (-1.0, 1.0))):
+        o_m, g_m, w_m, c_m = fit(place(sx, sy), outlines)
+        how = (f"{o_m:.3f} mm2 of metal inside parts" if o_m > 0.0 else
+               f"tightest {w_m} at {g_m:.3f} mm, crowding {c_m:.3f} mm")
+        print(f"          its mirror image, {label}: {how}")
+        if o_r > 0.0 or g_r is None:
+            continue                                          # already an error
+        if o_m > 0.0 or c_m >= c_r + CROWD_MARGIN:
+            told += 1
+            continue                                          # told apart
+        if c_m <= c_r - CROWD_MARGIN:
+            err(f"the {vname} shell as written crowds the board KiCad exports MORE than "
+                f"its own mirror image does ({c_r:.3f} mm against {c_m:.3f}, {label}; "
+                f"tightest {w_r} at {g_r:.3f} against {w_m} at {g_m:.3f}) -- THE FILE IS "
+                f"WRITTEN IN THE WRONG HAND")
+            continue
+        # fits the same. Either this gate cannot see, or there is nothing for it to see:
+        # show which (SAME_ERODE, above)
+        felt, at, whole, wbox = felt_difference(place(1.0, 1.0), place(sx, sy), outlines)
+        if felt > 1e-3:
+            err(f"SELF-TEST: the {vname} shell's MIRROR IMAGE, {label}, fits KiCad's board "
+                f"no worse than the shell does ({how}, against crowding {c_r:.3f} as "
+                f"written; a mirror image must overlap or crowd by {CROWD_MARGIN} more) "
+                f"though {felt:.3f} mm2 of its metal within {REACH} of a part is not where "
+                f"the shell's is (near KiCad ({at.x:.2f}, {at.y:.2f})) -- this cannot tell "
+                f"the shell's hand, and 'no collision' is not evidence")
+            continue
+        differs = ("nothing a section can see" if wbox is None else
+                   f"{whole:.2f} mm2 at most on a level, all of it more than {REACH} from "
+                   f"every part (within KiCad x {wbox[0]:.1f}..{wbox[2]:.1f}, "
+                   f"y {wbox[1]:.1f}..{wbox[3]:.1f})")
+        print(f"          ...and that mirror image IS this cavity wherever a part stands: "
+              f"the two differ by {differs}")
+        same.append((label, differs))
+    if told == 0 and o_r == 0.0 and g_r is not None and len(_ERRORS) == pre:
+        err(f"SELF-TEST: neither mirror image of the {vname} shell fits KiCad's board worse "
+            f"than the shell does -- nothing here tells its hand at all")
+    if len(_ERRORS) == pre:
+        ok(f"the {vname} shell as written clears every part KiCad exports (tightest "
+           f"{w_r} at {g_r:.3f} mm, crowding {c_r:.3f} mm inside {REACH}); its mirror "
+           f"image fits worse in {told} of the 2 placements"
+           + ("".join(f". The mirror image {label} is the same cavity wherever a part "
+                      f"stands -- the two differ by {differs} -- so fit cannot tell that "
+                      f"hand and no part is the worse for it; assembly_drc [J] holds it, by "
+                      f"the two tabs' rounds and roots, through the frame [M] ties to KiCad's"
+                      for label, differs in same)))
 
 
 def check(board_step, panel_step=None):
@@ -596,40 +716,8 @@ def check(board_step, panel_step=None):
         if any(m.is_empty for _z, m in raw):
             err(f"the {vname} shell has no material at one of its cavity cuts -- nothing to compare")
             continue
-        dz = z_under - seat                                       # shell z -> KiCad z: the seat at the underside
-        place = lambda sx, sy: [(z + dz, translate(scale(m, sx, sy, origin=(0, 0)), kcx, kcy)) for z, m in raw]
-        pre = len(_ERRORS)
-        o_r, g_r, w_r, c_r = fit(place(1.0, 1.0), outlines)
-        if o_r > 0.0:
-            err(f"the {vname} shell as written has {o_r:.3f} mm2 of metal inside KiCad's part "
-                f"bodies -- it does not fit the board KiCad exports")
-        elif g_r is None:
-            err(f"no cut through the {vname} shell passes through any of KiCad's parts -- "
-                f"nothing was measured")
-        elif g_r < adrc.SECTION_FLOOR:
-            err(f"the {vname} shell as written stands {g_r:.3f} mm from {w_r} in KiCad's "
-                f"export -- inside the {adrc.SECTION_FLOOR} a section resolves, i.e. contact")
-        for label, (sx, sy) in (("as written", (1.0, -1.0)), ("turned half a turn", (-1.0, 1.0))):
-            o_m, g_m, w_m, c_m = fit(place(sx, sy), outlines)
-            how = (f"{o_m:.3f} mm2 of metal inside parts" if o_m > 0.0 else
-                   f"tightest {w_m} at {g_m:.3f} mm, crowding {c_m:.3f} mm")
-            print(f"          its mirror image, {label}: {how}")
-            if o_r > 0.0 or g_r is None or o_m > 0.0 or c_m >= c_r + CROWD_MARGIN:
-                continue                                          # already an error, or told apart
-            if c_m <= c_r - CROWD_MARGIN:
-                err(f"the {vname} shell as written crowds the board KiCad exports MORE than "
-                    f"its own mirror image does ({c_r:.3f} mm against {c_m:.3f}, {label}; "
-                    f"tightest {w_r} at {g_r:.3f} against {w_m} at {g_m:.3f}) -- THE FILE IS "
-                    f"WRITTEN IN THE WRONG HAND")
-            else:
-                err(f"SELF-TEST: the {vname} shell's MIRROR IMAGE, {label}, fits KiCad's board "
-                    f"no worse than the shell does ({how}, against crowding {c_r:.3f} as "
-                    f"written; a mirror image must overlap or crowd by {CROWD_MARGIN} more) "
-                    f"-- this cannot tell the shell's hand, and 'no collision' is not evidence")
-        if len(_ERRORS) == pre:
-            ok(f"the {vname} shell as written clears every part KiCad exports (tightest "
-               f"{w_r} at {g_r:.3f} mm, crowding {c_r:.3f} mm inside {REACH}); its mirror "
-               f"image fits worse in both placements")
+        # shell z -> KiCad z: the seat at the underside
+        shell_hand(vname, raw, outlines, z_under - seat, kcx, kcy, adrc.SECTION_FLOOR)
 
     # ---- [E] each STEP is its own STL, in the same hand ------------------------------
     print("[E] each STEP against its own STL")

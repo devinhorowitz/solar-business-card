@@ -184,9 +184,12 @@ LIP_STEP = 0.1
 # have. Three times that, and still under the 0.034 mm the shallower of the two original
 # violations stood inside the rule by.
 COIL_TOL = 0.02
-# The canary's coil is this much fatter than the board's. The lip and the relieved bosses
-# are cut to stand EXACTLY the clearance off, so any growth past COIL_TOL must read as a
-# violation at each of them; a quarter millimetre leaves no doubt which side of it we are.
+# The canary's coil is this much fatter than the board's. The lip is cut to stand EXACTLY the
+# clearance off, so any growth past COIL_TOL must read as a violation there; a quarter
+# millimetre leaves no doubt which side of it we are. A boss cut STRAIGHT for the coil
+# (fit_rules.boss_coil_cuts, 2026-11-15) stands a little further off than the rule asks --
+# 0.07 and 0.17 mm today -- and the quarter millimetre has to cover that too: [I] refuses to
+# call the canary proven on a boss that stands COIL_FAT or more past the clearance.
 COIL_FAT = 0.25
 # ---- the channel ridge ([C]) -------------------------------------------------------------
 # The ridge's faces are planes and section exactly; this is headroom for the 0.005 mm the
@@ -956,6 +959,12 @@ def check_variant(vname, v, fr, bp, trimesh):
     need = fr.COIL_CLR - COIL_TOL
     reach = fr.BOSS_R + 0.1
     relieved = [(mx, my) for mx, my in fr.MOUNTS if any(fr.boss_coil_cuts(mx, my))]
+    for mx, my in relieved:
+        if fr.boss_coil_gap(mx, my) - need >= COIL_FAT:
+            err(f"SELF-TEST: the boss at ({mx}, {my}) is cut to stand "
+                f"{fr.boss_coil_gap(mx, my):.3f} mm off the coil, {COIL_FAT} or more past the "
+                f"{fr.COIL_CLR:.2f} rule -- the fatter-coil canary cannot reach it, so it "
+                f"proves nothing there. Raise COIL_FAT")
     east_by_coil = any(fr.COIL_REF in who for _lo, _hi, _w, who in fr.lip_as_cut("E"))
     all_bosses = _uu([_Pt(mx, my).buffer(reach) for mx, my in fr.MOUNTS])
     tight, blind = {}, []          # site -> [as modelled, as milled, where it was tightest]
@@ -1017,7 +1026,7 @@ def check_variant(vname, v, fr, bp, trimesh):
            f"as it must")
 
     # ---- 10. each boss meets the wall the way the sheet says ---------------------------
-    print("[J] boss blends, webs and outside rounds (sectioned)")
+    print("[J] boss blends, webs, outside rounds and tab roots (sectioned)")
     import math as _m
     from shapely.geometry import Polygon as _Poly
     pre = len(_ERRORS)
@@ -1046,9 +1055,12 @@ def check_variant(vname, v, fr, bp, trimesh):
                     f"(z {z:.2f}) at board ({full[0].x:.2f}, {full[0].y:.2f}) -- more metal "
                     f"than the blend the sheet calls: a wider one, or one somewhere else")
         # canary: everything between the wall, the boss and the chord from the foot to the
-        # boss taken out again
-        boss = _Pt(mx, my).buffer(fr.BOSS_R, quad_segs=64)
-        sharp = canary_cut.difference(_Poly([b["J"], b["F"], b["T"]]).difference(boss))
+        # boss taken out again. A blend that joins two PLANES -- a straight cut across a boss,
+        # or the side of a tab -- has no boss circle in its corner: the whole triangle goes
+        tri = _Poly([b["J"], b["F"], b["T"]])
+        if mx is not None and not b.get("chord"):
+            tri = tri.difference(_Pt(mx, my).buffer(fr.BOSS_R, quad_segs=64))
+        sharp = canary_cut.difference(tri)
         if sharp.contains(metal_at[len(metal_at) // 2]):
             blind.append(where)
 
@@ -1140,6 +1152,15 @@ def check_variant(vname, v, fr, bp, trimesh):
     if n_rd == 0 or n_tab == 0:
         err(f"fit_rules returned {n_rd} boss rounds and {n_tab} tab-tip rounds -- the sheet "
             f"calls both, and nothing was checked")
+    # THE TAB ROOTS (2026-11-15): each tab meets the short-edge wall through a true R of the
+    # finisher, tangent to the RECESS wall. A blend between two planes, probed as one.
+    n_root = 0
+    for b in fr.tab_roots():
+        n_root += 1
+        probe_blend(b, None, None, shell_cuts, mid,
+                    f"the {b['edge']} tab's root at board ({b['J'][0]:.2f}, {b['J'][1]:.2f})")
+    if n_root == 0:
+        err("fit_rules.tab_roots() returned no root -- the sheet calls them, and nothing was checked")
     if blind:
         err(f"SELF-TEST: with the junction put back sharp, the probe still reads metal at "
             f"{blind[0]}" + (f" and {len(blind) - 1} more" if len(blind) > 1 else "") +
@@ -1162,9 +1183,9 @@ def check_variant(vname, v, fr, bp, trimesh):
               f"{max(_slight_depth(rd) for rd in slight):.3f} mm) -- those are held by the shell "
               f"generator, which refuses to export a solid without each round's cylinder among "
               f"its faces" if slight else "")
-           + f"; the same sections with "
+           + f"; {n_root} tab roots are R{fr.TOOL_R:g} on the recess wall; the same sections with "
            f"each junction and corner put back sharp fail all "
-           f"{n_bl + n_web + n_back + n_rd - len(slight) + n_tab}, as they must")
+           f"{n_bl + n_web + n_back + n_rd - len(slight) + n_tab + n_root}, as they must")
 
     return len(_ERRORS), len(_WARNS)
 

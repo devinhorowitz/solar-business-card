@@ -56,7 +56,7 @@ board   = _fr.BOARD_TH                       # 0.60
 # the five scalars were read by nothing. What is left is the one Section A-A draws: the west
 # lip where no part narrows it -- the widest row of fit_rules.lip_as_cut("W") -- and the
 # note is built from that same function for all four edges (_lip_note, below).
-lip_w   = max(_w for _lo, _hi, _w, _who in _fr.lip_as_cut("W"))      # 2.5 today
+lip_w   = max(_w for _lo, _hi, _w, _who in _fr.lip_as_cut("W"))      # 2.25 today, the whole edge
 bbw     = _fr.BACK_BORDER                    # SYMMETRIC exterior back-border width (4 sides)
 boss_r, pilot_r, cbore, ease = _fr.BOSS_R, _fr.PILOT_R, 3.0, 0.10
 lb = 0.10                                    # light interior edge-breaks (felt, not seen), 45deg
@@ -157,7 +157,10 @@ def _lip_note():
         + [f"STEPS BLEND AT R{_fr.TOOL_R:.2f}."]
         # the tab between the two supercaps on each short edge: its tip corners are rounds
         # (fit_rules.tab_rounds), true cylinders in the STEP, and the note says so
-        + ([f"TAB TIP CORNERS {len(_fr.tab_rounds())}\u00d7 R{_fr.CONTOUR_R:.2f}, MODELED."]
+        # ...and so, since 2026-11-15, are its roots (fit_rules.tab_roots), each tangent to
+        # the recess wall
+        + ([f"TAB TIP CORNERS {len(_fr.tab_rounds())}\u00d7 R{_fr.CONTOUR_R:.2f} AND TAB ROOTS "
+            f"{len(_fr.tab_roots())}\u00d7 R{_fr.TOOL_R:.2f}, MODELED."]
            if _fr.tab_rounds() else []))
 
 
@@ -537,14 +540,25 @@ def sheet(vname, v):
         # flats, since boss_fouls() carries it, and SAID here: how many, at what radius (the
         # shop has to know a Ø2.0 finisher can cut it), and the stand-off measured off the
         # finished island rather than the constant that asked for it.
+        # STRAIGHT SINCE 2026-11-15 (DRH: "smooth contiguous surfaces for the milling to be done
+        # simpler"). A mid-span boss is no longer hollowed round the coil's corner: it is cut
+        # straight across, the same distance from its axis on both sides and on every such
+        # boss (fit_rules.boss_coil_chord_d). A corner boss in the coil's reach would still be
+        # hollowed -- none is today -- and each kind is said only if it is there.
         _coil = [(_bx, _by) for _bx, _by in mounts if _fr.boss_coil_keepout(_bx, _by) is not None]
         _coiltxt = ""
         if _coil:
-            _rr = sorted({r for _bx, _by in _coil for _x, _y, r in _fr.boss_coil_cuts(_bx, _by)[0]})
-            _rtxt = f"R{_rr[0]:.2f}" if _rr[-1] - _rr[0] < 0.005 else f"R{_rr[0]:.2f}\u2013{_rr[-1]:.2f}"
             _gap = min(_fr.boss_coil_gap(_bx, _by) for _bx, _by in _coil)
-            _coiltxt = (f"{len(_coil)} ALSO HOLLOWED {_rtxt} TO STAND {_gap:.2f} OFF {_fr.COIL_REF} "
-                        f"COPPER, AND THE SAME ON THE FAR SIDE TO MATCH.")
+            _str = [m for m in _coil if _fr.boss_coil_cuts(*m)[1] and not _fr.boss_coil_cuts(*m)[0]]
+            _rr = sorted({r for _bx, _by in _coil for _x, _y, r in _fr.boss_coil_cuts(_bx, _by)[0]})
+            _bits = []
+            if _str:
+                _bits.append(f"{len(_str)} ALSO CUT STRAIGHT ACROSS {_fr.boss_coil_chord_d():.2f} FROM "
+                             f"THE AXIS, BOTH SIDES ALIKE")
+            if _rr:
+                _rtxt = f"R{_rr[0]:.2f}" if _rr[-1] - _rr[0] < 0.005 else f"R{_rr[0]:.2f}\u2013{_rr[-1]:.2f}"
+                _bits.append(f"{len(_coil) - len(_str)} HOLLOWED {_rtxt}")
+            _coiltxt = (", ".join(_bits) + f", TO STAND {_gap:.2f} OFF {_fr.COIL_REF} COPPER.")
         # ...AND HOW EACH BOSS MEETS THE WALL (2026-11-14): the blends and the webs, counted
         # off fit_rules like everything else in this callout.
         _nweb = sum(len(_fr.boss_webs(_bx, _by)) for _bx, _by in mounts)

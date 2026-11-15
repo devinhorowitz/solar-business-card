@@ -311,8 +311,22 @@ def ring_metal_poly():
     east wide-END blocks are NOT here: `_east_blocks` in the shell CAD is defined but
     never called -- the wide east ends migrated into the per-band system and the def is
     a fossil, so modelling them would assert metal that does not exist.)"""
-    return unary_union([box(0.0, 0.0, RING["W"], H), box(W - RING["E"], 0.0, W, H),
-                        box(0.0, 0.0, W, RING["S"]), box(0.0, H - RING["N"], W, H)])
+    rw = ring_widths()
+    return unary_union([box(0.0, 0.0, rw["W"], H), box(W - rw["E"], 0.0, W, H),
+                        box(0.0, 0.0, W, rw["S"]), box(0.0, H - rw["N"], W, H)])
+
+
+def ring_widths():
+    """RING as the shell builds it: held to the lip's own width on an edge whose lip is cut to
+    ONE width (LIP_ONE_WIDTH, 2026-11-15). The ring is a guaranteed MINIMUM seat, and on those
+    edges the lip is by rule no wider than its narrowest need -- a ring wider than that would
+    put back, everywhere but beside the part that set the width, exactly the steps the rule
+    was written to remove (it did, on the first run: the west wall came out 2.50 with a
+    relief at R16 and C24, as before). The shell CAD reads this, never RING itself."""
+    out = dict(RING)
+    for e in LIP_ONE_WIDTH:
+        out[e] = min(out[e], lip_bands(e)[0][2])
+    return out
 
 
 def ring_reliefs(ps=None):
@@ -396,7 +410,19 @@ def spannable(ps=None, span=None):
 
 
 def cavity_rect():
+    """The scalar rectangle a brace is cut inside (and then held to the void, brace_cavity()).
+
+    ITS WEST EDGE FOLLOWS THE WEST LIP (2026-11-15). _CAV's 2.50 was the west lip's width
+    while that lip was 2.50 wide wherever no part narrowed it; the lip is one width the whole
+    edge now (LIP_ONE_WIDTH), 2.25, and a brace still cut at 2.50 would stand 0.30 off a wall
+    it is meant to bear on with WALL_FIT -- free to slide a quarter of a millimetre west,
+    which is all the clearance its pockets leave round a part. So where an edge's lip is one
+    width, that width is the rectangle's edge if it is the smaller."""
     x0, y0, x1, y1 = _CAV
+    if "W" in LIP_ONE_WIDTH:
+        x0 = min(x0, lip_bands("W")[0][2])
+    if "E" in LIP_ONE_WIDTH:
+        x1 = max(x1, W - lip_bands("E")[0][2])
     ir = _CAV_IR
     c = box(x0 + ir, y0, x1 - ir, y1).union(box(x0, y0 + ir, x1, y1 - ir))
     for cx, cy in [(x0+ir, y0+ir), (x1-ir, y0+ir), (x0+ir, y1-ir), (x1-ir, y1-ir)]:
@@ -666,9 +692,26 @@ def _lip_reach(edge, lo, hi, ps=None):
     return _lip_limits(edge, lo, hi, ps)[0]
 
 
+# ---- ONE WIDTH ALONG A LONG EDGE (2026-11-15, DRH, circling the west wall on a plan of the
+# cavity: "mill away material so they are smooth contiguous surfaces for the milling to be done
+# simpler") ---------------------------------------------------------------------------------
+# The west lip was cut per 0.5 mm station like every other, so it stepped in twice -- 2.50 to
+# 2.32 beside R16 and 2.25 beside C24 -- and out again, with an R1.0 blend at each step: four
+# little faces in a wall 84 mm long, for 0.25 mm of seat over 6 mm of it. A long edge's lip is
+# now ONE width for its whole length: the narrowest any part along it asks for. The east lip
+# already was (the coil clamps all of it). Only ever less metal.
+#
+# The whole edge, not just the stretch between the two mid-span bosses: a wall that changed
+# width behind a boss would give that boss a different blend on each side, and the bosses are
+# their own mirror images by rule (EVEN AND SYMMETRIC, below).
+LIP_ONE_WIDTH = ("W", "E")
+
+
 def lip_bands(edge, step=0.5):
     """[(lo, hi, width)] along `edge`, merged. Computed, so it cannot go stale."""
     span = H if edge in ("W", "E") else W
+    if edge in LIP_ONE_WIDTH:
+        return [(0.0, span, _lip_reach(edge, 0.0, span))]
     out, cur, start = [], None, 0.0
     a = 0.0
     while a < span - 1e-9:
@@ -694,6 +737,12 @@ def lip_band_limits(edge, step=0.5):
 
     The bands and widths ARE lip_bands(); the names are _lip_limits() over the same
     stations, so a band and its reason cannot be read from two different computations."""
+    if edge in LIP_ONE_WIDTH:
+        # one band, sized over the whole edge in one call -- so the limiter named is the part
+        # that sets THAT width, not every part that would have narrowed its own station
+        span = H if edge in ("W", "E") else W
+        w, who = _lip_limits(edge, 0.0, span)
+        return [(0.0, span, w, who)]
     out = []
     for lo, hi, w in lip_bands(edge, step):
         who, a = [], lo
@@ -758,7 +807,9 @@ def lip_relieved(tool_r=TOOL_R, _opened=None):
 def cavity_void_poly(tool_r=TOOL_R, simplify=True, _trims=True):
     """Cavity void in board coords: the board rect inset by the per-band lip, opened by the
     finisher radius, plus local reliefs for what the tool then cannot reach, plus what makes
-    the two short-edge tabs symmetric and round-cornered (tab_trims)."""
+    the two short-edge tabs symmetric and round-cornered (tab_trims), less the true fillet at
+    each tab root (tab_roots). `_trims` False is the void with the tabs left SQUARE at root
+    and tip -- what the shell cuts first (void_as_cut), and what both are laid out on."""
     opened = _void_opened(tool_r)
 
     # A dia 2.0 finisher cannot reach the concave corners a band step leaves, so the opening
@@ -769,7 +820,10 @@ def cavity_void_poly(tool_r=TOOL_R, simplify=True, _trims=True):
     if stuck:
         opened = opened.union(unary_union([_lip_relief(p, tool_r) for p in stuck]))
     if _trims and tool_r == TOOL_R:
-        opened = opened.union(unary_union(tab_trims()))
+        # the two short-edge tabs as the part has them: tips rounded, and at each root the
+        # true fillet on the wall that is really there in place of the one the opening left
+        opened = (opened.union(unary_union(_tab_squares()[0] + tab_trims()))
+                        .difference(unary_union(tab_root_metal())))
     # The void is BOARD area by definition, and until 2026-11 nothing held it there. A
     # relief dilated by LIP_CLR + tool_r runs past the board edge wherever a part sits
     # closer to it than that -- all four supercaps, 1.00 mm off the N and S edges -- so the
@@ -784,7 +838,11 @@ def cavity_void_poly(tool_r=TOOL_R, simplify=True, _trims=True):
     # buffer vertices), not geometric truth: it may move a boundary by up to 0.01 mm, which
     # on a 2.45 mm edge is 0.0245 mm2 of phantom overlap. check_consistency [8] asks for the
     # unsimplified polygon so its verdict is exact rather than tolerance-padded.
-    return opened.simplify(0.01, preserve_topology=True) if simplify else opened
+    if simplify:
+        opened = opened.simplify(0.01, preserve_topology=True)
+    if not _trims and tool_r == TOOL_R:
+        opened = _tabs_squared(opened)
+    return opened
 
 
 def lip_poly(simplify=True, _trims=True):
@@ -885,6 +943,132 @@ def tab_trims():
     """[polygon] -- what tab_rounds() takes off the tab tips, for the 2D void (the brace, the
     gates and the sheet read the lip from cavity_void_poly(), and it has to have the rounds)."""
     return [rd["cut"] for rd in tab_rounds()]
+
+
+# ---- ...AND THEIR ROOTS (2026-11-15, DRH: "see if there are any others ... that could be made
+# to be simpler cuts"). Each tab met the short-edge wall through the fillet the finisher-radius
+# opening leaves (_void_opened), and that fillet had two things wrong with it, both in the
+# model and neither in the part. It was laid out from the BOARD edge, but the cavity's wall on
+# a short edge is the RECESS wall, EDGE_FIT inside it -- so the curve met the wall it was
+# supposed to be tangent to at a 19-degree kink, 0.31 mm short of its own foot. And it lived
+# in the void's polygon, which is simplified for the kernel: three or four flats where a
+# cutter leaves an arc. A Ø2.0 finisher running along that wall and up the tab leaves R1.00
+# tangent to the wall, whatever the model says; now the model says that.
+#
+# Same construction as a boss blend (boss_blends), and for the same reasons: the void is cut
+# with each root SQUARE (_tabs_squared), and a cover holding the corner, less a TRUE
+# CYLINDER set BLEND_BITE past tangent to the wall and to the tab's side, is added after. A
+# tab is 2 * TOOL_R deep from the BOARD edge, so from the wall it is EDGE_FIT short of that:
+# the root's cylinder and the tip round's overlap by a hair, and the side of the tab between
+# them is a flat 0.08 mm wide that both cross. Only the model moves; the part does not.
+def _tab_squares():
+    """([box], [box]) -- board that goes back into the void at each tab root (the fillet
+    _void_opened() leaves there), and the tabs themselves as exact rectangles."""
+    g = TOOL_R + 0.30
+    add, keep = [], []
+    for e, lo, hi, w, _win in lip_tabs():
+        y0, y1 = (0.0, w) if e == "S" else (H - w, H)       # the whole side, root to tip
+        add += [box(lo - g, y0, lo, y1), box(hi, y0, hi + g, y1)]
+        keep.append(box(lo, 0.0, hi, w) if e == "S" else box(lo, H - w, hi, H))
+    return add, keep
+
+
+def _tabs_squared(v):
+    """The void `v` with each short-edge tab an EXACT RECTANGLE: square at the roots, square
+    at the tips, sides straight. Applied AFTER the kernel's simplify, on purpose -- that pass
+    may move an outline 0.01, and on a tab it did: it kept a vertex 0.008 mm along the tip in
+    place of the corner, so one side of the south tab leaned 0.23 degrees and the other did
+    not, under four cylinders laid out as if both were square (found 2026-11-15, laying out
+    the roots). Refuses to square a root that holds anything but the opening's own fillet."""
+    add, keep = _tab_squares()
+    if not add:
+        return v
+    r = TOOL_R
+    for b in add:
+        x0, y0, x1, y1 = b.bounds
+        had = b.difference(v)                                          # the metal this box takes away
+        xr = x1 if any(abs(x1 - k.bounds[0]) < 1e-9 for k in keep) else x0      # the tab's side
+        yr = y0 if y0 < 1e-9 else y1                                             # the board edge
+        zone = box(min(xr, xr + (r + 0.02) * (-1 if xr == x1 else 1)), min(yr, yr + (r + 0.02) * (1 if yr == y0 else -1)),
+                   max(xr, xr + (r + 0.02) * (-1 if xr == x1 else 1)), max(yr, yr + (r + 0.02) * (1 if yr == y0 else -1)))
+        # ...but for a sliver the simplify itself can leave along the tab's side (0.01 at most)
+        stray = had.difference(zone).buffer(-0.011)
+        if not stray.is_empty or had.area > (1.0 - math.pi / 4.0) * r * r + 0.03:
+            raise RuntimeError(f"tab root near ({xr:g}, {yr:g}): squaring it would take "
+                               f"{had.area:.4f} mm2 of lip, {had.difference(zone).area:.4f} of it "
+                               f"outside the R{r:g} fillet the opening leaves -- something else "
+                               f"stands there")
+    out = v.union(unary_union(add)).difference(unary_union(keep))
+    if out.geom_type != "Polygon":
+        out = max((g for g in out.geoms if g.geom_type == "Polygon"), key=lambda g: g.area)
+    # the boxes leave vertices where they cross the old outline, lying ON the new straight
+    # sides: each would split a flat wall into two faces. Moves nothing.
+    return out.simplify(1e-7, preserve_topology=True)
+
+
+def tab_roots(_c={}):
+    """[blend] -- the four tab roots, each a dict as boss_blends() gives them (O, r, F, T, J, t,
+    n, cover) plus `edge`: a concave blend of TOOL_R between the short-edge wall AS CUT and the
+    side of the tab. Board coords.
+
+    Laid out on void_as_cut(), like every blend. It raises rather than return a root whose
+    wall or tab side is not the straight face the layout assumes, whose new metal is not the
+    fillet a square corner takes, or that comes within LIP_CLR of a part."""
+    if "t" not in _c:
+        r, d = TOOL_R, TOOL_R - BLEND_BITE
+        v = void_as_cut()
+        metal = box(-1.0, -1.0, W + 1.0, H + 1.0).difference(v)
+        rx0, ry0, rx1, ry1 = recess_poly().bounds
+        out = []
+        for edge, lo, hi, w, _win in lip_tabs():
+            yw, sy = (ry0, 1.0) if edge == "S" else (ry1, -1.0)       # the wall, and the way the cavity lies
+            tip = w if edge == "S" else H - w
+            if abs(tip - yw) < d + 0.25:
+                raise RuntimeError(f"the {edge} tab stands {abs(tip - yw):.2f} mm off its wall: "
+                                   f"no room for an R{r:g} root")
+            for xs, sx in ((lo, -1.0), (hi, 1.0)):                    # sx: along the wall, away from the tab
+                at = f"the {edge} tab's root at ({xs:g}, {yw:g})"
+                J = (xs, yw)
+                t, n = (sx, 0.0), (0.0, sy)
+                F = (xs + d * sx, yw)
+                O = (F[0], yw + d * sy)
+                T = (xs, O[1])
+                # the two faces it joins must be there, straight, as far as it reaches and beyond
+                for a, b, what in ((J, (xs + (r + 0.25) * sx, yw), "the wall"),
+                                   (J, (xs, yw + (r + 0.25) * sy), "the tab's side")):
+                    run = LineString([a, b])
+                    if run.difference(v.exterior.buffer(1e-6)).length > 1e-6:
+                        raise RuntimeError(f"{at}: {what} is not a straight face of the void as "
+                                           f"cut from ({a[0]:.3f}, {a[1]:.3f}) to ({b[0]:.3f}, {b[1]:.3f})")
+                cover = Polygon([O, F,
+                                 (F[0], F[1] - _BLEND_LIP * sy),
+                                 (xs - _BLEND_LIP * sx, yw - _BLEND_LIP * sy),
+                                 (xs - _BLEND_LIP * sx, T[1])])
+                b = {"O": (round(O[0], 9), round(O[1], 9)), "r": r, "F": F, "T": T, "J": J,
+                     "t": t, "n": n, "cover": cover, "limit": None, "twin": False, "edge": edge}
+                new = cover.difference(_blend_disc(b)).difference(metal)
+                want = (box(min(xs, xs + r * sx), min(yw, yw + r * sy), max(xs, xs + r * sx), max(yw, yw + r * sy))
+                        .difference(Point(xs + r * sx, yw + r * sy).buffer(r, resolution=256)))
+                odd = new.symmetric_difference(want).buffer(-_ROUND_TOL / 2.0)
+                if not odd.is_empty:
+                    raise RuntimeError(f"{at}: the blend adds {new.area:.4f} mm2 where a square "
+                                       f"corner takes {want.area:.4f}, near "
+                                       f"({odd.centroid.x:.3f}, {odd.centroid.y:.3f})")
+                for ref, p, _h, src in _cached_parts():
+                    if src == "model" and part_envelope(ref, p).distance(new) < LIP_CLR - 1e-9:
+                        raise RuntimeError(f"{at}: its fillet stands "
+                                           f"{part_envelope(ref, p).distance(new):.3f} mm from {ref}, "
+                                           f"inside LIP_CLR {LIP_CLR}")
+                b["area"] = new.area
+                out.append(b)
+        _c["t"] = out
+    return _c["t"]
+
+
+def tab_root_metal():
+    """[polygon] -- each tab root as plan metal, WITH the part of its cover that lies in the
+    wall and the tab, so that a union with those is seamless (boss_blend_metal's shape)."""
+    return [b["cover"].difference(_blend_disc(b)) for b in tab_roots()]
 
 
 def lip_metal_poly():
@@ -1183,23 +1367,13 @@ def _coil_cached(_c={}):
     return _c["t"]
 
 
-def boss_coil_cuts(mx, my):
-    """([(cx, cy, r)], [slab]) -- what COIL_CLR takes out of the boss at (mx, my): the coil's
-    copper grown by the clearance, as the pieces a cutter makes it from. Both lists are empty
-    for a boss the coil is nowhere near, which today is six of the eight.
+def _coil_need(mx, my):
+    """([(cx, cy, r)], [band]) -- what COIL_CLR asks of the boss at (mx, my): the coil's copper
+    grown by the clearance, in the pieces it is made of. Both lists are empty for a boss the
+    coil is nowhere near, which today is six of the eight.
 
     A track grown by a distance is a round-ended slot: a disc of r = COIL_CLR + half the
-    track's width about each end, and the straight band between them. They are handed over
-    separately because the shell CAD cuts the discs as true cylinders and the bands as
-    planes (the rule boss_cuts() already keeps: nothing faceted for a CAM seat to choke on);
-    everything 2D reads boss_coil_keepout(), their union.
-
-    NO DOGBONES, and the reason is geometry rather than luck. The union of a track's discs
-    and bands has no outward-pointing corner -- every band end is buried in a disc of its own
-    half-width -- so the metal it leaves has no inside corner, only arcs of radius r hollowed
-    into the boss. A TOOL_R finisher cuts those exactly so long as r >= TOOL_R, and that is
-    checked below rather than assumed: with COIL_CLR at 1.00 the smallest r on this board is
-    1.076."""
+    track's width about each end, and the straight band between them."""
     c = Point(mx, my)
     disc = c.buffer(BOSS_R, resolution=64)
     win = box(mx - BOSS_R - 1.0, my - BOSS_R - 1.0, mx + BOSS_R + 1.0, my + BOSS_R + 1.0)
@@ -1213,28 +1387,89 @@ def boss_coil_cuts(mx, my):
             band = LineString([a, b]).buffer(r, cap_style=2)        # flat ends: the band alone
             if band.intersection(disc).area > 1e-9:
                 slabs.append(band.intersection(win))
-    if (discs or slabs) and not _is_corner_boss(mx, my):
-        # SYMMETRIC (2026-11-14): what the coil takes off one side of a mid-span boss comes off
-        # the other side too, so the boss mirrors itself about its own centre line. The twin
-        # is not a coil clearance (no copper is near it); it is the same cut, reflected.
-        for (px, py), r in list(discs.items()):
-            q = (px, round(2.0 * my - py, 9))
-            discs[q] = max(r, discs.get(q, 0.0))
-        slabs = slabs + [_mirror(sl, 1.0, -1.0, origin=(mx, my)) for sl in slabs]
-    small = [(p, r) for p, r in discs.items() if r < TOOL_R - 1e-9]
-    if small:
-        (px, py), r = small[0]
-        raise RuntimeError(
-            f"boss at ({mx}, {my}): the coil keep-out about ({px}, {py}) is R{r:.3f}, a hollow "
-            f"the Ø{2 * TOOL_R:g} finisher cannot cut -- COIL_CLR {COIL_CLR} is too small for "
-            f"this rule to be machined as modelled")
     return [(px, py, r) for (px, py), r in sorted(discs.items())], slabs
+
+
+def boss_coil_chord_d(_c={}):
+    """How far from its axis a mid-span boss is cut straight across for the coil: the least
+    the coil's keep-out leaves any of them, so that all of them are alike. None if the coil
+    reaches no mid-span boss."""
+    if "d" not in _c:
+        ds = []
+        for mx, my in MOUNTS:
+            if _is_corner_boss(mx, my):
+                continue
+            discs, slabs = _coil_need(mx, my)
+            ds += [abs(cy - my) - r for _cx, cy, r in discs]
+            for sl in slabs:
+                x0, y0, x1, y1 = sl.bounds
+                ds.append(min(abs(y0 - my), abs(y1 - my)) if not (y0 < my < y1) else 0.0)
+        _c["d"] = round(min(ds), 6) if ds else None
+    return _c["d"]
+
+
+def boss_coil_cuts(mx, my):
+    """([(cx, cy, r)], [slab]) -- what the coil takes out of the boss at (mx, my), as the pieces
+    a cutter makes it from: cylinders and plane-sided slabs. Both lists are empty for a boss the
+    coil is nowhere near.
+
+    AT A MID-SPAN BOSS IT IS A STRAIGHT CUT (2026-11-15, DRH, circling one on a plan: "smooth
+    contiguous surfaces for the milling to be done simpler"). The keep-out itself is a disc
+    about the coil's corner (_coil_need), and cut as a disc it left each side of the boss as a
+    dip and a hump -- a hollow of R1.15, a rag of the boss's own circle, then the blend to the
+    wall: three faces and two more rounds where one plane does. So the boss is cut square
+    across, boss_coil_chord_d() from its axis on BOTH sides (the far side for symmetry, as the
+    hollow was mirrored before), and that distance is the least the coil leaves either boss,
+    so the two are alike. Only ever less metal than the disc took; and it is checked here,
+    not assumed, that what is left stands COIL_CLR off the copper.
+
+    A corner boss the coil reached would still get the discs and bands themselves: nothing
+    has had to decide what a straight cut means beside a short-edge wall, and none is in
+    reach today."""
+    discs, slabs = _coil_need(mx, my)
+    if not discs and not slabs:
+        return [], []
+    if _is_corner_boss(mx, my):
+        small = [(px, py, r) for px, py, r in discs if r < TOOL_R - 1e-9]
+        if small:
+            px, py, r = small[0]
+            raise RuntimeError(
+                f"boss at ({mx}, {my}): the coil keep-out about ({px}, {py}) is R{r:.3f}, a hollow "
+                f"the Ø{2 * TOOL_R:g} finisher cannot cut -- COIL_CLR {COIL_CLR} is too small for "
+                f"this rule to be machined as modelled")
+        return discs, slabs
+    d = boss_coil_chord_d()
+    far = BOSS_R + 1.0
+    cuts = [box(mx - far, my - far, mx + far, my - d), box(mx - far, my + d, mx + far, my + far)]
+    left = Point(mx, my).buffer(BOSS_R, resolution=256).difference(unary_union(cuts))
+    cu = unary_union([Point(a).buffer(w / 2.0, resolution=64) if a == b_
+                      else LineString([a, b_]).buffer(w / 2.0, resolution=64)
+                      for a, b_, w in _coil_cached()])
+    if left.distance(cu) < COIL_CLR - 1e-6:
+        raise RuntimeError(f"boss at ({mx}, {my}): cut straight across {d:.3f} mm from its axis it "
+                           f"still stands {left.distance(cu):.3f} mm from NFC coil copper, inside "
+                           f"COIL_CLR {COIL_CLR} -- the coil comes at this boss from the side, and "
+                           f"a cut parallel to the short edges does not clear it")
+    if d < THREAD_KEEP + 0.5:
+        raise RuntimeError(f"the coil would cut the mid-span bosses {d:.3f} mm from their axes, "
+                           f"within 0.5 of the thread keep-out {THREAD_KEEP}")
+    return [], cuts
 
 
 def boss_coil_keepout(mx, my):
     """The coil keep-out at the boss at (mx, my) as one polygon, or None where the coil is out
     of reach: boss_coil_cuts() united, for boss_fouls(), the drawing and every 2D check."""
     discs, slabs = boss_coil_cuts(mx, my)
+    if not discs and not slabs:
+        return None
+    return unary_union([Point(x, y).buffer(r, resolution=64) for x, y, r in discs] + slabs)
+
+
+def boss_coil_need(mx, my):
+    """The keep-out COIL_CLR itself asks for at the boss at (mx, my) -- the copper grown by the
+    clearance -- or None. boss_coil_keepout() is what is CUT, which at a mid-span boss is
+    more (a straight cut); this is what a blend may not stand in."""
+    discs, slabs = _coil_need(mx, my)
     if not discs and not slabs:
         return None
     return unary_union([Point(x, y).buffer(r, resolution=64) for x, y, r in discs] + slabs)
@@ -1784,14 +2019,19 @@ def _boss_blends(mx, my):
     fer = box(*FER)
     cs = list(v.exterior.coords)
     out, how = [], []
+    # a boss the coil has cut straight across (boss_coil_cuts) has no circle left where it meets
+    # the wall on that side: the blend there joins two PLANES, the cut and the wall
+    chords = [sl for sl in boss_coil_cuts(mx, my)[1]] if not _is_corner_boss(mx, my) else []
+    make = (lambda J, t, n, r, room: _blend_chord(mx, my, J, t, n, r, room, chords)) if chords else \
+           (lambda J, t, n, r, room: _blend_at(mx, my, J, t, n, r, room))
     for (x0, y0), (x1, y1) in zip(cs[:-1], cs[1:]):
         for J, t, room in _boss_crossings(mx, my, x0, y0, x1, y1):
             n = _into(v, J, t)
-            bl = _blend_at(mx, my, J, t, n, BLEND_R, room)
+            bl = make(J, t, n, BLEND_R, room)
             if bl is None:
                 continue                             # the wall turns before the foot: not a blend
             if blend_added(mx, my, bl).distance(fer) < FER_CLR:
-                bl = _blend_at(mx, my, J, t, n, TOOL_R, room)
+                bl = make(J, t, n, TOOL_R, room)
                 if bl is None:
                     continue
                 bl["limit"] = FER_REF
@@ -1803,7 +2043,7 @@ def _boss_blends(mx, my):
         who = next(b["limit"] for b in out if b["r"] == small)
         for i, (J, t, n, room) in enumerate(how):
             if out[i]["r"] > small:
-                tw = _blend_at(mx, my, J, t, n, small, room)
+                tw = make(J, t, n, small, room)
                 if tw is None:
                     raise RuntimeError(f"boss at ({mx}, {my}): no R{small:g} twin fits at "
                                        f"({J[0]:.2f}, {J[1]:.2f})")
@@ -1842,6 +2082,54 @@ def _blend_at(mx, my, J, t, n, r, room):
             "twin": False}
 
 
+def _blend_chord(mx, my, J, t, n, r, room, chords):
+    """One blend of radius r between the wall and a STRAIGHT CUT across the boss (a chord slab
+    from boss_coil_cuts), where the wall leaves the boss at J0 = `J`. As _blend_at(), but its
+    second face is a plane, not the boss's circle:
+
+        J    the corner the cut and the wall make (what the blend replaces)
+        J0   where the boss's circle crosses the wall -- between J0 and J, and between the
+             circle and the wall, is a notch of void no cutter enters; the cover fills it
+        E0   where the cut leaves the boss's circle
+
+    None if the wall does not run straight as far as the foot. Raises on a wall that is not
+    square to the cut: nothing has had to decide what that means."""
+    side = [sl for sl in chords if sl.distance(Point(J[0] + 1.5 * t[0], J[1] + 1.5 * t[1])) < 1e-9]
+    if len(side) != 1:
+        raise RuntimeError(f"boss at ({mx}, {my}): the wall crossing at ({J[0]:.2f}, {J[1]:.2f}) "
+                           f"faces {len(side)} straight cuts, not one")
+    x0, y0, x1, y1 = side[0].bounds
+    yc = y1 if y1 < my else y0                       # the cut's own line, on the boss's side of the slab
+    if abs(t[0]) > 1e-3 or abs(n[1]) > 1e-3:
+        raise RuntimeError(f"boss at ({mx}, {my}): the wall at ({J[0]:.2f}, {J[1]:.2f}) leans "
+                           f"{math.degrees(math.atan2(abs(t[0]), abs(t[1]))):.2f} deg off square to the "
+                           f"straight cut -- a blend between them is a rule nobody has written")
+    sc = (yc - J[1]) * t[1]                          # from J0 along the wall to the corner
+    if sc < 0:
+        raise RuntimeError(f"boss at ({mx}, {my}): the straight cut at y{yc:.3f} lies inside the "
+                           f"wall crossing at ({J[0]:.2f}, {J[1]:.2f})")
+    C = (J[0], yc)
+    d = r - BLEND_BITE
+    if sc + d > room:
+        return None
+    F = (C[0] + d * t[0], C[1] + d * t[1])
+    O = (F[0] + d * n[0], F[1] + d * n[1])
+    T = (C[0] + d * n[0], C[1] + d * n[1])
+    half = math.sqrt(max(0.0, BOSS_R * BOSS_R - (yc - my) ** 2))
+    E0 = (mx + half * (1.0 if J[0] > mx else -1.0), yc)
+    if (T[0] - E0[0]) * n[0] < 0.2:
+        raise RuntimeError(f"boss at ({mx}, {my}): an R{r:g} blend at ({C[0]:.2f}, {C[1]:.2f}) would "
+                           f"end {abs(T[0] - E0[0]):.2f} mm from where the straight cut leaves the "
+                           f"boss -- no flat of the cut left to be tangent to")
+    cover = Polygon([O, F,
+                     (F[0] - _BLEND_LIP * n[0], F[1] - _BLEND_LIP * n[1]),
+                     (J[0] - 0.30 * t[0] - _BLEND_LIP * n[0], J[1] - 0.30 * t[1] - _BLEND_LIP * n[1]),
+                     (J[0] - 0.30 * t[0] + 0.20 * n[0], J[1] - 0.30 * t[1] + 0.20 * n[1]),
+                     (T[0] - _BLEND_BOSS * t[0], T[1] - _BLEND_BOSS * t[1])])
+    return {"O": O, "r": r, "F": F, "T": T, "J": C, "J0": J, "E0": E0, "t": t, "n": n,
+            "cover": cover, "limit": None, "twin": False, "chord": True}
+
+
 def _blend_disc(b, grow=0.0):
     return Point(b["O"]).buffer(b["r"] + grow, resolution=256)
 
@@ -1877,6 +2165,14 @@ def audit_blends(blends, ps=None):
         cut = unary_union(fouls) if fouls else None
         for b in bl:
             at = f"blend at ({b['J'][0]:.2f}, {b['J'][1]:.2f}) of the boss at ({mx}, {my})"
+            if b.get("chord"):
+                # A blend between the wall and a straight cut stands, on purpose, on the far
+                # side of that cut -- so what it may not stand in is what the cut was FOR (the
+                # coil's own keep-out), and the keep-outs of the parts: not the cut itself.
+                kps, dbs = boss_cuts(mx, my)
+                real = list(kps) + [Point(q).buffer(TOOL_R, resolution=64) for d_ in dbs for q in d_]
+                need = boss_coil_need(mx, my)
+                cut = unary_union(real + ([need] if need is not None else [])) if (real or need is not None) else None
             cov = b["cover"]
             if not cov.is_valid or cov.area < 1e-3:
                 raise RuntimeError(f"{at}: its cover is not a polygon")
@@ -1902,7 +2198,7 @@ def audit_blends(blends, ps=None):
                                    f"boss axis, where the tapped hole and its spotface are")
             # the edge-break zones the cover has to bury: the lip's strip from the old corner to
             # the foot, and the boss's ring from the old corner to T (each 0.10 wide, taken 0.12)
-            J, t, n, F = b["J"], b["t"], b["n"], b["F"]
+            J, t, n, F = b.get("J0", b["J"]), b["t"], b["n"], b["F"]
             s = math.hypot(F[0] - J[0], F[1] - J[1])
             strip = Polygon([(J[0] - 0.30 * t[0], J[1] - 0.30 * t[1]),
                              (J[0] + (s - 0.01) * t[0], J[1] + (s - 0.01) * t[1]),
@@ -1910,7 +2206,8 @@ def audit_blends(blends, ps=None):
                              (J[0] - 0.30 * t[0] - 0.12 * n[0], J[1] - 0.30 * t[1] - 0.12 * n[1])])
             strip = strip.difference(c.buffer(BOSS_R - 0.12, resolution=256))
             a0 = math.atan2(J[1] - my, J[0] - mx)
-            a1 = math.atan2(b["T"][1] - my, b["T"][0] - mx)
+            _T = b.get("E0", b["T"])                 # a chord blend: the ring runs to where the cut leaves the circle
+            a1 = math.atan2(_T[1] - my, _T[0] - mx)
             da = (a1 - a0 + math.pi) % (2 * math.pi) - math.pi
             a1 = a0 + da * (1.0 - 0.01 / max(abs(da) * BOSS_R, 1e-9))     # stop 0.01 short of T
             arc = [(mx + rr * math.cos(a0 + (a1 - a0) * k / 40.0), my + rr * math.sin(a0 + (a1 - a0) * k / 40.0))
@@ -1966,6 +2263,9 @@ def blend_gaps():
     return best, coil, fer
 
 
+_SEAM = 1e-4               # mm: closes a zero-width seam in a union; far under every tolerance here
+
+
 def _shell_metal(with_webs, rounds=True, _c={}):
     """`rounds` False is the metal BEFORE the outside corners of the bosses are rounded: what
     the webs and the rounds themselves are laid out on (boss_rounds needs it, and would chase
@@ -1975,6 +2275,13 @@ def _shell_metal(with_webs, rounds=True, _c={}):
                         + [g for mx, my in MOUNTS for g in boss_blend_metal(mx, my)])
         if with_webs:
             m = unary_union([m] + [u for mx, my in MOUNTS for u, _cov in boss_webs(mx, my)])
+            # A web's pocket is cut out of the void by the very bore it ends on, so the two
+            # meet along a line and the union leaves that line in the outline: a slit of no
+            # width, 0.06 to 0.35 mm long, beside each corner boss (found 2026-11-15, walking
+            # the outline as straights and arcs). It is not in the solid -- the web's COVER is
+            # what is built, and that is buried in the boss -- but every reader of this
+            # polygon had it. Closed by a ten-thousandth; nothing else moves.
+            m = m.buffer(_SEAM, join_style=2).buffer(-_SEAM, join_style=2)
         if rounds:
             # off the whole union, not just the islands: a round between a flat and a blend
             # takes a hair of the blend with it

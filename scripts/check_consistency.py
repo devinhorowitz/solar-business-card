@@ -674,15 +674,123 @@ def check_enclosure_fit():
                 f"still reaches everything -- the hard-corner test above cannot fail")
             bad += 1
     _tabs = fr.tab_rounds()
-    if len(_rds) != 20 or len(_tabs) != 4:
-        # a tripwire, like the twelve and four above: the sheet and the docs quote both counts
-        err(f"{len(_rds)} boss rounds and {len(_tabs)} tab-tip rounds, where this board has had "
-            f"20 and 4 -- read what moved (fit_rules.boss_rounds / tab_rounds), then re-ledger "
-            f"the counts here and in the docs that quote them")
+    _roots = fr.tab_roots()
+    if len(_rds) != 16 or len(_tabs) != 4 or len(_roots) != 4:
+        # a tripwire, like the twelve and four above: the sheet and the docs quote the counts.
+        # (20 boss rounds until 2026-11-15: the two east mid-span bosses lost two each when the
+        # coil's hollow became a straight cut.)
+        err(f"{len(_rds)} boss rounds, {len(_tabs)} tab-tip rounds and {len(_roots)} tab roots, "
+            f"where this board has had 16, 4 and 4 -- read what moved (fit_rules.boss_rounds / "
+            f"tab_rounds / tab_roots), then re-ledger the counts here and in the docs that "
+            f"quote them")
         bad += 1
     if any(abs(rd["r"] - fr.CONTOUR_R) > 1e-9 for _m, rd in _rds) or \
             any(abs(rd["r"] - fr.CONTOUR_R) > 1e-9 for rd in _tabs):
         err("a round is not CONTOUR_R")
+        bad += 1
+    # 4e. SIMPLER CUTS (2026-11-15, DRH: "smooth contiguous surfaces for the milling to be done
+    #     simpler"). Three things, each read here off the polygon the shell is cut to and by
+    #     assembly_drc [G] / [I] / [J] off the metal:
+    #       ONE WIDTH   the west and east lips are one band each, the whole edge, and the
+    #                   cavity's long walls between the bosses are single straight faces;
+    #       STRAIGHT    a mid-span boss in the coil's reach is cut straight across, the same
+    #                   distance from its axis on both sides and on every such boss;
+    #       TAB ROOTS   each tab meets the short-edge wall through a true R of the finisher,
+    #                   tangent to the RECESS wall (not the board edge, EDGE_FIT outside it).
+    _vc = fr.void_as_cut()
+    for e_ in fr.LIP_ONE_WIDTH:
+        _rows = fr.lip_as_cut(e_)
+        if len(_rows) != 1 or abs(_rows[0][1] - _rows[0][0] - fr.H) > 1e-9:
+            err(f"the {e_} lip is cut in {len(_rows)} band(s), not one the whole edge -- "
+                f"fit_rules.LIP_ONE_WIDTH says the wall there is a single straight face")
+            bad += 1
+            continue
+        # the wall itself, off the cut polygon: between each pair of neighbouring bosses on
+        # that edge, clear of them and their blends, the void's outline within 0.6 mm of where
+        # the lip's face should be is ONE straight run, on that face, the whole stretch
+        _xw = _rows[0][2] if e_ == "W" else fr.W - _rows[0][2]
+        _ys = sorted(m[1] for m in fr.MOUNTS if (m[0] < fr.W / 2.0) == (e_ == "W"))
+        _keep = fr.BOSS_R + fr.BLEND_R + 0.6
+        for _ya, _yb in zip(_ys[:-1], _ys[1:]):
+            _run = _vc.exterior.intersection(_box(_xw - 0.6, _ya + _keep, _xw + 0.6, _yb - _keep))
+            _bx0, _by0, _bx1, _by1 = _run.bounds if not _run.is_empty else (0.0, 0.0, 9.0, 0.0)
+            # 1e-3: the void is simplified by 0.01 for the kernel and a long wall leans by up
+            # to 0.0005 mm end to end (fit_rules.void_as_cut); the steps this is here to catch
+            # were 0.18 and 0.25
+            if max(abs(_bx0 - _xw), abs(_bx1 - _xw)) > 1e-3 or \
+                    abs(_run.length - (_yb - _ya - 2.0 * _keep)) > 1e-3:
+                err(f"the {e_} wall of the cavity is not one straight face at x{_xw:g} between "
+                    f"the bosses at y{_ya:g} and y{_yb:g}: the void's outline there runs "
+                    f"x{_bx0:.4f}..{_bx1:.4f}, {_run.length:.3f} mm of it")
+                bad += 1
+    # ...and it can fail: a notch 0.2 deep and 5 long let into the west wall, the size of
+    # the R16 / C24 steps this replaced, has to be seen
+    _xw = fr.lip_as_cut("W")[0][2]
+    _ya, _yb = sorted(m[1] for m in fr.MOUNTS if m[0] < fr.W / 2.0)[1:3]
+    _nv = _vc.difference(_box(_xw - 0.1, (_ya + _yb) / 2.0 - 2.5, _xw + 0.2, (_ya + _yb) / 2.0 + 2.5))
+    _run = _nv.exterior.intersection(_box(_xw - 0.6, _ya + _keep, _xw + 0.6, _yb - _keep))
+    if max(abs(_run.bounds[0] - _xw), abs(_run.bounds[2] - _xw)) <= 1e-3 and \
+            abs(_run.length - (_yb - _ya - 2.0 * _keep)) <= 1e-3:
+        err("SELF-TEST: a 0.2 mm step let into the west wall was not seen -- the straight-wall "
+            "test above cannot fail")
+        bad += 1
+    if fr.ring_widths()["W"] > fr.lip_as_cut("W")[0][2] + 1e-9:
+        err("the guaranteed ring is wider than the one-width west lip -- it would put the steps back")
+        bad += 1
+    _cut = [m for m in fr.MOUNTS if m not in _corner and fr.boss_coil_need(*m) is not None]
+    _cd = fr.boss_coil_chord_d() if _cut else None
+    for m in _cut:
+        _x0, _y0, _x1, _y1 = _isl[m].bounds
+        if abs((_y1 - _y0) - 2.0 * _cd) > 1e-6 or abs((_y0 + _y1) / 2.0 - m[1]) > 1e-6:
+            err(f"the boss at {m} is not cut straight {_cd:g} mm either side of its axis: it "
+                f"spans y{_y0:.3f}..{_y1:.3f}")
+            bad += 1
+        # straight means straight: a millimetre or more of the island's outline lies ON each
+        # of the two lines, and the same length on both
+        _on = [_isl[m].exterior.intersection(
+                   _box(_x0 - 1.0, m[1] + sg * _cd - 1e-7, _x1 + 1.0, m[1] + sg * _cd + 1e-7)).length
+               for sg in (-1.0, 1.0)]
+        if min(_on) < 1.0 or abs(_on[0] - _on[1]) > 1e-3:
+            err(f"the boss at {m}: its straight cuts are not straight -- {_on[0]:.3f} and "
+                f"{_on[1]:.3f} mm of its outline lie on the two lines y{m[1] - _cd:g} / y{m[1] + _cd:g}")
+            bad += 1
+        if _cd < fr.THREAD_KEEP + 0.5:
+            err(f"the straight cuts stand {_cd:.3f} from the axis of {m}, inside the thread's keep-out + 0.5")
+            bad += 1
+    if len(_cut) != 2:
+        err(f"{len(_cut)} mid-span bosses are cut straight for the coil, where this board has had 2")
+        bad += 1
+    _ry0, _ry1 = fr.recess_poly().bounds[1], fr.recess_poly().bounds[3]
+    for b in _roots:
+        _yw = _ry0 if b["edge"] == "S" else _ry1
+        if abs(abs(b["O"][1] - _yw) - (fr.TOOL_R - fr.BLEND_BITE)) > 1e-6 or abs(b["r"] - fr.TOOL_R) > 1e-9:
+            err(f"the tab root about ({b['O'][0]:.3f}, {b['O'][1]:.3f}) is not an R{fr.TOOL_R:g} "
+                f"tangent to the recess wall at y{_yw:g}")
+            bad += 1
+    # ...and by a rolled ball, which owes tab_roots() nothing: no inside corner at a tab root
+    # that an R(TOOL_R - 0.05) cutter cannot reach, and with the roots taken out it must find all four
+    _rb = fr.TOOL_R - 0.05
+    _lipm = unary_union([fr.lip_metal_poly(), _wallm])
+
+    def _unreached(metal, b):
+        w = _box(b["J"][0] - 2.0, b["J"][1] - 2.0, b["J"][0] + 2.0, b["J"][1] + 2.0).difference(metal)
+        gone = w.difference(w.buffer(-_rb, join_style=1, quad_segs=64).buffer(_rb, join_style=1, quad_segs=64))
+        # only what lies in the root's own corner: the window's four square corners, and the
+        # tab's tip above, are "unreached" too and are not what is being asked
+        near = _box(b["J"][0] - fr.TOOL_R - 0.2, b["J"][1] - fr.TOOL_R - 0.2,
+                    b["J"][0] + fr.TOOL_R + 0.2, b["J"][1] + fr.TOOL_R + 0.2)
+        return sum(k.area for k in getattr(gone, "geoms", [gone]) if near.contains(k))
+
+    _rootm = unary_union(fr.tab_root_metal())
+    _ur = [_unreached(_lipm, b) for b in _roots]
+    if _roots and max(_ur) > _HARD:
+        err(f"a tab root still has an inside corner an R{_rb:g} cutter cannot reach "
+            f"({max(_ur):.4f} mm2)")
+        bad += 1
+    if _roots and min(_unreached(_lipm.difference(_rootm.difference(_wallm).difference(
+            unary_union(fr._tab_squares()[1]))), b) for b in _roots) < 5 * _HARD:
+        err("SELF-TEST: with the tab roots taken out, the rolled ball still reaches everything "
+            "-- the tab-root test above cannot fail")
         bad += 1
     # mechanism self-test: a synthetic part planted INSIDE a blend's new metal must be refused
     (_m0, _b0) = _bl[0]
@@ -740,7 +848,11 @@ def check_enclosure_fit():
            f"{_ns:.4f}, E-W {_ew:.4f} mm2), {len(_rds)} boss corners and {len(_tabs)} tab tips "
            f"rounded R{fr.CONTOUR_R:g} with no hard corner left on a boss "
            f"({max(_hc.values()):.4f} mm2 at worst against {_HARD}; the rounds put back sharp "
-           f"fail all 8); guaranteed ring "
+           f"fail all 8); the {' and '.join(fr.LIP_ONE_WIDTH)} lips one width each "
+           f"({', '.join(f'{e_} {fr.lip_as_cut(e_)[0][2]:g}' for e_ in fr.LIP_ONE_WIDTH)}) and "
+           f"their walls straight between the bosses, {len(_cut)} mid-span bosses cut straight "
+           f"{_cd:g} from their axes for the coil, {len(_roots)} tab roots R{fr.TOOL_R:g} on the "
+           f"recess wall ({max(_ur):.4f} mm2 unreached at worst; taken out, all fail); guaranteed ring "
            f"relieved around {len(_reliefs) - len(fr.lip_tabs())} part(s) and given up at the "
            f"{len(fr.lip_tabs())} short-edge tabs, all bodies >={fr.LIP_CLR} clear of it")
 

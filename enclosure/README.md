@@ -72,13 +72,14 @@ resin walls beside blind pockets in both braces, since fixed, with its own row b
 | a Ø2.0 finisher vs a max-material supercap | SC2 / SC4 **0.113 / 0.130** inside the boss-corner fillet (SolidCraft 0.134 on a square corner); SC1 / SC3 0.050 at the outer corners | all four **0.150 clear** (the keep-out's full margin): Ø2.0 bores modeled where the tool must reach | fixed |
 | a Ø2.0 finisher vs the brace | brace **0.225 mm** into the east boss-to-wall fillets, 0.055 west | clear at every level, closest 0.048 | fixed |
 | C24 (STO_SNS pad) to the lip | **0.097** to its pad box (0.152 to the rounded pad; SolidCraft 0.157), against `LIP_CLR` 0.30 | **0.296** | fixed |
-| a mount boss to NFC coil copper | the two east mid-span bosses **0.874 / 0.966 mm** off it (ArtCraft 0.8772), under a sheet printing 1.00 for the lip beside them | **1.00**: each hollowed R1.15 about the coil's own corner, a cut the Ø2.0 makes | fixed 2026-11-14 |
+| a mount boss to NFC coil copper | the two east mid-span bosses **0.874 / 0.966 mm** off it (ArtCraft 0.8772), under a sheet printing 1.00 for the lip beside them | **1.07 / 1.17**: each cut straight across, 2.32 mm from its axis, on both sides (2026-11-15; an R1.15 hollow about the coil's own corner, to exactly 1.00, from 2026-11-14 until then) | fixed 2026-11-14 |
 | the brace's ridge east of the ferrite channel | tapers to **nothing** at both ends (y 31.40 and 57.50; 0.20 wide 0.19 from the point) | ends square at y 31.67 and 57.23, **0.25** wide there — the wall the print spec's printer holds | fixed 2026-11-14 |
 | where a boss meets the lip's wall | a **sharp inside corner** at all twelve junctions (51.5° on the east wall, 81.8° on the west), left to the finisher's radius _(this repo's instruments; DRH, from a render)_ | a modeled concave blend, a true cylinder, with the lip's and the boss's 0.10×45° break carried round it: eight at **R2.00**, four at **R1.00** — both sides of the two bosses the ferrite sheet stands beside (ten and two until the contouring pass below made each boss symmetric) | changed 2026-11-14 |
 | beside each corner boss | a **slot** of void between the boss and the recess wall, 0.17 mm at its narrowest, closed at one end, that no cutter enters | **metal**: boss, web and wall are one piece, and the boss's Ø2.0 bore runs out to the wall | changed 2026-11-14 |
 | where a boss annulus meets the frame, on the back | a **sharp inside corner** at all sixteen junctions (71.6°, as tall as the frame, 0.15), left to the back tool's radius — on the face that is seen _(this repo's instruments; DRH)_ | a modeled concave blend at each, **R2.00**, a true cylinder, with the frame's own 0.10×45° break running round frame, blend and annulus as one edge; the reeded fields stand 0.40 off a blend as they do off an annulus | changed 2026-11-14 |
 | the bosses and the two short-edge tabs, in plan | every boss cut back by its own supercap's numbers: flats **1.475 / 1.524 / 1.545 / 1.676** from their axes, a lump and a bore on one side of each east mid-span boss, **hard outside corners** wherever a flat left a circle or a bore; the south tab 0.1 mm wider on one side, both tabs square-tipped _(DRH, from a render)_ | **even, symmetric, round-cornered**: one flat 1.475 from every axis; each mid-span boss its own mirror image (full-chord flat, coil hollow and R1.00 blends on both sides); every outside corner a true **R1.00** cylinder (twenty on the bosses, four on the tab tips). Only ever less metal: 6.26 mm² in plan, 0.05 g | changed 2026-11-14 |
-| the ferrite sheet against the shell | never measured. Its two east corners stand **0.24 / 0.15 mm** from the as-milled titanium at the bosses at y 28.63 / y 60.27 — a clearance nobody chose | the same, and printed by `assembly_drc` [F] and [H] on every run | **DRH's call** |
+| the cavity's west wall, the sides of the two east mid-span bosses, the tab roots | the west lip **2.50** wide with two steps in it, to 2.32 beside R16 and 2.25 beside C24; each side of each east mid-span boss a **hollow and a hump** (R1.15 about the coil's corner, mirrored onto the side with no coil); each tab root a polygon fillet laid out from the board edge, meeting the recess wall at a **19° kink** _(DRH, circling two of them on a plan: "smooth contiguous surfaces for the milling to be done simpler")_ | **one straight west wall**, the lip 2.25 the whole edge; each side of those two bosses **one straight cut 2.32 from the axis**, R1.00 at the flat and R1.00 into the wall (sixteen boss rounds now, the coil 1.07 / 1.17 off, the ferrite sheet 0.35 off); each tab root a true **R1.00** cylinder tangent to the recess wall. 17.5 mm² less metal in plan, 0.14 g; 87 fewer faces on the max STEP, 87 on the lite, 145 on the air | changed 2026-11-15 |
+| the ferrite sheet against the shell | never measured. Its two east corners stand **0.24 / 0.15 mm** from the as-milled titanium at the bosses at y 28.63 / y 60.27 — a clearance nobody chose | **0.35 mm** since those two bosses were cut straight (2026-11-15), against `FER_CLR` 0.20; printed by `assembly_drc` [F] and [H] on every run | **DRH's call**, if 0.35 is not enough |
 
 The right-hand column was measured in the cloud with OpenCascade and by slicing the STLs — an
 instrument that reproduces every SolidCraft figure on the committed solids to the last digit, and
@@ -157,15 +158,30 @@ What changed, in one line each — the reasoning is in the generators and in `CL
   mid-span bores are gone), and what one side of a mid-span boss has the other has too: the coil
   hollow is mirrored, and the twin of a ferrite-limited blend takes its R1.00 (eight R2.00, four
   R1.00); **round** — `boss_rounds()` puts a true cylinder of `CONTOUR_R` (1.00, the finisher's
-  radius) on every outside corner, twenty in all, and `tab_rounds()` on the four tip corners of
+  radius) on every outside corner (twenty that day; sixteen since the coil's hollows became
+  straight cuts on 2026-11-15, next bullet), and `tab_rounds()` on the four tip corners of
   the two short-edge lip tabs, which the guaranteed ring no longer makes lopsided
   (`ring_reliefs()` gives way at a tab). A round is found by rolling a ball in the metal's polygon
   and then SOLVED against the planes and circles themselves: the polygon is good to 0.005 mm, and
   on the west bosses the choice between two candidate rounds turns on 0.0026. The shell generator
   refuses to export a solid that lacks any round's cylinder among its faces; `assembly_drc` **[J]**
-  probes the twenty a section can see (sixteen boss corners, four tab tips) and says which four it
-  cannot; `check_consistency` **[8]** holds the evenness, the symmetry and — by rolling its own
-  ball — the absence of a hard corner.
+  probes every one a section can see (all sixteen boss corners and the four tab tips, now that the
+  four slight ones are gone); `check_consistency` **[8]** holds the evenness, the symmetry and —
+  by rolling its own ball — the absence of a hard corner.
+- **Simpler cuts (2026-11-15).** DRH circled two places on a plan of the cavity and asked for
+  "smooth contiguous surfaces for the milling to be done simpler", then for any others like
+  them. **The west lip is one width the whole edge**, 2.25 (`fit_rules.LIP_ONE_WIDTH`; it was
+  2.50 with a step at R16 and one at C24), so the west wall is one straight face; the guaranteed
+  ring is held to that width (`ring_widths()`) and the brace follows the wall (`cavity_rect()`).
+  **The two east mid-span bosses are cut straight across for the coil**, 2.32 mm from the axis
+  on both sides (`boss_coil_cuts()`), in place of a hollow and a hump: R1.00 where the cut meets
+  the flat, R1.00 into the wall, the coil 1.07 / 1.17 off and the ferrite sheet 0.35. **Each tab
+  root is a true R1.00 on the recess wall** (`tab_roots()`), where a polygon fillet laid out from
+  the board edge had met that wall at a 19° kink. `check_consistency` **[8]** step 4e and
+  `assembly_drc` **[G]**, **[I]** and **[J]** hold all three; the shell generator will not export
+  a solid without each root's cylinder among its faces. Two more of the kind are DRH's to
+  decide and are not built — the bore beside each corner boss, and the two tabs' widths
+  (`TODO.md`).
 - **The channel's ridge ends square (2026-11-14).** Being let off `SLA_WALL` had let the ridge east
   of the ferrite channel off everything: where the brace's edge turns in round a boss fillet the
   ridge ran on with it to a point. `fit_rules.PRINT_WALL` (0.25) is the floor under the exception
@@ -625,7 +641,7 @@ The PCB recess is cut **0.05 mm smaller than the board on every flat** (relieved
 
 ### 9. Internal radii and tooling
 
-**Where a mount boss meets the lip's wall the junction is modeled** (2026-11-14): a concave blend at each of the twelve places a boss's circle crosses the wall — eight at **R2.00**, four at **R1.00** at the two bosses beside the ferrite sheet — each a true cylinder, and each corner boss is solid to the recess wall, its Ø2.0 bore running out to it. On the back, each r2.60 annulus is blended into the proud frame the same way — sixteen, all **R2.00**, cut with the other back-face features. **Outside corners are modeled too** (2026-11-14): every outside corner of a boss — twenty — and the four tip corners of the two short-edge lip tabs are **R1.00**, true cylinders. Any other internal concave junction is modeled **sharp**; a round tool leaves its own fillet there (standard for a milled pocket). The whole solid is analytic (planes, cylinders, cones), zero spline/Bezier. Rough the cavity with a Ø3–4 mm tool; finish corners/walls with a Ø2.0 **or smaller — never larger**. R2.00 is twice that tool's radius on purpose: it sweeps the blend and never dwells in a corner.
+**Where a mount boss meets the lip's wall the junction is modeled** (2026-11-14): a concave blend at each of the twelve places a boss's circle crosses the wall — eight at **R2.00**, four at **R1.00** at the two bosses beside the ferrite sheet — each a true cylinder, and each corner boss is solid to the recess wall, its Ø2.0 bore running out to it. On the back, each r2.60 annulus is blended into the proud frame the same way — sixteen, all **R2.00**, cut with the other back-face features. **Outside corners are modeled too** (2026-11-14): every outside corner of a boss — sixteen — and the four tip corners of the two short-edge lip tabs are **R1.00**, true cylinders, and since 2026-11-15 so are the four tab roots, each tangent to the recess wall. Any other internal concave junction is modeled **sharp**; a round tool leaves its own fillet there (standard for a milled pocket). The whole solid is analytic (planes, cylinders, cones), zero spline/Bezier. Rough the cavity with a Ø3–4 mm tool; finish corners/walls with a Ø2.0 **or smaller — never larger**. R2.00 is twice that tool's radius on purpose: it sweeps the blend and never dwells in a corner.
 
 Everything that has to clear those fillets is **sized for the Ø2.0's R1.0** (2026-11-13): the brace is cut to the cavity as that tool leaves it (`fit_rules.cavity_as_milled()`), and wherever a supercap keep-out corner lands where the tool could not reach, the boss carries a modeled **Ø2.0 bore** through that corner (`fit_rules.boss_cuts()` — four of them, one at each corner boss; the two east mid-span bosses carried one each until their flats became full chords on 2026-11-14), placed as far from the thread as the tool can be and still reach it. `scripts/assembly_drc.py` **[H]** sections the emitted shell, gives every sharp inside corner the R1.0, and holds the brace, every B-side part and the four supercaps **at max material** to that. Before it, the Ø2.0 put titanium 0.225 mm into the brace at the east boss-to-wall corners and 0.13 mm into a max-material SC4, on shells every other gate passed.
 

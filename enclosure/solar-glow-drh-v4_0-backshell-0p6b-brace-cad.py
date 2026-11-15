@@ -120,10 +120,12 @@ EDGE_BREAK = 0.10                  # Ti deburr: break the sharp END-FACE edges (
                                    # Ti edges chip and cut; an edge-break also resists nicking. ~0.1 mm.
 # ASYMMETRIC support lip (per side) -- wider = more board-edge support = stiffer PCB. Widths bounded
 # by the nearest B-side part on each edge (v3.0 board, measured):
-from fit_rules import RING as _RING                        # noqa: E402 -- single home; the
+from fit_rules import ring_widths as _ring_widths          # noqa: E402 -- single home; the
                                                            # main fit_rules import sits below
                                                            # the geometry helpers, after these
                                                            # scalars are needed
+_RING = _ring_widths()    # NOT fit_rules.RING itself: on an edge whose lip is cut to one width
+                          # the ring is held to that width, or it puts the steps back (2026-11-15)
 lip_W, lip_N, lip_S = _RING["W"], _RING["N"], _RING["S"]
 lip_E      = _RING["E"]                # E stays narrow through the JP1/TP1 pads (reach x49.6) AND clear of the NFC coil (~x49): lip_E=1.0 -> wall x49.8, east of both. A grounded Ti lip over the coil would detune it.
 # The old hand-typed 2.5/2.0/2.0 carried a v3-era justification ("body max edge ~2.35 from
@@ -334,7 +336,7 @@ from fit_rules import (lip_bands,
                        boss_cuts as _boss_cuts, boss_coil_cuts as _boss_coil_cuts,
                        boss_blends as _boss_blends, boss_webs as _boss_webs,
                        boss_rounds as _boss_rounds, CONTOUR_R as _CONTOUR_R,
-                       tab_rounds as _tab_rounds,
+                       tab_rounds as _tab_rounds, tab_roots as _tab_roots,
                        back_blends as _back_blends,
                        void_as_cut as _void_as_cut, BLEND_R as _BLEND_R,
                        recess_poly as _recess_poly, TOOL_R as _TOOL_R,
@@ -895,6 +897,13 @@ def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pill
             res = res.union(_blend_solid(_b, floor, cavity, lip_break, _foot))
         for _pocket, _cover in _boss_webs(mx, my):
             res = res.union(_web_solid(mx, my, _cover, floor, cavity, _foot))
+    # ...AND EACH SHORT-EDGE TAB TO ITS WALL (2026-11-15, fit_rules.tab_roots). The void was cut
+    # with the tab roots square; each gets the same true-cylinder blend, of the finisher's own
+    # radius, tangent to the recess wall that is really there. Until now the root was a fillet
+    # in the void's polygon, laid out from the board edge: a few flats, meeting the wall 0.05
+    # further in at a 19-degree kink.
+    for _b in _tab_roots():
+        res = res.union(_blend_solid(_b, floor, cavity, lip_break, _foot))
     # ROUND THE OUTSIDE CORNERS OF EACH BOSS (2026-11-14, fit_rules "ROUNDS"). Where a flat
     # leaves the boss's circle, a bore or a coil hollow, the model kept a hard outside corner.
     # Each is a true cylinder of CONTOUR_R now. LAST of the cavity's features, because a round
@@ -904,7 +913,9 @@ def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pill
         for _rd in _boss_rounds(mx, my):
             res = res.cut(_round_tool(_rd, floor, cavity, _foot))
     # ...AND THE TIP CORNERS OF THE TWO SHORT-EDGE TABS (fit_rules.tab_rounds): the void was
-    # cut with them square, so that these can be true cylinders too.
+    # cut with them square, so that these can be true cylinders too. After the roots: a tab is
+    # two radii deep from the BOARD edge, so a root's cylinder and its tip round's overlap by
+    # a hair, and the round has to cut what the root just added.
     for _rd in _tab_rounds():
         res = res.cut(_round_tool(_rd, floor, cavity, _foot, top_break=lip_break))
     # rear MEDALLION (Z9F, replaced the engraved maker's mark 2026-07-31): the coin. Cut
@@ -1004,7 +1015,7 @@ print(f"cavity={cavity} general (max; per-variant from fit_rules.VARIANTS); U7 p
       f"boss junctions: R{_BLEND_R:g} blends x{sum(len(_boss_blends(mx, my)) for mx, my in mounts)}, "
       f"webs x{sum(len(_boss_webs(mx, my)) for mx, my in mounts)}, "
       f"R{_CONTOUR_R:g} rounds x{sum(len(_boss_rounds(mx, my)) for mx, my in mounts)} on the bosses "
-      f"and x{len(_tab_rounds())} on the tab tips, "
+      f"and x{len(_tab_rounds())} on the tab tips, tab roots x{len(_tab_roots())} R{_TOOL_R:g}, "
       f"back blends x{sum(len(_back_blends(mx, my)) for mx, my in mounts)} where there is a back face "
       f"(true cylinders; every other concave corner left sharp, the round tool leaves its radius)")
 for _vn, name, fl, wl, bd, cav_v, sl, mk, fn, gm, mat in jobs:
@@ -1018,19 +1029,22 @@ for _vn, name, fl, wl, bd, cav_v, sl, mk, fn, gm, mat in jobs:
     # EVERY ROUND IS A FACE OF THIS SOLID, or it is not exported (_rounds_missing). And the
     # test must be able to fail: a round that is not there -- one of the real ones, its axis
     # moved half a millimetre -- has to be reported missing on every run.
-    _rds = [_rd for mx, my in mounts for _rd in _boss_rounds(mx, my)] + list(_tab_rounds())
+    _rds = ([_rd for mx, my in mounts for _rd in _boss_rounds(mx, my)] + list(_tab_rounds())
+            + list(_tab_roots()))
     _gone = _rounds_missing(solid, _rds)
     if _gone:
-        raise SystemExit(f"[{_vn}] {len(_gone)} of the {len(_rds)} R{_CONTOUR_R:g} rounds are not "
-                         f"faces of the solid, the first about board ({_gone[0]['O'][0]:.3f}, "
-                         f"{_gone[0]['O'][1]:.3f}) -- the sheet calls every outside corner of a "
-                         f"boss and every tab tip R{_CONTOUR_R:g}. Not exporting {name}.")
+        raise SystemExit(f"[{_vn}] {len(_gone)} of the {len(_rds)} R{_CONTOUR_R:g} rounds and tab "
+                         f"roots are not faces of the solid, the first about board "
+                         f"({_gone[0]['O'][0]:.3f}, {_gone[0]['O'][1]:.3f}) -- the sheet calls every "
+                         f"outside corner of a boss, every tab tip and every tab root "
+                         f"R{_CONTOUR_R:g}. Not exporting {name}.")
     _ghost = dict(_rds[0], O=(_rds[0]["O"][0] + 0.5, _rds[0]["O"][1]))
     if not _rounds_missing(solid, [_ghost]):
         raise SystemExit(f"[{_vn}] SELF-TEST: a round that is not in the solid was not reported "
                          f"missing -- the check above proves nothing. Not exporting {name}.")
-    print(f"  [{_vn}] {len(_rds)} R{_CONTOUR_R:g} rounds are cylinder faces of the solid "
-          f"({len(_rds) - len(_tab_rounds())} boss corners, {len(_tab_rounds())} tab tips); a "
+    print(f"  [{_vn}] {len(_rds)} R{_CONTOUR_R:g} cylinders are faces of the solid "
+          f"({len(_rds) - len(_tab_rounds()) - len(_tab_roots())} boss corners, "
+          f"{len(_tab_rounds())} tab tips, {len(_tab_roots())} tab roots); a "
           f"round moved 0.5 mm is reported missing, as it must be")
     field = fl + cav_v + board_th                       # per-variant, NOT the module cavity
     foot = (W + 2*edge_fit + 2*wl)
