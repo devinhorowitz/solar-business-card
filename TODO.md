@@ -1554,7 +1554,12 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
       (KiCad's bodies hang a little lower than the table), a refusal for a body with no
       height, and a self-test that its lowest cut passes through a supercap on a floored
       shell. On the evened shells it is green and the mirror image differs by 1.93 mm² at the
-      tabs, as before the fillet.
+      tabs, as before the fillet; on `de4894c`'s shells, rebuilt, it is red on max and lite
+      with CI's own figure at CI's own place.
+    - **In CI, against KiCad's export (run 664 on `8bb76c6`, green):** crowding 0.916 mm as
+      written and 0.917 for the top-for-bottom mirror image on max and lite (0.451 / 0.452 on
+      air), the two differing by 1.93 mm² at the tabs and by nothing within 0.5 mm of a part;
+      the half-turn mirror 7.714 mm² inside parts. Mesh gates and `assembly_drc` 0 errors.
   - **Each run is three true cylinders** — one lying along the wall, one standing at each end —
     each set 0.002 mm past tangent like every blend here, so the fillet as modelled reaches
     0.935 mm from the wall and 0.935 up it. Everything that has to clear it is measured to a
