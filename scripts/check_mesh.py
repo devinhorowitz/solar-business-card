@@ -130,7 +130,12 @@ BASELINE = {
     # tangent one's is 0.2146; each cylinder is set 0.002 into wall and floor), so 28.11 mm3
     # before the sixteen run ends are scooped; 26.23 measured on the STEP, 26.34 here.
     # bbox unchanged; 0 open edges, 0 degenerate. Triangles 53,712, ungated.
-    volume_mm3=5296.11, bbox=(-26.35, -45.4, -0.15, 26.35, 45.4, 3.4),
+    # re-ledgered the same day (the runs evened top for bottom), 5296.11 -> 5296.00: the run
+    # east of the south tab starts 0.5 mm later, to match its twin on the north wall
+    # (fit_rules.floor_runs, EVENED -- CI run 663's handedness gate). 132.86 mm of fillet;
+    # 0.2108 mm2 x 0.5 = 0.105 predicted, 0.109 measured on the STEP and 0.11 here. Inside this
+    # ledger's tolerance, so the gate did not ask; re-ledgered so the number is the part's.
+    volume_mm3=5296.00, bbox=(-26.35, -45.4, -0.15, 26.35, 45.4, 3.4),
         max_boundary_edges=0, max_open_len_mm=0.0, max_degenerate=0),
     "solar-glow-drh-pogo-testplate.stl": dict(
         # re-ledgered 2026-11-13: the y range flips, -10.4..99.3 -> -99.3..10.4, and nothing
@@ -351,7 +356,9 @@ BASELINE = {
         # re-ledgered 2026-11-15 (the floor fillets), 3906.80 -> 3933.15: the same eight runs
         # as the max shell, +26.23 on the STEP and +26.35 here; 0.67 % of this shell, so the
         # tolerance caught it. bbox unchanged; 0 open edges, 0 degenerate.
-        volume_mm3=3933.15, bbox=(-26.35, -45.4, -0.15, 26.35, 45.4, 2.42),
+        # re-ledgered the same day (the runs evened top for bottom), 3933.15 -> 3933.04: as the
+        # max shell, the south run east of the tab 0.5 mm shorter. Inside the tolerance.
+        volume_mm3=3933.04, bbox=(-26.35, -45.4, -0.15, 26.35, 45.4, 2.42),
         max_boundary_edges=0, max_open_len_mm=0.0, max_degenerate=0),
     "solar-glow-drh-frame-air-316L.stl": dict(
         # air: OPEN frame, no floor -- walls + recess + 8 bosses only, z 0..1.80 exactly

@@ -803,6 +803,36 @@ def check_enclosure_fit():
         err(f"{len(_fruns)} floor fillets, where this board has had 8 (two a wall) -- read what "
             f"moved (fit_rules.floor_runs), then re-ledger the count here and in the docs")
         bad += 1
+    # EVENED, TOP FOR BOTTOM (CI run 663, the same day). As first built each run stopped
+    # FLOOR_STOP short of its own stretch, and the two short-edge tabs differ by 0.5 mm: the
+    # runs east of them began at x 28.423 and 28.923, so a shell and its top-for-bottom mirror
+    # image differed by 0.109 mm2 of fillet beside SC2 / SC4 while fitting the board equally
+    # well -- which scripts/handedness_drc.py [S] refuses, rightly. floor_runs() evens each
+    # run with its twin. Held here on the fillets' METAL, which owes that bookkeeping nothing:
+    # reflected y -> H - y it must be itself.
+    from shapely.affinity import affine_transform as _aff
+    _uneven = lambda m: m.symmetric_difference(_aff(m, [1.0, 0.0, 0.0, -1.0, 0.0, fr.H])).buffer(-1e-3).area
+    if _fruns and _uneven(_fmetal) > 1e-6:
+        _d = _fmetal.symmetric_difference(_aff(_fmetal, [1.0, 0.0, 0.0, -1.0, 0.0, fr.H])).buffer(-1e-3)
+        err(f"the floor fillets are not their own mirror image top for bottom: {_d.area:.3f} mm2 of "
+            f"them, near ({_d.representative_point().x:.2f}, {_d.representative_point().y:.2f}), "
+            f"has no twin under y -> H - y. A shell and its mirror image then differ where a "
+            f"part can feel it, and nothing but fit tells them apart (fit_rules.floor_runs, "
+            f"EVENED; handedness_drc [S])")
+        bad += 1
+    if _fruns:
+        # canary: the half millimetre the first build had -- one run reaching 0.5 further
+        _rs = next(r_ for r_ in _fruns if r_["axis"] == "x")
+        _far = _rs["wall"] + _rs["sg"] * fr.floor_fillet_toe()
+        _stub = _box(_rs["s0"] - 0.5, min(_rs["wall"], _far), _rs["s0"], max(_rs["wall"], _far))
+        if _uneven(_fmetal.union(_stub)) <= 1e-6:
+            err("SELF-TEST: a floor fillet run made 0.5 mm longer than its twin still reads as "
+                "even -- the top-for-bottom test above cannot fail")
+            bad += 1
+        if any(r_.get("twin") is None for r_ in _fruns):
+            err("a floor fillet run has no twin top for bottom (fit_rules.floor_runs) -- it was "
+                "not evened with anything; read which wall lost its stretch")
+            bad += 1
     _fbr = {}
     for vn, v in fr.VARIANTS.items():
         if not v["brace"]:

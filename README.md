@@ -345,7 +345,7 @@ the whole edge (2.25, so the cavity's west wall is a single straight face), the 
 mid-span bosses are cut straight across for the coil (2.32 mm from the axis, both sides), and
 each tab runs into the short-edge wall through a modeled R1.00. On the max and lite shells the
 floor meets the wall through a modeled **R1.00 fillet** (a ball end mill's) on the eight long
-straight walls of the supercap bays, 133 mm in all — nowhere the brace bears; under the
+straight walls of the supercap bays, 133 mm in all, the same top for bottom — nowhere the brace bears; under the
 supercaps' edges it rests on a provisional figure for the pouch's sealed margin, with a caliper
 check in `TODO.md`. Each boss runs into the lip's wall through a modeled concave
 blend (twelve: eight R2.00, four R1.00 at the two bosses beside the ferrite sheet), and the four corner ones are solid

@@ -2447,6 +2447,23 @@ def _boss_webs(mx, my):
 # tangent to the wall like every other cylinder here. Two cutters of one radius leave the last
 # 0.3 mm of a run as a feather against the wall; that is the part, and the deburr note's.
 #
+# EVENED, TOP FOR BOTTOM. A run reaches no further along its wall than its twin does -- the
+# run that the reflection y -> H - y lays on it (south wall and north wall, station for
+# station; each long wall onto itself). Only ever LESS fillet, the contouring pass's rule
+# (boss_flat_d: "an evened keep-out is the part's own, united with what evens it"). Seven of
+# the eight stretches are twins already, to the 0.01 the cut outline is simplified by. The
+# eighth is the run east of each short-edge tab: the two tabs differ by 0.5 mm in width, so
+# FLOOR_STOP from each tab's own root put those two runs' west ends at x 28.423 and 28.923.
+# Both start at 28.923 now, and the south one stops 1.00 short of its tab's root instead of
+# 0.50. WHY IT IS A RULE AND NOT A TIDINESS: as first built (0.50 short at every end), the
+# shell's top-for-bottom mirror image differed from the shell by 0.109 mm2 of fillet within
+# half a millimetre of SC2 / SC4, and fitted the board exactly as well -- so
+# scripts/handedness_drc.py [S] could neither tell the hand by fit nor show that the two were
+# the same cavity wherever a part stands, and said so (CI run 663, red; the mesh gates were
+# green). The hand there is held by the tabs (assembly_drc [J]); nothing a part can feel may
+# differ between a shell and its mirror image unless fit can tell them apart. If the two tabs
+# are ever made alike, this rule gives nothing up and the south run goes back to 0.50.
+#
 # WHAT IT STANDS UNDER. On the two short-edge walls, the edge of a supercap: a can at nominal
 # stands 0.95 off that wall, past the fillet's toe, and clears it. A can at MAX MATERIAL
 # (part_envelope) stands 0.35 off, where the fillet is 0.24 mm high and the can's underside
@@ -2515,7 +2532,9 @@ def floor_runs(_c={}):
         edge, axis   which wall, and the coordinate that runs along it ("x" or "y")
         wall, sg     the wall's own coordinate, and +1 / -1 toward the cavity
         lo, hi       the straight stretch of wall the run stands on, feature to feature
-        s0, s1       the run itself: FLOOR_STOP in from each end; the scoops' axes are at these
+        s0, s1       the run itself: FLOOR_STOP in from each end of its stretch, then evened
+                     with its twin top for bottom (never longer); the scoops' axes are at these
+        twin         the edge and stretch of the run it was evened with, or None
         r            FLOOR_R
         cover        the plan of the block the fillet is cut from: the run's length, from
                      inside the wall out past the toe
@@ -2531,14 +2550,15 @@ def floor_runs(_c={}):
         braces = {vn: unary_union(brace_footprint(span=v["span"]))
                   for vn, v in VARIANTS.items() if v["brace"]}
         floored = {vn: v for vn, v in VARIANTS.items() if v["floor"] > 0}
-        out = []
+        out, cands = [], []
+
+        def _P(axis, wall, sg):                                 # station along the wall, distance into the cavity
+            return lambda s_, u_: (s_, wall + sg * u_) if axis == "x" else (wall + sg * u_, s_)
+
         for edge, axis, wall, sg in _floor_walls():
             if wall is None:
                 continue                                        # a stepped lip: no single wall to run on
-
-            def P(s_, u_, _a=axis, _w=wall, _g=sg):             # station along the wall, distance into the cavity
-                return (s_, _w + _g * u_) if _a == "x" else (_w + _g * u_, s_)
-
+            P = _P(axis, wall, sg)
             span = W if axis == "x" else H
             on = void.exterior.intersection(Polygon([P(0.0, -_FLOOR_ON), P(span, -_FLOOR_ON),
                                                      P(span, _FLOOR_ON), P(0.0, _FLOOR_ON)]))
@@ -2557,40 +2577,73 @@ def floor_runs(_c={}):
                 band = Polygon([P(lo, 0.0), P(hi, 0.0), P(hi, toe + FLOOR_BRACE_CLR), P(lo, toe + FLOOR_BRACE_CLR)])
                 if any(band.intersects(b) for b in braces.values()):
                     continue                                    # a brace bears here: sharp, the whole stretch
-                s0, s1 = lo + FLOOR_STOP, hi - FLOOR_STOP
-                at = f"floor fillet on the {edge} wall, {axis}{s0:.2f}..{s1:.2f}"
-                reach = Polygon([P(s0, 0.0), P(s1, 0.0), P(s1, toe), P(s0, toe)])
-                stray = reach.difference(void.buffer(_FLOOR_ON))
-                if stray.area > 1e-6:
-                    raise RuntimeError(f"{at}: {stray.area:.4f} mm2 of it would stand in metal, near "
-                                       f"({stray.centroid.x:.2f}, {stray.centroid.y:.2f}) -- the wall "
-                                       f"is not clear to the fillet's toe along the whole run")
-                run = {"edge": edge, "axis": axis, "wall": wall, "sg": sg,
-                       "lo": round(lo, 6), "hi": round(hi, 6), "s0": round(s0, 6), "s1": round(s1, 6),
-                       "r": r, "reach": reach,
-                       # out to r + 0.03 and no further: the cylinder dips BLEND_BITE under the
-                       # floor between 0.935 and 1.061 from the wall and comes up again beyond,
-                       # so a cover that reached 1.07 would leave a ridge 0.004 mm high there
-                       "cover": Polygon([P(s0, -0.20), P(s1, -0.20), P(s1, r + 0.03), P(s0, r + 0.03)])}
-                run["scoops"] = [P(s0, dd), P(s1, dd)]
-                run["axis_pts"] = (P(s0, dd), P(s1, dd))
-                run["under"] = floor_run_clearances(run, floored)
-                for vn, rows in run["under"].items():
-                    for ref, kind, gap in rows:
-                        if kind == "part" and gap < FLOOR_PART_CLR - 1e-9:
-                            raise RuntimeError(
-                                f"{at}: {ref} hangs {gap:.3f} mm over it on the {vn} shell at the "
-                                f"cavity's worst case, inside FLOOR_PART_CLR {FLOOR_PART_CLR}")
-                        if kind == "cap nominal" and gap < 0.0:
-                            raise RuntimeError(
-                                f"{at}: {ref} at its NOMINAL outline stands {-gap:.3f} mm into it "
-                                f"on the {vn} shell -- that is not the pouch's margin, it is the can")
-                        if kind == "cap margin" and gap < 0.0:
-                            raise RuntimeError(
-                                f"{at}: {ref} stands {-gap:.3f} mm into it on the {vn} shell even "
-                                f"{FLOOR_CAP_MARGIN} mm in from its max-material outline -- more than "
-                                f"the margin a pouch is TAKEN to have (FLOOR_CAP_MARGIN, provisional)")
-                out.append(run)
+                cands.append({"edge": edge, "axis": axis, "wall": wall, "sg": sg, "lo": lo, "hi": hi,
+                              "s0": lo + FLOOR_STOP, "s1": hi - FLOOR_STOP})
+
+        # EVENED, TOP FOR BOTTOM (the block above): each run is cut back to what its twin
+        # under y -> H - y also covers. Decided on the runs as first found, so that the order
+        # the walls are walked in cannot matter.
+        _twin_edge = {"S": "N", "N": "S", "W": "W", "E": "E"}
+        _mir = lambda c: ((c["s0"], c["s1"]) if c["axis"] == "x" else (H - c["s1"], H - c["s0"]))
+        evened = []
+        for c in cands:
+            best, lap = None, 0.0
+            for t in cands:
+                if t["edge"] != _twin_edge[c["edge"]]:
+                    continue
+                m0, m1 = _mir(t)
+                o = min(c["s1"], m1) - max(c["s0"], m0)
+                if o > lap:
+                    best, lap = (t, m0, m1), o
+            s0, s1, twin = c["s0"], c["s1"], None
+            if best is not None:
+                t, m0, m1 = best
+                s0, s1 = max(s0, m0), min(s1, m1)
+                twin = (t["edge"], round(t["lo"], 6), round(t["hi"], 6))
+            if s1 - s0 < FLOOR_MIN_RUN - 2.0 * FLOOR_STOP - 1e-9:
+                raise RuntimeError(
+                    f"floor fillet on the {c['edge']} wall, {c['axis']}{c['s0']:.2f}..{c['s1']:.2f}: "
+                    f"evened with its twin top for bottom it would be {s1 - s0:.2f} mm long, "
+                    f"under the {FLOOR_MIN_RUN - 2.0 * FLOOR_STOP:.2f} a run is allowed to be -- "
+                    f"the two walls no longer offer the same stretch; decide which gives way")
+            evened.append((c, s0, s1, twin))
+
+        for c, s0, s1, twin in evened:
+            edge, axis, wall, sg, lo, hi = (c[k] for k in ("edge", "axis", "wall", "sg", "lo", "hi"))
+            P = _P(axis, wall, sg)
+            at = f"floor fillet on the {edge} wall, {axis}{s0:.2f}..{s1:.2f}"
+            reach = Polygon([P(s0, 0.0), P(s1, 0.0), P(s1, toe), P(s0, toe)])
+            stray = reach.difference(void.buffer(_FLOOR_ON))
+            if stray.area > 1e-6:
+                raise RuntimeError(f"{at}: {stray.area:.4f} mm2 of it would stand in metal, near "
+                                   f"({stray.centroid.x:.2f}, {stray.centroid.y:.2f}) -- the wall "
+                                   f"is not clear to the fillet's toe along the whole run")
+            run = {"edge": edge, "axis": axis, "wall": wall, "sg": sg,
+                   "lo": round(lo, 6), "hi": round(hi, 6), "s0": round(s0, 6), "s1": round(s1, 6),
+                   "twin": twin, "r": r, "reach": reach,
+                   # out to r + 0.03 and no further: the cylinder dips BLEND_BITE under the
+                   # floor between 0.935 and 1.061 from the wall and comes up again beyond,
+                   # so a cover that reached 1.07 would leave a ridge 0.004 mm high there
+                   "cover": Polygon([P(s0, -0.20), P(s1, -0.20), P(s1, r + 0.03), P(s0, r + 0.03)])}
+            run["scoops"] = [P(s0, dd), P(s1, dd)]
+            run["axis_pts"] = (P(s0, dd), P(s1, dd))
+            run["under"] = floor_run_clearances(run, floored)
+            for vn, rows in run["under"].items():
+                for ref, kind, gap in rows:
+                    if kind == "part" and gap < FLOOR_PART_CLR - 1e-9:
+                        raise RuntimeError(
+                            f"{at}: {ref} hangs {gap:.3f} mm over it on the {vn} shell at the "
+                            f"cavity's worst case, inside FLOOR_PART_CLR {FLOOR_PART_CLR}")
+                    if kind == "cap nominal" and gap < 0.0:
+                        raise RuntimeError(
+                            f"{at}: {ref} at its NOMINAL outline stands {-gap:.3f} mm into it "
+                            f"on the {vn} shell -- that is not the pouch's margin, it is the can")
+                    if kind == "cap margin" and gap < 0.0:
+                        raise RuntimeError(
+                            f"{at}: {ref} stands {-gap:.3f} mm into it on the {vn} shell even "
+                            f"{FLOOR_CAP_MARGIN} mm in from its max-material outline -- more than "
+                            f"the margin a pouch is TAKEN to have (FLOOR_CAP_MARGIN, provisional)")
+            out.append(run)
         _c["r"] = out
     return _c["r"]
 

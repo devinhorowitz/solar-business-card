@@ -389,10 +389,14 @@ def sheet(vname, v):
             # ONE LINE, and the runs themselves are on the plan (heavy dash, to scale). With
             # each run's coordinates in it the note was two lines and the block two over its
             # eighteen; where a run is, is a thing a drawing shows better than a sentence.
+            # "OR MORE": the runs are evened top for bottom (fit_rules.floor_runs), so one of
+            # them stops further short of its tab than FLOOR_STOP. The least is read off the
+            # runs, like the rest; the plan shows which.
+            _short = min(min(_r["s0"] - _r["lo"], _r["hi"] - _r["s1"]) for _r in _runs)
             notes.append(("ffil", [
                 f"FLOOR MEETS WALL THROUGH R{_fr.FLOOR_R:.2f} (\u00d8{2 * _fr.FLOOR_R:.1f} BALL END MILL), MODELED, ON "
                 f"{len(_runs)} RUNS ({sum(_r['s1'] - _r['s0'] for _r in _runs):.1f} mm; HEAVY DASH ON THE PLAN), EACH "
-                f"STOPPING {_fr.FLOOR_STOP:.2f} SHORT OF THE BOSS OR TAB AT EITHER END. FLOOR CORNER SHARP ELSEWHERE."]))
+                f"ENDING {_short:.2f} OR MORE SHORT OF THE NEXT BOSS OR TAB. FLOOR CORNER SHARP ELSEWHERE."]))
     else:
         notes.append(("floor", ["NO FLOOR - OPEN FRAME. THE BACK OF EVERY B-SIDE COMPONENT FACES THE TABLE; THE FRAME'S RESTING PLANE (BOTTOM FACE) CARRIES THE ASSEMBLY.",
                                 f"DEPTH {cavity:.2f} = TALLEST B-SIDE PART {cavity - 2*_fr.CAP_AIR:.2f} + 2×{_fr.CAP_AIR:.2f} RESTING CLEARANCE (fit_rules.VARIANTS: resting-clearance-limited)."]))

@@ -1516,11 +1516,11 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
   then, on a prototype of eight straight runs, "apply as you displayed") — SO THE MAX AND LITE
   SHELLS CHANGED ONCE MORE.** The air frame has no floor and did not. Board coordinates; this
   repo's instruments, on a local build with CI's pins.
-  - **Eight runs, 133.37 mm.** An R1.00 fillet (`fit_rules.floor_runs()`) on each long straight
-    stretch of cavity wall that no brace comes near anywhere along it — the walls of the four
-    supercap bays:
-    - south wall x 5.37–22.08 and x 28.42–45.43; north wall x 5.37–22.08 and x 28.92–45.43;
-    - west wall y 7.65–23.85 and y 65.05–81.25; east wall y 7.85–24.89 and y 64.02–81.04.
+  - **Eight runs, 132.86 mm** _(133.37 as first pushed; evened the same day, below)_. An R1.00
+    fillet (`fit_rules.floor_runs()`) on each long straight stretch of cavity wall that no
+    brace comes near anywhere along it — the walls of the four supercap bays:
+    - south wall x 5.37–22.08 and x 28.92–45.43; north wall the same two;
+    - west wall y 7.65–23.85 and y 65.05–81.25; east wall y 7.86–24.88 and y 64.02–81.04.
     Not the middle of either long wall: the brace bears on the east one from end to end and on
     the middle of the west one, and a run is a whole stretch or none, so no run ends in mid-wall.
     Not round the bosses, whose flats are 2.3–3.2 mm long. The same eight on both shells.
@@ -1528,6 +1528,33 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
     corner boss's bore, a tab's root), in the scoop a FLAT cutter of the same radius leaves where
     it finishes the sharp corner beyond: a vertical R1.00 cylinder. Two cutters of one radius
     leave the last 0.3 mm of each run as a feather against the wall; that is the deburr note's.
+  - **EVENED, TOP FOR BOTTOM — the one departure from the prototype picture, and CI asked for
+    it.** As first pushed (`de4894c`) every run stopped 0.50 short of its own stretch. The run
+    east of each short-edge tab starts from that tab's root, and the tabs differ by 0.5 mm in
+    width, so those two runs began at x 28.42 (south) and 28.92 (north).
+    - PCB CI run 663 went red at the handedness gate, on the max and lite shells, with the mesh
+      gates and `assembly_drc` green: top for bottom, the shell's mirror image fitted KiCad's
+      board exactly as well as the shell (crowding 0.917 against 0.916) **though 0.109 mm² of
+      its fillet within 0.5 mm of a supercap was not where the shell's is**, near board
+      (29.55, 0.56). `[S]` will not accept "fits no worse" unless it can show the two are the
+      same cavity wherever a part stands. It was right not to.
+    - The cure is in the part: a run reaches no further than its twin under y → H − y. **The
+      south run east of the tab now starts at x 28.92, 1.00 short of its tab's root instead of
+      0.50** — half a millimetre of fillet, 0.109 mm³, beside SC2's west corner. Only ever less
+      fillet, the contouring pass's rule. The east wall's two runs moved by 0.004–0.010 mm for
+      the same reason (the cut outline's own simplify). If the two tabs are ever made alike
+      the rule gives nothing up and that run goes back to 0.50.
+    - `check_consistency` [8] 4f holds the fillets' metal to its own mirror image, by the
+      polygon and not by the bookkeeping, with the lost half millimetre put back as its canary.
+    - **Why it reached CI.** The local rehearsal of `[S]` was a scratch script that gave any
+      body without a tabled height 0.5 mm — and `part_height()` returns `None` for the four
+      supercaps, so the cut above the floor passed through none of them. With their own 1.70
+      the same script reproduced CI's 0.109 mm² at the same place. It is in the gate now
+      (`python3 scripts/handedness_drc.py --rehearse`): the parts' own heights, 0.10 deeper
+      (KiCad's bodies hang a little lower than the table), a refusal for a body with no
+      height, and a self-test that its lowest cut passes through a supercap on a floored
+      shell. On the evened shells it is green and the mirror image differs by 1.93 mm² at the
+      tabs, as before the fillet.
   - **Each run is three true cylinders** — one lying along the wall, one standing at each end —
     each set 0.002 mm past tangent like every blend here, so the fillet as modelled reaches
     0.935 mm from the wall and 0.935 up it. Everything that has to clear it is measured to a
@@ -1547,10 +1574,10 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
       (`FLOOR_CAP_MARGIN`, **PROVISIONAL**). The datasheet does not dimension the margin. The
       bench item above ("Put a caliper on a supercap's edge") is what makes it a measurement.
   - **The numbers.**
-    - OCC on the STEPs: **5296.159 / 3933.158 mm³** (max / lite; were 5269.930 / 3906.929), air
-      961.850 unchanged. STL 5296.11 / 3933.15. +26.23 mm³ each, **0.12 g** of titanium: the
-      fillet's section as cut is 0.2108 mm², 28.11 mm³ over the eight runs before the sixteen
-      ends are scooped.
+    - OCC on the STEPs: **5296.050 / 3933.050 mm³** (max / lite; were 5269.930 / 3906.929
+      before the fillet, and 5296.159 / 3933.158 as first pushed), air 961.850 unchanged. STL
+      5296.00 / 3933.04. +26.12 mm³ each, **0.12 g** of titanium: the fillet's section as cut
+      is 0.2108 mm², 28.01 mm³ over the eight runs before the sixteen ends are scooped.
     - Max STEP **30,783 edges, 10,411 faces**; lite **972 / 373** (+72 / +24 each: three faces a
       run). 37 faces under 0.001 mm², as before; none shared by more than two.
     - `scripts/assembly_drc.py` **[K]**, new: on the cut just above the floor, metal 0.06 mm
@@ -1561,14 +1588,15 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
     - **[G] moved up.** The lip check sectioned the shell at mid-cavity; on the lite shell an
       R1.00 fillet is still 0.07 mm of metal there, and the lip note describes the lip. It
       reads the cut just under the seat now, below the lip-break and above the fillets.
-    - `check_consistency` **[8]**, new step 4f: eight runs; each brace's footprint against
-      each run's wall, by an instrument that owes `floor_runs()` nothing; the margin needed
-      against the margin taken; and a synthetic part planted over a run must be seen.
+    - `check_consistency` **[8]**, new step 4f: eight runs; the fillets' metal against its own
+      mirror image top for bottom; each brace's footprint against each run's wall, by an
+      instrument that owes `floor_runs()` nothing; the margin needed against the margin taken;
+      and a synthetic part planted over a run must be seen.
     - The shell generator refuses to export a floored shell without each run's lying cylinder
       among its faces, and proves a run moved 0.5 mm off its wall is reported missing.
   - **The sheet.** Note 7 is the fillet — "FLOOR MEETS WALL THROUGH R1.00 (Ø2.0 BALL END MILL),
-    MODELED, ON 8 RUNS (133.4 mm; HEAVY DASH ON THE PLAN), EACH STOPPING 0.50 SHORT OF THE BOSS
-    OR TAB AT EITHER END. FLOOR CORNER SHARP ELSEWHERE." — the plan draws each run to scale,
+    MODELED, ON 8 RUNS (132.9 mm; HEAVY DASH ON THE PLAN), EACH ENDING 0.50 OR MORE SHORT OF
+    THE NEXT BOSS OR TAB. FLOOR CORNER SHARP ELSEWHERE." — the plan draws each run to scale,
     and Section A-A shows the arc. The block was full, so the note that said only "NO U7 RELIEF
     POCKET" gave up its line: the floor note says "NO U7 POCKET" itself. Every later note keeps
     its number. Also moved: the "0.10×45° FRAME (2 PL)" label, which had been set across the
@@ -1579,7 +1607,8 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
     a ridge 0.004 mm high along every run. The prototype's cover stopped at 1.05 by luck. The
     cover stops at 1.03 now, on purpose, and says why.
   - **Still DRH's, and the fillet follows whichever way they go:** the bore beside each corner
-    boss (the south and north runs end 0.50 short of it) and the two tabs' widths.
+    boss (the south and north runs end 0.50 short of it) and the two tabs' widths (alike, the
+    south run east of the tab gets its half millimetre back).
 
 - [ ] **[SOURCING — lite/air] Pick the thin supercap MPN**
   _(2026-08-07, opened with the three-variant round.)_ `part_heights.SUPERCAP_H_THIN = 1.00`

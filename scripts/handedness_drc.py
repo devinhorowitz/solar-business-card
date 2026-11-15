@@ -89,6 +89,13 @@ USAGE -- two halves, because KiCad lives in the container and cadquery on the ru
 The panel is optional in both (it exists only after scripts/panelize.py has run, as it has
 in CI); without it [T] is skipped, out loud, and the plate's hand rests on its row in
 check_mesh.py alone -- the one solid whose bounding box is not symmetric in y.
+
+REHEARSING [S] WITHOUT KICAD
+    python3 scripts/handedness_drc.py --rehearse
+[S]'s verdict alone, board_parts' outlines standing in for KiCad's bodies at part_heights'
+heights. It reads the shells in the tree it is run from. It exists because the first
+rehearsal was a scratch script with a made-up height in it, and passed what CI refused
+(2026-11-15, run 663; see SAME_ERODE). A rehearsal, never the gate.
 """
 import argparse
 import os
@@ -150,7 +157,26 @@ CROWD_MARGIN = 0.05
 # lite and air shells would then be their own mirror images, and only the max shell's rear
 # art, which nothing here reads, would have a hand left.
 # A difference a part COULD feel that fit cannot tell is still the old error.
+# IT FIRED THE SAME DAY, AND WAS RIGHT (CI run 663). The floor-to-wall fillets went in with
+# each run stopping 0.50 short of the feature at either end. East of each short-edge tab that
+# is 0.50 past the tab's own root, and the tabs differ by 0.5 mm -- so those two runs began at
+# x 28.423 and 28.923, under the edges of SC2 and SC4. Top for bottom the mirror image then
+# differed from the shell by 0.109 mm2 of fillet within REACH of a supercap and crowded the
+# board no more (0.917 against 0.916): a difference a part could feel that fit could not
+# tell. The cure was in the part, not here: fit_rules.floor_runs() evens every run with its
+# twin top for bottom, so the fillets are the same metal in both hands and this placement is
+# once more a symmetry of the cavity as the parts meet it.
+# WHY IT REACHED CI: the rehearsal of this verdict (below) was a scratch script that gave
+# every body with no tabled height -- the four supercaps -- 0.5 mm of height, so the cut
+# above the floor never passed through one. --rehearse is that rehearsal with the parts'
+# own heights, kept here so that it cannot drift from the verdict it rehearses.
 SAME_ERODE = 0.03
+# --rehearse: how much lower than its tabled height a body is taken to hang. KiCad's bodies
+# hang a little lower than part_heights' figures (a model seats on its pads, not on the
+# copper): on the max shell the cut above the floor, 1.706 under the board, passes through
+# KiCad's supercaps (run 663) and would miss a body of exactly SUPERCAP_H 1.70. A rehearsal
+# has to be the stricter of the two.
+REHEARSE_DEEPER = 0.10
 
 # [E]: a STEP against its STL. Two questions, two measurements.
 # SAME HAND, by SURFACES: the farthest any vertex of either file's surface stands from the
@@ -512,6 +538,58 @@ def shell_hand(vname, raw, outlines, dz, kcx, kcy, section_floor):
                       for label, differs in same)))
 
 
+def rehearse():
+    """[S]'s verdict WITHOUT KiCad's export, for a machine with no kicad-cli: board_parts'
+    outlines stand in for KiCad's bodies (the reader [P] ties to KiCad's placement in CI),
+    each as tall as part_heights says and REHEARSE_DEEPER more. It reads the shells in the
+    tree it is run from, like every mesh gate -- after a change to the enclosure, point a copy
+    of the tree at freshly built solids (CLAUDE.md). A REHEARSAL: the merge run is the gate.
+    It says nothing about [P], [B], [E] or [T]."""
+    import trimesh
+    import fit_rules as fr
+    import board_parts as bp
+    import part_heights as ph
+    import assembly_drc as adrc
+    from shapely.affinity import affine_transform
+    from shapely.geometry import Point
+
+    # board -> file, as one affine map; held to fit_rules.file_xy(), the one statement of it
+    to_file = lambda g: affine_transform(g, [1.0, 0.0, 0.0, -1.0, -fr.W / 2.0, fr.H / 2.0])
+    if tuple(to_file(Point(3.0, 7.0)).coords[0]) != tuple(fr.file_xy(3.0, 7.0)):
+        err("SELF-TEST: the rehearsal's board-to-file mapping is not fit_rules.file_xy()")
+    print("handedness REHEARSAL -- [S] only, board_parts' outlines standing in for KiCad's bodies")
+    for vname, v in fr.VARIANTS.items():
+        print(f"[S] {vname}: shell vs board_parts' outlines (rehearsal)")
+        path = ROOT / "enclosure" / (v["shell_name"] + ".stl")
+        if not path.exists():
+            err(f"missing {path.relative_to(ROOT)} -- CI emits it")
+            continue
+        shell = trimesh.load(path)
+        seat = v["floor"] + v["cavity"]
+        outlines = []
+        for ref, poly, h, src in bp.parts("B"):
+            if h is None and src == "model":
+                h = ph.SUPERCAP_H if ref.startswith("SC") else None
+            if h is None:
+                err(f"{ref}: no height to rehearse with (part_heights) -- a body with a made-up "
+                    f"height is how the 2026-11-15 rehearsal passed what CI refused")
+                continue
+            deeper = REHEARSE_DEEPER if src == "model" else 0.0
+            outlines.append((ref, to_file(poly), seat - h - deeper, seat))
+        raw = [(z, adrc.section_file(shell, z, trimesh)) for _lbl, z in adrc.cavity_levels(v["floor"], v["cavity"])]
+        if any(m.is_empty for _z, m in raw):
+            err(f"the {vname} shell has no material at one of its cavity cuts -- nothing to compare")
+            continue
+        low = min(z for z, _m in raw)
+        through = [ref for ref, _o, zlo, zhi in outlines if zlo < low < zhi]
+        if v["floor"] > 0 and not any(r.startswith("SC") for r in through):
+            err(f"SELF-TEST: the {vname} shell's cut above the floor passes through no supercap "
+                f"-- the rehearsal is not looking where the floor fillets are")
+        shell_hand(vname, raw, outlines, 0.0, 0.0, 0.0, adrc.SECTION_FLOOR)
+    print(f"== handedness rehearsal: {len(_ERRORS)} error(s) -- [S] only; the merge run is the gate ==")
+    return 1 if _ERRORS else 0
+
+
 def check(board_step, panel_step=None):
     try:
         import numpy as np                                        # noqa: F401
@@ -798,7 +876,13 @@ def main():
                     help="gate the emitted solids against this export (needs cadquery, trimesh)")
     ap.add_argument("--panel-step", metavar="STEP",
                     help="with --board-step: also hold the pogo plate against this panel export")
+    ap.add_argument("--rehearse", action="store_true",
+                    help="[S] only, without KiCad: board_parts' outlines stand in for its bodies")
     a = ap.parse_args()
+    if a.rehearse:
+        if a.export_board or a.board_step or a.export_panel or a.panel_step:
+            ap.error("--rehearse stands alone")
+        return rehearse()
     if bool(a.export_board) == bool(a.board_step):
         ap.error("give exactly one of --export-board (in the KiCad image) or --board-step (on the runner)")
     if a.export_board:

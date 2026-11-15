@@ -120,7 +120,9 @@ python3 scripts/handedness_drc.py --export-board /tmp/board.step --export-panel 
 python3 scripts/handedness_drc.py --board-step /tmp/board.step --panel-step /tmp/panel.step
 ```
 The panel half is optional in both (the panel exists only after `scripts/panelize.py` has run; it
-is not committed) and the gate says so out loud when it is skipped.
+is not committed) and the gate says so out loud when it is skipped. With no `kicad-cli` to hand,
+`python3 scripts/handedness_drc.py --rehearse` runs the shells' verdict (`[S]`) alone against
+`board_parts`' outlines — a rehearsal, never the gate.
 STEP validity is gated at export time — OCC `BRepCheck` inside `fit_rules.export_step_stable`,
 the one choke point all three CAD generators use — **and since 2026-11-12 so is the thing
 `BRepCheck` does not check**: no edge of an exported solid may be shared by more than two faces
@@ -765,8 +767,8 @@ red, the check itself fails.
   near ANYWHERE along it — a run is a whole stretch or none, so none ends in mid-wall — and
   that is the walls of the four supercap bays on the max and lite shells (the air frame has no
   floor). Each run is three true cylinders: one lying along the wall, and at each end the scoop
-  a flat cutter of the same radius leaves, `FLOOR_STOP` short of the next boss or tab. Four
-  things to know before touching it:
+  a flat cutter of the same radius leaves, `FLOOR_STOP` short of the next boss or tab — or
+  further, where its twin stops further (5). Five things to know before touching it:
   **(1) The south and north runs stand under the supercaps' edges, and a square-edged can at
   max material is NOT cleared** (0.187 mm into the fillet on max). DRH accepted that with a
   photograph: the can is a foil pouch and its outline is the sealed margin. So the rule is
@@ -790,6 +792,23 @@ red, the check itself fails.
   drawn on the plan (heavy dash) instead of written; and the note that said only "NO U7 RELIEF
   POCKET" gave its line up — the floor note says so. A new note has to take a line from
   somewhere, and every later note's number is cited in `enclosure/README.md`.
+  **(5) The runs are EVENED top for bottom, and the handedness gate is why.** As first pushed,
+  every run stopped 0.50 short of its own stretch. The two short-edge tabs differ by 0.5 mm, so
+  the runs east of them began at x 28.423 and 28.923 — and a shell and its top-for-bottom
+  mirror image then differed by 0.109 mm² of fillet beside SC2 / SC4 while fitting the board
+  equally well. `handedness_drc` [S] refuses exactly that (a difference a part could feel that
+  fit cannot tell), and CI went red on it with every other gate green. `floor_runs()` now cuts
+  each run back to what its twin under y → H − y also covers (only ever less fillet: the south
+  run east of the tab stops 1.00 short of the tab's root); `check_consistency` [8] 4f holds the
+  fillets' metal to its own mirror image, with the lost half millimetre as its canary. **Any
+  feature added near a part must be the same in both hands top for bottom, or fit must be able
+  to tell them apart** — the tabs are the only thing here allowed to differ, and [J] holds
+  them. And **the rehearsal lied before the gate told the truth**: the scratch script that
+  rehearsed [S] gave each supercap 0.5 mm of height (`part_height()` returns `None` for them),
+  so its cut above the floor passed through none. `python3 scripts/handedness_drc.py
+  --rehearse` is that rehearsal with the parts' own heights, kept beside the verdict it
+  rehearses; it refuses a body it has no height for, and fails if its lowest cut misses the
+  supercaps on a floored shell. **A stand-in value in a rehearsal is a typed copy too.**
 - **A ledger entry is a standing waiver, so a ledger audits itself.** `scripts/interference_drc.py`'s
   `EDGE_LEDGER` excused seven parts from the cavity rectangle and had excused nothing since
   2026-08-08: six had been moved inboard and the seventh, C7, was deleted from the board the day
