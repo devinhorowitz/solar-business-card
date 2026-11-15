@@ -56,7 +56,7 @@ board   = _fr.BOARD_TH                       # 0.60
 # the five scalars were read by nothing. What is left is the one Section A-A draws: the west
 # lip where no part narrows it -- the widest row of fit_rules.lip_as_cut("W") -- and the
 # note is built from that same function for all four edges (_lip_note, below).
-lip_w   = max(_w for _lo, _hi, _w, _who in _fr.lip_as_cut("W"))      # 2.5 today
+lip_w   = max(_w for _lo, _hi, _w, _who in _fr.lip_as_cut("W"))      # 2.25 today, the whole edge
 bbw     = _fr.BACK_BORDER                    # SYMMETRIC exterior back-border width (4 sides)
 boss_r, pilot_r, cbore, ease = _fr.BOSS_R, _fr.PILOT_R, 3.0, 0.10
 lb = 0.10                                    # light interior edge-breaks (felt, not seen), 45deg
@@ -132,11 +132,17 @@ def _lip_note():
                 runs[-1][1].append(where)
             else:
                 runs.append((label, [where]))
-        s = f"{word} {top:.2f}" + (" FULL LENGTH" if len(rows) == 1 else "") \
+        s = f" {top:.2f}" + (" FULL LENGTH" if len(rows) == 1 else "") \
             + (f" ({_who(named)})" if named else "")
         if runs:
             s += "; " + ", ".join(f"{label} " + ", ".join(ws) for label, ws in runs)
-        edges.append(s)
+        # TWO EDGES CUT ALIKE ARE ONE SENTENCE (2026-11-15: the south and north lips are one
+        # table, fit_rules.LIP_TWIN). Said once, it is also a line the notes block gets back.
+        if edges and edges[-1][1] == s:
+            edges[-1] = (edges[-1][0] + [word], s)
+        else:
+            edges.append(([word], s))
+    edges = [" AND ".join(words) + s for words, s in edges]
     # the rules behind the brackets, each stated only if a row above actually uses it
     rule = ""
     if cleared or tooled:
@@ -154,7 +160,14 @@ def _lip_note():
          "BRACKETS:"]
         + [s + "." for s in edges]
         + ([rule + "."] if rule else [])
-        + [f"STEPS BLEND AT R{_fr.TOOL_R:.2f}."])
+        + [f"STEPS BLEND AT R{_fr.TOOL_R:.2f}."]
+        # the tab between the two supercaps on each short edge: its tip corners are rounds
+        # (fit_rules.tab_rounds), true cylinders in the STEP, and the note says so
+        # ...and so, since 2026-11-15, are its roots (fit_rules.tab_roots), each tangent to
+        # the recess wall
+        + ([f"TAB TIP CORNERS {len(_fr.tab_rounds())}\u00d7 R{_fr.CONTOUR_R:.2f} AND TAB ROOTS "
+            f"{len(_fr.tab_roots())}\u00d7 R{_fr.TOOL_R:.2f}, MODELED."]
+           if _fr.tab_rounds() else []))
 
 
 # ---- THE NOTES BLOCK: measured, wrapped, and refused if it does not fit (2026-11-12) ----
@@ -315,8 +328,15 @@ def sheet(vname, v):
     # finisher's own radius (fit_rules, "THE FERRITE LIMITS TWO OF THEM"), and the sheet says so
     _radii = sorted(_fr.blend_radii().items(), reverse=True)
     _bltxt = " + ".join(f"{n}\u00d7 R{r:.2f}" for r, n in _radii)
-    _fin = (f"BOSS-TO-WALL JUNCTIONS ARE MODELED: {_bltxt} BLEND, AND THE "
-            f"\u00d8{2 * _fr.TOOL_R:.1f} BOSS-CORNER BORES. ANY OTHER CONCAVE CORNER LEFT SHARP IN THE "
+    # WHAT STANDS IN THE CORNER BESIDE A CORNER BOSS, counted off fit_rules: until 2026-11-15
+    # a Ø2.0 bore (boss_cuts), since then a plain R of the finisher where the flat meets the
+    # short-edge wall (boss_roots). Each is said only if it is there.
+    _nbore = sum(len(_d) for mx, my in mounts for _d in _fr.boss_cuts(mx, my)[1])
+    _nbroot = len(_fr.boss_roots())
+    _cornertxt = ((f", AND THE \u00d8{2 * _fr.TOOL_R:.1f} BOSS-CORNER BORES" if _nbore else "")
+                  + (f", AND {_nbroot}\u00d7 R{_fr.TOOL_R:.2f} CORNER-BOSS ROOTS" if _nbroot else ""))
+    _fin = (f"BOSS-TO-WALL JUNCTIONS ARE MODELED: {_bltxt} BLEND{_cornertxt}. "
+            f"ANY OTHER CONCAVE CORNER LEFT SHARP IN THE "
             f"MODEL: FINISH WITH A \u00d8{2 * _fr.TOOL_R:.1f} mm TOOL = R{_fr.TOOL_R:.1f} AS-MILLED; ALL "
             f"CLEARANCES ALLOW FOR IT. SMALLER IS FINE, LARGER IS NOT.")
     if is_ti:
@@ -353,12 +373,13 @@ def sheet(vname, v):
         if u7_pocket > 0:
             _fl_main = "FLOOR IS A TRUE %.2f (%.2f LOCAL UNDER THE U7 POCKET), %s" % (floor, floor - u7_pocket, _guide)
         elif _webs:
-            _fl_main = ("CAVITY FLOOR IS ONE FLAT FACE AT %.2f, NO LOCAL RELIEF. METAL UNDER IT: "
+            _fl_main = ("CAVITY FLOOR IS ONE FLAT FACE AT %.2f, NO U7 POCKET. METAL UNDER IT: "
                         "%.2f UNCUT, %s (REAR ART BLOCK). THE UNCUT %.2f IS %s"
                         % (floor, floor, " AND ".join("%.2f UNDER %s" % (t, n) for n, t in _webs),
                            floor, _guide))
         else:
-            _fl_main = "FLOOR IS A TRUE %.2f, UNIFORM ACROSS THE CAVITY, %s" % (floor, _guide)
+            _fl_main = ("FLOOR IS A TRUE %.2f, UNIFORM ACROSS THE CAVITY (NO U7 POCKET), %s"
+                        % (floor, _guide))
         _cap_desc = (f"WS17 {cap_h:.2f} MAX (DATASHEET CASE WS17 HEIGHT)" if abs(cap_h - _CAPH) < 1e-9
                      else f"THIN CAP {cap_h:.2f} MAX (PROVISIONAL — part_heights.SUPERCAP_H_THIN)")
         _cav_main = f"CAVITY {cavity:.2f} ±0.05 -> {cavity-0.05:.2f} WORST-CASE, MINUS {_cap_desc} = {cavity-0.05-cap_h:.2f} NON-CONTACT; THE BRACE + SOLAR-CELL SANDWICHES CARRY THE BOARD."
@@ -367,9 +388,28 @@ def sheet(vname, v):
         # there (the notes' doubled-space separator) rather than each opening a line
         notes.append(("floor", [_fl_main + "  " + _cav_main] if _webs and u7_pocket <= 0
                                else [_fl_main, _cav_main]))
-        notes.append(("u7", [("U7 RELIEF POCKET: 7.8 x 5.4 CENTERED (28.1, 37.3) ON THE CAVITY FLOOR, %.2f DEEP (LOCAL FLOOR %.2f) - U7 (%.2f) KEEPS 0.10 AIR. GENERAL FLOOR %.2f. MODELED IN THE STEP." % (u7_pocket, floor - u7_pocket, U7_H, floor))
-                             if u7_pocket > 0 else
-                             ("NO U7 RELIEF POCKET. U7 IS THE %.2f mm MB85RC512TY DFN-8, WELL UNDER THE %.2f CAVITY, SO THE CAVITY FLOOR IS ONE FLAT FACE AT %.2f. (A POCKET EXISTED FOR A 1.75 SOIC-8 THE v4 BOARD DOES NOT CARRY.)" % (U7_H, cavity, floor))]))
+        # A U7 note only when there IS a U7 pocket (2026-11-15). With none, this was a note of
+        # its own saying so -- "NO U7 RELIEF POCKET ... (A POCKET EXISTED FOR A 1.75 SOIC-8 THE
+        # v4 BOARD DOES NOT CARRY.)" -- a line of a full block spent on a feature that is not
+        # there. The floor note says it now, in a bracket, and the line went to the floor fillet.
+        if u7_pocket > 0:
+            notes.append(("u7", ["U7 RELIEF POCKET: 7.8 x 5.4 CENTERED (28.1, 37.3) ON THE CAVITY FLOOR, %.2f DEEP (LOCAL FLOOR %.2f) - U7 (%.2f) KEEPS 0.10 AIR. GENERAL FLOOR %.2f. MODELED IN THE STEP." % (u7_pocket, floor - u7_pocket, U7_H, floor)]))
+        # THE FLOOR-TO-WALL FILLET (2026-11-15, fit_rules.floor_runs). Every figure in it is
+        # read off the runs the shell is built from: the radius, how many, how long, where each
+        # one is, and how far short of the next feature it stops.
+        _runs = _fr.floor_runs()
+        if _runs:
+            # ONE LINE, and the runs themselves are on the plan (heavy dash, to scale). With
+            # each run's coordinates in it the note was two lines and the block two over its
+            # eighteen; where a run is, is a thing a drawing shows better than a sentence.
+            # "OR MORE": the runs are evened top for bottom (fit_rules.floor_runs), so one of
+            # them stops further short of its tab than FLOOR_STOP. The least is read off the
+            # runs, like the rest; the plan shows which.
+            _short = min(min(_r["s0"] - _r["lo"], _r["hi"] - _r["s1"]) for _r in _runs)
+            notes.append(("ffil", [
+                f"FLOOR MEETS WALL THROUGH R{_fr.FLOOR_R:.2f} (\u00d8{2 * _fr.FLOOR_R:.1f} BALL END MILL), MODELED, ON "
+                f"{len(_runs)} RUNS ({sum(_r['s1'] - _r['s0'] for _r in _runs):.1f} mm; HEAVY DASH ON THE PLAN), EACH "
+                f"ENDING {_short:.2f} OR MORE SHORT OF THE NEXT BOSS OR TAB. FLOOR CORNER SHARP ELSEWHERE."]))
     else:
         notes.append(("floor", ["NO FLOOR - OPEN FRAME. THE BACK OF EVERY B-SIDE COMPONENT FACES THE TABLE; THE FRAME'S RESTING PLANE (BOTTOM FACE) CARRIES THE ASSEMBLY.",
                                 f"DEPTH {cavity:.2f} = TALLEST B-SIDE PART {cavity - 2*_fr.CAP_AIR:.2f} + 2×{_fr.CAP_AIR:.2f} RESTING CLEARANCE (fit_rules.VARIANTS: resting-clearance-limited)."]))
@@ -442,11 +482,16 @@ def sheet(vname, v):
     # visible outline, so the circle gives way to the island itself.
     from shapely.geometry import Point as _Pt
     from shapely.ops import unary_union as _uu
+    # ...AND ITS OUTSIDE CORNERS ARE ROUNDED (2026-11-14, fit_rules.boss_rounds), so what is
+    # drawn is no longer the keep-outs' edges but the finished island's own outline, less the
+    # stretch of it that is still the boss's circle: the flat, the bores and hollows, and the
+    # rounds between them, as one line.
     _flats = {}
     for mx,my in mounts:
         _kp = _fr.boss_fouls(mx, my)
         if _kp:
-            _seg = _uu(_kp).boundary.intersection(_Pt(mx, my).buffer(boss_r, resolution=64))
+            _seg = _fr.boss_island(mx, my).exterior.difference(
+                _Pt(mx, my).buffer(boss_r, resolution=64).exterior.buffer(0.012))
             _flats[(mx, my)] = (_seg, _uu(_kp).distance(_Pt(mx, my)))
     for mx,my in mounts:
         if open_back and (mx, my) in _flats:
@@ -485,6 +530,20 @@ def sheet(vname, v):
                         if _ln.geom_type == "LineString":
                             ax.plot([X(px) for px, _py in _ln.coords], [Y(py) for _px, py in _ln.coords],
                                     color=INK, lw=0.55, ls=_ls)
+        # ...AND THE ROOT OF A CORNER BOSS'S FLAT (2026-11-15, fit_rules.boss_roots): the flat
+        # runs to the short-edge wall and meets it through a true R of the finisher. Its arc,
+        # and a stub of the wall it runs into, drawn as a blend's are.
+        for _b in _fr.boss_roots():
+            if _b["boss"] != (mx, my):
+                continue
+            _a0 = np.arctan2(_b["F"][1] - _b["O"][1], _b["F"][0] - _b["O"][0])
+            _a1 = np.arctan2(_b["T"][1] - _b["O"][1], _b["T"][0] - _b["O"][0])
+            _da = (_a1 - _a0 + np.pi) % (2 * np.pi) - np.pi
+            _th = _a0 + _da * np.linspace(0.0, 1.0, 24)
+            ax.plot([X(_b["O"][0] + _b["r"] * np.cos(t)) for t in _th],
+                    [Y(_b["O"][1] + _b["r"] * np.sin(t)) for t in _th], color=INK, lw=0.55, ls=_ls)
+            ax.plot([X(_b["F"][0]), X(_b["F"][0] + 1.5 * _b["t"][0])],
+                    [Y(_b["F"][1]), Y(_b["F"][1] + 1.5 * _b["t"][1])], color=INK, lw=0.55, ls=_ls)
         ax.add_patch(plt.Circle((X(mx),Y(my)),cbore/2*S1,fill=False,ec=GRY,lw=0.5))
         ax.add_patch(plt.Circle((X(mx),Y(my)),pilot_r*S1,fill=False,ec=INK,lw=0.9))
         ax.plot([X(mx)-1.6*S1,X(mx)+1.6*S1],[Y(my),Y(my)],lw=0.4,color=INK)
@@ -528,34 +587,73 @@ def sheet(vname, v):
         # flats, since boss_fouls() carries it, and SAID here: how many, at what radius (the
         # shop has to know a Ø2.0 finisher can cut it), and the stand-off measured off the
         # finished island rather than the constant that asked for it.
+        # STRAIGHT SINCE 2026-11-15 (DRH: "smooth contiguous surfaces for the milling to be done
+        # simpler"). A mid-span boss is no longer hollowed round the coil's corner: it is cut
+        # straight across, the same distance from its axis on both sides and on every such
+        # boss (fit_rules.boss_coil_chord_d). A corner boss in the coil's reach would still be
+        # hollowed -- none is today -- and each kind is said only if it is there.
         _coil = [(_bx, _by) for _bx, _by in mounts if _fr.boss_coil_keepout(_bx, _by) is not None]
-        _coiltxt = " "
+        _coiltxt = ""
         if _coil:
-            _rr = sorted({r for _bx, _by in _coil for _x, _y, r in _fr.boss_coil_cuts(_bx, _by)[0]})
-            _rtxt = f"R{_rr[0]:.2f}" if _rr[-1] - _rr[0] < 0.005 else f"R{_rr[0]:.2f}\u2013{_rr[-1]:.2f}"
             _gap = min(_fr.boss_coil_gap(_bx, _by) for _bx, _by in _coil)
-            _coiltxt = (f" {len(_coil)} ALSO HOLLOWED {_rtxt}, TO STAND\n"
-                        f"{_gap:.2f} OFF {_fr.COIL_REF} COPPER. ")
+            _str = [m for m in _coil if _fr.boss_coil_cuts(*m)[1] and not _fr.boss_coil_cuts(*m)[0]]
+            _rr = sorted({r for _bx, _by in _coil for _x, _y, r in _fr.boss_coil_cuts(_bx, _by)[0]})
+            _bits = []
+            if _str:
+                _bits.append(f"{len(_str)} ALSO CUT STRAIGHT ACROSS {_fr.boss_coil_chord_d():.2f} FROM "
+                             f"THE AXIS, BOTH SIDES ALIKE")
+            if _rr:
+                _rtxt = f"R{_rr[0]:.2f}" if _rr[-1] - _rr[0] < 0.005 else f"R{_rr[0]:.2f}\u2013{_rr[-1]:.2f}"
+                _bits.append(f"{len(_coil) - len(_str)} HOLLOWED {_rtxt}")
+            _coiltxt = (", ".join(_bits) + f", TO STAND {_gap:.2f} OFF {_fr.COIL_REF} COPPER.")
         # ...AND HOW EACH BOSS MEETS THE WALL (2026-11-14): the blends and the webs, counted
         # off fit_rules like everything else in this callout.
         _nweb = sum(len(_fr.boss_webs(_bx, _by)) for _bx, _by in mounts)
-        # wrapped by hand to the callout's column: it runs on from the coil sentence when there
-        # is one, and opens its own line when there is not
         _held = sorted({b["limit"] for _bx, _by in mounts for b in _fr.boss_blends(_bx, _by) if b["limit"]})
-        _heldtxt = (f" (THE R{_radii[-1][0]:.2f} PAIR BESIDE FERRITE {' '.join(_held)})"
-                    if _held and len(_radii) > 1 and _radii[-1][1] == 2 else
-                    f" (R{_radii[-1][0]:.2f} BESIDE FERRITE {' '.join(_held)})"
-                    if _held and len(_radii) > 1 else "")
-        _jointxt = (f"BOSS TO LIP WALL:\n{_bltxt.replace(' + ', ', ')} BLEND{_heldtxt}, FULL DEPTH" if _coil
-                    else f"\nBOSS TO LIP WALL: {_bltxt.replace(' + ', ', ')} BLEND{_heldtxt}, FULL DEPTH")
-        _jointxt += (f";\n{_nweb} CORNER BOSSES SOLID TO THE RECESS WALL (NO SLOT), TO THEIR BORE.\n"
-                     if _nweb else ". ")
-        leader(X(_c.x), Y(_c.y), 141, 213,
-               f"{len(_flats)}\u00d7 BOSS FLAT" + (" (HIDDEN \u2014 CAVITY SIDE)" if not open_back else "") +
-               f": EACH \u00d8{2*boss_r:.2f} BOSS CUT BACK {_cbtxt}\n"
-               f"CLEAR OF THE PART IT WOULD FOUL ({_whotxt}), FULL\n"
-               f"DEPTH; FLATS {_dd[0]:.2f}\u2013{_dd[-1]:.2f} FROM THE HOLE AXIS (THREAD KEEP-OUT\n"
-               f"r{_fr.THREAD_KEEP:.2f} UNTOUCHED).{_coiltxt}{_jointxt}MODELED \u2014 STEP GOVERNS.", fs=4.9)
+        # a blend held to the smaller radius by the ferrite takes its twin with it (the two
+        # blends of a mid-span boss are alike), so what is said is which BOSSES, not which blends
+        _nhb = sum(1 for _bx, _by in mounts if any(b["limit"] for b in _fr.boss_blends(_bx, _by)))
+        _heldtxt = (f" (R{_radii[-1][0]:.2f} AT THE {_nhb} BOSS{'ES' if _nhb != 1 else ''} BESIDE "
+                    f"FERRITE {' '.join(_held)})" if _held and len(_radii) > 1 else "")
+        _jointxt = (f"BOSS TO LIP WALL: {_bltxt.replace(' + ', ', ')} BLEND, FULL DEPTH{_heldtxt}"
+                    + ((f"; {_nweb} CORNER BOSSES SOLID TO THE RECESS WALL (NO SLOT), "
+                        + ("TO THEIR BORE." if _nbore else
+                           f"EACH FLAT RUNNING TO IT THROUGH R{_fr.TOOL_R:.2f}." if _nbroot else "NO BORE."))
+                       if _nweb else "."))
+        # EVEN, AND ROUND-CORNERED (2026-11-14, DRH). One flat distance for all eight (the
+        # tightest any supercap asks for, fit_rules.boss_flat_d), so the cut-back is said as
+        # what it is -- a flat at a distance from the axis -- and the clearance it leaves each
+        # part is the range measured off the islands. And every outside corner is a round.
+        _ddtxt = (f"{_dd[0]:.2f} FROM ITS HOLE AXIS, ALIKE ON ALL {len(_flats)}" if _dd[-1] - _dd[0] < 0.005
+                  else f"{_dd[0]:.2f}\u2013{_dd[-1]:.2f} FROM ITS HOLE AXIS")
+        _nrd = sum(len(_fr.boss_rounds(_bx, _by)) for _bx, _by in mounts)
+        _rdtxt = (f"EVERY OUTSIDE CORNER OF A BOSS R{_fr.CONTOUR_R:.2f} ({_nrd}\u00d7)." if _nrd else "")
+        # WRAPPED, NOT HAND-BROKEN (2026-11-14). The callout was broken into lines by hand, and
+        # every clause that grew pushed one of them into the rim's own label to its right; it
+        # is one paragraph now, wrapped to the column that clears that label.
+        import textwrap as _tw
+        _calltxt = " ".join(t for t in (
+            f"{len(_flats)}\u00d7 BOSS FLAT" + (" (HIDDEN \u2014 CAVITY SIDE)" if not open_back else "") +
+            f": EACH \u00d8{2*boss_r:.2f} BOSS CUT BACK TO A FLAT {_ddtxt} (THREAD KEEP-OUT "
+            f"r{_fr.THREAD_KEEP:.2f} UNTOUCHED), FULL DEPTH, {_cbtxt} CLEAR OF THE PART BESIDE IT "
+            f"({_whotxt}).",
+            _coiltxt, _jointxt, _rdtxt, "MODELED \u2014 STEP GOVERNS.") if t)
+        leader(X(_c.x), Y(_c.y), 141, 213, "\n".join(_tw.wrap(_calltxt, 68)), fs=4.9)
+
+    # THE FLOOR FILLETS (fit_rules.floor_runs): each run drawn to scale along its wall, on the
+    # cavity side of it, as a heavy dash -- hidden in this view, like the boss flats. The note
+    # gives the radius, the count and the rule; WHERE is here.
+    if not open_back and _fr.floor_runs():
+        _ft = _fr.floor_fillet_toe() / 2.0
+        for _r in _fr.floor_runs():
+            _u = _r["wall"] + _r["sg"] * _ft
+            _pts = ([(_r["s0"], _u), (_r["s1"], _u)] if _r["axis"] == "x" else [(_u, _r["s0"]), (_u, _r["s1"])])
+            ax.plot([X(px) for px, _py in _pts], [Y(py) for _px, py in _pts],
+                    color=INK, lw=1.5, ls=(0, (2.2, 1.1)), solid_capstyle="butt")
+        _re = [_r for _r in _fr.floor_runs() if _r["edge"] == "E"][0]      # the one nearest the callout
+        leader(X(_re["wall"] - _ft), Y((_re["s0"] + _re["s1"]) / 2.0), 124, 166,
+               f"{len(_fr.floor_runs())}\u00d7 R{_fr.FLOOR_R:.2f} FLOOR FILLET\n(HIDDEN \u2014 CAVITY SIDE;\nNOTE {note_no['ffil']})",
+               fs=5.2)
 
     # U7 relief pocket (cavity-floor recess; hidden in back-face view -> dashed).
     # Drawn ONLY if the arithmetic still calls for one -- see the import block above.
@@ -639,8 +737,22 @@ def sheet(vname, v):
     S2=13.0; EX,EY=265,202
     xl=lambda v_:EX+v_*S2; zl=lambda z:EY+(z+border)*S2
     if not open_back:
+        # the corner where the floor meets the west wall: an R1.00 fillet where a floor run
+        # stands (fit_rules.floor_runs -- two of the eight are on this wall), drawn as the arc
+        # the shell is cut to; a sharp corner if this variant had none
+        _wr = [_r for _r in _fr.floor_runs() if _r["edge"] == "W"]
+        if _wr:
+            _rr, _dd = _wr[0]["r"], _wr[0]["r"] - _fr.BLEND_BITE
+            _t = _fr.floor_fillet_toe(_rr)
+            _a0, _a1 = _math.atan2(-_dd, _t - _dd), _math.atan2(_t - _dd, -_dd)     # floor end, wall end
+            if _a1 > _a0:
+                _a1 -= 2.0 * _math.pi
+            _corner = [(wall + lip_w + _dd + _rr * _math.cos(_a0 + k * (_a1 - _a0) / 24.0),
+                        floor + _dd + _rr * _math.sin(_a0 + k * (_a1 - _a0) / 24.0)) for k in range(25)]
+        else:
+            _corner = [(wall+lip_w,floor)]
         prof=[(0.10,0.0),(wall,0.0),(wall,-border+lb),(wall+lb,-border),(wall+bbw-lb,-border),(wall+bbw,-border+lb),(wall+bbw,0.0),
-              (8.5,0.0),(8.5,floor),(wall+lip_w,floor),(wall+lip_w,bb-lb),(wall+lip_w-lb,bb),(wall,bb),
+              (8.5,0.0),(8.5,floor)]+_corner+[(wall+lip_w,bb-lb),(wall+lip_w-lb,bb),(wall,bb),
               (wall,wt-ease),(wall-ease,wt),(ease,wt),(0.0,wt-ease),(0.0,0.10)]
     else:
         # open frame: wall + lip only -- no floor to draw, no proud back frame
@@ -662,10 +774,15 @@ def sheet(vname, v):
     leader(xl(0.90),zl(wt-0.06),xl(4.2),zl(wt)+9.5,"0.10×45° MOUTH",ha="left",fs=5.2)
     fcf(xl(3.4),zl(bb)+8,["FLAT","0.05"]); leader(xl(2.2),zl(bb),xl(3.4),zl(bb)+8+2.3,"",ha="left")
     leader(xl(3.36),zl(bb-0.04),xl(5.7),zl(bb+0.25),"0.10×45° LIP",ha="left",fs=5.2)
+    if not open_back and _wr:
+        leader(xl(wall+lip_w+0.29),zl(floor+0.29),xl(wall+lip_w)+7.0,zl(floor)+10.5,
+               f"R{_wr[0]['r']:.2f} FLOOR FILLET (note {note_no['ffil']})",ha="left",fs=5.2)
     leader(xl(0.05),zl(0.06),xl(-2.6),zl(0.55),"0.10×45° RIM (btm)",ha="right",fs=5.0)
     if border > 0:
-        leader(xl(1.08),zl(-0.10),xl(1.35),zl(-border)-9,"0.10×45° FRAME (2 PL)",ha="left",fs=5.0)
-        leader(xl(3.42),zl(-0.10),xl(1.35),zl(-border)-9,"",ha="left")
+        # at -6.6, not -9 (2026-11-15): at -9 this label was set across "SECTION A-A", the
+        # title under it, on every committed sheet
+        leader(xl(1.08),zl(-0.10),xl(1.35),zl(-border)-6.6,"0.10×45° FRAME (2 PL)",ha="left",fs=5.0)
+        leader(xl(3.42),zl(-0.10),xl(1.35),zl(-border)-6.6,"",ha="left")
     if not open_back:
         # Two lines, IN THE CAVITY (2026-11-14). This caption was one line starting at the
         # section's outer wall, so its first half -- the half that says what the floor is --
@@ -677,7 +794,8 @@ def sheet(vname, v):
                       ("cavity floor flat at %.2f \u2014 metal under it: note %d"
                        % (floor, note_no['floor'])) if (has_fins or has_med) else
                       ("floor %.2f TRUE, UNIFORM (no local relief)" % floor))
-        ax.text(xl(wall + lip_w) + 1.6, zl(floor) + 0.8,
+        # ...and clear of the fillet where the section has one: the caption starts past its toe
+        ax.text(xl(wall + lip_w + (_fr.floor_fillet_toe() if _wr else 0.0)) + 1.6, zl(floor) + 0.8,
                 "PCB recess %.2f (%.2f mm board)\n%s" % (board, board, _cap_floor),
                 fontsize=5.7, color=GRY, va="bottom", linespacing=1.25)
     else:

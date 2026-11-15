@@ -145,6 +145,35 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   the options are the ones the decision passed over: print the four rails as separate pieces, or
   bridge each past its mid-edge boss.
 
+- [ ] **[BENCH — before the titanium is ordered] Put a caliper on a supercap's edge: the floor fillets stand under it, and the corner-boss roots in its corner**
+  _(2026-11-15, opened with the floor fillets.)_ The south and north floor fillets of the max
+  and lite shells stand under the outer edge of all four supercaps. A can at nominal clears
+  them. A can at max material does so **only if it is thinner than its stated 1.70 mm for the
+  first 0.33 mm in from its outline** (max shell; 0.09 on lite) — `fit_rules.floor_cap_margin_needed()`,
+  held against `FLOOR_CAP_MARGIN` 0.50, which is an ASSUMPTION about a foil pouch's sealed
+  margin that the SCHURTER datasheet does not dimension (DRH's photograph of a WS17F shows the
+  margin; nothing here has measured one). **Measure, on an SS17 and a WS17, along a short
+  edge: thickness at the edge, and 0.1, 0.2 and 0.35 mm in from it.** On the max shell it
+  passes if the can is no thicker than **1.51 mm at its edge, 1.58 at 0.1 mm in, 1.64 at
+  0.2**, and reaches its full 1.70 no nearer than 0.33 mm in; the governing figures are
+  printed by `scripts/assembly_drc.py` [K] on every run. Then set `FLOOR_CAP_MARGIN` to what
+  was measured and delete "PROVISIONAL" where it is said. If the measurement is under the
+  need, `floor_runs()` refuses to build — by design, a run is refused, not shortened — and
+  the four short-wall runs have to come off; the four long-wall runs stand under nothing and
+  stay.
+  **And look at one corner of the can in plan** _(added 2026-11-15, with the plain corners at
+  the corner bosses)_. Each corner boss's flat now meets the short-edge wall through a plain
+  R1.00, where a Ø2.0 bore used to stand clear of the can. That corner stands **0.070 mm into
+  the very corner of a square-cornered SC1 at max material** (0.005 mm² in plan; 0.031 into
+  SC4, 0.015 into SC3, clear of SC2; a can at nominal is 0.75–0.94 mm away). It clears if the
+  can's BODY stays **0.05 mm** inside its max-material outline at that corner
+  (`fit_rules.boss_root_cap_need()`), against the same 0.50 assumed above — so the question is
+  only whether the pouch's corner is the sealed margin, or rounded, as it looks in the
+  photograph. If a can's body really is square and full-size to its corner, the bore has to
+  come back (`boss_roots()` refuses to build past the margin; the dogbone is in git history,
+  `boss_cuts` at a corner boss before 2026-11-15). `scripts/assembly_drc.py` [H] prints the
+  measured figure on every run.
+
 - [ ] **[BENCH — first-article gate] Sweep the LED's I-V curve, and the loop current in situ**
   _(2026-08-20. Added after an ASIC-side analysis published a wrong finding off the back of the
   gap: `asic/analog/README.md` briefly claimed a worst-bin LED cannot light at the 2.75 V glow
@@ -1182,6 +1211,9 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
       (footprint 1313.17 → 1312.70 mm²): **1916.609 / 1135.278 mm³** by OCC (were 1917.453 /
       1135.782), max 1,038 edges / 354 faces, lite 1,146 / 380, closest approach to the shell
       0.048. The ridge east of the ferrite channel still stands y 31.67–57.23.
+    - The reflow shim's DXF (`enclosure/shim/`) was rebuilt by this change too, and moved: at most
+      0.0023 mm, at its two east corners, net area 969.232 → 969.230 mm². _(Added 2026-11-14,
+      later: the block went out without saying so.)_
     - `scripts/assembly_drc.py` **[J]**, new: on every level of every shell there is metal
       0.06 mm outside each blend's circle and air 0.06 mm inside it, at three places along the
       arc, and metal in the middle of each web's pocket. Its canary is the same section with
@@ -1246,6 +1278,439 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
     and every vertex of a keep-out becomes a wall face of the valley: the max shell came out at
     14,851 faces and a 62 MB STEP, valid, with every gate green. Face count is ungated on
     purpose. The keep-out is drawn at the circles' own chord now (`_FIN_ARC`).
+  **THE CONTOURING PASS, 2026-11-14 (DRH, looking at the eight bosses and the two tabs from the
+  cavity side: "eliminate the hard corners and radius them … make them mostly symmetric or
+  even") — SO ALL THREE SHELLS CHANGED ONCE MORE.** Only ever less metal. The braces and the
+  reflow shim move by microns (last bullet). Board coordinates; this repo's instruments, on a
+  local build with CI's pins — none of it is a SolidCraft figure yet, and **an ArtCraft or
+  SolidCraft run against `466e1de` or earlier measures the bosses and tabs as they were before
+  this.**
+  - **Even: one flat for all eight.** Each boss was cut back for its own supercap by that cap's
+    own numbers, so the flats stood 1.475, 1.524, 1.545 and 1.676 mm from their axes. Every flat
+    is now **1.475** (`fit_rules.boss_flat_d()`: the least any cap leaves any boss, so no cap is
+    cleared by less than its bay asks). The bosses stand 0.75–0.95 mm off their caps' nominal
+    outlines (were 0.75 at all eight), and each keeps 79.8–81.6 % of its annulus (were
+    80.4–85.9 %). The thread keep-out is r1.30; nothing comes nearer an axis than the flats.
+  - **Symmetric: the flat runs the whole boss.** A mid-span boss kept a lump of itself beyond the
+    end of its cap's keep-out, on one side only, with a Ø2.0 bore in the corner. The flat is a
+    full chord now, so **the two mid-span bores are gone** (they were at (45.430, 30.341) and
+    (45.602, 58.555)) and each mid-span boss is its own mirror image about the line through its
+    axis (0.0000 mm² of difference, `check_consistency` [8]). To keep it so:
+    - **the coil hollow is cut on both sides** of the two east mid-span bosses — the real one
+      about (46.9, 32.2) and (46.9, 56.8), R1.15, and its mirror image about (46.9, 25.06) and
+      (46.9, 63.74), where no copper asks for it;
+    - **the blend opposite a ferrite-limited one is R1.00 too**: (48.552, 25.086) and
+      (48.552, 63.814) join (48.552, 32.174) and (48.552, 56.726). **Eight blends are R2.00 and
+      four R1.00** (were ten and two); the sheet says "R1.00 AT THE 2 BOSSES BESIDE FERRITE
+      FER1".
+    At a corner boss the flat runs out to the short-edge wall, and the one bore a corner boss
+    still needs is parked the same distance from that wall at all four: axes (4.947, 1.048),
+    (45.853, 1.048), (4.947, 87.852), (45.853, 87.852), each 1.763 mm from its screw axis (were
+    1.76–1.94). The four are one shape: north–south pairs mirror exactly, east–west pairs but
+    for 0.0016 mm² (next bullet).
+  - **Round: twenty R1.00 rounds on the bosses.** Every outside corner of a boss is a round of
+    `CONTOUR_R` (the finisher's radius) and a true cylinder in the STEP
+    (`fit_rules.boss_rounds()`), 1.081 mm² in plan:
+    - 4 where a corner boss's flat meets its bore (0.015 mm² each);
+    - 6 where a west boss's flat meets its BLEND (0.070): the west lip is 2.5 wide, the blend
+      takes over the boss's circle 0.63 mm from the end of the flat, and the round rests on
+      flat and blend with that stretch of circle gone;
+    - 2 where an east corner boss's flat meets the boss's own circle (0.071): the east lip is
+      1.25 wide, the blend starts farther round, and the round ends on the circle 0.57 mm short
+      of it. This is the 0.0016 mm² by which a west corner boss is not the mirror image of an
+      east one;
+    - 4 where an east mid-span boss's flat meets a coil hollow (0.092 at y 28.63, 0.133 at
+      y 60.27 — the coil's two corners are not the same distance from their bosses, 3.57 and
+      3.47 mm, so those two bosses differ by 0.1 mm in where the hollow sits);
+    - 4 where a coil hollow runs out into the boss's circle, at 150° or more: 0.0005 and
+      0.0056 mm², the removed corner 0.007 and 0.035 mm deep. They are cut all the same, so
+      that the sheet can say EVERY outside corner.
+    Like the blends, a round is set 0.002 mm past tangent into each face it rests on, so it
+    meets them at a 3.62° crease and not a tangency. No break is modelled on a round's top
+    edge (nor on a flat's or a bore's — the deburr note); on the air frame each carries the
+    resting face's 45° break.
+  - **The two short-edge tabs.** Between the supercaps on each short edge the lip stands as a
+    tab: x 23.5–27.0 on the south, 23.5–27.5 on the north, 2.00 deep. The guaranteed ring used
+    to add a strip 0.1 mm wide down one side of the south tab; the ring gives way at a tab now
+    (`fit_rules.ring_reliefs()`), so each tab is what the void leaves and mirrors itself. **Four
+    R1.00 rounds** take the tip corners (`fit_rules.tab_rounds()`, axes (24.498, 1.002),
+    (26.002, 1.002), (24.498, 87.898), (26.502, 87.898); 0.838 mm² in all), true cylinders
+    carrying the lip's own 0.10×45° break. A tab is 2 × R1.00 deep, so its root fillet ends
+    where its tip round begins: the side of a tab is an ogee with no straight in it. The two
+    tabs are still different widths, because the south and north supercaps stand 0.5 mm apart
+    in x — which is also the 0.5 mm by which a lite or air shell is not its own mirror image.
+  - **The numbers.**
+    - Plan metal at the seat 458.431 → **452.171 mm²** (−6.260): 3.720 off the bosses, 1.361
+      less blend, 0.983 off the lip, the rest where they overlap.
+    - Volumes by OCC on the STEPs: **5301.692 / 3928.453 / 983.025 mm³** (max / lite / air; were
+      5312.813 / 3935.970 / 990.335). STL 5301.51 / 3928.31 / 982.99. **That is 0.049 g of a
+      23.5 g max shell, 0.033 g of the lite and 0.058 g of the 316L frame** — the pass is for
+      the shape; the floor is where a shell's mass is.
+    - Max STEP **30,979 edges, 10,476 faces**; lite **1,168 / 438**; air **1,347 / 503**; 35
+      faces under 0.001 mm² on each (the air frame had 36), none shared by more than two.
+    - `scripts/assembly_drc.py`, all three variants 0 errors. **[H]**: the max-material
+      supercaps stand 0.150 (SC1), 0.199 and 0.220 from as-milled metal, or more (all four were
+      0.150); the ferrite sheet 0.149, as before. **[I]** 0.999 at both relieved bosses and the
+      lip. **[G]** 1,922 stations. **[J]** now probes the rounds as it probes the blends, the
+      other way round — metal 0.03 mm inside each circle, air 0.03 mm outside it, with the
+      corner put back sharp as its canary: **16 of the 20 boss rounds and all 4 tab tips**. The
+      four slight ones take off less than a section of an STL can see, and [J] says so.
+    - **So the shell generator holds all 24 itself:** it refuses to export a solid unless each
+      round's cylinder — its radius, about its axis — is among the solid's faces, and proves on
+      every run that a round moved 0.5 mm is reported missing.
+    - `check_consistency` **[8]**, new step 4d: one flat distance; each mid-span boss its own
+      mirror image; the corner bosses one shape; and, by an instrument that owes
+      `boss_rounds()` nothing, no outside corner left on a boss that a ball of R0.95 cannot
+      roll round (0.004 mm² at worst against a bar of 0.02; with the rounds put back sharp all
+      eight bosses fail, 0.086–0.281).
+    - `handedness_drc` **[E]**, the STEP against its own STL reflected: 0.600 / 0.501 / 0.501 mm
+      (were 0.600 / 0.465 / 0.435; the bar is 0.20). **[S], [T], [K], [P], [M] and [B] need
+      KiCad's own export and have not been run on these solids here** — the merge run does.
+  - **The braces and the shim.** The brace footprint is 1312.70 mm² still. The solids move in
+    the sixth figure — **1916.605 / 1135.276 mm³** by OCC (were 1916.609 / 1135.278), same edge
+    and face counts — and the reflow shim's outline by at most 0.0079 mm beside the two east
+    mid-span bosses (969.230 → 969.229 mm²): both follow the cavity as milled, and that moved
+    where two R2.00 blends became R1.00.
+  - **The sheet.** The boss callout is one wrapped paragraph now (it was broken by hand, and
+    each clause that grew pushed a line into the rim's label beside it): "CUT BACK TO A FLAT
+    1.47 FROM ITS HOLE AXIS, ALIKE ON ALL 8 … 0.75–0.95 CLEAR OF THE PART BESIDE IT … 2 ALSO
+    HOLLOWED R1.15 … AND THE SAME ON THE FAR SIDE TO MATCH … 8× R2.00, 4× R1.00 BLEND … EVERY
+    OUTSIDE CORNER OF A BOSS R1.00 (20×)". Note 8 adds "TAB TIP CORNERS 4× R1.00, MODELED."
+    The plan draws each boss's finished outline — flat, hollows and rounds as one line.
+  - **What the first builds got wrong.**
+    - The rounds were first found AND solved by rolling a ball in polygons. That is good to
+      0.005 mm, and on the west bosses the question it had to answer — flat and blend, or flat
+      and circle — is decided by 0.0026. It chose the circle and left a 0.01 mm step in each
+      of six blends. The polygons find the corners now; the faces themselves decide.
+    - The tab tips were first rounded in the void's own polygon, which is simplified to 0.01
+      for the kernel: each came out as three or four flats, a different three or four at each
+      corner, on a pass whose point was symmetry. They are cylinders now, cut after the void.
+
+  **THE SIMPLER CUTS, 2026-11-15 (DRH, on a plan of the cavity with two places circled: "there
+  are two surfaces I want to mill away material so they are smooth contiguous surfaces for the
+  milling to be done simpler", and then "see if there are any others just like those") — SO ALL
+  THREE SHELLS, BOTH BRACES AND THE SHIM CHANGED ONCE MORE.** Board coordinates; this repo's
+  instruments, on a local build with CI's pins. **An ArtCraft or SolidCraft run against
+  `2494c9f` or earlier measures the west wall, the two east mid-span bosses and the tab roots
+  as they were before this.**
+  - **The west wall is one straight face.** The west lip was 2.50 wide and stepped in twice, to
+    2.32 beside R16 and 2.25 beside C24 (0.18 and 0.25 mm, over y 44.5–50.5). It is **2.25 the whole
+    edge** now — the narrowest any part asks for, `fit_rules.LIP_ONE_WIDTH`; the east lip was
+    already one width, 1.25. The sheet's note 8 reads "WEST 2.25 FULL LENGTH (C24)". The
+    guaranteed ring is held to the same width there (`ring_widths()`), and the brace's west
+    edge follows the wall, x 2.55 → **2.30** (`cavity_rect()`).
+  - **The two east mid-span bosses are cut straight.** Each side of each had a hollow (R1.15,
+    about the coil's corner) and a hump beyond it; the contouring pass had mirrored that onto
+    the side with no coil. Each side is now **one straight cut 2.32 mm from the screw axis**
+    (`fit_rules.boss_coil_chord_d()`: the nearest the coil's clearance lets a line come to
+    either boss, used on both sides of both), with an R1.00 round where it meets the flat and an
+    R1.00 blend into the wall. The four hollows, the four slight rounds at their ends and the
+    0.1 mm by which the two bosses differed are gone: the two are one shape, and each is still
+    its own mirror image. Sixteen boss rounds now (were twenty); eight R2.00 blends and four
+    R1.00 still, the four now joining two planes.
+    - The coil stands **1.068 and 1.166 mm** from those bosses in the sectioned metal (was
+      0.999 at both; the rule is 1.00).
+    - **The ferrite sheet's tight corner stands 0.350 mm from titanium** (was 0.149 — the
+      clearance nobody chose; `assembly_drc` [F]). Against `FER_CLR` 0.20 that closes the open
+      question of the 2026-11-14 record, unless DRH wants more.
+    - The cuts are 2.32 from the axis against a thread keep-out of r1.30. **Those two bosses
+      keep 75.8 % of their annulus** (were 81.2 and 80.0); the other six keep 79.8–81.6 as
+      before.
+  - **The four tab roots are true R1.00, on the wall that is there.** Each tab met the
+    short-edge wall through the fillet a finisher-radius opening leaves in the void's polygon,
+    laid out from the BOARD edge. The cavity's wall on a short edge is the RECESS wall, 0.05
+    inside it, so the curve met its own wall at a 19° kink — and, being polygon, as three or
+    four flats. Each root is a cylinder now (`fit_rules.tab_roots()`, axes (22.502, 1.048),
+    (27.998, 1.048), (22.502, 87.852), (28.498, 87.852)), tangent to the recess wall and to
+    the tab's side, carrying the lip's 0.10×45° break. A Ø2.0 finisher cuts exactly this
+    whatever the model says; the model says it now. The tabs themselves are exact rectangles
+    under the rounds (next bullet but one).
+  - **Asked of DRH — both answered "yes" later the same day and built (THE CORNER BOSSES AND
+    THE TWO TABS, below):**
+    - **the corner bosses.** Between the short wall and each corner boss's flat there is the
+      Ø2.0 bore and a small R1.00 round, 0.66 mm long. Running the flat straight to the wall
+      with a plain R1.00 would remove four bores, four rounds and four webs — and leave that
+      R1.00 **0.07 mm inside the corner of a max-material supercap** (0.005 mm² in plan; a
+      nominal cap clears it by 0.75). The bore exists for exactly that corner. Whether it
+      matters rests on the same thing as the floor fillet: is the pouch's extreme corner thin
+      foil, as DRH's photograph of a WS17F suggests, or full thickness? The datasheet does not
+      dimension it. One caliper check answers both.
+    - **the two tabs alike.** Top to bottom, the inside of every shell now differs only by the
+      north tab being 0.5 mm wider than the south (4.0 against 3.5). Cut alike they cost about
+      1 mm² of seat, and the lite and air shells become their own mirror images.
+  - **Looked at and left:** the west mid-span bosses (R2.00 into R1.00 each side), the east
+    corner bosses (three arcs, tangent), and the whole back face (straight frame edges, R2.00
+    blends, the annuli) — the survey walked both outlines as straights and arcs and flagged
+    nothing short or stepped on any of them.
+  - **The numbers.**
+    - Plan metal at the seat 452.171 → **434.622 mm²** (−17.549).
+    - Volumes by OCC on the STEPs: **5269.930 / 3906.929 / 961.850 mm³** (max / lite / air; were
+      5301.692 / 3928.453 / 983.025). STL 5269.77 / 3906.80 / 961.83. That is **0.14 g of the
+      23.5 g max shell**, 0.10 g of the lite and 0.17 g of the 316L frame.
+    - Max STEP **30,711 edges, 10,387 faces** (were 30,979 / 10,476); lite **900 / 349** (were
+      1,168 / 438); air **936 / 366** (were 1,347 / 503). 37 faces under 0.001 mm² on each
+      (were 35): the two more are at board (3.2, 0.25), 0.01 mm tall, where the ring's relief
+      crosses the corner-relief step — three faces there before, one of them 0.0021 mm²; four
+      now, all under 0.001. None shared by more than two.
+    - **The STLs' one ledgered seam is gone.** `check_mesh` had allowed each shell one
+      zero-length open edge and three zero-area facets "where the south band-step fillet at
+      x 27.0 meets its wall" (two and four on the air frame). That was the tab root's kink.
+      All three shells now read 0 open edges, 0 degenerate, and the ledger holds them there.
+    - Braces **1926.670 / 1141.415 mm³** (were 1916.605 / 1135.276), footprint 1312.70 →
+      **1319.30 mm²**, envelope 46.95 → **47.20** wide: the strip down the west side. Shim net
+      area 969.230 → **969.442 mm²**, its outline moving by at most 0.154 mm, beside the two
+      east mid-span bosses; its eight inner contours are identical.
+    - `scripts/assembly_drc.py`, all three variants 0 errors. **[G]** "W 2.25; E 1.25; S
+      2.00/none; N 2.00/none", 1,926 stations. **[H]** max-material supercaps 0.150 / 0.199 /
+      0.220 from as-milled metal, as before. **[I]** as above; its fatter-coil canary still
+      reaches both bosses and refuses to call itself proven if one ever stands a quarter
+      millimetre past the rule. **[J]** probes the four tab roots as blends between two
+      planes: 56 junctions and corners in all, each failing with the corner put back sharp.
+    - `check_consistency` **[8]**, new step 4e: each of the two long lips one band and its
+      wall one straight run between every pair of bosses (a 0.2 mm step let into the west wall
+      must be seen, and is); each coil-cut boss straight on both sides, the same length on
+      both; each root R1.00 on the recess wall, and by a rolled ball of R0.95 nothing left
+      unreached at a root (0.0003 mm² at worst; with the roots taken out all four fail).
+  - **THE HAND.** The west lip's two steps were what `handedness_drc` [S] told a shell from its
+    top-for-bottom mirror image by (R16 lost 0.18 mm of clearance). With the wall straight
+    that mirror image **is the same cavity wherever a part stands**: the two differ by 1.93 mm²
+    on a level, all of it at the tabs and more than 0.5 mm from every part. [S] used to call
+    "fits no worse" an error without exception; it now accepts it only if it can show that —
+    it lays the mirrored sections over the sections as written and looks for any difference
+    within reach of a part — and says which gate holds that hand instead. **That gate is
+    `assembly_drc` [J], by the two tabs. Tried, not assumed:** each rebuilt shell's STL
+    reflected top for bottom fails [J] at twelve probes (the east side of both tabs, three
+    levels) and passes everything else, [G] included — a step 0.5 mm from where the lip table
+    puts it is inside the blend allowance [G] gives every step. The half-turn mirror still
+    lands its lip on the bare JP1 / TP1 pads (7.7 mm² here, against board_parts' outlines).
+    [S]'s verdict was split into a function so that it could be exercised here at all — there
+    is no `kicad-cli` outside the pinned image. **Against KiCad's own export, in CI on the
+    branch (PCB CI runs 661 on `7d0a776` and 662 on `4955077`, both green): crowding 0.451 mm
+    as written and 0.452 for the top-for-bottom mirror image (tightest JP1 / TP1 at 0.300),
+    the two differing by 1.93 mm² on a level, all of it within x 26.3–28.2; the half-turn
+    mirror 7.714 mm² inside parts; [K] [P] [M] [B] [E] [T] 0 errors.** The merge run measures
+    main's own rebuild. `handedness_drc` [E]: 0.600 / 0.500 / 0.500 mm reflected (the bar is
+    0.20).
+  - **What the first builds got wrong.**
+    - **The ring put the steps back.** `RING["W"]` guarantees 2.5 mm of seat; the lip rule
+      cut the band to 2.25; the shell unions the two; and the ring is relieved only where a
+      part stands. First build: a west wall at 2.50 with a relief at R16 and one at C24 — the
+      two steps, exactly as before, from a rule that said there were none. `lip_as_cut()`
+      refused it. A guaranteed minimum that is wider than the thing it guarantees is not a
+      floor.
+    - **The brace did not follow.** It is cut inside a scalar rectangle whose west edge was
+      2.50 — the lip's old width, typed. With the wall at 2.25 the brace would have stood
+      0.30 mm off a face it is meant to bear on with 0.05, free to slide the quarter
+      millimetre its pockets clear a part by. Nothing failed: `assembly_drc` [B] asks whether
+      the brace FITS, and a brace that is too small fits. Found adding up the plan areas.
+    - **A tab's side leaned.** The void is simplified by 0.01 for the kernel, and on the
+      south tab the simplify kept a vertex 0.008 mm along the tip in place of the corner: one
+      side leaned 0.23° and the other did not, under four cylinders laid out as if both were
+      square. The tabs are made exact rectangles AFTER the simplify now (`_tabs_squared`).
+    - **A break with nothing to run into.** A blend carries the lip's 0.10×45° break round it
+      as a cone, which at its far end runs into the boss's own chamfer ring. On the two
+      straight-cut bosses the far end is the cut — made after the deburr, no break, like a
+      flat — so the cone ran on into the boss, was filled back by it, and showed through only
+      in the 0.1 mm where the buried chamfer ring had already lowered the boss's top: a notch
+      and a three-cornered facet at the end of each of the four breaks. Every gate was green;
+      it was seen in a close-up render made for DRH. The cone is held to the blend's side of
+      the cut now, and those two bosses are built without a ring that is nowhere on their
+      surface (holding the cone alone left a 5×10⁻⁷ mm² face at two of the four, between two
+      coplanar faces that could not merge across the ring). The break runs out to nothing
+      against the cut's plane, as a west blend's does against its round.
+    - Three of the new checks failed on a correct part before they failed on anything else: a
+      straight wall has no vertices between its ends to test, a round's arc comes within any
+      tolerance of the line it is tangent to, and a rolled ball cannot reach the corners of
+      its own window.
+
+  **THE FLOOR MEETS THE WALL THROUGH A RADIUS, 2026-11-15 (DRH: "to have the floor meet the sides
+  at a curve using a ball endmill ... to give a slight amount of support to the thin 1mm floor";
+  then R1.0, and none "for any place that has an interface between the brace and titanium";
+  then, on a prototype of eight straight runs, "apply as you displayed") — SO THE MAX AND LITE
+  SHELLS CHANGED ONCE MORE.** The air frame has no floor and did not. Board coordinates; this
+  repo's instruments, on a local build with CI's pins.
+  - **Eight runs, 132.86 mm** _(133.37 as first pushed; evened the same day, below; **132.28
+    since the corner bosses and the tabs**, the next record, which has the runs as they are
+    now)_. An R1.00
+    fillet (`fit_rules.floor_runs()`) on each long straight stretch of cavity wall that no
+    brace comes near anywhere along it — the walls of the four supercap bays:
+    - south wall x 5.37–22.08 and x 28.92–45.43; north wall the same two;
+    - west wall y 7.65–23.85 and y 65.05–81.25; east wall y 7.86–24.88 and y 64.02–81.04.
+    Not the middle of either long wall: the brace bears on the east one from end to end and on
+    the middle of the west one, and a run is a whole stretch or none, so no run ends in mid-wall.
+    Not round the bosses, whose flats are 2.3–3.2 mm long. The same eight on both shells.
+  - **How a run ends.** 0.50 short of the feature at each end of its stretch (a boss's blend, a
+    corner boss's bore, a tab's root), in the scoop a FLAT cutter of the same radius leaves where
+    it finishes the sharp corner beyond: a vertical R1.00 cylinder. Two cutters of one radius
+    leave the last 0.3 mm of each run as a feather against the wall; that is the deburr note's.
+  - **EVENED, TOP FOR BOTTOM — the one departure from the prototype picture, and CI asked for
+    it.** As first pushed (`de4894c`) every run stopped 0.50 short of its own stretch. The run
+    east of each short-edge tab starts from that tab's root, and the tabs differ by 0.5 mm in
+    width, so those two runs began at x 28.42 (south) and 28.92 (north).
+    - PCB CI run 663 went red at the handedness gate, on the max and lite shells, with the mesh
+      gates and `assembly_drc` green: top for bottom, the shell's mirror image fitted KiCad's
+      board exactly as well as the shell (crowding 0.917 against 0.916) **though 0.109 mm² of
+      its fillet within 0.5 mm of a supercap was not where the shell's is**, near board
+      (29.55, 0.56). `[S]` will not accept "fits no worse" unless it can show the two are the
+      same cavity wherever a part stands. It was right not to.
+    - The cure is in the part: a run reaches no further than its twin under y → H − y. **The
+      south run east of the tab now starts at x 28.92, 1.00 short of its tab's root instead of
+      0.50** — half a millimetre of fillet, 0.109 mm³, beside SC2's west corner. Only ever less
+      fillet, the contouring pass's rule. The east wall's two runs moved by 0.004–0.010 mm for
+      the same reason (the cut outline's own simplify). If the two tabs are ever made alike
+      the rule gives nothing up and that run goes back to 0.50.
+    - `check_consistency` [8] 4f holds the fillets' metal to its own mirror image, by the
+      polygon and not by the bookkeeping, with the lost half millimetre put back as its canary.
+    - **Why it reached CI.** The local rehearsal of `[S]` was a scratch script that gave any
+      body without a tabled height 0.5 mm — and `part_height()` returns `None` for the four
+      supercaps, so the cut above the floor passed through none of them. With their own 1.70
+      the same script reproduced CI's 0.109 mm² at the same place. It is in the gate now
+      (`python3 scripts/handedness_drc.py --rehearse`): the parts' own heights, 0.10 deeper
+      (KiCad's bodies hang a little lower than the table), a refusal for a body with no
+      height, and a self-test that its lowest cut passes through a supercap on a floored
+      shell. On the evened shells it is green and the mirror image differs by 1.93 mm² at the
+      tabs, as before the fillet; on `de4894c`'s shells, rebuilt, it is red on max and lite
+      with CI's own figure at CI's own place.
+    - **In CI, against KiCad's export (run 664 on `8bb76c6`, green):** crowding 0.916 mm as
+      written and 0.917 for the top-for-bottom mirror image on max and lite (0.451 / 0.452 on
+      air), the two differing by 1.93 mm² at the tabs and by nothing within 0.5 mm of a part;
+      the half-turn mirror 7.714 mm² inside parts. Mesh gates and `assembly_drc` 0 errors.
+  - **Each run is three true cylinders** — one lying along the wall, one standing at each end —
+    each set 0.002 mm past tangent like every blend here, so the fillet as modelled reaches
+    0.935 mm from the wall and 0.935 up it. Everything that has to clear it is measured to a
+    tangent one, 1.00. The nearest brace is 1.05 mm past that.
+  - **WHAT STANDS OVER IT, AND WHAT IS NOT CLEARED.** Nothing machine-placed hangs over any
+    run. The south and north runs stand under the supercaps' edges:
+    - a can at its nominal outline is 0.95 from the wall, past the toe: **0.050 mm clear** on
+      the max shell with the cavity 0.05 shallow (0.170 on lite);
+    - a can at MAX MATERIAL, taken as square-edged, stands 0.35 from the wall where the fillet
+      is 0.24 high: **0.187 mm into it** on max (0.067 on lite). That is not cleared. DRH's
+      answer, with a photograph of a WS17F: the can is a foil pouch — "rectangular pillows with
+      a general maximum height ... the thickness is not even, particularly on the extreme
+      edges" — and its outline is the sealed margin, not the body;
+    - so the rule is stated as what it needs: **the can must still be thinner than its stated
+      1.70 for 0.33 mm in from its max-material outline** on the max shell (0.09 on lite,
+      `floor_cap_margin_needed()`), against a margin TAKEN to be 0.50
+      (`FLOOR_CAP_MARGIN`, **PROVISIONAL**). The datasheet does not dimension the margin. The
+      bench item above ("Put a caliper on a supercap's edge") is what makes it a measurement.
+  - **The numbers.**
+    - OCC on the STEPs: **5296.050 / 3933.050 mm³** (max / lite; were 5269.930 / 3906.929
+      before the fillet, and 5296.159 / 3933.158 as first pushed), air 961.850 unchanged. STL
+      5296.00 / 3933.04. +26.12 mm³ each, **0.12 g** of titanium: the fillet's section as cut
+      is 0.2108 mm², 28.01 mm³ over the eight runs before the sixteen ends are scooped.
+    - Max STEP **30,783 edges, 10,411 faces**; lite **972 / 373** (+72 / +24 each: three faces a
+      run). 37 faces under 0.001 mm², as before; none shared by more than two.
+    - `scripts/assembly_drc.py` **[K]**, new: on the cut just above the floor, metal 0.06 mm
+      inside each fillet's edge and air 0.06 mm outside it at three stations, air at both ends
+      of every run and beyond them — 80 probes a shell — and the same cut with each fillet
+      taken out fails all eight. It prints the three supercap figures above and says
+      PROVISIONAL. All three variants 0 errors.
+    - **[G] moved up.** The lip check sectioned the shell at mid-cavity; on the lite shell an
+      R1.00 fillet is still 0.07 mm of metal there, and the lip note describes the lip. It
+      reads the cut just under the seat now, below the lip-break and above the fillets.
+    - `check_consistency` **[8]**, new step 4f: eight runs; the fillets' metal against its own
+      mirror image top for bottom; each brace's footprint against each run's wall, by an
+      instrument that owes `floor_runs()` nothing; the margin needed against the margin taken;
+      and a synthetic part planted over a run must be seen.
+    - The shell generator refuses to export a floored shell without each run's lying cylinder
+      among its faces, and proves a run moved 0.5 mm off its wall is reported missing.
+  - **The sheet.** Note 7 is the fillet — "FLOOR MEETS WALL THROUGH R1.00 (Ø2.0 BALL END MILL),
+    MODELED, ON 8 RUNS (132.9 mm; HEAVY DASH ON THE PLAN), EACH ENDING 0.50 OR MORE SHORT OF
+    THE NEXT BOSS OR TAB. FLOOR CORNER SHARP ELSEWHERE." — the plan draws each run to scale,
+    and Section A-A shows the arc. The block was full, so the note that said only "NO U7 RELIEF
+    POCKET" gave up its line: the floor note says "NO U7 POCKET" itself. Every later note keeps
+    its number. Also moved: the "0.10×45° FRAME (2 PL)" label, which had been set across the
+    section's own title on every committed sheet.
+  - **What the first build got wrong.** The fillet's toe. A cylinder set 0.002 into wall and
+    floor leaves the floor at 0.935 from the wall, dips under it, and comes up again at 1.061;
+    the first rules took 1.061 for the toe and cut the cover out to 1.11, which would have left
+    a ridge 0.004 mm high along every run. The prototype's cover stopped at 1.05 by luck. The
+    cover stops at 1.03 now, on purpose, and says why.
+  - **Were DRH's, and the fillet followed:** the bore beside each corner boss and the two
+    tabs' widths. Both decided the same day — the next record.
+
+  **THE CORNER BOSSES AND THE TWO TABS, 2026-11-15 (DRH: "Yes to a b and c" — the plain corner,
+  the tabs alike, and the pull request) — SO EVERY SHELL CHANGED ONCE MORE, AND TWO OF THE
+  THREE NOW HAVE NO HAND.** Board coordinates; this repo's instruments, on a local build with
+  CI's pins. The braces did not change (1926.670 / 1141.415 mm³).
+  - **A. Each corner boss's flat runs to the short-edge wall through one true R1.00**
+    (`fit_rules.boss_roots()`). Until now the flat stopped 0.25 mm short of that wall and three
+    things stood in the corner: a Ø2.0 bore parked against the wall, a round 0.66 mm long
+    between the bore and the flat, and the web the bore ended.
+    - The flat is one plane from the boss's far round to the recess wall, x 4.345 on the west
+      bosses and 46.455 on the east. The corner is a true cylinder — axes (5.343, 1.048),
+      (45.457, 1.048), (5.343, 87.852), (45.457, 87.852) — tangent to flat and wall but for
+      0.002, laid out exactly as a tab's root is, with the lip's 0.10×45° break held to its
+      own side of the flat (a flat is cut after the deburr and has none).
+    - **Gone:** all four bores (no boss on this shell carries a bore any more) and the four
+      short rounds — **12 boss rounds, were 16.** **Still there:** the four webs, which now
+      end on the flat instead of on a bore (0.41 / 0.32 mm² in plan, west / east). _(Message
+      to DRH had said the webs would go too. They cannot: the boss's circle stands 0.22 mm
+      off the recess wall, and that slot is west of the flat.)_
+    - **WHAT IT COSTS — PROVISIONAL, like the floor fillet.** The bore was there so that the
+      finisher's radius left no metal inside a max-material supercap's corner. The plain
+      corner does: **0.070 mm at the very corner of a square-cornered SC1** (0.0053 mm² in
+      plan), 0.031 into SC4, 0.015 into SC3, none into SC2. A can at nominal is 0.745–0.945 mm
+      away. It clears if the can's body stays **0.05 mm** inside its max-material outline at
+      that corner (`boss_root_cap_need()`), against the 0.50 a pouch's sealed margin is TAKEN
+      to give — the floor fillet's assumption, and the same bench item above now asks for a
+      look at a corner. `assembly_drc` [H] measures it in the sectioned shell (0.050 / 0.022 /
+      0.011 mm deep into SC1 / SC4 / SC3 at max material), lets off only metal inside a root
+      `fit_rules` lays out, holds the can's BODY to the as-milled metal instead, and fails if
+      the rule and the part disagree about the cost.
+  - **B. The two short-edge tabs are the same width, 3.5 mm** (x 23.5–27.0 on both edges; the
+    north tab was 4.0). The south and north lips are ONE table now (`fit_rules.LIP_TWIN`: a
+    station's lip is the lesser of what the two edges allow), so the sheet says them once —
+    "SOUTH AND NORTH 2.00; NONE x3.0–23.5 (SC1, SC3), x27.0–47.5 (SC2, SC4)". The north tab
+    gave up 1.000 mm² of seat (0.975 in the metal, less its root's arc).
+  - **The floor fillets followed, by their own rule:** 132.28 mm (was 132.86). The runs along
+    the short walls start 0.50 mm past each corner boss's root now, not past its bore, and the
+    evening rule gives nothing up — both runs east of the tabs stop 0.50 short again:
+    - south and north walls x 5.77–22.08 and x 28.42–45.03;
+    - west wall y 7.65–23.85 and y 65.05–81.25; east wall y 7.86–24.88 and y 64.02–81.04.
+  - **THE HAND.** With the tabs alike, the inside of every shell is its own mirror image top
+    for bottom — `check_consistency` [8] holds the metal's polygon to its own reflection
+    (0.0000 mm² after a 0.02 erosion; a tab half a millimetre wider is its canary).
+    - **The lite and air shells have no hand.** Each whole solid stands **0.010 mm** off its
+      own reflection at most (the east wall's blends differ by that, the cut outline's own
+      simplify); an STL gives up 0.05. They cannot be written, cut or printed in the wrong
+      hand. `fit_rules.shell_has_hand()` declares it and `handedness_drc` [E] measures it: a
+      shell declared handless that grows a hand goes red and asks what holds it.
+    - **The max shell's hand is its rear art and nothing else** (0.600 mm off its own
+      reflection). Nothing read the lettering until today — the tabs told the hand, and [J]
+      held the tabs — so `assembly_drc` **[L]** is new: the coin's standing islands,
+      sectioned through the proud face, lie where `medallion.geometry()` puts them to
+      **0.0000 mm² of 136.2** (reflected top for bottom, as a shell written in the wrong hand
+      would have them, 77.0 mm² off); and the monogram, seen as a person sees the back,
+      matches the font's own "DRH" **0.998** against 0.638 / 0.795 / 0.587 mirrored left for
+      right, top for bottom, and turned half a turn. The second measurement owes
+      `medallion.py` nothing.
+    - `handedness_drc` [S] accepts a mirror image that fits no worse only if its sections
+      differ from the shell's by NOTHING; "differs, but only where no part stands" is an
+      error again, since no gate is left that would hold a hand living there.
+  - **The numbers.**
+    - OCC on the STEPs: **5298.696 / 3934.795 / 963.702 mm³** (max / lite / air; were 5296.050
+      / 3933.050 / 961.850): +2.646 / +1.745 / +1.852. In plan +2.487 mm² at the four corner
+      bosses and −1.000 at the north tab (`shell_metal_poly`, old against new; sectioned on
+      the air frame +2.527 and −0.975), less 0.12 mm³ of fillet on the two floored shells:
+      +2.55 / +1.69 / +1.78 predicted. STL 5298.64 / 3934.78 / 963.68.
+    - Max STEP **30,777 edges, 10,409 faces** (were 30,783 / 10,411); lite **966 / 371** (972 /
+      373); air **936 / 366** (unchanged in count). Faces under 0.001 mm²: **33 on each, were
+      37**; none shared by more than two.
+    - 24 true R1.00 cylinders a shell are checked as faces at export: 12 boss corners, 4 tab
+      tips, 4 tab roots, 4 corner-boss roots. `assembly_drc` [J] probes 56 junctions and
+      corners a floored shell, the corner-boss roots among them.
+    - All local gates 0 errors on all three variants.
+  - **What the first build got wrong.**
+    - A root's cover reaches 0.20 mm into the WALL so that the kernel unions it cleanly, and
+      the plan polygon counted that as the shell's metal: 0.24 mm² a corner that is not
+      there. No gate noticed. It was found adding up plan areas against the sectioned shells
+      to explain the new volumes — the same way the brace's missing 0.30 mm was found.
+    - The corner roots' self-test took the roots out of the finished polygon by subtraction.
+      An island's outline is simplified by 0.005, so a slit two microns wide was left up two
+      of the four flats, it joined the corner to the test window's own corner, and the test
+      read "reachable" where it should have read a sharp corner. The metal is BUILT without
+      the roots now, and the corner is measured by area inside its own square.
 
 - [ ] **[SOURCING — lite/air] Pick the thin supercap MPN**
   _(2026-08-07, opened with the three-variant round.)_ `part_heights.SUPERCAP_H_THIN = 1.00`

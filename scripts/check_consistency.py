@@ -523,7 +523,7 @@ def check_enclosure_fit():
     #    carries the scallop is scripts/assembly_drc.py [F], which sections the STL --
     #    this check cannot know and must not be read as saying so.
     import math
-    from shapely.geometry import Point as _P, box as _box
+    from shapely.geometry import LineString as _LS, Point as _P, box as _box
     from shapely.ops import unary_union
     for mx, my in fr.MOUNTS:
         island = fr.boss_island(mx, my)
@@ -607,6 +607,357 @@ def check_enclosure_fit():
         err(f"{len(_bb)} back-face blends, where this board has had 16 (two per mount) -- read "
             f"what moved (fit_rules.back_blends), then re-ledger the count here and in the docs")
         bad += 1
+    # 4d. EVEN, SYMMETRIC AND ROUND-CORNERED (2026-11-14, DRH's contouring pass). Three things
+    #     the sheet now says about the bosses and the two short-edge tabs, each measured off
+    #     the polygons here and off the metal by assembly_drc [J] and the shell generator's own
+    #     export check:
+    #       EVEN        one flat distance for all eight bosses;
+    #       SYMMETRIC   each mid-span boss mirrors itself about the line through its axis, the
+    #                   corner bosses are one shape (north-south exactly; east-west but for the
+    #                   last 0.003 mm of one round, which rests on a blend on the west and on
+    #                   the boss's own circle on the east, where the lip is narrower);
+    #       ROUND       no outside corner on a boss that a ball of CONTOUR_R cannot roll round,
+    #                   and the four tab tips are rounds (tab_rounds() refuses a lopsided tab).
+    from shapely.affinity import scale as _scale
+    _fd = [min(kp.distance(_P(m)) for kp in fr.boss_cuts(*m)[0]) for m in fr.MOUNTS]
+    if max(_fd) - min(_fd) > 1e-6:
+        err(f"the boss flats stand {min(_fd):.4f} to {max(_fd):.4f} mm from their axes -- the "
+            f"sheet says they are alike on all eight (fit_rules.boss_flat_d)")
+        bad += 1
+    _isl = {m: fr.boss_island(*m, exact=True) for m in fr.MOUNTS}
+    _corner = [m for m in fr.MOUNTS if fr._is_corner_boss(*m)]
+    _lop = {m: _isl[m].symmetric_difference(_scale(_isl[m], 1.0, -1.0, origin=m)).area
+            for m in fr.MOUNTS if m not in _corner}
+    for m, a in _lop.items():
+        if a > 1e-3:
+            err(f"the mid-span boss at {m} does not mirror itself about y{m[1]:g}: {a:.4f} mm2 "
+                f"differs between its two sides")
+            bad += 1
+    _ns = _ew = 0.0
+    for a_ in _corner:
+        for b_ in _corner:
+            if a_ < b_ and a_[0] == b_[0]:
+                _ns = max(_ns, _isl[a_].symmetric_difference(
+                    _scale(_isl[b_], 1.0, -1.0, origin=(0.0, fr.H / 2.0))).area)
+            if a_ < b_ and a_[1] == b_[1]:
+                _ew = max(_ew, _isl[a_].symmetric_difference(
+                    _scale(_isl[b_], -1.0, 1.0, origin=(fr.W / 2.0, 0.0))).area)
+    if _ns > 1e-3 or _ew > 1e-2:
+        err(f"the four corner bosses are no longer one shape: a north-south pair differs by "
+            f"{_ns:.4f} mm2 and an east-west pair by {_ew:.4f} (0.0000 and 0.0016 when ledgered)")
+        bad += 1
+    # ROUND, by an instrument that owes boss_rounds() nothing: roll a slightly smaller ball
+    # round the metal near each boss and see what it cannot reach. The buffer is good to a
+    # few 1e-3 mm2 (GEOS simplifies inside it); one hard corner is 0.015 or more.
+    _HARD = 0.02
+    _wallm = _box(-5.0, -5.0, fr.W + 5.0, fr.H + 5.0).difference(fr.recess_poly())
+    _rr = fr.CONTOUR_R - 0.05
+
+    def _hard(metal, m):
+        w = metal.intersection(_P(m).buffer(fr.BOSS_R + 2.5))
+        gone = w.difference(w.buffer(-_rr, join_style=1, quad_segs=64).buffer(_rr, join_style=1, quad_segs=64))
+        near = _P(m).buffer(fr.BOSS_R + 0.15)
+        return sum(k.area for k in getattr(gone, "geoms", [gone]) if near.contains(k))
+
+    _rds = [(m, rd) for m in fr.MOUNTS for rd in fr.boss_rounds(*m)]
+    _built = unary_union([fr.shell_metal_poly(), _wallm])
+    _sharp = unary_union([_built] + [rd["took"] for _m, rd in _rds])
+    _hc = {m: _hard(_built, m) for m in fr.MOUNTS}
+    for m, a in _hc.items():
+        if a > _HARD:
+            err(f"the boss at {m} still has a hard outside corner: a ball of R{_rr:g} cannot "
+                f"reach {a:.4f} mm2 of it (the sheet calls every outside corner R{fr.CONTOUR_R:g})")
+            bad += 1
+    for m in fr.MOUNTS:
+        if _hard(_sharp, m) < 2.5 * _HARD:
+            err(f"SELF-TEST: with the rounds of the boss at {m} put back sharp, the rolled ball "
+                f"still reaches everything -- the hard-corner test above cannot fail")
+            bad += 1
+    _tabs = fr.tab_rounds()
+    _roots = fr.tab_roots()
+    _broots = fr.boss_roots()
+    if len(_rds) != 12 or len(_tabs) != 4 or len(_roots) != 4 or len(_broots) != 4:
+        # a tripwire, like the twelve and four above: the sheet and the docs quote the counts.
+        # (20 boss rounds until 2026-11-15: the two east mid-span bosses lost two each when the
+        # coil's hollow became a straight cut. 16 until later the same day: each corner boss
+        # lost the short round between its flat and its bore when the bore went and the flat
+        # ran to the wall -- and gained a root, fit_rules.boss_roots.)
+        err(f"{len(_rds)} boss rounds, {len(_tabs)} tab-tip rounds, {len(_roots)} tab roots and "
+            f"{len(_broots)} corner-boss roots, where this board has had 12, 4, 4 and 4 -- read "
+            f"what moved (fit_rules.boss_rounds / tab_rounds / tab_roots / boss_roots), then "
+            f"re-ledger the counts here and in the docs that quote them")
+        bad += 1
+    if any(abs(rd["r"] - fr.CONTOUR_R) > 1e-9 for _m, rd in _rds) or \
+            any(abs(rd["r"] - fr.CONTOUR_R) > 1e-9 for rd in _tabs):
+        err("a round is not CONTOUR_R")
+        bad += 1
+    # 4e. SIMPLER CUTS (2026-11-15, DRH: "smooth contiguous surfaces for the milling to be done
+    #     simpler"). Three things, each read here off the polygon the shell is cut to and by
+    #     assembly_drc [G] / [I] / [J] off the metal:
+    #       ONE WIDTH   the west and east lips are one band each, the whole edge, and the
+    #                   cavity's long walls between the bosses are single straight faces;
+    #       STRAIGHT    a mid-span boss in the coil's reach is cut straight across, the same
+    #                   distance from its axis on both sides and on every such boss;
+    #       TAB ROOTS   each tab meets the short-edge wall through a true R of the finisher,
+    #                   tangent to the RECESS wall (not the board edge, EDGE_FIT outside it).
+    _vc = fr.void_as_cut()
+    for e_ in fr.LIP_ONE_WIDTH:
+        _rows = fr.lip_as_cut(e_)
+        if len(_rows) != 1 or abs(_rows[0][1] - _rows[0][0] - fr.H) > 1e-9:
+            err(f"the {e_} lip is cut in {len(_rows)} band(s), not one the whole edge -- "
+                f"fit_rules.LIP_ONE_WIDTH says the wall there is a single straight face")
+            bad += 1
+            continue
+        # the wall itself, off the cut polygon: between each pair of neighbouring bosses on
+        # that edge, clear of them and their blends, the void's outline within 0.6 mm of where
+        # the lip's face should be is ONE straight run, on that face, the whole stretch
+        _xw = _rows[0][2] if e_ == "W" else fr.W - _rows[0][2]
+        _ys = sorted(m[1] for m in fr.MOUNTS if (m[0] < fr.W / 2.0) == (e_ == "W"))
+        _keep = fr.BOSS_R + fr.BLEND_R + 0.6
+        for _ya, _yb in zip(_ys[:-1], _ys[1:]):
+            _run = _vc.exterior.intersection(_box(_xw - 0.6, _ya + _keep, _xw + 0.6, _yb - _keep))
+            _bx0, _by0, _bx1, _by1 = _run.bounds if not _run.is_empty else (0.0, 0.0, 9.0, 0.0)
+            # 1e-3: the void is simplified by 0.01 for the kernel and a long wall leans by up
+            # to 0.0005 mm end to end (fit_rules.void_as_cut); the steps this is here to catch
+            # were 0.18 and 0.25
+            if max(abs(_bx0 - _xw), abs(_bx1 - _xw)) > 1e-3 or \
+                    abs(_run.length - (_yb - _ya - 2.0 * _keep)) > 1e-3:
+                err(f"the {e_} wall of the cavity is not one straight face at x{_xw:g} between "
+                    f"the bosses at y{_ya:g} and y{_yb:g}: the void's outline there runs "
+                    f"x{_bx0:.4f}..{_bx1:.4f}, {_run.length:.3f} mm of it")
+                bad += 1
+    # ...and it can fail: a notch 0.2 deep and 5 long let into the west wall, the size of
+    # the R16 / C24 steps this replaced, has to be seen
+    _xw = fr.lip_as_cut("W")[0][2]
+    _ya, _yb = sorted(m[1] for m in fr.MOUNTS if m[0] < fr.W / 2.0)[1:3]
+    _nv = _vc.difference(_box(_xw - 0.1, (_ya + _yb) / 2.0 - 2.5, _xw + 0.2, (_ya + _yb) / 2.0 + 2.5))
+    _run = _nv.exterior.intersection(_box(_xw - 0.6, _ya + _keep, _xw + 0.6, _yb - _keep))
+    if max(abs(_run.bounds[0] - _xw), abs(_run.bounds[2] - _xw)) <= 1e-3 and \
+            abs(_run.length - (_yb - _ya - 2.0 * _keep)) <= 1e-3:
+        err("SELF-TEST: a 0.2 mm step let into the west wall was not seen -- the straight-wall "
+            "test above cannot fail")
+        bad += 1
+    if fr.ring_widths()["W"] > fr.lip_as_cut("W")[0][2] + 1e-9:
+        err("the guaranteed ring is wider than the one-width west lip -- it would put the steps back")
+        bad += 1
+    _cut = [m for m in fr.MOUNTS if m not in _corner and fr.boss_coil_need(*m) is not None]
+    _cd = fr.boss_coil_chord_d() if _cut else None
+    for m in _cut:
+        _x0, _y0, _x1, _y1 = _isl[m].bounds
+        if abs((_y1 - _y0) - 2.0 * _cd) > 1e-6 or abs((_y0 + _y1) / 2.0 - m[1]) > 1e-6:
+            err(f"the boss at {m} is not cut straight {_cd:g} mm either side of its axis: it "
+                f"spans y{_y0:.3f}..{_y1:.3f}")
+            bad += 1
+        # straight means straight: a millimetre or more of the island's outline lies ON each
+        # of the two lines, and the same length on both
+        _on = [_isl[m].exterior.intersection(
+                   _box(_x0 - 1.0, m[1] + sg * _cd - 1e-7, _x1 + 1.0, m[1] + sg * _cd + 1e-7)).length
+               for sg in (-1.0, 1.0)]
+        if min(_on) < 1.0 or abs(_on[0] - _on[1]) > 1e-3:
+            err(f"the boss at {m}: its straight cuts are not straight -- {_on[0]:.3f} and "
+                f"{_on[1]:.3f} mm of its outline lie on the two lines y{m[1] - _cd:g} / y{m[1] + _cd:g}")
+            bad += 1
+        if _cd < fr.THREAD_KEEP + 0.5:
+            err(f"the straight cuts stand {_cd:.3f} from the axis of {m}, inside the thread's keep-out + 0.5")
+            bad += 1
+    if len(_cut) != 2:
+        err(f"{len(_cut)} mid-span bosses are cut straight for the coil, where this board has had 2")
+        bad += 1
+    _ry0, _ry1 = fr.recess_poly().bounds[1], fr.recess_poly().bounds[3]
+    for b in _roots:
+        _yw = _ry0 if b["edge"] == "S" else _ry1
+        if abs(abs(b["O"][1] - _yw) - (fr.TOOL_R - fr.BLEND_BITE)) > 1e-6 or abs(b["r"] - fr.TOOL_R) > 1e-9:
+            err(f"the tab root about ({b['O'][0]:.3f}, {b['O'][1]:.3f}) is not an R{fr.TOOL_R:g} "
+                f"tangent to the recess wall at y{_yw:g}")
+            bad += 1
+    # ...and by a rolled ball, which owes tab_roots() nothing: no inside corner at a tab root
+    # that an R(TOOL_R - 0.05) cutter cannot reach, and with the roots taken out it must find all four
+    _rb = fr.TOOL_R - 0.05
+    _lipm = unary_union([fr.lip_metal_poly(), _wallm])
+
+    def _unreached(metal, b):
+        w = _box(b["J"][0] - 2.0, b["J"][1] - 2.0, b["J"][0] + 2.0, b["J"][1] + 2.0).difference(metal)
+        gone = w.difference(w.buffer(-_rb, join_style=1, quad_segs=64).buffer(_rb, join_style=1, quad_segs=64))
+        # only what lies in the root's own corner: the window's four square corners, and the
+        # tab's tip above, are "unreached" too and are not what is being asked
+        near = _box(b["J"][0] - fr.TOOL_R - 0.2, b["J"][1] - fr.TOOL_R - 0.2,
+                    b["J"][0] + fr.TOOL_R + 0.2, b["J"][1] + fr.TOOL_R + 0.2)
+        return sum(k.area for k in getattr(gone, "geoms", [gone]) if near.contains(k))
+
+    _rootm = unary_union(fr.tab_root_metal())
+    _ur = [_unreached(_lipm, b) for b in _roots]
+    if _roots and max(_ur) > _HARD:
+        err(f"a tab root still has an inside corner an R{_rb:g} cutter cannot reach "
+            f"({max(_ur):.4f} mm2)")
+        bad += 1
+    if _roots and min(_unreached(_lipm.difference(_rootm.difference(_wallm).difference(
+            unary_union(fr._tab_squares()[1]))), b) for b in _roots) < 5 * _HARD:
+        err("SELF-TEST: with the tab roots taken out, the rolled ball still reaches everything "
+            "-- the tab-root test above cannot fail")
+        bad += 1
+    # 4e'. A CORNER BOSS MEETS THE SHORT-EDGE WALL THROUGH ONE TRUE RADIUS (2026-11-15, DRH:
+    #     the simpler cut). fit_rules.boss_roots(): the flat runs to the wall, an R of the
+    #     finisher in the corner, no bore. Held three ways: no bore is left at a corner boss;
+    #     each root is that R on the recess wall and on the flat; and a rolled ball, which owes
+    #     boss_roots() nothing, finds no corner there it cannot reach -- and finds all four
+    #     with the roots taken out. What the plain corner costs a max-material supercap is
+    #     computed, printed, and held to the margin a pouch is TAKEN to give (PROVISIONAL).
+    for m in fr.MOUNTS:
+        if fr._is_corner_boss(*m) and any(fr.boss_cuts(*m)[1]):
+            err(f"the corner boss at {m} still carries a bore ({fr.boss_cuts(*m)[1]}) -- its "
+                f"flat is meant to run to the short-edge wall (fit_rules.boss_roots)")
+            bad += 1
+    for b in _broots:
+        _yw = _ry0 if b["boss"][1] < fr.H / 2.0 else _ry1
+        _fx = b["boss"][0] + (1.0 if b["O"][0] > b["boss"][0] else -1.0) * fr.boss_flat_d()
+        if (abs(abs(b["O"][1] - _yw) - (fr.TOOL_R - fr.BLEND_BITE)) > 1e-6
+                or abs(abs(b["O"][0] - _fx) - (fr.TOOL_R - fr.BLEND_BITE)) > 1e-6
+                or abs(b["r"] - fr.TOOL_R) > 1e-9):
+            err(f"the corner-boss root about ({b['O'][0]:.3f}, {b['O'][1]:.3f}) is not an "
+                f"R{fr.TOOL_R:g} tangent to the recess wall at y{_yw:g} and the flat at x{_fx:.3f}")
+            bad += 1
+    _allm = unary_union([fr.shell_metal_poly(), _wallm])
+
+    def _unreached_sq(metal, b):
+        # what the ball cannot reach INSIDE the root's own corner square, by area -- not "the
+        # pieces that lie wholly near it", which is what the tab roots are asked: an island's
+        # outline is simplified by 0.005, and with the roots out a hairline of void runs up
+        # two of the four flats and joins this corner's piece to the window's own corner
+        w = _box(b["J"][0] - 2.0, b["J"][1] - 2.0, b["J"][0] + 2.0, b["J"][1] + 2.0).difference(metal)
+        gone = w.difference(w.buffer(-_rb, join_style=1, quad_segs=64).buffer(_rb, join_style=1, quad_segs=64))
+        e = fr.TOOL_R + 0.02
+        cx, cy = b["J"][0] + e * (b["t"][0] + b["n"][0]), b["J"][1] + e * (b["t"][1] + b["n"][1])
+        return gone.intersection(_box(min(b["J"][0], cx), min(b["J"][1], cy),
+                                      max(b["J"][0], cx), max(b["J"][1], cy))).area
+
+    _ubr = [_unreached_sq(_allm, b) for b in _broots]
+    if _broots and max(_ubr) > _HARD:
+        err(f"a corner-boss root still has an inside corner an R{_rb:g} cutter cannot reach "
+            f"({max(_ubr):.4f} mm2)")
+        bad += 1
+    # "taken out" is BUILT, not subtracted: the metal as fit_rules unions it, less the one step
+    # that adds the roots.
+    _noroot = unary_union([fr._shell_metal(False), _wallm]
+                          + [u for m_ in fr.MOUNTS for u, _c in fr.boss_webs(*m_)])
+    _noroot = _noroot.buffer(1e-4, join_style=2).buffer(-1e-4, join_style=2)
+    if _broots and min(_unreached_sq(_noroot, b) for b in _broots) < 5 * _HARD:
+        err("SELF-TEST: with the corner-boss roots taken out, the rolled ball still reaches "
+            "everything -- the root test above cannot fail")
+        bad += 1
+    _cbite, _cneed = fr.boss_root_cap_need()
+    if _cneed > fr.FLOOR_CAP_MARGIN + 1e-9:
+        err(f"the corner-boss roots need a supercap's body to stay {_cneed:.3f} mm inside its "
+            f"max-material outline, more than the {fr.FLOOR_CAP_MARGIN} it is TAKEN to "
+            f"(FLOOR_CAP_MARGIN, provisional)")
+        bad += 1
+    if _broots and min(b["cap_gap"] for b in _broots) < fr.BOSS_CLR - 1e-9:
+        err(f"a corner-boss root stands {min(b['cap_gap'] for b in _broots):.3f} mm from its "
+            f"supercap's NOMINAL outline, inside BOSS_CLR {fr.BOSS_CLR}")
+        bad += 1
+    # 4e''. THE TWO SHORT EDGES ARE CUT ALIKE (2026-11-15, DRH: the two tabs the same width).
+    #     One lip table for S and N (fit_rules.LIP_TWIN); held on the lip AS CUT, and on the
+    #     metal's own polygon reflected top for bottom, which owes lip_bands() nothing. What
+    #     is left over is the outline's own simplify, well under a hundredth.
+    _geo = lambda rows: [(round(lo, 6), round(hi, 6), round(w, 6)) for lo, hi, w, _n in rows]
+    if _geo(fr.lip_as_cut("S")) != _geo(fr.lip_as_cut("N")):
+        err(f"the south and north lips are not cut alike: {_geo(fr.lip_as_cut('S'))} against "
+            f"{_geo(fr.lip_as_cut('N'))} (fit_rules.LIP_TWIN)")
+        bad += 1
+    from shapely.affinity import affine_transform as _aff0
+    _tb = lambda g: _aff0(g, [1.0, 0.0, 0.0, -1.0, 0.0, fr.H])
+    _tbdiff = lambda m: m.symmetric_difference(_tb(m)).buffer(-0.02).area
+    _cavm = unary_union([fr.shell_metal_poly(), _wallm])
+    _tbd = _tbdiff(_cavm)
+    if _tbd > 1e-6:
+        _d = _cavm.symmetric_difference(_tb(_cavm)).buffer(-0.02)
+        err(f"the cavity's metal is not its own mirror image top for bottom: {_tbd:.4f} mm2 "
+            f"differs, near ({_d.representative_point().x:.2f}, {_d.representative_point().y:.2f}). "
+            f"The lite and air shells are declared to have no hand (fit_rules.shell_has_hand); "
+            f"if this is meant, say what now holds it")
+        bad += 1
+    if _tbdiff(_cavm.union(_box(27.0, 0.0, 27.5, 2.0))) <= 1e-6:
+        err("SELF-TEST: with the south tab made half a millimetre wider than the north, the "
+            "cavity still reads as its own mirror image -- the test above cannot fail")
+        bad += 1
+    # 4f. THE FLOOR MEETS THE WALL THROUGH A RADIUS (2026-11-15, DRH). fit_rules.floor_runs():
+    #     an R1.00 fillet on the long straight walls of the supercap bays -- never where a
+    #     brace bears, never under a machine-placed part it cannot clear, and under a supercap
+    #     only as far as the pouch's sealed margin is TAKEN to allow (FLOOR_CAP_MARGIN,
+    #     provisional). The polygons here; the metal is assembly_drc [K].
+    _fruns = fr.floor_runs()
+    _fmetal = unary_union(fr.floor_fillet_metal())
+    if len(_fruns) != 8:
+        err(f"{len(_fruns)} floor fillets, where this board has had 8 (two a wall) -- read what "
+            f"moved (fit_rules.floor_runs), then re-ledger the count here and in the docs")
+        bad += 1
+    # EVENED, TOP FOR BOTTOM (CI run 663, the same day). As first built each run stopped
+    # FLOOR_STOP short of its own stretch, and the two short-edge tabs differ by 0.5 mm: the
+    # runs east of them began at x 28.423 and 28.923, so a shell and its top-for-bottom mirror
+    # image differed by 0.109 mm2 of fillet beside SC2 / SC4 while fitting the board equally
+    # well -- which scripts/handedness_drc.py [S] refuses, rightly. floor_runs() evens each
+    # run with its twin. Held here on the fillets' METAL, which owes that bookkeeping nothing:
+    # reflected y -> H - y it must be itself.
+    from shapely.affinity import affine_transform as _aff
+    _uneven = lambda m: m.symmetric_difference(_aff(m, [1.0, 0.0, 0.0, -1.0, 0.0, fr.H])).buffer(-1e-3).area
+    if _fruns and _uneven(_fmetal) > 1e-6:
+        _d = _fmetal.symmetric_difference(_aff(_fmetal, [1.0, 0.0, 0.0, -1.0, 0.0, fr.H])).buffer(-1e-3)
+        err(f"the floor fillets are not their own mirror image top for bottom: {_d.area:.3f} mm2 of "
+            f"them, near ({_d.representative_point().x:.2f}, {_d.representative_point().y:.2f}), "
+            f"has no twin under y -> H - y. A shell and its mirror image then differ where a "
+            f"part can feel it, and nothing but fit tells them apart (fit_rules.floor_runs, "
+            f"EVENED; handedness_drc [S])")
+        bad += 1
+    if _fruns:
+        # canary: the half millimetre the first build had -- one run reaching 0.5 further
+        _rs = next(r_ for r_ in _fruns if r_["axis"] == "x")
+        _far = _rs["wall"] + _rs["sg"] * fr.floor_fillet_toe()
+        _stub = _box(_rs["s0"] - 0.5, min(_rs["wall"], _far), _rs["s0"], max(_rs["wall"], _far))
+        if _uneven(_fmetal.union(_stub)) <= 1e-6:
+            err("SELF-TEST: a floor fillet run made 0.5 mm longer than its twin still reads as "
+                "even -- the top-for-bottom test above cannot fail")
+            bad += 1
+        if any(r_.get("twin") is None for r_ in _fruns):
+            err("a floor fillet run has no twin top for bottom (fit_rules.floor_runs) -- it was "
+                "not evened with anything; read which wall lost its stretch")
+            bad += 1
+    _fbr = {}
+    for vn, v in fr.VARIANTS.items():
+        if not v["brace"]:
+            continue
+        _bfp = unary_union(fr.brace_footprint(span=v["span"]))
+        # by an instrument that owes floor_runs() nothing: the brace's footprint against each
+        # run's wall, which a tangent fillet of FLOOR_R reaches FLOOR_R from
+        for run in _fruns:
+            _wl = (_LS([(run["s0"], run["wall"]), (run["s1"], run["wall"])]) if run["axis"] == "x"
+                   else _LS([(run["wall"], run["s0"]), (run["wall"], run["s1"])]))
+            _fbr[vn] = min(_fbr.get(vn, 1e9), _bfp.distance(_wl) - fr.FLOOR_R)
+        if _fbr[vn] < fr.FLOOR_BRACE_CLR - 1e-9:
+            err(f"the {vn} brace stands {_fbr[vn]:.3f} mm from the toe of a floor fillet, inside "
+                f"FLOOR_BRACE_CLR {fr.FLOOR_BRACE_CLR} -- DRH's rule is no fillet where the brace "
+                f"meets the titanium")
+            bad += 1
+    _fneed = fr.floor_cap_margin_needed()
+    if max(_fneed.values()) > fr.FLOOR_CAP_MARGIN + 1e-9:
+        err(f"the floor fillets need a supercap to be thin for {max(_fneed.values()):.2f} mm in "
+            f"from its max-material outline, more than the {fr.FLOOR_CAP_MARGIN} it is TAKEN to "
+            f"be (FLOOR_CAP_MARGIN, provisional)")
+        bad += 1
+    _fpart = [g for run in _fruns for rows in run["under"].values() for _r, k, g in rows if k == "part"]
+    if _fpart and min(_fpart) < fr.FLOOR_PART_CLR - 1e-9:
+        err(f"a machine-placed part hangs {min(_fpart):.3f} mm over a floor fillet, inside "
+            f"FLOOR_PART_CLR {fr.FLOOR_PART_CLR}")
+        bad += 1
+    # mechanism self-test: a part 0.2 mm short of the floor planted over a run must be seen
+    _r0 = next(r_ for r_ in _fruns if r_["edge"] == "W")
+    _ym = (_r0["s0"] + _r0["s1"]) / 2.0
+    _fake = [("SELFTEST", _box(_r0["wall"] + 0.3, _ym - 0.5, _r0["wall"] + 1.3, _ym + 0.5),
+              min(v["cavity"] for v in fr.VARIANTS.values() if v["floor"] > 0) - 0.2, "model")]
+    _seen = [g for rows in fr.floor_run_clearances(_r0, ps=_fake).values() for _r, k, g in rows if k == "part"]
+    if not _seen or min(_seen) >= fr.FLOOR_PART_CLR:
+        err("SELF-TEST: a synthetic part planted 0.3 mm from the west wall, hanging to 0.2 mm above "
+            "the floor over a fillet, was not seen as fouling it -- floor_run_clearances() does "
+            "not measure what hangs over a run")
+        bad += 1
     # mechanism self-test: a synthetic part planted INSIDE a blend's new metal must be refused
     (_m0, _b0) = _bl[0]
     _pt = fr.blend_added(_m0[0], _m0[1], _b0).representative_point()
@@ -651,12 +1002,35 @@ def check_enclosure_fit():
            f"keeps a >={fr.SLA_WEB} mm web; {sum(len(fr.lip_bands(e)) for e in 'WESN')} lip "
            f"bands all stand off their parts and clear the coil; 8 boss islands clear, "
            f"thread intact (the polygon -- the metal is assembly_drc [F]); {len(_bl)} boss "
-           f"blends ({len(_bl) - len(_held)} at R{fr.BLEND_R:g}, {len(_held)} held to "
-           f"R{fr.TOOL_R:g} by the ferrite sheet, {_bfer:.2f} off it) stand {_bgap:.2f} off the "
+           f"blends ({len(_bl) - len(_held)} at R{fr.BLEND_R:g}, "
+           f"{sum(1 for b in _held if not b.get('twin'))} held to "
+           f"R{fr.TOOL_R:g} by the ferrite sheet, {_bfer:.2f} off it, and "
+           f"{sum(1 for b in _held if b.get('twin'))} more to match them) stand {_bgap:.2f} off the "
            f"nearest part ({_bref}) and {_bcoil:.2f} off the coil, {len(_wb)} corner webs "
            f"{_wgap:.2f} off theirs, and {len(_bb)} back-face blends the reeded pour wraps at "
-           f"{_valgap:.2f} (the polygon -- the metal is assembly_drc [J]); guaranteed ring "
-           f"relieved around {len(_reliefs)} part(s), all bodies >={fr.LIP_CLR} clear of it")
+           f"{_valgap:.2f} (the polygon -- the metal is assembly_drc [J]); all 8 boss flats "
+           f"{_fd[0]:.3f} from their axes, every mid-span boss its own mirror image "
+           f"({max(_lop.values()):.4f} mm2 at worst), the corner bosses one shape (N-S "
+           f"{_ns:.4f}, E-W {_ew:.4f} mm2), {len(_rds)} boss corners and {len(_tabs)} tab tips "
+           f"rounded R{fr.CONTOUR_R:g} with no hard corner left on a boss "
+           f"({max(_hc.values()):.4f} mm2 at worst against {_HARD}; the rounds put back sharp "
+           f"fail all 8); the {' and '.join(fr.LIP_ONE_WIDTH)} lips one width each "
+           f"({', '.join(f'{e_} {fr.lip_as_cut(e_)[0][2]:g}' for e_ in fr.LIP_ONE_WIDTH)}) and "
+           f"their walls straight between the bosses, {len(_cut)} mid-span bosses cut straight "
+           f"{_cd:g} from their axes for the coil, {len(_roots)} tab roots R{fr.TOOL_R:g} on the "
+           f"recess wall ({max(_ur):.4f} mm2 unreached at worst; taken out, all fail); "
+           f"{len(_broots)} corner bosses' flats run to the short-edge wall through R{fr.TOOL_R:g} "
+           f"with no bore ({_cbite:.3f} mm into a max-material supercap's corner; needs "
+           f"{_cneed:.2f} mm of the margin, PROVISIONAL); the south and north lips one table "
+           f"and the cavity its own mirror image top for bottom ({_tbd:.4f} mm2); "
+           f"{len(_fruns)} floor fillets R{fr.FLOOR_R:g}, {sum(r_['s1'] - r_['s0'] for r_ in _fruns):.1f} mm "
+           f"of wall ({_fmetal.area:.1f} mm2 in plan), "
+           + ", ".join(f"{g:.2f} mm from the {vn} brace" for vn, g in _fbr.items())
+           + f", under no machine-placed part, and under the supercaps' edges for "
+           f"{max(_fneed.values()):.2f} mm of a margin TAKEN to be {fr.FLOOR_CAP_MARGIN} "
+           f"(PROVISIONAL); guaranteed ring "
+           f"relieved around {len(_reliefs) - len(fr.lip_tabs())} part(s) and given up at the "
+           f"{len(fr.lip_tabs())} short-edge tabs, all bodies >={fr.LIP_CLR} clear of it")
 
 
 def check_doc_file_refs():

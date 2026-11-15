@@ -42,7 +42,7 @@ import os
 import sys
 
 import cadquery as cq
-from shapely.geometry import Point, box
+from shapely.geometry import Point, Polygon, box
 from shapely.ops import unary_union
 
 # ===== board (committed PCB) =====
@@ -120,10 +120,12 @@ EDGE_BREAK = 0.10                  # Ti deburr: break the sharp END-FACE edges (
                                    # Ti edges chip and cut; an edge-break also resists nicking. ~0.1 mm.
 # ASYMMETRIC support lip (per side) -- wider = more board-edge support = stiffer PCB. Widths bounded
 # by the nearest B-side part on each edge (v3.0 board, measured):
-from fit_rules import RING as _RING                        # noqa: E402 -- single home; the
+from fit_rules import ring_widths as _ring_widths          # noqa: E402 -- single home; the
                                                            # main fit_rules import sits below
                                                            # the geometry helpers, after these
                                                            # scalars are needed
+_RING = _ring_widths()    # NOT fit_rules.RING itself: on an edge whose lip is cut to one width
+                          # the ring is held to that width, or it puts the steps back (2026-11-15)
 lip_W, lip_N, lip_S = _RING["W"], _RING["N"], _RING["S"]
 lip_E      = _RING["E"]                # E stays narrow through the JP1/TP1 pads (reach x49.6) AND clear of the NFC coil (~x49): lip_E=1.0 -> wall x49.8, east of both. A grounded Ti lip over the coil would detune it.
 # The old hand-typed 2.5/2.0/2.0 carried a v3-era justification ("body max edge ~2.35 from
@@ -333,6 +335,10 @@ from fit_rules import (lip_bands,
                        BOSS_CLR, THREAD_KEEP, export_solid,
                        boss_cuts as _boss_cuts, boss_coil_cuts as _boss_coil_cuts,
                        boss_blends as _boss_blends, boss_webs as _boss_webs,
+                       boss_rounds as _boss_rounds, CONTOUR_R as _CONTOUR_R,
+                       tab_rounds as _tab_rounds, tab_roots as _tab_roots,
+                       boss_roots as _boss_roots,
+                       floor_runs as _floor_runs, BLEND_BITE as _BITE,
                        back_blends as _back_blends,
                        void_as_cut as _void_as_cut, BLEND_R as _BLEND_R,
                        recess_poly as _recess_poly, TOOL_R as _TOOL_R,
@@ -556,11 +562,33 @@ def _blend_solid(b, floor, cavity, top_break, foot):
     sol = _poly_solid(b["cover"], floor, cavity)
     sol = sol.cut(cq.Workplane("XY").workplane(offset=zlo - 0.01).moveTo(wx(ox), wy(oy))
                     .circle(r).extrude(bb + 0.02 - (zlo - 0.01)))
+    # A BLEND ONTO A STRAIGHT CUT BREAKS ONLY ITS OWN SIDE OF THAT CUT (2026-11-15). Where the
+    # second face is a boss's circle, the boss's own chamfer ring is there for the cone to run
+    # into. A straight cut across a boss (fit_rules.boss_coil_cuts) is made after the deburr
+    # and carries no break, like a flat -- so past the cut's line the cone has nothing to run
+    # into, and the first build of this showed what it did instead: inside the boss it was
+    # filled back by the boss, except in the 0.1 mm where the boss's chamfer ring had already
+    # lowered the top, which left a notch and a three-cornered facet at the end of every one of
+    # the four breaks. The cone is held to the blend's side of the cut's line: the break then
+    # runs out to nothing against the cut's own plane, as a west blend's does against its round.
+    keep = None
+    if b.get("chord"):
+        (cx, cy), (tx, ty), (nx, ny) = b["J"], b["t"], b["n"]
+        far = r + 1.0
+        keep = Polygon([(cx - far * nx, cy - far * ny), (cx + far * nx, cy + far * ny),
+                        (cx + far * nx + far * tx, cy + far * ny + far * ty),
+                        (cx - far * nx + far * tx, cy - far * ny + far * ty)])
+
+    def _held(cone, z0, dz):
+        return cone if keep is None else cone.intersect(_poly_solid(keep, z0, dz))
+
     if top_break > 0:
-        sol = sol.cut(_cone(ox, oy, bb - top_break - _BREAK_DIP, r - _BREAK_DIP,
-                            bb + 0.01, r + top_break + 0.01))
+        sol = sol.cut(_held(_cone(ox, oy, bb - top_break - _BREAK_DIP, r - _BREAK_DIP,
+                                  bb + 0.01, r + top_break + 0.01),
+                            bb - top_break - _BREAK_DIP - 0.01, top_break + _BREAK_DIP + 0.03))
     if foot > 0:
-        sol = sol.cut(_cone(ox, oy, -0.02, r + foot + 0.02, foot + _BREAK_DIP, r - _BREAK_DIP))
+        sol = sol.cut(_held(_cone(ox, oy, -0.02, r + foot + 0.02, foot + _BREAK_DIP, r - _BREAK_DIP),
+                            -0.03, foot + _BREAK_DIP + 0.04))
     return _under_corner_relief(sol, b["cover"], bb)
 
 
@@ -575,6 +603,128 @@ def _web_solid(x, y, cover, floor, cavity, foot):
     for brk in _boss_foot_breaks(fouls, bores, floor, z0, foot):
         sol = sol.cut(brk)
     return _under_corner_relief(sol, cover, floor + cavity)
+
+
+def _round_tool(rd, floor, cavity, foot, top_break=0.0):
+    """What comes OUT of the shell to round one outside corner (fit_rules.boss_rounds, a boss;
+    fit_rules.tab_rounds, the tip of a lip tab): the round's cover -- a sector of board about
+    the round's axis, holding the corner -- less a TRUE CYLINDER of CONTOUR_R about that axis.
+    The one face it leaves on the part is that cylinder; the cover's two straight sides run out
+    along the normals of the two faces the round rests on, 0.002 into the void beyond each
+    (BLEND_BITE), so neither lies on metal.
+
+    BREAKS. A boss's round gets none at the top (`top_break` 0): it is a cut, like the flat or
+    the bore beside it, and its top edge is the deburr note's, as theirs are. A tab's round
+    does (`top_break` = the lip's): the lip's inner edge is broken all the way round, and a
+    round that cut the corner off square would leave the one sharp edge on the seat. On the
+    open frame (`foot` > 0) both carry the resting face's break. Each break is a true 45-degree
+    cone about the round's axis, which in the plane of each straight side IS the neighbour's
+    own break in section (a flat's wedge, a bore's cone, a blend's, a boss's chamfer, the
+    lip's strip), so they run into one another. Each cone starts _BREAK_DIP outside the
+    cylinder for the reason _lip_break_cut's frustum starts inside the void: so that it
+    crosses the wall instead of lying on it."""
+    ox, oy = rd["O"]
+    r = rd["r"]
+    z0, dz = _scallop_span(floor, cavity)
+    bb = floor + cavity
+    tool = _poly_solid(rd["cover"], z0, dz)
+    tool = tool.cut(cq.Workplane("XY").workplane(offset=z0 - 0.01).moveTo(wx(ox), wy(oy))
+                      .circle(r).extrude(dz + 0.02))
+    if foot > 0:
+        low = _poly_solid(rd["cover"], z0, foot + _BREAK_DIP - z0)
+        tool = tool.union(low.cut(_cone(ox, oy, z0 - 0.01, r - foot + (z0 - 0.01),
+                                        foot + _BREAK_DIP + 0.01, r + _BREAK_DIP + 0.01)))
+    if top_break > 0:
+        zb = bb - top_break - _BREAK_DIP
+        high = _poly_solid(rd["cover"], zb, z0 + dz - zb)
+        tool = tool.union(high.cut(_cone(ox, oy, zb - 0.01, r + _BREAK_DIP + 0.01,
+                                         z0 + dz + 0.01, r - top_break - (z0 + dz + 0.01 - bb))))
+    return tool
+
+
+def _floor_fillet_solid(run, floor):
+    """One floor-to-wall fillet (fit_rules.floor_runs) as the metal to ADD: the run's cover --
+    a block along the wall, from inside the wall out past the fillet's toe and from inside the
+    floor up past its top -- less a TRUE CYLINDER of the ball end mill's radius lying along the
+    wall, less a vertical cylinder of the same radius at each end: the scoop a flat cutter of
+    that radius leaves where it finishes the sharp corner beyond the run.
+
+    All three cylinders are set BLEND_BITE past tangent, as every blend here is: the lying one
+    0.002 into the wall and into the floor, each standing one 0.002 into the wall. Each scoop's
+    axis is at the run's own end, so the cover's end face lies wholly inside the scoop and the
+    part has no flat end to the fillet -- only the three cylinders.
+
+    NOT on the open frame, which has no floor (the caller does not ask)."""
+    r = run["r"]
+    dd = r - _BITE
+    sol = _poly_solid(run["cover"], floor - 0.10, 0.10 + r + 0.03)
+    (ax0, ay0), (ax1, ay1) = run["axis_pts"]
+    ux, uy = ax1 - ax0, ay1 - ay0
+    ln = (ux * ux + uy * uy) ** 0.5
+    ux, uy = ux / ln, uy / ln
+    a = cq.Vector(wx(ax0 - 2.0 * ux), wy(ay0 - 2.0 * uy), floor + dd)
+    lying = cq.Workplane("XY").newObject(
+        [cq.Solid.makeCylinder(r, ln + 4.0, a, cq.Vector(ux, uy, 0.0))])
+    sol = sol.cut(lying)
+    for cx, cy in run["scoops"]:
+        sol = sol.cut(cq.Workplane("XY").workplane(offset=floor - 0.20).moveTo(wx(cx), wy(cy))
+                        .circle(r).extrude(r + 0.50))
+    return sol
+
+
+def _fillets_missing(solid, runs, floor):
+    """Those of `runs` that are NOT in `solid`: for each, is there a cylindrical face of its
+    radius whose axis is the line the run's cylinder lies on? Read off the kernel's own face
+    list, like _rounds_missing."""
+    from OCP.BRepAdaptor import BRepAdaptor_Surface
+    from OCP.GeomAbs import GeomAbs_Cylinder
+    have = []
+    for f in solid.faces().vals():
+        srf = BRepAdaptor_Surface(f.wrapped)
+        if srf.GetType() == GeomAbs_Cylinder:
+            cyl = srf.Cylinder()
+            dr = cyl.Axis().Direction()
+            if abs(dr.Z()) < 1e-9:
+                lc = cyl.Axis().Location()
+                have.append((lc.X(), lc.Y(), lc.Z(), dr.X(), dr.Y(), cyl.Radius()))
+    gone = []
+    for run in runs:
+        (ax0, ay0), (ax1, ay1) = run["axis_pts"]
+        ux, uy = ax1 - ax0, ay1 - ay0
+        ln = (ux * ux + uy * uy) ** 0.5
+        ux, uy = ux / ln, uy / ln
+        zc = floor + run["r"] - _BITE
+        ok_ = False
+        for x, y, z, dx, dy, rr in have:
+            off = abs((x - wx(ax0)) * uy - (y - wy(ay0)) * ux)        # distance of its axis point from the run's line
+            if (abs(rr - run["r"]) < 1e-6 and abs(z - zc) < 1e-6 and off < 1e-6
+                    and abs(abs(dx * ux + dy * uy) - 1.0) < 1e-9):
+                ok_ = True
+                break
+        if not ok_:
+            gone.append(run)
+    return gone
+
+
+def _rounds_missing(solid, rounds):
+    """Those of `rounds` that are NOT in `solid`: for each, is there a cylindrical face of its
+    radius about its axis? Read off the solid that is about to be exported -- the kernel's own
+    face list, not the polygons the rounds were laid out on. Four of the twenty boss rounds
+    take less than 0.006 mm2 off a corner of 150 degrees or more, which no section of an STL
+    can tell from the corner left sharp (scripts/assembly_drc.py [J] says so and probes the
+    rest); this can."""
+    from OCP.BRepAdaptor import BRepAdaptor_Surface
+    from OCP.GeomAbs import GeomAbs_Cylinder
+    have = []
+    for f in solid.faces().vals():
+        srf = BRepAdaptor_Surface(f.wrapped)
+        if srf.GetType() == GeomAbs_Cylinder:
+            cyl = srf.Cylinder()
+            if abs(abs(cyl.Axis().Direction().Z()) - 1.0) < 1e-9:
+                have.append((cyl.Axis().Location().X(), cyl.Axis().Location().Y(), cyl.Radius()))
+    return [rd for rd in rounds
+            if not any(abs(r - rd["r"]) < 1e-6 and abs(x - wx(rd["O"][0])) < 1e-6
+                       and abs(y - wy(rd["O"][1])) < 1e-6 for x, y, r in have)]
 
 
 def _maker_text(txt, lx, cy, capH, fontpath):
@@ -679,7 +829,15 @@ def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pill
     # (39.5,40.0) for future revs. Analysis: U7 floor clearance unchanged (rib end is its support).)
     for x, y, rr in [(mx, my, boss_r) for mx, my in mounts] + (list(BRACE) if braces else []) + (list(PILLARS) if pillars else []):
         b = cq.Workplane("XY").workplane(offset=floor).moveTo(wx(x), wy(y)).circle(rr).extrude(cavity)
-        if lip_break > 0:                                   # convex top-edge break that FOLLOWS the boss circle;
+        # ...but NOT on a boss whose circle is nowhere on the part's surface (2026-11-15): one cut
+        # straight across on both sides for the coil (fit_rules.boss_coil_cuts). Its flat, its
+        # two cuts and its rounds are all made after the deburr, and what is left of the circle
+        # is inside the lip or under a blend's cover -- so the ring would only ever be buried,
+        # and where a blend's break meets the cut's plane it was not quite: a three-cornered
+        # facet and a face of 5e-7 mm2 at each, between two coplanar faces that could not merge.
+        _ring = lip_break > 0 and not ((x, y) in mounts and _boss_blends(x, y)
+                                        and all(q.get("chord") for q in _boss_blends(x, y)))
+        if _ring:                                           # convex top-edge break that FOLLOWS the boss circle;
             try: b = b.faces(">Z").chamfer(lip_break)       # chamfer the bare cylinder BEFORE the union (OCC won't
             except Exception: pass                          # chamfer the merged internal tops, but a lone cylinder is fine)
         if EDGE_BREAK > 0 and floor == 0:                   # open frame: the boss foot IS the resting face
@@ -835,6 +993,41 @@ def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pill
             res = res.union(_blend_solid(_b, floor, cavity, lip_break, _foot))
         for _pocket, _cover in _boss_webs(mx, my):
             res = res.union(_web_solid(mx, my, _cover, floor, cavity, _foot))
+    # ...AND EACH SHORT-EDGE TAB TO ITS WALL (2026-11-15, fit_rules.tab_roots). The void was cut
+    # with the tab roots square; each gets the same true-cylinder blend, of the finisher's own
+    # radius, tangent to the recess wall that is really there. Until now the root was a fillet
+    # in the void's polygon, laid out from the board edge: a few flats, meeting the wall 0.05
+    # further in at a 19-degree kink.
+    for _b in _tab_roots():
+        res = res.union(_blend_solid(_b, floor, cavity, lip_break, _foot))
+    # ...AND EACH CORNER BOSS'S FLAT TO THE SHORT-EDGE WALL (2026-11-15, fit_rules.boss_roots).
+    # The flat runs to the wall now -- no bore, no short round beside it -- and the corner is
+    # the same true cylinder of the finisher's radius a tab's root is, standing on the web and
+    # the wall. After the webs, which it stands on; its edge-break is held to its own side of
+    # the flat (`chord`), which is a cut made after the deburr and has none.
+    for _b in _boss_roots():
+        res = res.union(_blend_solid(_b, floor, cavity, lip_break, _foot))
+    # ROUND THE OUTSIDE CORNERS OF EACH BOSS (2026-11-14, fit_rules "ROUNDS"). Where a flat
+    # leaves the boss's circle, a bore or a coil hollow, the model kept a hard outside corner.
+    # Each is a true cylinder of CONTOUR_R now. LAST of the cavity's features, because a round
+    # on a west boss rests on the flat and on the BLEND: it has to cut metal the loop above
+    # only just put there.
+    for mx, my in mounts:
+        for _rd in _boss_rounds(mx, my):
+            res = res.cut(_round_tool(_rd, floor, cavity, _foot))
+    # ...AND THE TIP CORNERS OF THE TWO SHORT-EDGE TABS (fit_rules.tab_rounds): the void was
+    # cut with them square, so that these can be true cylinders too. After the roots: a tab is
+    # two radii deep from the BOARD edge, so a root's cylinder and its tip round's overlap by
+    # a hair, and the round has to cut what the root just added.
+    for _rd in _tab_rounds():
+        res = res.cut(_round_tool(_rd, floor, cavity, _foot, top_break=lip_break))
+    # THE FLOOR MEETS THE WALL THROUGH A RADIUS (2026-11-15, DRH; fit_rules.floor_runs): an
+    # R1.00 fillet, the ball end mill's, on the long straight walls of the four supercap bays --
+    # where no brace bears and the floor has nothing over it. Eight runs, the same eight on
+    # every shell with a floor; each a true cylinder, ending in a flat cutter's own scoop.
+    if floor > 0:
+        for _run in _floor_runs():
+            res = res.union(_floor_fillet_solid(_run, floor))
     # rear MEDALLION (Z9F, replaced the engraved maker's mark 2026-07-31): the coin. Cut
     # AFTER the deburr, deliberately: the 0.1 edge-break must never see the crest edges --
     # on a 0.30 letter stroke it would eat two-thirds of the lap face, and walking OCC
@@ -931,6 +1124,11 @@ print(f"cavity={cavity} general (max; per-variant from fit_rules.VARIANTS); U7 p
       f"deburr: outer rim {edge_ease}, ends {EDGE_BREAK}  reflector-frame {GLOW_WIN[2]-GLOW_WIN[0]:.1f}x{GLOW_WIN[3]-GLOW_WIN[1]:.1f} laser-marked (full floor under it)  "
       f"boss junctions: R{_BLEND_R:g} blends x{sum(len(_boss_blends(mx, my)) for mx, my in mounts)}, "
       f"webs x{sum(len(_boss_webs(mx, my)) for mx, my in mounts)}, "
+      f"R{_CONTOUR_R:g} rounds x{sum(len(_boss_rounds(mx, my)) for mx, my in mounts)} on the bosses "
+      f"and x{len(_tab_rounds())} on the tab tips, tab roots x{len(_tab_roots())} and "
+      f"corner-boss roots x{len(_boss_roots())} R{_TOOL_R:g}, "
+      f"floor fillets x{len(_floor_runs())} R{_floor_runs()[0]['r']:g} "
+      f"({sum(_r['s1'] - _r['s0'] for _r in _floor_runs()):.1f} mm, where there is a floor), "
       f"back blends x{sum(len(_back_blends(mx, my)) for mx, my in mounts)} where there is a back face "
       f"(true cylinders; every other concave corner left sharp, the round tool leaves its radius)")
 for _vn, name, fl, wl, bd, cav_v, sl, mk, fn, gm, mat in jobs:
@@ -941,6 +1139,45 @@ for _vn, name, fl, wl, bd, cav_v, sl, mk, fn, gm, mat in jobs:
         raise SystemExit(f"[{_vn}] the edge-break was skipped on {_DEBURR_SKIPS} -- OCC could "
                          f"not chamfer that end face, so the solid would ship without breaks "
                          f"its drawing calls MODELED. Not exporting {name}; see _DEBURR_SKIPS.")
+    # EVERY ROUND IS A FACE OF THIS SOLID, or it is not exported (_rounds_missing). And the
+    # test must be able to fail: a round that is not there -- one of the real ones, its axis
+    # moved half a millimetre -- has to be reported missing on every run.
+    _rds = ([_rd for mx, my in mounts for _rd in _boss_rounds(mx, my)] + list(_tab_rounds())
+            + list(_tab_roots()) + list(_boss_roots()))
+    _gone = _rounds_missing(solid, _rds)
+    if _gone:
+        raise SystemExit(f"[{_vn}] {len(_gone)} of the {len(_rds)} R{_CONTOUR_R:g} rounds and tab "
+                         f"roots are not faces of the solid, the first about board "
+                         f"({_gone[0]['O'][0]:.3f}, {_gone[0]['O'][1]:.3f}) -- the sheet calls every "
+                         f"outside corner of a boss, every tab tip, every tab root and "
+                         f"every corner-boss root R{_CONTOUR_R:g}. Not exporting {name}.")
+    _ghost = dict(_rds[0], O=(_rds[0]["O"][0] + 0.5, _rds[0]["O"][1]))
+    if not _rounds_missing(solid, [_ghost]):
+        raise SystemExit(f"[{_vn}] SELF-TEST: a round that is not in the solid was not reported "
+                         f"missing -- the check above proves nothing. Not exporting {name}.")
+    print(f"  [{_vn}] {len(_rds)} R{_CONTOUR_R:g} cylinders are faces of the solid "
+          f"({len(_rds) - len(_tab_rounds()) - len(_tab_roots()) - len(_boss_roots())} boss corners, "
+          f"{len(_tab_rounds())} tab tips, {len(_tab_roots())} tab roots, "
+          f"{len(_boss_roots())} corner-boss roots); a "
+          f"round moved 0.5 mm is reported missing, as it must be")
+    # ...AND EVERY FLOOR FILLET, on a shell that has a floor: its lying cylinder is a face of
+    # the solid, and one moved half a millimetre off its wall is reported missing.
+    if fl > 0:
+        _frs = list(_floor_runs())
+        _fgone = _fillets_missing(solid, _frs, fl)
+        if _fgone or not _frs:
+            raise SystemExit(f"[{_vn}] {len(_fgone)} of the {len(_frs)} floor fillets are not faces "
+                             f"of the solid" + (f", the first on the {_fgone[0]['edge']} wall at "
+                             f"{_fgone[0]['axis']}{_fgone[0]['s0']:.2f}..{_fgone[0]['s1']:.2f}" if _fgone else "")
+                             + f" -- the sheet calls {len(_frs)}. Not exporting {name}.")
+        _fa = _frs[0]
+        _fg = dict(_fa, axis_pts=tuple((px + (0.5 if _fa["axis"] == "y" else 0.0),
+                                        py + (0.5 if _fa["axis"] == "x" else 0.0)) for px, py in _fa["axis_pts"]))
+        if not _fillets_missing(solid, [_fg], fl):
+            raise SystemExit(f"[{_vn}] SELF-TEST: a floor fillet that is not in the solid was not "
+                             f"reported missing. Not exporting {name}.")
+        print(f"  [{_vn}] {len(_frs)} R{_fa['r']:g} floor fillets are cylinder faces of the solid; "
+              f"one moved 0.5 mm off its wall is reported missing, as it must be")
     field = fl + cav_v + board_th                       # per-variant, NOT the module cavity
     foot = (W + 2*edge_fit + 2*wl)
     # Modelled in board coordinates, which are LEFT-handed; written right-handed. export_solid

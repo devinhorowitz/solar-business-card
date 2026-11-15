@@ -103,8 +103,49 @@ BASELINE = {
     # less the rib metal that went with it, 5.382 mm2 x 0.70 = 3.77. 1.60 + 7.62 - 3.77 = 5.45
     # predicted, 5.54 measured (the rest is edge-break). bbox, seam and facets unchanged.
     # Triangles 52,505, ungated.
-    volume_mm3=5312.64, bbox=(-26.35, -45.4, -0.15, 26.35, 45.4, 3.4),
-        max_boundary_edges=1, max_open_len_mm=0.001, max_degenerate=3),
+    # re-ledgered 2026-11-14 (the contouring pass), 5312.64 -> 5301.51: the bosses and the two
+    # short-edge tabs made even, symmetric and round-cornered (fit_rules "EVEN AND SYMMETRIC",
+    # "ROUNDS", tab_rounds). Only ever less metal: 6.260 mm2 in plan -- 3.720 off the eight
+    # boss islands (one flat distance, full-chord flats, the coil hollow mirrored, twenty R1.00
+    # rounds), 1.361 less blend (the twins of the two the ferrite holds to R1.00), 0.983 off
+    # the lip (the ring's strip beside the south tab, four R1.00 tip rounds) -- x 1.80 = 11.27
+    # predicted, 11.13 measured (the difference is edge-break that went with the metal). bbox,
+    # seam and facets unchanged. Triangles 53,372, ungated.
+    # re-ledgered 2026-11-15 (the simpler cuts), 5301.51 -> 5269.77: DRH asked for "smooth
+    # contiguous surfaces for the milling to be done simpler". Three things, 17.590 mm2 less
+    # metal in plan: the west lip one width the whole edge, 2.25 (it was 2.50 with a step at
+    # R16 and one at C24 -- fit_rules.LIP_ONE_WIDTH); the two east mid-span bosses cut straight
+    # across for the coil, 2.32 from the axis on both sides, in place of a hollow and a hump
+    # (boss_coil_cuts; the islands lose 1.854, their blends 0.161); and the four tab roots
+    # true R1.00 cylinders on the recess wall (tab_roots; +0.18, they are laid out 0.05
+    # further in). x 1.80 = 31.66 predicted, 31.74 measured. bbox unchanged.
+    # AND THE SEAM IS GONE. The one zero-length seam and its three zero-area facets were "where
+    # the south band-step fillet at x 27.0 meets its wall" -- the kink the old tab root made
+    # with the recess wall. With the root tangent to that wall there is nothing for the break
+    # cutter to pinch: 0 open edges, 0 degenerate, and the ledger holds it there now.
+    # Triangles 52,608, ungated.
+    # re-ledgered 2026-11-15 (the floor fillets), 5269.77 -> 5296.11: the floor meets the wall
+    # through an R1.00 on the eight long straight walls of the supercap bays
+    # (fit_rules.floor_runs), 133.37 mm of it. The fillet's section as cut is 0.2108 mm2 (a
+    # tangent one's is 0.2146; each cylinder is set 0.002 into wall and floor), so 28.11 mm3
+    # before the sixteen run ends are scooped; 26.23 measured on the STEP, 26.34 here.
+    # bbox unchanged; 0 open edges, 0 degenerate. Triangles 53,712, ungated.
+    # re-ledgered the same day (the runs evened top for bottom), 5296.11 -> 5296.00: the run
+    # east of the south tab starts 0.5 mm later, to match its twin on the north wall
+    # (fit_rules.floor_runs, EVENED -- CI run 663's handedness gate). 132.86 mm of fillet;
+    # 0.2108 mm2 x 0.5 = 0.105 predicted, 0.109 measured on the STEP and 0.11 here. Inside this
+    # ledger's tolerance, so the gate did not ask; re-ledgered so the number is the part's.
+    # re-ledgered 2026-11-15 (the corner bosses and the tabs, DRH: "yes to a b and c"),
+    # 5296.00 -> 5298.64. Each corner boss's flat runs to the short-edge wall through a plain
+    # R1.00 -- its Ø2.0 bore and the short round beside it are gone -- and the north tab is cut
+    # to the south tab's 3.5 mm. In plan: +2.487 mm2 at the four corner bosses, -1.000 at the
+    # north tab (fit_rules.shell_metal_poly, old against new; sectioned on the air frame,
+    # +2.527 and -0.975). x 1.80 = +2.68, less 0.12 for the floor fillets' runs ending 0.4 mm
+    # sooner at the four corner bosses and 0.5 later at the tabs (132.86 -> 132.28 mm):
+    # +2.55 predicted, +2.646 on the STEP, +2.64 here. bbox unchanged; 0 open edges,
+    # 0 degenerate. Triangles 53,678, ungated.
+    volume_mm3=5298.64, bbox=(-26.35, -45.4, -0.15, 26.35, 45.4, 3.4),
+        max_boundary_edges=0, max_open_len_mm=0.0, max_degenerate=0),
     "solar-glow-drh-pogo-testplate.stl": dict(
         # re-ledgered 2026-11-13: the y range flips, -10.4..99.3 -> -99.3..10.4, and nothing
         # else moves (the rebuilt STL measures the same volume as the one it replaces, to
@@ -258,7 +299,15 @@ BASELINE = {
     # measured 0.84. The two east corners -- and with them the ridge east of the ferrite
     # channel, y 31.68-57.22 -- did not move: the blends there are held to R1.00 by the
     # ferrite sheet. bbox unchanged; watertight, 0 open, 0 degenerate.
-    volume_mm3=1916.61, bbox=(-22.85, -42.4, 0.0, 24.10, 42.4, 1.8),
+    # re-ledgered 2026-11-15 (the simpler cuts), 1916.61 -> 1926.67, and the bbox's west face
+    # -22.85 -> -23.10: the west lip is 2.25 wide the whole edge now, and the brace follows
+    # the wall it bears on (fit_rules.cavity_rect -- left at the old 2.50 it would have stood
+    # 0.30 off that wall, free to slide the quarter millimetre its pockets clear a part by).
+    # Footprint 1312.70 -> 1319.30 mm2: +6.04 the strip down the west side, +0.56 beside the
+    # two east mid-span bosses, now cut straight. x 1.80 would be 11.88; 10.06 measured, the
+    # rest being the pockets of the parts the new strip reaches. Watertight, 0 open, 0
+    # degenerate.
+    volume_mm3=1926.67, bbox=(-23.10, -42.4, 0.0, 24.10, 42.4, 1.8),
         max_boundary_edges=0, max_open_len_mm=0.0, max_degenerate=0),
     # ---- the 2026-08-07 enclosure variants (fit_rules.VARIANTS) --------------------------
     # Ledgered from local builds in the variants commit itself -- the chicken-and-egg rule:
@@ -306,8 +355,23 @@ BASELINE = {
         # re-ledgered 2026-11-14 (later still), 3934.15 -> 3935.83: the sixteen back blends,
         # 10.678 mm2 x 0.15 = 1.60 predicted, 1.68 measured. No rear art here, so nothing
         # gives way. bbox, seam and facets unchanged.
-        volume_mm3=3935.83, bbox=(-26.35, -45.4, -0.15, 26.35, 45.4, 2.42),
-        max_boundary_edges=1, max_open_len_mm=0.001, max_degenerate=3),
+        # re-ledgered 2026-11-14 (the contouring pass), 3935.83 -> 3928.31: bosses and tabs
+        # even, symmetric and round-cornered, 6.260 mm2 x 1.22 = 7.64 predicted, 7.52 measured.
+        # bbox, seam and facets unchanged.
+        # re-ledgered 2026-11-15 (the simpler cuts), 3928.31 -> 3906.80: one-width west lip,
+        # straight cuts on the two east mid-span bosses, true tab roots -- as the max shell.
+        # 17.590 mm2 x 1.22 = 21.46 predicted, 21.51 measured. bbox unchanged. The seam at the
+        # old tab root's kink is gone: 0 open edges, 0 degenerate, held there now.
+        # re-ledgered 2026-11-15 (the floor fillets), 3906.80 -> 3933.15: the same eight runs
+        # as the max shell, +26.23 on the STEP and +26.35 here; 0.67 % of this shell, so the
+        # tolerance caught it. bbox unchanged; 0 open edges, 0 degenerate.
+        # re-ledgered the same day (the runs evened top for bottom), 3933.15 -> 3933.04: as the
+        # max shell, the south run east of the tab 0.5 mm shorter. Inside the tolerance.
+        # re-ledgered 2026-11-15 (the corner bosses and the tabs), 3933.04 -> 3934.78: as the
+        # max shell, +1.487 mm2 in plan x 1.22 less 0.12 of fillet = +1.69 predicted, +1.745 on
+        # the STEP, +1.74 here. bbox unchanged; 0 open edges, 0 degenerate.
+        volume_mm3=3934.78, bbox=(-26.35, -45.4, -0.15, 26.35, 45.4, 2.42),
+        max_boundary_edges=0, max_open_len_mm=0.0, max_degenerate=0),
     "solar-glow-drh-frame-air-316L.stl": dict(
         # air: OPEN frame, no floor -- walls + recess + 8 bosses only, z 0..1.80 exactly
         # (nothing below the resting plane; the M2x1.6 tip hides 0.20 inside the boss
@@ -352,8 +416,20 @@ BASELINE = {
         # 9.641 mm2 x 1.20 = 11.57 predicted, 11.83 measured. More over than on the floored
         # shells because here the buried edge-breaks are at both ends: the seat and the
         # resting face. Both seams and the four facets are where they were.
-        volume_mm3=990.31, bbox=(-26.35, -45.4, 0.0, 26.35, 45.4, 1.8),
-        max_boundary_edges=2, max_open_len_mm=0.001, max_degenerate=4),
+        # re-ledgered 2026-11-14 (the contouring pass), 990.31 -> 982.99: bosses and tabs even,
+        # symmetric and round-cornered, 6.260 mm2 x 1.20 = 7.51 predicted, 7.32 measured -- and
+        # 0.74 % of this frame, so the tolerance caught it, as it should. Both seams and the
+        # four facets are where they were.
+        # re-ledgered 2026-11-15 (the simpler cuts), 982.99 -> 961.83: one-width west lip,
+        # straight cuts on the two east mid-span bosses, true tab roots -- as the max shell.
+        # 17.590 mm2 x 1.20 = 21.11 predicted, 21.16 measured; 2.15 % of this frame. bbox
+        # unchanged. BOTH seams (the lip break's and the resting face's, at the old tab
+        # root's kink) and their four facets are gone: 0 open edges, 0 degenerate, held there.
+        # re-ledgered 2026-11-15 (the corner bosses and the tabs), 961.83 -> 963.68: +1.487 mm2
+        # in plan x 1.20 = +1.78 predicted, +1.852 on the STEP, +1.85 here (0.19 % of this
+        # frame). No floor, so no fillet term. bbox unchanged; 0 open edges, 0 degenerate.
+        volume_mm3=963.68, bbox=(-26.35, -45.4, 0.0, 26.35, 45.4, 1.8),
+        max_boundary_edges=0, max_open_len_mm=0.0, max_degenerate=0),
     "solar-glow-drh-diffuser-brace-lite.stl": dict(
         # the lite brace: gap 1.22, span 0.60, 31 pockets, 0 through-holes, single piece
         # (307.2 mm2 dropped post-consolidation -- recovery plan: TODO.md's lite-brace
@@ -394,7 +470,10 @@ BASELINE = {
         # as the max brace.
         # re-ledgered 2026-11-14 (later still), 1135.78 -> 1135.28: the same two west corners
         # cut back to the R2.00 blends, as on the max brace. bbox unchanged; watertight.
-        volume_mm3=1135.28, bbox=(-22.85, -42.4, 0.0, 24.10, 42.4, 1.22),
+        # re-ledgered 2026-11-15 (the simpler cuts), 1135.28 -> 1141.41, west face -22.85 ->
+        # -23.10: the brace follows the west wall to the one-width lip, as the max brace.
+        # Footprint 1083.31 -> 1089.83 mm2; x 1.22 would be 7.95, 6.13 measured (pockets).
+        volume_mm3=1141.41, bbox=(-23.10, -42.4, 0.0, 24.10, 42.4, 1.22),
         max_boundary_edges=0, max_open_len_mm=0.0, max_degenerate=0),
 }
 VOL_TOL = 0.005
