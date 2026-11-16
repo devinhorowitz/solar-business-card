@@ -659,6 +659,22 @@ def check_enclosure_fit():
             f"{fr.boss_flat_d():.3f} from the axis reads as leaving SPOTFACE_WALL -- the test "
             f"above cannot fail")
         bad += 1
+    #     A WALL IS NOT A LAND. In a boss, the spotface's mouth and the flat's foot both carry
+    #     the end-face break, back to back, so the wall above is a flat land narrower by two
+    #     breaks where it meets the resting face: 0.075 mm on the air frame, under a 0.275
+    #     wall. The wall rule has to cover both breaks and a land, or they meet in a knife edge
+    #     at the resting face -- the defect this check was written for, at a tenth the size.
+    if fr.SPOTFACE_WALL < 2.0 * fr.EDGE_BREAK + fr.SPOTFACE_LAND - 1e-9:
+        err(f"fit_rules.SPOTFACE_WALL {fr.SPOTFACE_WALL} does not cover two {fr.EDGE_BREAK} edge "
+            f"breaks and a {fr.SPOTFACE_LAND} land: a spotface that passes the wall rule could "
+            f"leave no land at the resting face")
+        bad += 1
+    _lands = {vn: fr.spotface_land(vn) for vn in fr.VARIANTS}
+    for vn, _ld in _lands.items():
+        if _ld is not None and _ld < fr.SPOTFACE_LAND - 1e-9:
+            err(f"[{vn}] the back spotface leaves a land of {_ld:.3f} mm at the resting face "
+                f"(needs {fr.SPOTFACE_LAND}): its mouth break and the boss flat's foot meet")
+            bad += 1
     # 4d. EVEN, SYMMETRIC AND ROUND-CORNERED (2026-11-14, DRH's contouring pass). Three things
     #     the sheet now says about the bosses and the two short-edge tabs, each measured off
     #     the polygons here and off the metal by assembly_drc [J] and the shell generator's own
@@ -1114,6 +1130,8 @@ def check_enclosure_fit():
            f"{len(fr.fin_ribs())} ribs their own mirror images top for bottom and left for right "
            f"(one cut 0.58 short is seen); back spotfaces "
            + ", ".join(f"Ø{fr.VARIANTS[vn]['spotface_d']:g} leaving {m_:.3f} of {w_} on {vn}"
+                       + (f" (a land of {_lands[vn]:.3f} at the resting face, both edges broken)"
+                          if _lands[vn] is not None else "")
                        for vn, (w_, m_) in _sfit.items())
            + f"; all 8 boss flats "
            f"{_fd[0]:.3f} from their axes, every mid-span boss its own mirror image "

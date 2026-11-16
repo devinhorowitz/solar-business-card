@@ -331,7 +331,17 @@ SPOTFACE_D_OPEN = 2.4      # ...and where it is cut into the BOSS, on an open fr
                            # frame whose sheet said nothing of it. Found by the second outside
                            # review; nothing here held a spotface to its boss. At 2.4 it leaves
                            # 0.275 of wall at the flat and 0.20 round the M2's tip.
+EDGE_BREAK = 0.10          # the 45-degree break on every end-face edge of a shell (the shell CAD
+                           # reads it from here since 2026-11-16; it was that file's own). It is
+                           # here because a WALL IS NOT A LAND: on the open frame the spotface's
+                           # mouth and the boss flat's foot both carry it, back to back, so the
+                           # 0.275 wall above is a flat land only 0.275 - 2 x 0.10 = 0.075 wide
+                           # where it meets the resting face (spotface_land). The wall was
+                           # quoted to DRH without the land, the day the size was chosen.
 SPOTFACE_WALL = 0.25       # least metal between a spotface cut into a boss and that boss's flat
+SPOTFACE_LAND = 0.05       # ...and the least flat land left at the resting face once both of
+                           # that wall's edges are broken: SPOTFACE_WALL must cover two breaks
+                           # and this (check_consistency [8]), or the breaks meet in a knife edge
 SPOTFACE_COVER = 0.10      # least floor left OVER a spotface cut into a floor: the cut must end
                            # inside the floor, not come up into the cavity. Under the boss it is
                            # backed by the boss; it matters only for the 0.025 mm by which the
@@ -779,6 +789,20 @@ def spotface_fit(vname):
 def spotface_need(where):
     """The least margin spotface_fit() may report for a cut in the "boss" or in the "floor"."""
     return SPOTFACE_WALL if where == "boss" else SPOTFACE_COVER
+
+
+def spotface_land(vname):
+    """The flat land left at the resting face between the spotface's mouth break and the boss
+    flat's foot break, at its narrowest -- or None where the spotface is in a floor, whose
+    mouth opens on the back face with metal all round it.
+
+    The wall spotface_fit() reports stands between two vertical faces, and each of them is
+    broken EDGE_BREAK x 45 degrees where it meets the resting face. What is left flat there is
+    the wall less both breaks: 0.075 mm on the air frame, over a crescent about a millimetre
+    long at each boss (it is 0.175 half a millimetre either side of the flat's middle).
+    scripts/assembly_drc.py [D] probes the emitted frame for it."""
+    where, margin = spotface_fit(vname)
+    return margin - 2.0 * EDGE_BREAK if where == "boss" else None
 
 
 def variant_span(name):

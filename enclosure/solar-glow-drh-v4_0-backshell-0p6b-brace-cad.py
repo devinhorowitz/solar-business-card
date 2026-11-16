@@ -115,7 +115,7 @@ assert R == _BOARD_R, "board corner radius: fit_rules.BOARD_R is its home"
 corner_clr = 0.15                  # corner relief so the press grips the flats
 edge_ease  = 0.10                  # light edge-break on the outer rim + recess mouth (felt, not seen)
 lip_break  = 0.10                  # light 45deg edge-break on the inner (cavity-side) lip edge (felt, not seen)
-EDGE_BREAK = 0.10                  # Ti deburr: break the sharp END-FACE edges (back proud frame/annuli
+from fit_rules import EDGE_BREAK   # noqa: E402 -- one home (0.10). Ti deburr: break the sharp END-FACE edges (back proud frame/annuli
                                    # + front rim + recess mouth) so corners are durable, not knife-sharp.
                                    # Ti edges chip and cut; an edge-break also resists nicking. ~0.1 mm.
 # ASYMMETRIC support lip (per side) -- wider = more board-edge support = stiffer PCB. Widths bounded

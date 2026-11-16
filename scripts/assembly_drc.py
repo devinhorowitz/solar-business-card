@@ -774,6 +774,39 @@ def check_variant(vname, v, fr, bp, trimesh):
     if sf_blind:
         err("SELF-TEST: a ring of probes INSIDE a spotface found metal all the way round -- the "
             "probe cannot tell a cut from metal")
+    # ...AND THE LAND AT THE RESTING FACE, where the cut is in a boss. The wall probed above
+    # stands between two vertical faces, and each is broken 45 degrees where it meets the
+    # resting face: the flat land left there is the wall less two breaks (fit_rules.
+    # spotface_land -- 0.075 mm on the air frame, under a 0.275 wall). Sectioned 0.02 above the
+    # resting face and probed down the middle of what should be left; a ring just inside the
+    # mouth's cone at the same height must find none, or the probe is not looking at the break.
+    sf_land = fr.spotface_land(vname)
+    land_txt = ""
+    if sf_land is not None:
+        zl = 0.02
+        lsec = section(shell, zl, trimesh)
+        r_cone = sf_d / 2.0 + fr.EDGE_BREAK - zl            # the mouth break's radius at zl
+        r_mid = r_cone + (sf_land + 2.0 * zl) / 2.0         # the middle of the metal at the flat
+        lost, seen = [], 0
+        for mx, my in fr.MOUNTS:
+            pts = lambda r_: [lsec.contains(_PtD(mx + r_ * np.cos(2 * np.pi * i / sf_n),
+                                                 my + r_ * np.sin(2 * np.pi * i / sf_n)))
+                              for i in range(sf_n)]
+            gone = sf_n - sum(pts(r_mid))
+            if gone:
+                lost.append((mx, my, gone))
+            seen += sum(pts(r_cone - 0.03))
+        if lost:
+            err(f"no land is left at the resting face between the Ø{sf_d:g} spotface's mouth "
+                f"break and its boss at {len(lost)} of {len(fr.MOUNTS)} mounts: at "
+                f"({lost[0][0]},{lost[0][1]}) {lost[0][2]} of {sf_n} probes at r {r_mid:.3f}, "
+                f"z {zl:.2f} find air (the rule leaves {sf_land:.3f} mm)")
+        if seen:
+            err(f"SELF-TEST: {seen} probes inside the spotface's mouth break at z {zl:.2f} found "
+                f"metal -- the land probe is not looking at the break")
+        land_txt = (f", and a land is left at the resting face between its mouth break and the "
+                    f"boss's foot ({sf_n} probes a mount at r {r_mid:.3f}, z {zl:.2f}; "
+                    f"{sf_land:.3f} mm wide at its narrowest by rule)")
     if len(_ERRORS) == pre_screw_errs:
         extra = (", tip stays >= 0 above the resting plane" if open_back
                  else f" (back face {back:.3f})")
@@ -781,7 +814,7 @@ def check_variant(vname, v, fr, bp, trimesh):
            f"inside the shell{extra}; each Ø{sf_d:g} back spotface is cut and is walled all the "
            f"way round ({sf_n} probes at r {sf_out:.2f}; it is in the {sf_where}, with "
            + (f"{sf_margin:.3f} mm of boss wall left round it by rule)" if sf_where == "boss" else
-              f"{sf_margin:.3f} mm of floor left over its bottom by rule)"))
+              f"{sf_margin:.3f} mm of floor left over its bottom by rule)") + land_txt)
 
     # ---- 5. the front side: nothing of the shell may stand over it -------------------
     # THE CELLS ARE THE WHOLE POINT. This card harvests indoor light through two cells

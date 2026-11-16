@@ -2120,6 +2120,24 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
       mount). On the frame as committed it finds air at all 72, at all eight.
     - The shell sheet generator had a typed `3.0` and drew Detail B's spotface at a typed
       `1.5`. Both read the variant.
+    - **A wall is not a land, and DRH was quoted the wall.** The size was put to DRH as
+      leaving "0.28 mm of wall at the flat". Sectioned on the rebuilt frame, along the line
+      from each axis to the middle of its flat: 0.275 mm of metal from z 0.10 to 0.20, then
+      0.235 at z 0.08, 0.175 at z 0.05 and 0.081 at z 0.003. The spotface's mouth and the
+      flat's foot each carry the 0.10 × 45° break, back to back, so the flat land at the
+      resting face is 0.075 at its narrowest (0.175 half a millimetre either side), over a
+      crescent about a millimetre long at each boss.
+      - Now stated and held: `fit_rules.spotface_land()`; `EDGE_BREAK` has its home in
+        `fit_rules` so that the rule can read it (the shell CAD imports it; the solids did
+        not change); check [8] 4c'' requires `SPOTFACE_WALL` to cover two breaks and a
+        `SPOTFACE_LAND` of 0.05; `assembly_drc` [D] probes the frame 0.02 above the resting
+        face for the land, all the way round each spotface.
+      - Not decided: whether a 0.075 land is enough. Under the sheet's general tolerance a
+        spotface 0.05 large on radius and a flat 0.05 in would close it, leaving the two
+        breaks to meet at the resting face under a wall still 0.175 wide. The alternatives
+        are a smaller spotface (Ø2.2: wall 0.375, land 0.175, 0.10 round the screw's tip), a
+        plain countersink at the thread's exit in place of a spotface, or none. Put to DRH
+        2026-11-16.
   - **The short rib on the max shell's back is its counterparts' length.**
     - What was wrong: the outermost rib along the y 2.05 edge (y 2.85–3.45) ended at x 42.286
       at its east end, its three counterparts 7.93 from their edges (42.870). The review's
@@ -2167,6 +2185,14 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
       are polygon against polygon, each with its arcs as chords.
     - The two floored shells' volumes by SolidCraft's exact routine: the review's own finest
       mesh agrees with OCC, so it is that routine.
+    - Mirrored braces on KiCad's board: the review's 487.920 / 52.833 (max) and 301.786 /
+      52.923 (lite) are what CI's `handedness_drc` printed for these solids. The 487.572 it
+      sets them against is an earlier build's figure, further up this item.
+    - Medallion islands, NOT reconciled: [L]'s 136.2 mm² is `medallion.geometry()`'s standing
+      art inside the coin's disc less a 0.05 rim; the review read 129.4 from section profiles
+      and about 140.3 from the coin's floor faces, and says itself that neither settles it.
+      Nothing rests on the total: [L] tests the DIFFERENCE between the metal and the layout
+      (0.0000 mm² on the rebuilt shell; 77 with the shell reflected).
   - **Measured on the rebuilt solids (scratch tree; the merge run builds the ones that count):**
     - Max shell: STEP 10,337 faces and 30,565 edges, as before; no edge shared by more than
       two faces, no face under 0.001 mm². Volume 5298.801 → 5299.094 mm³ on the STEP: +0.293,

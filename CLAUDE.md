@@ -948,7 +948,11 @@ red, the check itself fails.
   watching. It is Ø2.4 there now (DRH; `fit_rules.SPOTFACE_D_OPEN`, 0.275 mm of wall), each
   variant's size lives in `VARIANTS["spotface_d"]`, `spotface_fit()` says what the cut is in
   and what it leaves, check [8] 4c'' holds the rule and `assembly_drc` [D] probes the emitted
-  solid for a wall all the way round each one. The sheet generator had its own typed `3.0`
+  solid for a wall all the way round each one. **And a wall is not a land:** the size was put
+  to DRH as "0.28 mm of wall at the flat", which is true from z 0.10 up — the spotface's mouth
+  and the flat's foot each carry the 0.10 break, back to back, so at the resting face the land
+  is 0.075. `fit_rules.spotface_land()` states it, the wall rule must cover two breaks and a
+  land, and [D] probes for it. When quoting what a cut leaves, quote it after the edge breaks. The sheet generator had its own typed `3.0`
   and drew Detail B's spotface at a typed `1.5`; both read the variant now. **When you write
   "seen, not changed" about a clearance, write the gate that will notice when it changes.**
 - **GEOS simplifies inside `buffer()` by a hundredth of the distance, and an EPS of that size
