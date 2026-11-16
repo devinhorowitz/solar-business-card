@@ -2009,6 +2009,6 @@ distance, 1.475 from its axis, so the window was at all eight bosses, 0.545 mm w
 edge either side; the second outside review measured it. The air frame's spotface is Ø2.4 now
 (DRH), leaving 0.275 mm of wall at the flat — `fit_rules.SPOTFACE_D_OPEN` — and, at the
 resting face, a land of 0.075 between the spotface's mouth break and the flat's foot break
-(`fit_rules.spotface_land()`; whether that is enough was put to DRH the same day). Nothing had been
+(`fit_rules.spotface_land()`; DRH accepted it the same day, with the alternatives in `TODO.md`). Nothing had been
 watching this note's overlap grow from two bosses to eight, which is the lesson `CLAUDE.md`
 keeps.)_

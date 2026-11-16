@@ -2132,12 +2132,12 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
         not change); check [8] 4c'' requires `SPOTFACE_WALL` to cover two breaks and a
         `SPOTFACE_LAND` of 0.05; `assembly_drc` [D] probes the frame 0.02 above the resting
         face for the land, all the way round each spotface.
-      - Not decided: whether a 0.075 land is enough. Under the sheet's general tolerance a
-        spotface 0.05 large on radius and a flat 0.05 in would close it, leaving the two
-        breaks to meet at the resting face under a wall still 0.175 wide. The alternatives
-        are a smaller spotface (Ø2.2: wall 0.375, land 0.175, 0.10 round the screw's tip), a
-        plain countersink at the thread's exit in place of a spotface, or none. Put to DRH
-        2026-11-16.
+      - **Decided, DRH 2026-11-16: keep Ø2.4 as built ("6A i").** What was weighed: under
+        the sheet's general tolerance a spotface 0.05 large on radius and a flat 0.05 in
+        would close the land, leaving the two breaks to meet at the resting face under a
+        wall still 0.175 wide. The alternatives put beside it were a smaller spotface (Ø2.2:
+        wall 0.375, land 0.175, 0.10 round the screw's tip), a plain countersink at the
+        thread's exit in place of a spotface, and none.
   - **The short rib on the max shell's back is its counterparts' length.**
     - What was wrong: the outermost rib along the y 2.05 edge (y 2.85–3.45) ended at x 42.286
       at its east end, its three counterparts 7.93 from their edges (42.870). The review's
