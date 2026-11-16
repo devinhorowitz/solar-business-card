@@ -2019,6 +2019,86 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
     `check_mesh` (the two braces re-ledgered), `interference_drc`, `assembly_drc` on all three
     variants, and the kicad-free part of `check_consistency`.
 
+  **MEASURED 2026-11-16 on `3440af7` — the second local ArtCraft review (SolidCraft 0.40.1,
+  CADCraft, PdfCraft; the board export is `4b49641`'s, the board being unchanged).** The solids as
+  that merge run committed them, against every figure the six blocks above call "not a SolidCraft
+  figure yet". Board coordinates. "Inferred" marks arithmetic or code reading on top of a
+  measurement. This records a measurement; it does not tick the checkbox above.
+  - **Disagree, or new:**
+    - **The max shell's hand is in the reeding too, not only in the coin.** Against its own
+      top-for-bottom mirror image it differs in 78 places. 36 are the medallion. Two are a rib:
+      the first rib along the north edge (y 2.85–3.45) ends at x 41.986, and its twin along the
+      south edge (y 85.45–86.05) at x 42.570, which is 0.584 mm longer. The other 40 are rib ends
+      at x 2.84–3.14 and 47.66–47.96, differing by 0.0016–0.0096. `assembly_drc` [L] reads only
+      the coin, so nothing holds these (inferred). Lite and air match their mirror images within
+      0.0005 mm.
+    - **Rib to back blend: 1.132, where the list says no rib comes closer than 1.189.** On a
+      section at z −0.025 (good to about ±0.02), the NW and SE corner blends are 1.132 from
+      their first rib, and SW 1.139. Every other blend's nearest rib is 1.185 or more. At the
+      corners the nearest point is the blend's tangent end where it runs into the frame edge.
+    - **Air frame: the Ø3.0 back spotface breaks through all eight boss flats.** It is a true
+      r 1.500 cylinder at z 0.1–0.2, and every flat is 1.475 from its axis, so the spotface
+      reaches 0.025 past the flat over a 0.545 chord (inferred), more through the 45° foot.
+      Each spotface face is 92 % of a full band. That leaves zero-thickness edges where the
+      spotface meets the flat. The max and lite spotfaces end below the floor and are
+      unaffected.
+    - **Brace to shell is 0.0700, max and lite, not 0.064.** This is exact `inspect.clearance`
+      with the floor cut away, nearest at (2.83, 57.19) by the west mid-span blend. No concave
+      vertical corner is left square, so as milled equals as modelled (inferred). The 0.064
+      reads like a facet effect of sectioned STLs (inferred).
+    - **SolidCraft's exact volume reads low on the two floored shells:** 5298.7104 and
+      3934.8067, against 5298.801 and 3934.900. Its own finest tessellation of the same import
+      reads 5298.8011 and 3934.8846, and the committed STLs 5298.7546 and 3934.8896. That makes
+      it a tool limit, not the part (inferred). The air frame (963.8062) and both braces
+      (1947.985 / 1155.6705) agree.
+    - **Note 7, "EACH ENDING 0.50 OR MORE SHORT OF THE NEXT BOSS OR TAB":** each scoop axis
+      stands 0.394–0.431 from the next blend's or root's tangent point. `FLOOR_STOP` counts its
+      0.50 from where that arc comes within 0.0008 of the wall: 0.075 before an R1.00 tangent
+      point, 0.106 before an R2.00. That reproduces every scoop axis (inferred, from
+      `floor_runs`). The figure is a construction parameter, not a gap a shop can measure.
+    - **Shim: 969.4419 mm²** (CADCraft). The two blocks above say 969.437; the simpler-cuts
+      block said 969.442.
+    - **Annulus kept:** 82.06 % at the corner bosses, 81.67 % at the west mid-span bosses,
+      76.03 % at the coil-cut bosses, the same on all three shells. The list says 79.8–81.6 and
+      75.8 (both from before the corner-boss change, inferred). `fit_rules.py`'s module
+      docstring still says 92.4 %.
+    - **Medallion islands:** SolidCraft's section profiles give 129.4 mm² and its coin floor
+      faces imply about 140.3, against [L]'s 136.2. That does not settle the figure.
+    - **Mirrored braces on KiCad's board:**
+      - max YZ 487.9200 over 28 parts (was 487.572); XZ 52.8334 over 33 (unchanged);
+      - lite YZ 301.7856 over 28; XZ 52.9228 over 34.
+    - **The sheets round the flat to 1.47;** the model is 1.475. "1.07 OFF NFC COIL COPPER" is
+      the nearer of 1.0683 and 1.1652.
+  - **Agree:**
+    - Max STEP 30,565 edges and 10,337 faces, with no face under 0.001 mm² and no edge on more
+      than two faces. Lite 754 / 299, air 724 / 294.
+    - The seat is one plane, with nothing at seat − 0.010.
+    - All 8 flats at 1.4750, and the coil cuts at 2.3200 both sides.
+    - Blends: 8 R2.000 and 4 R1.000 in the cavity, 16 R2.000 on the back (max and lite).
+    - Rounds and roots: 12 boss rounds, 4 tab tips, 4 tab roots and 4 corner-boss roots, all
+      R1.000. No bores.
+    - Both tabs x 23.5–27.0, 2.00 deep. West wall 2.25, east 49.55.
+    - Coil: lip 1.0026, bosses 1.1652 and 1.0683.
+    - Ferrite corner 0.3506 from titanium.
+    - Floor fillets: 8 R1.000 runs, 132.279 mm in all.
+    - Max-material supercaps: the fillet stands 0.176 into SC1's edge at KiCad's can height
+      (0.187 at the list's). The corner roots reach 0.067, 0.028 and 0.013 into SC1, SC4 and
+      SC3, and SC2 is clear by 0.1015.
+    - Brace envelope 47.159 × 88.659; footprints 1331.5954 / 1102.1899.
+    - Brace ridge 0.380 wide, ending square at y 31.4852 / 57.4202, with end faces 0.2526 /
+      0.2519.
+    - Brace walls: none under 0.25, and none under 0.60 but the channel's. The 0.0068 canary is
+      gone. Channel 12.40.
+    - The brace nests at the four mid-span bosses and both tabs. Nearest resin to a tab 14.0067.
+    - Brace on board: the max brace overlaps only L2 (0.0466 mm³), the lite brace nothing.
+    - The medallion reads correctly from behind.
+    - Shim: one piece, clear of all 270 back-side pad and body boxes.
+    - Notes 4–8 of the shell sheets, and notes 4–5 of the brace sheets.
+    - Masses (arithmetic): 23.473 / 17.431 / 7.701 / 2.240 / 1.329 g.
+  - **Not measured:** brace coverage (its denominator is the repo's own); insertion sweeps; the
+    pogo plate (unchanged since `4b49641`); the lite brace's 24-part list; STL against STEP
+    beyond volume.
+
 - [ ] **[SOURCING — lite/air] Pick the thin supercap MPN**
   _(2026-08-07, opened with the three-variant round.)_ `part_heights.SUPERCAP_H_THIN = 1.00`
   is **PROVISIONAL — DRH's working number, no MPN, no datasheet behind it**, unlike every
