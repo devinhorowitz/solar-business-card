@@ -2099,6 +2099,90 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
     pogo plate (unchanged since `4b49641`); the lite brace's 24-part list; STL against STEP
     beyond volume.
 
+  **TWO DEFECTS FROM THAT REVIEW FIXED, AND ITS WORDING FINDINGS, 2026-11-16 (DRH: "6A yes, 6B
+  Ø2.4 air only, 6C fix, 6D yes") — SO THE MAX SHELL AND THE AIR FRAME CHANGED AGAIN; THE LITE
+  SHELL, BOTH BRACES AND THE SHIM DID NOT.** Each finding was reproduced with the repo's own
+  tools before anything was changed. The SolidCraft re-measure checkbox above is still open.
+  - **The air frame's back spotface is Ø2.4 (it was Ø3.0); max and lite keep Ø3.0.**
+    - What was wrong: on the open frame the spotface is cut into the boss itself, every boss
+      carries a flat 1.475 from its axis, and a r 1.500 cut reached 0.025 past it. OCC on the
+      committed frame: each spotface cylinder was 94.2 % of a full band, on all eight bosses.
+      The design notes had this at two bosses on 2026-11-13 as "seen, not changed"; the
+      contouring pass a day later put every flat at that distance.
+    - Now: `fit_rules.SPOTFACE_D` 3.0 and `SPOTFACE_D_OPEN` 2.4, carried per variant as
+      `VARIANTS[...]["spotface_d"]`. `spotface_fit()` says what each cut is in and what it
+      leaves: 0.275 mm of boss wall on air, and 0.600 / 0.180 mm of floor over it on max /
+      lite. The 0.180 is the lite floor over the 0.025 mm by which a Ø3.0 cut peeks past the
+      boss's flat there; under the boss it is backed by the boss.
+    - Gates: `check_consistency` [8] 4c'' (the rule; a Ø3.0 cut in a boss must be refused) and
+      `assembly_drc` [D], which sections each emitted shell just under the spotface's bottom
+      and asks for air inside its radius and metal all the way round outside it (72 probes a
+      mount). On the frame as committed it finds air at all 72, at all eight.
+    - The shell sheet generator had a typed `3.0` and drew Detail B's spotface at a typed
+      `1.5`. Both read the variant.
+  - **The short rib on the max shell's back is its counterparts' length.**
+    - What was wrong: the outermost rib along the y 2.05 edge ended at x 42.286 at its east
+      end, its three counterparts 7.93 from their edges (42.870). GEOS simplifies a
+      `buffer()`'s input by a hundredth of the distance — 0.0109 mm for the 1.0889 erosion
+      `fin_ribs()` made — and at that one corner a pad's first vertex stood 0.0103 above the
+      field's edge (0.0234 at its twin). The corner vertex was dropped, the field's edge
+      became a line tilted 0.01 mm in 35, and the eroded boundary crossed the row's
+      centreline, which is kept `EPS` = 0.01 inside it. The same tilt moved forty other rib
+      ends by 0.002–0.010.
+    - Now: `fin_ribs()` erodes the band and grows the pads separately — erosion(band − pads)
+      is exactly erosion(band) − dilation(pads). The 38 ribs differ from their own mirror
+      images, top for bottom and left for right, by 0.0014 mm² of hairline and nothing with
+      body; rib area 974.016 → 974.435 mm².
+    - Gates: `check_consistency` [8] 4c' (the layout, both mirrors, eroded so that a hairline
+      is not a finding; one rib cut 0.58 short must be seen) and `assembly_drc` [L], which now
+      reads the ribs off the sectioned max shell as well as the coin: against the layout, and
+      against their own reflections. On the shell as committed [L] reports 0.298 mm² off the
+      layout and 0.596 off its mirror image.
+    - **What this does to the hand.** The review read the short rib as part of the max
+      shell's hand. The reeding has none: it is its own mirror image both ways now, by rule
+      and in the metal. The shell's hand is the coin's, as `shell_has_hand()` says.
+  - **The wording.**
+    - Shell sheets, floor-fillet note: "EACH ENDING 0.50 OR MORE SHORT OF THE NEXT BOSS OR
+      TAB" is now "EACH ENDING IN A SCOOP, AXIS 0.39 OR MORE SHORT OF THE NEXT BLEND OR
+      ROOT." `fit_rules.floor_run_gaps()` measures from each run's end station to the foot of
+      the next blend or root on its wall: 0.425 on the short walls, 0.394 on the west, 0.404
+      and 0.431 on the east — the review's 0.394–0.431.
+    - Shell sheets, boss callout: the flat prints as 1.475 (it was 1.47, a correct rounding
+      of 1.474983 and half a hundredth off the part).
+    - `fit_rules.py`'s module docstring said a boss "keeps 92.4 %" of its thread ring. By
+      `boss_island()` it is 81.8–81.9 % at the corner bosses, 81.6 % at the west mid-span and
+      75.8 % at the two coil-cut ones; the review's 82.06 / 81.67 / 76.03 % is all the metal
+      inside r 0.80–2.60, which includes the blends and roots that stand there.
+  - **Figures that differ by instrument, and why (nothing changed).**
+    - Rib to back blend: the list's "no rib within 1.189" is to the blend's ADDED METAL as
+      `back_blend_metal()` gives it (1.1886–1.1890 at all twelve now; it was 1.3117 at the
+      short rib's corner). The review's 1.132 is to the end of the blend's FACE on the frame
+      edge. The rule that matters, the valley's 0.40 from a blend, holds either way
+      (0.3995 here, polygon against polygon).
+    - Shim: 969.437 mm² is `reflow_shim.outline()`'s polygon; 969.442 is the DXF as written,
+      whose coordinates are rounded to four decimals (969.4419, read here from the file).
+    - Brace to shell: 0.0700 by SolidCraft on the STEPs. The 0.064 / 0.065 the gates print
+      are polygon against polygon, each with its arcs as chords.
+    - The two floored shells' volumes by SolidCraft's exact routine: the review's own finest
+      mesh agrees with OCC, so it is that routine.
+  - **Measured on the rebuilt solids (scratch tree; the merge run builds the ones that count):**
+    - Max shell: STEP 10,337 faces and 30,565 edges, as before; no edge shared by more than
+      two faces, no face under 0.001 mm². Volume 5298.801 → 5299.094 mm³ on the STEP: +0.293,
+      against +0.293 predicted (0.419 mm² more rib × 0.70). STL 5299.05. `assembly_drc` [L]:
+      ribs 0.0000 mm² of 974 off the layout, 0.0000 off their mirror images both ways.
+    - Air frame: eight r 1.200 cylinders on the mount axes, z 0.100–0.200, each 100.0 % of a
+      full band; none of r 1.500 left. STEP 286 faces (294), 684 edges, none under 0.001 mm².
+      Volume 963.806 → 967.857 mm³: +4.051, against +4.06 predicted. STL 967.83.
+      `assembly_drc` [D]: walled all the way round at all eight.
+    - Lite shell and both braces: the STLs are byte-identical to the committed ones. The
+      reflow shim's DXF is byte-identical too.
+    - Every local gate on the rebuilt solids: `check_mesh` (6 STLs against the ledger, max and
+      air re-ledgered with the sums above), `interference_drc`, `assembly_drc` (0 errors on
+      each variant), the handedness rehearsal and its [E], and the consistency suite without
+      `kicad-cli` (0 errors; the checks that need it run on the merge).
+    - Masses move with the volumes, at the densities the review's own figures imply (7.99
+      and 4.43 g/cm³): the air frame +0.032 g, to 7.733; the max shell +0.001 g.
+
 - [ ] **[SOURCING — lite/air] Pick the thin supercap MPN**
   _(2026-08-07, opened with the three-variant round.)_ `part_heights.SUPERCAP_H_THIN = 1.00`
   is **PROVISIONAL — DRH's working number, no MPN, no datasheet behind it**, unlike every

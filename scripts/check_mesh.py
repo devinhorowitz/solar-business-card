@@ -152,7 +152,17 @@ BASELINE = {
     # +0.11 here -- inside this ledger's tolerance, so the gate did not ask; re-ledgered so the
     # number is the part's. What a volume cannot say: the STEP has 10,337 faces where it had
     # 10,409, and NONE under 0.001 mm2 where it had 33. bbox unchanged; 0 open, 0 degenerate.
-    volume_mm3=5298.75, bbox=(-26.35, -45.4, -0.15, 26.35, 45.4, 3.4),
+    # re-ledgered 2026-11-16 (the short rib, the second outside review), 5298.75 -> 5299.05.
+    # One reeded rib of the 38 was 0.584 mm shorter than its three counterparts, and forty
+    # other rib ends were off by 0.002-0.010: GEOS simplifies a buffer's input by a hundredth
+    # of the distance, and fit_rules.fin_ribs() kept each row EPS = 0.01 inside an erosion of
+    # 1.0889. The band is eroded and the pads grown separately now. Rib area 974.016 ->
+    # 974.435 mm2, x 0.70 of rib height = +0.293 predicted, +0.293 on the STEP (5298.801 ->
+    # 5299.094), +0.30 here -- 0.006 % of this shell, so the gate did not ask; re-ledgered so
+    # the number is the part's. The spotfaces on this shell did not move (Ø3.0, in the floor).
+    # STEP 10,337 faces and 30,565 edges, as before; none under 0.001 mm2. bbox unchanged;
+    # 0 open, 0 degenerate. Triangles 52,828, ungated.
+    volume_mm3=5299.05, bbox=(-26.35, -45.4, -0.15, 26.35, 45.4, 3.4),
         max_boundary_edges=0, max_open_len_mm=0.0, max_degenerate=0),
     "solar-glow-drh-pogo-testplate.stl": dict(
         # re-ledgered 2026-11-13: the y range flips, -10.4..99.3 -> -99.3..10.4, and nothing
@@ -461,7 +471,19 @@ BASELINE = {
         # frame). No floor, so no fillet term. bbox unchanged; 0 open edges, 0 degenerate.
         # re-ledgered 2026-11-15 (the seat is one plane), 963.68 -> 963.79: as the max shell.
         # +0.104 on the STEP; 294 faces where it had 366, none under 0.001 mm2 where it had 33.
-        volume_mm3=963.79, bbox=(-26.35, -45.4, 0.0, 26.35, 45.4, 1.8),
+        # re-ledgered 2026-11-16 (the back spotface, DRH: "Ø2.4 air only"), 963.79 -> 967.83.
+        # On this frame the spotface is cut into the boss, and at Ø3.0 it reached 0.025 mm past
+        # every boss flat (1.475 from the axis): eight breakouts 0.545 mm wide, found by the
+        # second outside review. It is Ø2.4 here now (fit_rules.SPOTFACE_D_OPEN), 0.275 mm of
+        # boss wall round it. A mount: the Ø3.0 disc less the 0.009 mm2 past the flat, 7.060,
+        # against the Ø2.4 disc, 4.524 = 2.536 mm2 x 0.20 deep = 0.507, and the mouth break and
+        # the flat's own 45-degree foot change by 0.005 each way. x 8 = +4.06 predicted, +4.051
+        # on the STEP (963.806 -> 967.857), +4.04 here: 0.42 % of this frame, under the
+        # tolerance by a little, and what holds the cut is not this ledger but assembly_drc
+        # [D], which probes each one for a wall all the way round. STEP 286 faces where it had
+        # 294 (one fewer at each boss, where the breakout was), none under 0.001 mm2.
+        # bbox unchanged; 0 open edges, 0 degenerate.
+        volume_mm3=967.83, bbox=(-26.35, -45.4, 0.0, 26.35, 45.4, 1.8),
         max_boundary_edges=0, max_open_len_mm=0.0, max_degenerate=0),
     "solar-glow-drh-diffuser-brace-lite.stl": dict(
         # the lite brace: gap 1.22, span 0.60, 31 pockets, 0 through-holes, single piece

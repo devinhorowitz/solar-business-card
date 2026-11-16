@@ -673,7 +673,8 @@ this sound, and all three are requests to the shop, not hopes:
 
 ### 6. Spotfaces
 
-- 8× back-face spotface **Ø3.0 mm**, concentric with the mounting holes, depth ~0.2 mm (screw tip seats flush below the proud boss annulus). Modeled.
+- 8× back-face spotface **Ø3.0 mm** on the max and lite shells, concentric with the mounting holes, to the plane the screw's tip reaches (the tip seats flush below the proud boss annulus). Modeled. It is cut into the floor there, which keeps 0.60 mm (max) and 0.18 mm (lite) over it.
+- On the **air frame** the spotface is **Ø2.4 mm** (since 2026-11-16). That frame has no floor, so the cut is in the boss itself, and every boss carries a flat 1.475 mm from its axis: at Ø3.0 the cut broke out through the foot of all eight flats. At Ø2.4 it leaves 0.275 mm of wall at the flat and 0.20 mm round the M2's tip. `fit_rules.VARIANTS[...]["spotface_d"]` is the one home of each size; `scripts/assembly_drc.py` [D] probes each emitted shell for a wall all the way round every spotface.
 
 ### 7. U7 relief pocket — REMOVED 2026-07-28
 

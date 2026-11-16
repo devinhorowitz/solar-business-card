@@ -58,7 +58,11 @@ board   = _fr.BOARD_TH                       # 0.60
 # note is built from that same function for all four edges (_lip_note, below).
 lip_w   = max(_w for _lo, _hi, _w, _who in _fr.lip_as_cut("W"))      # 2.25 today, the whole edge
 bbw     = _fr.BACK_BORDER                    # SYMMETRIC exterior back-border width (4 sides)
-boss_r, pilot_r, cbore, ease = _fr.BOSS_R, _fr.PILOT_R, 3.0, 0.10
+boss_r, pilot_r, cbore, ease = _fr.BOSS_R, _fr.PILOT_R, _fr.SPOTFACE_D, 0.10
+# cbore here is only the default: sheet() takes each variant's own from fit_rules.VARIANTS
+# (2.4 on the open frame since 2026-11-16). It was a typed 3.0, and Detail B drew the spotface
+# at a typed 1.5 beside it -- the air frame's sheet would have gone on showing a spotface the
+# part no longer has.
 lb = 0.10                                    # light interior edge-breaks (felt, not seen), 45deg
 # Mounts and EVERY dimension derived from them come from fit_rules -- the same one home the
 # shell CAD reads. This sheet held its own literal copy until 2026-08-03, alongside six
@@ -263,6 +267,7 @@ def sheet(vname, v):
     floor, cavity, border = v["floor"], v["cavity"], v["border_h"]
     wall      = v["wall_th"]
     screw     = v["screw_len"]
+    cbore     = v["spotface_d"]              # this variant's back spotface (fit_rules.SPOTFACE_D / _OPEN)
     cap_h     = v["cap_h"]
     open_back = v["open_back"]
     has_brace = bool(v["brace"])
@@ -402,14 +407,18 @@ def sheet(vname, v):
             # ONE LINE, and the runs themselves are on the plan (heavy dash, to scale). With
             # each run's coordinates in it the note was two lines and the block two over its
             # eighteen; where a run is, is a thing a drawing shows better than a sentence.
-            # "OR MORE": the runs are evened top for bottom (fit_rules.floor_runs), so one of
-            # them stops further short of its tab than FLOOR_STOP. The least is read off the
-            # runs, like the rest; the plan shows which.
-            _short = min(min(_r["s0"] - _r["lo"], _r["hi"] - _r["s1"]) for _r in _runs)
+            # WHAT A SHOP CAN MEASURE (2026-11-16). This read "EACH ENDING 0.50 OR MORE SHORT OF
+            # THE NEXT BOSS OR TAB": FLOOR_STOP, counted from the end of the straight stretch as
+            # the cut outline has it -- which is a little way INTO each blend. The second outside
+            # review measured 0.39 to 0.43 from the blend's foot. The figure printed is that
+            # one, the least over every run's two ends (fit_rules.floor_run_gaps), and it says
+            # what it is measured between: the axis of the scoop the run ends in, and the point
+            # where the next blend or root meets the wall.
+            _short = min(min(_lo, _hi) for _r, _lo, _hi in _fr.floor_run_gaps())
             notes.append(("ffil", [
                 f"FLOOR MEETS WALL THROUGH R{_fr.FLOOR_R:.2f} (\u00d8{2 * _fr.FLOOR_R:.1f} BALL END MILL), MODELED, ON "
                 f"{len(_runs)} RUNS ({sum(_r['s1'] - _r['s0'] for _r in _runs):.1f} mm; HEAVY DASH ON THE PLAN), EACH "
-                f"ENDING {_short:.2f} OR MORE SHORT OF THE NEXT BOSS OR TAB. FLOOR CORNER SHARP ELSEWHERE."]))
+                f"ENDING IN A SCOOP, AXIS {_short:.2f} OR MORE SHORT OF THE NEXT BLEND OR ROOT. FLOOR CORNER SHARP ELSEWHERE."]))
     else:
         notes.append(("floor", ["NO FLOOR - OPEN FRAME. THE BACK OF EVERY B-SIDE COMPONENT FACES THE TABLE; THE FRAME'S RESTING PLANE (BOTTOM FACE) CARRIES THE ASSEMBLY.",
                                 f"DEPTH {cavity:.2f} = TALLEST B-SIDE PART {cavity - 2*_fr.CAP_AIR:.2f} + 2×{_fr.CAP_AIR:.2f} RESTING CLEARANCE (fit_rules.VARIANTS: resting-clearance-limited)."]))
@@ -624,8 +633,11 @@ def sheet(vname, v):
         # tightest any supercap asks for, fit_rules.boss_flat_d), so the cut-back is said as
         # what it is -- a flat at a distance from the axis -- and the clearance it leaves each
         # part is the range measured off the islands. And every outside corner is a round.
-        _ddtxt = (f"{_dd[0]:.2f} FROM ITS HOLE AXIS, ALIKE ON ALL {len(_flats)}" if _dd[-1] - _dd[0] < 0.005
-                  else f"{_dd[0]:.2f}\u2013{_dd[-1]:.2f} FROM ITS HOLE AXIS")
+        # THREE DECIMALS (2026-11-16): the flat is 1.475 from the axis, and at two this printed
+        # "1.47" -- a correct rounding of 1.474983 and half a hundredth off the part, beside a
+        # spotface whose wall to that flat is a quarter of a millimetre.
+        _ddtxt = (f"{_dd[0]:.3f} FROM ITS HOLE AXIS, ALIKE ON ALL {len(_flats)}" if _dd[-1] - _dd[0] < 0.005
+                  else f"{_dd[0]:.3f}\u2013{_dd[-1]:.3f} FROM ITS HOLE AXIS")
         _nrd = sum(len(_fr.boss_rounds(_bx, _by)) for _bx, _by in mounts)
         _rdtxt = (f"EVERY OUTSIDE CORNER OF A BOSS R{_fr.CONTOUR_R:.2f} ({_nrd}\u00d7)." if _nrd else "")
         # WRAPPED, NOT HAND-BROKEN (2026-11-14). The callout was broken into lines by hand, and
@@ -812,6 +824,7 @@ def sheet(vname, v):
     # ===================== DETAIL B (corner boss, section) =====================
     S3=13.0; BX,BY=312,112
     bx=lambda v_:BX+v_*S3; bz=lambda z:BY+(z+border)*S3
+    _cr = cbore / 2.0                        # the spotface's radius, as this variant cuts it
     if floor > 0:
         ax.add_patch(MplPoly([(bx(-4),bz(0)),(bx(4),bz(0)),(bx(4),bz(floor)),(bx(-4),bz(floor))],closed=True,fc=HATCH,ec=INK,lw=0.6,hatch="////"))
     for s in (1,-1):
@@ -819,17 +832,17 @@ def sheet(vname, v):
         # which is COMPUTED (stack - screw length): 0.40 here on max. The old sheet drew it
         # at a hand-typed 0.20 that matched no shipped stack -- a stale literal, silent
         # because no dimension string quoted it.
-        ax.add_patch(MplPoly([(bx(x),bz(z)) for x,z in [(s*0.8,sf),(s*1.5,sf),(s*1.5,bb),(s*0.8,bb)]],closed=True,fc=HATCH,ec=INK,lw=0.7,hatch="////"))
+        ax.add_patch(MplPoly([(bx(x),bz(z)) for x,z in [(s*0.8,sf),(s*_cr,sf),(s*_cr,bb),(s*0.8,bb)]],closed=True,fc=HATCH,ec=INK,lw=0.7,hatch="////"))
         if border > 0:
-            ax.add_patch(MplPoly([(bx(x),bz(z)) for x,z in [(s*1.5,-border+lb),(s*(1.5+lb),-border),(s*(2.6-lb),-border),(s*2.6,-border+lb),(s*2.6,bb),(s*1.5,bb)]],closed=True,fc=HATCH,ec=INK,lw=0.7,hatch="////"))
+            ax.add_patch(MplPoly([(bx(x),bz(z)) for x,z in [(s*_cr,-border+lb),(s*(_cr+lb),-border),(s*(2.6-lb),-border),(s*2.6,-border+lb),(s*2.6,bb),(s*_cr,bb)]],closed=True,fc=HATCH,ec=INK,lw=0.7,hatch="////"))
         else:
-            ax.add_patch(MplPoly([(bx(x),bz(z)) for x,z in [(s*1.5,0.0),(s*2.6,0.0),(s*2.6,bb),(s*1.5,bb)]],closed=True,fc=HATCH,ec=INK,lw=0.7,hatch="////"))
+            ax.add_patch(MplPoly([(bx(x),bz(z)) for x,z in [(s*_cr,0.0),(s*2.6,0.0),(s*2.6,bb),(s*_cr,bb)]],closed=True,fc=HATCH,ec=INK,lw=0.7,hatch="////"))
     ax.add_patch(Rectangle((bx(-4),bz(bb)),8*S3,board*S3,fill=False,ec=GRY,lw=0.6,ls=(0,(5,3))))
     ax.add_patch(Rectangle((bx(-1.0),bz(wt)),2.0*S3,1.6*S3,fill=False,ec=GRY,lw=0.6,ls=(0,(5,3))))
     ax.add_patch(Rectangle((bx(-0.9),bz(sf)),1.8*S3,(wt-sf)*S3,fill=False,ec=GRY,lw=0.6,ls=(0,(5,3))))
     ax.plot([bx(0),bx(0)],[bz(-border)-3,bz(wt)+1.6*S3+3],lw=0.4,color=INK,ls=(0,(8,3,1,3)))
     dim((bx(-2.6),bz(-border)),(bx(2.6),bz(-border)),bz(-border)-12,f"Ø{2*boss_r:.2f}",fs=6.8,side=-1)
-    dim((bx(-1.5),bz(-border)),(bx(1.5),bz(-border)),bz(-border)-5,f"Ø{cbore:g} SPOTFACE (BACK)",fs=6.3,side=-1)
+    dim((bx(-_cr),bz(-border)),(bx(_cr),bz(-border)),bz(-border)-5,f"Ø{cbore:g} SPOTFACE (BACK)",fs=6.3,side=-1)
     if border > 0:
         dim((bx(2.6),bz(-border)),(bx(2.6),bz(0.0)),bx(2.6)+3,f"{border:.2f}",vert=True,fs=5.8,side=-1,txtoff=1.0)
     leader(bx(0.0),bz(bb*0.55),bx(4.6),bz(bb*0.7),"M2 THREAD\nØ1.6 TAP DRILL, THRU\nTAP FROM BACK",ha="left",fs=6.2)

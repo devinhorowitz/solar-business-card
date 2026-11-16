@@ -2004,3 +2004,9 @@ KiCad's placement.
 60.27) reaches 0.025 mm past that boss's SC1 / SC3 flat at x 4.345 / 4.415, so the flat has a
 0.025 × 0.20 window at its foot. It is the same on `main`; the spotface is sized for the screw
 head and the flat for the can, and they overlap by that much.
+_(Changed 2026-11-16. The contouring pass of 2026-11-14 put every boss's flat at that one
+distance, 1.475 from its axis, so the window was at all eight bosses, 0.545 mm wide with a knife
+edge either side; the second outside review measured it. The air frame's spotface is Ø2.4 now
+(DRH), leaving 0.275 mm of wall at the flat — `fit_rules.SPOTFACE_D_OPEN`. Nothing had been
+watching this note's overlap grow from two bosses to eight, which is the lesson `CLAUDE.md`
+keeps.)_

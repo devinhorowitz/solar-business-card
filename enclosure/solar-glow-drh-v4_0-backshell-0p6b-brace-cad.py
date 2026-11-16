@@ -149,6 +149,10 @@ pilot_r    = 0.80                  # M2 tap-drill hole, CLEAN THROUGH. Boss is T
 # corner fasteners: brass M2x3, pan head <= Ø4.0 (cell-limited; absolute Ø5.3 touches the cell at 2.66 mm).
 SCREW_LEN  = VARIANTS["max"]["screw_len"]   # bare-build() fallback = the max variant; jobs pass per-variant (was a literal 3.0 -- second-home class)
 CBORE_D    = 3.0                   # back spotface dia at each hole; depth auto-set so the M2x3 tip is flush.
+                                   # The DEFAULT: each variant's own is fit_rules.VARIANTS[...]["spotface_d"]
+                                   # (2.4 on the open frame since 2026-11-16, where the cut is in the boss and
+                                   # 3.0 broke through every boss flat -- fit_rules.SPOTFACE_D_OPEN), passed
+                                   # to build() from the jobs table.
 
 # glow-window reflector registration frame (on the cavity FLOOR): a LASER-MARKED outline showing where
 # the Al reflector strip is placed -- behind the monogram window, facing the reverse-mount LEDs -- so
@@ -286,12 +290,12 @@ def _resting_face_break(c):
     up = _frustum(v.buffer(-_BREAK_DIP, join_style=2), 0.0, h, -45)
     return up.mirror("XY", basePointVector=(0, 0, 0)).translate((0, 0, c + _BREAK_DIP))
 
-def _spotface_mouth_break(c):
+def _spotface_mouth_break(c, d=CBORE_D):
     """OPEN FRAME ONLY: a true 45deg cone at each spotface mouth on the resting face."""
     tool = None
     for mx, my in mounts:
         cone = (cq.Workplane("XY").workplane(offset=-0.02).moveTo(wx(mx), wy(my))
-                  .circle(CBORE_D / 2 + c + 0.02).extrude(c + 0.02, taper=45))
+                  .circle(d / 2 + c + 0.02).extrude(c + 0.02, taper=45))
         tool = cone if tool is None else tool.union(cone)
     return tool
 
@@ -768,7 +772,7 @@ _LIPSUM = {e: len(lip_bands(e)) for e in ('W', 'E', 'S', 'N')}
 _DEBURR_SKIPS = []
 
 
-def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pillars=False, locators=False, prog_window=False, glow_marker=True, maker_mark=True, tool_relief=False, fins=True, cavity=cavity, screw_len=None):
+def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pillars=False, locators=False, prog_window=False, glow_marker=True, maker_mark=True, tool_relief=False, fins=True, cavity=cavity, screw_len=None, spotface_d=CBORE_D):
     # `cavity` and `screw_len` are per-variant since 2026-08-07 -- passed EXPLICITLY from
     # fit_rules.VARIANTS by the jobs loop, never smuggled through module state. The
     # defaults are the max variant, so a bare build() means what it always meant.
@@ -922,7 +926,7 @@ def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pill
     sf_start  = -border_h - 0.4
     sfp = cq.Workplane("XY").workplane(offset=sf_start)
     for mx, my in mounts:
-        sfp = sfp.moveTo(wx(mx), wy(my)).circle(CBORE_D / 2)
+        sfp = sfp.moveTo(wx(mx), wy(my)).circle(spotface_d / 2)
     res = res.cut(sfp.extrude(sf_bottom - sf_start))
     if prog_window:
         res = res.cut(cq.Workplane("XY").workplane(offset=-border_h - 0.1)
@@ -963,7 +967,7 @@ def build(floor=1.00, wall_th=1.0, border_h=0.15, ribs=False, braces=False, pill
     # bosses went on (_resting_face_break), each boss foot on its own cylinder, the spotface
     # mouths here.
     if EDGE_BREAK > 0 and floor == 0:
-        res = res.cut(_spotface_mouth_break(EDGE_BREAK))
+        res = res.cut(_spotface_mouth_break(EDGE_BREAK, spotface_d))
     if EDGE_BREAK > 0:
         for sel in tuple(s_ for s_ in (("<Z",) if edge_ease > 0 else ("<Z", ">Z"))
                          if not (s_ == "<Z" and floor == 0)):
@@ -1116,6 +1120,7 @@ for _vn, _v in VARIANTS.items():
         not _v["open_back"] and _v["fins"],
         not _v["open_back"],                              # glow marker needs a floor
         _v["material"],
+        _v["spotface_d"],
     ))
 print(f"cavity={cavity} general (max; per-variant from fit_rules.VARIANTS); U7 pocket {U7_POCKET} deep "
       f"({'NO POCKET -- uniform floor' if U7_POCKET == 0 else 'local relief'})  lip PER-BAND from the board (W {_LIPSUM['W']} / E {_LIPSUM['E']} / S {_LIPSUM['S']} / N {_LIPSUM['N']} bands)  "
@@ -1132,10 +1137,10 @@ print(f"cavity={cavity} general (max; per-variant from fit_rules.VARIANTS); U7 p
       f"({sum(_r['s1'] - _r['s0'] for _r in _floor_runs()):.1f} mm, where there is a floor), "
       f"back blends x{sum(len(_back_blends(mx, my)) for mx, my in mounts)} where there is a back face "
       f"(true cylinders; every other concave corner left sharp, the round tool leaves its radius)")
-for _vn, name, fl, wl, bd, cav_v, sl, mk, fn, gm, mat in jobs:
+for _vn, name, fl, wl, bd, cav_v, sl, mk, fn, gm, mat, sfd in jobs:
     del _DEBURR_SKIPS[:]
     solid = build(floor=fl, wall_th=wl, border_h=bd, cavity=cav_v, screw_len=sl,
-                  maker_mark=mk, fins=fn, glow_marker=gm)
+                  maker_mark=mk, fins=fn, glow_marker=gm, spotface_d=sfd)
     if _DEBURR_SKIPS:
         raise SystemExit(f"[{_vn}] the edge-break was skipped on {_DEBURR_SKIPS} -- OCC could "
                          f"not chamfer that end face, so the solid would ship without breaks "
