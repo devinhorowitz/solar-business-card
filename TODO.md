@@ -2121,8 +2121,10 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
     - The shell sheet generator had a typed `3.0` and drew Detail B's spotface at a typed
       `1.5`. Both read the variant.
   - **The short rib on the max shell's back is its counterparts' length.**
-    - What was wrong: the outermost rib along the y 2.05 edge ended at x 42.286 at its east
-      end, its three counterparts 7.93 from their edges (42.870). GEOS simplifies a
+    - What was wrong: the outermost rib along the y 2.05 edge (y 2.85–3.45) ended at x 42.286
+      at its east end, its three counterparts 7.93 from their edges (42.870). The review's
+      41.986 and 42.570 are the same two ends read 0.300 further in, where a rib's round end
+      begins: a rib is 0.60 wide and its tip is a full radius. GEOS simplifies a
       `buffer()`'s input by a hundredth of the distance — 0.0109 mm for the 1.0889 erosion
       `fin_ribs()` made — and at that one corner a pad's first vertex stood 0.0103 above the
       field's edge (0.0234 at its twin). The corner vertex was dropped, the field's edge
@@ -2171,7 +2173,8 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
       against +0.293 predicted (0.419 mm² more rib × 0.70). STL 5299.05. `assembly_drc` [L]:
       ribs 0.0000 mm² of 974 off the layout, 0.0000 off their mirror images both ways.
     - Air frame: eight r 1.200 cylinders on the mount axes, z 0.100–0.200, each 100.0 % of a
-      full band; none of r 1.500 left. STEP 286 faces (294), 684 edges, none under 0.001 mm².
+      full band; none of r 1.500 left. STEP 286 faces (294) and 684 edges (724), none under
+      0.001 mm².
       Volume 963.806 → 967.857 mm³: +4.051, against +4.06 predicted. STL 967.83.
       `assembly_drc` [D]: walled all the way round at all eight.
     - Lite shell and both braces: the STLs are byte-identical to the committed ones. The
