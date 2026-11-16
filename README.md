@@ -356,7 +356,8 @@ blend (twelve: eight R2.00, four R1.00 at the two bosses beside the ferrite shee
 to the recess wall (2026-11-14; until then those junctions were sharp corners in the STEP, and
 each corner boss stood beside a 0.17 mm slot no cutter could enter). On the back, each boss's
 proud annulus runs into the frame through the same R2.00 blend (sixteen). Retention is **eight M2×3 slotted brass screws**, not a press
-fit; the head is Ø3.0 and the tip lands **flush** in a Ø3.0 back spotface.
+fit; the head is Ø3.0 and the tip lands **flush** in a Ø3.0 back spotface (Ø2.4 on the air
+frame, where the cut is in the boss and not in a floor — `enclosure/README.md` → "Spotfaces").
 
 **Measured independently on 2026-11-12, and two things on this page were not true of the parts.**
 The scallops above existed in `fit_rules` and not in the titanium — all four supercaps sat inside

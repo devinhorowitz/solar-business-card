@@ -112,7 +112,9 @@ python3 scripts/assembly_drc.py        # the assembled stack: Z budget, ferrite,
                                        # and the SECTIONED shell-vs-parts and brace-vs-shell checks,
                                        # [G]: the lip the shell drawing describes vs the metal,
                                        # [I]: every shell's metal vs the NFC coil's copper,
+                                       # [D]: each back spotface walled all the way round,
                                        # and [L]: the max shell's rear art, read off the solid
+                                       # (the coin, the monogram, and the 38 reeded ribs)
 ```
 ```sh
 # which HAND the solids are in: each one against KiCad's own STEP export of the board/panel.
@@ -936,6 +938,48 @@ red, the check itself fails.
   The shells do not read the fit and did not move. What is still open with the printer — a
   quote, the 0.33 mm channel walls against a 0.406 mm minimum feature in Z, heat, opacity — is
   in `TODO.md`.
+- **A cut made from the back answers to whatever is done to the metal it is cut into — and
+  "seen, not changed" is not a gate** (2026-11-16, the second outside review). Each mount
+  carries a back spotface. On max and lite it is in the floor. On the open (air) frame it is in
+  the boss, and it was Ø3.0 against a boss flat 1.475 from the axis: it broke out through the
+  foot of all eight flats, 0.545 mm wide, with a knife edge either side. The design notes had
+  recorded exactly that at two bosses on 2026-11-13 as "seen, not changed"; the contouring
+  pass a day later moved every flat to that distance and made it all eight, and nothing was
+  watching. It is Ø2.4 there now (DRH; `fit_rules.SPOTFACE_D_OPEN`, 0.275 mm of wall), each
+  variant's size lives in `VARIANTS["spotface_d"]`, `spotface_fit()` says what the cut is in
+  and what it leaves, check [8] 4c'' holds the rule and `assembly_drc` [D] probes the emitted
+  solid for a wall all the way round each one. **And a wall is not a land:** the size was put
+  to DRH as "0.28 mm of wall at the flat", which is true from z 0.10 up — the spotface's mouth
+  and the flat's foot each carry the 0.10 break, back to back, so at the resting face the land
+  is 0.075. `fit_rules.spotface_land()` states it, the wall rule must cover two breaks and a
+  land, and [D] probes for it. When quoting what a cut leaves, quote it after the edge breaks. The sheet generator had its own typed `3.0`
+  and drew Detail B's spotface at a typed `1.5`; both read the variant now. **When you write
+  "seen, not changed" about a clearance, write the gate that will notice when it changes.**
+- **GEOS simplifies inside `buffer()` by a hundredth of the distance, and an EPS of that size
+  beside it is a coin toss** (2026-11-16). `fin_ribs()` eroded the reeded pour's zone by
+  1.0889 mm and kept each row's centreline `EPS` = 0.01 inside the result. GEOS first
+  simplifies a buffer's input by distance/100 = 0.0109: at ONE corner of four a pad's first
+  vertex stood 0.0103 above the field's edge (0.0234 at its twin — the pads are simplified to
+  `_FIN_ARC`, which is not a symmetric operation), the corner vertex went, the field's edge
+  became a line tilted 0.01 mm in 35, and the eroded boundary rose across the outermost row.
+  **One rib of 38 was 0.584 mm shorter than its three counterparts on every max shell since
+  2026-11-14**, and forty other rib ends were off by 0.002–0.010. Every gate was green: a rib
+  that stops short clears everything. The review found it by reflecting the shell onto
+  itself. The fix is the identity erosion(band − pads) = erosion(band) − dilation(pads), so no
+  pad vertex sits beside a long straight edge when GEOS simplifies; check [8] 4c' holds the
+  ribs to their own mirror images, and `assembly_drc` [L] reads the ribs off the sectioned
+  max shell — against the layout and against their own reflections — where it used to read
+  only the coin. The contouring bullet above already says "when a tolerance and the thing it
+  must tell apart are the same size, stop measuring and solve"; this is that, in a place
+  nobody had looked. **If a shape is meant to be symmetric, gate the symmetry — a part that
+  is merely smaller than intended collides with nothing.**
+- **A sheet figure has to be one a shop can measure** (2026-11-16). The shell sheets said each
+  floor fillet ends "0.50 OR MORE SHORT OF THE NEXT BOSS OR TAB". 0.50 is `FLOOR_STOP`, counted
+  from the end of the straight stretch as the cut outline has it, and that outline hugs the
+  wall a little way into each blend: from the blend's foot the scoop's axis is 0.39–0.43. The
+  note prints `fit_rules.floor_run_gaps()` now and says what it is measured between. Same
+  day: the boss flat printed as 1.47 for a model at 1.475 (three decimals now), and a module
+  docstring still gave a boss "92.4 %" of its thread ring four changes after it was true.
 - **A ledger entry is a standing waiver, so a ledger audits itself.** `scripts/interference_drc.py`'s
   `EDGE_LEDGER` excused seven parts from the cavity rectangle and had excused nothing since
   2026-08-08: six had been moved inboard and the seventh, C7, was deleted from the board the day

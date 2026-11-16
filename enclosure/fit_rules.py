@@ -31,8 +31,12 @@ WHAT THE RULES ARE
           never overhanging the NFC coil. Wide wherever nothing is in the way, because it
           supports a 0.60 mm board.
 
-  BOSS    The r2.60 disc with any fouling part cut out of it, which costs almost no thread:
-          the worst case keeps 92.4% of the r0.80..r2.60 annulus.
+  BOSS    The r2.60 disc cut back to ONE flat for the supercap beside it (boss_flat_d), and
+          straight across beside the NFC coil -- never inside THREAD_KEEP. What that costs in
+          thread: a boss keeps about 82 % of its r0.80..r2.60 annulus, and the two coil-cut
+          ones about 76 % (enclosure/README.md owns the figures; boss_island() is what they
+          are measured on). This line said "the worst case keeps 92.4%" from the day the
+          bosses were first scalloped until 2026-11-16, through four changes to them.
 """
 from __future__ import annotations
 
@@ -316,6 +320,33 @@ def print_xy_tol(length):
 # ---- shell ----------------------------------------------------------------------------
 BOSS_R = 2.60
 PILOT_R = 0.80
+SPOTFACE_D = 3.0           # the back spotface at each mount hole, where it is cut into the FLOOR
+                           # (max, lite): the M2's tip lands flush in it, under the proud annulus.
+SPOTFACE_D_OPEN = 2.4      # ...and where it is cut into the BOSS, on an open frame (air), whose
+                           # boss foot is the resting face. 3.0 there until 2026-11-16 (DRH:
+                           # "6B Ø2.4 air only"). Every boss carries a flat boss_flat_d() =
+                           # 1.475 from its axis since the contouring pass of 2026-11-14, and a
+                           # r 1.500 spotface reached 0.025 PAST it: a notch 0.545 wide through
+                           # the foot of all eight flats, with a knife edge either side, on a
+                           # frame whose sheet said nothing of it. Found by the second outside
+                           # review; nothing here held a spotface to its boss. At 2.4 it leaves
+                           # 0.275 of wall at the flat and 0.20 round the M2's tip.
+EDGE_BREAK = 0.10          # the 45-degree break on every end-face edge of a shell (the shell CAD
+                           # reads it from here since 2026-11-16; it was that file's own). It is
+                           # here because a WALL IS NOT A LAND: on the open frame the spotface's
+                           # mouth and the boss flat's foot both carry it, back to back, so the
+                           # 0.275 wall above is a flat land only 0.275 - 2 x 0.10 = 0.075 wide
+                           # where it meets the resting face (spotface_land). The wall was
+                           # quoted to DRH without the land, the day the size was chosen.
+SPOTFACE_WALL = 0.25       # least metal between a spotface cut into a boss and that boss's flat
+SPOTFACE_LAND = 0.05       # ...and the least flat land left at the resting face once both of
+                           # that wall's edges are broken: SPOTFACE_WALL must cover two breaks
+                           # and this (check_consistency [8]), or the breaks meet in a knife edge
+SPOTFACE_COVER = 0.10      # least floor left OVER a spotface cut into a floor: the cut must end
+                           # inside the floor, not come up into the cavity. Under the boss it is
+                           # backed by the boss; it matters only for the 0.025 mm by which the
+                           # cut peeks past the boss's flat, where 0.60 (max) and 0.18 (lite) of
+                           # floor is all there is over it (spotface_fit)
 BOSS_CLR = 0.20            # Ti boss to part/pad
 THREAD_KEEP = 1.30         # never scallop inside this: the M2 thread lives at r0.80..~1.0
 LIP_CLR = 0.30             # lip edge to nearest part body or pad
@@ -729,10 +760,49 @@ def _mk_variants():
         d["stack"] = round(d["floor"] + d["cavity"] + BOARD_TH, 2)   # 3.40 / 2.42 / 1.80
         d["screw_len"] = _pick_screw(d["stack"])                     # 3.0  / 2.0  / 1.6
         d["span"] = round(d["cavity"] - AIR - SLA_WEB, 2) if d["brace"] else None
+        d["spotface_d"] = SPOTFACE_D_OPEN if d["open_back"] else SPOTFACE_D
     return v
 
 
 VARIANTS = _mk_variants()
+
+
+def spotface_fit(vname):
+    """(where, margin) -- what the back spotface at each mount is cut into on this variant,
+    and how much metal it leaves there.
+
+    The spotface is a flat-bottomed cut of the variant's spotface_d from the back, to the plane
+    the screw's tip reaches (stack - screw_len). On a floored shell that plane is inside the
+    floor, and the margin is the floor left over it: the cut must not come up into the cavity,
+    where the bosses' flats are. On an open frame there is no floor -- the cut is in the boss
+    itself -- and the margin is the wall left between it and the boss's flat. The first must
+    be SPOTFACE_COVER or more and the second SPOTFACE_WALL (spotface_need(); check_consistency
+    [8]; scripts/assembly_drc.py [D] measures it on the emitted solid). Until 2026-11-16
+    nothing asked."""
+    v = VARIANTS[vname]
+    tip = round(v["stack"] - v["screw_len"], 6)
+    if v["open_back"]:
+        return "boss", boss_flat_d() - v["spotface_d"] / 2.0
+    return "floor", v["floor"] - tip
+
+
+def spotface_need(where):
+    """The least margin spotface_fit() may report for a cut in the "boss" or in the "floor"."""
+    return SPOTFACE_WALL if where == "boss" else SPOTFACE_COVER
+
+
+def spotface_land(vname):
+    """The flat land left at the resting face between the spotface's mouth break and the boss
+    flat's foot break, at its narrowest -- or None where the spotface is in a floor, whose
+    mouth opens on the back face with metal all round it.
+
+    The wall spotface_fit() reports stands between two vertical faces, and each of them is
+    broken EDGE_BREAK x 45 degrees where it meets the resting face. What is left flat there is
+    the wall less both breaks: 0.075 mm on the air frame, over a crescent about a millimetre
+    long at each boss (it is 0.175 half a millimetre either side of the flat's middle).
+    scripts/assembly_drc.py [D] probes the emitted frame for it."""
+    where, margin = spotface_fit(vname)
+    return margin - 2.0 * EDGE_BREAK if where == "boss" else None
 
 
 def variant_span(name):
@@ -2932,6 +3002,33 @@ def floor_runs(_c={}):
     return _c["r"]
 
 
+def floor_run_gaps():
+    """[(run, gap_lo, gap_hi)] -- how far each end of each floor fillet run stands from where
+    the NEXT feature on its wall begins: the foot of the nearest boss blend, tab root or
+    corner-boss root on that wall, measured along it from the run's end station (the axis of
+    the scoop the run ends in).
+
+    THIS IS THE FIGURE A SHOP CAN MEASURE, and FLOOR_STOP is not (2026-11-16). A run stops
+    FLOOR_STOP = 0.50 short of the end of its straight stretch, and the stretch is read off
+    the cut outline, which hugs the wall for a little way INTO each blend -- an arc set
+    BLEND_BITE past tangent leaves a wall slowly. So the scoop's axis stands 0.39 to 0.43 mm
+    from the blend's foot, not 0.50, and the shell sheets said "EACH ENDING 0.50 OR MORE SHORT
+    OF THE NEXT BOSS OR TAB" until the second outside review measured it. The sheet prints
+    the least of these now. Raises if a run's end has no feature beyond it on its wall."""
+    feats = ([b for m in MOUNTS for b in boss_blends(*m)] + list(tab_roots()) + list(boss_roots()))
+    out = []
+    for run in floor_runs():
+        along, across = (0, 1) if run["axis"] == "x" else (1, 0)
+        feet = [p[along] for f in feats for p in (f["F"], f["T"]) if abs(p[across] - run["wall"]) < 0.01]
+        lo = [run["s0"] - s for s in feet if s < run["s0"]]
+        hi = [s - run["s1"] for s in feet if s > run["s1"]]
+        if not lo or not hi:
+            raise RuntimeError(f"the floor fillet run on the {run['edge']} wall, {run['s0']:.3f}.."
+                               f"{run['s1']:.3f}, has no blend or root beyond one end of it")
+        out.append((run, min(lo), min(hi)))
+    return out
+
+
 def floor_run_clearances(run, variants=None, ps=None):
     """{variant: [(ref, kind, gap)]} -- what hangs over one run, and by how much it clears the
     fillet with the cavity CAVITY_TOL shallow. kind is "part" (a machine-placed body: the gap
@@ -3260,8 +3357,12 @@ FIN_ROWS, FIN_GROOVE, FIN_PITCH = _fin_layout()   # 19 / 0.792 / 1.392 today; de
 _FIN_ARC = 0.0005     # mm: (BOSS_R + FIN_BOSS_CLR) * (1 - cos(90 deg / 48 / 2)) = 0.0004
 
 
-def fin_runs(rib_w=FIN_RIB_W):
+def fin_runs(rib_w=FIN_RIB_W, _parts=False):
     """Per-field rib centrelines and the pour zone.
+
+    `_parts=True` gives each field as (band, pads, centrelines) -- the band the pour floods
+    before the pads are taken out of it, and the pads -- for fin_ribs(), which has to erode
+    the one and grow the other (see there). The zone is band - pads either way.
 
     The grid anchors on the MID-BOSS LINES: the innermost rib's flank sits exactly ON
     the boss centreline -- as close to the card's centre as a row can get without
@@ -3291,8 +3392,11 @@ def fin_runs(rib_w=FIN_RIB_W):
     for outer, inner, sgn in [(fy0, inner_bot, 1), (fy1, inner_top, -1)]:
         cys = sorted(inner - sgn * (rib_w / 2 + i * pitch) for i in range(n))
         z0, z1 = (outer, inner + sgn * g) if sgn > 0 else (inner + sgn * g, outer)
-        zone = field.intersection(box(fx0 - 1, z0, fx1 + 1, z1)).difference(blockers)
-        runs.append((zone, cys))
+        band = field.intersection(box(fx0 - 1, z0, fx1 + 1, z1))
+        if _parts:
+            runs.append((band, blockers, cys))
+        else:
+            runs.append((band.difference(blockers), cys))
     return runs
 
 
@@ -3320,9 +3424,28 @@ def fin_ribs(rib_w=FIN_RIB_W):
     EPS = 0.01
     region = fin_region(rib_w)
     out = []
-    for zone, cys in fin_runs(rib_w):
-        ero = zone.buffer(-(rib_w / 2 + moat - EPS), join_style=1, resolution=48)
-        zx0, _zy0, zx1, _zy1 = zone.bounds
+    # THE ZONE IS NEVER ERODED AS ONE POLYGON (2026-11-16). It was -- zone.buffer(-d) -- and
+    # one rib of the 38 came out 0.584 mm shorter than its three counterparts: the outermost
+    # row along the y 2.05 edge, at its east end (found by the second outside review as a
+    # difference between the max shell and its own mirror image; `main` at 3440af7). The cause
+    # is GEOS, not the layout: buffer() first simplifies its input by a hundredth of the
+    # distance, 0.0109 mm here, and a vertex of a pad that happens to stand nearer than that
+    # to the field's edge takes the corner where pad and edge meet with it. At that one corner
+    # the pad's first vertex stood 0.0103 above the edge (0.0234 at its twin -- the pads are
+    # simplified to _FIN_ARC, which is not a symmetric operation), the corner went, the
+    # field's whole edge became a line tilted by 0.01 mm in 35, and the eroded boundary rose
+    # across the outermost row's centreline -- which stands exactly EPS = 0.01 inside it, by
+    # design. A tolerance and the thing it must tell apart, the same size. The other forty rib
+    # ends the review found differing, by 0.002 to 0.010 mm, were the same tilt.
+    # An erosion of (band - pads) is exactly erosion(band) - dilation(pads), and neither of
+    # those has a pad's vertex beside a long straight edge: the band is the field's rounded
+    # rectangle cut by a box, and a pad is grown, not shrunk. check_consistency [8] holds the
+    # ribs to their own mirror images, both ways.
+    d = rib_w / 2 + moat - EPS
+    for band, pads, cys in fin_runs(rib_w, _parts=True):
+        ero = (band.buffer(-d, join_style=1, resolution=48)
+                   .difference(pads.buffer(d, join_style=1, resolution=48)))
+        zx0, _zy0, zx1, _zy1 = band.bounds
         for cy in cys:
             seg = ero.intersection(LineString([(zx0 - 1, cy), (zx1 + 1, cy)]))
             if seg.is_empty:

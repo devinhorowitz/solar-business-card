@@ -607,6 +607,74 @@ def check_enclosure_fit():
         err(f"{len(_bb)} back-face blends, where this board has had 16 (two per mount) -- read "
             f"what moved (fit_rules.back_blends), then re-ledger the count here and in the docs")
         bad += 1
+    # 4c'. THE REEDED RIBS ARE THEIR OWN MIRROR IMAGES, TOP FOR BOTTOM AND LEFT FOR RIGHT
+    #     (2026-11-16). The mounts are mirrored about both centre lines and the rib grid is
+    #     anchored on them, so the ribs must be too -- and one of the 38 was not: 0.584 mm short
+    #     at one corner of four, on every max shell built since the blends went onto the back.
+    #     Nothing here could see it (the pour's clearance from a blend was held, and a rib that
+    #     stops short clears everything); an outside review found it as a difference between the
+    #     shell and its own reflection. An AREA is the wrong audit -- a rib end redrawn by a
+    #     micron is a hairline a millimetre long -- so the difference is eroded and asked whether
+    #     anything with body is left. Scope: the ribs as fit_rules lays them out. That the
+    #     metal carries them is scripts/assembly_drc.py [L].
+    from shapely.affinity import scale as _mirror
+    _ribs_u = unary_union(fr.fin_ribs())
+    _RIB_BODY = 0.002          # mm: a difference thinner than twice this is the outline's own noise
+    def _rib_asym(u):
+        tb = u.symmetric_difference(_mirror(u, xfact=1, yfact=-1, origin=(0, fr.H / 2)))
+        lr = u.symmetric_difference(_mirror(u, xfact=-1, yfact=1, origin=(fr.W / 2, 0)))
+        return tb.buffer(-_RIB_BODY).area, lr.buffer(-_RIB_BODY).area
+    _rtb, _rlr = _rib_asym(_ribs_u)
+    if _rtb > 1e-9 or _rlr > 1e-9:
+        err(f"the reeded ribs are not their own mirror image: {_rtb:.4f} mm2 with body differs "
+            f"top for bottom and {_rlr:.4f} left for right -- one rib is longer or shorter than "
+            f"its counterparts (fit_rules.fin_ribs; in 2026-11 it was GEOS simplifying inside "
+            f"buffer() by a hundredth of the erosion distance)")
+        bad += 1
+    # canary: the defect itself -- one outermost rib 0.58 mm short at its east end
+    _r0 = max(fr.fin_ribs(), key=lambda r_: (-round(r_.centroid.y, 1), r_.bounds[2]))
+    _short = _ribs_u.difference(_box(_r0.bounds[2] - 0.58, _r0.bounds[1] - 0.01,
+                                     _r0.bounds[2] + 0.01, _r0.bounds[3] + 0.01))
+    if max(_rib_asym(_short)) <= 1e-9:
+        err("SELF-TEST: the ribs with one outermost rib cut 0.58 mm short still read as their "
+            "own mirror image -- the test above cannot fail")
+        bad += 1
+    # 4c''. A BACK SPOTFACE STAYS INSIDE WHAT IT IS CUT INTO (2026-11-16). On a floored shell
+    #     that is the floor; on the open frame it is the boss, whose flat stands boss_flat_d()
+    #     from the axis -- and a Ø3.0 spotface reached 0.025 mm past that flat on all eight
+    #     bosses of every air frame built since the contouring pass made the flats one distance.
+    #     A clearance belongs to every feature it is true of: the flat was held off its supercap
+    #     and off the thread, and nothing held the spotface off the flat.
+    _sfit = {vn: fr.spotface_fit(vn) for vn in fr.VARIANTS}
+    for vn, (_where, _m) in _sfit.items():
+        if _m < fr.spotface_need(_where) - 1e-9:
+            err(f"[{vn}] the Ø{fr.VARIANTS[vn]['spotface_d']:g} back spotface leaves {_m:.3f} mm of "
+                f"{_where} (needs {fr.spotface_need(_where)})"
+                + (" -- it breaks out through the boss's flat" if _where == "boss" and _m <= 0 else ""))
+            bad += 1
+    # canary: the size the open frame carried until that day must be refused there
+    if any(w == "boss" for w, _m in _sfit.values()) \
+            and fr.boss_flat_d() - fr.SPOTFACE_D / 2.0 >= fr.SPOTFACE_WALL:
+        err(f"SELF-TEST: a Ø{fr.SPOTFACE_D:g} spotface in a boss whose flat is "
+            f"{fr.boss_flat_d():.3f} from the axis reads as leaving SPOTFACE_WALL -- the test "
+            f"above cannot fail")
+        bad += 1
+    #     A WALL IS NOT A LAND. In a boss, the spotface's mouth and the flat's foot both carry
+    #     the end-face break, back to back, so the wall above is a flat land narrower by two
+    #     breaks where it meets the resting face: 0.075 mm on the air frame, under a 0.275
+    #     wall. The wall rule has to cover both breaks and a land, or they meet in a knife edge
+    #     at the resting face -- the defect this check was written for, at a tenth the size.
+    if fr.SPOTFACE_WALL < 2.0 * fr.EDGE_BREAK + fr.SPOTFACE_LAND - 1e-9:
+        err(f"fit_rules.SPOTFACE_WALL {fr.SPOTFACE_WALL} does not cover two {fr.EDGE_BREAK} edge "
+            f"breaks and a {fr.SPOTFACE_LAND} land: a spotface that passes the wall rule could "
+            f"leave no land at the resting face")
+        bad += 1
+    _lands = {vn: fr.spotface_land(vn) for vn in fr.VARIANTS}
+    for vn, _ld in _lands.items():
+        if _ld is not None and _ld < fr.SPOTFACE_LAND - 1e-9:
+            err(f"[{vn}] the back spotface leaves a land of {_ld:.3f} mm at the resting face "
+                f"(needs {fr.SPOTFACE_LAND}): its mouth break and the boss flat's foot meet")
+            bad += 1
     # 4d. EVEN, SYMMETRIC AND ROUND-CORNERED (2026-11-14, DRH's contouring pass). Three things
     #     the sheet now says about the bosses and the two short-edge tabs, each measured off
     #     the polygons here and off the metal by assembly_drc [J] and the shell generator's own
@@ -1058,7 +1126,14 @@ def check_enclosure_fit():
            f"{sum(1 for b in _held if b.get('twin'))} more to match them) stand {_bgap:.2f} off the "
            f"nearest part ({_bref}) and {_bcoil:.2f} off the coil, {len(_wb)} corner webs "
            f"{_wgap:.2f} off theirs, and {len(_bb)} back-face blends the reeded pour wraps at "
-           f"{_valgap:.2f} (the polygon -- the metal is assembly_drc [J]); all 8 boss flats "
+           f"{_valgap:.2f} (the polygon -- the metal is assembly_drc [J]), its "
+           f"{len(fr.fin_ribs())} ribs their own mirror images top for bottom and left for right "
+           f"(one cut 0.58 short is seen); back spotfaces "
+           + ", ".join(f"Ø{fr.VARIANTS[vn]['spotface_d']:g} leaving {m_:.3f} of {w_} on {vn}"
+                       + (f" (a land of {_lands[vn]:.3f} at the resting face, both edges broken)"
+                          if _lands[vn] is not None else "")
+                       for vn, (w_, m_) in _sfit.items())
+           + f"; all 8 boss flats "
            f"{_fd[0]:.3f} from their axes, every mid-span boss its own mirror image "
            f"({max(_lop.values()):.4f} mm2 at worst), the corner bosses one shape (N-S "
            f"{_ns:.4f}, E-W {_ew:.4f} mm2), {len(_rds)} boss corners and {len(_tabs)} tab tips "

@@ -739,11 +739,82 @@ def check_variant(vname, v, fr, bp, trimesh):
         elif tip < back - TOL:
             err(f"mount ({mx},{my}): the screw tip reaches {tip:.2f}, past the shell's "
                 f"back face {back:.2f} -- it would stand proud of the medallion")
+    # THE BACK SPOTFACE, IN THE METAL (2026-11-16). Each mount carries a flat-bottomed cut from
+    # the back to the plane the screw's tip reaches. On a floored shell it is in the floor. On
+    # the open frame it is in the boss, whose flat stands boss_flat_d() from the axis, and until
+    # this date the cut was wider than that: it broke out through the foot of all eight flats,
+    # 0.545 mm wide, with a knife edge either side (the second outside review; this section
+    # of the committed frame reads it too). Sectioned just under the cut's bottom: air inside
+    # its radius, and metal ALL THE WAY ROUND just outside it.
+    from shapely.geometry import Point as _PtD
+    sf_d = v["spotface_d"]
+    sf_where, sf_margin = fr.spotface_fit(vname)
+    sf_tip = floor + cavity + fr.BOARD_TH - screw_len
+    sf_sec = section(shell, sf_tip - 0.04, trimesh)
+    sf_out = sf_d / 2.0 + min(0.10, max(sf_margin, 0.02) / 2.0)   # a ring inside the wall it leaves
+    sf_in = sf_d / 2.0 - 0.05
+    sf_n, sf_bad, sf_blind = 72, [], 0
+    for mx, my in fr.MOUNTS:
+        ring = lambda r_: [sf_sec.contains(_PtD(mx + r_ * np.cos(2 * np.pi * i / sf_n),
+                                                my + r_ * np.sin(2 * np.pi * i / sf_n)))
+                           for i in range(sf_n)]
+        gone = sf_n - sum(ring(sf_out))
+        if gone:
+            sf_bad.append((mx, my, gone))
+        if any(ring(sf_in)):
+            err(f"mount ({mx},{my}): metal inside the Ø{sf_d:g} back spotface at z "
+                f"{sf_tip - 0.04:.2f} -- the cut is not there, or not that size")
+        sf_blind += 0 if not all(ring(sf_in)) else 1
+    if sf_bad:
+        err(f"the Ø{sf_d:g} back spotface is not walled all the way round at "
+            f"{len(sf_bad)} of {len(fr.MOUNTS)} mounts: at ({sf_bad[0][0]},{sf_bad[0][1]}) "
+            f"{sf_bad[0][2]} of {sf_n} probes at r {sf_out:.2f} find air"
+            + (" -- the cut breaks out through the boss" if sf_where == "boss" else
+               " -- the cut comes up out of the floor"))
+    if sf_blind:
+        err("SELF-TEST: a ring of probes INSIDE a spotface found metal all the way round -- the "
+            "probe cannot tell a cut from metal")
+    # ...AND THE LAND AT THE RESTING FACE, where the cut is in a boss. The wall probed above
+    # stands between two vertical faces, and each is broken 45 degrees where it meets the
+    # resting face: the flat land left there is the wall less two breaks (fit_rules.
+    # spotface_land -- 0.075 mm on the air frame, under a 0.275 wall). Sectioned 0.02 above the
+    # resting face and probed down the middle of what should be left; a ring just inside the
+    # mouth's cone at the same height must find none, or the probe is not looking at the break.
+    sf_land = fr.spotface_land(vname)
+    land_txt = ""
+    if sf_land is not None:
+        zl = 0.02
+        lsec = section(shell, zl, trimesh)
+        r_cone = sf_d / 2.0 + fr.EDGE_BREAK - zl            # the mouth break's radius at zl
+        r_mid = r_cone + (sf_land + 2.0 * zl) / 2.0         # the middle of the metal at the flat
+        lost, seen = [], 0
+        for mx, my in fr.MOUNTS:
+            pts = lambda r_: [lsec.contains(_PtD(mx + r_ * np.cos(2 * np.pi * i / sf_n),
+                                                 my + r_ * np.sin(2 * np.pi * i / sf_n)))
+                              for i in range(sf_n)]
+            gone = sf_n - sum(pts(r_mid))
+            if gone:
+                lost.append((mx, my, gone))
+            seen += sum(pts(r_cone - 0.03))
+        if lost:
+            err(f"no land is left at the resting face between the Ø{sf_d:g} spotface's mouth "
+                f"break and its boss at {len(lost)} of {len(fr.MOUNTS)} mounts: at "
+                f"({lost[0][0]},{lost[0][1]}) {lost[0][2]} of {sf_n} probes at r {r_mid:.3f}, "
+                f"z {zl:.2f} find air (the rule leaves {sf_land:.3f} mm)")
+        if seen:
+            err(f"SELF-TEST: {seen} probes inside the spotface's mouth break at z {zl:.2f} found "
+                f"metal -- the land probe is not looking at the break")
+        land_txt = (f", and a land is left at the resting face between its mouth break and the "
+                    f"boss's foot ({sf_n} probes a mount at r {r_mid:.3f}, z {zl:.2f}; "
+                    f"{sf_land:.3f} mm wide at its narrowest by rule)")
     if len(_ERRORS) == pre_screw_errs:
         extra = (", tip stays >= 0 above the resting plane" if open_back
                  else f" (back face {back:.3f})")
         ok(f"all {len(fr.MOUNTS)} mounts: boss material present, {screw_len} mm screw lands "
-           f"inside the shell{extra}")
+           f"inside the shell{extra}; each Ø{sf_d:g} back spotface is cut and is walled all the "
+           f"way round ({sf_n} probes at r {sf_out:.2f}; it is in the {sf_where}, with "
+           + (f"{sf_margin:.3f} mm of boss wall left round it by rule)" if sf_where == "boss" else
+              f"{sf_margin:.3f} mm of floor left over its bottom by rule)") + land_txt)
 
     # ---- 5. the front side: nothing of the shell may stand over it -------------------
     # THE CELLS ARE THE WHOLE POINT. This card harvests indoor light through two cells
@@ -1470,6 +1541,46 @@ def check_variant(vname, v, fr, bp, trimesh):
                 err(f"SELF-TEST: the monogram reads as well mirrored as it does the right way round "
                     f"({max(scores[1:]):.3f} against {scores[0]:.3f}) -- these letters cannot tell "
                     f"which way the art reads")
+        # ...and the reeded ribs, which are rear art too (2026-11-16). The second outside review
+        # found one of the 38 a 0.58 mm shorter than its three counterparts -- in the metal, on
+        # every max shell since the blends went onto the back, with this check reading only the
+        # coin. Two measurements on the same section: the ribs that stand in the valleys against
+        # fit_rules.fin_ribs(), and against their own reflections. The mounts are mirrored about
+        # both centre lines and the rib grid is anchored on them, so the ribs have no hand: a
+        # shell written in the wrong hand passes this, and one with a rib of its own does not.
+        rib_txt = ""
+        if v.get("fins"):
+            from shapely.geometry import box as _boxL
+            valley = fr.fin_region().buffer(-0.05)
+            want_r = _uu(fr.fin_ribs()).intersection(valley)
+            got_r = art.intersection(valley)
+            _body = lambda g: g.buffer(-ART_ERODE).area
+            _tb = lambda g: _aff.scale(g, xfact=1.0, yfact=-1.0, origin=(0.0, H / 2.0))
+            _lr = lambda g: _aff.scale(g, xfact=-1.0, yfact=1.0, origin=(W / 2.0, 0.0))
+            rib_off = _body(got_r.symmetric_difference(want_r))
+            rib_tb = _body(got_r.symmetric_difference(_tb(got_r)))
+            rib_lr = _body(got_r.symmetric_difference(_lr(got_r)))
+            if want_r.area < 100.0:
+                err(f"fit_rules.fin_ribs() returns {want_r.area:.1f} mm2 of rib on a variant with "
+                    f"reeded fields -- nothing to read")
+            elif rib_off > ART_OFF_MAX:
+                err(f"the reeded ribs in the metal are not the ribs fit_rules.fin_ribs() lays out: "
+                    f"{rib_off:.3f} mm2 with body differs (z {zb:.3f})")
+            if max(rib_tb, rib_lr) > ART_OFF_MAX:
+                err(f"the reeded ribs in the metal are not their own mirror image: {rib_tb:.3f} mm2 "
+                    f"with body differs top for bottom and {rib_lr:.3f} left for right -- a rib is "
+                    f"longer or shorter than its counterparts")
+            # canary: the defect itself, one outermost rib 0.58 mm short at its east end
+            _r0 = min(fr.fin_ribs(), key=lambda r_: (round(r_.centroid.y, 1), -r_.bounds[2]))
+            _cut = got_r.difference(_boxL(_r0.bounds[2] - 0.58, _r0.bounds[1] - 0.05,
+                                          _r0.bounds[2] + 0.05, _r0.bounds[3] + 0.05))
+            if _body(_cut.symmetric_difference(_tb(_cut))) <= ART_OFF_MAX:
+                err("SELF-TEST: the ribs with one outermost rib cut 0.58 mm short still read as "
+                    "their own mirror image top for bottom -- the test above cannot fail")
+            rib_txt = (f"; its {len(fr.fin_ribs())} reeded ribs are the ones laid out "
+                       f"({rib_off:.4f} mm2 of {want_r.area:.0f} off) and their own mirror images "
+                       f"({rib_tb:.4f} top for bottom, {rib_lr:.4f} left for right; one cut 0.58 "
+                       f"short is seen)")
         if len(_ERRORS) == pre:
             ok(f"the rear art is in the metal where medallion.geometry() puts it "
                f"({off:.4f} mm2 of {want.area:.1f} off; reflected top for bottom, as a shell "
@@ -1477,7 +1588,7 @@ def check_variant(vname, v, fr, bp, trimesh):
                f"{_md.DIAL_MONOGRAM!r} from the back ({scores[0]:.3f} against the font's letters; "
                f"{scores[1]:.3f} / {scores[2]:.3f} / {scores[3]:.3f} mirrored left for right, top "
                f"for bottom, turned half a turn) -- this shell's hand is its rear art, and this "
-               f"is the gate that holds it")
+               f"is the gate that holds it" + rib_txt)
 
     return len(_ERRORS), len(_WARNS)
 
