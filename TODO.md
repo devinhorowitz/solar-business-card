@@ -2212,7 +2212,7 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
     - Masses move with the volumes, at the densities the review's own figures imply (7.99
       and 4.43 g/cm³): the air frame +0.032 g, to 7.733; the max shell +0.001 g.
 
-  **MEASURED 2026-11-25 on `b2b0832` — SolidCraft 0.49.1 (the rounds before it used 0.40.1); the
+  **MEASURED 2026-11-26 on `b2b0832` — SolidCraft 0.49.1 (the rounds before it used 0.40.1); the
   board export is `9a90a36`'s, the board's geometry being unchanged since.** The solids as that
   merge run committed them. The max shell and the air frame are the only solids whose bytes differ
   from `3440af7`'s, so those two were measured and each was compared with its `3440af7` self. Board
