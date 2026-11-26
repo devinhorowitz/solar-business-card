@@ -2212,6 +2212,90 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
     - Masses move with the volumes, at the densities the review's own figures imply (7.99
       and 4.43 g/cm³): the air frame +0.032 g, to 7.733; the max shell +0.001 g.
 
+  **MEASURED 2026-11-26 on `b2b0832` — SolidCraft 0.49.1 (the rounds before it used 0.40.1); the
+  board export is `9a90a36`'s, the board's geometry being unchanged since.** The solids as that
+  merge run committed them. The max shell and the air frame are the only solids whose bytes differ
+  from `3440af7`'s, so those two were measured and each was compared with its `3440af7` self. Board
+  coordinates. "Inferred" marks arithmetic or code reading on top of a measurement. This records a
+  measurement; it does not tick the checkbox above.
+  - **Agree — the air frame's spotface:**
+    - Eight cylinders of r 1.2000 on the mount axes, z 0.100–0.200, each two full circles and a
+      seam; none of r 1.500 left. Kernel 286 faces and 684 edges. Volume 967.8568 mm³.
+    - Spotface to boss flat, face to face: 0.2750 at all eight. Spotface mouth to the flat's 45°
+      foot, at the resting face: 0.0750 at all eight.
+    - Max and lite keep r 1.500, ending at z 0.400 and 0.420, with 0.600 and 0.180 of floor above.
+  - **Agree — the max shell's ribs:**
+    - The outermost rib by the y 2.05 edge runs x 7.9297–42.8706, and its twin by the far edge
+      7.9295–42.8703 (straight sides ending at 42.5706 and 42.5703). The same listing of the
+      `3440af7` shell reads 42.2860, 0.5844 short.
+    - No rib differs from its top-for-bottom twin, nor its west tip from its east, by more than
+      0.0003 mm. Rib tops 974.4346 mm².
+    - Against its own top-for-bottom mirror image the shell differs in 36 places, all at the
+      medallion (78 in the `3440af7` record). Left for right it differs at the medallion and, on
+      the cavity side, where the west lip is 2.25 and the east 1.25 and where the tabs sit 0.15 off
+      centre; nowhere on the ribs.
+    - Nearest rib wall to a back blend, face to face: 1.1887–1.1890 at the twelve, and 4.1827 at
+      the four beside the medallion. On the `3440af7` shell the blend about (43.485, 4.048) reads
+      1.3117.
+    - STEP 30,565 edges and 10,337 faces, none under 0.001 mm² and none on more than two faces.
+  - **Agree — nothing else moved** (old against new, tolerance 0.002 mm, a sample every 0.2 mm):
+    - Air frame: 8 regions, all metal the new frame has and the old did not, each within 1.6 of a
+      mount axis at z 0–0.200. +4.0507 mm³, 8 × 0.50633.
+    - Max shell: 19 regions, all rib ends on the back at z −0.10 to 0.60: the one at x
+      41.986–42.869, y 2.849–3.449, and eighteen at x 2.84–3.14 and 47.66–47.96 that differ by
+      0.0025–0.0096. +0.2933 mm³. Nothing on the cavity side, and nothing at the coin.
+    - Canary: the new frame moved 0.010 mm reads as 18 regions, 797 mm² beyond tolerance.
+  - **Agree — each STL is its STEP**, in the same hand and place (tolerance 0.01 mm): both braces
+    0.0000 mm at the most; the max shell, the lite shell and the air frame 0.0047. STL volumes
+    5299.0479 and 967.8336 for the two rebuilt solids. Canaries: a 0.050 mm shift reads 0.0500, and
+    the `d060215` brace STL reads 1.94 off.
+  - **Agree — regression on these solids:**
+    - Tap-drill axes on the board's eight holes: residual 0.000000 on all three shells.
+    - Max brace on KiCad's board: L2 only, 0.0466 mm³. Mirrored: 52.8334 over 33 parts, and
+      487.9200 over 28. Lite brace: nothing. Mirrored: 52.9228 over 34, and 301.7856 over 28.
+    - Max assembly, 96 pairs: the board in its recess (5.93073 mm³) and L2 in the brace
+      (0.04661), nothing else. The supercaps stand 0.0600 off the floor.
+    - Supercap face to the boss flat beside it: 0.7500 (SC1), 0.8202 (SC3), 0.9513 (SC2) and
+      0.7994 (SC4).
+    - Brace to shell, the floor contact left out: 0.0700 on max and lite, at (2.828, 57.191).
+    - The only up-facing planes are floor, seat and rim. No concave vertical corner of 30° or
+      more between planar faces in any of the three cavities.
+    - Floor fillets: 8 runs, 132.279 mm between scoop axes. Each scoop axis stands 0.425, 0.394,
+      0.404 or 0.431 from the next foot.
+  - **Agree — the sheets:** the flat at 1.475; the Ø2.4 spotface, its bottom at z 0.200; "AXIS
+    0.39 OR MORE" (0.394 at the least). The rim top and the recess mouth are single 0.10 × 45°
+    faces on all three shells, and the east lip's top is one plane with its break at the wall. The
+    brace channel measures 12.400. The pogo sheet's text is `9a90a36`'s, line for line.
+  - **New, none of it a disagreement:**
+    - **Two edges 0.0000956 mm long on every shell**, at (48.615, 26.310) and (48.615, 57.950) at
+      seat level, where the R1.00 blend meets the coil cut. The air frame has two more, 0.0000953
+      long at z 0.100, at (48.615, 30.950) and (48.615, 62.590). The STEPs state a tolerance of
+      0.0005 mm. The `3440af7` air frame has the same four. The next shortest edge is 0.0025 mm
+      (max), 0.050 (lite) and 0.063 (air).
+    - **SolidCraft 0.49.1 prints import notes that 0.40.1 did not.** On the max and lite shells:
+      "32 edges lie off their faces' surfaces by more than 0.00002 mm", by up to 0.00039. All six
+      STEPs still import closed, with no repair.
+    - **The list at the head of this item is behind the solids.** It still expects flats at x
+      4.415, 46.254 and 46.406 with datum ends 0.25 off (they are at 4.345 and 46.455, with no
+      datum-end faces); the brace's east face at 49.500 (49.480); 30,914 edges and 10,453 faces
+      with 35 under 0.001 mm² (30,565, 10,337, none); ten R2.000 and two R1.000 boss blends and a
+      bore at each corner boss (8 and 4 by the sheet and the last review, which found no bores);
+      the ridge square at y 31.67 and 57.23 (31.4852 and 57.4202); 487.6 and 301.5 for the
+      mirrored braces (487.9200 and 301.7856); and 5312.813 mm³ (5299.094 by the block above).
+      The later blocks carry the current figures.
+    - **The exact volume of the two floored shells reads 0.099 mm³ under OCC's**: 5298.9952 and
+      3934.8008. The last review found the same with 0.40.1 (0.09 then). The air frame and both
+      braces agree to 0.001, and the change between commits is +0.2933 by the exact routine and
+      by SolidCraft's finest mesh alike. That finest mesh no longer matches OCC on the max shell:
+      it reads 0.025 under on both commits.
+    - Note 8's "NONE x3.0–23.5, x27.0–47.5" gives band limits. At the recess wall the cavity is
+      open over x 5.280–22.565 and 27.935–45.520; from there out to 3.0 and 47.5 the metal is the
+      corner boss and its root.
+  - **Not measured:** the lite shell, both braces and the shim in depth, and the pogo plate (the
+    same bytes as at `3440af7`; the plate as at `9a90a36`); the coil stand-offs and the
+    max-material supercaps (the cavity side has not moved); tolerance stacks and anything
+    physical.
+
 - [ ] **[SOURCING — lite/air] Pick the thin supercap MPN**
   _(2026-08-07, opened with the three-variant round.)_ `part_heights.SUPERCAP_H_THIN = 1.00`
   is **PROVISIONAL — DRH's working number, no MPN, no datasheet behind it**, unlike every
