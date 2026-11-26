@@ -2326,7 +2326,20 @@ def _blend_chord(mx, my, J, t, n, r, room, chords):
                      (J[0] - 0.30 * t[0] - _BLEND_LIP * n[0], J[1] - 0.30 * t[1] - _BLEND_LIP * n[1]),
                      (J[0] - 0.30 * t[0] + 0.20 * n[0], J[1] - 0.30 * t[1] + 0.20 * n[1]),
                      (T[0] - _BLEND_BOSS * t[0], T[1] - _BLEND_BOSS * t[1])])
+    # THE CUT'S OWN LINE, EXACTLY (2026-11-26). t and n are the WALL's frame, and the wall as
+    # cut leans -- 6.5e-6 rad on the east wall, the 0.0005 mm its simplify leaves in 77. Laying
+    # the blend out square to that wall is right (rule: lay new metal out on the wall that is
+    # CUT), but a blend has TWO faces, and the second is a slab of boss_coil_cuts whose edge
+    # is y = yc and nothing else. A line through C along n is not that edge: where the blend's
+    # circle crosses, it stands 6.0e-6 mm off it. The shell CAD ended the blend's edge break on
+    # that line, and the solid kept the difference as an edge 0.0000956 mm long at each of the
+    # four blends -- on every shell from 2026-11-15 until the third outside review listed its
+    # edges by length (SolidCraft 0.49.1). `cut_u` runs along the cut and `cut_s` points to the
+    # blend's side of it, both exact, for whatever has to end ON the cut's plane.
+    cut_u = (math.copysign(1.0, n[0]), 0.0)
+    cut_s = (0.0, math.copysign(1.0, t[1]))
     return {"O": O, "r": r, "F": F, "T": T, "J": C, "J0": J, "E0": E0, "t": t, "n": n,
+            "cut_u": cut_u, "cut_s": cut_s,
             "cover": cover, "limit": None, "twin": False, "chord": True}
 
 
@@ -3569,6 +3582,58 @@ def crowded_edges(shape):
     return out
 
 
+MIN_EDGE = 0.001           # mm: no edge of an exported solid may be shorter (short_edges). The
+                           # shortest edges anything here means to have are 0.0018 (a brace) and
+                           # 0.0025 (the medallion's lettering); the four this was written for
+                           # were 0.0000956, under the tolerance the lite shell's own STEP states
+
+
+def short_edges(shape, least=None):
+    """[(length, (x, y, z))] -- every edge of an OCC shape shorter than `least` (MIN_EDGE),
+    shortest first, with its midpoint. Edges OCC itself marks degenerated -- a cone's apex, a
+    sphere's pole -- have no length by design and are left out."""
+    from OCP.BRep import BRep_Tool
+    from OCP.BRepGProp import BRepGProp
+    from OCP.GProp import GProp_GProps
+    from OCP.TopAbs import TopAbs_EDGE
+    from OCP.TopExp import TopExp
+    from OCP.TopoDS import TopoDS
+    from OCP.TopTools import TopTools_IndexedMapOfShape
+    least = MIN_EDGE if least is None else least
+    edges = TopTools_IndexedMapOfShape()
+    TopExp.MapShapes_s(shape, TopAbs_EDGE, edges)
+    out = []
+    for i in range(1, edges.Extent() + 1):
+        e = TopoDS.Edge_s(edges.FindKey(i))
+        if BRep_Tool.Degenerated_s(e):
+            continue
+        g = GProp_GProps()
+        BRepGProp.LinearProperties_s(e, g)
+        if g.Mass() < least:
+            c = g.CentreOfMass()
+            out.append((g.Mass(), (c.X(), c.Y(), c.Z())))
+    return sorted(out)
+
+
+_SHORT_EDGE_SELFTEST = []
+
+
+def _short_edges_selftest():
+    """Once a process: short_edges() must find the edges of a notch 0.0001 mm deep cut into a
+    block, and none on the block before it is cut. A gate that cannot go red is not one."""
+    if _SHORT_EDGE_SELFTEST:
+        return
+    import cadquery as _cq
+    block = _cq.Workplane("XY").box(1.0, 1.0, 1.0)
+    notch = block.cut(_cq.Workplane("XY").box(0.0001, 0.4, 0.4).translate((0.49995, 0.3, 0.3)))
+    if short_edges(block.val().wrapped) or not short_edges(notch.val().wrapped):
+        raise SystemExit("export_step_stable SELF-TEST: short_edges() reports "
+                         f"{len(short_edges(block.val().wrapped))} short edge(s) on a plain block "
+                         f"and {len(short_edges(notch.val().wrapped))} on one with a 0.0001 mm "
+                         "notch -- the edge-length gate cannot tell them apart")
+    _SHORT_EDGE_SELFTEST.append(True)
+
+
 def export_step_stable(solid, path, **kw):
     """cq.exporters.export to STEP, but leave the file alone if only the timestamp moved.
 
@@ -3610,6 +3675,25 @@ def export_step_stable(solid, path, **kw):
                 f"({_a[0]:.3f}, {_a[1]:.3f}, {_a[2]:.3f}) .. ({_b[0]:.3f}, {_b[1]:.3f}, "
                 f"{_b[2]:.3f}), solid coordinates). OCC accepts a solid that touches itself "
                 f"like this; other kernels refuse to open the file -- refusing to export")
+        # EDGE-LENGTH GATE (2026-11-26). The manifold gate asks how many faces share an edge;
+        # nothing asked how LONG an edge is, and "no face under 0.001 mm2" -- counted with every
+        # change since 2026-11-14 -- does not answer it: an edge can be 0.0001 long between two
+        # faces of ordinary size. Every shell carried two of 0.0000956 mm (the air frame four)
+        # from 2026-11-15, where an R1.00 blend's edge break ended 6.0e-6 mm off the straight
+        # cut it runs out against (_blend_chord has the cause). OCC calls that valid and so did
+        # SolidCraft; an edge shorter than the tolerance its own file states is what another
+        # importer heals, or refuses. Measured before it was wired in: 2 / 2 / 4 on the shells
+        # as committed at b2b0832, 0 on both braces and the pogo plate, 0 on the shells rebuilt
+        # with the fix.
+        _short_edges_selftest()
+        _short = short_edges(_shape)
+        if _short:
+            _len, _at = _short[0]
+            raise SystemExit(
+                f"export_step_stable: the solid bound for {path} has {len(_short)} edge(s) "
+                f"shorter than {MIN_EDGE} mm (shortest: {_len:.7f} mm at ({_at[0]:.3f}, "
+                f"{_at[1]:.3f}, {_at[2]:.3f}), solid coordinates). OCC accepts it; an importer "
+                f"with a coarser tolerance heals it or refuses the file -- refusing to export")
     strip = lambda s: _re.sub(r"(?m)^FILE_NAME\('[^']*','[^']*'", "FILE_NAME(", s)
     tmp = path + ".tmp"
     # exportType is REQUIRED here and was the bug that kept this function from ever running:

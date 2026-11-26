@@ -971,54 +971,81 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
   four-face edges, 804 sliver faces, four seat-level faces of 24.896 mm²) — but it is the same kernel
   that wrote the files, which is exactly what the original measurement was designed to avoid. On the
   solids the merge run commits, check:
-  - **No supercap-to-boss overlap**, max / lite / air. Expect a flat on every boss, **0.750 mm** off
-    the can's free edge (its bay clearance): faces at board x 4.345 (SC1), 4.415 (SC3), 46.254 (SC2),
-    46.406 (SC4). The two east mid-span bosses also meet SC2's and SC4's datum ends, 0.25 off.
-    _(Was 0.200 off a nominal can until 2026-11-13 — see the boss item below.)_
-  - **No brace-to-shell overlap**, max and lite. Expect the brace's east face at x **49.500** against
-    a wall at 49.550.
+  _(This list was brought up to date on 2026-11-26. Seven of its expectations had been left at
+  figures from earlier builds, which the SolidCraft review of `b2b0832` pointed out — the block
+  beginning "MEASURED 2026-11-26" below. Each is now the figure for the solids `main` carries, with
+  the figure it replaces kept in a parenthesis beside it. The later blocks have the history.)_
+  - **No supercap-to-boss overlap**, max / lite / air. Expect ONE flat distance on all eight
+    bosses, **1.475 mm** from the hole axis: faces at board x **4.345** (the four west bosses,
+    facing SC1 and SC3) and **46.455** (the four east, facing SC2 and SC4), each 0.75–0.95 mm off
+    the can beside it (SolidCraft on `b2b0832`: 0.7500 SC1, 0.8202 SC3, 0.9513 SC2, 0.7994 SC4).
+    No boss carries a datum-end face: the two east mid-span bosses are cut straight across for
+    the coil instead, 2.32 from the axis on both sides. That is at NOMINAL size. At its largest
+    allowed size a can is not clear of the corner-boss roots or of the floor fillets, by rule
+    and provisionally — the blocks "THE FLOOR MEETS THE WALL THROUGH A RADIUS" and "THE CORNER
+    BOSSES AND THE TWO TABS" say what each needs of the can.
+    _(Until the contouring pass of 2026-11-14 this read: a flat 0.750 mm off each can's free edge,
+    faces at x 4.345 (SC1), 4.415 (SC3), 46.254 (SC2), 46.406 (SC4), and the two east mid-span
+    bosses meeting SC2's and SC4's datum ends 0.25 off. Was 0.200 off a nominal can until
+    2026-11-13 — see the boss item below.)_
+  - **No brace-to-shell overlap**, max and lite. Expect the brace **0.07 mm** off every shell face
+    it reaches (`fit_rules.WALL_FIT`): its east face at x **49.480** against a wall at 49.550, its
+    west at 2.321 against 2.250, and its prongs' ends at y 0.12 and 88.78 against recess walls at
+    0.05 and 88.85. SolidCraft reads 0.0700 at the nearest, at (2.828, 57.191).
+    _(49.500 against 49.550, a 0.05 fit, until the brace was nested and its fit set on 2026-11-15.)_
   - **The four downward faces at seat level are gone** (24.896 mm², max and lite; the air frame had
     them too).
-  - **The max shell STEP imports with no edge repair.** Expect **30,914 edges, none shared by more
-    than two faces; 10,453 faces, 35 of them under 0.001 mm²**; no upward faces at z +0.02. _(Counts
-    by OCC on a local build with CI's pins, 2026-11-14, of the shell with each boss joined to the
-    wall and each back annulus to the frame — the last two blocks of this item. They were
+  - **The max shell STEP imports with no edge repair.** Expect **30,559 edges, none shared by more
+    than two faces and none shorter than 0.001 mm; 10,335 faces, none under 0.001 mm²**; no upward
+    faces at z +0.02. _(Counts by OCC on a local build with CI's pins, 2026-11-26, of the shell
+    with its short edges gone — the last block of this item. They were 30,565 / 10,337 / none at
+    `b2b0832`, which SolidCraft confirmed, with two edges 0.0000956 mm long; 30,914 / 10,453 / 35
+    on 2026-11-14, with each boss joined to the wall and each back annulus to the frame;
     28,512 / 9,647 / 35 with the cavity's junctions alone; 28,544 / 9,654 / 36 with the coil relief alone,
     the shell at `5a36638`; 28,526 / 9,648 / 36 on the STEP built at `a4f951e`, which is what the
     2026-11-14 ArtCraft record below measured; and 28,403 / 9,626 / 82 at `9a90a36`, which is what
     the 2026-11-13 MEASURED block reads.)_
   - **Each boss runs into the wall through a blend, and no corner boss stands beside a slot** (max /
-    lite / air; since 2026-11-14, the last block of this item). Expect twelve concave cylinders
-    where a boss meets the lip's wall — **ten of R2.000 and two of R1.000**, the two on the
-    ferrite's side of the bosses at (47.93, 28.63) and (47.93, 60.27) — and solid metal from each
-    corner boss to the recess wall, with that boss's Ø2.0 bore running out to the wall. The axes
-    are in the last block.
+    lite / air). Expect twelve concave cylinders where a boss meets the lip's wall — **eight of
+    R2.000 and four of R1.000**, the four where the straight coil cuts on the bosses at
+    (47.93, 28.63) and (47.93, 60.27) meet the east wall — and solid metal from each corner boss
+    to the recess wall. **No boss carries a bore**: each corner boss's flat runs to the short-edge
+    wall through one R1.000 root. The axes are in the blocks "THE SIMPLER CUTS" and "THE CORNER
+    BOSSES AND THE TWO TABS".
+    _(Ten of R2.000, two of R1.000 and a Ø2.0 bore at each corner boss until 2026-11-15.)_
   - **The open frame still has its resting-face edge-break**, including a 45° foot on each boss flat.
   - **No brace resin wall under 0.10 mm**, max and lite, and none under `SLA_WALL` 0.60 except the
     ferrite channel's own walls (x 36.2–36.7 and 49.10, top 0.33 mm only) — **and none of those
-    under 0.25** (`fit_rules.PRINT_WALL`): the ridge east of the channel now stops square at y 31.67
-    and y 57.23, where it is 0.25 wide, instead of tapering to a point at 31.40 and 57.50. The
-    0.0068 mm wall at (4.411, 49.653) is the canary: it must be gone.
+    under 0.25** (`fit_rules.PRINT_WALL`): the ridge east of the channel now stops square at y **31.49**
+    and y **57.42**, where it is 0.25 wide, instead of tapering to a point at 31.40 and 57.50
+    (SolidCraft on `3440af7`: 31.4852 and 57.4202, end faces 0.2526 and 0.2519 wide; the braces
+    have not changed since). _(31.67 and 57.23 at `5a36638`.)_ The 0.0068 mm wall at
+    (4.411, 49.653) is the canary: it must be gone.
   - **The files are the parts, not their mirror images** (written right-handed since 2026-11-13).
     In a shell's or a brace's file a board point (x, y) is at **(x − 25.4, 44.45 − y)**: y runs UP
     now, so every board coordinate in this list reads that way in SolidCraft. Expect:
     - against KiCad's STEP export of the populated board, placed by a translation alone and NOT
       mirrored: the **max brace overlaps one part, L2, by 0.047 mm³** (KiCad's generic 1008 body,
       1.20 tall where the part fitted is 1.00 — the item on L2 below) and the **lite brace
-      nothing**. Mirrored, they must collide: 52.8 mm³ over 33 parts and 487.6 over 28 (max),
-      52.9 over 34 and 301.5 over 28 (lite). Cutting the two west corners back (the last
-      block of this item) did not move them: the gate printed 52.833 over 33, 487.572 over 28,
-      52.933 over 34 and 301.511 over 28 on the braces at `c448408`, as it had at `5a36638`
-      — no part stands at either corner. The 53.1 / 493.9 SolidCraft first
-      reported were the braces at `d060215`, before the level opening;
+      nothing**. Mirrored, they must collide: **52.833 mm³ over 33 parts and 487.920 over 28
+      (max), 52.923 over 34 and 301.786 over 28 (lite)** — the gate's figures for the braces as
+      nested and fitted at 0.07, which SolidCraft read as 52.8334 / 487.9200 / 52.9228 / 301.7856
+      on `3440af7` and again on `b2b0832`. _(Before the nesting the gate printed 52.833 over 33,
+      487.572 over 28, 52.933 over 34 and 301.511 over 28, on the braces at `c448408` as at
+      `5a36638`: cutting the two west corners back had not moved them, no part standing at
+      either corner. The 53.1 / 493.9 SolidCraft first reported were the braces at `d060215`,
+      before the level opening.)_;
     - **the medallion reads correctly from behind** — DRH, No 001, and SOLAR · NFC · TITANIUM ·
       ATL GA · MMXXVI clockwise round the ring;
     - **the pogo plate takes the panel face-UP**: its two dowel bores under TH1 and TH2 (file
       (−4.9, −20.0) and (55.7, −85.0); the plate is un-centred, a board point (x, y) is at
       (x, −y)), and its title and net labels reading correctly from above;
     - the max shell STEP's counts are what they were — the reflection changes no face, edge or
-      volume (**5312.813 mm³** by OCC with each boss joined to the wall and each back annulus to
-      the frame; 5307.193 with the cavity's junctions alone; 5289.748 at `5a36638`,
+      volume (**5299.094 mm³** by OCC on the max shell `main` carries, unchanged by the removal
+      of its short edges; SolidCraft's exact routine reads 0.099 under OCC on the two floored
+      shells, and its change between commits agrees with OCC's to 0.0001. It was 5312.813 with
+      each boss joined to the wall and each back annulus to the frame, before the contouring
+      pass; 5307.193 with the cavity's junctions alone; 5289.748 at `5a36638`,
       with the coil relief alone; 5289.905 at `a4f951e`; 5293.129 was `9a90a36`'s).
     `scripts/handedness_drc.py` measures the first and third of these on every CI run, in the
     kernel that wrote the files; this is the check in one that did not.
@@ -2295,6 +2322,62 @@ wrong on this board — see the PCB item; `U5` pin 7 is unconnected.)_
     same bytes as at `3440af7`; the plate as at `9a90a36`); the coil stand-offs and the
     max-material supercaps (the cavity side has not moved); tolerance stacks and anything
     physical.
+
+  **THE SHORT EDGES REMOVED, AND THE LIST AT THE HEAD OF THIS ITEM BROUGHT UP TO DATE, 2026-11-26
+  (DRH, on that review's "New" list: "do it all") — SO ALL THREE SHELLS CHANGED AGAIN; BOTH
+  BRACES, THE SHIM AND THE POGO PLATE DID NOT.** The three shells have no outside measurement
+  again until SolidCraft compares each with its `b2b0832` self. The checkbox above is still open.
+  - **The edges, by OCC, beside SolidCraft's figures.** The same ten, reproduced before anything
+    was changed: two of 0.0000956 mm on each shell, at (48.615, 26.310) and (48.615, 57.950) at
+    seat level, between the seat's plane and an R1.000 blend's cylinder; and two of 0.0000953 on
+    the air frame at z 0.100, at (48.615, 30.950) and (48.615, 62.590), between a coil cut's
+    plane and its 45° foot. The next shortest edge on each solid: 0.0025 (max), 0.050 (lite),
+    0.063 (air), 0.0018 (both braces), 0.0158 (the pogo plate).
+    - One figure to set beside the record's. It says the STEPs state a tolerance of 0.0005 mm.
+      That is the lite shell's file. The max shell's states 0.00002 and the air frame's 0.000002
+      (`UNCERTAINTY_MEASURE_WITH_UNIT`), so the edges were under the lite's stated tolerance and
+      over the other two's.
+  - **The cause.** A blend onto a straight coil cut is laid out on the wall as cut, and that
+    wall leans by 6.5e-6 rad. Its edge break — a cone about the blend's axis — has to end on
+    the cut, and was ended on a line through the corner along the WALL's normal. Where the
+    blend's circle crosses the cut, 0.935 mm from the corner, that line stands 6.0e-6 mm off the
+    cut's plane: short of it at the south side of each boss, which left 0.0000956 mm of the
+    blend's top edge unbroken, and past it at the north side, which on the open frame split the
+    edge of the cut's foot.
+  - **Now:** `fit_rules._blend_chord()` hands out the cut's own line (`cut_u`, `cut_s`: the edge
+    of the slab `boss_coil_cuts()` cuts with, exactly), and the shell CAD's `_blend_solid()` ends
+    the break on it. No surface was moved on purpose.
+  - **Gates.** `fit_rules.short_edges()`, in `export_step_stable()`, refuses any solid with an
+    edge under `MIN_EDGE` 0.001 mm, and proves on every run that it can find a notch 0.0001 mm
+    deep. On the solids as committed at `b2b0832` it finds 2 / 2 / 4. `check_consistency` [8]
+    4b' holds the rule: the line each such blend's break ends on is a slab's own edge.
+  - **Measured on the rebuilt solids (scratch tree; the merge run builds the ones that count):**
+    - No edge under 0.001 mm on any shell. The shortest are 0.0025 (max), 0.050 (lite) and 0.063
+      (air), as they were before with the ten taken away.
+    - Max STEP 30,559 edges (30,565) and 10,335 faces (10,337); lite 748 (754) and 297 (299); air
+      676 (684) and 286 (286). No edge on more than two faces, no face under 0.001 mm².
+    - Volumes as they were: 5299.094 / 3934.900 / 967.857 mm³ by OCC on the STEPs, and
+      5299.0479 / 3934.8896 / 967.8336 on the STLs, the same to four decimals before and after.
+    - Old against new, every STL vertex against the other file's surface: 0.0013 mm at the
+      most, and over 0.0001 at only 8 vertices one way and 6 the other on each shell. All of
+      them lie on the coil cuts' planes at y 30.950 and 62.590, within 0.10 mm under the seat:
+      the line where a break ends on a cut.
+    - Both braces (STEP and STL), the shim's DXF and the pogo plate (STEP and STL):
+      byte-identical to `main`'s.
+    - Every local gate: the three generators with the new export gate, `check_mesh` (no
+      re-ledger: no volume moved), `interference_drc`, `assembly_drc` (0 errors on each
+      variant), the handedness rehearsal and its [E], `reflow_shim`, and the consistency suite
+      without `kicad-cli`.
+  - **The 32 edges SolidCraft 0.49.1 reports off their surfaces** (max and lite, by up to
+    0.00039 mm) are the edge breaks of the sixteen back blends: 16 edges between two cones and
+    16 between a cone and a plane, at z −0.10, each carrying an OCC tolerance of 0.00013 mm.
+    Not changed.
+  - **The list at the head of this item** now gives the figures for the solids `main` carries;
+    each figure it replaced is in a parenthesis beside it.
+  - **Not changed:** the lip note's "NONE x3.0–23.5, x27.0–47.5". It says where there is no LIP.
+    At the recess wall the cavity is open over x 5.280–22.565 and 27.935–45.520, as the review
+    measured and `boss_roots()` and `tab_roots()` give; the rest is the corner boss and its
+    root, which the plan draws. The sheet's notes block has no spare line.
 
 - [ ] **[SOURCING — lite/air] Pick the thin supercap MPN**
   _(2026-08-07, opened with the three-variant round.)_ `part_heights.SUPERCAP_H_THIN = 1.00`

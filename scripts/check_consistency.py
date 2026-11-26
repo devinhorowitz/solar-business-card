@@ -586,6 +586,32 @@ def check_enclosure_fit():
             f"read what moved (fit_rules.boss_blends / boss_webs), then re-ledger the counts "
             f"here and in the docs that quote them")
         bad += 1
+    # 4b'. A BLEND ONTO A STRAIGHT CUT ENDS ITS BREAK ON THE CUT'S OWN LINE (2026-11-26). Such a
+    #     blend has two faces: the wall, which leans as cut, and a slab of boss_coil_cuts,
+    #     which does not. Its edge break is ended on a line through the corner; taken along the
+    #     WALL's normal, that line stood 6.0e-6 mm off the cut's plane where the blend's circle
+    #     crosses, and every shell kept an edge 0.0000956 mm long there (the third outside
+    #     review). The rule: cut_u is the slab's own edge, exactly. THE POLYGON AGAIN -- what
+    #     reads the solid is fit_rules.short_edges() at export.
+    _chord = [(m, b) for m, b in _bl if b.get("chord")]
+    for (mx, my), b in _chord:
+        _slabs = fr.boss_coil_cuts(mx, my)[1]
+        _on = [sl for sl in _slabs
+               if min(abs(b["J"][1] - sl.bounds[1]), abs(b["J"][1] - sl.bounds[3])) == 0.0]
+        if "cut_u" not in b or b["cut_u"][1] != 0.0 or abs(b["cut_u"][0]) != 1.0 or not _on:
+            err(f"the blend at ({b['J'][0]:.2f}, {b['J'][1]:.2f}) meets a straight cut, but the "
+                f"line its edge break ends on ({b.get('cut_u')} through y {b['J'][1]!r}) is not "
+                f"the edge of a slab of boss_coil_cuts({mx}, {my})")
+            bad += 1
+    # canary: where the wall leans, the wall's own normal must read as a different line
+    #     (how far off: the wall's lean times the run from the corner to where the circle crosses)
+    _off = max([abs(b["n"][1]) * ((b["r"] - fr.BLEND_BITE)
+                                  - math.sqrt(b["r"] ** 2 - (b["r"] - fr.BLEND_BITE) ** 2))
+                for _m, b in _chord] or [0.0])
+    if _chord and _off > 1e-9 and all(b.get("cut_u") == b["n"] for _m, b in _chord):
+        err("SELF-TEST: the walls the chord blends stand on lean, and each blend's cut_u is the "
+            "wall's normal all the same -- the test above cannot fail")
+        bad += 1
     # 4c. ...and on the back face (2026-11-14): each proud annulus runs into the proud frame
     #     through the same blend, two per mount. Nothing limits a radius there, so all are
     #     BLEND_R; what answers to them is the reeded pour, which must wrap each at the
@@ -1125,7 +1151,9 @@ def check_enclosure_fit():
            f"R{fr.TOOL_R:g} by the ferrite sheet, {_bfer:.2f} off it, and "
            f"{sum(1 for b in _held if b.get('twin'))} more to match them) stand {_bgap:.2f} off the "
            f"nearest part ({_bref}) and {_bcoil:.2f} off the coil, {len(_wb)} corner webs "
-           f"{_wgap:.2f} off theirs, and {len(_bb)} back-face blends the reeded pour wraps at "
+           f"{_wgap:.2f} off theirs, {len(_chord)} of the blends meet a straight cut and end "
+           f"their breaks on its own line (the wall's normal would stand {_off:.1e} mm off it), "
+           f"and {len(_bb)} back-face blends the reeded pour wraps at "
            f"{_valgap:.2f} (the polygon -- the metal is assembly_drc [J]), its "
            f"{len(fr.fin_ribs())} ribs their own mirror images top for bottom and left for right "
            f"(one cut 0.58 short is seen); back spotfaces "
