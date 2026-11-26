@@ -95,6 +95,38 @@ STO_LDO island / led_sweep / MPN-grouped-BOM work._
   - _LCSC pending as a third source (API hookup TBD). Expectation to verify: strong on the Yageo /
     Samsung / TDK passives, useless for the actual chokepoints (SCHURTER, ANYSOLAR, e-peas, RAMXEED,
     Würth FSFS, likely ADXL367)._
+  - **2026-11-26 sweep: 25 of 30 lines available (27 on 2026-11-14). Two lines went to zero in
+    twelve days, and neither has a better part waiting — both are DRH's to decide.**
+    - **U7 FRAM `MB85RC512TYPN-GS-AWEWE1`: 1,500 → 0, and no stocked source was found for the
+      DFN in any grade.** Mouser shows 0 and "Restricted Availability" for all four DFN order
+      codes (`-GS-` and `-G-`, `AWE1` and `AWEWE1`) and for the 256 Kbit DFN; DigiKey US lists
+      none; DigiKey's German page for the `-G-` tape code reads "no longer available at
+      DigiKey"; Kaga FEI Europe, RAMXEED's own distributor, shows the `-G-` code out of stock
+      at **42 weeks** supplier lead time. RAMXEED's product page still lists all four codes and
+      marks none of them discontinued. Not checked: any other franchised distributor (the stock
+      aggregators refused an automated read). What IS in stock does not fit: the SOP-8 codes
+      (1,378 of `MB85RC512TPNF-G-AMERE2`, 48 of `MB85RC512TYPNF-GS-BCE1`) are 1.75 mm against a
+      0.90 mm pocket, and the only leadless I2C FRAMs on a shelf are 64 Kbit in other packages
+      (`MB85RC64TAPN-G-AMEWE1`, SON-8 2 × 3, 9,375 at Mouser; Infineon `FM24CL64B-DG`, DFN
+      4 × 4.5, 18,742 at DigiKey) — a new footprint and an eighth of the memory; their heights
+      were not verified. **The card runs without U7:** the log is off by default
+      (`USE_FRAM_LOG` 0) and nothing else reads the part; `fram_sleep()` is the only call left,
+      and an absent part costs it what a sleeping part that does not answer costs: two refused
+      frames a poll.
+    - **C4 / C13 `GXT188R61C106KE13D`: 5,393 → 0 at DigiKey, 0 at Mouser, which shows 15,766 on
+      order due 2026-12-08 and 16,000 due 2027-01-07.** No part in stock is better on every
+      axis: none is AEC-Q200, none is ±10 % at 0.95 mm. **Every 10 µF 0603 of 16 V or more on a
+      shelf is 1.00 mm at maximum where the maker's own figure could be read** — Samsung
+      `CL10X106MO8NRNC` (16 V X6S, 105 °C) is 0.80 ±0.20, Taiyo Yuden `TMK107BBJ106MA-T`
+      (25 V X5R) is 0.8 +0.20/−0 — **and DigiKey's "Thickness (Max)" says 0.90 for both.** It
+      was right for every Murata part checked on 2026-11-14; it is not a source for a height
+      on its own. Murata's pages refused an automated read this time, so
+      `GRM188C81C106MA73D` (16 V X6S, 1.00 by DigiKey) and `GRM188R61C106MAALJ` (the one
+      same-height part in stock: general purpose, ±20 %, 420 at Mouser, 0.95 by DigiKey) are
+      unverified. **What 1.00 costs, measured by rebuilding:** the max brace loses 0.470 mm³
+      (two blind pockets 0.05 deeper), the lite brace is byte-identical, and no shell moves —
+      the cavities are already sized by parts that are 1.00 (U1, L2, C23). As committed, the
+      max brace clears a 1.00 mm capacitor by 0.17 where the rule asks 0.22 (`AIR`).
 
 - [ ] **[BENCH/PCB — TABLED 2026-08-02 until the hero project ships] Two designed-but-never-laid-out
   test boards — the instrument and the go/no-go**
