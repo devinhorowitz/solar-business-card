@@ -576,9 +576,16 @@ def _blend_solid(b, floor, cavity, top_break, foot):
     # lowered the top, which left a notch and a three-cornered facet at the end of every one of
     # the four breaks. The cone is held to the blend's side of the cut's line: the break then
     # runs out to nothing against the cut's own plane, as a west blend's does against its round.
+    # ...AND THE CUT'S OWN LINE IS NOT THE WALL'S NORMAL (2026-11-26). This read b["t"], b["n"] --
+    # the frame of the WALL the blend stands on, which leans by 6.5e-6 rad as cut -- so the cone
+    # ended 6.0e-6 mm short of the cut's plane on one side of each boss and that far past it on
+    # the other, and the solid kept an edge 0.0000956 mm long at each (fit_rules._blend_chord).
+    # A blend onto a coil cut carries the cut's exact line as cut_u / cut_s. A corner-boss root
+    # does not need one: its two faces are the recess wall and the boss's flat, both square to
+    # the board, and its t and n are exact.
     keep = None
     if b.get("chord"):
-        (cx, cy), (tx, ty), (nx, ny) = b["J"], b["t"], b["n"]
+        (cx, cy), (tx, ty), (nx, ny) = b["J"], b.get("cut_s", b["t"]), b.get("cut_u", b["n"])
         far = r + 1.0
         keep = Polygon([(cx - far * nx, cy - far * ny), (cx + far * nx, cy + far * ny),
                         (cx + far * nx + far * tx, cy + far * ny + far * ty),

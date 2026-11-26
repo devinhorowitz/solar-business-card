@@ -130,7 +130,9 @@ STEP validity is gated at export time — OCC `BRepCheck` inside `fit_rules.expo
 the one choke point all three CAD generators use — **and since 2026-11-12 so is the thing
 `BRepCheck` does not check**: no edge of an exported solid may be shared by more than two faces
 (`fit_rules.crowded_edges`). OCC calls a solid that touches itself along a line valid; another
-kernel refused to open the max shell for exactly that. The mesh gate also runs in `kibot.yml`
+kernel refused to open the max shell for exactly that. **And since 2026-11-26, no edge may be
+shorter than 0.001 mm** (`fit_rules.short_edges`, `MIN_EDGE`, with a self-test that must find a
+0.0001 mm notch on every run). The mesh gate also runs in `kibot.yml`
 **before** the commit-back, so a cadquery/OCC bump that breaks a tessellation fails the job
 instead of landing. So does the handedness gate, which needs that job for a reason of its own:
 KiCad's export exists only inside the pinned image, and the panel only after `panelize.py` has run. The shell STLs carry NO open edge since 2026-11-15 (the one ledgered zero-length rim pinch was the old tab root's kink, and went with it), so the ledger allows none; a real hole
@@ -980,6 +982,24 @@ red, the check itself fails.
   note prints `fit_rules.floor_run_gaps()` now and says what it is measured between. Same
   day: the boss flat printed as 1.47 for a model at 1.475 (three decimals now), and a module
   docstring still gave a boss "92.4 %" of its thread ring four changes after it was true.
+- **A blend has TWO faces, and what must end on the second is laid out on the second — and
+  nobody had ever asked how long an edge was** (2026-11-26, the third outside review, SolidCraft
+  0.49.1 listing every edge by length). Every shell carried two edges **0.0000956 mm** long, and
+  the air frame two more, where an R1.00 blend meets a straight coil cut: shorter than the
+  tolerance the lite shell's own STEP states. OCC called the solids valid, SolidCraft opened
+  them, and every gate was green — "no face under 0.001 mm²" had been counted with each change
+  since 2026-11-14, and an edge can be that short between two faces of ordinary size. The
+  cause is rule (1) of the boss-junction bullet, applied one face too far. A blend onto a coil
+  cut is laid out on the wall that is CUT, which leans (6.5e-6 rad on the east wall), and that is
+  right for the wall. But its edge break was ended on a line through the corner along that
+  wall's NORMAL, taken for the cut's own line: 6.0e-6 mm off the cut's plane where the blend's
+  circle crosses. Short of the plane on one side of each boss, past it on the other.
+  `fit_rules._blend_chord` now hands out the cut's line exactly (`cut_u`, `cut_s` — the slab's
+  own edge), the shell CAD ends the break on it, check [8] 4b' holds the rule, and
+  `export_step_stable` refuses any solid with an edge under `MIN_EDGE`. Nothing moved by more
+  than 0.0013 mm (the facets of those four breaks) and no volume changed; each shell lost six
+  or eight edges. **When a count has been reported as clean for weeks, ask what else has a
+  size that nobody is counting** — and when a frame is borrowed from one face, say which.
 - **A ledger entry is a standing waiver, so a ledger audits itself.** `scripts/interference_drc.py`'s
   `EDGE_LEDGER` excused seven parts from the cavity rectangle and had excused nothing since
   2026-08-08: six had been moved inboard and the seventh, C7, was deleted from the board the day

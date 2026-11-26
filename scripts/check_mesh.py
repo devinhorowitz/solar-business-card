@@ -162,6 +162,12 @@ BASELINE = {
     # the number is the part's. The spotfaces on this shell did not move (Ø3.0, in the floor).
     # STEP 10,337 faces and 30,565 edges, as before; none under 0.001 mm2. bbox unchanged;
     # 0 open, 0 degenerate. Triangles 52,828, ungated.
+    # NOT re-ledgered 2026-11-26 (the short edges): the edge break of each of the four blends
+    # that meet a straight coil cut ends on the cut's own line now (fit_rules._blend_chord),
+    # which took two edges 0.0000956 mm long out of every shell's STEP. No volume moved --
+    # 5299.0479 before and after here, 5299.094 on the STEP -- and no vertex stands more than
+    # 0.0013 mm off the old surface. What a volume cannot say: 30,559 edges where the STEP had
+    # 30,565, and none under 0.001 mm (fit_rules.short_edges holds that at export).
     volume_mm3=5299.05, bbox=(-26.35, -45.4, -0.15, 26.35, 45.4, 3.4),
         max_boundary_edges=0, max_open_len_mm=0.0, max_degenerate=0),
     "solar-glow-drh-pogo-testplate.stl": dict(
